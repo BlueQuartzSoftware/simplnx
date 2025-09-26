@@ -8,8 +8,10 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -161,6 +163,136 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
 
   UnitTest::CompareDataArrays<uint8>(xGeneratedImageData, xFlippedImageData);
   UnitTest::CompareDataArrays<uint8>(yGeneratedImageData, yFlippedImageData);
+}
+
+struct AxisBoundsChoices
+{
+  std::vector<IntVec2Type> voxelX{{IntVec2Type{50, 150}}};
+  std::vector<IntVec2Type> voxelY{{IntVec2Type{50, 150}}};
+  std::vector<IntVec2Type> voxelZ{{IntVec2Type{0, 1}}};
+
+  std::vector<FloatVec2Type> physX{{FloatVec2Type{100.0f, 300.0f}}};
+  std::vector<FloatVec2Type> physY{{FloatVec2Type{100.0f, 300.0f}}};
+  std::vector<FloatVec2Type> physZ{{FloatVec2Type{10.0f, 30.0f}}};
+};
+
+std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBoundsChoices& C)
+{
+  std::vector<CropGeometryParameter::ValueType> out;
+
+  // NoCropping
+  {
+    CropGeometryParameter::ValueType cv;
+    cv.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
+    cv.cropX = false;
+    cv.cropY = false;
+    cv.cropZ = false;
+    out.push_back(cv);
+  }
+
+  const std::array<std::tuple<bool, bool, bool>, 7> kFlagOrder = {std::tuple{false, false, true}, std::tuple{false, true, false}, std::tuple{false, true, true}, std::tuple{true, false, false},
+                                                                  std::tuple{true, false, true},  std::tuple{true, true, false},  std::tuple{true, true, true}};
+
+  for(const auto& [cx, cy, cz] : kFlagOrder)
+  {
+    if(!(cx || cy || cz))
+    {
+      return {}; // require at least one axis cropped
+    }
+
+    std::vector<std::optional<IntVec2Type>> xOpts = cx ? std::vector<std::optional<IntVec2Type>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+    std::vector<std::optional<IntVec2Type>> yOpts = cy ? std::vector<std::optional<IntVec2Type>>(C.voxelY.begin(), C.voxelY.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+    std::vector<std::optional<IntVec2Type>> zOpts = cz ? std::vector<std::optional<IntVec2Type>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+
+    for(const auto& xb : xOpts)
+    {
+      for(const auto& yb : yOpts)
+      {
+        for(const auto& zb : zOpts)
+        {
+          CropGeometryParameter::ValueType cv;
+          cv.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
+          cv.cropX = cx;
+          cv.cropY = cy;
+          cv.cropZ = cz;
+          if(xb)
+          {
+            cv.xBoundVoxels = *xb;
+          }
+          if(yb)
+          {
+            cv.yBoundVoxels = *yb;
+          }
+          if(zb)
+          {
+            cv.zBoundVoxels = *zb;
+          }
+          out.push_back(cv);
+        }
+      }
+    }
+  }
+  for(const auto& [cx, cy, cz] : kFlagOrder)
+  {
+    if(!(cx || cy || cz))
+    {
+      return {};
+    }
+
+    std::vector<std::optional<FloatVec2Type>> xOpts = cx ? std::vector<std::optional<FloatVec2Type>>(C.physX.begin(), C.physX.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+    std::vector<std::optional<FloatVec2Type>> yOpts = cy ? std::vector<std::optional<FloatVec2Type>>(C.physY.begin(), C.physY.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+    std::vector<std::optional<FloatVec2Type>> zOpts = cz ? std::vector<std::optional<FloatVec2Type>>(C.physZ.begin(), C.physZ.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+
+    for(const auto& xb : xOpts)
+    {
+      for(const auto& yb : yOpts)
+      {
+        for(const auto& zb : zOpts)
+        {
+          CropGeometryParameter::ValueType cv;
+          cv.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+          cv.cropX = cx;
+          cv.cropY = cy;
+          cv.cropZ = cz;
+          if(xb)
+          {
+            cv.xBoundPhysical = *xb;
+          }
+          if(yb)
+          {
+            cv.yBoundPhysical = *yb;
+          }
+          if(zb)
+          {
+            cv.zBoundPhysical = *zb;
+          }
+          out.push_back(cv);
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+std::string BoolToString(bool v)
+{
+  return v ? "True" : "False";
+}
+
+std::string CropTypeToString(CropGeometryParameter::CropValues::TypeEnum t)
+{
+  using T = CropGeometryParameter::CropValues::TypeEnum;
+  switch(t)
+  {
+  case T::NoCropping:
+    return "NoCropping";
+  case T::VoxelSubvolume:
+    return "VoxelSubvolume";
+  case T::PhysicalSubvolume:
+    return "PhysicalSubvolume";
+  }
+  return "Unknown";
 }
 } // namespace
 
@@ -409,278 +541,87 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB_To_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter]")
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: All Combinations", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
   UnitTest::LoadPlugins();
 
-  ITKImportImageStackFilter filter;
-  DataStructure dataStructure;
-  Arguments args;
+  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_v3.tar.gz",
+  //  "ITKMhaFileReaderTest_v3"); const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest_v3/ExemplarySmallIN100.dream3d";
+  const fs::path exemplaryFilePath = "/Users/bluequartz/Downloads/image_stack_exemplary.dream3d";
 
-  GeneratedFileListParameter::ValueType fileListInfo;
-  fileListInfo.inputPath = k_ImageStackDir;
-  fileListInfo.startIndex = 0;
-  fileListInfo.endIndex = 2;
-  fileListInfo.incrementIndex = 1;
-  fileListInfo.fileExtension = ".png";
-  fileListInfo.filePrefix = "rgb_";
-  fileListInfo.fileSuffix = "";
-  fileListInfo.paddingDigits = 1;
-  fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplaryFilePath);
 
-  std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
-  std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.filePrefix = "input_image_";
+  fileList.fileSuffix = "";
+  fileList.fileExtension = ".tif";
+  fileList.inputPath = "/Users/bluequartz/Downloads/input_images";
+  fileList.incrementIndex = 1;
+  fileList.startIndex = 0;
+  fileList.endIndex = 2;
+  fileList.paddingDigits = 1;
 
-  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(true));
+  const AxisBoundsChoices bounds{};
+  auto allCropVals = GenerateAllCropValues(bounds);
 
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  bool convertToGrayScale = GENERATE(false, true);
+  ChoicesParameter::ValueType resampleIdx = GENERATE(0, 1, 2);
+  ChoicesParameter::ValueType imageTransformIdx = GENERATE(0, 1, 2);
+  auto croppingOptions = GENERATE_COPY(from_range(allCropVals));
+  float32 scalingChoice = GENERATE(10.0);
+  VectorUInt64Parameter::ValueType exactXYDimensionsChoice = GENERATE(VectorUInt64Parameter::ValueType{64, 64});
 
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  static std::atomic<int> geomCounter{1};
+  const int myId = geomCounter.fetch_add(1);
 
-  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-  REQUIRE(imageGeomPtr != nullptr);
+  const std::string exemplaryGeomName =
+      fmt::format("ImageGeometry {:0>3} (CroppingOptions=[{}, {}, {}, {}] Resample={} ImageFlip={} Grayscale={})", myId, CropTypeToString(croppingOptions.type), BoolToString(croppingOptions.cropX),
+                  BoolToString(croppingOptions.cropY), BoolToString(croppingOptions.cropZ), resampleIdx, imageTransformIdx, BoolToString(convertToGrayScale));
+  const std::string computedGeomName = "ImageGeometry";
 
-  SizeVec3 imageDims = imageGeomPtr->getDimensions();
-  FloatVec3 imageOrigin = imageGeomPtr->getOrigin();
-  FloatVec3 imageSpacing = imageGeomPtr->getSpacing();
-
-  std::array<usize, 3> dims = {524, 390, 3};
-
-  REQUIRE(imageDims[0] == dims[0]);
-  REQUIRE(imageDims[1] == dims[1]);
-  REQUIRE(imageDims[2] == dims[2]);
-
-  REQUIRE(imageOrigin[0] == Approx(origin[0]));
-  REQUIRE(imageOrigin[1] == Approx(origin[1]));
-  REQUIRE(imageOrigin[2] == Approx(origin[2]));
-
-  REQUIRE(imageSpacing[0] == Approx(spacing[0]));
-  REQUIRE(imageSpacing[1] == Approx(spacing[1]));
-  REQUIRE(imageSpacing[2] == Approx(spacing[2]));
-
-  const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
-  REQUIRE(imageDataPtr != nullptr);
-
-  // md5 hash only works on in-memory DataStore<T>
-  // if(ITKTestBase::IsArrayInMemory(dataStructure, k_ImageDataPath))
+  DYNAMIC_SECTION(exemplaryGeomName)
   {
-    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-    REQUIRE(md5Hash == "2620b39f0dcaa866602c2591353116a4");
-  }
+    ITKImportImageStackFilter filter;
+    Arguments args;
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
+    args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, fileList);
+    args.insertOrAssign(ITKImportImageStackFilter::k_CroppingOptions_Key, croppingOptions);
+    args.insertOrAssign(ITKImportImageStackFilter::k_ResampleImagesChoice_Key, resampleIdx);
+    args.insertOrAssign(ITKImportImageStackFilter::k_ImageTransformChoice_Key, imageTransformIdx);
+    args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, convertToGrayScale);
+    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::vector<float64>{2.0f, 2.0f, 20.0f});
+    args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, DataPath({computedGeomName}));
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: RGB", "[ITKImageProcessing][ITKImportImageStackFilter]")
-{
-  UnitTest::LoadPlugins();
+    if(resampleIdx == 1)
+    {
+      args.insertOrAssign(ITKImportImageStackFilter::k_Scaling_Key, scalingChoice);
+    }
+    else if(resampleIdx == 2)
+    {
+      args.insertOrAssign(ITKImportImageStackFilter::k_ExactXYDimensions_Key, exactXYDimensionsChoice);
+    }
 
-  ITKImportImageStackFilter filter;
-  DataStructure dataStructure;
-  Arguments args;
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
 
-  GeneratedFileListParameter::ValueType fileListInfo;
-  fileListInfo.inputPath = k_ImageStackDir;
-  fileListInfo.startIndex = 0;
-  fileListInfo.endIndex = 2;
-  fileListInfo.incrementIndex = 1;
-  fileListInfo.fileExtension = ".png";
-  fileListInfo.filePrefix = "rgb_";
-  fileListInfo.fileSuffix = "";
-  fileListInfo.paddingDigits = 1;
-  fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+    auto executeResult = filter.execute(dataStructure, args);
+    if(executeResult.result.invalid())
+    {
+      INFO([&] {
+        std::ostringstream oss;
+        oss << "Errors for combo '" << exemplaryGeomName << "':\n";
+        for(const auto& e : executeResult.result.errors())
+          oss << "  - " << e.code << " : " << e.message << "\n";
+        return oss.str();
+      }());
+    }
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
-  std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
+    UnitTest::CompareImageGeometry(dataStructure, DataPath({exemplaryGeomName}), DataPath({computedGeomName}));
 
-  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(false));
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-  REQUIRE(imageGeomPtr != nullptr);
-
-  SizeVec3 imageDims = imageGeomPtr->getDimensions();
-  FloatVec3 imageOrigin = imageGeomPtr->getOrigin();
-  FloatVec3 imageSpacing = imageGeomPtr->getSpacing();
-
-  std::array<usize, 3> dims = {524, 390, 3};
-
-  REQUIRE(imageDims[0] == dims[0]);
-  REQUIRE(imageDims[1] == dims[1]);
-  REQUIRE(imageDims[2] == dims[2]);
-
-  REQUIRE(imageOrigin[0] == Approx(origin[0]));
-  REQUIRE(imageOrigin[1] == Approx(origin[1]));
-  REQUIRE(imageOrigin[2] == Approx(origin[2]));
-
-  REQUIRE(imageSpacing[0] == Approx(spacing[0]));
-  REQUIRE(imageSpacing[1] == Approx(spacing[1]));
-  REQUIRE(imageSpacing[2] == Approx(spacing[2]));
-
-  const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
-  REQUIRE(imageDataPtr != nullptr);
-
-  // md5 hash only works on in-memory DataStore<T>
-  // if(ITKTestBase::IsArrayInMemory(dataStructure, k_ImageDataPath))
-  {
-    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-    REQUIRE(md5Hash == "8b0b0393d6779156c88544bc4d75d3fc");
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Scaled", "[ITKImageProcessing][ITKImportImageStackFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  ITKImportImageStackFilter filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  GeneratedFileListParameter::ValueType fileListInfo;
-  fileListInfo.inputPath = k_ImageStackDir;
-  fileListInfo.startIndex = 0;
-  fileListInfo.endIndex = 2;
-  fileListInfo.incrementIndex = 1;
-  fileListInfo.fileExtension = ".png";
-  fileListInfo.filePrefix = "rgb_";
-  fileListInfo.fileSuffix = "";
-  fileListInfo.paddingDigits = 1;
-  fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-
-  std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
-  std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
-
-  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(false));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Scaling_Key, std::make_any<Float32Parameter::ValueType>(50.0f));
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-  REQUIRE(imageGeomPtr != nullptr);
-
-  SizeVec3 imageDims = imageGeomPtr->getDimensions();
-  FloatVec3 imageOrigin = imageGeomPtr->getOrigin();
-  FloatVec3 imageSpacing = imageGeomPtr->getSpacing();
-
-  std::array<usize, 3> dims = {262, 195, 3};
-  std::vector<float32> new_spacing = {0.6f, 0.4f, 0.9f};
-
-  REQUIRE(imageDims[0] == dims[0]);
-  REQUIRE(imageDims[1] == dims[1]);
-  REQUIRE(imageDims[2] == dims[2]);
-
-  REQUIRE(imageOrigin[0] == Approx(origin[0]));
-  REQUIRE(imageOrigin[1] == Approx(origin[1]));
-  REQUIRE(imageOrigin[2] == Approx(origin[2]));
-
-  REQUIRE(imageSpacing[0] == Approx(new_spacing[0]));
-  REQUIRE(imageSpacing[1] == Approx(new_spacing[1]));
-  REQUIRE(imageSpacing[2] == Approx(new_spacing[2]));
-
-  const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
-  REQUIRE(imageDataPtr != nullptr);
-
-  // md5 hash only works on in-memory DataStore<T>
-  // if(ITKTestBase::IsArrayInMemory(dataStructure, k_ImageDataPath))
-  {
-    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-    REQUIRE(md5Hash == "5969f0ae7507bfae14de3cb470d53e60");
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Resampled Exact Dims", "[ITKImageProcessing][ITKImportImageStackFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  ITKImportImageStackFilter filter;
-  DataStructure dataStructure;
-  Arguments args;
-
-  GeneratedFileListParameter::ValueType fileListInfo;
-  fileListInfo.inputPath = k_ImageStackDir;
-  fileListInfo.startIndex = 0;
-  fileListInfo.endIndex = 2;
-  fileListInfo.incrementIndex = 1;
-  fileListInfo.fileExtension = ".png";
-  fileListInfo.filePrefix = "rgb_";
-  fileListInfo.fileSuffix = "";
-  fileListInfo.paddingDigits = 1;
-  fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-
-  std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
-  std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
-
-  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, std::make_any<BoolParameter::ValueType>(false));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ResampleImagesChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-  args.insertOrAssign(ITKImportImageStackFilter::k_ExactXYDimensions_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{100, 100}));
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-  REQUIRE(imageGeomPtr != nullptr);
-
-  SizeVec3 imageDims = imageGeomPtr->getDimensions();
-  FloatVec3 imageOrigin = imageGeomPtr->getOrigin();
-  FloatVec3 imageSpacing = imageGeomPtr->getSpacing();
-
-  std::array<usize, 3> dims = {100, 100, 3};
-  std::vector<float32> new_spacing = {1.572f, 0.78f, 0.9f};
-
-  REQUIRE(imageDims[0] == dims[0]);
-  REQUIRE(imageDims[1] == dims[1]);
-  REQUIRE(imageDims[2] == dims[2]);
-
-  REQUIRE(imageOrigin[0] == Approx(origin[0]));
-  REQUIRE(imageOrigin[1] == Approx(origin[1]));
-  REQUIRE(imageOrigin[2] == Approx(origin[2]));
-
-  REQUIRE(imageSpacing[0] == Approx(new_spacing[0]));
-  REQUIRE(imageSpacing[1] == Approx(new_spacing[1]));
-  REQUIRE(imageSpacing[2] == Approx(new_spacing[2]));
-
-  const auto* imageDataPtr = dataStructure.getDataAs<UInt8Array>(k_ImageDataPath);
-  REQUIRE(imageDataPtr != nullptr);
-
-  // if(imageDataPtr->getDataFormat().empty())
-  {
-    const std::string md5Hash = ITKTestBase::ComputeMd5Hash(dataStructure, k_ImageDataPath);
-    REQUIRE(md5Hash == "e1e892c7e11eb55a57919053eee66f22");
+    auto exemplaryAttrMatrixPath = DataPath({exemplaryGeomName}).createChildPath(Constants::k_Cell_Data);
+    auto computedAttrMatrixPath = DataPath({computedGeomName}).createChildPath(Constants::k_Cell_Data);
+    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplaryAttrMatrixPath, dataStructure, computedAttrMatrixPath, true);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

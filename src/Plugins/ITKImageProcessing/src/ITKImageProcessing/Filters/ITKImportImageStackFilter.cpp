@@ -152,6 +152,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
                         const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   DataPath destImageGeomPath = imageGeomPath;
+  std::string destImageArrayName = imageArrayName;
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(destImageGeomPath);
 
   auto* filterListPtr = Application::Instance()->getFilterList();
@@ -218,42 +219,46 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     }
 
     // ======================= Crop Image Geometry Section ===================
+    // We've already cropped out Z by only running the loop on specific Z slices,
+    // so only run this section if we are cropping X or Y dimensions.
     if(croppingOptions.type != CropGeometryParameter::ValueType::TypeEnum::NoCropping)
     {
-      auto cropImageGeomFilter = filterListPtr->createFilter(k_CropImageGeomFilterHandle);
-      Arguments cropImageGeomArgs;
-      cropImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(imageGeomPath));
-      cropImageGeomArgs.insertOrAssign("use_physical_bounds", std::make_any<bool>(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume));
-      cropImageGeomArgs.insertOrAssign("crop_x_dim", std::make_any<bool>(croppingOptions.cropX));
-      cropImageGeomArgs.insertOrAssign("crop_y_dim", std::make_any<bool>(croppingOptions.cropY));
-      cropImageGeomArgs.insertOrAssign("crop_z_dim", std::make_any<bool>(false)); // Do this because we're only cropping one image at a time
-      if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
+      if(croppingOptions.cropX || croppingOptions.cropY)
       {
-        cropImageGeomArgs.insertOrAssign("min_voxel",
-                                         std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(croppingOptions.xBoundVoxels[0]), static_cast<uint64>(croppingOptions.yBoundVoxels[0]),
-                                                                                          static_cast<uint64>(croppingOptions.zBoundVoxels[0])}));
-        cropImageGeomArgs.insertOrAssign("max_voxel",
-                                         std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(croppingOptions.xBoundVoxels[1]), static_cast<uint64>(croppingOptions.yBoundVoxels[1]),
-                                                                                          static_cast<uint64>(croppingOptions.zBoundVoxels[1])}));
-      }
-      else
-      {
-        cropImageGeomArgs.insertOrAssign(
-            "min_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(croppingOptions.xBoundPhysical[0]), static_cast<float64>(croppingOptions.yBoundPhysical[0]),
-                                                                           static_cast<float64>(croppingOptions.zBoundPhysical[0])}));
-        cropImageGeomArgs.insertOrAssign(
-            "max_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(croppingOptions.xBoundPhysical[1]), static_cast<float64>(croppingOptions.yBoundPhysical[1]),
-                                                                           static_cast<float64>(croppingOptions.zBoundPhysical[1])}));
-      }
-      cropImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(true));
+        auto cropImageGeomFilter = filterListPtr->createFilter(k_CropImageGeomFilterHandle);
+        Arguments cropImageGeomArgs;
+        cropImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(imageGeomPath));
+        cropImageGeomArgs.insertOrAssign("use_physical_bounds", std::make_any<bool>(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume));
+        cropImageGeomArgs.insertOrAssign("crop_x_dim", std::make_any<bool>(croppingOptions.cropX));
+        cropImageGeomArgs.insertOrAssign("crop_y_dim", std::make_any<bool>(croppingOptions.cropY));
+        cropImageGeomArgs.insertOrAssign("crop_z_dim", std::make_any<bool>(false)); // Do this because we're only cropping one image at a time
+        if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
+        {
+          cropImageGeomArgs.insertOrAssign("min_voxel",
+                                           std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(croppingOptions.xBoundVoxels[0]), static_cast<uint64>(croppingOptions.yBoundVoxels[0]),
+                                                                                            static_cast<uint64>(croppingOptions.zBoundVoxels[0])}));
+          cropImageGeomArgs.insertOrAssign("max_voxel",
+                                           std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(croppingOptions.xBoundVoxels[1]), static_cast<uint64>(croppingOptions.yBoundVoxels[1]),
+                                                                                            static_cast<uint64>(croppingOptions.zBoundVoxels[1])}));
+        }
+        else
+        {
+          cropImageGeomArgs.insertOrAssign(
+              "min_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(croppingOptions.xBoundPhysical[0]), static_cast<float64>(croppingOptions.yBoundPhysical[0]),
+                                                                             static_cast<float64>(croppingOptions.zBoundPhysical[0])}));
+          cropImageGeomArgs.insertOrAssign(
+              "max_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(croppingOptions.xBoundPhysical[1]), static_cast<float64>(croppingOptions.yBoundPhysical[1]),
+                                                                             static_cast<float64>(croppingOptions.zBoundPhysical[1])}));
+        }
+        cropImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(true));
 
-      // Run crop image geometry filter and process results and messages
-      auto result = cropImageGeomFilter->execute(importedDataStructure, cropImageGeomArgs).result;
-      if(result.invalid())
-      {
-        return result;
+        // Run crop image geometry filter and process results and messages
+        auto result = cropImageGeomFilter->execute(importedDataStructure, cropImageGeomArgs).result;
+        if(result.invalid())
+        {
+          return result;
+        }
       }
-
       destImageGeomPath = DataPath({imageGeomPath.getTargetName() + "_cropped"});
     }
 
@@ -377,7 +382,8 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     }
 
     // Copy that into the output array...
-    DataPath destImageDataPath = destImageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
+    DataPath destImageDataPath = convertToGrayscale ? destImageGeomPath.createChildPath(cellDataName).createChildPath("grayscale_" + imageArrayName) :
+                                                      destImageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
     auto& outputData = dataStructure.getDataRefAs<DataArray<T>>(destImageDataPath);
     auto& outputDataStore = outputData.getDataStoreRef();
     auto result = outputDataStore.copyFrom(destTupleIndex, srcDataStore, 0, destTuplesPerSlice);
@@ -550,6 +556,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   }
 
   DataStructure tmpDs;
+  std::vector<usize> outputDims;
 
   // Create a sub-filter to read each image, although for preflight we are going to read the first image in the
   // list and hope the rest are correct.
@@ -579,7 +586,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   const auto* createImageGeomActionPtr = dynamic_cast<const CreateImageGeometryAction*>(action0Ptr);
   if(createImageGeomActionPtr != nullptr)
   {
-    auto outputDims = createImageGeomActionPtr->dims();
+    outputDims = createImageGeomActionPtr->dims();
     outputDims.back() = files.size();
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
@@ -653,11 +660,15 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     {
       return cropImageResult;
     }
+
     Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
+
+    auto croppedGeom = tmpDs.getDataRefAs<ImageGeom>(DataPath({imageGeomPath.getTargetName() + "_cropped"}));
+    outputDims = croppedGeom.getDimensions().toContainer<std::vector<usize>>();
 
     resultOutputActions = MergeOutputActionResults(resultOutputActions, cropImageResult.outputActions);
 
@@ -702,13 +713,35 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
       return resampleImageResult;
     }
 
-    Result<> actionsResult = resampleImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
-    if(actionsResult.invalid())
+    // The first output actions should be the geometry creation
+    // A better solution might be to extract the preflight code into a common function for both filters
+    action0Ptr = resampleImageResult.outputActions.value().actions.at(0).get();
+    createImageGeomActionPtr = dynamic_cast<const CreateImageGeometryAction*>(action0Ptr);
+    if(createImageGeomActionPtr != nullptr)
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
-    }
+      auto dims = createImageGeomActionPtr->dims();
+      dims.back() = outputDims.back();
+      outputDims = dims;
+      resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
+                                                                                           createImageGeomActionPtr->spacing(), createImageGeomActionPtr->cellAttributeMatrixName(),
+                                                                                           createImageGeomActionPtr->units()));
+      // The second action should be the array creation
+      const IDataAction* action1Ptr = resampleImageResult.outputActions.value().actions.at(1).get();
+      const auto* createArrayActionPtr = dynamic_cast<const CreateArrayAction*>(action1Ptr);
+      if(createArrayActionPtr != nullptr)
+      {
+        resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(createArrayActionPtr->type(), std::vector<usize>(outputDims.rbegin(), outputDims.rend()),
+                                                                                     createArrayActionPtr->componentDims(), createArrayActionPtr->path(), createArrayActionPtr->dataFormat(),
+                                                                                     createArrayActionPtr->fillValue()));
+      }
 
-    resultOutputActions = MergeOutputActionResults(resultOutputActions, resampleImageResult.outputActions);
+      tmpDs = DataStructure();
+      Result<> actionsResult = resultOutputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+      if(actionsResult.invalid())
+      {
+        return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      }
+    }
 
     pathsToDelete.push_back(currentImageGeomPath);
     currentImageGeomPath = DataPath({imageGeomPath.getTargetName() + "_resampled"});
