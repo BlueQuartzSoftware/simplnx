@@ -1,5 +1,5 @@
 {% set name = "simplnx" %}
-{% set version = "25.07.23" %}
+{% set version = "25.09.28" %}
 
 package:
   name: {{ name|lower }}
