@@ -2,7 +2,7 @@
    compiling additional plugins, and you want the python docs
    generated, you will need to add those to the list below
 
-DREAM3D-NX Python Docs (v25.07.23)
+DREAM3D-NX Python Docs (v25.09.28)
 ===================================
 
 .. image:: https://anaconda.org/bluequartzsoftware/dream3dnx/badges/version.svg   
