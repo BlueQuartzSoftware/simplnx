@@ -182,6 +182,7 @@ public:
 
     herr_t error = H5Aread(attribId, typeId, values.data());
     H5Aclose(attribId);
+    H5Tclose(typeId);
     if(error != 0)
     {
       std::string ss = fmt::format("Error Reading Vector Attribute '{}'.", attributeName);

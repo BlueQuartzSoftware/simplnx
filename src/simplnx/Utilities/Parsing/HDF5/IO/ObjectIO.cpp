@@ -254,6 +254,7 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
     }
   }
   H5Aclose(attribId);
+  H5Tclose(attrTypeId);
   return returnResult;
 }
 
@@ -303,12 +304,13 @@ bool ObjectIO::hasAttribute(const std::string& attributeName) const
 
 usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
 {
-  size_t typeSize = H5Tget_size(H5Aget_type(attribId));
+  hid_t attrType = H5Aget_type(attribId);
+  size_t typeSize = H5Tget_size(attrType);
   std::vector<hsize_t> dims;
   hid_t dataspaceId = H5Aget_space(attribId);
   if(dataspaceId >= 0)
   {
-    Type type = getTypeFromId(H5Aget_type(attribId));
+    Type type = getTypeFromId(attrType);
     if(type == Type::string)
     {
       size_t rank = 1;
@@ -324,6 +326,8 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
       if(error < 0)
       {
         std::cout << "Error Getting Attribute dims" << std::endl;
+        H5Sclose(dataspaceId);
+        H5Tclose(attrType);
         return 0;
       }
       // Copy the dimensions into the dims vector
@@ -332,6 +336,8 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
       std::copy(hdims.cbegin(), hdims.cend(), dims.begin());
     }
   }
+  H5Sclose(dataspaceId);
+  H5Tclose(attrType);
 
   hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());
   return numElements;
