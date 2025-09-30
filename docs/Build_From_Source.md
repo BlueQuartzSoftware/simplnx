@@ -32,12 +32,14 @@
 
 ## Prerequisites
 
-In order to compile `simplnx` you will need a C++20 compiler suite installed on your computer. For Python Bindings a Python version of 3.8 or higher is recommended.
+In order to compile `simplnx` you will need a C++20 compiler suite installed on your computer.
 
 + Compiler
   + Windows Visual Studio 2022 v143 toolset
   + macOS 12.5 and Xcode 14.2 or higher
   + Linux with GCC Version 11.0 or higher or clang 14.
+
+For Python Bindings a Python version of 3.8 is the minimum version, but internally 3.11 and 3.12 are the actively used versions.
 
 ## Install vcpkg
 
@@ -207,4 +209,173 @@ conda config --set channel_priority strict
 conda create -n cxpython python=3.8
 conda activate cxpython
 conda install -c bluequartzsoftware simplnx
+```
+
+## Example Linux/Ninja CMakeUserPresets.json Template
+
+Be sure to update `Python_EXECUTABLE`, `SPHINX_BUILD_EXECUTABLE`, and `VCPKG_INSTALLATION_ROOT`.
+
+Update `generator` with preferred generator if you wish to avoid Ninja.
+
+If adapting for another platform, be sure to update `VCPKG_TARGET_TRIPLET` and `VCPKG_HOST_TRIPLET`, then search and replace "linux" with current OS.
+
+```console
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default-all",
+      "displayName": "default-all",
+      "description": "Build configuration for Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/dream3dnx",
+      "hidden": true,
+      "cacheVariables": {
+        "VCPKG_MANIFEST_DIR": {
+          "type": "STRING",
+          "value": "${sourceDir}/../simplnx"
+        },
+        "VCPKG_MANIFEST_FEATURES": {
+          "type": "STRING",
+          "value": "tests;parallel;itk;ebsd;benchmark;python"
+        },
+        "VCPKG_INSTALLED_DIR": {
+          "type": "STRING",
+          "value": "${sourceDir}/../vcpkg-installed"
+        },
+        "VCPKG_MANIFEST_INSTALL": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_EXTRA_PLUGINS": {
+          "type": "STRING",
+          "value": "SimplnxReview"
+        },
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        },
+        "SIMPLNX_BUILD_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_BUILD_DOCS": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
+        "ITKImageProcessing_USE_JOB_POOL": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "ITKImageProcessing_JOB_POOL": {
+          "type": "STRING",
+          "value": "16"
+        },
+        "SIMPLNX_BUILD_PYTHON": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_EMBED_PYTHON": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_BUILD_PYTHON_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "SIMPLNX_PY_DISABLE_HIDDEN_VISIBILITY": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "Python_EXECUTABLE": {
+          "type": "PATH",
+          "value": "absolute/path/to/python"
+        },
+        "SPHINX_BUILD_EXECUTABLE": {
+          "type": "PATH",
+          "value": "absolute/path/to/sphinx"
+        },
+        "DREAM3D_DATA_DIR": {
+          "type": "STRING",
+          "value": "${sourceDir}/../DREAM3D_Data"
+        },
+        "SIMPLNX_ENABLE_BENCHMARK_UTILITY": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      },
+      "environment": {"VCPKG_INSTALLATION_ROOT":"absolute/path/to/vcpkg"}
+    },
+    {
+      "name": "x64",
+      "inherits": "default-all",
+      "displayName": "x64",
+      "description": "x64 Arch",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/DREAM3DNX-Linux-x64",
+      "hidden": true,
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
+        },
+        "VCPKG_HOST_TRIPLET": {
+          "type": "STRING",
+          "value": "x64-linux-dynamic"
+        }
+      }
+    },
+    {
+      "name": "Linux-Debug-x64",
+      "inherits": "x64",
+      "displayName": "Linux-Debug-x64",
+      "description": "Build configuration for Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/DREAM3DNX-Debug-Linux-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+          }
+       }
+    },
+    {
+      "name": "Linux-Release-x64",
+      "inherits": "x64",
+      "displayName": "Linux-Release-x64",
+      "description": "Build configuration for Linux",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/../DREAM3D-Build/DREAM3DNX-Release-Linux-x64",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Release"
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Debug-x64",
+      "displayName": "Debug-x64",
+      "description": "Build configuration for Debug-x64",
+      "configurePreset": "Linux-Debug-x64",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Release-x64",
+      "displayName": "Release-x64",
+      "description": "Build configuration for Release-x64",
+      "configurePreset": "Linux-Release-x64",
+      "configuration": "Release"
+
+    }
+  ]
+}
+
 ```
