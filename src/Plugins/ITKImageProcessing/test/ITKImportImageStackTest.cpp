@@ -533,11 +533,13 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd 
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: All Combinations", "[ITKImageProcessing][ITKImportImageStackFilter]")
 {
-  UnitTest::LoadPlugins();
+  // Only load the plugins once for this entire test
+  static std::once_flag once;
+  std::call_once(once, [] { UnitTest::LoadPlugins(); });
 
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_v3.tar.gz",
-  //  "ITKMhaFileReaderTest_v3"); const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "ITKMhaFileReaderTest_v3/ExemplarySmallIN100.dream3d";
-  const fs::path exemplaryFilePath = "/Users/bluequartz/Downloads/image_stack_exemplary.dream3d";
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test.tar.gz", "import_image_stack_test");
+  const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "import_image_stack_test/import_image_stack_test.dream3d";
+  const fs::path inputImagesFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "import_image_stack_test/input_images";
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplaryFilePath);
 
@@ -545,7 +547,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: All Combinations", "[I
   fileList.filePrefix = "input_image_";
   fileList.fileSuffix = "";
   fileList.fileExtension = ".tif";
-  fileList.inputPath = "/Users/bluequartz/Downloads/input_images";
+  fileList.inputPath = inputImagesFilePath.string();
   fileList.incrementIndex = 1;
   fileList.startIndex = 0;
   fileList.endIndex = 2;
