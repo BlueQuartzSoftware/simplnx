@@ -54,8 +54,8 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
   REQUIRE(filterListPtr != nullptr);
 
   // Define Shared parameters
-  std::vector<float32> k_Origin = {0.0f, 0.0f, 0.0f};
-  std::vector<float32> k_Spacing = {1.0f, 1.0f, 1.0f};
+  std::vector<float64> k_Origin = {0.0f, 0.0f, 0.0f};
+  std::vector<float64> k_Spacing = {1.0f, 1.0f, 1.0f};
   GeneratedFileListParameter::ValueType k_FileListInfo;
 
   // Set File list for reads
@@ -78,8 +78,8 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
 
     Arguments args;
 
-    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
     args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
     args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_XGeneratedImageGeomPath));
     args.insertOrAssign(ITKImportImageStackFilter::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutXAxis));
@@ -98,8 +98,8 @@ void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& 
 
     Arguments args;
 
-    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(k_Origin));
-    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(k_Spacing));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float64>>(k_Origin));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(k_Spacing));
     args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
     args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(::k_YGeneratedImageGeomPath));
     args.insertOrAssign(ITKImportImageStackFilter::k_ImageTransformChoice_Key, std::make_any<ChoicesParameter::ValueType>(::k_FlipAboutYAxis));
@@ -332,8 +332,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoFiles", "[ITKImagePr
   fileListInfo.paddingDigits = 4;
 
   args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(3));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float64>>(3));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(3));
   args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -358,8 +358,8 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: FileDoesNotExist", "[I
   fileListInfo.paddingDigits = 4;
 
   args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(3));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(3));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float64>>(3));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(3));
   args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -387,12 +387,12 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: CompareImage", "[ITKIm
   fileListInfo.paddingDigits = 2;
   fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
 
-  std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
-  std::vector<float32> spacing = {0.3f, 0.2f, 0.9f};
+  std::vector<float64> origin = {1.0f, 4.0f, 8.0f};
+  std::vector<float64> spacing = {0.3f, 0.2f, 0.9f};
 
   args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float64>>(origin));
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(spacing));
   args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
