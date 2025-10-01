@@ -78,7 +78,7 @@ Result<> ComputeAvgCAxes::operator()()
 
   std::vector<int32> counter(totalFeatures, 0);
 
-  // Loop over each cell (this assumes we are on some sort of regular grid
+  // Loop over each cell
   for(usize i = 0; i < totalPoints; i++)
   {
     int32 currentFeatureId = featureIds[i];
@@ -156,13 +156,17 @@ Result<> ComputeAvgCAxes::operator()()
     else
     {
       // Compute the final average c-axis value
-      Eigen::Vector3f curCAxis{avgCAxes[tupleIndex] / static_cast<float32>(counter[i]), avgCAxes[tupleIndex + 1] / static_cast<float32>(counter[i]),
-                               avgCAxes[tupleIndex + 2] / static_cast<float32>(counter[i])};
-      curCAxis.normalize();
+      float value = avgCAxes[3 * i];
+      value /= static_cast<float>(counter[i]);
+      avgCAxes[3 * i] = value;
 
-      avgCAxes.setValue(tupleIndex, curCAxis(0));
-      avgCAxes.setValue(tupleIndex + 1, curCAxis(1));
-      avgCAxes.setValue(tupleIndex + 2, curCAxis(2));
+      value = avgCAxes[3 * i + 1];
+      value /= static_cast<float>(counter[i]);
+      avgCAxes[3 * i + 1] = value;
+
+      value = avgCAxes[3 * i + 2];
+      value /= static_cast<float>(counter[i]);
+      avgCAxes[3 * i + 2] = value;
     }
   }
   return result;
