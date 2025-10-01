@@ -108,9 +108,8 @@ IFilter::PreflightResult ComputeAvgCAxesFilter::preflightImpl(const DataStructur
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  resultOutputActions.warnings().push_back(
-      {-6401, "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure your data is of one of these two types."});
-
+  preflightUpdatedValues.push_back(
+      {"Crystal Symmetry Warning:", "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure at least 1 phase is of this type."});
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 

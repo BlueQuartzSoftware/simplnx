@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Utilities/Math/GeometryMath.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
@@ -50,7 +51,7 @@ Result<> ComputeAvgCAxes::operator()()
   // If NONE of the phases are hexagonal then bail out now with an error
   if(noPhasesHexagonal)
   {
-    return MakeErrorResult(-6402, "Finding the average c-axes requires at least one phase to be Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures but none were found.");
+    return MakeErrorResult(-76402, "No phases that have a crystal symmetry of Hexagonal (6/mmm or 6/m) were found.");
   }
 
   Result<> result;
@@ -58,9 +59,7 @@ Result<> ComputeAvgCAxes::operator()()
   // Throw a warning for any NON-Hex Laue Phases
   if(!allPhasesHexagonal)
   {
-    result.warnings().push_back(
-        {-6403,
-         "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. All calculations for non Hexagonal phases will be skipped and a NaN value inserted."});
+    result.warnings().push_back({-76403, "Non Hexagonal phases were found. All calculations for non Hexagonal phases will be skipped and a NaN value inserted."});
   }
 
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
@@ -71,10 +70,10 @@ Result<> ComputeAvgCAxes::operator()()
   const usize totalPoints = featureIds.getNumberOfTuples();
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
 
-  Matrix3fR g1T;
+  Matrix3dR g1T;
   g1T.fill(0.0f);
-  const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
-  Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
+  const Eigen::Vector3d cAxis{0.0f, 0.0f, 1.0f};
+  Eigen::Vector3d c1{0.0f, 0.0f, 0.0f};
 
   std::vector<int32> counter(totalFeatures, 0);
 
@@ -101,7 +100,7 @@ Result<> ComputeAvgCAxes::operator()()
       const usize quatIndex = i * 4;
 
       // Create the 3x3 Orientation Matrix from the Quaternion. This represents a passive rotation matrix
-      OrientationF oMatrix = OrientationTransformation::qu2om<QuatF, OrientationF>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
+      OrientationD oMatrix = OrientationTransformation::qu2om<QuatD, OrientationD>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
 
       // Convert the passive rotation matrix to an active rotation matrix by taking the transpose
       g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
@@ -115,7 +114,7 @@ Result<> ComputeAvgCAxes::operator()()
       c1.normalize();
 
       // Compute the running average c-axis and normalize the result
-      Eigen::Vector3f curCAxis{0.0f, 0.0f, 0.0f};
+      Eigen::Vector3d curCAxis{0.0f, 0.0f, 0.0f};
       curCAxis[0] = avgCAxes[cAxesIndex] / static_cast<float32>(counter[currentFeatureId]);
       curCAxis[1] = avgCAxes[cAxesIndex + 1] / static_cast<float32>(counter[currentFeatureId]);
       curCAxis[2] = avgCAxes[cAxesIndex + 2] / static_cast<float32>(counter[currentFeatureId]);
@@ -123,17 +122,21 @@ Result<> ComputeAvgCAxes::operator()()
 
       // Ensure that angle between the current point's sample reference frame C-Axis
       // and the running average sample C-Axis is positive
-      float32 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
+      float64 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
       if(w < 0)
       {
         c1 *= -1.0f;
       }
 
       // Continue summing up the rotations
-      std::vector<float> debug = {avgCAxes[cAxesIndex] + c1[0], avgCAxes[cAxesIndex + 1] + c1[1], avgCAxes[cAxesIndex + 2] + c1[2]};
-      avgCAxes[cAxesIndex] += c1[0];
-      avgCAxes[cAxesIndex + 1] += c1[1];
-      avgCAxes[cAxesIndex + 2] += c1[2];
+      float value = avgCAxes[cAxesIndex] + c1[0];
+      avgCAxes[cAxesIndex] = value;
+
+      value = avgCAxes[cAxesIndex + 1] + c1[1];
+      avgCAxes[cAxesIndex + 1] = value;
+
+      value = avgCAxes[cAxesIndex + 2] + c1[2];
+      avgCAxes[cAxesIndex + 2] = value;
     }
   }
 

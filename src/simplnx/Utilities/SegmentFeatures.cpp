@@ -137,8 +137,7 @@ SegmentFeatures::~SegmentFeatures() = default;
 // -----------------------------------------------------------------------------
 Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
-  MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
 
   SizeVec3 udims = gridGeom->getDimensions();
 
@@ -217,10 +216,10 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
   if(hasNonContiguousFeature)
   {
-    messageHelper.sendMessage("SegmentFeatures found Non-Contiguous Features.");
+    m_MessageHelper.sendMessage("SegmentFeatures found Non-Contiguous Features.");
   }
 
-  messageHelper.sendMessage(fmt::format("Total Features Found: {}", gnum));
+  m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", gnum));
 
   m_FoundFeatures = gnum;
   return {};
