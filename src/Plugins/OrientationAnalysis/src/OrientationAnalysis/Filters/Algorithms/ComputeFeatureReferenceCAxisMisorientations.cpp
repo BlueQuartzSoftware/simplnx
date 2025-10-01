@@ -33,6 +33,11 @@ ComputeFeatureReferenceCAxisMisorientations::~ComputeFeatureReferenceCAxisMisori
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 {
+
+  /* **************************************************************************
+   * This section performs a sanity check to ensure that at least 1 phase is
+   * hexagonal.
+   */
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   bool allPhasesHexagonal = true;
   bool noPhasesHexagonal = true;
@@ -58,6 +63,9 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
          "Finding the feature reference c-axis misorientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Calculations for non Hexagonal phases will be skipped."});
   }
 
+  /* **************************************************************************
+   * Get References to the Input and output Data Arrays
+   */
   // Input Cell Data
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
@@ -69,14 +77,17 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   auto& cellRefCAxisMis = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureReferenceCAxisMisorientationsArrayPath);
   // Output Feature Data
   auto& featAvgCAxisMis = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureAvgCAxisMisorientationsArrayPath);
+  featAvgCAxisMis.fill(0.0f);
   auto& featStdevCAxisMis = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureStdevCAxisMisorientationsArrayPath);
+  featStdevCAxisMis.fill(0.0f);
 
   const usize totalPoints = featureIds.getNumberOfTuples();
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
 
-  static constexpr usize k_AvgMisComps = 3;
   const usize numQuatComps = quats.getNumberOfComponents();
-  std::vector<float32> avgMis(totalFeatures * k_AvgMisComps, 0.0f);
+
+  std::vector<usize> counts(totalFeatures, 0ULL);
+  std::vector<float32> avgMisorientations(totalFeatures, 0.0f);
 
   SizeVec3 uDims = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath).getDimensions();
 
@@ -86,7 +97,9 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 
   const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
 
-  // Loop over all Cells
+  /* **************************************************************************
+   * Loop over all cells in the ImageGeometry
+   */
   for(int64 plane = 0; plane < zPoints; plane++)
   {
     for(int64 row = 0; row < yPoints; row++)
@@ -128,9 +141,8 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
           }
 
           cellRefCAxisMis.setValue(cellIdx, static_cast<float32>(w));
-          usize index = cellFeatureId * k_AvgMisComps;
-          avgMis[index]++;
-          avgMis[index + 1] += static_cast<float32>(w);
+          counts[cellFeatureId]++;
+          avgMisorientations[cellFeatureId] += static_cast<float32>(w);
         }
         else
         {
@@ -142,45 +154,32 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 
   // Loop over all the features from the feature attribute matrix and compute the
   // average C Axis Misorientation for each feature
-  for(usize i = 1; i < totalFeatures; i++)
+  for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
-    if(i % 1000 == 0)
+    if(featureId % 1000 == 0)
     {
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working On Feature {} of {}", i, totalFeatures));
+      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working On Feature {} of {}", featureId, totalFeatures));
     }
-    usize index = i * k_AvgMisComps;
-    if(avgMis[index] == 0.0f)
-    {
-      featAvgCAxisMis[i] = 0.0f; // If no cells had this feature, then make sure the value is zero
-    }
-    else
-    {
-      // Compute the average value of the misorientations between each feature's cell
-      // and the average C-Axis for that feature
-      featAvgCAxisMis[i] = avgMis[index + 1] / avgMis[index];
-    }
+    // Compute the average value of the misorientations between each feature's cell
+    // and the average C-Axis for that feature
+    featAvgCAxisMis[featureId] = avgMisorientations[featureId] / static_cast<float32>(counts[featureId]);
   }
 
   // These 2 loops compute the population standard deviation of those misorientations for
   // each feature.
-  for(usize j = 0; j < totalPoints; j++)
+  std::vector<float32> stdevs(totalFeatures, 0.0f);
+
+  for(usize cellIdx = 0; cellIdx < totalPoints; cellIdx++)
   {
-    const int32 featureId = featureIds[j];
-    float diff = cellRefCAxisMis.getValue(j) - featAvgCAxisMis.getValue(featureId);
-    avgMis[(featureId * k_AvgMisComps) + 2] += diff * diff;
+    const int32 featureId = featureIds[cellIdx];
+    float diff = cellRefCAxisMis.getValue(cellIdx) - featAvgCAxisMis.getValue(featureId);
+    stdevs[featureId] += (diff * diff);
   }
+
   // Finish computing the standard deviation in this loop
-  for(usize i = 1; i < totalFeatures; i++)
+  for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
-    const usize index = i * k_AvgMisComps;
-    if(avgMis[index] == 0.0f)
-    {
-      featStdevCAxisMis[i] = 0.0f;
-    }
-    else
-    {
-      featStdevCAxisMis[i] = std::sqrt(avgMis[index + 2] / avgMis[index]);
-    }
+    featStdevCAxisMis[featureId] = std::sqrt(stdevs[featureId] / static_cast<float32>(counts[featureId]));
   }
 
   return {};
