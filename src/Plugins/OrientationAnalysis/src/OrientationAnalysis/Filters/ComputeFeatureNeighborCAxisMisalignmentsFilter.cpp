@@ -68,11 +68,12 @@ Parameters ComputeFeatureNeighborCAxisMisalignmentsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_CAxisMisalignmentListArrayName_Key, "C-Axis Misalignment List",
-                                                          "List of the C-axis misalignment angles (in degrees) with the contiguous neighboring Features for a given Feature", "CAxisMisalignmentList"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgCAxisMisalignmentsArrayName_Key, "Average C-Axis Misalignments",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_CAxisMisalignmentListArrayName_Key, "Feature C-Axis Misalignment NeighborList",
+                                                          "NeighborList of the C-axis misalignment angles (in degrees) with the contiguous neighboring Features for a given Feature",
+                                                          "CAxisMisalignmentList"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_AvgCAxisMisalignmentsArrayName_Key, "Feature Average C-Axis Misalignments",
                                                           "Number weighted average of neighbor C-axis misalignments. Only created if Find Average Misalignment Per Feature is checked",
-                                                          "AvgCAxisMisalignments"));
+                                                          "AvgNeighborCAxisMisalignments"));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_FindAvgMisals_Key, k_AvgCAxisMisalignmentsArrayName_Key, true);
 
@@ -126,9 +127,8 @@ IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflig
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  resultOutputActions.warnings().push_back(
-      {-1561, "Finding the feature neighbor c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure your data is of one of these types."});
-
+  preflightUpdatedValues.push_back(
+      {"Crystal Symmetry Warning:", "Finding the average c-axes requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Make sure at least 1 phase is of this type."});
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
