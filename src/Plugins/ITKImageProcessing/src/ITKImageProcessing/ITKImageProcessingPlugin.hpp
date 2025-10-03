@@ -28,4 +28,7 @@ public:
   SIMPLMapType getSimplToSimplnxMap() const override;
 
   static std::vector<std::string> GetList2DSupportedFileExtensions();
+
+private:
+  static bool isRegistered;
 };
