@@ -48,9 +48,9 @@ jobs:
           pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Add C++ Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@0.2.0
-      - name: Install Dependencies - 2
+      - name: Install Dependencies
         run: |
-          brew install ninja
+          brew install ninja mono
       - name: Install Sphinx
         run: |
           sudo pip3 install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
