@@ -126,7 +126,7 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
         std::vector<Error>{Error{k_MissingFeatureAttributeMatrix, fmt::format("Could not find Feature Attribute Matrix at path '{}'", featureAttributeMatrixPath.toString())}})};
   }
 
-  std::vector<usize> tupleDimensions = featAttributeMatrix->getShape();
+  ShapeType tupleDimensions = featAttributeMatrix->getShape();
   uint64 numberOfComponents = 1;
 
   auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath, arrayDataFormat);

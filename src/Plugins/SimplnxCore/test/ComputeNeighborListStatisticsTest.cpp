@@ -34,8 +34,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Test Algorithm", "[
   DataPath summationOutputPath = statsDataPath.createChildPath(summation);
 
   usize numTuples = 3;
-  auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", numTuples, topLevelGroup->getId());
-  neighborList->resizeTotalElements(numTuples);
+  auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", ShapeType{numTuples}, topLevelGroup->getId());
   std::vector<float32> list1 = {117, 875, 1035, 3905, 4214};
   std::vector<float32> list2 = {750, 1905, 1912, 2015, 2586, 3180, 3592, 4041, 4772};
   std::vector<float32> list3 = {309, 775, 2625, 2818, 3061, 3751, 4235, 4817};

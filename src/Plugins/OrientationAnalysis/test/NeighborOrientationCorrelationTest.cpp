@@ -193,5 +193,5 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
   WriteTestDataStructure(dataStructure, fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }

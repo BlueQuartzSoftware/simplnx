@@ -146,7 +146,7 @@ IFilter::PreflightResult ComputeFeatureBoundsFilter::preflightImpl(const DataStr
 
   nx::core::Result<OutputActions> resultOutputActions;
   const auto& featureAM = dataStructure.getDataRefAs<AttributeMatrix>(pFeatureAMPathValue);
-  AttributeMatrix::ShapeType tupleShape = featureAM.getShape();
+  ShapeType tupleShape = featureAM.getShape();
   switch(static_cast<ComputeFeatureBounds::OutputDataType>(pOutputTypeValue))
   {
   case ComputeFeatureBounds::OutputDataType::Split: {

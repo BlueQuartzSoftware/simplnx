@@ -8,7 +8,7 @@
 namespace nx::core
 {
 //------------------------------------------------------------------------------
-CreateAttributeMatrixAction::CreateAttributeMatrixAction(const DataPath& path, const AttributeMatrix::ShapeType& shape)
+CreateAttributeMatrixAction::CreateAttributeMatrixAction(const DataPath& path, const ShapeType& shape)
 : IDataCreationAction(path)
 , m_TupleShape(shape)
 {

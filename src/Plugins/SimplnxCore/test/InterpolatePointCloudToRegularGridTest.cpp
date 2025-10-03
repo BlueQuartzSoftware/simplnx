@@ -43,6 +43,13 @@ const DataPath k_GaussianKernalDistancesExemplar = k_GaussianInterpolatedDataExe
 const DataPath k_GaussianFaceAreasComputed = k_GaussianInterpolatedDataComputed.createChildPath(k_FaceAreas);
 const DataPath k_GaussianVoxelIndicesComputed = k_GaussianInterpolatedDataComputed.createChildPath(k_VoxelIndices);
 const DataPath k_GaussianKernalDistancesComputed = k_GaussianInterpolatedDataComputed.createChildPath(k_KernalDistances);
+
+// These paths are excluded because they come from a version prior to
+// NeighborList and StringArray having multidimensional tuple capability
+// (Only exemplars not checked, GENERATED/COMPUTED VALIDATED)
+const std::vector<DataPath> k_ExemplarTupleCheckIgnoredPaths{{{"Image Geometry", "GaussianInterpolatedData", "FaceAreas"}},      {{"Image Geometry", "GaussianInterpolatedData", "KernelDistances"}},
+                                                             {{"Image Geometry", "GaussianInterpolatedData", "VoxelIndices"}},   {{"Image Geometry", "UniformInterpolatedData", "FaceAreas"}},
+                                                             {{"Image Geometry", "UniformInterpolatedData", "KernelDistances"}}, {{"Image Geometry", "UniformInterpolatedData", "VoxelIndices"}}};
 } // namespace
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter Execution - Uniform Inpterpolation with Mask", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
@@ -84,7 +91,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
   UnitTest::CompareNeighborLists<uint64>(dataStructure, k_UniformVoxelIndicesExemplar, k_UniformVoxelIndicesComputed);
   UnitTest::CompareNeighborLists<float32>(dataStructure, k_UniformKernalDistancesExemplar, k_UniformKernalDistancesComputed);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_ExemplarTupleCheckIgnoredPaths);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter Execution - Gaussian Inpterpolation", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
@@ -126,7 +133,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
   UnitTest::CompareNeighborLists<uint64>(dataStructure, k_GaussianVoxelIndicesExemplar, k_GaussianVoxelIndicesComputed);
   UnitTest::CompareNeighborLists<float32>(dataStructure, k_GaussianKernalDistancesExemplar, k_GaussianKernalDistancesComputed);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_ExemplarTupleCheckIgnoredPaths);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter Execution", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")
@@ -180,5 +187,5 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_ExemplarTupleCheckIgnoredPaths);
 }

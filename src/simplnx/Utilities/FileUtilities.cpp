@@ -428,7 +428,7 @@ Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, con
   return {};
 }
 
-std::string TupleDimsToString(const std::vector<usize>& tupleDims)
+std::string TupleDimsToString(const ShapeType& tupleDims)
 {
   std::string tupleDimsStr;
   for(usize i = 0; i < tupleDims.size(); ++i)

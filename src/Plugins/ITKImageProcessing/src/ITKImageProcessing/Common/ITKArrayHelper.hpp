@@ -402,8 +402,8 @@ void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, AbstractDataS
   using ImageType = itk::Image<PixelT, Dimension>;
   using T = UnderlyingType_t<PixelT>;
   typename ImageType::SizeType imageSize = image.GetLargestPossibleRegion().GetSize();
-  typename DataStore<T>::ShapeType tDims(imageSize.rbegin(), imageSize.rend());
-  typename DataStore<T>::ShapeType cDims = GetComponentDimensions<PixelT>();
+  ShapeType tDims(imageSize.rbegin(), imageSize.rend());
+  ShapeType cDims = GetComponentDimensions<PixelT>();
   if constexpr(Dimension == 2)
   {
     tDims.insert(tDims.begin(), 1);
@@ -441,8 +441,8 @@ Result<> ConvertImageToDataStore(DataStore<NewStoreT>& dataStore, itk::Image<Pix
   using ImageType = itk::Image<PixelT, Dimension>;
   using T = UnderlyingType_t<PixelT>;
   typename ImageType::SizeType imageSize = image.GetLargestPossibleRegion().GetSize();
-  std::vector<usize> tDims(imageSize.rbegin(), imageSize.rend());
-  std::vector<usize> cDims = GetComponentDimensions<PixelT>();
+  ShapeType tDims(imageSize.rbegin(), imageSize.rend());
+  ShapeType cDims = GetComponentDimensions<PixelT>();
   if constexpr(Dimension == 2)
   {
     tDims.insert(tDims.begin(), 1);
@@ -655,7 +655,7 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
     return MakeErrorResult<OutputActions>(nx::core::ITK::Constants::k_ImageGeometryDimensionMismatch, errMessage);
   }
 
-  std::vector<usize> cDims = dataStore.getComponentShape();
+  ShapeType cDims = dataStore.getComponentShape();
   std::vector<usize> inputPixelDims = ITK::GetComponentDimensions<InputPixelT>();
 
   if(cDims != inputPixelDims)
@@ -669,7 +669,7 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
 
   DataType outputType = GetDataType<OutputValueType>();
   SizeVec3 imageDims = imageGeom.getDimensions();
-  std::vector<usize> tDims(std::make_reverse_iterator(imageDims.end()), std::make_reverse_iterator(imageDims.begin()));
+  ShapeType tDims(std::make_reverse_iterator(imageDims.end()), std::make_reverse_iterator(imageDims.begin()));
   std::vector<usize> outputPixelDims = ITK::GetComponentDimensions<OutputPixelT>();
 
   outputActions.appendAction(std::make_unique<CreateArrayAction>(outputType, tDims, outputPixelDims, outputArrayPath, dataStore.getDataFormat()));

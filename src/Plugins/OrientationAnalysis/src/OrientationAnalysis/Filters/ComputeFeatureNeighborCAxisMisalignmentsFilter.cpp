@@ -115,7 +115,7 @@ IFilter::PreflightResult ComputeFeatureNeighborCAxisMisalignmentsFilter::preflig
   const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
   {
     auto createArrayAction =
-        std::make_unique<CreateNeighborListAction>(DataType::float32, featurePhases.getNumberOfTuples(), pFeaturePhasesArrayPathValue.replaceName(pCAxisMisalignmentListArrayNameValue));
+        std::make_unique<CreateNeighborListAction>(DataType::float32, featurePhases.getTupleShape(), pFeaturePhasesArrayPathValue.replaceName(pCAxisMisalignmentListArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   if(pFindAvgMisalsValue)

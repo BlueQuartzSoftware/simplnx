@@ -113,7 +113,7 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
                                                         "located in the cell feature attribute matrix of the selected geometry",
                                                         pNumCellsArrayPathValue.toString()));
   }
-  IDataStore::ShapeType tupleShape = cellFeatureData->getShape();
+  ShapeType tupleShape = cellFeatureData->getShape();
   // Create the SurfaceAreaVolumeRatio
   {
     auto arrayPath = pNumCellsArrayPathValue.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));

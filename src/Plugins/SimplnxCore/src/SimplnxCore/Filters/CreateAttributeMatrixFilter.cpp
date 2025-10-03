@@ -68,7 +68,7 @@ IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataSt
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
   const auto& rowData = tableData.at(0);
-  std::vector<usize> tupleDims;
+  ShapeType tupleDims;
   tupleDims.reserve(rowData.size());
   for(auto floatValue : rowData)
   {

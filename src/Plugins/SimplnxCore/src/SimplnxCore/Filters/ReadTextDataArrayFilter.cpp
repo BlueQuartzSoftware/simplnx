@@ -119,7 +119,7 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  std::vector<usize> tupleDims = {};
+  ShapeType tupleDims = {};
 
   auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
   if(parentAM == nullptr)

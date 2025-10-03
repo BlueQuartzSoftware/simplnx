@@ -298,7 +298,7 @@ Result<> ComputeGBCDPoleFigure::operator()()
   gbcdLimits[9] = sqrtf(Constants::k_PiOver2D);
 
   // get num components of GBCD
-  std::vector<usize> cDims = gbcd.getComponentShape();
+  ShapeType cDims = gbcd.getComponentShape();
 
   gbcdSizes[0] = static_cast<int32>(cDims[0]);
   gbcdSizes[1] = static_cast<int32>(cDims[1]);

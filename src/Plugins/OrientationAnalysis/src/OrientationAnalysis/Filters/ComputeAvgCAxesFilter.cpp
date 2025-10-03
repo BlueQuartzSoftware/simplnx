@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeAvgCAxesFilter::preflightImpl(const DataStructur
   }
 
   {
-    std::vector<usize> tupleShape = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue).getShape();
+    ShapeType tupleShape = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue).getShape();
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{3}, avgCAxesPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }

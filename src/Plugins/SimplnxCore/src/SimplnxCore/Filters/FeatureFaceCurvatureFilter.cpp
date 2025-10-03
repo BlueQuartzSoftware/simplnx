@@ -72,11 +72,11 @@ Parameters FeatureFaceCurvatureFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels", "The DataPath to the 'Face Labels' DataArray", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureFaceIdsPath_Key, "Feature Face Ids", "The DataPath to the 'FeatureIds' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{1}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceNormalsPath_Key, "Face Normals", "The DataPath to the 'Feature Normals' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{3}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceCentroidsPath_Key, "Face Centroids", "The DataPath to the 'Face Centroids' DataArray", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{IArray::ShapeType{3}}));
+                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{ShapeType{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_PrincipalCurvature1Path_Key, "Principal Curvature 1", "Output DataPath to hold the 'Principal Curvature 1' values",
@@ -156,7 +156,7 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
   }
 
   // auto* dataArray = dataStructure.getDataAs<IDataArray>(triangles->getFaceAttributeMatrixDataPath());
-  IArray::ShapeType tupleShape = triangleMatrix->getShape();
+  ShapeType tupleShape = triangleMatrix->getShape();
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;

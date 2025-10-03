@@ -1049,7 +1049,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
 
   constexpr StringLiteral k_NewAmName = "newAM";
 
-  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_NewAmName, AttributeMatrix::ShapeType(1, 1));
+  AttributeMatrix* cellAm = AttributeMatrix::Create(dataStructure, k_NewAmName, ShapeType(1, 1));
 
   {
     ComputeBoundingBoxStatsFilter filter;

@@ -32,7 +32,7 @@ namespace
 struct GeometryArrayInfo
 {
   std::string name;
-  std::vector<usize> compDims;
+  ShapeType compDims;
   IArray::ArrayType arrayType;
   std::optional<DataType> dataType;
 };
@@ -289,7 +289,7 @@ Result<> AddOutputArray(const GeometryArrayInfo& arrayInfo, const DataPath& outp
     break;
   }
   case IArray::ArrayType::NeighborListArray: {
-    actions.appendAction(std::make_unique<CreateNeighborListAction>(arrayInfo.dataType.value(), 1, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
+    actions.appendAction(std::make_unique<CreateNeighborListAction>(arrayInfo.dataType.value(), std::vector<usize>{1}, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
     break;
   }
   case IArray::ArrayType::Any: {
@@ -324,7 +324,7 @@ Result<> CreateINodeGeometry1DObjects(const DataPath& outputGeomPath, bool edges
     // Create Edge Attribute Matrix and Edges Array
     if(edgeAttrMatrixExists)
     {
-      actions.appendAction(std::make_unique<CreateAttributeMatrixAction>(outputGeomPath.createChildPath(INodeGeometry1D::k_EdgeAttributeMatrixName), AttributeMatrix::ShapeType{1}));
+      actions.appendAction(std::make_unique<CreateAttributeMatrixAction>(outputGeomPath.createChildPath(INodeGeometry1D::k_EdgeAttributeMatrixName), ShapeType{1}));
     }
     if(edgesArrayExists)
     {
@@ -353,7 +353,7 @@ Result<> CreateINodeGeometry2DObjects(const DataPath& outputGeomPath, bool faces
     // Create Face Attribute Matrix and Faces Array
     if(faceAttrMatrixExists)
     {
-      actions.appendAction(std::make_unique<CreateAttributeMatrixAction>(outputGeomPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName), AttributeMatrix::ShapeType{1}));
+      actions.appendAction(std::make_unique<CreateAttributeMatrixAction>(outputGeomPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName), ShapeType{1}));
     }
     if(facesArrayExists)
     {

@@ -79,7 +79,7 @@ template <typename T>
 void RunInvalidTest()
 {
   const std::string inputFilePath = fmt::format("{}/TestFile1.txt", unit_test::k_BinaryTestOutputDir);
-  std::vector<usize> tupleDims = {10};
+  ShapeType tupleDims = {10};
   char delimiter = '\t';
   const DataPath createdArrayPath({k_GroupAName, k_DataArrayName});
 
@@ -201,7 +201,7 @@ void RunTest(char sep, int delimiter)
 
   DataStructure dataStructure;
   auto* imageGeom = ImageGeom::Create(dataStructure, "ImageDataContainer");
-  const std::vector<usize> tDims = {xDim, yDim, zDim};
+  const ShapeType tDims = {xDim, yDim, zDim};
   imageGeom->setDimensions(tDims);
   AttributeMatrix* attrMat = AttributeMatrix::Create(dataStructure, "AttributeMatrix", std::vector<usize>{zDim, yDim, xDim}, imageGeom->getId());
 

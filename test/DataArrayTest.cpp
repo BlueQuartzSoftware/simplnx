@@ -50,7 +50,7 @@ TEST_CASE("DataArrayCreation")
   nx::core::DataStructure dataStructure;
 
   using DataStoreType = nx::core::DataStore<int32_t>;
-  DataStoreType data_array = DataStoreType(nx::core::IDataStore::ShapeType{0}, nx::core::IDataStore::ShapeType{2}, 0);
+  DataStoreType data_array = DataStoreType(nx::core::ShapeType{0}, nx::core::ShapeType{2}, 0);
   size_t numTuples = data_array.getNumberOfTuples();
   REQUIRE(numTuples == 0);
 
@@ -67,8 +67,8 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
   const usize k_NumComponents = 3;
 
   DataStructure dataStructure;
-  IDataStore::ShapeType tupleShape{k_NumTuples};
-  IDataStore::ShapeType componentShape{k_NumComponents};
+  ShapeType tupleShape{k_NumTuples};
+  ShapeType componentShape{k_NumComponents};
   Result<> result = ArrayCreationUtilities::CreateArray<int32>(dataStructure, tupleShape, componentShape, k_DataPath, IDataAction::Mode::Execute);
   REQUIRE(result.valid() == true);
 
@@ -103,8 +103,8 @@ TEST_CASE("nx::core::DataArray Copy TupleTest", "[simplnx][DataArray]")
 
 TEST_CASE("DataStore Test")
 {
-  IDataStore::ShapeType tupleShape{5};
-  IDataStore::ShapeType componentShape{3};
+  ShapeType tupleShape{5};
+  ShapeType componentShape{3};
   DataStore<int32> dataStore(tupleShape, componentShape, 5);
 
   REQUIRE(dataStore.getSize() == 15);
@@ -138,8 +138,8 @@ TEST_CASE("DataStore Test")
 
 TEST_CASE("Copy DataStore", "DataArray")
 {
-  IDataStore::ShapeType tupleShape{5};
-  IDataStore::ShapeType componentShape{3};
+  ShapeType tupleShape{5};
+  ShapeType componentShape{3};
   DataStore<int32> dataStore(tupleShape, componentShape, 5);
   usize size = dataStore.getSize();
   for(usize i = 0; i < size; i++)

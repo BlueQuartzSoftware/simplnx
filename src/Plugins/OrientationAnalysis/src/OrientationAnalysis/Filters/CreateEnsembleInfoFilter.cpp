@@ -94,7 +94,7 @@ IFilter::PreflightResult CreateEnsembleInfoFilter::preflightImpl(const DataStruc
   std::vector<PreflightValue> preflightUpdatedValues;
 
   int numPhases = pEnsembleValue.size();
-  std::vector<usize> tDims(1, numPhases + 1);
+  ShapeType tDims(1, numPhases + 1);
   auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(pCellEnsembleAttributeMatrixNameValue, tDims);
   outputActions.appendAction(std::move(createAttributeMatrixAction));
 

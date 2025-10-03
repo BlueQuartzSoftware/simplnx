@@ -141,7 +141,7 @@ DataStructure CreateTestDataStructure()
   auto group2 = DataGroup::Create(dataStructure, DataNames::k_Group2Name, group1->getId());
   auto group3 = DataGroup::Create(dataStructure, DataNames::k_Group3Name, group2->getId());
 
-  std::vector<usize> tupleShape = {10};
+  ShapeType tupleShape = {10};
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, DataNames::k_AttributeMatrixName, tupleShape, group1->getId());
 
   Result<> arrayCreationResults =
@@ -294,7 +294,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_Group2Name, DataNames::k_Group3Name})) != nullptr);
     auto attMatrix = dataStructure.getDataAs<AttributeMatrix>(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName}));
     REQUIRE(attMatrix != nullptr);
-    REQUIRE(attMatrix->getShape() == AttributeMatrix::ShapeType{10});
+    REQUIRE(attMatrix->getShape() == ShapeType{10});
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name})) != nullptr);
 
     // Test reading the Pipeline
@@ -318,7 +318,7 @@ TEST_CASE("DREAM3DFileTest::StringArray")
 
   std::vector<std::string> values = {"foo", "bar", "baz"};
 
-  REQUIRE(StringArray::CreateWithValues(exportDataStructure, stringArrayPath.getTargetName(), values) != nullptr);
+  REQUIRE(StringArray::CreateWithValues(exportDataStructure, stringArrayPath.getTargetName(), ShapeType{3}, values) != nullptr);
 
   WriteDREAM3DFilter writeDream3dFilter;
   Arguments writeArgs;
@@ -447,7 +447,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  UnitTest::CheckArraysInheritTupleDims(ds, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
@@ -553,5 +553,5 @@ TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
     REQUIRE(dataStructure.containsData(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }

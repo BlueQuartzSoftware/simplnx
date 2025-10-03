@@ -132,7 +132,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
     return {MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
   }
 
-  IDataStore::ShapeType tupleShape = cellDataArray->getIDataStore()->getTupleShape();
+  ShapeType tupleShape = cellDataArray->getIDataStore()->getTupleShape();
   DataType outputDataType = DataType::int32;
   if(!pCalcManhattanDistValue)
   {

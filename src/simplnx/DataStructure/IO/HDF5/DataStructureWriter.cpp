@@ -137,7 +137,7 @@ Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::
 
 Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, nx::core::HDF5::GroupIO& parentGroup)
 {
-  for(auto [key, object] : dataMap)
+  for(const auto& [key, object] : dataMap)
   {
     Result<> result = writeDataObject(object.get(), parentGroup);
     if(result.invalid())

@@ -27,7 +27,7 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
 
   auto groupReader = parentGroup.openGroup(objectName);
 
-  std::vector<usize> tupleShape;
+  ShapeType tupleShape;
   auto tupleShapeResult = groupReader.readVectorAttribute<usize>(IOConstants::k_TupleDims);
   if(tupleShapeResult.invalid())
   {

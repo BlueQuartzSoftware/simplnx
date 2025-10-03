@@ -32,7 +32,6 @@ public:
   using parent_type = AbstractDataStore<T>;
   using value_type = typename AbstractDataStore<T>::value_type;
   using reference = typename AbstractDataStore<T>::reference;
-  using ShapeType = typename IDataStore::ShapeType;
 
   static constexpr const char k_DataStore[] = "DataStore";
   static constexpr const char k_DataObjectId[] = "DataObjectId";
@@ -236,7 +235,7 @@ public:
    * @param tupleShape The new shape of the data where the dimensions are "C" ordered
    * from *slowest* to *fastest*.
    */
-  void resizeTuples(const std::vector<usize>& tupleShape) override
+  void resizeTuples(const ShapeType& tupleShape) override
   {
     auto oldSize = this->getSize();
     // Calculate the total number of values in the new array
@@ -599,17 +598,17 @@ public:
    * @brief Returns the Smallest N-Dimensional tuple position included in the
    * specified chunk.
    * @param flatChunkIndex
-   * @return IDataStore::ShapeType
+   * @return ShapeType
    */
-  IDataStore::ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
+  ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
-      return IDataStore::ShapeType();
+      return ShapeType();
     }
     usize tupleDims = getTupleShape().size();
 
-    IDataStore::ShapeType lowerBounds(tupleDims);
+    ShapeType lowerBounds(tupleDims);
     std::fill(lowerBounds.begin(), lowerBounds.end(), 0);
     return lowerBounds;
   }
@@ -618,16 +617,16 @@ public:
    * @brief Returns the largest N-Dimensional tuple position included in the
    * specified chunk.
    * @param flatChunkIndex
-   * @return IDataStore::ShapeType
+   * @return ShapeType
    */
-  IDataStore::ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
+  ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
   {
     if(flatChunkIndex >= getNumberOfChunks())
     {
-      return IDataStore::ShapeType();
+      return ShapeType();
     }
 
-    IDataStore::ShapeType upperBounds(getTupleShape());
+    ShapeType upperBounds(getTupleShape());
     for(auto& value : upperBounds)
     {
       value -= 1;

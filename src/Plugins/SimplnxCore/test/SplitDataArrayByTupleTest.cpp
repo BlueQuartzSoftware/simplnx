@@ -88,7 +88,7 @@ void fillDataArray(DataArray<T>& inputArray)
 }
 
 template <typename T>
-DataStructure createDataStructure(const std::vector<usize>& tupleShape, const std::vector<usize>& compShape)
+DataStructure createDataStructure(const ShapeType& tupleShape, const ShapeType& compShape)
 {
   DataStructure ds;
 
@@ -404,7 +404,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
   {
     DataStructure ds;
     auto* am = AttributeMatrix::Create(ds, k_AttributeMatrixName, {10});
-    auto* nl = NeighborList<T>::Create(ds, "Input NL", 10, am->getId());
+    auto* nl = NeighborList<T>::Create(ds, "Input NL", am->getShape(), am->getId());
     for(usize i = 0; i < 10; ++i)
     {
       nl->setList(i, std::vector<T>{static_cast<T>(i), static_cast<T>(i + 1)});
@@ -461,7 +461,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     {
       strings.push_back(fmt::format("str{}", i));
     }
-    auto* strArray = StringArray::CreateWithValues(ds, "Input Strings", strings, am->getId());
+    auto* strArray = StringArray::CreateWithValues(ds, "Input Strings", am->getShape(), strings, am->getId());
 
     // Execute filter
     args.insertOrAssign(SplitDataArrayByTupleFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({k_AttributeMatrixName, "Input Strings"})));

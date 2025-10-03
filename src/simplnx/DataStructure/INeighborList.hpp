@@ -1,9 +1,16 @@
 #pragma once
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/IListStore.hpp"
 
 namespace nx::core
 {
+namespace NeighborListConstants
+{
+inline constexpr StringLiteral k_TypeName = "NeighborList<T>";
+}
+
 /**
  * @brief Non-templated base class for NeighborList class.
  */
@@ -13,6 +20,74 @@ public:
   static inline constexpr StringLiteral k_TypeName = "INeighborList";
 
   ~INeighborList() noexcept override;
+
+  /**
+   * @brief Returns a pointer to the array's IListStore.
+   * @return IListStore*
+   */
+  virtual IListStore* getIListStore() = 0;
+
+  /**
+   * @brief Returns a pointer to the array's IListStore.
+   * @return const IListStore*
+   */
+  virtual const IListStore* getIListStore() const = 0;
+
+  /**
+   * @brief Returns a reference to the array's IListStore.
+   * @return IListStore&
+   */
+  IListStore& getIListStoreRef();
+
+  /**
+   * @brief Returns a reference to the array's IListStore.
+   * @return const IListStore&
+   */
+  const IListStore& getIListStoreRef() const;
+
+  /**
+   * @brief Returns a pointer to the DataStore cast as type StoreT.
+   * @return const StoreT*
+   */
+  template <class StoreT>
+  const StoreT* getIListStoreAs() const
+  {
+    static_assert(std::is_base_of_v<IListStore, StoreT>);
+    return dynamic_cast<const StoreT*>(getIListStore());
+  }
+
+  /**
+   * @brief Returns a pointer to the DataStore cast as type StoreT.
+   * @return StoreT*
+   */
+  template <class StoreT>
+  StoreT* getIListStoreAs()
+  {
+    static_assert(std::is_base_of_v<IListStore, StoreT>);
+    return dynamic_cast<StoreT*>(getIListStore());
+  }
+
+  /**
+   * @brief Returns a reference to the DataStore cast as type StoreT.
+   * @return const StoreT&
+   */
+  template <class StoreT>
+  const StoreT& getIListStoreRefAs() const
+  {
+    static_assert(std::is_base_of_v<IListStore, StoreT>);
+    return dynamic_cast<const StoreT&>(getIListStoreRef());
+  }
+
+  /**
+   * @brief Returns a reference to the DataStore cast as type StoreT.
+   * @return StoreT&
+   */
+  template <class StoreT>
+  StoreT& getIListStoreRefAs()
+  {
+    static_assert(std::is_base_of_v<IListStore, StoreT>);
+    return dynamic_cast<StoreT&>(getIListStoreRef());
+  }
 
   /**
    * @brief Returns typename of the DataObject as a std::string.
@@ -73,10 +148,12 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override
-  {
-    return Type::INeighborList;
-  }
+  DataObject::Type getDataObjectType() const override;
+
+  /**
+   * @brief Resizes the internal array to accommodate
+   */
+  void resizeTuples(const ShapeType& tupleShape) override;
 
 protected:
   /**
@@ -85,7 +162,7 @@ protected:
    * @param name
    * @param numTuples
    */
-  INeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples);
+  INeighborList(DataStructure& dataStructure, const std::string& name);
 
   /**
    * @brief Constructor for use when importing INeighborLists
@@ -94,16 +171,9 @@ protected:
    * @param numTuples
    * @param importId
    */
-  INeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, IdType importId);
-
-  /**
-   * @brief Sets the number of tuples.
-   * @param numTuples
-   */
-  void setNumberOfTuples(usize numTuples);
+  INeighborList(DataStructure& dataStructure, const std::string& name, IdType importId);
 
 private:
   std::string m_NumNeighborsArrayName;
-  usize m_NumTuples;
 };
 } // namespace nx::core

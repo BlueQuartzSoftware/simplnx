@@ -20,7 +20,7 @@ class SIMPLNX_EXPORT ArraySelectionParameter : public MutableDataParameter
 public:
   using ValueType = DataPath;
   using AllowedTypes = nx::core::DataTypeSetType;
-  using AllowedComponentShapes = std::vector<IArray::ShapeType>;
+  using AllowedComponentShapes = std::vector<ShapeType>;
 
   enum class DataLocation : uint8
   {

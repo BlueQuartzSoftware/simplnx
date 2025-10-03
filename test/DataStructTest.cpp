@@ -107,8 +107,7 @@ DataStructure createTestDataStructure()
     const DataGroup* levelOneGroup = DataGroup::Create(dataStruct, Constants::k_LevelOne, imageGeom->getId());
 
     const DataGroup* levelTwoGroup = DataGroup::Create(dataStruct, Constants::k_LevelTwo, levelOneGroup->getId());
-    auto* neighborList = NeighborList<int16>::Create(dataStruct, Constants::k_Int16DataSet, 3, levelOneGroup->getId());
-    neighborList->resizeTotalElements(3);
+    auto* neighborList = NeighborList<int16>::Create(dataStruct, Constants::k_Int16DataSet, ShapeType{3}, levelOneGroup->getId());
     std::vector<int16> list1 = {117, 875, 1035, 3905, 4214};
     std::vector<int16> list2 = {750, 1905, 1912, 2015, 2586, 3180, 3592, 4041, 4772};
     std::vector<int16> list3 = {309, 775, 2625, 2818, 3061, 3751, 4235, 4817};
@@ -199,7 +198,7 @@ DataStructure createTestDataStructure()
     std::vector<usize> vertTupleShape = {4};
     AttributeMatrix* vertAttMatrix = AttributeMatrix::Create(dataStruct, Constants::k_VertexDataGroupName, vertTupleShape, vertexGeom->getId());
     vertexGeom->setVertexAttributeMatrix(*vertAttMatrix);
-    StringArray* testStringArray = StringArray::CreateWithValues(dataStruct, k_StringArray, {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrix->getId());
+    StringArray* testStringArray = StringArray::CreateWithValues(dataStruct, k_StringArray, vertAttMatrix->getShape(), {"stringone", "stringtwo", "stringthree", "stringfour"}, vertAttMatrix->getId());
     Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStruct, Constants::k_Float32DataSet, vertTupleShape, {3}, vertexGeom->getId());
     (*vertListArray)[0] = 0;
     (*vertListArray)[1] = 0;

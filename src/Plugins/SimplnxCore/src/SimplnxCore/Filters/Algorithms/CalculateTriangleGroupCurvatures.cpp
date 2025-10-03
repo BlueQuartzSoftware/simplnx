@@ -56,7 +56,7 @@ namespace
  */
 std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeighbors::UniqueFaceIds_t& triPatch, Float64AbstractDataStore& data)
 {
-  IDataStore::ShapeType cDims = {3ULL};
+  ShapeType cDims = {3ULL};
 
   for(auto iter = triPatch.begin(); iter != triPatch.end();)
   {
@@ -87,7 +87,7 @@ std::shared_ptr<Float64DataStore> extractPatchData(int64_t triId, FindNRingNeigh
     totalTuples++;
   }
 
-  IDataStore::ShapeType tupleShape = {totalTuples};
+  ShapeType tupleShape = {totalTuples};
   std::optional<float64> initValue = {};
   std::shared_ptr<Float64DataStore> extractedData = std::make_shared<Float64DataStore>(tupleShape, cDims, initValue);
   // This little chunk makes sure the current seed triangles centroid and normal data appear

@@ -31,7 +31,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
 
   auto inputArrayPath = filterArgs.value<DataPath>(ComputeNeighborListStatisticsFilter::k_InputNeighborListPath_Key);
   auto* inputArray = dataStructure.getDataAs<INeighborList>(inputArrayPath);
-  std::vector<usize> tupleDims{inputArray->getNumberOfTuples()};
+  ShapeType tupleDims{inputArray->getNumberOfTuples()};
   DataType dataType = inputArray->getDataType();
   const DataPath outputGroupPath = inputArrayPath.getParent();
 

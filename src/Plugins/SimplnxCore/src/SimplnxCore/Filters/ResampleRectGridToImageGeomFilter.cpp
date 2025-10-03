@@ -136,7 +136,6 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(pRectilinearGridPathValue);
   const DataPath srcCellDataPath = pRectilinearGridPathValue.createChildPath(rectGridGeom.getCellData()->getName());
   const DataPath destCellDataPath = pImageGeometryPathValue.createChildPath(pImageGeomCellAttributeMatrixNameValue);
-  usize totalPoints = dims[0] * dims[1] * dims[2];
   for(const auto& path : pSelectedDataArrayPathsValue)
   {
     const DataPath destPath = destCellDataPath.createChildPath(path.getTargetName());
@@ -173,7 +172,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
     else if(arrayType == IArray::ArrayType::NeighborListArray)
     {
       const auto* srcDataArray = dataStructure.getDataAs<INeighborList>(path);
-      auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArray->getDataType(), totalPoints, destPath);
+      auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArray->getDataType(), dims, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else if(arrayType == IArray::ArrayType::StringArray)

@@ -14,8 +14,6 @@ namespace nx::core
 class SIMPLNX_EXPORT AttributeMatrix : public BaseGroup
 {
 public:
-  using ShapeType = std::vector<usize>;
-
   static inline constexpr StringLiteral k_TypeName = "AttributeMatrix";
 
   /**

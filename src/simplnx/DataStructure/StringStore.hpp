@@ -10,15 +10,33 @@ namespace nx::core
 class StringStore : public AbstractStringStore
 {
 public:
-  StringStore(uint64 count = 0);
-  StringStore(std::vector<std::string> strings);
+  explicit StringStore(const ShapeType& tupleShape);
+  explicit StringStore(std::vector<std::string> strings, const ShapeType& tupleShape);
   ~StringStore();
 
   std::unique_ptr<AbstractStringStore> deepCopy() const override;
 
+  /**
+   * @brief Returns the number of tuples in the ListStore.
+   * @return usize
+   */
+  usize getNumberOfTuples() const override;
+
+  /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  const ShapeType& getTupleShape() const override;
+
+  /**
+   * @brief This method sets the shape of the dimensions to `tupleShape`.
+   * @param tupleShape The new shape of the data where the dimensions are "C" ordered
+   * from *slowest* to *fastest*.
+   */
+  void resizeTuples(const ShapeType& tupleShape) override;
+
   usize size() const override;
   bool empty() const override;
-  void resize(usize count) override;
 
   reference operator[](usize index) override;
   const_reference operator[](usize index) const override;
@@ -30,6 +48,8 @@ public:
   AbstractStringStore& operator=(const std::vector<std::string>& values) override;
 
 private:
+  ShapeType m_TupleShape;
+  ShapeType::value_type m_NumTuples;
   std::vector<std::string> m_Data;
 };
 } // namespace nx::core

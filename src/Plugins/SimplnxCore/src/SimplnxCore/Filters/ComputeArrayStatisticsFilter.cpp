@@ -36,7 +36,7 @@ struct IsIntegerType
   }
 };
 
-OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, std::vector<usize> tupleDims)
+OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const Arguments& filterArgs, ShapeType tupleDims)
 {
   auto findLength = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindLength_Key);
   auto findMin = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_FindMin_Key);
@@ -53,8 +53,6 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
   auto destinationAttributeMatrixValue = filterArgs.value<DataPath>(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
   DataType dataType = inputArray->getDataType();
-
-  size_t tupleSize = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
 
   OutputActions actions;
 
@@ -123,7 +121,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   if(findMode)
   {
     auto arrayPath = filterArgs.value<std::string>(ComputeArrayStatisticsFilter::k_ModeArrayName_Key);
-    auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleSize, destinationAttributeMatrixValue.createChildPath(arrayPath));
+    auto action = std::make_unique<CreateNeighborListAction>(dataType, tupleDims, destinationAttributeMatrixValue.createChildPath(arrayPath));
     actions.appendAction(std::move(action));
   }
   if(findStdDeviation)
@@ -360,7 +358,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(-57203, fmt::format("Input array must be a scalar array"));
   }
 
-  AttributeMatrix::ShapeType tupleDims = {1};
+  ShapeType tupleDims = {1};
   const Int32Array* featureIdsPtr = nullptr;
   if(pComputeByIndexValue)
   {

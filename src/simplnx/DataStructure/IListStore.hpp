@@ -1,6 +1,9 @@
 #pragma once
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
+
+#include <vector>
 
 namespace nx::core
 {
@@ -15,25 +18,22 @@ public:
   virtual ~IListStore() = default;
 
   /**
+   * @brief Returns the number of tuples in the DataStore.
+   * @return usize
+   */
+  virtual usize getNumberOfTuples() const = 0;
+  /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  virtual const ShapeType& getTupleShape() const = 0;
+
+  /**
    * @brief This method sets the shape of the dimensions to `tupleShape`.
-   *
-   * There are 3 possibilities when using this function:
-   * [1] The number of tuples of the new shape is *LESS* than the original. In this
-   * case a memory allocation will take place and the first 'N' elements of data
-   * will be copied into the new array. The remaining data is *LOST*
-   *
-   * [2] The number of tuples of the new shape is *EQUAL* to the original. In this
-   * case the shape is set and the function returns.
-   *
-   * [3] The number of tuples of the new shape is *GREATER* than the original. In
-   * this case a new array is allocated and all the data from the original array
-   * is copied into the new array and the remaining elements are initialized to
-   * the default initialization value.
-   *
    * @param tupleShape The new shape of the data where the dimensions are "C" ordered
    * from *slowest* to *fastest*.
    */
-  virtual void resizeTuples(usize tupleCount) = 0;
+  virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
   /**
    * @brief Clear All Lists

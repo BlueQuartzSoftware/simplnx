@@ -69,7 +69,7 @@ DataStructure CreateTestData()
 
   AttributeMatrix* featureAM = AttributeMatrix::Create(dataStructure, k_FeatureAttrMatrixName, {4}, iGeom->getId());
 
-  std::vector<usize> compDims = {6};
+  ShapeType compDims = {6};
   UInt32Array* rect = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_RectCoordsExemplaryArrayName, {4}, {6}, featureAM->getId());
   auto& rectStore = rect->getDataStoreRef();
   rectStore.setComponent(1, 0, 1);

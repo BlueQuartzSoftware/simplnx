@@ -141,7 +141,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
 
   // create the Image Geometry and it's attribute matrices
   const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scanNames.size()};
-  const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
+  const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
   {
     CreateImageGeometryAction::SpacingType spacing = {static_cast<float32>(reader->getXStep()), static_cast<float32>(reader->getYStep()), pZSpacingValue};
     for(float& value : spacing)

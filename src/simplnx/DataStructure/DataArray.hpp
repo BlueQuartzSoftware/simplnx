@@ -85,8 +85,7 @@ public:
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
   template <typename DataStoreType>
-  static DataArray* CreateWithStore(DataStructure& dataStructure, const std::string& name, const std::vector<usize>& tupleShape, const std::vector<usize>& componentShape,
-                                    const std::optional<IdType>& parentId = {})
+  static DataArray* CreateWithStore(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, const std::optional<IdType>& parentId = {})
   {
     static_assert(std::is_base_of_v<AbstractDataStore<T>, DataStoreType>);
 

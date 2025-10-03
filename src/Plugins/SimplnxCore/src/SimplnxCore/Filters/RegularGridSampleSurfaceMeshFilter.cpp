@@ -152,7 +152,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   std::vector<PreflightValue> preflightUpdatedValues;
 
   DataPath cellAttributeMatrixPath;
-  std::vector<usize> tupleDims;
+  ShapeType tupleDims;
 
   if(geometryOption == GeometryOption::Create)
   {

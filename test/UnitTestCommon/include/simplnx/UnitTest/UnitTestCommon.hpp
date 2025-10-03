@@ -895,8 +895,7 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
  * @return
  */
 template <typename T>
-DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, typename DataStore<T>::ShapeType tupleShape, typename DataStore<T>::ShapeType componentShape,
-                                  DataObject::IdType parentId = {})
+DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, ShapeType tupleShape, ShapeType componentShape, DataObject::IdType parentId = {})
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
@@ -935,7 +934,7 @@ inline DataStructure CreateDataStructure()
   // Create some DataArrays; The DataStructure keeps a shared_ptr<> to the DataArray so DO NOT put
   // it into another shared_ptr<>
   usize numComponents = 1;
-  std::vector<usize> tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
+  ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
   Float32Array* ci_data = CreateTestDataArray<float>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
   Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
@@ -969,7 +968,7 @@ inline DataStructure CreateDataStructure()
  * other group has a DataArray of each primitive type with 3 components.
  * @return
  */
-inline DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShape)
+inline DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape)
 {
   DataStructure dataStructure;
   DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
@@ -988,7 +987,7 @@ inline DataStructure CreateAllPrimitiveTypes(const std::vector<usize>& tupleShap
 
   // DataStore<usize>::ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
   // Create Scalar type data
-  DataStore<uint64>::ShapeType componentShape = {1ULL};
+  ShapeType componentShape = {1ULL};
 
   CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
   CreateTestDataArray<uint8>(dataStructure, Constants::k_Uint8DataSet, tupleShape, componentShape, levelOneId);
@@ -1338,14 +1337,14 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   return dataStructure;
 }
 
-inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure)
+inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, std::vector<DataPath> ignoredPaths = {})
 {
   std::optional<std::vector<DataPath>> amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, DataObject::Type::AttributeMatrix);
   REQUIRE(amPathsOpt.has_value());
   for(const auto& amPath : amPathsOpt.value())
   {
     const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(amPath);
-    std::optional<std::vector<DataPath>> daPathsOpt = GetAllChildDataPaths(dataStructure, amPath, DataObject::Type::DataArray);
+    std::optional<std::vector<DataPath>> daPathsOpt = GetAllChildArrayDataPaths(dataStructure, amPath, ignoredPaths);
     REQUIRE(daPathsOpt.has_value());
     for(const auto& daPath : daPathsOpt.value())
     {
@@ -1370,6 +1369,33 @@ const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_Simp
 
 namespace SmallIn100
 {
+// These paths are excluded because they come from a version prior to
+// NeighborList and StringArray having multidimensional tuple capability
+const std::vector<DataPath> k_TupleCheckIgnoredPaths{{{"MirroredXDataContainer", "CellData", "NeighborList"}},
+                                                     {{"MirroredXDataContainer", "CellData", "StringArray"}},
+                                                     {{"MirroredXInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"MirroredXInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"MirroredYDataContainer", "CellData", "NeighborList"}},
+                                                     {{"MirroredYDataContainer", "CellData", "StringArray"}},
+                                                     {{"MirroredYInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"MirroredYInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"MirroredZDataContainer", "CellData", "NeighborList"}},
+                                                     {{"MirroredZDataContainer", "CellData", "StringArray"}},
+                                                     {{"MirroredZInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"MirroredZInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"XDataContainer", "CellData", "NeighborList"}},
+                                                     {{"XDataContainer", "CellData", "StringArray"}},
+                                                     {{"XInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"XInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"YDataContainer", "CellData", "NeighborList"}},
+                                                     {{"YDataContainer", "CellData", "StringArray"}},
+                                                     {{"YInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"YInconsistentArrays", "CellData", "StringArray"}},
+                                                     {{"ZDataContainer", "CellData", "NeighborList"}},
+                                                     {{"ZDataContainer", "CellData", "StringArray"}},
+                                                     {{"ZInconsistentArrays", "CellData", "NeighborList"}},
+                                                     {{"ZInconsistentArrays", "CellData", "StringArray"}}};
+
 //------------------------------------------------------------------------------
 inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList)
 {
@@ -1409,7 +1435,8 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
 }
 
 //------------------------------------------------------------------------------
@@ -1436,6 +1463,7 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
   // Execute the filter and check the result
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
 }
 } // namespace SmallIn100

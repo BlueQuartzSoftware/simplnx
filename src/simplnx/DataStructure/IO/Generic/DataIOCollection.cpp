@@ -45,8 +45,7 @@ bool DataIOCollection::hasDataStoreCreationFunction(const std::string& type) con
   }
   return false;
 }
-std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string& type, DataType dataType, const typename IDataStore::ShapeType& tupleShape,
-                                                              const typename IDataStore::ShapeType& componentShape)
+std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string& type, DataType dataType, const ShapeType& tupleShape, const ShapeType& componentShape)
 {
   for(const auto& [ioType, ioManager] : m_ManagerMap)
   {
@@ -60,18 +59,18 @@ std::unique_ptr<IDataStore> DataIOCollection::createDataStore(const std::string&
   return coreManager.dataStoreCreationFnc(coreManager.formatName())(dataType, tupleShape, componentShape, {});
 }
 
-std::unique_ptr<IListStore> DataIOCollection::createListStore(const std::string& type, DataType dataType, usize tupleCount) const
+std::unique_ptr<IListStore> DataIOCollection::createListStore(const std::string& type, DataType dataType, const ShapeType& tupleShape) const
 {
   for(const auto& [ioType, ioManager] : m_ManagerMap)
   {
     if(ioManager->hasListStoreCreationFnc(type))
     {
-      return ioManager->listStoreCreationFnc(type)(dataType, tupleCount);
+      return ioManager->listStoreCreationFnc(type)(dataType, tupleShape);
     }
   }
 
   nx::core::Generic::CoreDataIOManager coreManager;
-  return coreManager.listStoreCreationFnc(coreManager.formatName())(dataType, tupleCount);
+  return coreManager.listStoreCreationFnc(coreManager.formatName())(dataType, tupleShape);
 }
 
 void DataIOCollection::checkStoreDataFormat(uint64 dataSize, std::string& dataFormat) const

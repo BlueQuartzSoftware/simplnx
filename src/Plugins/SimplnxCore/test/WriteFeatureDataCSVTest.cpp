@@ -56,8 +56,7 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
   AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataStructure, "TestData", k_VertexTupleDims);
   auto path = dataStructure.getAllDataPaths()[0];
 
-  auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", k_NumTuples, topLevelGroup.getId());
-  neighborList->resizeTotalElements(k_NumTuples);
+  auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", topLevelGroup.getShape(), topLevelGroup.getId());
   std::vector<float32> list1 = {117, 875, 1035, 3905, 4214};
   std::vector<float32> list2 = {750, 1905, 1912, 2015, 2586, 3180, 3592, 4041, 4772};
   std::vector<float32> list3 = {309, 775, 2625, 2818, 3061, 3751, 4235, 4817};

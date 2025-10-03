@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 
 namespace nx::core
@@ -7,8 +8,6 @@ namespace nx::core
 class SIMPLNX_EXPORT IArray : public DataObject
 {
 public:
-  using ShapeType = std::vector<usize>;
-
   static inline constexpr StringLiteral k_TypeName = "IArray";
 
   enum class ArrayType : EnumType
@@ -102,7 +101,7 @@ public:
    * @param tupleShape The new shape of the data where the dimensions are "C" ordered
    * from *slowest* to *fastest*.
    */
-  virtual void resizeTuples(const std::vector<usize>& tupleShape) = 0;
+  virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
   static std::set<std::string> StringListFromArrayType(const std::set<ArrayType>& arrayTypes)
   {

@@ -119,8 +119,8 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
     return MakePreflightErrorResult(k_EmptyParameterError, fmt::format("{}: Init Value cannot be empty.{}({})", humanName(), __FILE__, __LINE__));
   }
 
-  std::vector<usize> compDims = std::vector<usize>{numComponents};
-  std::vector<usize> tupleDims = {};
+  ShapeType compDims = std::vector<usize>{numComponents};
+  ShapeType tupleDims = {};
 
   auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
   if(parentAM == nullptr)

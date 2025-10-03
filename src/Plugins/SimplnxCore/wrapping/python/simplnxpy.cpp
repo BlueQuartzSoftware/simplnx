@@ -169,13 +169,13 @@ template <class T>
 auto BindDataStore(py::handle scope, const char* name)
 {
   py::class_<DataStore<T>, AbstractDataStore<T>, std::shared_ptr<DataStore<T>>> dataStore(scope, name);
-  dataStore.def(py::init<const IDataStore::ShapeType&, const IDataStore::ShapeType&, std::optional<T>>(), "tuple_shape"_a, "component_shape"_a, "init_value"_a = std::optional<T>{});
+  dataStore.def(py::init<const ShapeType&, const ShapeType&, std::optional<T>>(), "tuple_shape"_a, "component_shape"_a, "init_value"_a = std::optional<T>{});
   dataStore.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
   dataStore.def(
       "npview",
       [](DataStore<T>& dataStore) {
-        IDataStore::ShapeType shape = dataStore.getTupleShape();
-        IDataStore::ShapeType componentShape = dataStore.getComponentShape();
+        ShapeType shape = dataStore.getTupleShape();
+        ShapeType componentShape = dataStore.getComponentShape();
         shape.insert(shape.end(), componentShape.cbegin(), componentShape.cend());
         return py::array_t<T, py::array::c_style>(shape, dataStore.data(), py::cast(dataStore));
       },
@@ -198,8 +198,8 @@ auto BindDataArray(py::handle scope, const char* name)
         using DataStoreType = DataStore<T>;
         const typename DataArrayType::store_type& abstractDataStore = dataArray.getDataStoreRef();
         const DataStoreType& dataStore = dynamic_cast<const DataStoreType&>(abstractDataStore);
-        IDataStore::ShapeType shape = dataStore.getTupleShape();
-        IDataStore::ShapeType componentShape = dataStore.getComponentShape();
+        ShapeType shape = dataStore.getTupleShape();
+        ShapeType componentShape = dataStore.getComponentShape();
         shape.insert(shape.end(), componentShape.cbegin(), componentShape.cend());
         return py::array_t<T, py::array::c_style>(shape, dataStore.data(), py::cast(dataStore));
       },
@@ -1139,7 +1139,7 @@ PYBIND11_MODULE(simplnx, mod)
                         "data_format"_a = std::string(""));
 
   auto createAttributeMatrixAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateAttributeMatrixAction, IDataCreationAction);
-  createAttributeMatrixAction.def(py::init<const DataPath&, const AttributeMatrix::ShapeType&>(), "path"_a, "shape"_a);
+  createAttributeMatrixAction.def(py::init<const DataPath&, const ShapeType&>(), "path"_a, "shape"_a);
 
   auto createDataGroupAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateDataGroupAction, IDataCreationAction);
   createDataGroupAction.def(py::init<const DataPath&>(), "path"_a);
@@ -1162,7 +1162,7 @@ PYBIND11_MODULE(simplnx, mod)
       "path"_a, "dims"_a, "origin"_a, "spacing"_a, "cell_attribute_matrix_name"_a);
 
   auto createNeighborListAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateNeighborListAction, IDataCreationAction);
-  createNeighborListAction.def(py::init<DataType, usize, const DataPath&>(), "type"_a, "tuple_count"_a, "path"_a);
+  createNeighborListAction.def(py::init<DataType, const ShapeType&, const DataPath&>(), "type"_a, "tuple_count"_a, "path"_a);
 
   auto createRectGridGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateRectGridGeometryAction, IDataCreationAction);
   createRectGridGeometryAction.def(py::init<const DataPath&, usize, usize, usize, const std::string&, const std::string&, const std::string&, const std::string&>(), "path"_a, "x_bounds_dim"_a,
@@ -1171,7 +1171,7 @@ PYBIND11_MODULE(simplnx, mod)
                                    "input_y_bounds_path"_a, "input_z_bounds_path"_a, "cell_attribute_matrix_name"_a, "array_type"_a);
 
   auto createStringArrayAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateStringArrayAction, IDataCreationAction);
-  createStringArrayAction.def(py::init<const std::vector<usize>&, const DataPath&, const std::string&>(), "t_dims"_a, "path"_a, "initialize_value"_a = std::string(""));
+  createStringArrayAction.def(py::init<const ShapeType&, const DataPath&, const std::string&>(), "t_dims"_a, "path"_a, "initialize_value"_a = std::string(""));
 
   auto createVertexGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateVertexGeometryAction, IDataCreationAction);
   createVertexGeometryAction.def(py::init<const DataPath&, IGeometry::MeshIndexType, const std::string&, const std::string&>(), "geometry_path"_a, "num_vertices"_a, "vertex_attribute_matrix_name"_a,

@@ -128,8 +128,8 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
       CreateImageGeometryAction::SpacingType{2.0f / pOutputImageDimension, 2.0f / pOutputImageDimension, 2.0f / pOutputImageDimension}, pCellAttributeMatrixName);
   resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
 
-  std::vector<usize> cDims = {1};
-  std::vector<usize> tDims = {1ULL, pOutputImageDimension, pOutputImageDimension}; // The DataArray Tuple Dims should be slowest to fastest, "C" Order
+  ShapeType cDims = {1};
+  ShapeType tDims = {1ULL, pOutputImageDimension, pOutputImageDimension}; // The DataArray Tuple Dims should be slowest to fastest, "C" Order
 
   DataPath cellIntensityArrayPath = pImageGeometryPath.createChildPath(pCellAttributeMatrixName).createChildPath(pCellIntensityArrayName);
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float64, tDims, cDims, cellIntensityArrayPath);

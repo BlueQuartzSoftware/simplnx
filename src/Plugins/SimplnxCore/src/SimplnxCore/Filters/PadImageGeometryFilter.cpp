@@ -230,7 +230,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
-      IDataStore::ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
+      ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, destArrayDims, std::move(componentShape), dataArrayPath));
     }

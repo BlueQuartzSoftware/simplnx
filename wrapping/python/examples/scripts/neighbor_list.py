@@ -5,7 +5,7 @@ ds = nx.DataStructure()
 SIZE = 42
 PATH = nx.DataPath(['foo'])
 
-action = nx.CreateNeighborListAction(nx.DataType.int32, SIZE, PATH)
+action = nx.CreateNeighborListAction(nx.DataType.int32, [SIZE], PATH)
 
 assert action.apply(ds, nx.IDataAction.Mode.Execute)
 

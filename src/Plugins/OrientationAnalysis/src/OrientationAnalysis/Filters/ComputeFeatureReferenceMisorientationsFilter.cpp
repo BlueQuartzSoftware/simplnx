@@ -151,7 +151,7 @@ IFilter::PreflightResult ComputeFeatureReferenceMisorientationsFilter::preflight
   // Create output Feature Average Misorientations
   {
     DataPath featAvgMisorientationsPath;
-    std::vector<usize> tupleShape;
+    ShapeType tupleShape;
     if(pReferenceOrientationValue == 0)
     {
       auto cellFeatPath = pAvgQuatsArrayPathValue.getParent();

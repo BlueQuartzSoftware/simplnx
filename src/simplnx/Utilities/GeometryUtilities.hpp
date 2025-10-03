@@ -185,7 +185,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   }
 
   // Create array to hold unique node numbers
-  Int64DataStore uniqueIds(IDataStore::ShapeType{nNodes}, IDataStore::ShapeType{1}, {});
+  Int64DataStore uniqueIds(ShapeType{nNodes}, ShapeType{1}, {});
   for(IGeometry::MeshIndexType i = 0; i < nNodesAll; i++)
   {
     uniqueIds[i] = static_cast<int64>(i);

@@ -203,7 +203,7 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
     const DataPath amPath = inputImageGeometry.createChildPath(pAlignmentAMName);
 
     // Create Parent AM
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(amPath, AttributeMatrix::ShapeType{dims}));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(amPath, ShapeType{dims}));
 
     // Create slices Array
     auto pSlicesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SlicesArrayName_Key);

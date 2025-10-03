@@ -139,7 +139,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
   }
 
   const auto& cellEnsembleAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixNameValue);
-  const std::vector<usize>& tupleShape = cellEnsembleAM.getShape();
+  const ShapeType& tupleShape = cellEnsembleAM.getShape();
   {
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{static_cast<usize>(pNumberOfBinsValue)},
                                                                  pCellEnsembleAttributeMatrixNameValue.createChildPath(pRDFArrayNameValue));
@@ -152,7 +152,7 @@ IFilter::PreflightResult ComputeFeatureClusteringFilter::preflightImpl(const Dat
   {
     const DataPath featureAttributeMatrixPath = pFeaturePhasesArrayPathValue.getParent();
     const auto& cellFeatureAM = dataStructure.getDataRefAs<AttributeMatrix>(featureAttributeMatrixPath);
-    auto createArrayAction = std::make_unique<CreateNeighborListAction>(DataType::float32, cellFeatureAM.getNumTuples(), featureAttributeMatrixPath.createChildPath(pClusteringListArrayNameValue));
+    auto createArrayAction = std::make_unique<CreateNeighborListAction>(DataType::float32, cellFeatureAM.getShape(), featureAttributeMatrixPath.createChildPath(pClusteringListArrayNameValue));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

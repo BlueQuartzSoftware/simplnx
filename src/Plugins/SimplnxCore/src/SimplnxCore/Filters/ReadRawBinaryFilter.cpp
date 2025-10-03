@@ -111,7 +111,7 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   }
 
   const auto& rowData = pTupleDimsValue.at(0);
-  std::vector<usize> tupleDims;
+  ShapeType tupleDims;
   for(auto floatValue : rowData)
   {
     tupleDims.push_back(static_cast<usize>(floatValue));

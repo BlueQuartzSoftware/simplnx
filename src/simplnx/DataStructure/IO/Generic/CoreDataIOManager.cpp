@@ -26,8 +26,7 @@ void CoreDataIOManager::addCoreFactories()
 
 void CoreDataIOManager::addDataStoreFnc()
 {
-  DataStoreCreateFnc dataStoreFnc = [](nx::core::DataType numericType, const typename IDataStore::ShapeType& tupleShape, const typename IDataStore::ShapeType& componentShape,
-                                       const std::optional<IDataStore::ShapeType>& chunkShape) {
+  DataStoreCreateFnc dataStoreFnc = [](nx::core::DataType numericType, const ShapeType& tupleShape, const ShapeType& componentShape, const std::optional<ShapeType>& chunkShape) {
     std::unique_ptr<IDataStore> dataStore = nullptr;
     switch(numericType)
     {
@@ -72,39 +71,39 @@ void CoreDataIOManager::addDataStoreFnc()
 
 void CoreDataIOManager::addListStoreFnc()
 {
-  ListStoreCreateFnc listStoreFnc = [](nx::core::DataType numericType, usize tupleCount) {
+  ListStoreCreateFnc listStoreFnc = [](nx::core::DataType numericType, const ShapeType& tupleShape) {
     std::unique_ptr<IListStore> listStore = nullptr;
     switch(numericType)
     {
     case DataType::int8:
-      listStore = std::make_unique<Int8ListStore>(tupleCount);
+      listStore = std::make_unique<Int8ListStore>(tupleShape);
       break;
     case DataType::int16:
-      listStore = std::make_unique<Int16ListStore>(tupleCount);
+      listStore = std::make_unique<Int16ListStore>(tupleShape);
       break;
     case DataType::int32:
-      listStore = std::make_unique<Int32ListStore>(tupleCount);
+      listStore = std::make_unique<Int32ListStore>(tupleShape);
       break;
     case DataType::int64:
-      listStore = std::make_unique<Int64ListStore>(tupleCount);
+      listStore = std::make_unique<Int64ListStore>(tupleShape);
       break;
     case DataType::uint8:
-      listStore = std::make_unique<UInt8ListStore>(tupleCount);
+      listStore = std::make_unique<UInt8ListStore>(tupleShape);
       break;
     case DataType::uint16:
-      listStore = std::make_unique<UInt16ListStore>(tupleCount);
+      listStore = std::make_unique<UInt16ListStore>(tupleShape);
       break;
     case DataType::uint32:
-      listStore = std::make_unique<UInt32ListStore>(tupleCount);
+      listStore = std::make_unique<UInt32ListStore>(tupleShape);
       break;
     case DataType::uint64:
-      listStore = std::make_unique<UInt64ListStore>(tupleCount);
+      listStore = std::make_unique<UInt64ListStore>(tupleShape);
       break;
     case DataType::float32:
-      listStore = std::make_unique<Float32ListStore>(tupleCount);
+      listStore = std::make_unique<Float32ListStore>(tupleShape);
       break;
     case DataType::float64:
-      listStore = std::make_unique<Float64ListStore>(tupleCount);
+      listStore = std::make_unique<Float64ListStore>(tupleShape);
       break;
     case DataType::boolean:
       listStore = nullptr;

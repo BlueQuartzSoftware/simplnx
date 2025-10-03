@@ -33,7 +33,7 @@ SIMPLNX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 
  * @return
  */
 template <class T>
-Result<> CreateArray(DataStructure& dataStructure, const std::vector<usize>& tupleShape, const std::vector<usize>& compShape, const DataPath& path, IDataAction::Mode mode, std::string dataFormat = "",
+Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& compShape, const DataPath& path, IDataAction::Mode mode, std::string dataFormat = "",
                      std::string fillValue = "")
 {
   auto parentPath = path.getParent();

@@ -20,16 +20,17 @@ public:
   using const_reference = typename parent_type::const_reference;
   using iterator = typename parent_type::iterator;
   using const_iterator = typename parent_type::const_iterator;
-  using shape_type = typename std::vector<usize>;
 
   /**
    * @brief Constructs a ListStore using the specified tuple shape and list size.
    * @param tupleShape
    * @param listSize
    */
-  ListStore(usize numTuples)
+  explicit ListStore(const ShapeType& tupleShape)
   : parent_type()
-  , m_Array(numTuples)
+  , m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_Array(m_NumTuples)
   {
   }
 
@@ -37,7 +38,7 @@ public:
    * @brief Creates a ListStore from a vector of vectors.
    * @param vectors
    */
-  ListStore(const typename std::vector<shared_vector_type>& vectors)
+  explicit ListStore(const typename std::vector<shared_vector_type>& vectors)
   : parent_type()
   {
     setData(vectors);
@@ -49,6 +50,8 @@ public:
   ListStore(const ListStore& other)
   : parent_type(other)
   , m_Array(other.m_Array)
+  , m_TupleShape(other.m_TupleShape)
+  , m_NumTuples(other.m_NumTuples)
   {
   }
 
@@ -58,6 +61,8 @@ public:
   ListStore(ListStore&& copy) noexcept
   : parent_type(std::move(copy))
   , m_Array(std::move(copy.m_Array))
+  , m_TupleShape(std::move(copy.m_TupleShape))
+  , m_NumTuples(copy.m_NumTuples)
   {
   }
 
@@ -73,27 +78,33 @@ public:
   }
 
   /**
+   * @brief Returns the number of tuples in the ListStore.
+   * @return usize
+   */
+  usize getNumberOfTuples() const override
+  {
+    return m_NumTuples;
+  }
+
+  /**
+   * @brief Returns the dimensions of the Tuples
+   * @return
+   */
+  const ShapeType& getTupleShape() const override
+  {
+    return m_TupleShape;
+  }
+
+  /**
    * @brief This method sets the shape of the dimensions to `tupleShape`.
-   *
-   * There are 3 possibilities when using this function:
-   * [1] The number of tuples of the new shape is *LESS* than the original. In this
-   * case a memory allocation will take place and the first 'N' elements of data
-   * will be copied into the new array. The remaining data is *LOST*
-   *
-   * [2] The number of tuples of the new shape is *EQUAL* to the original. In this
-   * case the shape is set and the function returns.
-   *
-   * [3] The number of tuples of the new shape is *GREATER* than the original. In
-   * this case a new array is allocated and all the data from the original array
-   * is copied into the new array and the remaining elements are initialized to
-   * the default initialization value.
-   *
    * @param tupleShape The new shape of the data where the dimensions are "C" ordered
    * from *slowest* to *fastest*.
    */
-  void resizeTuples(usize tupleCount) override
+  void resizeTuples(const ShapeType& tupleShape) override
   {
-    m_Array.resize(tupleCount);
+    m_TupleShape = tupleShape;
+    m_NumTuples = std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>());
+    m_Array.resize(m_NumTuples);
   }
 
   /**
@@ -168,36 +179,27 @@ public:
    */
   T getValue(int32 grainId, int32 index, bool& ok) const override
   {
-    if(grainId >= this->getNumberOfLists() || grainId < 0 || index < 0)
+    if(grainId < this->getNumberOfLists() && grainId >= 0 && index >= 0 && index < m_Array[grainId].size())
     {
-      ok = false;
-      return {};
+      ok = true;
+      return m_Array[grainId][index];
     }
 
-    auto& list = m_Array[grainId];
-    if(index > list.size())
-    {
-      ok = false;
-      return {};
-    }
-
-    ok = true;
-    return list[index];
+    ok = false;
+    return {};
   }
 
   void setValue(int32 grainId, usize index, T value) override
   {
-    if(grainId >= this->getNumberOfLists())
+    if(grainId < this->getNumberOfLists() && grainId >= 0 && index < m_Array[grainId].size())
     {
-      return;
+      m_Array[grainId][index] = value;
     }
-
-    m_Array[grainId][index] = value;
   }
 
   uint64 getNumberOfLists() const override
   {
-    return m_Array.size();
+    return m_NumTuples;
   }
 
   /**
@@ -247,7 +249,9 @@ public:
 
   void setData(const std::vector<shared_vector_type>& lists) override
   {
-    m_Array.resize(lists.size());
+    m_NumTuples = lists.size();
+    m_TupleShape = ShapeType{m_NumTuples};
+    m_Array.resize(m_NumTuples);
     for(usize i = 0; i < m_Array.size(); i++)
     {
       m_Array[i] = *lists[i];
@@ -257,6 +261,8 @@ public:
   void setData(const std::vector<vector_type>& lists) override
   {
     m_Array = lists;
+    m_NumTuples = m_Array.size();
+    m_TupleShape = ShapeType{m_NumTuples};
   }
 
   void readHdf5(const HDF5::DatasetIO& datasetReader) override
@@ -270,6 +276,8 @@ public:
   }
 
 private:
+  ShapeType m_TupleShape;
+  ShapeType::value_type m_NumTuples;
   std::vector<std::vector<T>> m_Array;
 };
 

@@ -126,9 +126,9 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   OutputActions actions;
 
   auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  std::vector<usize> tupleShape = featureIdsArray.getIDataStore()->getTupleShape();
+  ShapeType tupleShape = featureIdsArray.getIDataStore()->getTupleShape();
 
-  const std::vector<usize> cDims{1};
+  const ShapeType cDims{1};
 
   // Create output Cell Data Arrays (if the user requested it)
   if(storeBoundaryCells)
@@ -146,7 +146,6 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
     return {MakeErrorResult<OutputActions>(-12600, "Cell Feature AttributeMatrix Path is NOT an AttributeMatrix")};
   }
   tupleShape = featureAttrMatrix->getShape();
-  auto tupleCount = std::accumulate(tupleShape.begin(), tupleShape.end(), 1ULL, std::multiplies<>());
 
   // Create the NumNeighbors Output Data Array in the Feature Attribute Matrix
   {
@@ -155,12 +154,12 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   }
   // Create the NeighborList Output NeighborList in the Feature Attribute Matrix
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, tupleCount, neighborListPath);
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::int32, tupleShape, neighborListPath);
     actions.appendAction(std::move(action));
   }
   // And we do the same for the SharedSurfaceArea list in the Feature Attribute Matrix
   {
-    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleCount, sharedSurfaceAreaPath);
+    auto action = std::make_unique<CreateNeighborListAction>(DataType::float32, tupleShape, sharedSurfaceAreaPath);
     actions.appendAction(std::move(action));
   }
   // Create the SurfaceFeatures Output Data Array in the Feature Attribute Matrix

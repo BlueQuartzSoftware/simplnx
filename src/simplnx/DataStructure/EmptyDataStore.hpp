@@ -23,7 +23,6 @@ class EmptyDataStore : public AbstractDataStore<T>
 public:
   using value_type = typename AbstractDataStore<T>::value_type;
   using reference = typename AbstractDataStore<T>::reference;
-  using ShapeType = typename IDataStore::ShapeType;
 
   /**
    * @brief Constructs an empty data store with a tuple getSize and count of 0.
@@ -336,11 +335,11 @@ public:
     return nullptr;
   }
 
-  IDataStore::ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
+  ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
   {
     return {};
   }
-  IDataStore::ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
+  ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
   {
     return {};
   }

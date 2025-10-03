@@ -88,7 +88,7 @@ void AddDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 
 StringArray* CreateStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName)
 {
-  return StringArray::CreateWithValues(dataStructure, arrayName, std::vector<std::string>(attrMatrix.getNumTuples()), attrMatrix.getId());
+  return StringArray::CreateWithValues(dataStructure, arrayName, attrMatrix.getShape(), std::vector<std::string>(attrMatrix.getNumTuples()), attrMatrix.getId());
 }
 
 void AddStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
@@ -101,7 +101,7 @@ void AddStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 template <typename T>
 NeighborList<T>* CreateNeighborList(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& nlName)
 {
-  return NeighborList<T>::Create(dataStructure, nlName, attrMatrix.getNumTuples(), attrMatrix.getId());
+  return NeighborList<T>::Create(dataStructure, nlName, attrMatrix.getShape(), attrMatrix.getId());
 }
 
 template <typename T>
