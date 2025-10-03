@@ -18,12 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-13
           - macos-14
+          - macos-15
         include:
-          - os: macos-13
-            preset: ci-macos-x64
           - os: macos-14
+            preset: ci-macos-x64
+          - os: macos-15
             preset: ci-macos-arm64
     runs-on: ${{matrix.os}}
     steps:
