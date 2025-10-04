@@ -18,12 +18,12 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-13
           - macos-14
+          - macos-15
         include:
-          - os: macos-13
-            preset: ci-macos-x64
           - os: macos-14
+            preset: ci-macos-arm64
+          - os: macos-15
             preset: ci-macos-arm64
     runs-on: ${{matrix.os}}
     steps:
@@ -48,9 +48,9 @@ jobs:
           pip install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
       - name: Add C++ Problem Matcher
         uses: ammaraskar/gcc-problem-matcher@0.2.0
-      - name: Install Dependencies - 2
+      - name: Install Dependencies
         run: |
-          brew install ninja
+          brew install ninja mono
       - name: Install Sphinx
         run: |
           sudo pip3 install sphinx myst-parser sphinx-markdown-tables sphinx_rtd_theme numpy
