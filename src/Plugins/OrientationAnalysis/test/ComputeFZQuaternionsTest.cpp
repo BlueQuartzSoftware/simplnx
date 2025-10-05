@@ -83,13 +83,6 @@ TEST_CASE("OrientationAnalysis::ComputeFZQuaternions", "[OrientationAnalysis][Co
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  if(preflightResult.outputActions.invalid())
-  {
-    for(const auto& error : preflightResult.outputActions.errors())
-    {
-      std::cout << error.code << ": " << error.message << std::endl;
-    }
-  }
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
   // Execute the filter and check the result
@@ -99,31 +92,7 @@ TEST_CASE("OrientationAnalysis::ComputeFZQuaternions", "[OrientationAnalysis][Co
   // Compare Results
   auto generatedFZQuats = dataStructure.getDataRefAs<Float32Array>(scanDataPath.createChildPath(k_FZQuats));
   auto exemplarFZQuats = dataStructure.getDataRefAs<Float32Array>(scanDataPath.createChildPath("FZ_QUATS_EXEMPLAR"));
-  std::vector<size_t> misMatchIndices;
-  for(size_t idx = 0; idx < generatedFZQuats.getNumberOfTuples(); idx++)
-  {
-    if(generatedFZQuats[idx * 4] != exemplarFZQuats[idx * 4])
-    {
-      misMatchIndices.push_back(idx);
-      continue;
-    }
-    if(generatedFZQuats[idx * 4 + 1] != exemplarFZQuats[idx * 4 + 1])
-    {
-      misMatchIndices.push_back(idx);
-      continue;
-    }
-    if(generatedFZQuats[idx * 4 + 2] != exemplarFZQuats[idx * 4 + 2])
-    {
-      misMatchIndices.push_back(idx);
-      continue;
-    }
-    if(generatedFZQuats[idx * 4 + 3] != exemplarFZQuats[idx * 4 + 3])
-    {
-      misMatchIndices.push_back(idx);
-      continue;
-    }
-  }
-  REQUIRE(misMatchIndices.size() == 0);
+  UnitTest::CompareArrays<float32>(dataStructure, scanDataPath.createChildPath(k_FZQuats), scanDataPath.createChildPath("FZ_QUATS_EXEMPLAR"));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
