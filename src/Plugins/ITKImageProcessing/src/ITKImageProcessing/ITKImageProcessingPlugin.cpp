@@ -34,7 +34,13 @@ ITKImageProcessingPlugin::ITKImageProcessingPlugin()
   {
     addFilter(filterFunc);
   }
-  RegisterITKImageIO();
+
+  static bool s_IsRegistered = false;
+  if(!s_IsRegistered)
+  {
+    RegisterITKImageIO();
+    s_IsRegistered = true;
+  }
 }
 
 ITKImageProcessingPlugin::~ITKImageProcessingPlugin() noexcept = default;
