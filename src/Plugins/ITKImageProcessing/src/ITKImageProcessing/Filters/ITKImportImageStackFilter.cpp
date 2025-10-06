@@ -75,26 +75,24 @@ enum class RotationRepresentation : uint64_t
 // Make sure we can instantiate the RotateSampleRefFrame Filter
 std::unique_ptr<IFilter> CreateRotateSampleRefFrameFilter()
 {
-  auto* filterListPtr = Application::Instance()->getFilterList();
-  auto filter = filterListPtr->createFilter(k_RotateSampleRefFrameFilterHandle);
+  FilterList* filterListPtr = Application::Instance()->getFilterList();
+  std::unique_ptr<IFilter> filter = filterListPtr->createFilter(k_RotateSampleRefFrameFilterHandle);
   return filter;
 }
 
 template <class T>
 void FlipAboutYAxis(DataArray<T>& dataArray, Vec3<usize>& dims)
 {
-  auto& tempDataStore = dataArray.getDataStoreRef();
+  AbstractDataStore<T>& tempDataStore = dataArray.getDataStoreRef();
 
   usize numComp = tempDataStore.getNumberOfComponents();
   std::vector<T> currentRowBuffer(dims[0] * dataArray.getNumberOfComponents());
 
-  // We could _in theory_ parallelize over the rows, not sure how the out-of-core
-  // would handle that though.
   for(usize row = 0; row < dims[1]; row++)
   {
     // Copy the current row into a temp buffer
-    auto startIter = tempDataStore.begin() + (dims[0] * numComp * row);
-    auto endIter = startIter + dims[0] * numComp;
+    typename AbstractDataStore<T>::Iterator startIter = tempDataStore.begin() + (dims[0] * numComp * row);
+    typename AbstractDataStore<T>::Iterator endIter = startIter + dims[0] * numComp;
     std::copy(startIter, endIter, currentRowBuffer.begin());
 
     // Starting at the last tuple in the buffer
@@ -116,7 +114,7 @@ void FlipAboutYAxis(DataArray<T>& dataArray, Vec3<usize>& dims)
 template <class T>
 void FlipAboutXAxis(DataArray<T>& dataArray, Vec3<usize>& dims)
 {
-  auto& tempDataStore = dataArray.getDataStoreRef();
+  AbstractDataStore<T>& tempDataStore = dataArray.getDataStoreRef();
   usize numComp = tempDataStore.getNumberOfComponents();
   size_t rowLCV = (dims[1] % 2 == 1) ? ((dims[1] - 1) / 2) : dims[1] / 2;
   usize bottomRow = dims[1] - 1;
@@ -124,9 +122,9 @@ void FlipAboutXAxis(DataArray<T>& dataArray, Vec3<usize>& dims)
   for(usize row = 0; row < rowLCV; row++)
   {
     // Copy the "top" row into a temp buffer
-    auto topStartIter = 0 + (dims[0] * numComp * row);
-    auto topEndIter = topStartIter + dims[0] * numComp;
-    auto bottomStartIter = 0 + (dims[0] * numComp * bottomRow);
+    usize topStartIter = 0 + (dims[0] * numComp * row);
+    usize topEndIter = topStartIter + dims[0] * numComp;
+    usize bottomStartIter = 0 + (dims[0] * numComp * bottomRow);
 
     // Copy from bottom to top and then temp to bottom
     for(usize eleIndex = topStartIter; eleIndex < topEndIter; eleIndex++)
@@ -152,16 +150,15 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
                         const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   DataPath destImageGeomPath = imageGeomPath;
-  std::string destImageArrayName = imageArrayName;
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(destImageGeomPath);
 
-  auto* filterListPtr = Application::Instance()->getFilterList();
+  FilterList* filterListPtr = Application::Instance()->getFilterList();
 
   if((convertToGrayscale || resample != k_NoResampleModeIndex) && !filterListPtr->containsPlugin(k_SimplnxCorePluginId))
   {
     return MakeErrorResult(-18542, "SimplnxCore was not instantiated in this instance, so color to grayscale is not a valid option.");
   }
-  auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
+  std::unique_ptr<IFilter> grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
   Result<> outputResult = {};
 
   usize startSlice = 0;
@@ -173,8 +170,8 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
   }
   else if(croppingOptions.cropZ && croppingOptions.type == CropGeometryParameter::ValueType::TypeEnum::PhysicalSubvolume)
   {
-    auto destDims = imageGeom.getDimensions();
-    auto result = imageGeom.getIndex(croppingOptions.xBoundPhysical[0], croppingOptions.yBoundPhysical[0], croppingOptions.zBoundPhysical[0]);
+    Vec3<usize> destDims = imageGeom.getDimensions();
+    std::optional<usize> result = imageGeom.getIndex(croppingOptions.xBoundPhysical[0], croppingOptions.yBoundPhysical[0], croppingOptions.zBoundPhysical[0]);
     if(result.has_value())
     {
       startSlice = result.value() / (destDims[0] * destDims[1]);
@@ -190,7 +187,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
   usize slice = 0;
   for(usize i = startSlice; i <= endSlice; i++)
   {
-    const auto& filePath = files[i];
+    const std::string& filePath = files[i];
     messageHandler(IFilter::Message::Type::Info, fmt::format("Importing: {}", filePath));
 
     DataStructure importedDataStructure;
@@ -211,7 +208,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, std::make_any<BoolParameter::ValueType>(true));
       args.insertOrAssign(ITKImageReaderFilter::k_Spacing_Key, std::make_any<VectorFloat64Parameter::ValueType>(spacing));
 
-      auto executeResult = imageReader.execute(importedDataStructure, args);
+      IFilter::ExecuteResult executeResult = imageReader.execute(importedDataStructure, args);
       if(executeResult.result.invalid())
       {
         return executeResult.result;
@@ -225,7 +222,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     {
       if(croppingOptions.cropX || croppingOptions.cropY)
       {
-        auto cropImageGeomFilter = filterListPtr->createFilter(k_CropImageGeomFilterHandle);
+        std::unique_ptr<IFilter> cropImageGeomFilter = filterListPtr->createFilter(k_CropImageGeomFilterHandle);
         Arguments cropImageGeomArgs;
         cropImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(imageGeomPath));
         cropImageGeomArgs.insertOrAssign("use_physical_bounds", std::make_any<bool>(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume));
@@ -253,7 +250,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
         cropImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(true));
 
         // Run crop image geometry filter and process results and messages
-        auto result = cropImageGeomFilter->execute(importedDataStructure, cropImageGeomArgs).result;
+        Result<> result = cropImageGeomFilter->execute(importedDataStructure, cropImageGeomArgs).result;
         if(result.invalid())
         {
           return result;
@@ -265,7 +262,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     // ======================= Resample Image Geometry Section ===================
     if(resample != k_NoResampleModeIndex)
     {
-      auto resampleImageGeomFilter = filterListPtr->createFilter(k_ResampleImageGeomFilterHandle);
+      std::unique_ptr<IFilter> resampleImageGeomFilter = filterListPtr->createFilter(k_ResampleImageGeomFilterHandle);
       if(resample == k_ScalingModeIndex)
       {
         if(scalingFactor == 100.0f)
@@ -281,7 +278,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
         resampleImageGeomArgs.insertOrAssign("scaling", std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{scalingFactor, scalingFactor, 100.0f}));
 
         // Run resample image geometry filter and process results and messages
-        auto result = resampleImageGeomFilter->execute(importedDataStructure, resampleImageGeomArgs).result;
+        Result<> result = resampleImageGeomFilter->execute(importedDataStructure, resampleImageGeomArgs).result;
         if(result.invalid())
         {
           return result;
@@ -297,7 +294,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
         resampleImageGeomArgs.insertOrAssign("exact_dimensions", std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{exactDims[0], exactDims[1], 1}));
 
         // Run resample image geometry filter and process results and messages
-        auto result = resampleImageGeomFilter->execute(importedDataStructure, resampleImageGeomArgs).result;
+        Result<> result = resampleImageGeomFilter->execute(importedDataStructure, resampleImageGeomArgs).result;
         if(result.invalid())
         {
           return result;
@@ -321,7 +318,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       colorToGrayscaleArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("gray"));
 
       // Run grayscale filter and process results and messages
-      auto result = grayScaleFilter->execute(importedDataStructure, colorToGrayscaleArgs).result;
+      Result<> result = grayScaleFilter->execute(importedDataStructure, colorToGrayscaleArgs).result;
       if(result.invalid())
       {
         return result;
@@ -370,7 +367,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
 
     // get the current Slice data...
     auto& srcData = importedDataStructure.getDataRefAs<DataArray<T>>(srcImageDataPath);
-    auto& srcDataStore = srcData.getDataStoreRef();
+    AbstractDataStore<T>& srcDataStore = srcData.getDataStoreRef();
 
     if(transformType == k_FlipAboutYAxis)
     {
@@ -385,8 +382,8 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     DataPath destImageDataPath = convertToGrayscale ? destImageGeomPath.createChildPath(cellDataName).createChildPath("grayscale_" + imageArrayName) :
                                                       destImageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
     auto& outputData = dataStructure.getDataRefAs<DataArray<T>>(destImageDataPath);
-    auto& outputDataStore = outputData.getDataStoreRef();
-    auto result = outputDataStore.copyFrom(destTupleIndex, srcDataStore, 0, destTuplesPerSlice);
+    AbstractDataStore<T>& outputDataStore = outputData.getDataStoreRef();
+    Result<> result = outputDataStore.copyFrom(destTupleIndex, srcDataStore, 0, destTuplesPerSlice);
     if(result.invalid())
     {
       return result;
@@ -541,7 +538,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
 
   if(imageTransformValue != k_NoImageTransform)
   {
-    const auto rotateSampleRefFrameFilter = CreateRotateSampleRefFrameFilter();
+    const std::unique_ptr<IFilter> rotateSampleRefFrameFilter = CreateRotateSampleRefFrameFilter();
     if(nullptr == rotateSampleRefFrameFilter)
     {
       return MakePreflightErrorResult(-23500, "ITKImageImageStack requires the use of the RotateSampleRefFrame filter to perform any image manipulation.");
@@ -609,22 +606,22 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     }
   }
 
-  auto currentImageGeomPath = imageGeomPath;
+  DataPath currentImageGeomPath = imageGeomPath;
   std::vector<DataPath> pathsToDelete;
 
-  auto* filterListPtr = Application::Instance()->getFilterList();
+  FilterList* filterListPtr = Application::Instance()->getFilterList();
   if(croppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
   {
     if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
     {
-      auto errorResult = MakePreflightErrorResult(-18542, "The plugin SimplnxCore was not instantiated in this instance, so image cropping is not available.");
+      PreflightResult errorResult = MakePreflightErrorResult(-18542, "The plugin SimplnxCore was not instantiated in this instance, so image cropping is not available.");
       return errorResult;
     }
 
-    auto cropImageGeomFilter = filterListPtr->createFilter(k_CropImageGeomFilterHandle);
+    std::unique_ptr<IFilter> cropImageGeomFilter = filterListPtr->createFilter(k_CropImageGeomFilterHandle);
     if(nullptr == cropImageGeomFilter.get())
     {
-      auto errorResult = MakePreflightErrorResult(-18543, "Unable to create an instance of the crop image geometry filter, so image cropping is not available.");
+      PreflightResult errorResult = MakePreflightErrorResult(-18543, "Unable to create an instance of the crop image geometry filter, so image cropping is not available.");
       return errorResult;
     }
 
@@ -680,21 +677,21 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   {
     if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
     {
-      auto errorResult = MakePreflightErrorResult(-18544, "The plugin SimplnxCore was not instantiated in this instance, so image resampling is not available.");
+      PreflightResult errorResult = MakePreflightErrorResult(-18544, "The plugin SimplnxCore was not instantiated in this instance, so image resampling is not available.");
       return errorResult;
     }
 
-    auto resampleImageGeomFilter = filterListPtr->createFilter(k_ResampleImageGeomFilterHandle);
+    std::unique_ptr<IFilter> resampleImageGeomFilter = filterListPtr->createFilter(k_ResampleImageGeomFilterHandle);
     if(nullptr == resampleImageGeomFilter.get())
     {
-      auto errorResult = MakePreflightErrorResult(-18545, "Unable to create an instance of the resample image geometry filter, so image resampling is not available.");
+      PreflightResult errorResult = MakePreflightErrorResult(-18545, "Unable to create an instance of the resample image geometry filter, so image resampling is not available.");
       return errorResult;
     }
 
     if(pResampleImagesChoiceValue == k_ScalingModeIndex && pScalingValue < 1.0f)
     {
       // seemingly arbitrary numeric limit, only included for compatibility with ResampleImageGeomFilter
-      auto errorResult = MakePreflightErrorResult(-23508, fmt::format("Scaling value must be greater than or equal to 1.0f. Received: {}", pScalingValue));
+      PreflightResult errorResult = MakePreflightErrorResult(-23508, fmt::format("Scaling value must be greater than or equal to 1.0f. Received: {}", pScalingValue));
       return errorResult;
     }
 
@@ -707,7 +704,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     resampleImageGeomArgs.insertOrAssign("exact_dimensions", std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{pExactXYDimsValue[0], pExactXYDimsValue[1], 1}));
 
     // Run resample image geometry filter and process results and messages
-    auto resampleImageResult = resampleImageGeomFilter->preflight(tmpDs, resampleImageGeomArgs, messageHandler, shouldCancel);
+    PreflightResult resampleImageResult = resampleImageGeomFilter->preflight(tmpDs, resampleImageGeomArgs, messageHandler, shouldCancel);
     if(resampleImageResult.outputActions.invalid())
     {
       return resampleImageResult;
@@ -719,7 +716,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     createImageGeomActionPtr = dynamic_cast<const CreateImageGeometryAction*>(action0Ptr);
     if(createImageGeomActionPtr != nullptr)
     {
-      auto dims = createImageGeomActionPtr->dims();
+      std::vector<usize> dims = createImageGeomActionPtr->dims();
       dims.back() = outputDims.back();
       outputDims = dims;
       resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
@@ -759,27 +756,23 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
 
     if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
     {
-      auto errorResult = MakePreflightErrorResult(-23501, "Color to GrayScale conversion is disabled because the 'SimplnxCore' plugin was not loaded.");
+      PreflightResult errorResult = MakePreflightErrorResult(-23501, "Color to GrayScale conversion is disabled because the 'SimplnxCore' plugin was not loaded.");
       return errorResult;
     }
-    auto grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
+    std::unique_ptr<IFilter> grayScaleFilter = filterListPtr->createFilter(k_ColorToGrayScaleFilterHandle);
     if(nullptr == grayScaleFilter.get())
     {
-      auto errorResult = MakePreflightErrorResult(-23502, "Color to GrayScale conversion is disabled because the 'Color to GrayScale' filter is missing from the SimplnxCore plugin.");
+      PreflightResult errorResult = MakePreflightErrorResult(-23502, "Color to GrayScale conversion is disabled because the 'Color to GrayScale' filter is missing from the SimplnxCore plugin.");
       return errorResult;
     }
 
     Arguments grayscaleImageGeomArgs;
-
-    //    static inline constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm_index";
-    //    static inline constexpr StringLiteral k_ColorChannel_Key = "color_channel";
-
     grayscaleImageGeomArgs.insertOrAssign("input_data_array_paths", std::make_any<std::vector<DataPath>>({imageDataPath}));
     grayscaleImageGeomArgs.insertOrAssign("output_array_prefix", std::make_any<std::string>("grayscale_"));
     grayscaleImageGeomArgs.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(pColorWeightsValue));
 
     // Run resample image geometry filter and process results and messages
-    auto grayscaleImageResult = grayScaleFilter->preflight(tmpDs, grayscaleImageGeomArgs, messageHandler, shouldCancel);
+    PreflightResult grayscaleImageResult = grayScaleFilter->preflight(tmpDs, grayscaleImageGeomArgs, messageHandler, shouldCancel);
     if(grayscaleImageResult.outputActions.invalid())
     {
       return grayscaleImageResult;
@@ -805,7 +798,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     }
   }
 
-  for(const auto& pathToDelete : pathsToDelete)
+  for(const DataPath& pathToDelete : pathsToDelete)
   {
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pathToDelete));
   }
