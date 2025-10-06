@@ -6,5 +6,5 @@
 
 namespace nx::core
 {
-using ShapeType = typename std::vector<usize>;
+using ShapeType = std::vector<usize>;
 }
