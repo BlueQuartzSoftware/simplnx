@@ -7,10 +7,8 @@
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -134,7 +132,7 @@ Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, c
 
   usize totalPoints = featureIds.getNumberOfTuples();
   std::map<int32, int32> featureMap;
-  std::map<int32, int32> warningMap;
+  std::set<int32> warnFeatures;
 
   for(usize i = 0; i < totalPoints; i++)
   {
@@ -149,23 +147,25 @@ Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, c
     int32 curPhaseVal = featureMap[gnum];
     if(curPhaseVal != cellPhases[i])
     {
-      auto [iter, insertSuccess] = warningMap.insert({gnum, 1});
-      if(!insertSuccess)
-      {
-        iter->second += 1;
-      }
+      warnFeatures.insert(gnum);
     }
     featurePhases[gnum] = cellPhases[i];
   }
 
   Result<> result;
-  if(!warningMap.empty())
+  if(!warnFeatures.empty())
   {
-    result.warnings().push_back(Warning{-500, "Elements from some features did not all have the same phase ID. The last phase ID copied into each feature will be used."});
-    for(auto&& [key, value] : warningMap)
+    std::string warnStr = "Elements from some features did not all have the same phase ID. The last phase ID copied into each feature will be used. Effected Phase Features: ";
+    usize position = 0;
+    for(auto value : warnFeatures)
     {
-      result.warnings().push_back(Warning{-500, fmt::format("Phase Feature {} created {} warnings.", key, value)});
+      warnStr.append(std::to_string(value));
+      if(++position != warnFeatures.size())
+      {
+        warnStr.append(", ");
+      }
     }
+    result.warnings().push_back(Warning{-500, std::move(warnStr)});
   }
 
   return result;
