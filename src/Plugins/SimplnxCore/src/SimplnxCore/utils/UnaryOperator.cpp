@@ -172,12 +172,12 @@ void UnaryOperator::CreateNewArrayStandardUnary(DataStructure& dataStructure, Ca
     Float64Array* newArray =
         Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), arrayPtr->getArray()->getTupleShape(), arrayPtr->getArray()->getComponentShape());
 
-    int numComps = newArray->getNumberOfComponents();
-    for(int i = 0; i < newArray->getNumberOfTuples(); i++)
+    usize numComps = newArray->getNumberOfComponents();
+    for(usize i = 0; i < newArray->getNumberOfTuples(); i++)
     {
-      for(int c = 0; c < newArray->getNumberOfComponents(); c++)
+      for(usize c = 0; c < newArray->getNumberOfComponents(); c++)
       {
-        int index = numComps * i + c;
+        usize index = numComps * i + c;
         double num = arrayPtr->getValue(index);
         (*newArray)[index] = op(num);
       }
@@ -198,16 +198,17 @@ void UnaryOperator::CreateNewArrayTrig(DataStructure& dataStructure, CalculatorP
     executionStack.pop();
     calculatedArrayPath = GetUniquePathName(dataStructure, calculatedArrayPath);
 
-    Float64Array* newArray =
-        Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), arrayPtr->getArray()->getTupleShape(), arrayPtr->getArray()->getComponentShape());
+    DataArray<float64>* array = arrayPtr->getArray();
 
-    int numComps = newArray->getNumberOfComponents();
-    for(int i = 0; i < newArray->getNumberOfTuples(); i++)
+    Float64Array* newArray = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), array->getTupleShape(), array->getComponentShape());
+
+    usize numComps = newArray->getNumberOfComponents();
+    for(usize i = 0; i < newArray->getNumberOfTuples(); i++)
     {
-      for(int c = 0; c < newArray->getNumberOfComponents(); c++)
+      for(usize c = 0; c < newArray->getNumberOfComponents(); c++)
       {
-        int index = numComps * i + c;
-        double num = arrayPtr->getValue(index);
+        usize index = numComps * i + c;
+        double num = array->getValue(index);
 
         if(units == CalculatorParameter::AngleUnits::Degrees)
         {
@@ -235,16 +236,17 @@ void UnaryOperator::CreateNewArrayArcTrig(DataStructure& dataStructure, Calculat
     executionStack.pop();
     calculatedArrayPath = GetUniquePathName(dataStructure, calculatedArrayPath);
 
-    Float64Array* newArray =
-        Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), arrayPtr->getArray()->getTupleShape(), arrayPtr->getArray()->getComponentShape());
+    DataArray<float64>* array = arrayPtr->getArray();
 
-    int numComps = newArray->getNumberOfComponents();
-    for(int i = 0; i < newArray->getNumberOfTuples(); i++)
+    Float64Array* newArray = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), array->getTupleShape(), array->getComponentShape());
+
+    usize numComps = newArray->getNumberOfComponents();
+    for(usize i = 0; i < newArray->getNumberOfTuples(); i++)
     {
-      for(int c = 0; c < newArray->getNumberOfComponents(); c++)
+      for(usize c = 0; c < newArray->getNumberOfComponents(); c++)
       {
-        int index = numComps * i + c;
-        double num = arrayPtr->getValue(index);
+        usize index = numComps * i + c;
+        double num = array->getValue(index);
 
         if(units == CalculatorParameter::AngleUnits::Degrees)
         {
