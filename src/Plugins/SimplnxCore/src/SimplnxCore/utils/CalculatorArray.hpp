@@ -54,7 +54,7 @@ public:
     return nullptr;
   }
 
-  void setValue(int i, double val) override
+  void setValue(usize i, double val) override
   {
     if(m_ArrayId.has_value())
     {
@@ -62,7 +62,7 @@ public:
     }
   }
 
-  double getValue(int i) override
+  double getValue(usize i) override
   {
     if(!m_ArrayId.has_value())
     {
@@ -87,7 +87,7 @@ public:
     return m_Type;
   }
 
-  Float64Array* reduceToOneComponent(int c, bool allocate) override
+  Float64Array* reduceToOneComponent(int c, bool allocate = true) override
   {
     if(!m_ArrayId.has_value())
     {
@@ -103,7 +103,7 @@ public:
         Float64Array* newArray = Float64Array::CreateWithStore<Float64DataStore>(m_DataStructure, reducedArrayPath.getTargetName(), array->getTupleShape(), {1});
         if(allocate)
         {
-          for(int i = 0; i < array->getNumberOfTuples(); i++)
+          for(usize i = 0; i < array->getNumberOfTuples(); i++)
           {
             (*newArray)[i] = (*array)[i * numComponents + c];
           }
@@ -139,7 +139,7 @@ protected:
       if(allocate)
       {
         auto* tempArray = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, dataArray->getName(), dataArray->getTupleShape(), dataArray->getComponentShape());
-        for(int i = 0; i < dataArray->getSize(); i++)
+        for(usize i = 0; i < dataArray->getSize(); i++)
         {
           (*tempArray)[i] = static_cast<double>(dataArray->at(i));
         }

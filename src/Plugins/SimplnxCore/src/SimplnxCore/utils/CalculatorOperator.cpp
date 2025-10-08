@@ -93,38 +93,41 @@ CalculatorOperator::Pointer CalculatorOperator::NullPointer()
 void CalculatorOperator::CreateNewArrayTwoArguments(DataStructure& dataStructure, CalculatorParameter::AngleUnits units, DataPath calculatedArrayPath,
                                                     std::stack<ICalculatorArray::Pointer>& executionStack, std::function<double(double, double)> op)
 {
-  ICalculatorArray::Pointer array1 = executionStack.top();
-  if(executionStack.size() >= 2 && nullptr != array1)
+  ICalculatorArray::Pointer iArray1 = executionStack.top();
+  if(executionStack.size() >= 2 && nullptr != iArray1)
   {
     executionStack.pop();
-    ICalculatorArray::Pointer array2 = executionStack.top();
+    ICalculatorArray::Pointer iArray2 = executionStack.top();
     executionStack.pop();
 
     calculatedArrayPath = GetUniquePathName(dataStructure, calculatedArrayPath);
 
+    DataArray<float64>* array1 = iArray1->getArray();
+    DataArray<float64>* array2 = iArray2->getArray();
+
     Float64Array* newArray = nullptr;
-    if(array1->getType() == ICalculatorArray::Array)
+    if(iArray1->getType() == ICalculatorArray::Array)
     {
-      newArray = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), array1->getArray()->getTupleShape(), array1->getArray()->getComponentShape());
+      newArray = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), array1->getTupleShape(), array1->getComponentShape());
     }
     else
     {
-      newArray = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), array2->getArray()->getTupleShape(), array2->getArray()->getComponentShape());
+      newArray = Float64Array::CreateWithStore<Float64DataStore>(dataStructure, calculatedArrayPath.getTargetName(), array2->getTupleShape(), array2->getComponentShape());
     }
 
-    int numComps = newArray->getNumberOfComponents();
-    for(int i = 0; i < static_cast<int>(newArray->getNumberOfTuples()); i++)
+    usize numComps = newArray->getNumberOfComponents();
+    for(usize i = 0; i < newArray->getNumberOfTuples(); i++)
     {
-      for(int c = 0; c < newArray->getNumberOfComponents(); c++)
+      for(usize c = 0; c < newArray->getNumberOfComponents(); c++)
       {
-        int index = numComps * i + c;
-        double num1 = array1->getValue(index);
-        double num2 = array2->getValue(index);
+        usize index = numComps * i + c;
+        float64 num1 = (iArray1->getType() == ICalculatorArray::Array) ? array1->getValue(index) : array1->getValue(0);
+        float64 num2 = (iArray2->getType() == ICalculatorArray::Array) ? array2->getValue(index) : array2->getValue(0);
         (*newArray)[index] = op(num2, num1);
       }
     }
 
-    if(array1->getType() == ICalculatorArray::Array || array2->getType() == ICalculatorArray::Array)
+    if(iArray1->getType() == ICalculatorArray::Array || iArray2->getType() == ICalculatorArray::Array)
     {
       executionStack.push(CalculatorArray<double>::New(dataStructure, newArray, ICalculatorArray::Array, true));
     }

@@ -29,11 +29,11 @@ public:
   ~ICalculatorArray() override;
 
   virtual Float64Array* getArray() = 0;
-  virtual double getValue(int i) = 0;
-  virtual void setValue(int i, double value) = 0;
+  virtual double getValue(usize i) = 0;
+  virtual void setValue(usize i, double value) = 0;
   virtual ValueType getType() = 0;
 
-  virtual Float64Array* reduceToOneComponent(int c, bool allocate = true) = 0;
+  virtual Float64Array* reduceToOneComponent(int c, bool allocate) = 0;
 
 protected:
   ICalculatorArray();
