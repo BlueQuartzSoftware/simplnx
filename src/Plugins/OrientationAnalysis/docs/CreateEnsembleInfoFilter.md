@@ -8,22 +8,22 @@ Processing (Generation)
 
 This **Filter** allows the user to enter basic crystallographic information about each phase. The Laue class, Phase Type, and Phase Name can all be entered by the user. The information is stored in an EnsembleAttributeMatrix. These values are needed to allow the calculation of certain kinds of crystallographic statistics on the volume, if they have not already been provided by some other means. Each row in the table lists the **Crystal Structure**, **Phase Type**, and **Phase Name**. The proper values for the crystal structure and phase type come from internal constants within DREAM3D-NX and are listed here:
 
-### Crystal Structure
+## DREAM3D-NX Laue Group to Point Group Table
 
-| String Name | Internal Value | Laue Name | Rotation Point Group |
-| ------------|----------------|----------|-----------------------|
-| Hexagonal_High | 0 |  Hexagonal-High 6/mmm | 622 |
-| Cubic_High | 1 |  Cubic-High m3m | 432 |
-| Hexagonal_Low | 2 |  Hexagonal-Low 6/m | 6 |
-| Cubic_Low | 3 |  Cubic-Low m3 (Tetrahedral) | 23 |
-| Triclinic | 4 |  Triclinic -1 | 1 |
-| Monoclinic | 5 |  Monoclinic 2/m | 2 |
-| OrthoRhombic | 6 |  Orthorhombic mmm | 222 |
-| Tetragonal_Low | 7 |  Tetragonal-Low 4/m | 4 |
-| Tetragonal_High | 8 |  Tetragonal-High 4/mmm | 422 |
-| Trigonal_Low | 9 |  Trigonal-Low -3 | 3 |
-| Trigonal_High | 10 |  Trigonal-High -3m | 32 |
-| UnknownCrystalStructure | 999 |  Undefined Crystal Structure |  |
+| Internal Value | String Name              | HM Sym | Point Group | Rotation Point Group |
+|----------------|--------------------------|--------|-------------|----------------------|
+| 0              | Hexagonal_High           | 6/mmm  | 27          | 622                  |
+| 1              | Cubic_High               | m-3m   | 32          | 432                  |
+| 2              | Hexagonal_Low            | 6/m    | 23          | 6                    |
+| 3              | Cubic_Low                | m-3    | 29          | 23                   |
+| 4              | Triclinic                | -1     | 2           | 1                    |
+| 5              | Monoclinic               | 2/m    | 5           | 2                    |
+| 6              | OrthoRhombic             | mmm    | 8           | 222                  |
+| 7              | Tetragonal_Low           | 4/m    | 11          | 4                    |
+| 8              | Tetragonal_High          | 4/mmm  | 15          | 422                  |
+| 9              | Trigonal_Low             | -3     | 17          | 3                    |
+| 10             | Trigonal_High            | -3m    | 20          | 32                   |
+| 999            | UnknownCrystalStructure  |        |             |                      |
 
 ### Phase Type
 
