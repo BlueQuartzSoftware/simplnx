@@ -271,7 +271,7 @@ public:
     auto& inDataStore = m_InputArray.getDataStoreRef();
     auto& outDataStore = m_OutputArray.getDataStoreRef();
 
-    std::array<T, 4> input;
+    std::array<T, 4> input = {0.0, 0.0, 0.0, 0.0};
     for(size_t tIndex = range.min(); tIndex < range.max(); tIndex++)
     {
       for(size_t cIndex = 0; cIndex < InCompSize; cIndex++)
@@ -279,8 +279,8 @@ public:
         input[cIndex] = inDataStore.getValue(tIndex * InCompSize + cIndex);
       }
       m_CheckFunc(input.data());
-
-      Orientation<T> output = m_TransformFunc(QuaterionType(input[0], input[1], input[2], input[3]), m_Layout); // Do the actual Conversion
+      QuaterionType inputQuat = QuaterionType(input[0], input[1], input[2], input[3]).normalize();
+      Orientation<T> output = m_TransformFunc(inputQuat, m_Layout); // Do the actual Conversion
       for(size_t cIndex = 0; cIndex < OutCompSize; cIndex++)
       {
         outDataStore.setValue(tIndex * OutCompSize + cIndex, output[cIndex]);
