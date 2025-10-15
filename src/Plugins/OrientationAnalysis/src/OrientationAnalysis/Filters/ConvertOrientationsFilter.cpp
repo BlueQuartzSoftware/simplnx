@@ -279,7 +279,7 @@ public:
         input[cIndex] = inDataStore.getValue(tIndex * InCompSize + cIndex);
       }
       m_CheckFunc(input.data());
-      QuaterionType inputQuat = QuaterionType(input[0], input[1], input[2], input[3]).normalize();
+      QuaterionType inputQuat = quat_pos::makePositive(QuaterionType(input[0], input[1], input[2], input[3]));
       Orientation<T> output = m_TransformFunc(inputQuat, m_Layout); // Do the actual Conversion
       for(size_t cIndex = 0; cIndex < OutCompSize; cIndex++)
       {

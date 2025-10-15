@@ -129,13 +129,14 @@ Result<> ComputeAvgOrientations::operator()()
 
     QuatF curAvgQuat(avgQuats[featureId * 4], avgQuats[featureId * 4 + 1], avgQuats[featureId * 4 + 2], avgQuats[featureId * 4 + 3]);
     curAvgQuat = curAvgQuat.scalarDivide(counts[featureId]);
-    curAvgQuat = curAvgQuat.unitQuaternion();
+    curAvgQuat = curAvgQuat.normalize();
 
     UpdateQuaternionArray(avgQuats, curAvgQuat, featureId);
 
-    // Update the value for the average Euler. Be sure to 'normalize' the Quaterion
+    // Update the value for the average Euler. Be sure to make sure the Quaterion is in the northern hemisphere
     // before converting it to a Euler Angle
-    OrientationF eu = OrientationTransformation::qu2eu<QuatF, OrientationF>(curAvgQuat.normalize());
+    curAvgQuat = quat_pos::makePositive(curAvgQuat);
+    OrientationF eu = OrientationTransformation::qu2eu<QuatF, OrientationF>(curAvgQuat);
     UpdateEulerArray(avgEuler, eu, featureId);
   }
 
