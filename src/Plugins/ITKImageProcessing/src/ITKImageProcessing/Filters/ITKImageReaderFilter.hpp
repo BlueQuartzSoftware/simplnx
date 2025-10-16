@@ -41,6 +41,8 @@ public:
   static inline constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
   static inline constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
 
+  static inline constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
+
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json

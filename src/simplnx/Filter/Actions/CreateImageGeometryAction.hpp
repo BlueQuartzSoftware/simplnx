@@ -75,6 +75,18 @@ public:
   const SpacingType& spacing() const;
 
   /**
+   * @brief Returns the cell atrribute matrix name of the ImageGeometry to be created.
+   * @return
+   */
+  std::string cellAttributeMatrixName() const;
+
+  /**
+   * @brief Returns the units of the ImageGeometry to be created.
+   * @return
+   */
+  IGeometry::LengthUnit units() const;
+
+  /**
    * @brief Returns all of the DataPaths to be created.
    * @return std::vector<DataPath>
    */

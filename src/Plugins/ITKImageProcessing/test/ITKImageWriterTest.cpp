@@ -93,12 +93,12 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImagePro
     fileListInfo.paddingDigits = 2;
     fileListInfo.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
 
-    std::vector<float32> origin = {1.0f, 4.0f, 8.0f};
-    std::vector<float32> spacing = {0.3f, 1.2f, 0.9f};
+    std::vector<float64> origin = {1.0f, 4.0f, 8.0f};
+    std::vector<float64> spacing = {0.3f, 1.2f, 0.9f};
 
     args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
-    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float32>>(origin));
-    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float32>>(spacing));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float64>>(origin));
+    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(spacing));
     args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);

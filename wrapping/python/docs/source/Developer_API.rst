@@ -458,6 +458,75 @@ General Parameters
 
       params.link_parameters('example_choices_key', 'example_data_path_selection_key', 1)
 
+.. _CropGeometryParameter:
+.. py:class:: CropGeometryParameter
+
+   The ``CropGeometryParameter`` packages the inputs used to crop a geometry (typically an :ref:`ImageGeom<ImageGeom>`) along X, Y, and Z. It supports cropping by **voxel indices** or by
+   **physical coordinates**, and lets you enable/disable cropping per axis.
+
+   **Value Type**
+
+   .. py:class:: CropGeometryParameter.ValueType
+
+      :ivar type: :py:class:`CropGeometryParameter.TypeEnum` – one of ``NoCropping``, ``VoxelSubvolume``, ``PhysicalSubvolume``.
+      :ivar crop_x: ``bool`` – crop along X.
+      :ivar crop_y: ``bool`` – crop along Y.
+      :ivar crop_z: ``bool`` – crop along Z.
+      :ivar x_bound_voxels: ``IntVec2`` – (min_idx, max_idx) along X (inclusive).
+      :ivar y_bound_voxels: ``IntVec2`` – (min_idx, max_idx) along Y (inclusive).
+      :ivar z_bound_voxels: ``IntVec2`` – (min_idx, max_idx) along Z (inclusive).
+      :ivar x_bound_physical: ``FloatVec2`` – (min, max) physical coordinates along X.
+      :ivar y_bound_physical: ``FloatVec2`` – (min, max) physical coordinates along Y.
+      :ivar z_bound_physical: ``FloatVec2`` – (min, max) physical coordinates along Z.
+
+   **Enumeration**
+
+   .. py:enum:: CropGeometryParameter.TypeEnum
+
+      - ``NoCropping`` – do not crop.
+      - ``VoxelSubvolume`` – use the ``*_bound_voxels`` members.
+      - ``PhysicalSubvolume`` – use the ``*_bound_physical`` members.
+
+   **Usage (voxel bounds)**
+
+   .. code-block:: python
+
+      import simplnx as nx
+
+      cv = nx.CropGeometryParameter.ValueType()
+      cv.type = nx.CropGeometryParameter.TypeEnum.VoxelSubvolume
+      cv.crop_x = True
+      cv.crop_y = True
+      cv.crop_z = False
+      cv.x_bound_voxels = nx.IntVec2(0, 199)
+      cv.y_bound_voxels = nx.IntVec2(10, 210)
+      cv.z_bound_voxels = nx.IntVec2(0, 0)  # ignored if crop_z == False
+
+      params.insert(nx.CropGeometryParameter('cropping_options_key',
+                                             'Cropping Options',
+                                             'Select ROI using voxel indices',
+                                             cv))
+
+   **Usage (physical bounds)**
+
+   .. code-block:: python
+
+      import simplnx as nx
+
+      cv = nx.CropGeometryParameter.ValueType()
+      cv.type = nx.CropGeometryParameter.TypeEnum.PhysicalSubvolume
+      cv.crop_x = True
+      cv.crop_y = True
+      cv.crop_z = True
+      cv.x_bound_physical = nx.FloatVec2(0.0, 200.0)
+      cv.y_bound_physical = nx.FloatVec2(10.0, 210.0)
+      cv.z_bound_physical = nx.FloatVec2(0.0, 30.0)
+
+      params.insert(nx.CropGeometryParameter('cropping_options_key',
+                                             'Cropping Options',
+                                             'Select ROI using physical coordinates',
+                                             cv))
+
 .. _DataGroupCreationParameter:
 .. py:class:: DataGroupCreationParameter
 

@@ -83,6 +83,12 @@ public:
    */
   std::string dataFormat() const;
 
+  /**
+   * @brief Returns the fill value of the DataArray to be created.
+   * @return std::string
+   */
+  std::string fillValue() const;
+
 private:
   DataType m_Type;
   std::vector<usize> m_Dims;

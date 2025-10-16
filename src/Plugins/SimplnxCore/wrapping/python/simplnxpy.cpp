@@ -58,6 +58,7 @@
 #include <simplnx/Parameters/CalculatorParameter.hpp>
 #include <simplnx/Parameters/ChoicesParameter.hpp>
 #include <simplnx/Parameters/CreateColorMapParameter.hpp>
+#include <simplnx/Parameters/CropGeometryParameter.hpp>
 #include <simplnx/Parameters/DataGroupCreationParameter.hpp>
 #include <simplnx/Parameters/DataGroupSelectionParameter.hpp>
 #include <simplnx/Parameters/DataObjectNameParameter.hpp>
@@ -164,6 +165,41 @@ auto BindVectorParameter(py::handle scope, const char* name)
 
 #define SIMPLNX_PY_BIND_NUMBER_PARAMETER(scope, className) BindNumberParameter<className>(scope, #className)
 #define SIMPLNX_PY_BIND_VECTOR_PARAMETER(scope, className) BindVectorParameter<className>(scope, #className)
+
+template <class T>
+static void BindVec2(py::module_& m, const char* name)
+{
+  using Vec = nx::core::Vec2<T>;
+  py::class_<Vec>(m, name)
+      .def(py::init<>())
+      .def(py::init<T, T>())
+      .def(py::init([](py::sequence s) {
+        if(py::len(s) != 2)
+          throw py::type_error("Expected length-2 sequence");
+        return Vec{s[0].cast<T>(), s[1].cast<T>()};
+      }))
+      .def_property(
+          "min", [](const Vec& v) { return v[0]; }, [](Vec& v, T x) { v[0] = x; })
+      .def_property(
+          "max", [](const Vec& v) { return v[1]; }, [](Vec& v, T x) { v[1] = x; })
+      .def("__getitem__",
+           [](const Vec& v, size_t i) {
+             if(i >= 2)
+               throw py::index_error();
+             return v[i];
+           })
+      .def("__setitem__",
+           [](Vec& v, size_t i, T x) {
+             if(i >= 2)
+               throw py::index_error();
+             v[i] = x;
+           })
+      .def(
+          "__iter__", [](const Vec& v) { return py::make_iterator(&v[0], &v[0] + 2); }, py::keep_alive<0, 1>())
+      .def("__repr__", [](const Vec& v) { return fmt::format("Vec2({}, {})", v[0], v[1]); });
+
+  py::implicitly_convertible<py::sequence, Vec>();
+}
 
 template <class T>
 auto BindDataStore(py::handle scope, const char* name)
@@ -472,6 +508,9 @@ PYBIND11_MODULE(simplnx, mod)
   });
   result.def("valid", &Result<>::valid);
   result.def("invalid", &Result<>::invalid);
+
+  BindVec2<int32>(mod, "IntVec2");
+  BindVec2<float32>(mod, "FloatVec2");
 
   py::enum_<NumericType> numericType(mod, "NumericType");
   numericType.value("int8", NumericType::int8);
@@ -1209,6 +1248,7 @@ PYBIND11_MODULE(simplnx, mod)
   auto attributeMatrixSelectionParameter = SIMPLNX_PY_BIND_PARAMETER(mod, AttributeMatrixSelectionParameter);
   auto boolParameter = SIMPLNX_PY_BIND_PARAMETER(mod, BoolParameter);
   auto calculatorParameter = SIMPLNX_PY_BIND_PARAMETER(mod, CalculatorParameter);
+  auto cropGeometryParameter = SIMPLNX_PY_BIND_PARAMETER(mod, CropGeometryParameter);
   auto choicesParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ChoicesParameter);
   auto dataGroupCreationParameter = SIMPLNX_PY_BIND_PARAMETER(mod, DataGroupCreationParameter);
   auto dataGroupSelectionParameter = SIMPLNX_PY_BIND_PARAMETER(mod, DataGroupSelectionParameter);
@@ -1337,6 +1377,25 @@ PYBIND11_MODULE(simplnx, mod)
   calculatorParameterValueType.def_readwrite("selected_group", &CalculatorParameter::ValueType::m_SelectedGroup);
   calculatorParameterValueType.def_readwrite("equation", &CalculatorParameter::ValueType::m_Equation);
   calculatorParameterValueType.def_readwrite("units", &CalculatorParameter::ValueType::m_Units);
+
+  auto calculatorParameterTypeEnum = py::enum_<CropGeometryParameter::CropValues::TypeEnum>(cropGeometryParameter, "TypeEnum");
+  calculatorParameterTypeEnum.value("NoCropping", CropGeometryParameter::CropValues::TypeEnum::NoCropping);
+  calculatorParameterTypeEnum.value("VoxelSubvolume", CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume);
+  calculatorParameterTypeEnum.value("PhysicalSubvolume", CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume);
+
+  auto cropGeometryParameterCropValues = py::class_<CropGeometryParameter::ValueType>(cropGeometryParameter, "ValueType");
+  cropGeometryParameterCropValues.def(py::init<>());
+  cropGeometryParameterCropValues.def(py::init<CropGeometryParameter::ValueType::TypeEnum, bool, bool, bool, IntVec2Type, IntVec2Type, IntVec2Type, FloatVec2Type, FloatVec2Type, FloatVec2Type>());
+  cropGeometryParameterCropValues.def_readwrite("crop_x", &CropGeometryParameter::ValueType::cropX);
+  cropGeometryParameterCropValues.def_readwrite("crop_y", &CropGeometryParameter::ValueType::cropY);
+  cropGeometryParameterCropValues.def_readwrite("crop_z", &CropGeometryParameter::ValueType::cropZ);
+  cropGeometryParameterCropValues.def_readwrite("x_bound_voxels", &CropGeometryParameter::ValueType::xBoundVoxels);
+  cropGeometryParameterCropValues.def_readwrite("y_bound_voxels", &CropGeometryParameter::ValueType::yBoundVoxels);
+  cropGeometryParameterCropValues.def_readwrite("z_bound_voxels", &CropGeometryParameter::ValueType::zBoundVoxels);
+  cropGeometryParameterCropValues.def_readwrite("x_bound_physical", &CropGeometryParameter::ValueType::xBoundPhysical);
+  cropGeometryParameterCropValues.def_readwrite("y_bound_physical", &CropGeometryParameter::ValueType::yBoundPhysical);
+  cropGeometryParameterCropValues.def_readwrite("z_bound_physical", &CropGeometryParameter::ValueType::zBoundPhysical);
+  cropGeometryParameterCropValues.def_readwrite("type", &CropGeometryParameter::ValueType::type);
 
   BindParameterConstructor(arrayCreationParameter);
 
@@ -1613,6 +1672,7 @@ PYBIND11_MODULE(simplnx, mod)
   internals->addConversion<AttributeMatrixSelectionParameter>();
   internals->addConversion<BoolParameter>();
   internals->addConversion<CalculatorParameter>();
+  internals->addConversion<CropGeometryParameter>();
   internals->addConversion<ChoicesParameter>();
   internals->addConversion<DataGroupCreationParameter>();
   internals->addConversion<DataGroupSelectionParameter>();
