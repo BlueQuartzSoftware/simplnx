@@ -22,7 +22,24 @@ After all the **Features** have been identified, a **Feature Attribute Matrix** 
 
 Historically DREAM.3D version 6.x has used *only* the 6 face neighbors of a voxel. This release introduces the option
 of using all 26 neighboring voxels that are connected by a face, edge or vertex. The default for the filter
-is to still use the 6 face neighbors in order to stay consistent with the output from DREAM.3D version 6.x.
+is to still use the 6 face neighbors ("Face Only") in order to stay consistent with the output from DREAM.3D version 6.x.
+
+| Neighbor Scheme = "Face Only" | Neighbor Scheme = "All Connected" |
+|:--:|:--:|
+| ![Shared Edges - Neighbor Scheme = "Face Only"](Images/SegmentFeatures/shared_edges_face_only.png) | ![Shared Edges - Neighbor Scheme = "All Connected"](Images/SegmentFeatures/shared_edges_all_connected.png) |
+
+| Neighbor Scheme = "Face Only" | Neighbor Scheme = "All Connected" |
+|:--:|:--:|
+| ![Shared Points - Neighbor Scheme = "Face Only"](Images/SegmentFeatures/shared_points_face_only.png) | ![Shared Points - Neighbor Scheme = "All Connected"](Images/SegmentFeatures/shared_points_all_connected.png) |
+
+| Neighbor Scheme = "Face Only" | Neighbor Scheme = "All Connected" |
+|:--:|:--:|
+| ![Disconnected Regions - Neighbor Scheme = "Face Only"](Images/SegmentFeatures/nothing_shared_face_only.png) | ![Disconnected Regions - Neighbor Scheme = "All Connected"](Images/SegmentFeatures/nothing_shared_all_connected.png) |
+
+| Neighbor Scheme = "Face Only" | Neighbor Scheme = "All Connected" |
+|:--:|:--:|
+| ![Shared Edges & Points With Disconnected Region - "Face Only"](Images/SegmentFeatures/combination_face_only.png) | ![Shared Edges & Points With Disconnected Region - "All Connected"](Images/SegmentFeatures/combination_all_connected.png) |
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
