@@ -209,11 +209,6 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     seed = getSeed(gnum, nextSeed);
   }
 
-  if(hasNonContiguousFeature)
-  {
-    m_MessageHelper.sendMessage("SegmentFeatures found Non-Contiguous Features.");
-  }
-
   m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", gnum));
   m_FoundFeatures = gnum;
   return {};
