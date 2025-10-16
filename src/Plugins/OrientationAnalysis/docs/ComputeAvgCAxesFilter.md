@@ -10,13 +10,19 @@ This **Filter** determines the average C-axis location of each **Feature** by th
 
 1. Gather all **Elements** that belong to the **Feature**
 2. Determine the location of the c-axis in the sample *reference frame* for the rotated quaternions for all **Elements**. This is achieved by converting the input quaternion to
-and orientation matrix (which represents a passive transform matrix), taking the transpose of the matrix to convert it from passive to active, and thne multiplying the
+an orientation matrix (which represents a passive transform matrix), taking the transpose of the matrix to convert it from passive to active, and then multiplying the
 transposed matrix by the crystallographic C-Axis direction vector <001>.
-3. Average the locations and store as the average for the **Feature**
+3. Average the locations and store the average for the **Feature**
 
-*Note:* This **Filter** will only work properly for *Hexagonal* materials.  The **Filter** does not apply any symmetry operators because there is only one c-axis (<001>) in *Hexagonal* materials and thus all symmetry operators will leave the c-axis in the same position in the sample *reference frame*.  However, in *Cubic* materials, for example, the {100} family of directions are all equivalent and the <001> direction will change location in the sample *reference frame* when symmetry operators are applied.
+*Note:* This **Filter** will only work properly for *Hexagonal* materials.  The **Filter** does not apply any symmetry 
+operators because there is only one c-axis (<001>) in *Hexagonal* materials and thus all symmetry operators will leave 
+the c-axis in the same position in the sample *reference frame*.  However, in *Cubic* materials, for example, the {100} 
+family of directions are all equivalent and the <001> direction will change location in the sample *reference frame* when 
+symmetry operators are applied.
 
 This filter will error out if **ALL** phases are non-hexagonal. Any non-hexagonal phases will have their computed values set to NaN value.
+
+The output is a direction vector for each feature.
 
 % Auto generated parameter table will be inserted here
 
