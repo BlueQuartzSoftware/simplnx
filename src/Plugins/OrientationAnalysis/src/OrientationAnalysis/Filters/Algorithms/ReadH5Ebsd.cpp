@@ -331,23 +331,26 @@ Result<> ReadH5Ebsd::operator()()
   if(m_InputValues->useRecommendedTransform)
   {
 
-    if(eulerTransAngle > 0)
+    nx::core::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
+
+    if(eulerTransAngle > 0 && m_DataStructure.containsData(eulerDataPath))
     {
       RotateEulerRefFrameFilter rotEuler;
       Arguments args;
       args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key,
                           std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{eulerTransAxis[0], eulerTransAxis[1], eulerTransAxis[2], eulerTransAngle}));
 
-      nx::core::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
       args.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerDataPath));
       // Preflight the filter and check result
       auto preflightResult = rotEuler.preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
+        Result<> result;
         for(const auto& error : preflightResult.outputActions.errors())
         {
-          std::cout << error.code << ": " << error.message << std::endl;
+          result.errors().push_back(error);
         }
+        return result;
       }
 
       // Execute the filter and check the result
@@ -388,11 +391,12 @@ Result<> ReadH5Ebsd::operator()()
       nx::core::IFilter::PreflightResult preflightResult = filter->preflight(m_DataStructure, args);
       if(preflightResult.outputActions.invalid())
       {
+        Result<> result;
         for(const auto& error : preflightResult.outputActions.errors())
         {
-          std::cout << error.code << ": " << error.message << std::endl;
+          result.errors().push_back(error);
         }
-        return {MakeErrorResult(-50012, fmt::format("Error preflighting {}", filter->humanName()))};
+        return result;
       }
 
       // Execute the filter and check the result
