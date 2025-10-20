@@ -24,7 +24,7 @@ public:
 
   Result<> operator()();
 
-  Result<> copyRawEbsdData(int index) override;
+  Result<> copyRawEbsdData(int sliceIndex) override;
 };
 
 } // namespace nx::core
