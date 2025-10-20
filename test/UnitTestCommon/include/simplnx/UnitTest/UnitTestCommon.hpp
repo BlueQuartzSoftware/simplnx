@@ -69,6 +69,7 @@ inline constexpr StringLiteral k_Grain_Data("Grain Data");
 inline constexpr StringLiteral k_FeatureData("FeatureData");
 inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
+inline constexpr StringLiteral k_Cell_Ensemble_Data("Cell Ensemble Data");
 inline constexpr StringLiteral k_Phase_Data("Phase Data");
 
 inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");

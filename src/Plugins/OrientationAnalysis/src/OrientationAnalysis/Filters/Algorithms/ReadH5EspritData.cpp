@@ -84,6 +84,10 @@ Result<> ReadH5EspritData::copyRawEbsdData(int index)
   if(m_InputValues->ReadPatternData)
   {
     const uint8* patternDataPtr = m_Reader->getPatternData();
+    if(patternDataPtr == nullptr)
+    {
+      return MakeErrorResult(-34980, "Pattern data was requested but no pattern data was found in the data file");
+    }
     std::array<int32, 2> pDims = {{0, 0}};
     m_Reader->getPatternDims(pDims);
     if(pDims[0] != 0 && pDims[1] != 0)
