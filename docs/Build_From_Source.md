@@ -8,7 +8,7 @@
 | blosc | <https://github.com/Blosc/c-blosc> | 1.18.1 |
 | boost-mp11 | <https://github.com/boostorg/mp11>  | 1.77.0 |
 | catch2 | <https://github.com/catchorg/Catch2>  | 2.13.6 |
-| ebsdlib | <https://www.github.com/bluequartzsoftware/EBSDLib>   | 1.0.39 |
+| ebsdlib | <https://www.github.com/bluequartzsoftware/EBSDLib>   | 1.0.40 |
 | eigen3 |  <https://gitlab.com/libeigen/eigen.git> | 3.4.0 |
 | expected-lite | <https://github.com/martinmoene/expected-lite>  | 0.8.0 |
 | fmt | <https://github.com/fmtlib/fmt>  | 11.1.4 |
