@@ -20,13 +20,13 @@ class IGridGeometry;
 
 namespace segment_features
 {
-static inline constexpr StringLiteral k_6NeighborString = "Face Neighbors";
-static inline constexpr StringLiteral k_26NeighborString = "All Connected Neighbors";
+inline constexpr StringLiteral k_6NeighborString = "Face Neighbors";
+inline constexpr StringLiteral k_26NeighborString = "All Connected Neighbors";
 
-static inline const ChoicesParameter::Choices k_OperationChoices = {k_6NeighborString, k_26NeighborString};
+inline const ChoicesParameter::Choices k_OperationChoices = {k_6NeighborString, k_26NeighborString};
 
-static inline constexpr ChoicesParameter::ValueType k_6NeighborIndex = 0ULL;
-static inline constexpr ChoicesParameter::ValueType k_26NeighborIndex = 1ULL;
+inline constexpr ChoicesParameter::ValueType k_6NeighborIndex = 0ULL;
+inline constexpr ChoicesParameter::ValueType k_26NeighborIndex = 1ULL;
 } // namespace segment_features
 
 class SIMPLNX_EXPORT SegmentFeatures
