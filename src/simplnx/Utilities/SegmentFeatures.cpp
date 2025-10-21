@@ -3,7 +3,6 @@
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
-#include <cstdint>
 #include <vector>
 
 using namespace nx::core;
