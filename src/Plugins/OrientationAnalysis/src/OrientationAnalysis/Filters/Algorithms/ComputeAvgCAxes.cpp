@@ -87,6 +87,7 @@ Result<> ComputeAvgCAxes::operator()()
       const int32 currentCellPhase = cellPhases[i];                          // Get the current cell phase
       const auto crystalStructureType = crystalStructures[currentCellPhase]; // Get the CrystalStructure, i.e., Laue class of the cell
       const usize cAxesIndex = 3 * currentFeatureId;
+
       // Ensure the Laue class is correct, otherwise mark the values with a NaN and continue
       if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
       {

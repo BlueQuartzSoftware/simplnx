@@ -6,7 +6,7 @@
 #include "simplnx/simplnx_export.hpp"
 
 #include <algorithm>
-#include <cmath>
+#include <numeric>
 #include <random>
 
 namespace nx::core::ClusterUtilities

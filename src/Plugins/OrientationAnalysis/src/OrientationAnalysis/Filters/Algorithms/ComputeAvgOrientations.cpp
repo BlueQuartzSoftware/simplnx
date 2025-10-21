@@ -129,8 +129,7 @@ Result<> ComputeAvgOrientations::operator()()
 
     QuatF curAvgQuat(avgQuats[featureId * 4], avgQuats[featureId * 4 + 1], avgQuats[featureId * 4 + 2], avgQuats[featureId * 4 + 3]);
     curAvgQuat = curAvgQuat.scalarDivide(counts[featureId]);
-    curAvgQuat = curAvgQuat.normalize();
-    curAvgQuat.positiveOrientation();
+    curAvgQuat = curAvgQuat.normalize().getPositiveOrientation();
     UpdateQuaternionArray(avgQuats, curAvgQuat, featureId);
 
     // Update the value for the average Euler. Be sure to make sure the Quaterion is in the northern hemisphere
