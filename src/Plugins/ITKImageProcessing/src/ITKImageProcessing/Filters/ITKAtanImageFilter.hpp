@@ -44,9 +44,9 @@ public:
   ITKAtanImageFilter& operator=(ITKAtanImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

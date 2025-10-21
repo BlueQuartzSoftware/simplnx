@@ -21,14 +21,14 @@ public:
   ExtractInternalSurfacesFromTriangleGeometryFilter& operator=(ExtractInternalSurfacesFromTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
-  static inline constexpr StringLiteral k_NodeTypesPath_Key = "node_types_path";
-  static inline constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
-  static inline constexpr StringLiteral k_CopyTrianglePaths_Key = "copy_triangle_array_paths";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
-  static inline constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
-  static inline constexpr StringLiteral k_NodeTypeRange_Key = "node_type_range";
+  static constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
+  static constexpr StringLiteral k_NodeTypesPath_Key = "node_types_path";
+  static constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
+  static constexpr StringLiteral k_CopyTrianglePaths_Key = "copy_triangle_array_paths";
+  static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
+  static constexpr StringLiteral k_NodeTypeRange_Key = "node_type_range";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -24,9 +24,9 @@ public:
   VerifyTriangleWindingFilter& operator=(VerifyTriangleWindingFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_LabelsPath_Key = "labels_path";
-  static inline constexpr StringLiteral k_RepairNormals_Key = "repair_normals";
-  static inline constexpr StringLiteral k_TriangleNormalsPath_Key = "triangle_normals_path";
+  static constexpr StringLiteral k_LabelsPath_Key = "labels_path";
+  static constexpr StringLiteral k_RepairNormals_Key = "repair_normals";
+  static constexpr StringLiteral k_TriangleNormalsPath_Key = "triangle_normals_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

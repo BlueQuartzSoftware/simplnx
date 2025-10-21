@@ -24,17 +24,17 @@ public:
   ReadGrainMapper3DFilter& operator=(ReadGrainMapper3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
-  static inline constexpr StringLiteral k_ReadLabDCT_Key = "read_lab_dct_data";
-  static inline constexpr StringLiteral k_CreatedDCTImageGeometryPath_Key = "output_dct_image_geometry_path";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
-  static inline constexpr StringLiteral k_ConvertPhaseToInt32_Key = "convert_phase_to_int32";
-  static inline constexpr StringLiteral k_ConvertOrientationData_Key = "convert_orientation_data";
-  static inline constexpr StringLiteral k_ReadAbsorptionCT_Key = "read_absorption_ct_data";
-  static inline constexpr StringLiteral k_CreatedAbsorptionGeometryPath_Key = "output_absorption_image_geometry_path";
-  static inline constexpr StringLiteral k_CellAbsorptionAttributeMatrixName_Key = "cell_absorption_attribute_matrix_name";
-  static inline constexpr StringLiteral k_ConvertIPFColorData_Key = "convert_ipfcolor_data";
+  static constexpr StringLiteral k_InputFile_Key = "input_file";
+  static constexpr StringLiteral k_ReadLabDCT_Key = "read_lab_dct_data";
+  static constexpr StringLiteral k_CreatedDCTImageGeometryPath_Key = "output_dct_image_geometry_path";
+  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static constexpr StringLiteral k_ConvertPhaseToInt32_Key = "convert_phase_to_int32";
+  static constexpr StringLiteral k_ConvertOrientationData_Key = "convert_orientation_data";
+  static constexpr StringLiteral k_ReadAbsorptionCT_Key = "read_absorption_ct_data";
+  static constexpr StringLiteral k_CreatedAbsorptionGeometryPath_Key = "output_absorption_image_geometry_path";
+  static constexpr StringLiteral k_CellAbsorptionAttributeMatrixName_Key = "cell_absorption_attribute_matrix_name";
+  static constexpr StringLiteral k_ConvertIPFColorData_Key = "convert_ipfcolor_data";
 
   /**
    * @brief Returns the name of the filter.

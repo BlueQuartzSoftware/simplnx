@@ -24,9 +24,9 @@ public:
   RemoveFlaggedVerticesFilter& operator=(RemoveFlaggedVerticesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
-  static inline constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
-  static inline constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
+  static constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
+  static constexpr StringLiteral k_CreatedVertexGeometryPath_Key = "output_vertex_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

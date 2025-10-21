@@ -28,11 +28,11 @@ public:
   ReadDeformKeyFileV12Filter& operator=(ReadDeformKeyFileV12Filter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFilePath_Key = "input_file_path";
+  static constexpr StringLiteral k_InputFilePath_Key = "input_file_path";
 
-  static inline constexpr StringLiteral k_QuadGeomPath_Key = "output_quad_geometry_path";
-  static inline constexpr StringLiteral k_VertexAMName_Key = "vertex_attribute_matrix_name";
-  static inline constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteral k_QuadGeomPath_Key = "output_quad_geometry_path";
+  static constexpr StringLiteral k_VertexAMName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

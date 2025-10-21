@@ -24,21 +24,21 @@ public:
   ITKImportImageStackFilter& operator=(ITKImportImageStackFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
-  static inline constexpr StringLiteral k_Origin_Key = "origin";
-  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
-  static inline constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
-  static inline constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
-  static inline constexpr StringLiteral k_ImageTransformChoice_Key = "image_transform_index";
-  static inline constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
-  static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";
-  static inline constexpr StringLiteral k_ResampleImagesChoice_Key = "resample_images_index";
-  static inline constexpr StringLiteral k_Scaling_Key = "scaling";
-  static inline constexpr StringLiteral k_ExactXYDimensions_Key = "exact_xy_dimensions";
-  static inline constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
-  static inline constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
+  static constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
+  static constexpr StringLiteral k_Origin_Key = "origin";
+  static constexpr StringLiteral k_Spacing_Key = "spacing";
+  static constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
+  static constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
+  static constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteral k_ImageTransformChoice_Key = "image_transform_index";
+  static constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
+  static constexpr StringLiteral k_ColorWeights_Key = "color_weights";
+  static constexpr StringLiteral k_ResampleImagesChoice_Key = "resample_images_index";
+  static constexpr StringLiteral k_Scaling_Key = "scaling";
+  static constexpr StringLiteral k_ExactXYDimensions_Key = "exact_xy_dimensions";
+  static constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
+  static constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json

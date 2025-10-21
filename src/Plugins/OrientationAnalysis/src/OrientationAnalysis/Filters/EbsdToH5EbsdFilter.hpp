@@ -24,11 +24,11 @@ public:
   EbsdToH5EbsdFilter& operator=(EbsdToH5EbsdFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
-  static inline constexpr StringLiteral k_StackingOrder_Key = "stacking_order_index";
-  static inline constexpr StringLiteral k_ReferenceFrame_Key = "reference_frame_index";
-  static inline constexpr StringLiteral k_OutputPath_Key = "output_file_path";
-  static inline constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
+  static constexpr StringLiteral k_ZSpacing_Key = "z_spacing";
+  static constexpr StringLiteral k_StackingOrder_Key = "stacking_order_index";
+  static constexpr StringLiteral k_ReferenceFrame_Key = "reference_frame_index";
+  static constexpr StringLiteral k_OutputPath_Key = "output_file_path";
+  static constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
 
   /**
    * @brief Returns the name of the filter.

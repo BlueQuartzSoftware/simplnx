@@ -21,13 +21,13 @@ public:
   CreateDataArrayFilter& operator=(CreateDataArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumericType_Key = "numeric_type_index";
-  static inline constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
-  static inline constexpr StringLiteral k_NumComps_Key = "component_count";
-  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-  static inline constexpr StringLiteral k_DataPath_Key = "output_array_path";
-  static inline constexpr StringLiteral k_InitializationValue_Key = "initialization_value_str";
-  static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
+  static constexpr StringLiteral k_NumericType_Key = "numeric_type_index";
+  static constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
+  static constexpr StringLiteral k_NumComps_Key = "component_count";
+  static constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+  static constexpr StringLiteral k_DataPath_Key = "output_array_path";
+  static constexpr StringLiteral k_InitializationValue_Key = "initialization_value_str";
+  static constexpr StringLiteral k_DataFormat_Key = "data_format";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

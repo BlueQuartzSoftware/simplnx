@@ -25,17 +25,17 @@ public:
   ComputeTwinBoundariesFilter& operator=(ComputeTwinBoundariesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FindCoherence_Key = "find_coherence";
-  static inline constexpr StringLiteral k_AngleTolerance_Key = "angle_tolerance";
-  static inline constexpr StringLiteral k_AxisTolerance_Key = "axis_tolerance";
-  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
-  static inline constexpr StringLiteral k_FaceNormalsArrayPath_Key = "face_normals_array_path";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_BoundariesArrayType_Key = "boundaries_array_type_index";
-  static inline constexpr StringLiteral k_TwinBoundariesName_Key = "twin_boundaries_name";
-  static inline constexpr StringLiteral k_TwinBoundariesIncoherenceName_Key = "twin_boundaries_incoherence_name";
+  static constexpr StringLiteral k_FindCoherence_Key = "find_coherence";
+  static constexpr StringLiteral k_AngleTolerance_Key = "angle_tolerance";
+  static constexpr StringLiteral k_AxisTolerance_Key = "axis_tolerance";
+  static constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static constexpr StringLiteral k_FaceNormalsArrayPath_Key = "face_normals_array_path";
+  static constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteral k_BoundariesArrayType_Key = "boundaries_array_type_index";
+  static constexpr StringLiteral k_TwinBoundariesName_Key = "twin_boundaries_name";
+  static constexpr StringLiteral k_TwinBoundariesIncoherenceName_Key = "twin_boundaries_incoherence_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

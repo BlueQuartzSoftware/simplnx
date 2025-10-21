@@ -26,17 +26,17 @@ public:
   ReadStlFileFilter& operator=(ReadStlFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ScaleOutput = "scale_output";
-  static inline constexpr StringLiteral k_ScaleFactor = "scale_factor";
-  static inline constexpr StringLiteral k_StlFilePath_Key = "stl_file_path";
+  static constexpr StringLiteral k_ScaleOutput = "scale_output";
+  static constexpr StringLiteral k_ScaleFactor = "scale_factor";
+  static constexpr StringLiteral k_StlFilePath_Key = "stl_file_path";
 
-  static inline constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
+  static constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
 
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
-  static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
-  static inline constexpr StringLiteral k_FaceNormalsName_Key = "face_normals_name";
-  static inline constexpr StringLiteral k_CreateFaceLabels_Key = "create_face_labels";
-  static inline constexpr StringLiteral k_FaceLabelsName_Key = "face_labels_name";
+  static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
+  static constexpr StringLiteral k_FaceNormalsName_Key = "face_normals_name";
+  static constexpr StringLiteral k_CreateFaceLabels_Key = "create_face_labels";
+  static constexpr StringLiteral k_FaceLabelsName_Key = "face_labels_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

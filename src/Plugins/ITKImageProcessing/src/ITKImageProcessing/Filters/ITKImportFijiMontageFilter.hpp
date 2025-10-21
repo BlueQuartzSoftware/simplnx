@@ -29,19 +29,19 @@ public:
   ITKImportFijiMontageFilter& operator=(ITKImportFijiMontageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
-  static inline constexpr StringLiteral k_DataGroupName_Key = "data_group_name";
-  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
-  static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
-  static inline constexpr StringLiteral k_Origin_Key = "origin";
-  static inline constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
-  static inline constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
-  static inline constexpr StringLiteral k_ParentDataGroup_Key = "parent_data_group";
-  static inline constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
-  static inline constexpr StringLiteral k_ColorWeights_Key = "color_weights";
-  static inline constexpr StringLiteral k_DataContainerPath_Key = "data_container_path";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static inline constexpr StringLiteral k_ImageDataArrayName_Key = "image_data_array_name";
+  static constexpr StringLiteral k_InputFile_Key = "input_file";
+  static constexpr StringLiteral k_DataGroupName_Key = "data_group_name";
+  static constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
+  static constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
+  static constexpr StringLiteral k_Origin_Key = "origin";
+  static constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
+  static constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
+  static constexpr StringLiteral k_ParentDataGroup_Key = "parent_data_group";
+  static constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
+  static constexpr StringLiteral k_ColorWeights_Key = "color_weights";
+  static constexpr StringLiteral k_DataContainerPath_Key = "data_container_path";
+  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteral k_ImageDataArrayName_Key = "image_data_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,12 +24,12 @@ public:
   ComputeBiasedFeaturesFilter& operator=(ComputeBiasedFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CalcByPhase_Key = "calc_by_phase";
-  static inline constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
-  static inline constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "surface_features_array_path";
-  static inline constexpr StringLiteral k_PhasesArrayPath_Key = "phases_array_path";
-  static inline constexpr StringLiteral k_BiasedFeaturesArrayName_Key = "biased_features_array_name";
+  static constexpr StringLiteral k_CalcByPhase_Key = "calc_by_phase";
+  static constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static constexpr StringLiteral k_SurfaceFeaturesArrayPath_Key = "surface_features_array_path";
+  static constexpr StringLiteral k_PhasesArrayPath_Key = "phases_array_path";
+  static constexpr StringLiteral k_BiasedFeaturesArrayName_Key = "biased_features_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

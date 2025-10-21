@@ -31,10 +31,10 @@ public:
   };
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Endianess_Key = "endian_index";
-  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
-  static inline constexpr StringLiteral k_FileExtension_Key = "file_extension";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteral k_Endianess_Key = "endian_index";
+  static constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static constexpr StringLiteral k_FileExtension_Key = "file_extension";
+  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.

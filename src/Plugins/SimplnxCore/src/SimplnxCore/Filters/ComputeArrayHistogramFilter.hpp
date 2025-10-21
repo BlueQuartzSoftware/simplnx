@@ -24,21 +24,21 @@ public:
   ComputeArrayHistogramFilter& operator=(ComputeArrayHistogramFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NumberOfBins_Key = "number_of_bins";
-  static inline constexpr StringLiteral k_UserDefinedRange_Key = "user_defined_range";
-  static inline constexpr StringLiteral k_MinRange_Key = "min_range";
-  static inline constexpr StringLiteral k_MaxRange_Key = "max_range";
-  static inline constexpr StringLiteral k_CreateNewDataGroup_Key = "create_new_data_group";
-  static inline constexpr StringLiteral k_SelectedArrayPaths_Key = "selected_array_paths";
-  static inline constexpr StringLiteral k_NewDataGroupPath_Key = "new_data_group_path";
-  static inline constexpr StringLiteral k_DataGroupPath_Key = "output_data_group_path";
-  static inline constexpr StringLiteral k_HistoBinCountName_Key = "histogram_bin_count_name";
-  static inline constexpr StringLiteral k_HistoBinRangeName_Key = "histogram_bin_range_name";
-  static inline constexpr StringLiteral k_HistoMostPopulatedBinName_Key = "histogram_most_populated_bin_name";
-  static inline constexpr StringLiteral k_CalculateModalBinRanges_Key = "calculate_modal_bin_ranges";
-  static inline constexpr StringLiteral k_HistoModalBinRangesName_Key = "histogram_modal_bin_ranges_name";
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_NumberOfBins_Key = "number_of_bins";
+  static constexpr StringLiteral k_UserDefinedRange_Key = "user_defined_range";
+  static constexpr StringLiteral k_MinRange_Key = "min_range";
+  static constexpr StringLiteral k_MaxRange_Key = "max_range";
+  static constexpr StringLiteral k_CreateNewDataGroup_Key = "create_new_data_group";
+  static constexpr StringLiteral k_SelectedArrayPaths_Key = "selected_array_paths";
+  static constexpr StringLiteral k_NewDataGroupPath_Key = "new_data_group_path";
+  static constexpr StringLiteral k_DataGroupPath_Key = "output_data_group_path";
+  static constexpr StringLiteral k_HistoBinCountName_Key = "histogram_bin_count_name";
+  static constexpr StringLiteral k_HistoBinRangeName_Key = "histogram_bin_range_name";
+  static constexpr StringLiteral k_HistoMostPopulatedBinName_Key = "histogram_most_populated_bin_name";
+  static constexpr StringLiteral k_CalculateModalBinRanges_Key = "calculate_modal_bin_ranges";
+  static constexpr StringLiteral k_HistoModalBinRangesName_Key = "histogram_modal_bin_ranges_name";
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

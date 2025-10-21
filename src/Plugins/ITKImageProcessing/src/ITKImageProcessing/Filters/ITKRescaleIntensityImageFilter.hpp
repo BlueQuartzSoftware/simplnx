@@ -44,11 +44,11 @@ public:
   ITKRescaleIntensityImageFilter& operator=(ITKRescaleIntensityImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static inline constexpr StringLiteral k_OutputMinimum_Key = "output_minimum";
-  static inline constexpr StringLiteral k_OutputMaximum_Key = "output_maximum";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_OutputMinimum_Key = "output_minimum";
+  static constexpr StringLiteral k_OutputMaximum_Key = "output_maximum";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

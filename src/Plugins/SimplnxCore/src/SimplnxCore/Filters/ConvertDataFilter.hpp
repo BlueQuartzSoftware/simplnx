@@ -24,10 +24,10 @@ public:
   ConvertDataFilter& operator=(ConvertDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
-  static inline constexpr StringLiteral k_ArrayToConvertPath_Key = "array_to_convert_path";
-  static inline constexpr StringLiteral k_ConvertedArrayName_Key = "converted_array_name";
-  static inline constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
+  static constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
+  static constexpr StringLiteral k_ArrayToConvertPath_Key = "array_to_convert_path";
+  static constexpr StringLiteral k_ConvertedArrayName_Key = "converted_array_name";
+  static constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

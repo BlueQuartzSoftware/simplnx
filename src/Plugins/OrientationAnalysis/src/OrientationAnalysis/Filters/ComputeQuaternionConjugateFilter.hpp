@@ -24,9 +24,9 @@ public:
   ComputeQuaternionConjugateFilter& operator=(ComputeQuaternionConjugateFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellQuatsArrayPath_Key = "input_quats_data_path";
-  static inline constexpr StringLiteral k_OutputDataArrayName_Key = "output_data_array_name";
-  static inline constexpr StringLiteral k_DeleteOriginalData_Key = "delete_original_data";
+  static constexpr StringLiteral k_CellQuatsArrayPath_Key = "input_quats_data_path";
+  static constexpr StringLiteral k_OutputDataArrayName_Key = "output_data_array_name";
+  static constexpr StringLiteral k_DeleteOriginalData_Key = "delete_original_data";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

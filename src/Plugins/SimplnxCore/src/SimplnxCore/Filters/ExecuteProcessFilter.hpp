@@ -24,10 +24,10 @@ public:
   ExecuteProcessFilter& operator=(ExecuteProcessFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Arguments_Key = "arguments";
-  static inline constexpr StringLiteral k_Blocking_Key = "blocking";
-  static inline constexpr StringLiteral k_Timeout_Key = "timeout";
-  static inline constexpr StringLiteral k_OutputLogFile_Key = "output_log_file";
+  static constexpr StringLiteral k_Arguments_Key = "arguments";
+  static constexpr StringLiteral k_Blocking_Key = "blocking";
+  static constexpr StringLiteral k_Timeout_Key = "timeout";
+  static constexpr StringLiteral k_OutputLogFile_Key = "output_log_file";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

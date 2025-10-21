@@ -23,12 +23,12 @@ public:
   ErrorWarningFilter& operator=(ErrorWarningFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PreflightWarning_Key = "preflight_warning";
-  static inline constexpr StringLiteral k_PreflightError_Key = "preflight_error";
-  static inline constexpr StringLiteral k_PreflightException_Key = "preflight_exception";
-  static inline constexpr StringLiteral k_ExecuteWarning_Key = "execute_warning";
-  static inline constexpr StringLiteral k_ExecuteError_Key = "execute_error";
-  static inline constexpr StringLiteral k_ExecuteException_Key = "execute_exception";
+  static constexpr StringLiteral k_PreflightWarning_Key = "preflight_warning";
+  static constexpr StringLiteral k_PreflightError_Key = "preflight_error";
+  static constexpr StringLiteral k_PreflightException_Key = "preflight_exception";
+  static constexpr StringLiteral k_ExecuteWarning_Key = "execute_warning";
+  static constexpr StringLiteral k_ExecuteError_Key = "execute_error";
+  static constexpr StringLiteral k_ExecuteException_Key = "execute_exception";
 
   /**
    * @brief Returns the name of the filter.

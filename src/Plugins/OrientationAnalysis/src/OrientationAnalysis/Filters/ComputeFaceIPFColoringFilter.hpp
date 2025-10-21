@@ -24,13 +24,13 @@ public:
   ComputeFaceIPFColoringFilter& operator=(ComputeFaceIPFColoringFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
-  static inline constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_FirstFaceIPFColorsArrayName_Key = "first_face_ipf_colors_array_name";
-  static inline constexpr StringLiteral k_SecondFaceIPFColorsArrayName_Key = "second_face_ipf_colors_array_name";
+  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteral k_SurfaceMeshFaceNormalsArrayPath_Key = "surface_mesh_face_normals_array_path";
+  static constexpr StringLiteral k_FeatureEulerAnglesArrayPath_Key = "feature_euler_angles_array_path";
+  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteral k_FirstFaceIPFColorsArrayName_Key = "first_face_ipf_colors_array_name";
+  static constexpr StringLiteral k_SecondFaceIPFColorsArrayName_Key = "second_face_ipf_colors_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

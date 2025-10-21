@@ -24,11 +24,11 @@ public:
   SplitDataArrayByComponentFilter& operator=(SplitDataArrayByComponentFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MultiCompArrayPath_Key = "multicomponent_array_path";
-  static inline constexpr StringLiteral k_Postfix_Key = "postfix";
-  static inline constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
-  static inline constexpr StringLiteral k_SelectComponents_Key = "select_components_to_extract";
-  static inline constexpr StringLiteral k_ComponentsToExtract_Key = "components_to_extract";
+  static constexpr StringLiteral k_MultiCompArrayPath_Key = "multicomponent_array_path";
+  static constexpr StringLiteral k_Postfix_Key = "postfix";
+  static constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
+  static constexpr StringLiteral k_SelectComponents_Key = "select_components_to_extract";
+  static constexpr StringLiteral k_ComponentsToExtract_Key = "components_to_extract";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -29,13 +29,13 @@ public:
   ReadRawBinaryFilter& operator=(ReadRawBinaryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
-  static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
-  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-  static inline constexpr StringLiteral k_NumberOfComponents_Key = "number_of_components";
-  static inline constexpr StringLiteral k_Endian_Key = "endian_index";
-  static inline constexpr StringLiteral k_SkipHeaderBytes_Key = "skip_header_bytes";
-  static inline constexpr StringLiteral k_CreatedAttributeArrayPath_Key = "created_attribute_array_path";
+  static constexpr StringLiteral k_InputFile_Key = "input_file";
+  static constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
+  static constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+  static constexpr StringLiteral k_NumberOfComponents_Key = "number_of_components";
+  static constexpr StringLiteral k_Endian_Key = "endian_index";
+  static constexpr StringLiteral k_SkipHeaderBytes_Key = "skip_header_bytes";
+  static constexpr StringLiteral k_CreatedAttributeArrayPath_Key = "created_attribute_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

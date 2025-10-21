@@ -21,9 +21,9 @@ public:
   AlignGeometriesFilter& operator=(AlignGeometriesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MovingGeometry_Key = "input_moving_geometry_path";
-  static inline constexpr StringLiteral k_TargetGeometry_Key = "input_target_geometry_path";
-  static inline constexpr StringLiteral k_AlignmentType_Key = "alignment_type_index";
+  static constexpr StringLiteral k_MovingGeometry_Key = "input_moving_geometry_path";
+  static constexpr StringLiteral k_TargetGeometry_Key = "input_target_geometry_path";
+  static constexpr StringLiteral k_AlignmentType_Key = "alignment_type_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -25,11 +25,11 @@ public:
   ExtractComponentAsArrayFilter& operator=(ExtractComponentAsArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_RemoveComponentsFromArray_Key = "remove_components_from_array";
-  static inline constexpr StringLiteral k_MoveComponentsToNewArray_Key = "move_components_to_new_array";
-  static inline constexpr StringLiteral k_CompNumber_Key = "comp_number";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
-  static inline constexpr StringLiteral k_NewArrayName_Key = "new_array_name";
+  static constexpr StringLiteral k_RemoveComponentsFromArray_Key = "remove_components_from_array";
+  static constexpr StringLiteral k_MoveComponentsToNewArray_Key = "move_components_to_new_array";
+  static constexpr StringLiteral k_CompNumber_Key = "comp_number";
+  static constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static constexpr StringLiteral k_NewArrayName_Key = "new_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

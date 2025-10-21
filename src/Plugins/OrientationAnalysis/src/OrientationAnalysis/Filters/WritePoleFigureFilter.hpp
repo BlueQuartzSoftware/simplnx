@@ -24,30 +24,30 @@ public:
   WritePoleFigureFilter& operator=(WritePoleFigureFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Title_Key = "title";
-  static inline constexpr StringLiteral k_GenerationAlgorithm_Key = "generation_algorithm_index";
-  static inline constexpr StringLiteral k_LambertSize_Key = "lambert_size";
-  static inline constexpr StringLiteral k_NumColors_Key = "num_colors";
-  static inline constexpr StringLiteral k_ImageFormat_Key = "image_format";
-  static inline constexpr StringLiteral k_ImageLayout_Key = "image_layout_index";
-  static inline constexpr StringLiteral k_OutputPath_Key = "output_path";
-  static inline constexpr StringLiteral k_ImagePrefix_Key = "image_prefix";
-  static inline constexpr StringLiteral k_ImageSize_Key = "image_size";
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_MaterialNameArrayPath_Key = "material_name_array_path";
-  static inline constexpr StringLiteral k_SaveAsImageGeometry_Key = "save_as_image_geometry";
-  static inline constexpr StringLiteral k_WriteImageToDisk = "write_image_to_disk";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_SaveIntensityDataArrays = "save_intensity_plots";
-  static inline constexpr StringLiteral k_NormalizeToMRD = "normalize_to_mrd";
-  static inline constexpr StringLiteral k_IntensityGeometryPath = "intensity_geometry_path";
-  static inline constexpr StringLiteral k_IntensityPlot1Name = "intensity_plot_1_name";
-  static inline constexpr StringLiteral k_IntensityPlot2Name = "intensity_plot_2_name";
-  static inline constexpr StringLiteral k_IntensityPlot3Name = "intensity_plot_3_name";
+  static constexpr StringLiteral k_Title_Key = "title";
+  static constexpr StringLiteral k_GenerationAlgorithm_Key = "generation_algorithm_index";
+  static constexpr StringLiteral k_LambertSize_Key = "lambert_size";
+  static constexpr StringLiteral k_NumColors_Key = "num_colors";
+  static constexpr StringLiteral k_ImageFormat_Key = "image_format";
+  static constexpr StringLiteral k_ImageLayout_Key = "image_layout_index";
+  static constexpr StringLiteral k_OutputPath_Key = "output_path";
+  static constexpr StringLiteral k_ImagePrefix_Key = "image_prefix";
+  static constexpr StringLiteral k_ImageSize_Key = "image_size";
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteral k_MaterialNameArrayPath_Key = "material_name_array_path";
+  static constexpr StringLiteral k_SaveAsImageGeometry_Key = "save_as_image_geometry";
+  static constexpr StringLiteral k_WriteImageToDisk = "write_image_to_disk";
+  static constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_SaveIntensityDataArrays = "save_intensity_plots";
+  static constexpr StringLiteral k_NormalizeToMRD = "normalize_to_mrd";
+  static constexpr StringLiteral k_IntensityGeometryPath = "intensity_geometry_path";
+  static constexpr StringLiteral k_IntensityPlot1Name = "intensity_plot_1_name";
+  static constexpr StringLiteral k_IntensityPlot2Name = "intensity_plot_2_name";
+  static constexpr StringLiteral k_IntensityPlot3Name = "intensity_plot_3_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

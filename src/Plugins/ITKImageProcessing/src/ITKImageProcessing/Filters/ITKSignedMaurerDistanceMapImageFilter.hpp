@@ -45,13 +45,13 @@ public:
   ITKSignedMaurerDistanceMapImageFilter& operator=(ITKSignedMaurerDistanceMapImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static inline constexpr StringLiteral k_InsideIsPositive_Key = "inside_is_positive";
-  static inline constexpr StringLiteral k_SquaredDistance_Key = "squared_distance";
-  static inline constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
-  static inline constexpr StringLiteral k_BackgroundValue_Key = "background_value";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_InsideIsPositive_Key = "inside_is_positive";
+  static constexpr StringLiteral k_SquaredDistance_Key = "squared_distance";
+  static constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
+  static constexpr StringLiteral k_BackgroundValue_Key = "background_value";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

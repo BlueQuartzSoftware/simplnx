@@ -24,34 +24,34 @@ public:
   ComputeBoundingBoxStatsFilter& operator=(ComputeBoundingBoxStatsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CalculateLength_Key = "calculate_length";
-  static inline constexpr StringLiteral k_CalculateMin_Key = "calculate_min";
-  static inline constexpr StringLiteral k_CalculateMax_Key = "calculate_max";
-  static inline constexpr StringLiteral k_CalculateSummation_Key = "calculate_summation";
-  static inline constexpr StringLiteral k_CalculateMean_Key = "calculate_mean";
-  static inline constexpr StringLiteral k_CalculateMedian_Key = "calculate_median";
-  static inline constexpr StringLiteral k_CalculateMode_Key = "calculate_mode";
-  static inline constexpr StringLiteral k_CalculateUniqueValues_Key = "calculate_num_unique_values";
-  static inline constexpr StringLiteral k_CalculateStandardDeviation_Key = "calculate_standard_deviation";
+  static constexpr StringLiteral k_CalculateLength_Key = "calculate_length";
+  static constexpr StringLiteral k_CalculateMin_Key = "calculate_min";
+  static constexpr StringLiteral k_CalculateMax_Key = "calculate_max";
+  static constexpr StringLiteral k_CalculateSummation_Key = "calculate_summation";
+  static constexpr StringLiteral k_CalculateMean_Key = "calculate_mean";
+  static constexpr StringLiteral k_CalculateMedian_Key = "calculate_median";
+  static constexpr StringLiteral k_CalculateMode_Key = "calculate_mode";
+  static constexpr StringLiteral k_CalculateUniqueValues_Key = "calculate_num_unique_values";
+  static constexpr StringLiteral k_CalculateStandardDeviation_Key = "calculate_standard_deviation";
 
-  static inline constexpr StringLiteral k_GeometryPath_Key = "geometry_path";
-  static inline constexpr StringLiteral k_UnifiedBoundsPath_Key = "unified_bounds_path";
-  static inline constexpr StringLiteral k_InputArrayPath_Key = "input_array_path";
+  static constexpr StringLiteral k_GeometryPath_Key = "geometry_path";
+  static constexpr StringLiteral k_UnifiedBoundsPath_Key = "unified_bounds_path";
+  static constexpr StringLiteral k_InputArrayPath_Key = "input_array_path";
 
-  static inline constexpr StringLiteral k_CreateNewAM_Key = "create_new_am";
-  static inline constexpr StringLiteral k_OutputAMPath_Key = "output_am_path";
-  static inline constexpr StringLiteral k_NewAMName_Key = "new_am_name";
+  static constexpr StringLiteral k_CreateNewAM_Key = "create_new_am";
+  static constexpr StringLiteral k_OutputAMPath_Key = "output_am_path";
+  static constexpr StringLiteral k_NewAMName_Key = "new_am_name";
 
-  static inline constexpr StringLiteral k_BoundsHasDataName_Key = "bounds_has_data_name";
-  static inline constexpr StringLiteral k_LengthName_Key = "length_name";
-  static inline constexpr StringLiteral k_MinName_Key = "min_name";
-  static inline constexpr StringLiteral k_MaxName_Key = "max_name";
-  static inline constexpr StringLiteral k_SummationName_Key = "summation_name";
-  static inline constexpr StringLiteral k_MeanName_Key = "mean_name";
-  static inline constexpr StringLiteral k_MedianName_Key = "median_name";
-  static inline constexpr StringLiteral k_ModeName_Key = "mode_name";
-  static inline constexpr StringLiteral k_NumUniqueValuesName_Key = "num_unique_values_name";
-  static inline constexpr StringLiteral k_StdDevName_Key = "std_dev_name";
+  static constexpr StringLiteral k_BoundsHasDataName_Key = "bounds_has_data_name";
+  static constexpr StringLiteral k_LengthName_Key = "length_name";
+  static constexpr StringLiteral k_MinName_Key = "min_name";
+  static constexpr StringLiteral k_MaxName_Key = "max_name";
+  static constexpr StringLiteral k_SummationName_Key = "summation_name";
+  static constexpr StringLiteral k_MeanName_Key = "mean_name";
+  static constexpr StringLiteral k_MedianName_Key = "median_name";
+  static constexpr StringLiteral k_ModeName_Key = "mode_name";
+  static constexpr StringLiteral k_NumUniqueValuesName_Key = "num_unique_values_name";
+  static constexpr StringLiteral k_StdDevName_Key = "std_dev_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

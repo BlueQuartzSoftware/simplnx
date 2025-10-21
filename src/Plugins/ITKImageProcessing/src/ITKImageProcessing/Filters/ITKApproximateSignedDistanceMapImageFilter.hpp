@@ -62,11 +62,11 @@ public:
   ITKApproximateSignedDistanceMapImageFilter& operator=(ITKApproximateSignedDistanceMapImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static inline constexpr StringLiteral k_InsideValue_Key = "inside_value";
-  static inline constexpr StringLiteral k_OutsideValue_Key = "outside_value";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_InsideValue_Key = "inside_value";
+  static constexpr StringLiteral k_OutsideValue_Key = "outside_value";
 
   /**
    * @brief Returns the name of the filter.

@@ -21,10 +21,10 @@ public:
   CopyDataObjectFilter& operator=(CopyDataObjectFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataPath_Key = "existing_data_path";
-  static inline constexpr StringLiteral k_UseNewParent_Key = "use_new_parent";
-  static inline constexpr StringLiteral k_NewPath_Key = "new_data_path";
-  static inline constexpr StringLiteral k_NewPathSuffix_Key = "new_path_suffix";
+  static constexpr StringLiteral k_DataPath_Key = "existing_data_path";
+  static constexpr StringLiteral k_UseNewParent_Key = "use_new_parent";
+  static constexpr StringLiteral k_NewPath_Key = "new_data_path";
+  static constexpr StringLiteral k_NewPathSuffix_Key = "new_path_suffix";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

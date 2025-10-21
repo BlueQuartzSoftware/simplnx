@@ -24,18 +24,18 @@ public:
   PadImageGeometryFilter& operator=(PadImageGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_XMinMax_Key = "x_min_max";
-  static inline constexpr StringLiteral k_YMinMax_Key = "y_min_max";
-  static inline constexpr StringLiteral k_ZMinMax_Key = "z_min_max";
-  static inline constexpr StringLiteral k_DefaultFillValue_Key = "default_fill_value";
-  static inline constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
-  static inline constexpr StringLiteral k_AttributeMatrixPath_Key = "attribute_matrix_path";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_PerformInPlace_Key = "perform_in_place";
-  static inline constexpr StringLiteral k_PadXDim_Key = "crop_x_dim";
-  static inline constexpr StringLiteral k_PadYDim_Key = "crop_y_dim";
-  static inline constexpr StringLiteral k_PadZDim_Key = "crop_z_dim";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_XMinMax_Key = "x_min_max";
+  static constexpr StringLiteral k_YMinMax_Key = "y_min_max";
+  static constexpr StringLiteral k_ZMinMax_Key = "z_min_max";
+  static constexpr StringLiteral k_DefaultFillValue_Key = "default_fill_value";
+  static constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
+  static constexpr StringLiteral k_AttributeMatrixPath_Key = "attribute_matrix_path";
+  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_PerformInPlace_Key = "perform_in_place";
+  static constexpr StringLiteral k_PadXDim_Key = "crop_x_dim";
+  static constexpr StringLiteral k_PadYDim_Key = "crop_y_dim";
+  static constexpr StringLiteral k_PadZDim_Key = "crop_z_dim";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

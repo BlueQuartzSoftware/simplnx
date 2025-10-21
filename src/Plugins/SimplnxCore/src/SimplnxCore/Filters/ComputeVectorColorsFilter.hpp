@@ -24,10 +24,10 @@ public:
   ComputeVectorColorsFilter& operator=(ComputeVectorColorsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_VectorsArrayPath_Key = "vectors_array_path";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_CellVectorColorsArrayName_Key = "cell_vector_colors_array_name";
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_VectorsArrayPath_Key = "vectors_array_path";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_CellVectorColorsArrayName_Key = "cell_vector_colors_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

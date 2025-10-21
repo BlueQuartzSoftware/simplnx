@@ -25,12 +25,12 @@ public:
   ReadCtfDataFilter& operator=(ReadCtfDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
-  static inline constexpr StringLiteral k_DegreesToRadians_Key = "degrees_to_radians";
-  static inline constexpr StringLiteral k_EdaxHexagonalAlignment_Key = "edax_hexagonal_alignment";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
+  static constexpr StringLiteral k_InputFile_Key = "input_file";
+  static constexpr StringLiteral k_DegreesToRadians_Key = "degrees_to_radians";
+  static constexpr StringLiteral k_EdaxHexagonalAlignment_Key = "edax_hexagonal_alignment";
+  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteral k_CellEnsembleAttributeMatrixName_Key = "cell_ensemble_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

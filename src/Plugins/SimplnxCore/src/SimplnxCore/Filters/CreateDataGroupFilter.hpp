@@ -23,7 +23,7 @@ public:
   CreateDataGroupFilter& operator=(CreateDataGroupFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataObjectPath = "data_object_path";
+  static constexpr StringLiteral k_DataObjectPath = "data_object_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

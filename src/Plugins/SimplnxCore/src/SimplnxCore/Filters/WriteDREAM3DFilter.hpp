@@ -27,8 +27,8 @@ public:
   WriteDREAM3DFilter& operator=(WriteDREAM3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ExportFilePath = "export_file_path";
-  static inline constexpr StringLiteral k_WriteXdmf = "write_xdmf_file";
+  static constexpr StringLiteral k_ExportFilePath = "export_file_path";
+  static constexpr StringLiteral k_WriteXdmf = "write_xdmf_file";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -23,8 +23,8 @@ public:
   CreateAttributeMatrixFilter& operator=(CreateAttributeMatrixFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_DataObjectPath = "data_object_path";
-  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
+  static constexpr StringLiteral k_DataObjectPath = "data_object_path";
+  static constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

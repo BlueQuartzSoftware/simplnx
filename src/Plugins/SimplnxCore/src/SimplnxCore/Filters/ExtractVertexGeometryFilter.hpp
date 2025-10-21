@@ -26,14 +26,14 @@ public:
   ExtractVertexGeometryFilter& operator=(ExtractVertexGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ArrayHandling_Key = "array_handling_index";
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_InputGeometryPath_Key = "input_grid_geometry_path";
-  static inline constexpr StringLiteral k_IncludedDataArrayPaths_Key = "included_data_array_paths";
-  static inline constexpr StringLiteral k_VertexGeometryPath_Key = "output_vertex_geometry_path";
-  static inline constexpr StringLiteral k_VertexAttrMatrixName_Key = "output_vertex_attr_matrix_name";
-  static inline constexpr StringLiteral k_SharedVertexListName_Key = "output_shared_vertex_list_name";
+  static constexpr StringLiteral k_ArrayHandling_Key = "array_handling_index";
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_InputGeometryPath_Key = "input_grid_geometry_path";
+  static constexpr StringLiteral k_IncludedDataArrayPaths_Key = "included_data_array_paths";
+  static constexpr StringLiteral k_VertexGeometryPath_Key = "output_vertex_geometry_path";
+  static constexpr StringLiteral k_VertexAttrMatrixName_Key = "output_vertex_attr_matrix_name";
+  static constexpr StringLiteral k_SharedVertexListName_Key = "output_shared_vertex_list_name";
 
   /**
    * @brief Returns the name of the filter.

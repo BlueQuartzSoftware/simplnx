@@ -27,9 +27,9 @@ public:
   CopyFeatureArrayToElementArrayFilter& operator=(CopyFeatureArrayToElementArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "selected_feature_array_paths";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_CreatedArraySuffix_Key = "created_array_suffix";
+  static constexpr StringLiteral k_SelectedFeatureArrayPath_Key = "selected_feature_array_paths";
+  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_CreatedArraySuffix_Key = "created_array_suffix";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

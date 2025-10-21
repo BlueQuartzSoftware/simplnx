@@ -24,18 +24,18 @@ public:
   LaplacianSmoothingFilter& operator=(LaplacianSmoothingFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
-  static inline constexpr StringLiteral k_IterationSteps_Key = "iteration_steps";
-  static inline constexpr StringLiteral k_Lambda_Key = "lambda_value";
-  static inline constexpr StringLiteral k_UseTaubinSmoothing_Key = "use_taubin_smoothing";
-  static inline constexpr StringLiteral k_MuFactor_Key = "mu_factor";
-  static inline constexpr StringLiteral k_TripleLineLambda_Key = "triple_line_lambda";
-  static inline constexpr StringLiteral k_QuadPointLambda_Key = "quad_point_lambda";
-  static inline constexpr StringLiteral k_SurfacePointLambda_Key = "surface_point_lambda";
-  static inline constexpr StringLiteral k_SurfaceTripleLineLambda_Key = "surface_triple_line_lambda";
-  static inline constexpr StringLiteral k_SurfaceQuadPointLambda_Key = "surface_quad_point_lambda";
-  static inline constexpr StringLiteral k_SurfaceMeshNodeTypeArrayPath_Key = "surface_mesh_node_type_array_path";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteral k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteral k_IterationSteps_Key = "iteration_steps";
+  static constexpr StringLiteral k_Lambda_Key = "lambda_value";
+  static constexpr StringLiteral k_UseTaubinSmoothing_Key = "use_taubin_smoothing";
+  static constexpr StringLiteral k_MuFactor_Key = "mu_factor";
+  static constexpr StringLiteral k_TripleLineLambda_Key = "triple_line_lambda";
+  static constexpr StringLiteral k_QuadPointLambda_Key = "quad_point_lambda";
+  static constexpr StringLiteral k_SurfacePointLambda_Key = "surface_point_lambda";
+  static constexpr StringLiteral k_SurfaceTripleLineLambda_Key = "surface_triple_line_lambda";
+  static constexpr StringLiteral k_SurfaceQuadPointLambda_Key = "surface_quad_point_lambda";
+  static constexpr StringLiteral k_SurfaceMeshNodeTypeArrayPath_Key = "surface_mesh_node_type_array_path";
+  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

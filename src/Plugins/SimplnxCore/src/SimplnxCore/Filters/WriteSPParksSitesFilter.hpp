@@ -24,9 +24,9 @@ public:
   WriteSPParksSitesFilter& operator=(WriteSPParksSitesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_ImageGeomPath = "input_image_geometry_path";
+  static constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteral k_ImageGeomPath = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

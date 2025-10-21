@@ -21,15 +21,15 @@ public:
   CropEdgeGeometryFilter& operator=(CropEdgeGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CropXDim_Key = "crop_x_dim";
-  static inline constexpr StringLiteral k_CropYDim_Key = "crop_y_dim";
-  static inline constexpr StringLiteral k_CropZDim_Key = "crop_z_dim";
-  static inline constexpr StringLiteral k_MinCoord_Key = "min_coord";
-  static inline constexpr StringLiteral k_MaxCoord_Key = "max_coord";
-  static inline constexpr StringLiteral k_SelectedEdgeGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_CreatedEdgeGeometryPath_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-  static inline constexpr StringLiteral k_BoundaryIntersectionBehavior_Key = "boundary_intersection_behavior_index";
+  static constexpr StringLiteral k_CropXDim_Key = "crop_x_dim";
+  static constexpr StringLiteral k_CropYDim_Key = "crop_y_dim";
+  static constexpr StringLiteral k_CropZDim_Key = "crop_z_dim";
+  static constexpr StringLiteral k_MinCoord_Key = "min_coord";
+  static constexpr StringLiteral k_MaxCoord_Key = "max_coord";
+  static constexpr StringLiteral k_SelectedEdgeGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_CreatedEdgeGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+  static constexpr StringLiteral k_BoundaryIntersectionBehavior_Key = "boundary_intersection_behavior_index";
 
   /**
    * @brief

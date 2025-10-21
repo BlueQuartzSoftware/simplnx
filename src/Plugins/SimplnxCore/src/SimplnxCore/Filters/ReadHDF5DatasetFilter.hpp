@@ -26,7 +26,7 @@ public:
   ReadHDF5DatasetFilter& operator=(ReadHDF5DatasetFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImportHDF5File_Key = "import_hdf5_object";
+  static constexpr StringLiteral k_ImportHDF5File_Key = "import_hdf5_object";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

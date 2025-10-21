@@ -24,20 +24,20 @@ public:
   CombineStlFilesFilter& operator=(CombineStlFilesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_StlFilesPath_Key = "stl_files_path";
-  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "output_triangle_geometry_path";
-  static inline constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
-  static inline constexpr StringLiteral k_FaceNormalsArrayName_Key = "face_normals_array_name";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
-  static inline constexpr StringLiteral k_CreatePartNumbers_Key = "create_part_numbers";
-  static inline constexpr StringLiteral k_PartNumbersName_Key = "part_numbers_name";
-  static inline constexpr StringLiteral k_CreateFaceLabels_Key = "create_face_labels";
-  static inline constexpr StringLiteral k_FaceLabelsName_Key = "face_labels_name";
-  static inline constexpr StringLiteral k_LabelVertices_Key = "label_vertices";
-  static inline constexpr StringLiteral k_VertexLabelName_Key = "vertex_label_name";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
-  static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
-  static inline constexpr StringLiteral k_FileListName_Key = "output_file_list_name";
+  static constexpr StringLiteral k_StlFilesPath_Key = "stl_files_path";
+  static constexpr StringLiteral k_TriangleGeometryPath_Key = "output_triangle_geometry_path";
+  static constexpr StringLiteral k_FaceAttributeMatrixName_Key = "face_attribute_matrix_name";
+  static constexpr StringLiteral k_FaceNormalsArrayName_Key = "face_normals_array_name";
+  static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteral k_CreatePartNumbers_Key = "create_part_numbers";
+  static constexpr StringLiteral k_PartNumbersName_Key = "part_numbers_name";
+  static constexpr StringLiteral k_CreateFaceLabels_Key = "create_face_labels";
+  static constexpr StringLiteral k_FaceLabelsName_Key = "face_labels_name";
+  static constexpr StringLiteral k_LabelVertices_Key = "label_vertices";
+  static constexpr StringLiteral k_VertexLabelName_Key = "vertex_label_name";
+  static constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
+  static constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
+  static constexpr StringLiteral k_FileListName_Key = "output_file_list_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -24,14 +24,14 @@ public:
   AppendImageGeometryFilter& operator=(AppendImageGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputGeometries_Key = "input_image_geometries_paths";
-  static inline constexpr StringLiteral k_DestinationGeometry_Key = "destination_image_geometry_path";
-  static inline constexpr StringLiteral k_Direction_Key = "direction_index";
-  static inline constexpr StringLiteral k_MirrorGeometry_Key = "mirror_geometry";
-  static inline constexpr StringLiteral k_CheckResolution_Key = "check_resolution";
-  static inline constexpr StringLiteral k_DefaultValue_Key = "default_value";
-  static inline constexpr StringLiteral k_SaveAsNewGeometry_Key = "save_as_new_geometry";
-  static inline constexpr StringLiteral k_NewGeometry_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_InputGeometries_Key = "input_image_geometries_paths";
+  static constexpr StringLiteral k_DestinationGeometry_Key = "destination_image_geometry_path";
+  static constexpr StringLiteral k_Direction_Key = "direction_index";
+  static constexpr StringLiteral k_MirrorGeometry_Key = "mirror_geometry";
+  static constexpr StringLiteral k_CheckResolution_Key = "check_resolution";
+  static constexpr StringLiteral k_DefaultValue_Key = "default_value";
+  static constexpr StringLiteral k_SaveAsNewGeometry_Key = "save_as_new_geometry";
+  static constexpr StringLiteral k_NewGeometry_Key = "output_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -24,17 +24,17 @@ public:
   RemoveFlaggedEdgesFilter& operator=(RemoveFlaggedEdgesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputEdgeGeometryPath_Key = "input_edge_geometry_path";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
+  static constexpr StringLiteral k_InputEdgeGeometryPath_Key = "input_edge_geometry_path";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
 
-  static inline constexpr StringLiteral k_EdgeDataHandling_Key = "edge_data_handling_index";
-  static inline constexpr StringLiteral k_EdgeDataSelectedArrays_Key = "edge_data_selected_array_paths";
-  static inline constexpr StringLiteral k_EdgeDataSelectedAttributeMatrix_Key = "edge_data_selected_attribute_matrix_path";
+  static constexpr StringLiteral k_EdgeDataHandling_Key = "edge_data_handling_index";
+  static constexpr StringLiteral k_EdgeDataSelectedArrays_Key = "edge_data_selected_array_paths";
+  static constexpr StringLiteral k_EdgeDataSelectedAttributeMatrix_Key = "edge_data_selected_attribute_matrix_path";
 
-  static inline constexpr StringLiteral k_VertexDataHandling_Key = "vertex_data_handling_index";
-  static inline constexpr StringLiteral k_VertexDataSelectedArrays_Key = "vertex_data_selected_array_paths";
-  static inline constexpr StringLiteral k_VertexDataSelectedAttributeMatrix_Key = "vertex_data_selected_attribute_matrix_path";
+  static constexpr StringLiteral k_VertexDataHandling_Key = "vertex_data_handling_index";
+  static constexpr StringLiteral k_VertexDataSelectedArrays_Key = "vertex_data_selected_array_paths";
+  static constexpr StringLiteral k_VertexDataSelectedAttributeMatrix_Key = "vertex_data_selected_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it complex Arguments.

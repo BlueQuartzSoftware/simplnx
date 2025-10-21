@@ -24,8 +24,8 @@ public:
   CombineTransformationMatricesFilter& operator=(CombineTransformationMatricesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputArrays_Key = "input_arrays";
-  static inline constexpr StringLiteral k_OutputArray_Key = "output_array_path";
+  static constexpr StringLiteral k_InputArrays_Key = "input_arrays";
+  static constexpr StringLiteral k_OutputArray_Key = "output_array_path";
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json

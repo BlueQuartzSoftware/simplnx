@@ -33,11 +33,11 @@ public:
   };
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureDataFile_Key = "feature_data_file";
-  static inline constexpr StringLiteral k_WriteNeighborListData_Key = "write_neighborlist_data";
-  static inline constexpr StringLiteral k_WriteNumFeaturesLine_Key = "write_num_features_line";
-  static inline constexpr StringLiteral k_DelimiterChoiceInt_Key = "delimiter_index";
-  static inline constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteral k_FeatureDataFile_Key = "feature_data_file";
+  static constexpr StringLiteral k_WriteNeighborListData_Key = "write_neighborlist_data";
+  static constexpr StringLiteral k_WriteNumFeaturesLine_Key = "write_num_features_line";
+  static constexpr StringLiteral k_DelimiterChoiceInt_Key = "delimiter_index";
+  static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

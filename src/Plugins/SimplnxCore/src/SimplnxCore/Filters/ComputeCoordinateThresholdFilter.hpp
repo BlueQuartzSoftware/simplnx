@@ -24,13 +24,13 @@ public:
   ComputeCoordinateThresholdFilter& operator=(ComputeCoordinateThresholdFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ContainerShapeType_Key = "container_shape_type_index";
-  static inline constexpr StringLiteral k_InvertContainer_Key = "invert_container";
-  static inline constexpr StringLiteral k_MinCoord_Key = "min_coord";
-  static inline constexpr StringLiteral k_MaxCoord_Key = "max_coord";
-  static inline constexpr StringLiteral k_SphereInfo_Key = "sphere_info";
-  static inline constexpr StringLiteral k_SelectedGeometryPath_Key = "selected_geometry_path";
-  static inline constexpr StringLiteral k_CreatedMaskPath_Key = "created_mask_path";
+  static constexpr StringLiteral k_ContainerShapeType_Key = "container_shape_type_index";
+  static constexpr StringLiteral k_InvertContainer_Key = "invert_container";
+  static constexpr StringLiteral k_MinCoord_Key = "min_coord";
+  static constexpr StringLiteral k_MaxCoord_Key = "max_coord";
+  static constexpr StringLiteral k_SphereInfo_Key = "sphere_info";
+  static constexpr StringLiteral k_SelectedGeometryPath_Key = "selected_geometry_path";
+  static constexpr StringLiteral k_CreatedMaskPath_Key = "created_mask_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

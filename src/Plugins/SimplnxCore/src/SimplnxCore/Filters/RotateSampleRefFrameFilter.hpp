@@ -31,14 +31,14 @@ public:
   };
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
-  static inline constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
-  static inline constexpr StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-  static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-  static inline constexpr StringLiteral k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
+  static constexpr StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
+  static constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
+  static constexpr StringLiteral k_RotationMatrix_Key = "rotation_matrix";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+  static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+  static constexpr StringLiteral k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

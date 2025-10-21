@@ -24,8 +24,8 @@ public:
   TriangleCentroidFilter& operator=(TriangleCentroidFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
-  static inline constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
+  static constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

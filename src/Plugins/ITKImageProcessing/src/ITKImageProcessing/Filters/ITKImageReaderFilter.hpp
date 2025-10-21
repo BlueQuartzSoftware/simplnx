@@ -24,24 +24,24 @@ public:
   ITKImageReaderFilter& operator=(ITKImageReaderFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FileName_Key = "file_name";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "output_geometry_path";
-  static inline constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
-  static inline constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteral k_FileName_Key = "file_name";
+  static constexpr StringLiteral k_ImageGeometryPath_Key = "output_geometry_path";
+  static constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
+  static constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
 
-  static inline constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
+  static constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
 
-  static inline constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
-  static inline constexpr StringLiteral k_CenterOrigin_Key = "center_origin";
-  static inline constexpr StringLiteral k_Origin_Key = "origin";
+  static constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
+  static constexpr StringLiteral k_CenterOrigin_Key = "center_origin";
+  static constexpr StringLiteral k_Origin_Key = "origin";
 
-  static inline constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
-  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
+  static constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
+  static constexpr StringLiteral k_Spacing_Key = "spacing";
 
-  static inline constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
-  static inline constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
+  static constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
+  static constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
 
-  static inline constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
+  static constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

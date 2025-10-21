@@ -24,18 +24,18 @@ public:
   ApplyTransformationToGeometryFilter& operator=(ApplyTransformationToGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_TransformationType_Key = "transformation_type_index";
-  static inline constexpr StringLiteral k_InterpolationType_Key = "interpolation_type_index";
-  static inline constexpr StringLiteral k_ManualTransformationMatrix_Key = "manual_transformation_matrix";
-  static inline constexpr StringLiteral k_Rotation_Key = "rotation";
-  static inline constexpr StringLiteral k_Translation_Key = "translation";
-  static inline constexpr StringLiteral k_Scale_Key = "scale";
-  static inline constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix_path";
-  static inline constexpr StringLiteral k_TranslateGeometryToGlobalOrigin_Key = "translate_geometry_to_global_origin";
-  static inline constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
-  static inline constexpr StringLiteral k_SaveTransformMatrix_Key = "save_transform_matrix";
-  static inline constexpr StringLiteral k_TransformMatrixOutputPath_Key = "output_transform_matrix_path";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_TransformationType_Key = "transformation_type_index";
+  static constexpr StringLiteral k_InterpolationType_Key = "interpolation_type_index";
+  static constexpr StringLiteral k_ManualTransformationMatrix_Key = "manual_transformation_matrix";
+  static constexpr StringLiteral k_Rotation_Key = "rotation";
+  static constexpr StringLiteral k_Translation_Key = "translation";
+  static constexpr StringLiteral k_Scale_Key = "scale";
+  static constexpr StringLiteral k_ComputedTransformationMatrix_Key = "computed_transformation_matrix_path";
+  static constexpr StringLiteral k_TranslateGeometryToGlobalOrigin_Key = "translate_geometry_to_global_origin";
+  static constexpr StringLiteral k_CellAttributeMatrixPath_Key = "cell_attribute_matrix_path";
+  static constexpr StringLiteral k_SaveTransformMatrix_Key = "save_transform_matrix";
+  static constexpr StringLiteral k_TransformMatrixOutputPath_Key = "output_transform_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
