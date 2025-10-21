@@ -405,7 +405,11 @@
           "value": 5.0,
           "version": 1
         },
-        "parameters_version": 1,
+        "neighbor_scheme_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 2,
         "randomize_features": {
           "value": true,
           "version": 1

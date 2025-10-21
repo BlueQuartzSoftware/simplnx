@@ -24,14 +24,9 @@ CAxisSegmentFeatures::CAxisSegmentFeatures(DataStructure& dataStructure, const I
 CAxisSegmentFeatures::~CAxisSegmentFeatures() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& CAxisSegmentFeatures::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> CAxisSegmentFeatures::operator()()
 {
+  this->m_NeighborScheme = m_InputValues->NeighborScheme;
   auto* imageGeometry = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);

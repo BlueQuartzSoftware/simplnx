@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <random>
@@ -16,6 +17,17 @@ namespace nx::core
 {
 
 class IGridGeometry;
+
+namespace segment_features
+{
+inline constexpr StringLiteral k_6NeighborString = "Face Neighbors";
+inline constexpr StringLiteral k_26NeighborString = "All Connected Neighbors";
+
+inline const ChoicesParameter::Choices k_OperationChoices = {k_6NeighborString, k_26NeighborString};
+
+inline constexpr ChoicesParameter::ValueType k_6NeighborIndex = 0ULL;
+inline constexpr ChoicesParameter::ValueType k_26NeighborIndex = 1ULL;
+} // namespace segment_features
 
 class SIMPLNX_EXPORT SegmentFeatures
 {
@@ -31,6 +43,12 @@ public:
   SegmentFeatures(SegmentFeatures&&) = delete;                 // Move Constructor Not Implemented
   SegmentFeatures& operator=(const SegmentFeatures&) = delete; // Copy Assignment Not Implemented
   SegmentFeatures& operator=(SegmentFeatures&&) = delete;      // Move Assignment Not Implemented
+
+  enum class NeighborScheme : ChoicesParameter::ValueType
+  {
+    Face = 0,
+    FaceEdgeVertex = 1
+  };
 
   /**
    * @brief execute
@@ -96,8 +114,7 @@ protected:
   const std::atomic_bool& m_ShouldCancel;
   MessageHelper m_MessageHelper;
   int32 m_FoundFeatures = 0;
-
-private:
+  NeighborScheme m_NeighborScheme = NeighborScheme::Face;
 };
 
 } // namespace nx::core

@@ -3,7 +3,6 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
-#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -38,6 +37,7 @@ public:
   static inline constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
   static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
   static inline constexpr StringLiteral k_IsPeriodic_Key = "is_periodic";
+  static inline constexpr StringLiteral k_NeighborScheme_Key = "neighbor_scheme_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

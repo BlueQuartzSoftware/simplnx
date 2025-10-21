@@ -68,6 +68,7 @@ Parameters CAxisSegmentFeaturesFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "C-Axis Misorientation Tolerance (Degrees)",
                                                    "Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature", 5.0f));
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatureIds_Key, "Randomize Feature Ids", "Specifies whether to randomize the feature ids", false));
+  params.insert(std::make_unique<ChoicesParameter>(k_NeighborScheme_Key, "Neighbor Scheme", "How many neighbors to use", segment_features::k_6NeighborIndex, segment_features::k_OperationChoices));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(
@@ -106,7 +107,7 @@ Parameters CAxisSegmentFeaturesFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType CAxisSegmentFeaturesFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -207,6 +208,7 @@ Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.FeatureIdsArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
+  inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
 
   return CAxisSegmentFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -25,6 +25,7 @@ struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
   float32 MisorientationTolerance;
   bool UseMask;
   bool RandomizeFeatureIds;
+  SegmentFeatures::NeighborScheme NeighborScheme;
   DataPath ImageGeometryPath;
   DataPath QuatsArrayPath;
   DataPath CellPhasesArrayPath;

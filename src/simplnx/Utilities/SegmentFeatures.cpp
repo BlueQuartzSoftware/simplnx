@@ -3,7 +3,124 @@
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
+#include <vector>
+
 using namespace nx::core;
+
+namespace
+{
+/**
+ * @brief This will find the 6 face neighbor's indices.
+ * @param currentPoint
+ * @param width
+ * @param height
+ * @param depth
+ * @return Vector of indices
+ */
+std::vector<int64> getFaceNeighbors(const int64 currentPoint, const int64 width, const int64 height, const int64 depth)
+{
+  std::vector<int64> neighbors;
+  neighbors.reserve(6);
+
+  // decode currentPoint -> (col, row, plane)
+  const int64 col = currentPoint % width;
+  const int64 tmp = currentPoint / width;
+  const int64 row = tmp % height;
+  const int64 plane = tmp / height;
+
+  // stride for one z-slice
+  const int64 slice = width * height;
+
+  if(col > 0)
+  {
+    neighbors.push_back(currentPoint - 1);
+  }
+  if(col < width - 1)
+  {
+    neighbors.push_back(currentPoint + 1);
+  }
+  if(row > 0)
+  {
+    neighbors.push_back(currentPoint - width);
+  }
+  if(row < height - 1)
+  {
+    neighbors.push_back(currentPoint + width);
+  }
+  if(plane > 0)
+  {
+    neighbors.push_back(currentPoint - slice);
+  }
+  if(plane < depth - 1)
+  {
+    neighbors.push_back(currentPoint + slice);
+  }
+
+  return neighbors;
+}
+
+/**
+ * @brief This will find all indices that are connected via the 26 face, edge or vertex neighbors
+ * @param currentPoint
+ * @param width
+ * @param height
+ * @param depth
+ * @return vector of indices
+ */
+std::vector<int64> getAllNeighbors(const int64 currentPoint, const int64 width, const int64 height, const int64 depth)
+{
+  std::vector<int64> neighbors;
+  neighbors.reserve(26);
+
+  // decode currentPoint -> (col, row, plane)
+  const int64 col = currentPoint % width;
+  const int64 tmp = currentPoint / width;
+  const int64 row = tmp % height;
+  const int64 plane = tmp / height;
+
+  // stride for one z-slice
+  const int64 slice = width * height;
+
+  // baseOffset == currentPoint
+  const int64 baseOffset = currentPoint;
+
+  for(int64 dz = -1; dz <= 1; ++dz)
+  {
+    if(const int64 p = plane + dz; p < 0 || p >= depth)
+    {
+      continue;
+    }
+    const int64 dzOff = dz * slice;
+
+    for(int64 dy = -1; dy <= 1; ++dy)
+    {
+      if(const int64 r = row + dy; r < 0 || r >= height)
+      {
+        continue;
+      }
+      const int64 dyOff = dy * width;
+
+      for(int64 dx = -1; dx <= 1; ++dx)
+      {
+        // skip the center voxel itself
+        if(dx == 0 && dy == 0 && dz == 0)
+        {
+          continue;
+        }
+        if(int64 c = col + dx; c < 0 || c >= width)
+        {
+          continue;
+        }
+        int64 neighbor = baseOffset + dzOff + dyOff + dx;
+        neighbors.push_back(neighbor);
+      }
+    }
+  }
+
+  return neighbors;
+}
+
+} // namespace
 
 // -----------------------------------------------------------------------------
 SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
@@ -21,42 +138,17 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
   SizeVec3 udims = gridGeom->getDimensions();
 
-  int64 dims[3] = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
+  const int64 dims[3] = {static_cast<int64>(udims[0]), static_cast<int64>(udims[1]), static_cast<int64>(udims[2])};
 
-  // Initialize sequence of execution modifiers
+  // Initialize a sequence of execution modifiers
   int32 gnum = 1;
   int64 nextSeed = 0;
   int64 seed = getSeed(gnum, nextSeed);
   usize size = 0;
 
-  // Initialize calculation modifiers
-  int64 neighbor = 0;
-  bool good = false;
-  bool hasNonContiguousFeature = false;
-  int64 col = 0, row = 0, plane = 0;
-
   // Initialize containers
-  usize initialVoxelsListSize = 100000;
-  std::vector<int64_t> voxelsList(initialVoxelsListSize, -1);
-
-  int64 neighPoints[6] = {0, 0, 0, 0, 0, 0};
-  { // Initialize neighPoints in a readable fashion
-    neighPoints[0] = -(dims[0] * dims[1]);
-    neighPoints[1] = -dims[0];
-    neighPoints[2] = -1;
-    neighPoints[3] = 1;
-    neighPoints[4] = dims[0];
-    neighPoints[5] = (dims[0] * dims[1]);
-  }
-  int64 periodicPoints[6] = {0, 0, 0, 0, 0, 0};
-  {
-    periodicPoints[0] = (dims[0] * dims[1]) * (dims[2] - 1);
-    periodicPoints[1] = dims[0] * (dims[1] - 1);
-    periodicPoints[2] = dims[0] - 1;
-    periodicPoints[3] = -dims[0] + 1;
-    periodicPoints[4] = -(dims[0] * (dims[1] - 1));
-    periodicPoints[5] = -(dims[0] * dims[1]) * (dims[2] - 1);
-  }
+  constexpr usize initialVoxelsListSize = 100000;
+  std::vector<int64> voxelsList(initialVoxelsListSize, -1);
 
   ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
   while(seed >= 0)
@@ -71,67 +163,36 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     size++;
     while(size > 0)
     {
-      int64 currentPoint = voxelsList[size - 1];
+      const int64 currentPoint = voxelsList[size - 1];
       size -= 1;
-      col = currentPoint % dims[0];
-      row = (currentPoint / dims[0]) % dims[1];
-      plane = currentPoint / (dims[0] * dims[1]);
-      for(int32 i = 0; i < 6; i++)
+      std::vector<int64> neighPoints;
+      switch(m_NeighborScheme)
       {
-        good = true;
-        neighbor = currentPoint + neighPoints[i];
-        if(i == 0 && plane == 0)
+      case NeighborScheme::Face:
+        neighPoints = getFaceNeighbors(currentPoint, dims[0], dims[1], dims[2]);
+        break;
+      case NeighborScheme::FaceEdgeVertex:
+        neighPoints = getAllNeighbors(currentPoint, dims[0], dims[1], dims[2]);
+        break;
+      }
+
+      for(const auto& neighbor : neighPoints)
+      {
+        if(determineGrouping(currentPoint, neighbor, gnum))
         {
-          good = false;
-          neighbor = currentPoint + periodicPoints[i];
-        }
-        if(i == 5 && plane == (dims[2] - 1))
-        {
-          good = false;
-          neighbor = currentPoint + periodicPoints[i];
-        }
-        if(i == 1 && row == 0)
-        {
-          good = false;
-          neighbor = currentPoint + periodicPoints[i];
-        }
-        if(i == 4 && row == (dims[1] - 1))
-        {
-          good = false;
-          neighbor = currentPoint + periodicPoints[i];
-        }
-        if(i == 2 && col == 0)
-        {
-          good = false;
-          neighbor = currentPoint + periodicPoints[i];
-        }
-        if(i == 3 && col == (dims[0] - 1))
-        {
-          good = false;
-          neighbor = currentPoint + periodicPoints[i];
-        }
-        if(good || m_IsPeriodic)
-        {
-          if(determineGrouping(currentPoint, neighbor, gnum))
+          voxelsList[size] = neighbor;
+          size++;
+          if(neighbor == nextSeed)
           {
-            voxelsList[size] = neighbor;
-            size++;
-            if(neighbor == nextSeed)
+            nextSeed = neighbor + 1;
+          }
+          if(size >= voxelsList.size())
+          {
+            size = voxelsList.size();
+            voxelsList.resize(size + initialVoxelsListSize);
+            for(std::vector<int64>::size_type j = size; j < voxelsList.size(); ++j)
             {
-              nextSeed = neighbor + 1;
-            }
-            if(size >= voxelsList.size())
-            {
-              size = voxelsList.size();
-              voxelsList.resize(size + initialVoxelsListSize);
-              for(std::vector<int64_t>::size_type j = size; j < voxelsList.size(); ++j)
-              {
-                voxelsList[j] = -1;
-              }
-            }
-            if(!good)
-            {
-              hasNonContiguousFeature = true;
+              voxelsList[j] = -1;
             }
           }
         }
@@ -145,11 +206,6 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
     nextSeed = seed + 1;
     seed = getSeed(gnum, nextSeed);
-  }
-
-  if(hasNonContiguousFeature)
-  {
-    m_MessageHelper.sendMessage("SegmentFeatures found Non-Contiguous Features.");
   }
 
   m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", gnum));

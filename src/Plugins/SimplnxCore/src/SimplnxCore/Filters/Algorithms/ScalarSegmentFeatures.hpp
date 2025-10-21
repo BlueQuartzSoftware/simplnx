@@ -22,6 +22,7 @@ struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
   bool UseMask;
   bool RandomizeFeatureIds;
   bool IsPeriodic = false;
+  SegmentFeatures::NeighborScheme NeighborScheme;
   DataPath ImageGeometryPath;
   DataPath InputDataPath;
   DataPath MaskArrayPath;
