@@ -104,7 +104,7 @@ Result<> ComputeAvgOrientations::operator()()
 
     // Create a copy of the quaternion
     QuatF curAvgQuat(avgQuats[featureIdOffset] / count, avgQuats[featureIdOffset + 1] / count, avgQuats[featureIdOffset + 2] / count, avgQuats[featureIdOffset + 3] / count);
-    curAvgQuat = curAvgQuat.unitQuaternion();
+    curAvgQuat = curAvgQuat.normalize().getPositiveOrientation();
 
     avgQuats[featureIdOffset] = curAvgQuat.x();
     avgQuats[featureIdOffset + 1] = curAvgQuat.y();
