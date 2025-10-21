@@ -8,6 +8,7 @@
     {
       "kind": "git",
       "repository": "https://github.com/bluequartzsoftware/simplnx-registry",
+      "baseline": "9ff0ea7373196b1c26c9cac15919b23045405994",
       "packages": [
         "benchmark",
         "blosc",
@@ -33,8 +34,7 @@
         "vcpkg-cmake-config",
         "zlib",
         "zstd"
-      ],
-      "baseline": "29bc0b17debdcb1341eb98992ecefb62d768b892"
+      ]
     }
   ]
 }
