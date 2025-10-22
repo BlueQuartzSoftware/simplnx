@@ -20,10 +20,10 @@ public:
   ExampleFilter1Filter& operator=(ExampleFilter1Filter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputDir_Key = "input_dir";
-  static inline constexpr StringLiteral k_InputFile_Key = "input_file";
-  static inline constexpr StringLiteral k_OutputDir_Key = "output_dir";
-  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static constexpr StringLiteral k_InputDir_Key = "input_dir";
+  static constexpr StringLiteral k_InputFile_Key = "input_file";
+  static constexpr StringLiteral k_OutputDir_Key = "output_dir";
+  static constexpr StringLiteral k_OutputFile_Key = "output_file";
 
   /**
    * @brief

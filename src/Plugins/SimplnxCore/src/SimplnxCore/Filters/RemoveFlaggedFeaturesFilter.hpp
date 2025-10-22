@@ -24,13 +24,13 @@ public:
   RemoveFlaggedFeaturesFilter& operator=(RemoveFlaggedFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPrefix_Key = "output_image_geometry_prefix";
-  static inline constexpr StringLiteral k_FillRemovedFeatures_Key = "fill_removed_features";
-  static inline constexpr StringLiteral k_Functionality_Key = "operation_type_index";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_FlaggedFeaturesArrayPath_Key = "flagged_features_array_path";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_CreatedImageGeometryPrefix_Key = "output_image_geometry_prefix";
+  static constexpr StringLiteral k_FillRemovedFeatures_Key = "fill_removed_features";
+  static constexpr StringLiteral k_Functionality_Key = "operation_type_index";
+  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_FlaggedFeaturesArrayPath_Key = "flagged_features_array_path";
+  static constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

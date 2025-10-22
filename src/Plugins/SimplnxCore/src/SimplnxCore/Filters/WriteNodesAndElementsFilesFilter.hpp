@@ -27,15 +27,15 @@ public:
   WriteNodesAndElementsFilesFilter& operator=(WriteNodesAndElementsFilesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedGeometry = "selected_geometry_path";
-  static inline constexpr StringLiteral k_WriteNodeFile = "write_node_file";
-  static inline constexpr StringLiteral k_NumberNodes = "number_nodes";
-  static inline constexpr StringLiteral k_IncludeNodeFileHeader = "include_node_file_header";
-  static inline constexpr StringLiteral k_NodeFilePath = "node_file_path";
-  static inline constexpr StringLiteral k_WriteElementFile = "write_element_file";
-  static inline constexpr StringLiteral k_NumberElements = "number_elements";
-  static inline constexpr StringLiteral k_IncludeElementFileHeader = "include_element_file_header";
-  static inline constexpr StringLiteral k_ElementFilePath = "element_file_path";
+  static constexpr StringLiteral k_SelectedGeometry = "selected_geometry_path";
+  static constexpr StringLiteral k_WriteNodeFile = "write_node_file";
+  static constexpr StringLiteral k_NumberNodes = "number_nodes";
+  static constexpr StringLiteral k_IncludeNodeFileHeader = "include_node_file_header";
+  static constexpr StringLiteral k_NodeFilePath = "node_file_path";
+  static constexpr StringLiteral k_WriteElementFile = "write_element_file";
+  static constexpr StringLiteral k_NumberElements = "number_elements";
+  static constexpr StringLiteral k_IncludeElementFileHeader = "include_element_file_header";
+  static constexpr StringLiteral k_ElementFilePath = "element_file_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

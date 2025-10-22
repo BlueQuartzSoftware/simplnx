@@ -21,21 +21,21 @@ public:
   CropImageGeometryFilter& operator=(CropImageGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UsePhysicalBounds_Key = "use_physical_bounds";
-  static inline constexpr StringLiteral k_CropXDim_Key = "crop_x_dim";
-  static inline constexpr StringLiteral k_CropYDim_Key = "crop_y_dim";
-  static inline constexpr StringLiteral k_CropZDim_Key = "crop_z_dim";
-  static inline constexpr StringLiteral k_MinVoxel_Key = "min_voxel";
-  static inline constexpr StringLiteral k_MaxVoxel_Key = "max_voxel";
-  static inline constexpr StringLiteral k_MinCoord_Key = "min_coord";
-  static inline constexpr StringLiteral k_MaxCoord_Key = "max_coord";
-  // static inline constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
-  static inline constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+  static constexpr StringLiteral k_UsePhysicalBounds_Key = "use_physical_bounds";
+  static constexpr StringLiteral k_CropXDim_Key = "crop_x_dim";
+  static constexpr StringLiteral k_CropYDim_Key = "crop_y_dim";
+  static constexpr StringLiteral k_CropZDim_Key = "crop_z_dim";
+  static constexpr StringLiteral k_MinVoxel_Key = "min_voxel";
+  static constexpr StringLiteral k_MaxVoxel_Key = "max_voxel";
+  static constexpr StringLiteral k_MinCoord_Key = "min_coord";
+  static constexpr StringLiteral k_MaxCoord_Key = "max_coord";
+  // static constexpr StringLiteral k_UpdateOrigin_Key = "update_origin";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
+  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

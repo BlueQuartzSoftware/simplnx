@@ -21,8 +21,8 @@ public:
   MoveDataFilter& operator=(MoveDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SourceDataPaths_Key = "source_data_paths";
-  static inline constexpr StringLiteral k_DestinationParentPath_Key = "destination_parent_path";
+  static constexpr StringLiteral k_SourceDataPaths_Key = "source_data_paths";
+  static constexpr StringLiteral k_DestinationParentPath_Key = "destination_parent_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

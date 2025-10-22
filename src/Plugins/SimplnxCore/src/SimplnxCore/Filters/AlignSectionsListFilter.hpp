@@ -24,9 +24,9 @@ public:
   AlignSectionsListFilter& operator=(AlignSectionsListFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputArrayType_Key = "input_array_type_index";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_ShiftsArrayPath_Key = "shifts_array_path";
+  static constexpr StringLiteral k_InputArrayType_Key = "input_array_type_index";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_ShiftsArrayPath_Key = "shifts_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

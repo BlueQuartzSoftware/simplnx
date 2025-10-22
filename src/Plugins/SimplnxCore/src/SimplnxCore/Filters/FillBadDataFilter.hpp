@@ -25,13 +25,13 @@ public:
   FillBadDataFilter& operator=(FillBadDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MinAllowedDefectSize_Key = "min_allowed_defect_size";
-  static inline constexpr StringLiteral k_StoreAsNewPhase_Key = "store_as_new_phase";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_group";
+  static constexpr StringLiteral k_MinAllowedDefectSize_Key = "min_allowed_defect_size";
+  static constexpr StringLiteral k_StoreAsNewPhase_Key = "store_as_new_phase";
+  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_SelectedCellDataGroup_Key = "selected_cell_data_group";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -24,17 +24,17 @@ public:
   DBSCANFilter& operator=(DBSCANFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ParseOrderIndex_Key = "parse_order_index";
-  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
-  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-  static inline constexpr StringLiteral k_Epsilon_Key = "epsilon";
-  static inline constexpr StringLiteral k_MinPoints_Key = "min_points";
-  static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric_index";
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static inline constexpr StringLiteral k_FeatureAMPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteral k_ParseOrderIndex_Key = "parse_order_index";
+  static constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
+  static constexpr StringLiteral k_Epsilon_Key = "epsilon";
+  static constexpr StringLiteral k_MinPoints_Key = "min_points";
+  static constexpr StringLiteral k_DistanceMetric_Key = "distance_metric_index";
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static constexpr StringLiteral k_FeatureAMPath_Key = "feature_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

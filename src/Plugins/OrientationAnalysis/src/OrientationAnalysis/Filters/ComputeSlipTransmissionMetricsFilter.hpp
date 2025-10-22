@@ -24,14 +24,14 @@ public:
   ComputeSlipTransmissionMetricsFilter& operator=(ComputeSlipTransmissionMetricsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
-  static inline constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_F1ListArrayName_Key = "f1_list_array_name";
-  static inline constexpr StringLiteral k_F1sptListArrayName_Key = "f1spt_list_array_name";
-  static inline constexpr StringLiteral k_F7ListArrayName_Key = "f7_list_array_name";
-  static inline constexpr StringLiteral k_mPrimeListArrayName_Key = "m_prime_list_array_name";
+  static constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
+  static constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteral k_F1ListArrayName_Key = "f1_list_array_name";
+  static constexpr StringLiteral k_F1sptListArrayName_Key = "f1spt_list_array_name";
+  static constexpr StringLiteral k_F7ListArrayName_Key = "f7_list_array_name";
+  static constexpr StringLiteral k_mPrimeListArrayName_Key = "m_prime_list_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

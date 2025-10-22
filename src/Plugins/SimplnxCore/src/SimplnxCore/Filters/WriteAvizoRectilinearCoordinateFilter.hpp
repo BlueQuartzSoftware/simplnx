@@ -24,11 +24,11 @@ public:
   WriteAvizoRectilinearCoordinateFilter& operator=(WriteAvizoRectilinearCoordinateFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
-  static inline constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
-  static inline constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_Units_Key = "units";
+  static constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
+  static constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteral k_Units_Key = "units";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

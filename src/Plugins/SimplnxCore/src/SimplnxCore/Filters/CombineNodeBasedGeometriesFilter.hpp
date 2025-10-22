@@ -27,8 +27,8 @@ public:
   CombineNodeBasedGeometriesFilter& operator=(CombineNodeBasedGeometriesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputGeometries_Key = "input_geometry_paths";
-  static inline constexpr StringLiteral k_OutputGeometryPath_Key = "output_geometry_path";
+  static constexpr StringLiteral k_InputGeometries_Key = "input_geometry_paths";
+  static constexpr StringLiteral k_OutputGeometryPath_Key = "output_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

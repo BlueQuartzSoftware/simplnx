@@ -20,13 +20,13 @@ public:
   MultiThresholdObjectsFilter& operator=(const MultiThresholdObjectsFilter&) = delete;
   MultiThresholdObjectsFilter& operator=(MultiThresholdObjectsFilter&&) noexcept = delete;
 
-  static inline constexpr StringLiteral k_ArrayThresholdsObject_Key = "array_thresholds_object";
-  static inline constexpr StringLiteral k_UseCustomTrueValue = "use_custom_true_value";
-  static inline constexpr StringLiteral k_UseCustomFalseValue = "use_custom_false_value";
-  static inline constexpr StringLiteral k_CustomTrueValue = "custom_true_value";
-  static inline constexpr StringLiteral k_CustomFalseValue = "custom_false_value";
-  static inline constexpr StringLiteral k_CreatedDataName_Key = "output_data_array_name";
-  static inline constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
+  static constexpr StringLiteral k_ArrayThresholdsObject_Key = "array_thresholds_object";
+  static constexpr StringLiteral k_UseCustomTrueValue = "use_custom_true_value";
+  static constexpr StringLiteral k_UseCustomFalseValue = "use_custom_false_value";
+  static constexpr StringLiteral k_CustomTrueValue = "custom_true_value";
+  static constexpr StringLiteral k_CustomFalseValue = "custom_false_value";
+  static constexpr StringLiteral k_CreatedDataName_Key = "output_data_array_name";
+  static constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

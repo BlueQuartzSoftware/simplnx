@@ -29,7 +29,7 @@ public:
   // };
 
   // Parameter Keys
-  // static inline constexpr StringLiteral k_DeletionType_Key = "deletion_type";
+  // static constexpr StringLiteral k_DeletionType_Key = "deletion_type";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -38,7 +38,7 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static inline constexpr StringLiteral k_DataPath_Key = "removed_data_path";
+  static constexpr StringLiteral k_DataPath_Key = "removed_data_path";
 
   /**
    * @brief

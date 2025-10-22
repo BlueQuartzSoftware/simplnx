@@ -20,11 +20,11 @@ public:
   ITKMhaFileReaderFilter& operator=(ITKMhaFileReaderFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ApplyImageTransformation = "apply_image_transformation";
-  static inline constexpr StringLiteral k_SaveImageTransformationAsArray = "save_image_transformation";
-  static inline constexpr StringLiteral k_TransformationMatrixDataArrayPathKey = "output_transformation_matrix_path";
-  static inline constexpr StringLiteral k_TransposeTransformMatrix = "transpose_transform_matrix";
-  static inline constexpr StringLiteral k_InterpolationTypeKey = "interpolation_type_index";
+  static constexpr StringLiteral k_ApplyImageTransformation = "apply_image_transformation";
+  static constexpr StringLiteral k_SaveImageTransformationAsArray = "save_image_transformation";
+  static constexpr StringLiteral k_TransformationMatrixDataArrayPathKey = "output_transformation_matrix_path";
+  static constexpr StringLiteral k_TransposeTransformMatrix = "transpose_transform_matrix";
+  static constexpr StringLiteral k_InterpolationTypeKey = "interpolation_type_index";
 
   /**
    * @brief Returns the name of the filter.

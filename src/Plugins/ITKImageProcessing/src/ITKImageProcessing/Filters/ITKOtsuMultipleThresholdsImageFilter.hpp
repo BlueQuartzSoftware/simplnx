@@ -43,14 +43,14 @@ public:
   ITKOtsuMultipleThresholdsImageFilter& operator=(ITKOtsuMultipleThresholdsImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static inline constexpr StringLiteral k_NumberOfThresholds_Key = "number_of_thresholds";
-  static inline constexpr StringLiteral k_LabelOffset_Key = "label_offset";
-  static inline constexpr StringLiteral k_NumberOfHistogramBins_Key = "number_of_histogram_bins";
-  static inline constexpr StringLiteral k_ValleyEmphasis_Key = "valley_emphasis";
-  static inline constexpr StringLiteral k_ReturnBinMidpoint_Key = "return_bin_midpoint";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_NumberOfThresholds_Key = "number_of_thresholds";
+  static constexpr StringLiteral k_LabelOffset_Key = "label_offset";
+  static constexpr StringLiteral k_NumberOfHistogramBins_Key = "number_of_histogram_bins";
+  static constexpr StringLiteral k_ValleyEmphasis_Key = "valley_emphasis";
+  static constexpr StringLiteral k_ReturnBinMidpoint_Key = "return_bin_midpoint";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

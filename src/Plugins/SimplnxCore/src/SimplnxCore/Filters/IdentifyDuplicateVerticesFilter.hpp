@@ -24,8 +24,8 @@ public:
   IdentifyDuplicateVerticesFilter& operator=(IdentifyDuplicateVerticesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputGeomPath_Key = "input_geom_path";
-  static inline constexpr StringLiteral k_DuplicateMaskPath_Key = "duplicate_mask_path";
+  static constexpr StringLiteral k_InputGeomPath_Key = "input_geom_path";
+  static constexpr StringLiteral k_DuplicateMaskPath_Key = "duplicate_mask_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

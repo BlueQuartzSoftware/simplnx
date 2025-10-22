@@ -24,15 +24,15 @@ public:
   NeighborOrientationCorrelationFilter& operator=(NeighborOrientationCorrelationFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
-  static inline constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
-  static inline constexpr StringLiteral k_Level_Key = "level";
-  static inline constexpr StringLiteral k_CorrelationArrayPath_Key = "correlation_array_path";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
+  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
+  static constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
+  static constexpr StringLiteral k_Level_Key = "level";
+  static constexpr StringLiteral k_CorrelationArrayPath_Key = "correlation_array_path";
+  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -35,10 +35,10 @@ public:
   ConvertOrientationsFilter& operator=(ConvertOrientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputType_Key = "input_representation_index";
-  static inline constexpr StringLiteral k_OutputType_Key = "output_representation_index";
-  static inline constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
-  static inline constexpr StringLiteral k_OutputOrientationArrayName_Key = "output_orientation_array_name";
+  static constexpr StringLiteral k_InputType_Key = "input_representation_index";
+  static constexpr StringLiteral k_OutputType_Key = "output_representation_index";
+  static constexpr StringLiteral k_InputOrientationArrayPath_Key = "input_orientation_array_path";
+  static constexpr StringLiteral k_OutputOrientationArrayName_Key = "output_orientation_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

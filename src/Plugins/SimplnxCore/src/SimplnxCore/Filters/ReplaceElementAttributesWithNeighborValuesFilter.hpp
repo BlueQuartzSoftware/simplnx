@@ -25,11 +25,11 @@ public:
   ReplaceElementAttributesWithNeighborValuesFilter& operator=(ReplaceElementAttributesWithNeighborValuesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
-  static inline constexpr StringLiteral k_SelectedComparison_Key = "comparison_index";
-  static inline constexpr StringLiteral k_Loop_Key = "loop";
-  static inline constexpr StringLiteral k_ComparisonDataPath = "comparison_data_path";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_MinConfidence_Key = "min_confidence";
+  static constexpr StringLiteral k_SelectedComparison_Key = "comparison_index";
+  static constexpr StringLiteral k_Loop_Key = "loop";
+  static constexpr StringLiteral k_ComparisonDataPath = "comparison_data_path";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

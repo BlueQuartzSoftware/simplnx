@@ -24,8 +24,8 @@ public:
   TriangleNormalFilter& operator=(TriangleNormalFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SurfaceMeshTriangleNormalsArrayName_Key = "output_normals_array_name";
-  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteral k_SurfaceMeshTriangleNormalsArrayName_Key = "output_normals_array_name";
+  static constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -21,8 +21,8 @@ public:
   ReshapeDataArrayFilter& operator=(ReshapeDataArrayFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Input_Array_Key = "input_array_path";
-  static inline constexpr StringLiteral k_TupleDims_Key = "tuple_dims";
+  static constexpr StringLiteral k_Input_Array_Key = "input_array_path";
+  static constexpr StringLiteral k_TupleDims_Key = "tuple_dims";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

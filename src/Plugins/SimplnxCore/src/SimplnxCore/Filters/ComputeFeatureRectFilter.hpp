@@ -26,9 +26,9 @@ public:
   ComputeFeatureRectFilter& operator=(ComputeFeatureRectFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_FeatureRectArrayName_Key = "feature_rect_array_name";
-  static inline constexpr StringLiteral k_FeatureDataAttributeMatrixPath_Key = "feature_data_attribute_matrix_path";
+  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteral k_FeatureRectArrayName_Key = "feature_rect_array_name";
+  static constexpr StringLiteral k_FeatureDataAttributeMatrixPath_Key = "feature_data_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

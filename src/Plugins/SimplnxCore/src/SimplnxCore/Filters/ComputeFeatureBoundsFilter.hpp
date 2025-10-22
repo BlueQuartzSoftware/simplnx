@@ -24,18 +24,18 @@ public:
   ComputeFeatureBoundsFilter& operator=(ComputeFeatureBoundsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputType_Key = "output_type_index";
-  static inline constexpr StringLiteral k_SelectedGeometryPath_Key = "selected_geometry_path";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_FeatureAMPath_Key = "feature_am_path";
-  static inline constexpr StringLiteral k_MinArrayName_Key = "min_array_name";
-  static inline constexpr StringLiteral k_MaxArrayName_Key = "max_array_name";
-  static inline constexpr StringLiteral k_UnifiedArrayName_Key = "unified_array_name";
+  static constexpr StringLiteral k_OutputType_Key = "output_type_index";
+  static constexpr StringLiteral k_SelectedGeometryPath_Key = "selected_geometry_path";
+  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteral k_FeatureAMPath_Key = "feature_am_path";
+  static constexpr StringLiteral k_MinArrayName_Key = "min_array_name";
+  static constexpr StringLiteral k_MaxArrayName_Key = "max_array_name";
+  static constexpr StringLiteral k_UnifiedArrayName_Key = "unified_array_name";
 
-  static inline constexpr StringLiteral k_CreateEdgeGeometry_Key = "create_edge_geometry";
-  static inline constexpr StringLiteral k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
-  static inline constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
-  static inline constexpr StringLiteral k_CreatedFeatureIdsArrayName_Key = "created_feature_ids_array_name";
+  static constexpr StringLiteral k_CreateEdgeGeometry_Key = "create_edge_geometry";
+  static constexpr StringLiteral k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
+  static constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
+  static constexpr StringLiteral k_CreatedFeatureIdsArrayName_Key = "created_feature_ids_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

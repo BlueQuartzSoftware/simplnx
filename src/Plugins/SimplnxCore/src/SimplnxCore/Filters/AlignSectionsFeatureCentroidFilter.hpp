@@ -25,17 +25,17 @@ public:
   AlignSectionsFeatureCentroidFilter& operator=(AlignSectionsFeatureCentroidFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
-  static inline constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
+  static constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
-  static inline constexpr StringLiteral k_StoreAlignmentShifts_Key = "store_alignment_shifts";
-  static inline constexpr StringLiteral k_AlignmentAMName_Key = "alignment_attribute_matrix_name";
-  static inline constexpr StringLiteral k_SlicesArrayName_Key = "slices_array_name";
-  static inline constexpr StringLiteral k_RelativeShiftsArrayName_Key = "relative_shifts_array_name";
-  static inline constexpr StringLiteral k_CumulativeShiftsArrayName_Key = "cumulative_shifts_array_name";
-  static inline constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
+  static constexpr StringLiteral k_StoreAlignmentShifts_Key = "store_alignment_shifts";
+  static constexpr StringLiteral k_AlignmentAMName_Key = "alignment_attribute_matrix_name";
+  static constexpr StringLiteral k_SlicesArrayName_Key = "slices_array_name";
+  static constexpr StringLiteral k_RelativeShiftsArrayName_Key = "relative_shifts_array_name";
+  static constexpr StringLiteral k_CumulativeShiftsArrayName_Key = "cumulative_shifts_array_name";
+  static constexpr StringLiteral k_CentroidsArrayName_Key = "centroids_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

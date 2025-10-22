@@ -24,16 +24,16 @@ public:
   CreateAMScanPathsFilter& operator=(CreateAMScanPathsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_StripeWidth_Key = "hatch_length";
-  static inline constexpr StringLiteral k_HatchSpacing_Key = "hatch_spacing";
-  static inline constexpr StringLiteral k_RotationAngle = "rotation_angle";
-  static inline constexpr StringLiteral k_CADSliceDataContainerPath_Key = "cad_slice_data_container_path";
-  static inline constexpr StringLiteral k_CADSliceIdsArrayPath_Key = "cad_slice_ids_array_path";
-  static inline constexpr StringLiteral k_CADRegionIdsArrayPath_Key = "cad_region_ids_array_path";
-  static inline constexpr StringLiteral k_HatchDataContainerPath_Key = "hatch_data_container_path";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
-  static inline constexpr StringLiteral k_HatchAttributeMatrixName_Key = "hatch_attribute_matrix_name";
-  static inline constexpr StringLiteral k_RegionIdsArrayName_Key = "region_ids_array_name";
+  static constexpr StringLiteral k_StripeWidth_Key = "hatch_length";
+  static constexpr StringLiteral k_HatchSpacing_Key = "hatch_spacing";
+  static constexpr StringLiteral k_RotationAngle = "rotation_angle";
+  static constexpr StringLiteral k_CADSliceDataContainerPath_Key = "cad_slice_data_container_path";
+  static constexpr StringLiteral k_CADSliceIdsArrayPath_Key = "cad_slice_ids_array_path";
+  static constexpr StringLiteral k_CADRegionIdsArrayPath_Key = "cad_region_ids_array_path";
+  static constexpr StringLiteral k_HatchDataContainerPath_Key = "hatch_data_container_path";
+  static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteral k_HatchAttributeMatrixName_Key = "hatch_attribute_matrix_name";
+  static constexpr StringLiteral k_RegionIdsArrayName_Key = "region_ids_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

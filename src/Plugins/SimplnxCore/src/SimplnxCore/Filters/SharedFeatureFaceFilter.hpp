@@ -24,13 +24,13 @@ public:
   SharedFeatureFaceFilter& operator=(SharedFeatureFaceFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
-  static inline constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
-  static inline constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
-  static inline constexpr StringLiteral k_FeatureFaceIdsArrayName_Key = "feature_face_ids_array_name";
-  static inline constexpr StringLiteral k_GrainBoundaryAttributeMatrixName_Key = "grain_boundary_attribute_matrix_name";
-  static inline constexpr StringLiteral k_FeatureNumTrianglesArrayName_Key = "feature_num_triangles_array_name";
-  static inline constexpr StringLiteral k_FeatureFaceLabelsArrayName_Key = "feature_face_labels_array_name";
+  static constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static constexpr StringLiteral k_RandomizeFeatures_Key = "randomize_features";
+  static constexpr StringLiteral k_FeatureFaceIdsArrayName_Key = "feature_face_ids_array_name";
+  static constexpr StringLiteral k_GrainBoundaryAttributeMatrixName_Key = "grain_boundary_attribute_matrix_name";
+  static constexpr StringLiteral k_FeatureNumTrianglesArrayName_Key = "feature_num_triangles_array_name";
+  static constexpr StringLiteral k_FeatureFaceLabelsArrayName_Key = "feature_face_labels_array_name";
 
   /**
    * @brief Returns the name of the filter.

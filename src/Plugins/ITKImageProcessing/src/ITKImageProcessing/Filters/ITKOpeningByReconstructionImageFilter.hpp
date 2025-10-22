@@ -43,13 +43,13 @@ public:
   ITKOpeningByReconstructionImageFilter& operator=(ITKOpeningByReconstructionImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static inline constexpr StringLiteral k_KernelRadius_Key = "kernel_radius";
-  static inline constexpr StringLiteral k_KernelType_Key = "kernel_type_index";
-  static inline constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
-  static inline constexpr StringLiteral k_PreserveIntensities_Key = "preserve_intensities";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_KernelRadius_Key = "kernel_radius";
+  static constexpr StringLiteral k_KernelType_Key = "kernel_type_index";
+  static constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
+  static constexpr StringLiteral k_PreserveIntensities_Key = "preserve_intensities";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

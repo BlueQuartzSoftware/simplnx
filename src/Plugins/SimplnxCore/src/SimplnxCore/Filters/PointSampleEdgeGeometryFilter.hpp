@@ -21,14 +21,14 @@ public:
   PointSampleEdgeGeometryFilter& operator=(PointSampleEdgeGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ScanVectorSamplingRes_Key = "scan_vector_sampling_resolution";
-  static inline constexpr StringLiteral k_ScanVectorGeometryPath_Key = "scan_vector_geometry_path";
-  static inline constexpr StringLiteral k_CalculateCumulativeSampleDistance_Key = "calculate_cumulative_sample_distance";
-  static inline constexpr StringLiteral k_CumulativeSampleDistanceArrayName_Key = "cumulative_sample_distance_array_name";
-  static inline constexpr StringLiteral k_EdgeIdsArrayName_Key = "edge_ids_array_name";
-  static inline constexpr StringLiteral k_SampledVertexGeometryPath_Key = "sampled_vertex_geometry_path";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
-  static inline constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
+  static constexpr StringLiteral k_ScanVectorSamplingRes_Key = "scan_vector_sampling_resolution";
+  static constexpr StringLiteral k_ScanVectorGeometryPath_Key = "scan_vector_geometry_path";
+  static constexpr StringLiteral k_CalculateCumulativeSampleDistance_Key = "calculate_cumulative_sample_distance";
+  static constexpr StringLiteral k_CumulativeSampleDistanceArrayName_Key = "cumulative_sample_distance_array_name";
+  static constexpr StringLiteral k_EdgeIdsArrayName_Key = "edge_ids_array_name";
+  static constexpr StringLiteral k_SampledVertexGeometryPath_Key = "sampled_vertex_geometry_path";
+  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

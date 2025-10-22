@@ -24,18 +24,18 @@ public:
   UncertainRegularGridSampleSurfaceMeshFilter& operator=(UncertainRegularGridSampleSurfaceMeshFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static inline constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static inline constexpr StringLiteral k_Spacing_Key = "spacing";
-  static inline constexpr StringLiteral k_Origin_Key = "origin";
-  static inline constexpr StringLiteral k_Uncertainty_Key = "uncertainty";
-  static inline constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
-  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
-  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-  static inline constexpr StringLiteral k_Dimensions_Key = "dimensions";
+  static constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteral k_Spacing_Key = "spacing";
+  static constexpr StringLiteral k_Origin_Key = "origin";
+  static constexpr StringLiteral k_Uncertainty_Key = "uncertainty";
+  static constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
+  static constexpr StringLiteral k_Dimensions_Key = "dimensions";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

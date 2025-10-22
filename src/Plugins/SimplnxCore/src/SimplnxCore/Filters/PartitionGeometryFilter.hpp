@@ -52,24 +52,24 @@ public:
   };
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_PartitioningMode_Key = "partitioning_mode_index";
-  static inline constexpr StringLiteral k_StartingFeatureID_Key = "starting_partition_id";
-  static inline constexpr StringLiteral k_OutOfBoundsFeatureID_Key = "out_of_bounds_value";
-  static inline constexpr StringLiteral k_NumberOfCellsPerAxis_Key = "number_of_partitions_per_axis";
-  static inline constexpr StringLiteral k_PartitionGridOrigin_Key = "partitioning_scheme_origin";
-  static inline constexpr StringLiteral k_CellLength_Key = "length_per_partition";
-  static inline constexpr StringLiteral k_MinGridCoord_Key = "lower_left_coord";
-  static inline constexpr StringLiteral k_MaxGridCoord_Key = "upper_right_coord";
-  static inline constexpr StringLiteral k_InputGeometryCellAttributeMatrixPath_Key = "input_geometry_attribute_matrix_path";
-  static inline constexpr StringLiteral k_PartitionGridGeometry_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_PartitionGridCellAMName_Key = "created_attribute_matrix_name";
-  static inline constexpr StringLiteral k_PartitionGridFeatureIDsName_Key = "created_feature_ids_name";
-  static inline constexpr StringLiteral k_InputGeometryToPartition_Key = "input_geometry_path";
-  static inline constexpr StringLiteral k_ExistingPartitionGridPath_Key = "existing_partitioning_scheme_path";
-  static inline constexpr StringLiteral k_UseVertexMask_Key = "use_vertex_mask";
-  static inline constexpr StringLiteral k_VertexMaskPath_Key = "vertex_mask_path";
-  static inline constexpr StringLiteral k_FeatureAttrMatrixName_Key = "feature_attr_matrix_name";
-  static inline constexpr StringLiteral k_PartitionIdsArrayName_Key = "partition_ids_array_name";
+  static constexpr StringLiteral k_PartitioningMode_Key = "partitioning_mode_index";
+  static constexpr StringLiteral k_StartingFeatureID_Key = "starting_partition_id";
+  static constexpr StringLiteral k_OutOfBoundsFeatureID_Key = "out_of_bounds_value";
+  static constexpr StringLiteral k_NumberOfCellsPerAxis_Key = "number_of_partitions_per_axis";
+  static constexpr StringLiteral k_PartitionGridOrigin_Key = "partitioning_scheme_origin";
+  static constexpr StringLiteral k_CellLength_Key = "length_per_partition";
+  static constexpr StringLiteral k_MinGridCoord_Key = "lower_left_coord";
+  static constexpr StringLiteral k_MaxGridCoord_Key = "upper_right_coord";
+  static constexpr StringLiteral k_InputGeometryCellAttributeMatrixPath_Key = "input_geometry_attribute_matrix_path";
+  static constexpr StringLiteral k_PartitionGridGeometry_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_PartitionGridCellAMName_Key = "created_attribute_matrix_name";
+  static constexpr StringLiteral k_PartitionGridFeatureIDsName_Key = "created_feature_ids_name";
+  static constexpr StringLiteral k_InputGeometryToPartition_Key = "input_geometry_path";
+  static constexpr StringLiteral k_ExistingPartitionGridPath_Key = "existing_partitioning_scheme_path";
+  static constexpr StringLiteral k_UseVertexMask_Key = "use_vertex_mask";
+  static constexpr StringLiteral k_VertexMaskPath_Key = "vertex_mask_path";
+  static constexpr StringLiteral k_FeatureAttrMatrixName_Key = "feature_attr_matrix_name";
+  static constexpr StringLiteral k_PartitionIdsArrayName_Key = "partition_ids_array_name";
 
   /**
    * @brief Returns the name of the filter.

@@ -24,10 +24,10 @@ public:
   WriteVtkStructuredPointsFilter& operator=(WriteVtkStructuredPointsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_OutputFile_Key = "output_file";
-  static inline constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteral k_OutputFile_Key = "output_file";
+  static constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
+  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

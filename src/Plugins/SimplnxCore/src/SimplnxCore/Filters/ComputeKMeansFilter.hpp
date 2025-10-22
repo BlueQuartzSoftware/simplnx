@@ -24,17 +24,17 @@ public:
   ComputeKMeansFilter& operator=(ComputeKMeansFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InitClusters_Key = "init_clusters";
-  static inline constexpr StringLiteral k_DistanceMetric_Key = "distance_metric_index";
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static inline constexpr StringLiteral k_FeatureAMPath_Key = "feature_attribute_matrix_path";
-  static inline constexpr StringLiteral k_MeansArrayName_Key = "means_array_name";
-  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
-  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
-  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
+  static constexpr StringLiteral k_InitClusters_Key = "init_clusters";
+  static constexpr StringLiteral k_DistanceMetric_Key = "distance_metric_index";
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static constexpr StringLiteral k_FeatureAMPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteral k_MeansArrayName_Key = "means_array_name";
+  static constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

@@ -35,11 +35,11 @@ public:
   ITKIsoContourDistanceImageFilter& operator=(ITKIsoContourDistanceImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static inline constexpr StringLiteral k_LevelSetValue_Key = "level_set_value";
-  static inline constexpr StringLiteral k_FarValue_Key = "far_value";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_LevelSetValue_Key = "level_set_value";
+  static constexpr StringLiteral k_FarValue_Key = "far_value";
 
   /**
    * @brief Returns the name of the filter.

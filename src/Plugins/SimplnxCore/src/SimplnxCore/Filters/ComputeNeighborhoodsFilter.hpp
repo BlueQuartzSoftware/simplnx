@@ -24,12 +24,12 @@ public:
   ComputeNeighborhoodsFilter& operator=(ComputeNeighborhoodsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_MultiplesOfAverage_Key = "multiples_of_average";
-  static inline constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
-  static inline constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static inline constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
-  static inline constexpr StringLiteral k_NeighborhoodsArrayName_Key = "neighborhoods_array_name";
-  static inline constexpr StringLiteral k_NeighborhoodListArrayName_Key = "neighborhood_list_array_name";
+  static constexpr StringLiteral k_MultiplesOfAverage_Key = "multiples_of_average";
+  static constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
+  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
+  static constexpr StringLiteral k_NeighborhoodsArrayName_Key = "neighborhoods_array_name";
+  static constexpr StringLiteral k_NeighborhoodListArrayName_Key = "neighborhood_list_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -38,7 +38,7 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

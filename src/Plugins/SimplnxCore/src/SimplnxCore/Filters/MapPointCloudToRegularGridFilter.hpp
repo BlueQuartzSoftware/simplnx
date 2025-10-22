@@ -25,17 +25,17 @@ public:
   MapPointCloudToRegularGridFilter& operator=(MapPointCloudToRegularGridFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SamplingGridType_Key = "sampling_grid_index";
-  static inline constexpr StringLiteral k_GridDimensions_Key = "grid_dimensions";
-  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
-  static inline constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_OutOfBoundsHandlingType_Key = "out_of_bounds_handling_index";
-  static inline constexpr StringLiteral k_OutOfBoundsValue_Key = "out_of_bounds_value";
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
-  static inline constexpr StringLiteral k_VoxelIndicesName_Key = "voxel_indices_name";
-  static inline constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
+  static constexpr StringLiteral k_SamplingGridType_Key = "sampling_grid_index";
+  static constexpr StringLiteral k_GridDimensions_Key = "grid_dimensions";
+  static constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_OutOfBoundsHandlingType_Key = "out_of_bounds_handling_index";
+  static constexpr StringLiteral k_OutOfBoundsValue_Key = "out_of_bounds_value";
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_InputMaskPath_Key = "mask_path";
+  static constexpr StringLiteral k_VoxelIndicesName_Key = "voxel_indices_name";
+  static constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

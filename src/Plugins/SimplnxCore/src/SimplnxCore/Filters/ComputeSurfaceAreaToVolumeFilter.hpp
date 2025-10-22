@@ -24,11 +24,11 @@ public:
   ComputeSurfaceAreaToVolumeFilter& operator=(ComputeSurfaceAreaToVolumeFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_NumCellsArrayPath_Key = "num_cells_array_path";
-  static inline constexpr StringLiteral k_SurfaceAreaVolumeRatioArrayName_Key = "surface_area_volume_ratio_array_name";
-  static inline constexpr StringLiteral k_CalculateSphericity_Key = "calculate_sphericity";
-  static inline constexpr StringLiteral k_SphericityArrayName_Key = "sphericity_array_name";
+  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_NumCellsArrayPath_Key = "num_cells_array_path";
+  static constexpr StringLiteral k_SurfaceAreaVolumeRatioArrayName_Key = "surface_area_volume_ratio_array_name";
+  static constexpr StringLiteral k_CalculateSphericity_Key = "calculate_sphericity";
+  static constexpr StringLiteral k_SphericityArrayName_Key = "sphericity_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -37,7 +37,7 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Returns the name of the filter.

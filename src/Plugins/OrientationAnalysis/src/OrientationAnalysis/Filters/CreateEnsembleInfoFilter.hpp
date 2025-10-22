@@ -24,11 +24,11 @@ public:
   CreateEnsembleInfoFilter& operator=(CreateEnsembleInfoFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Ensemble_Key = "ensemble";
-  static inline constexpr StringLiteral k_CellEnsembleAttributeMatrixPath_Key = "cell_ensemble_attribute_matrix_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayName_Key = "crystal_structures_array_name";
-  static inline constexpr StringLiteral k_PhaseTypesArrayName_Key = "phase_types_array_name";
-  static inline constexpr StringLiteral k_PhaseNamesArrayName_Key = "phase_names_array_name";
+  static constexpr StringLiteral k_Ensemble_Key = "ensemble";
+  static constexpr StringLiteral k_CellEnsembleAttributeMatrixPath_Key = "cell_ensemble_attribute_matrix_path";
+  static constexpr StringLiteral k_CrystalStructuresArrayName_Key = "crystal_structures_array_name";
+  static constexpr StringLiteral k_PhaseTypesArrayName_Key = "phase_types_array_name";
+  static constexpr StringLiteral k_PhaseNamesArrayName_Key = "phase_names_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

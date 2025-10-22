@@ -21,14 +21,14 @@ public:
   RequireMinNumNeighborsFilter& operator=(RequireMinNumNeighborsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_ApplyToSinglePhase_Key = "apply_to_single_phase";
-  static inline constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
-  static inline constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
-  static inline constexpr StringLiteral k_NumNeighborsPath_Key = "num_neighbors_path";
-  static inline constexpr StringLiteral k_MinNumNeighbors_Key = "min_num_neighbors";
-  static inline constexpr StringLiteral k_IgnoredVoxelArrays_Key = "ignored_voxel_arrays";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_ApplyToSinglePhase_Key = "apply_to_single_phase";
+  static constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
+  static constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
+  static constexpr StringLiteral k_NumNeighborsPath_Key = "num_neighbors_path";
+  static constexpr StringLiteral k_MinNumNeighbors_Key = "min_num_neighbors";
+  static constexpr StringLiteral k_IgnoredVoxelArrays_Key = "ignored_voxel_arrays";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

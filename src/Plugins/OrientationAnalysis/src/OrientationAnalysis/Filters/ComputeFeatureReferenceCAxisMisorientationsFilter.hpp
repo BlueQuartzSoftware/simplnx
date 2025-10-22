@@ -24,15 +24,15 @@ public:
   ComputeFeatureReferenceCAxisMisorientationsFilter& operator=(ComputeFeatureReferenceCAxisMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static inline constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  static inline constexpr StringLiteral k_AvgCAxesArrayPath_Key = "avg_c_axes_array_path";
-  static inline constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static inline constexpr StringLiteral k_FeatureAvgCAxisMisorientationsArrayName_Key = "feature_avg_c_axis_misorientations_array_name";
-  static inline constexpr StringLiteral k_FeatureStdevCAxisMisorientationsArrayName_Key = "feature_stdev_c_axis_misorientations_array_name";
-  static inline constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayName_Key = "feature_reference_c_axis_misorientations_array_name";
+  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
+  static constexpr StringLiteral k_AvgCAxesArrayPath_Key = "avg_c_axes_array_path";
+  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteral k_FeatureAvgCAxisMisorientationsArrayName_Key = "feature_avg_c_axis_misorientations_array_name";
+  static constexpr StringLiteral k_FeatureStdevCAxisMisorientationsArrayName_Key = "feature_stdev_c_axis_misorientations_array_name";
+  static constexpr StringLiteral k_FeatureReferenceCAxisMisorientationsArrayName_Key = "feature_reference_c_axis_misorientations_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

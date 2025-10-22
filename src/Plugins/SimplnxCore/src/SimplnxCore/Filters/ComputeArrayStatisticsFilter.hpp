@@ -25,38 +25,38 @@ public:
   ComputeArrayStatisticsFilter& operator=(ComputeArrayStatisticsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_FindLength_Key = "find_length";
-  static inline constexpr StringLiteral k_FindMin_Key = "find_min";
-  static inline constexpr StringLiteral k_FindMax_Key = "find_max";
-  static inline constexpr StringLiteral k_FindMean_Key = "find_mean";
-  static inline constexpr StringLiteral k_FindMedian_Key = "find_median";
-  static inline constexpr StringLiteral k_FindMode_Key = "find_mode";
-  static inline constexpr StringLiteral k_FindStdDeviation_Key = "find_std_deviation";
-  static inline constexpr StringLiteral k_FindSummation_Key = "find_summation";
-  static inline constexpr StringLiteral k_FindUniqueValues_Key = "find_unique_values";
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_ComputeByIndex_Key = "compute_by_index";
-  static inline constexpr StringLiteral k_StandardizeData_Key = "standardize_data";
-  static inline constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_FeatureHasDataArrayName_Key = "feature_has_data_array_name";
-  static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static inline constexpr StringLiteral k_DestinationAttributeMatrixPath_Key = "destination_attribute_matrix_path";
-  static inline constexpr StringLiteral k_LengthArrayName_Key = "length_array_name";
-  static inline constexpr StringLiteral k_MinimumArrayName_Key = "minimum_array_name";
-  static inline constexpr StringLiteral k_MaximumArrayName_Key = "maximum_array_name";
-  static inline constexpr StringLiteral k_MeanArrayName_Key = "mean_array_name";
-  static inline constexpr StringLiteral k_MedianArrayName_Key = "median_array_name";
-  static inline constexpr StringLiteral k_ModeArrayName_Key = "mode_array_name";
-  static inline constexpr StringLiteral k_StdDeviationArrayName_Key = "std_deviation_array_name";
-  static inline constexpr StringLiteral k_SummationArrayName_Key = "summation_array_name";
-  static inline constexpr StringLiteral k_StandardizedArrayName_Key = "standardized_array_name";
-  static inline constexpr StringLiteral k_NumUniqueValuesName_Key = "number_unique_values_name";
+  static constexpr StringLiteral k_FindLength_Key = "find_length";
+  static constexpr StringLiteral k_FindMin_Key = "find_min";
+  static constexpr StringLiteral k_FindMax_Key = "find_max";
+  static constexpr StringLiteral k_FindMean_Key = "find_mean";
+  static constexpr StringLiteral k_FindMedian_Key = "find_median";
+  static constexpr StringLiteral k_FindMode_Key = "find_mode";
+  static constexpr StringLiteral k_FindStdDeviation_Key = "find_std_deviation";
+  static constexpr StringLiteral k_FindSummation_Key = "find_summation";
+  static constexpr StringLiteral k_FindUniqueValues_Key = "find_unique_values";
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_ComputeByIndex_Key = "compute_by_index";
+  static constexpr StringLiteral k_StandardizeData_Key = "standardize_data";
+  static constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
+  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_FeatureHasDataArrayName_Key = "feature_has_data_array_name";
+  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteral k_DestinationAttributeMatrixPath_Key = "destination_attribute_matrix_path";
+  static constexpr StringLiteral k_LengthArrayName_Key = "length_array_name";
+  static constexpr StringLiteral k_MinimumArrayName_Key = "minimum_array_name";
+  static constexpr StringLiteral k_MaximumArrayName_Key = "maximum_array_name";
+  static constexpr StringLiteral k_MeanArrayName_Key = "mean_array_name";
+  static constexpr StringLiteral k_MedianArrayName_Key = "median_array_name";
+  static constexpr StringLiteral k_ModeArrayName_Key = "mode_array_name";
+  static constexpr StringLiteral k_StdDeviationArrayName_Key = "std_deviation_array_name";
+  static constexpr StringLiteral k_SummationArrayName_Key = "summation_array_name";
+  static constexpr StringLiteral k_StandardizedArrayName_Key = "standardized_array_name";
+  static constexpr StringLiteral k_NumUniqueValuesName_Key = "number_unique_values_name";
 
   // Version 2 keys
-  static inline constexpr StringLiteral k_RangeType_Key = "range_type_index";
-  static inline constexpr StringLiteral k_Range_Key = "range";
-  static inline constexpr StringLiteral k_FeatureIdsIndexingName_Key = "feature_ids_indexing_name";
+  static constexpr StringLiteral k_RangeType_Key = "range_type_index";
+  static constexpr StringLiteral k_Range_Key = "range";
+  static constexpr StringLiteral k_FeatureIdsIndexingName_Key = "feature_ids_indexing_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

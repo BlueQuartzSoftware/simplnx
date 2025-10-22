@@ -25,21 +25,21 @@ public:
   InterpolatePointCloudToRegularGridFilter& operator=(InterpolatePointCloudToRegularGridFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static inline constexpr StringLiteral k_StoreKernelDistances_Key = "store_kernel_distances";
-  static inline constexpr StringLiteral k_InterpolationTechnique_Key = "interpolation_index";
-  static inline constexpr StringLiteral k_KernelSize_Key = "kernel_size";
-  static inline constexpr StringLiteral k_GaussianSigmas_Key = "gaussian_sigmas";
-  static inline constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_VoxelIndicesPath_Key = "voxel_indices_path";
-  static inline constexpr StringLiteral k_InputMaskPath_Key = "input_mask_path";
-  static inline constexpr StringLiteral k_InterpolateArrays_Key = "interpolate_arrays";
-  static inline constexpr StringLiteral k_CopyArrays_Key = "copy_arrays";
-  static inline constexpr StringLiteral k_InterpolatedGroupName_Key = "interpolated_group_name";
-  static inline constexpr StringLiteral k_KernelDistancesArrayName_Key = "kernel_distances_array_name";
-  static inline constexpr uint64 k_Uniform = 0;
-  static inline constexpr uint64 k_Gaussian = 1;
+  static constexpr StringLiteral k_UseMask_Key = "use_mask";
+  static constexpr StringLiteral k_StoreKernelDistances_Key = "store_kernel_distances";
+  static constexpr StringLiteral k_InterpolationTechnique_Key = "interpolation_index";
+  static constexpr StringLiteral k_KernelSize_Key = "kernel_size";
+  static constexpr StringLiteral k_GaussianSigmas_Key = "gaussian_sigmas";
+  static constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
+  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_VoxelIndicesPath_Key = "voxel_indices_path";
+  static constexpr StringLiteral k_InputMaskPath_Key = "input_mask_path";
+  static constexpr StringLiteral k_InterpolateArrays_Key = "interpolate_arrays";
+  static constexpr StringLiteral k_CopyArrays_Key = "copy_arrays";
+  static constexpr StringLiteral k_InterpolatedGroupName_Key = "interpolated_group_name";
+  static constexpr StringLiteral k_KernelDistancesArrayName_Key = "kernel_distances_array_name";
+  static constexpr uint64 k_Uniform = 0;
+  static constexpr uint64 k_Gaussian = 1;
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

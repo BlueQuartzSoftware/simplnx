@@ -57,12 +57,12 @@ public:
   ITKMinMaxCurvatureFlowImageFilter& operator=(ITKMinMaxCurvatureFlowImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static inline constexpr StringLiteral k_TimeStep_Key = "time_step";
-  static inline constexpr StringLiteral k_NumberOfIterations_Key = "number_of_iterations";
-  static inline constexpr StringLiteral k_StencilRadius_Key = "stencil_radius";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_TimeStep_Key = "time_step";
+  static constexpr StringLiteral k_NumberOfIterations_Key = "number_of_iterations";
+  static constexpr StringLiteral k_StencilRadius_Key = "stencil_radius";
 
   /**
    * @brief Returns the name of the filter.

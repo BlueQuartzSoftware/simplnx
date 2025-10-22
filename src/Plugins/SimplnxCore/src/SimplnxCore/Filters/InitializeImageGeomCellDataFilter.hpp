@@ -21,16 +21,16 @@ public:
   InitializeImageGeomCellDataFilter& operator=(InitializeImageGeomCellDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_CellArrayPaths_Key = "cell_arrays";
-  static inline constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_MinPoint_Key = "min_point";
-  static inline constexpr StringLiteral k_MaxPoint_Key = "max_point";
-  static inline constexpr StringLiteral k_InitType_Key = "init_type_index";
-  static inline constexpr StringLiteral k_InitValue_Key = "init_value";
-  static inline constexpr StringLiteral k_InitRange_Key = "init_range";
-  static inline constexpr StringLiteral k_UseSeed_Key = "use_seed";
-  static inline constexpr StringLiteral k_SeedValue_Key = "seed_value";
-  static inline constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
+  static constexpr StringLiteral k_CellArrayPaths_Key = "cell_arrays";
+  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_MinPoint_Key = "min_point";
+  static constexpr StringLiteral k_MaxPoint_Key = "max_point";
+  static constexpr StringLiteral k_InitType_Key = "init_type_index";
+  static constexpr StringLiteral k_InitValue_Key = "init_value";
+  static constexpr StringLiteral k_InitRange_Key = "init_range";
+  static constexpr StringLiteral k_UseSeed_Key = "use_seed";
+  static constexpr StringLiteral k_SeedValue_Key = "seed_value";
+  static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
 
   enum class InitType : uint64
   {

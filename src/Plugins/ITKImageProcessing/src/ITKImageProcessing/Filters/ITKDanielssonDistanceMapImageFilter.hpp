@@ -66,12 +66,12 @@ public:
   ITKDanielssonDistanceMapImageFilter& operator=(ITKDanielssonDistanceMapImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static inline constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static inline constexpr StringLiteral k_InputIsBinary_Key = "input_is_binary";
-  static inline constexpr StringLiteral k_SquaredDistance_Key = "squared_distance";
-  static inline constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
+  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteral k_InputIsBinary_Key = "input_is_binary";
+  static constexpr StringLiteral k_SquaredDistance_Key = "squared_distance";
+  static constexpr StringLiteral k_UseImageSpacing_Key = "use_image_spacing";
 
   /**
    * @brief Returns the name of the filter.
