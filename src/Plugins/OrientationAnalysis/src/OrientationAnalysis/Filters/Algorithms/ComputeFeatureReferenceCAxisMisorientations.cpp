@@ -167,19 +167,18 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 
   // These 2 loops compute the population standard deviation of those misorientations for
   // each feature.
-  std::vector<float32> stdevs(totalFeatures, 0.0f);
-
+  std::vector<double> stdevs(totalFeatures, 0.0);
   for(usize cellIdx = 0; cellIdx < totalPoints; cellIdx++)
   {
     const int32 featureId = featureIds[cellIdx];
-    float diff = cellRefCAxisMis.getValue(cellIdx) - featAvgCAxisMis.getValue(featureId);
+    double diff = cellRefCAxisMis.getValue(cellIdx) - featAvgCAxisMis.getValue(featureId);
     stdevs[featureId] += (diff * diff);
   }
 
   // Finish computing the standard deviation in this loop
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
-    featStdevCAxisMis[featureId] = std::sqrt(stdevs[featureId] / static_cast<float32>(counts[featureId]));
+    featStdevCAxisMis[featureId] = std::sqrt(stdevs[featureId] / static_cast<double>(counts[featureId]));
   }
 
   return {};
