@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 
-#include "EbsdLib/IO/HKL/CtfConstants.h"
-#include "EbsdLib/Math/EbsdLibMath.h"
+#include <EbsdLib/IO/HKL/CtfConstants.h>
+#include <EbsdLib/Math/EbsdLibMath.h>
 
 using namespace nx::core;
 

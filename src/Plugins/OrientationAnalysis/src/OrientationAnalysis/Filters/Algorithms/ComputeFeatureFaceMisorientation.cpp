@@ -5,8 +5,8 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/Core/EbsdLibConstants.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
 using LaueOpsContainer = std::vector<LaueOpsShPtrType>;

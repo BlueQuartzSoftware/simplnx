@@ -18,12 +18,12 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
-#include "EbsdLib/IO/BrukerNano/EspritConstants.h"
-#include "EbsdLib/IO/BrukerNano/EspritPhase.h"
-#include "EbsdLib/IO/BrukerNano/H5EspritFields.h"
-#include "EbsdLib/IO/BrukerNano/H5EspritReader.h"
-#include "EbsdLib/IO/TSL/AngFields.h"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/IO/BrukerNano/EspritConstants.h>
+#include <EbsdLib/IO/BrukerNano/EspritPhase.h>
+#include <EbsdLib/IO/BrukerNano/H5EspritFields.h>
+#include <EbsdLib/IO/BrukerNano/H5EspritReader.h>
+#include <EbsdLib/IO/TSL/AngFields.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <filesystem>
 namespace fs = std::filesystem;

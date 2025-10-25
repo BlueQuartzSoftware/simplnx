@@ -27,12 +27,6 @@ ComputeFeatureNeighborCAxisMisalignments::ComputeFeatureNeighborCAxisMisalignmen
 ComputeFeatureNeighborCAxisMisalignments::~ComputeFeatureNeighborCAxisMisalignments() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeFeatureNeighborCAxisMisalignments::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
 {
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
@@ -46,18 +40,17 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     noPhasesHexagonal = noPhasesHexagonal && !isHex;
   }
 
+  // If NONE of the phases are hexagonal then bail out now with an error
   if(noPhasesHexagonal)
   {
-    return MakeErrorResult(
-        -1562, "Finding the feature neighbor c-axis mis orientation requires at least one phase to be Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures but none were found.");
+    return MakeErrorResult(-1562, "No phases that have a crystal symmetry of Hexagonal (6/mmm or 6/m) were found.");
   }
 
   Result<> result;
+  // Throw a warning for any NON-Hex Laue Phases
   if(!allPhasesHexagonal)
   {
-    result.warnings().push_back(
-        {-1563, "Finding the feature neighbor c-axis mis orientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Calculations for non Hexagonal phases will be "
-                "skipped and a NAN value will be used instead."});
+    result.warnings().push_back({-1563, "Non Hexagonal phases were found. All calculations for non Hexagonal phases will be skipped and a NaN value inserted."});
   }
 
   auto& neighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborListArrayPath);
@@ -65,7 +58,12 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   const auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
 
   auto& cAxisMisalignmentList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->CAxisMisalignmentListArrayName);
-  auto& avgCAxisMisalignment = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxisMisalignmentsArrayName);
+
+  Float32Array* avgCAxisMisalignmentPtr = nullptr;
+  if(m_InputValues->FindAvgMisals)
+  {
+    avgCAxisMisalignmentPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgCAxisMisalignmentsArrayName);
+  }
 
   const usize totalFeatures = featurePhases.getNumberOfTuples();
   const usize numQuatComps = avgQuats.getNumberOfComponents();
@@ -75,35 +73,35 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
 
   const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
   usize hexNeighborListSize = 0;
-  uint32 phase1 = 0, phase2 = 0;
+  uint32 xtalPhase1 = 0, xtalPhase2 = 0;
   usize nName = 0;
-  for(usize i = 1; i < totalFeatures; i++)
+  for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
-    phase1 = crystalStructures[featurePhases[i]];
+    xtalPhase1 = crystalStructures[featurePhases[featureIdx]];
 
-    const usize quatTupleIndex1 = i * numQuatComps;
+    const usize quatTupleIndex1 = featureIdx * numQuatComps;
     OrientationD oMatrix1 =
         OrientationTransformation::qu2om<QuatD, OrientationD>({avgQuats[quatTupleIndex1], avgQuats[quatTupleIndex1 + 1], avgQuats[quatTupleIndex1 + 2], avgQuats[quatTupleIndex1 + 3]});
 
-    // transpose the g matrix so when c-axis is multiplied by it
+    // transpose the g matrix so when c-axis is multiplied by `g`
     // it will give the sample direction that the c-axis is along
     Eigen::Vector3d c1 = OrientationMatrixToGMatrixTranspose(oMatrix1) * cAxis;
     // normalize so that the dot product can be taken below without
     // dividing by the magnitudes (they would be 1)
     c1.normalize();
-    misalignmentLists[i].resize(neighborList[i].size(), -1.0f);
-    for(usize j = 0; j < neighborList[i].size(); j++)
+    misalignmentLists[featureIdx].resize(neighborList[featureIdx].size(), -1.0f);
+    for(usize j = 0; j < neighborList[featureIdx].size(); j++)
     {
-      nName = neighborList[i][j];
-      phase2 = crystalStructures[featurePhases[nName]];
-      hexNeighborListSize = neighborList[i].size();
-      if(phase1 == phase2 && (phase1 == EbsdLib::CrystalStructure::Hexagonal_High || phase1 == EbsdLib::CrystalStructure::Hexagonal_Low))
+      nName = neighborList[featureIdx][j];
+      xtalPhase2 = crystalStructures[featurePhases[nName]];
+      hexNeighborListSize = neighborList[featureIdx].size();
+      if(xtalPhase1 == xtalPhase2 && (xtalPhase1 == EbsdLib::CrystalStructure::Hexagonal_High || xtalPhase1 == EbsdLib::CrystalStructure::Hexagonal_Low))
       {
         const usize quatTupleIndex2 = nName * numQuatComps;
         OrientationD oMatrix2 =
             OrientationTransformation::qu2om<QuatD, OrientationD>({avgQuats[quatTupleIndex2], avgQuats[quatTupleIndex2 + 1], avgQuats[quatTupleIndex2 + 2], avgQuats[quatTupleIndex2 + 3]});
 
-        // transpose the g matrix so when c-axis is multiplied by it
+        // transpose the g matrix so when c-axis is multiplied by `g`
         // it will give the sample direction that the c-axis is along
         Eigen::Vector3d c2 = OrientationMatrixToGMatrixTranspose(oMatrix2) * cAxis;
         // normalize so that the dot product can be taken below without
@@ -118,10 +116,11 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
           w = Constants::k_PiD - w;
         }
 
-        misalignmentLists[i][j] = static_cast<float32>(w * Constants::k_180OverPiD);
+        misalignmentLists[featureIdx][j] = static_cast<float32>(w * Constants::k_180OverPiD);
         if(m_InputValues->FindAvgMisals)
         {
-          avgCAxisMisalignment[i] += misalignmentLists[i][j];
+          float32 value = avgCAxisMisalignmentPtr->getValue(featureIdx) + misalignmentLists[featureIdx][j];
+          avgCAxisMisalignmentPtr->setValue(featureIdx, value);
         }
       }
       else
@@ -130,18 +129,19 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
         {
           hexNeighborListSize--;
         }
-        misalignmentLists[i][j] = NAN;
+        misalignmentLists[featureIdx][j] = std::nanf("");
       }
     }
     if(m_InputValues->FindAvgMisals)
     {
       if(hexNeighborListSize > 0)
       {
-        avgCAxisMisalignment[i] /= hexNeighborListSize;
+        float32 value = avgCAxisMisalignmentPtr->getValue(featureIdx) / static_cast<float32>(hexNeighborListSize);
+        avgCAxisMisalignmentPtr->setValue(featureIdx, value);
       }
       else
       {
-        avgCAxisMisalignment[i] = NAN;
+        avgCAxisMisalignmentPtr->setValue(featureIdx, std::nanf(""));
       }
       hexNeighborListSize = 0;
     }

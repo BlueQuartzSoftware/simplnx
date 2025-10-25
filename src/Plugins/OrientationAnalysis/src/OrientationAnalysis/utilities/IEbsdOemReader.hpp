@@ -8,9 +8,9 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-#include "EbsdLib/IO/BrukerNano/H5EspritReader.h"
-#include "EbsdLib/IO/HKL/H5OINAReader.h"
-#include "EbsdLib/IO/TSL/H5OIMReader.h"
+#include <EbsdLib/IO/BrukerNano/H5EspritReader.h>
+#include <EbsdLib/IO/HKL/H5OINAReader.h>
+#include <EbsdLib/IO/TSL/H5OIMReader.h>
 
 #include <fmt/format.h>
 

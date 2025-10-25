@@ -10,9 +10,9 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
-#include "EbsdLib/Core/EbsdMacros.h"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/Core/EbsdLibConstants.h>
+#include <EbsdLib/Core/EbsdMacros.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
 

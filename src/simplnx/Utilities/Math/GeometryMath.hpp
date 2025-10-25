@@ -63,6 +63,19 @@ std::array<Point3D<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cach
   return points;
 }
 } // namespace detail
+
+template <typename T>
+T CosThetaBetweenVectors(const T a[3], const T b[3])
+{
+  T norm1 = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+  T norm2 = sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
+  if(norm1 == 0 || norm2 == 0)
+  {
+    return static_cast<T>(1.0);
+  }
+  return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (norm1 * norm2);
+}
+
 /**
  * @brief Returns the cosine between two angles defined by a point along each
  * vector. The vectors are assumed to cross at (0,0,0).

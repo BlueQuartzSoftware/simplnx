@@ -14,7 +14,7 @@
 #define RUN_TASK
 #endif
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
 

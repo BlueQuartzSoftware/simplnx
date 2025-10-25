@@ -18,9 +18,9 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
-#include "EbsdLib/IO/TSL/AngFields.h"
-#include "EbsdLib/IO/TSL/H5OIMReader.h"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/IO/TSL/AngFields.h>
+#include <EbsdLib/IO/TSL/H5OIMReader.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <filesystem>
 namespace fs = std::filesystem;

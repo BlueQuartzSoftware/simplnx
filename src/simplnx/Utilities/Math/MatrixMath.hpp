@@ -439,6 +439,10 @@ void Normalize3x1(T* g)
 {
   T denom;
   denom = g[0] * g[0] + g[1] * g[1] + g[2] * g[2];
+  if(denom == 0.0)
+  {
+    return;
+  }
   denom = sqrt(denom);
   g[0] = g[0] / denom;
   if(g[0] > 1.0)

@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
+#include <EbsdLib/Core/EbsdLibConstants.h>
 
 using namespace nx::core;
 

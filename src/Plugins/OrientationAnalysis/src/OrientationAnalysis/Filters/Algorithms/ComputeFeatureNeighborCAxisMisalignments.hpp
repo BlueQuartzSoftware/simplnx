@@ -39,8 +39,6 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
-
 private:
   DataStructure& m_DataStructure;
   const ComputeFeatureNeighborCAxisMisalignmentsInputValues* m_InputValues = nullptr;

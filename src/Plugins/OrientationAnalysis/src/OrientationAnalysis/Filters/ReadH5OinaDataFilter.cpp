@@ -17,10 +17,10 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 
-#include "EbsdLib/IO/HKL/CtfConstants.h"
-#include "EbsdLib/IO/HKL/CtfFields.h"
-#include "EbsdLib/IO/HKL/H5OINAReader.h"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/IO/HKL/CtfConstants.h>
+#include <EbsdLib/IO/HKL/CtfFields.h>
+#include <EbsdLib/IO/HKL/H5OINAReader.h>
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <filesystem>
 namespace fs = std::filesystem;

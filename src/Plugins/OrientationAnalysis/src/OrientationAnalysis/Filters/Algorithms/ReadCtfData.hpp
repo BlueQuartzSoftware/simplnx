@@ -7,8 +7,8 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 
-#include "EbsdLib/IO/HKL/CtfPhase.h"
-#include "EbsdLib/IO/HKL/CtfReader.h"
+#include <EbsdLib/IO/HKL/CtfPhase.h>
+#include <EbsdLib/IO/HKL/CtfReader.h>
 
 namespace nx::core
 {

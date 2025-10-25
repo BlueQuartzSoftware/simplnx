@@ -22,20 +22,20 @@
 #include "simplnx/Utilities/RTree.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
-#include "EbsdLib/LaueOps/CubicLowOps.h"
-#include "EbsdLib/LaueOps/CubicOps.h"
-#include "EbsdLib/LaueOps/HexagonalLowOps.h"
-#include "EbsdLib/LaueOps/HexagonalOps.h"
-#include "EbsdLib/LaueOps/MonoclinicOps.h"
-#include "EbsdLib/LaueOps/OrthoRhombicOps.h"
-#include "EbsdLib/LaueOps/TetragonalLowOps.h"
-#include "EbsdLib/LaueOps/TetragonalOps.h"
-#include "EbsdLib/LaueOps/TriclinicOps.h"
-#include "EbsdLib/LaueOps/TrigonalLowOps.h"
-#include "EbsdLib/LaueOps/TrigonalOps.h"
-#include "EbsdLib/Utilities/LambertUtilities.h"
-#include "EbsdLib/Utilities/ModifiedLambertProjection.h"
+#include <EbsdLib/Core/EbsdLibConstants.h>
+#include <EbsdLib/LaueOps/CubicLowOps.h>
+#include <EbsdLib/LaueOps/CubicOps.h>
+#include <EbsdLib/LaueOps/HexagonalLowOps.h>
+#include <EbsdLib/LaueOps/HexagonalOps.h>
+#include <EbsdLib/LaueOps/MonoclinicOps.h>
+#include <EbsdLib/LaueOps/OrthoRhombicOps.h>
+#include <EbsdLib/LaueOps/TetragonalLowOps.h>
+#include <EbsdLib/LaueOps/TetragonalOps.h>
+#include <EbsdLib/LaueOps/TriclinicOps.h>
+#include <EbsdLib/LaueOps/TrigonalLowOps.h>
+#include <EbsdLib/LaueOps/TrigonalOps.h>
+#include <EbsdLib/Utilities/LambertUtilities.h>
+#include <EbsdLib/Utilities/ModifiedLambertProjection.h>
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"

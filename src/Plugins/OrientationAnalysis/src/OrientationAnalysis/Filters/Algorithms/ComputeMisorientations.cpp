@@ -2,8 +2,8 @@
 
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
 #include "simplnx/Common/Constants.hpp"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <EbsdLib/Core/OrientationRepresentation.h>
 #include <EbsdLib/Core/OrientationTransformation.hpp>

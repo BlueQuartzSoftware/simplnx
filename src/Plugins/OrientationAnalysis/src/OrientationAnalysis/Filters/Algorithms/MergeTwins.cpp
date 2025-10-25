@@ -6,9 +6,9 @@
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include "EbsdLib/Core/EbsdLibConstants.h"
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/Quaternion.hpp"
+#include <EbsdLib/Core/EbsdLibConstants.h>
 
 #include <random>
 

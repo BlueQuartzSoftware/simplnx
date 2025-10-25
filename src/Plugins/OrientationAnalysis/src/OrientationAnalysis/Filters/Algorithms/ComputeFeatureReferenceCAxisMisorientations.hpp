@@ -13,15 +13,25 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceCAxisMisorientationsInputValues
 {
+  // Input Geometry
   DataPath ImageGeometryPath;
+  // Input Cell Data
   DataPath FeatureIdsArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath QuatsArrayPath;
+
+  // Input Feature Data
   DataPath AvgCAxesArrayPath;
+
+  // Input Ensemble Data
   DataPath CrystalStructuresArrayPath;
-  DataPath FeatureAvgCAxisMisorientationsArrayName;
-  DataPath FeatureStdevCAxisMisorientationsArrayName;
-  DataPath FeatureReferenceCAxisMisorientationsArrayName;
+
+  // Output Cell Data
+  DataPath FeatureReferenceCAxisMisorientationsArrayPath;
+
+  // Output Feature Data
+  DataPath FeatureAvgCAxisMisorientationsArrayPath;
+  DataPath FeatureStdevCAxisMisorientationsArrayPath;
 };
 
 /**
@@ -42,8 +52,6 @@ public:
   ComputeFeatureReferenceCAxisMisorientations& operator=(ComputeFeatureReferenceCAxisMisorientations&&) noexcept = delete;
 
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;

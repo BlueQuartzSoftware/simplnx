@@ -5,7 +5,9 @@
 #include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/simplnx_export.hpp"
 
-#include <cmath>
+#include <algorithm>
+#include <numeric>
+#include <random>
 
 namespace nx::core::ClusterUtilities
 {
@@ -18,6 +20,16 @@ enum DistanceMetric
   Pearson,
   SquaredPearson
 };
+
+template <typename T>
+std::vector<T> CreateRandomizedIndex(usize numElements, T startingValue)
+{
+  auto generator = std::mt19937_64(std::mt19937_64::default_seed);
+  std::vector<T> randomIds(numElements);
+  std::iota(randomIds.begin(), randomIds.end(), startingValue);
+  std::shuffle(randomIds.begin(), randomIds.end(), generator);
+  return randomIds;
+}
 
 /**
  * @brief The DistanceTemplate class contains a templated function getDistance to find the distance, via a variety of

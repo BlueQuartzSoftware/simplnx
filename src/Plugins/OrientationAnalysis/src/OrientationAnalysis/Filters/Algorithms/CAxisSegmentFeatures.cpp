@@ -8,7 +8,7 @@
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/Core/OrientationTransformation.hpp>
 
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
@@ -42,10 +42,16 @@ Result<> CAxisSegmentFeatures::operator()()
       return MakeErrorResult(-8362, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
     }
   }
+
+  // Loop through all the "Phase" cell values and validate that any phase found is
+  // a hexagonal phase. This guards against there being multiple phases defined in
+  // and EBSD file but the non-hexagonal phases were actually never found
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  for(usize i = 1; i < crystalStructures.size(); ++i)
+  usize numCells = m_CellPhases->getNumberOfTuples();
+  for(usize cellIdx = 0; cellIdx < numCells; ++cellIdx)
   {
-    const auto crystalStructureType = crystalStructures[i];
+    int32 currentPhaseIdx = m_CellPhases->getValue(cellIdx);
+    const auto crystalStructureType = crystalStructures[currentPhaseIdx];
     if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
     {
       return MakeErrorResult(-8363, fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis mis orientation requires all phases to be either Hexagonal-Low 6/m "

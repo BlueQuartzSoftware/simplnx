@@ -1,6 +1,6 @@
 #include "OrientationUtilities.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 namespace nx::core
 {

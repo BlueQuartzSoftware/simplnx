@@ -8,7 +8,7 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
 

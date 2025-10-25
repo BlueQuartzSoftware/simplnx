@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <vector>
 
@@ -136,9 +137,13 @@ SegmentFeatures::~SegmentFeatures() = default;
 // -----------------------------------------------------------------------------
 Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
+  ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+
   SizeVec3 udims = gridGeom->getDimensions();
 
-  const int64 dims[3] = {static_cast<int64>(udims[0]), static_cast<int64>(udims[1]), static_cast<int64>(udims[2])};
+  usize totalVoxels = udims[0] * udims[1] * udims[2];
+
+  int64 dims[3] = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
 
   // Initialize a sequence of execution modifiers
   int32 gnum = 1;
@@ -150,7 +155,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   constexpr usize initialVoxelsListSize = 100000;
   std::vector<int64> voxelsList(initialVoxelsListSize, -1);
 
-  ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+  usize totalVoxelsSegmented = 0;
   while(seed >= 0)
   {
     if(m_ShouldCancel)
@@ -197,18 +202,20 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
           }
         }
       }
+      totalVoxelsSegmented += size;
     }
 
-    voxelsList.assign(initialVoxelsListSize, -1);
+    voxelsList.assign(size + 1, -1);
     gnum++;
 
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Features Found: {}", gnum); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{:.2f}% - Features Found: {}", 100.0f * static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels), gnum); });
 
     nextSeed = seed + 1;
     seed = getSeed(gnum, nextSeed);
   }
 
   m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", gnum));
+
   m_FoundFeatures = gnum;
   return {};
 }

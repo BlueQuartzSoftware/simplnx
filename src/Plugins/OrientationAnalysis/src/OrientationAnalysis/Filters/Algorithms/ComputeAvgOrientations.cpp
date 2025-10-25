@@ -1,12 +1,45 @@
 #include "ComputeAvgOrientations.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
+
+namespace
+{
+
+std::ostream& operator<<(std::ostream& os, const QuatF& q)
+{
+  os << ", " << q.x() << ", " << q.y() << ", " << q.z() << ", " << q.w();
+  return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const QuatD& q)
+{
+  os << ", " << q.x() << ", " << q.y() << ", " << q.z() << ", " << q.w();
+  return os;
+}
+
+template <typename T>
+void UpdateQuaternionArray(AbstractDataStore<T>& quatArray, const Quaternion<T>& quat, int32 tupleIndex)
+{
+  quatArray.setValue(tupleIndex * 4, quat.x());
+  quatArray.setValue(tupleIndex * 4 + 1, quat.y());
+  quatArray.setValue(tupleIndex * 4 + 2, quat.z());
+  quatArray.setValue(tupleIndex * 4 + 3, quat.w());
+}
+
+template <typename T>
+void UpdateEulerArray(AbstractDataStore<T>& eulerArray, const Orientation<T>& euler, int32 tupleIndex)
+{
+  eulerArray.setValue(tupleIndex * 3, euler[0]);
+  eulerArray.setValue(tupleIndex * 3 + 1, euler[1]);
+  eulerArray.setValue(tupleIndex * 3 + 2, euler[2]);
+}
+
+} // namespace
 
 // -----------------------------------------------------------------------------
 ComputeAvgOrientations::ComputeAvgOrientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -26,14 +59,14 @@ Result<> ComputeAvgOrientations::operator()()
 {
   std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
 
-  nx::core::Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
-  nx::core::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  nx::core::Float32Array& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath);
+  Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
+  Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+  Float32Array& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath);
 
-  nx::core::UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
 
-  nx::core::Float32Array& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgQuatsArrayPath);
-  nx::core::Float32Array& avgEuler = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgEulerAnglesArrayPath);
+  auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgQuatsArrayPath).getDataStoreRef();
+  auto& avgEuler = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgEulerAnglesArrayPath).getDataStoreRef();
 
   const size_t totalPoints = featureIds.getNumberOfTuples();
 
@@ -50,17 +83,8 @@ Result<> ComputeAvgOrientations::operator()()
   // Initialize all Euler Angles to Zero
   avgEuler.fill(0.0F);
 
-  // Get the DataStore for each output array
-  auto* avgQuatDataStore = avgQuats.getDataStore();
-
   // Get the Identity Quaternion
-  std::array<float, 4> identityQuat = {0.0F, 0.0F, 0.0F, 1.0F};
-
-  // Initialize all Average Quats to Identity
-  for(size_t tupleIndex = 1; tupleIndex < totalFeatures; tupleIndex++)
-  {
-    avgQuatDataStore->setTuple(tupleIndex, identityQuat);
-  }
+  static const QuatF identityQuat(0.0f, 0.0f, 0.0f, 1.0f);
 
   for(size_t i = 0; i < totalPoints; i++)
   {
@@ -68,28 +92,26 @@ Result<> ComputeAvgOrientations::operator()()
     {
       return {};
     }
-    if(featureIds[i] > 0 && phases[i] > 0)
+    const int32_t currentFeatureId = featureIds[i];
+    const int32_t currentPhase = phases[i];
+    if(currentFeatureId > 0 && currentPhase > 0)
     {
-      int32 phase = phases[i];
-      size_t featureId = static_cast<size_t>(featureIds[i]);
-
-      size_t featureIdOffset = featureId * 4;
-      counts[featureId] += 1.0f;
-
-      float32 count = counts[featureId];
-      QuatF curAvgQuat(avgQuats[featureIdOffset] / count, avgQuats[featureIdOffset + 1] / count, avgQuats[featureIdOffset + 2] / count, avgQuats[featureIdOffset + 3] / count);
-
-      // Make a copy of the current quaternion from the DataArray into a QuatF object
+      const uint32 xtal = crystalStructures[currentPhase];
+      counts[currentFeatureId] += 1.0f;
       QuatF voxQuat(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-      QuatF nearestQuat = orientationOps[crystalStructures[phase]]->getNearestQuat(curAvgQuat, voxQuat);
+      QuatF curAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);
+      QuatF finalAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);
 
-      // Add the running average quat with the current quat
-      curAvgQuat = curAvgQuat + nearestQuat;
-      // Copy the new curAvgQuat back into the output array
-      avgQuats[featureIdOffset] = curAvgQuat.x();
-      avgQuats[featureIdOffset + 1] = curAvgQuat.y();
-      avgQuats[featureIdOffset + 2] = curAvgQuat.z();
-      avgQuats[featureIdOffset + 3] = curAvgQuat.w();
+      curAvgQuat = curAvgQuat.scalarDivide(counts[currentFeatureId]);
+
+      if(counts[currentFeatureId] == 1.0f)
+      {
+        curAvgQuat = QuatF::identity();
+      }
+      voxQuat = orientationOps[xtal]->getNearestQuat(curAvgQuat, voxQuat);
+      curAvgQuat = finalAvgQuat + voxQuat;
+
+      UpdateQuaternionArray(avgQuats, curAvgQuat, currentFeatureId);
     }
   }
 
@@ -99,23 +121,21 @@ Result<> ComputeAvgOrientations::operator()()
     {
       return {};
     }
-    size_t featureIdOffset = featureId * 4;
-    float32 count = counts[featureId];
 
-    // Create a copy of the quaternion
-    QuatF curAvgQuat(avgQuats[featureIdOffset] / count, avgQuats[featureIdOffset + 1] / count, avgQuats[featureIdOffset + 2] / count, avgQuats[featureIdOffset + 3] / count);
+    if(counts[featureId] == 0.0f)
+    {
+      UpdateQuaternionArray(avgQuats, identityQuat, featureId);
+    }
+
+    QuatF curAvgQuat(avgQuats[featureId * 4], avgQuats[featureId * 4 + 1], avgQuats[featureId * 4 + 2], avgQuats[featureId * 4 + 3]);
+    curAvgQuat = curAvgQuat.scalarDivide(counts[featureId]);
     curAvgQuat = curAvgQuat.normalize().getPositiveOrientation();
+    UpdateQuaternionArray(avgQuats, curAvgQuat, featureId);
 
-    avgQuats[featureIdOffset] = curAvgQuat.x();
-    avgQuats[featureIdOffset + 1] = curAvgQuat.y();
-    avgQuats[featureIdOffset + 2] = curAvgQuat.z();
-    avgQuats[featureIdOffset + 3] = curAvgQuat.w();
-
-    OrientationF eu = OrientationTransformation::qu2eu<Quaternion<float>, Orientation<float>>(curAvgQuat);
-    featureIdOffset = featureId * 3;
-    avgEuler[featureIdOffset] = eu[0];
-    avgEuler[featureIdOffset + 1] = eu[1];
-    avgEuler[featureIdOffset + 2] = eu[2];
+    // Update the value for the average Euler. Be sure to make sure the Quaterion is in the northern hemisphere
+    // before converting it to a Euler Angle
+    OrientationF eu = OrientationTransformation::qu2eu<QuatF, OrientationF>(curAvgQuat);
+    UpdateEulerArray(avgEuler, eu, featureId);
   }
 
   return {};

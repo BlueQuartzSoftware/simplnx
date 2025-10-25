@@ -8,7 +8,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-#include "EbsdLib/IO/TSL/AngReader.h"
+#include <EbsdLib/IO/TSL/AngReader.h>
 
 namespace nx::core
 {
