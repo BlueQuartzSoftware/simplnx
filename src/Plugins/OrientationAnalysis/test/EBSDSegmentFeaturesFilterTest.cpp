@@ -1,5 +1,25 @@
 #include <catch2/catch.hpp>
 
+/**
+* this unit test needs a complete rewrite.
+*
+* There are 4 exemplar ANG files that are specifically crafted with 51 clusters of orientations
+* that are all 6 degrees apart. Each cluster has a spread of 3 degrees. We should be able to
+* use these files to perform the segmentation and know exactly what the output should be.
+*
+* Here is a checklist of TEST_CASE() that should be written:
+*
+* For each exemplar Image Geometry, the data is ready for segmentation. Segment the data
+* using the filter, check the results against the exemplar data from the test data archive.
+*
+* NOTE: The exemplar data files were hand validated before being used in this unit test.
+*
+* We should also include a version that uses a Mask and one that possibly randomizes the featureIds.
+*
+* I am not sure about testing negative misorientations. Not sure that matters.
+*/
+
+
 #include "OrientationAnalysis/Filters/EBSDSegmentFeaturesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
@@ -18,6 +38,8 @@ using namespace nx::core::Constants;
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Valid Execution", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
+  REQUIRE(true == false);
+
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_ebsd_segment_features.tar.gz",
