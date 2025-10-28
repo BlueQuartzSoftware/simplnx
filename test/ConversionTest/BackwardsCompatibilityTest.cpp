@@ -5,6 +5,7 @@
 #include "simplnx/Filter/AnyCloneable.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/CalculatorParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
@@ -257,9 +258,9 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b").value(), DataPath({"DataArray", "Selection", "Parameter"}));
 
   // ChoicesParameter <- ChoiceFilterParameter
-  CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), 42ULL);
+  CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(42));
   // ChoicesParameter <- LinkedChoicesFilterParameter
-  CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), 1ULL);
+  CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(1));
 
   // DataGroupCreationParameter <- AttributeMatrixCreationFilterParameter
   CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath::FromString("/AttributeMatrix/CreationParameter").value());
@@ -305,7 +306,7 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("21acff45-a653-45db-a0d1-f43cd344b93a").value(), -132);
 
   // UInt64Parameter <- UInt64FilterParameter
-  CreateMapInput(Uuid::FromString("36d91b23-5500-4ed4-bdf3-d680f54ee5d1").value(), 132ULL);
+  CreateMapInput(Uuid::FromString("36d91b23-5500-4ed4-bdf3-d680f54ee5d1").value(), static_cast<uint64>(132));
 
   // VectorFloat32Parameter <- AxisAngleFilterParameter
   CreateMapInput(Uuid::FromString("88f231a1-7956-41f5-98b7-4471705d2805").value(), std::vector<float32>{23.7f, 62.9f, 36.4f, 90.01f});
@@ -424,6 +425,8 @@ void InitializeMap()
 
 TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
 {
+  InitializeMap();
+
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
   auto filterList = app->getFilterList();
@@ -520,7 +523,7 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
       bool found = false;
       for(const auto& value : parameterCheck.first)
       {
-        if(parameterCheck.second(parameter, importedValue))
+        if(parameterCheck.second(value, importedValue))
         {
           found = true;
           break;
