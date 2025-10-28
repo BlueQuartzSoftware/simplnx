@@ -389,16 +389,19 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("4f6d6a33-48da-427a-8b17-61e07d1d5b45").value(), ReadCSVFileParameter::ValueType{.inputFilePath = "/Read/ASCII/Data/Filter/Parameter.csv"});
 
   // MultiPathSelectionParameter <- DataContainerArrayProxyFilterParameter
-  CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"Data"}), DataPath({"Container", "Array"}), DataPath({"Proxy", "Filter", "Parameter"})});
+  CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(),
+                 std::vector<DataPath>{DataPath({"Data"}), DataPath({"Container", "Array"}), DataPath({"Proxy", "Filter", "Parameter"})});
   // MultiPathSelectionParameter <- MultiAttributeMatrixSelectionFilterParameter
-  CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"Multi", "Attribute"}), DataPath({"Matrix", "Selection"}), DataPath({"Filter", "Parameter"})});
+  CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(),
+                 std::vector<DataPath>{DataPath({"Multi", "Attribute"}), DataPath({"Matrix", "Selection"}), DataPath({"Filter", "Parameter"})});
   // MultiPathSelectionParameter <- MultiDataContainerSelectionFilterParameter
   CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"MultiDataContainer"}), DataPath({"SelectionFilterParameter"})});
 
   // OEMEbsdScanSelectionParameter <- OEMEbsdScanSelectionFilterParameter (in OrientationAnalysis parameter)
-  CreateMapInput(Uuid::FromString("3935c833-aa51-4a58-81e9-3a51972c05ea").value(), OEMEbsdScanSelectionParameter::ValueType{.inputFilePath="/Input/File/Filter/Parameter.txt", .scanNames=std::list<std::string>{"OEMEbsd", "ScanSelection", "FilterParameter"}});
+  CreateMapInput(Uuid::FromString("3935c833-aa51-4a58-81e9-3a51972c05ea").value(),
+                 OEMEbsdScanSelectionParameter::ValueType{.inputFilePath = "/Input/File/Filter/Parameter.txt", .scanNames = std::list<std::string>{"OEMEbsd", "ScanSelection", "FilterParameter"}});
   // ReadH5EbsdFileParameter <- ReadH5EbsdFilterParameter (in OrientationAnalysis parameter)
-  CreateMapInput(Uuid::FromString("FAC15aa6-b367-508e-bf73-94ab6be0058b").value(), ReadH5EbsdFileParameter::ValueType{.inputFilePath="/Read/H5Ebsd/Filter/Parameter.h5ebsd"});
+  CreateMapInput(Uuid::FromString("FAC15aa6-b367-508e-bf73-94ab6be0058b").value(), ReadH5EbsdFileParameter::ValueType{.inputFilePath = "/Read/H5Ebsd/Filter/Parameter.h5ebsd"});
 
   //  // From Filters Not Ported Yet (Parameter Doesn't Exist YET)
   //  s_ParameterMapping["MultiInputFileFilterParameter"] = "MultiInputFileFilterParameter";
@@ -421,6 +424,8 @@ void InitializeMap()
   //  s_ParameterMapping["ConvertHexGridToSquareGridFilterParameter"] = "ConvertHexGridToSquareGridFilterParameter";
   //  s_ParameterMapping["EbsdToH5EbsdFilterParameter"] = "EbsdToH5EbsdFilterParameter";
 }
+
+constexpr StringLiteral k_Separator = "-----------------------------------------------------------------------";
 } // namespace
 
 TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
@@ -515,7 +520,7 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
       if(iter == acceptedTypes.cend())
       {
         errorStrings.emplace_back(prefix + "The mapping from SIMPL Parameter type to SIMPLNX Parameter type is incorrect. This "
-                                           "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.\n");
+                                           "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.\n" + std::string{k_Separator});
       }
 
       std::pair<std::vector<std::any>, std::function<bool(const std::any&, const std::any&)>> parameterCheck = k_ParamMap[parameter->uuid()];
@@ -531,7 +536,7 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
       }
       if(!found)
       {
-        errorStrings.emplace_back(prefix + "The value read in from the conversion function does not match any of the expected values. Conversion function should be reviewed.");
+        errorStrings.emplace_back(prefix + "The value read in from the conversion function does not match any of the expected values. Conversion function should be reviewed.\n" + std::string{k_Separator});
       }
     }
 
