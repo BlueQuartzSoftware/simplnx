@@ -16,6 +16,7 @@ find_package(Catch2 CONFIG REQUIRED)
 include(Catch)
 
 add_subdirectory(UnitTestCommon)
+add_subdirectory(ConversionTest)
 
 add_executable(simplnx_test
   ${SIMPLNX_TEST_DIRS_HEADER}
