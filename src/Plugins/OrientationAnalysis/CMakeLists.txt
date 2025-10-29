@@ -192,6 +192,7 @@ set(filter_algorithms
   ComputeShapesTriangleGeom
   ComputeTwinBoundaries
   ConvertHexGridToSquareGrid
+  ConvertOrientations
   ConvertQuaternion
   CreateEnsembleInfo
   EBSDSegmentFeatures
