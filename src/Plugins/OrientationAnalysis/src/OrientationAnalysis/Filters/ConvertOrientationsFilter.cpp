@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "EbsdLib/Core/Orientation.hpp"
 #include "EbsdLib/Core/OrientationTransformation.hpp"
@@ -14,7 +15,7 @@
 #include "EbsdLib/OrientationMath/OrientationConverter.hpp"
 #include <EbsdLib/LaueOps/LaueOps.h>
 
-#include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ConvertOrientations.hpp"
 
 #include <fmt/format.h>
 
@@ -26,13 +27,6 @@ using namespace nx::core;
 
 namespace
 {
-
-// Error Code constants
-constexpr nx::core::int32 k_InputRepresentationTypeError = -67001;
-constexpr nx::core::int32 k_OutputRepresentationTypeError = -67002;
-constexpr nx::core::int32 k_InputComponentDimensionError = -67003;
-constexpr nx::core::int32 k_InputComponentCountError = -67004;
-
 template <typename T>
 struct EulerCheck
 {
@@ -377,6 +371,11 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   if(static_cast<int>(outputType) < 0 || outputType >= OrientationRepresentation::Type::Unknown)
   {
     return {MakeErrorResult<OutputActions>(::k_OutputRepresentationTypeError, fmt::format("Output Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(outputType)))};
+  }
+
+  if(inputType == outputType)
+  {
+    return {MakeErrorResult<OutputActions>(::k_MatchingTypesError, fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
