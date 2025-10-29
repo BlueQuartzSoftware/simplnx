@@ -1270,7 +1270,7 @@ Result<> finishImportingLegacyArray(DataStructure& dataStructure, const nx::core
   auto dataArraySet = amGroup.openDataset(dataPath.getTargetName());
   if(isLegacyNeighborList(dataArraySet))
   {
-    return finishImportingLegacyNeighborList(dataStructure, parentReader, dataArraySet, dataPath);
+    return finishImportingLegacyNeighborList(dataStructure, amGroup, dataArraySet, dataPath);
   }
   else if(isLegacyStringArray(dataArraySet))
   {
