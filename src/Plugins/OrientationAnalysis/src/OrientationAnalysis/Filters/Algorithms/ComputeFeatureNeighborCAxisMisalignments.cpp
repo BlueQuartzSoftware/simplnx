@@ -29,6 +29,8 @@ ComputeFeatureNeighborCAxisMisalignments::~ComputeFeatureNeighborCAxisMisalignme
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
 {
+  // Validate any Crystal Structure issues early in the process.
+  // If none of the phases are hexagonal, then report and return
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   bool allPhasesHexagonal = true;
   bool noPhasesHexagonal = true;
@@ -53,12 +55,13 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     result.warnings().push_back({-1563, "Non Hexagonal phases were found. All calculations for non Hexagonal phases will be skipped and a NaN value inserted."});
   }
 
+  // Get references to all the input data
   auto& neighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborListArrayPath);
   const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  const auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
+  const auto& featureAvgQuat = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
 
+  // Get references to all the Output data
   auto& cAxisMisalignmentList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->CAxisMisalignmentListArrayName);
-
   Float32Array* avgCAxisMisalignmentPtr = nullptr;
   if(m_InputValues->FindAvgMisals)
   {
@@ -66,22 +69,24 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   }
 
   const usize totalFeatures = featurePhases.getNumberOfTuples();
-  const usize numQuatComps = avgQuats.getNumberOfComponents();
+  const usize numQuatComps = featureAvgQuat.getNumberOfComponents();
 
-  std::vector<std::vector<float>> misalignmentLists;
-  misalignmentLists.resize(totalFeatures);
+  std::vector<std::vector<double>> misalignmentLists(totalFeatures);
 
   const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
   usize hexNeighborListSize = 0;
-  uint32 xtalPhase1 = 0, xtalPhase2 = 0;
-  usize nName = 0;
+  uint32 xtalPhase1 = 0;
+  uint32 xtalPhase2 = 0;
+
+  // Loop over every feature
   for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
+    // Get the crystal structure of phase 1
     xtalPhase1 = crystalStructures[featurePhases[featureIdx]];
 
     const usize quatTupleIndex1 = featureIdx * numQuatComps;
-    OrientationD oMatrix1 =
-        OrientationTransformation::qu2om<QuatD, OrientationD>({avgQuats[quatTupleIndex1], avgQuats[quatTupleIndex1 + 1], avgQuats[quatTupleIndex1 + 2], avgQuats[quatTupleIndex1 + 3]});
+    OrientationD oMatrix1 = OrientationTransformation::qu2om<QuatD, OrientationD>(
+        {featureAvgQuat[quatTupleIndex1], featureAvgQuat[quatTupleIndex1 + 1], featureAvgQuat[quatTupleIndex1 + 2], featureAvgQuat[quatTupleIndex1 + 3]});
 
     // transpose the g matrix so when c-axis is multiplied by `g`
     // it will give the sample direction that the c-axis is along
@@ -89,17 +94,23 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     // normalize so that the dot product can be taken below without
     // dividing by the magnitudes (they would be 1)
     c1.normalize();
-    misalignmentLists[featureIdx].resize(neighborList[featureIdx].size(), -1.0f);
-    for(usize j = 0; j < neighborList[featureIdx].size(); j++)
+
+    // Allocate enough room based on the current features neighbor list size
+    const NeighborList<int>::VectorType& currentNeighborList = neighborList[featureIdx];
+    auto& currentMisalignmentList = misalignmentLists[featureIdx];
+    currentMisalignmentList.resize(currentNeighborList.size(), -1.0);
+    for(usize j = 0; j < currentNeighborList.size(); j++)
     {
-      nName = neighborList[featureIdx][j];
-      xtalPhase2 = crystalStructures[featurePhases[nName]];
-      hexNeighborListSize = neighborList[featureIdx].size();
+      int neighborFeatureId = currentNeighborList[j];
+      xtalPhase2 = crystalStructures[featurePhases[neighborFeatureId]];
+      hexNeighborListSize = currentNeighborList.size();
+
+      // If both the feature and the neighbor are both Hexagonal Phases
       if(xtalPhase1 == xtalPhase2 && (xtalPhase1 == EbsdLib::CrystalStructure::Hexagonal_High || xtalPhase1 == EbsdLib::CrystalStructure::Hexagonal_Low))
       {
-        const usize quatTupleIndex2 = nName * numQuatComps;
-        OrientationD oMatrix2 =
-            OrientationTransformation::qu2om<QuatD, OrientationD>({avgQuats[quatTupleIndex2], avgQuats[quatTupleIndex2 + 1], avgQuats[quatTupleIndex2 + 2], avgQuats[quatTupleIndex2 + 3]});
+        const usize quatTupleIndex2 = neighborFeatureId * numQuatComps;
+        OrientationD oMatrix2 = OrientationTransformation::qu2om<QuatD, OrientationD>(
+            {featureAvgQuat[quatTupleIndex2], featureAvgQuat[quatTupleIndex2 + 1], featureAvgQuat[quatTupleIndex2 + 2], featureAvgQuat[quatTupleIndex2 + 3]});
 
         // transpose the g matrix so when c-axis is multiplied by `g`
         // it will give the sample direction that the c-axis is along
@@ -111,43 +122,49 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
         float64 w = ImageRotationUtilities::CosBetweenVectors(c1, c2);
         w = std::clamp(w, -1.0, 1.0);
         w = std::acos(w);
-        if(w > (Constants::k_PiD / 2.0))
+        if(w > Constants::k_PiOver2D)
         {
           w = Constants::k_PiD - w;
         }
 
-        misalignmentLists[featureIdx][j] = static_cast<float32>(w * Constants::k_180OverPiD);
+        // Convert the misorientation to Degrees and store the value
+        currentMisalignmentList[j] = w * Constants::k_180OverPiD;
+
+        // If we are finding the average misorientation, then start accumulating those values
         if(m_InputValues->FindAvgMisals)
         {
-          float32 value = avgCAxisMisalignmentPtr->getValue(featureIdx) + misalignmentLists[featureIdx][j];
+          float32 value = avgCAxisMisalignmentPtr->getValue(featureIdx) + currentMisalignmentList[j];
           avgCAxisMisalignmentPtr->setValue(featureIdx, value);
         }
       }
-      else
+      else // The current feature and it's neighbor do not match in crystal structures so place a NaN value
       {
         if(m_InputValues->FindAvgMisals)
         {
           hexNeighborListSize--;
         }
-        misalignmentLists[featureIdx][j] = std::nanf("");
+        currentMisalignmentList[j] = std::nanf("");
       }
     }
+
+    // If the user has asked to find the average misorientation then run that loop here
+    // on the current feature.
     if(m_InputValues->FindAvgMisals)
     {
       if(hexNeighborListSize > 0)
       {
-        float32 value = avgCAxisMisalignmentPtr->getValue(featureIdx) / static_cast<float32>(hexNeighborListSize);
+        double value = avgCAxisMisalignmentPtr->getValue(featureIdx) / static_cast<double>(hexNeighborListSize);
         avgCAxisMisalignmentPtr->setValue(featureIdx, value);
       }
       else
       {
-        avgCAxisMisalignmentPtr->setValue(featureIdx, std::nanf(""));
+        avgCAxisMisalignmentPtr->setValue(featureIdx, std::nan(""));
       }
       hexNeighborListSize = 0;
     }
-  }
 
-  cAxisMisalignmentList.setLists(misalignmentLists);
+    cAxisMisalignmentList.setList(featureIdx, {currentMisalignmentList.begin(), currentMisalignmentList.end()});
+  }
 
   return result;
 }

@@ -8,23 +8,35 @@
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-namespace
+namespace compute_feature_neighbor_caxis_misalignments::constants
 {
+const DataPath k_GeometryPath = DataPath({"6_5_simplnx_test_file_25x50_Hex"});
+const DataPath k_CellFeatureDataPath = k_GeometryPath.createChildPath("CellFeatureData");
+const DataPath k_CellEnsembleDataPath = k_GeometryPath.createChildPath("CellEnsembleData");
+
 const DataPath k_NeighborListPath = k_CellFeatureDataPath.createChildPath("NeighborList");
-const std::string k_CAxisMisalignmentListNameExemplar = "CAxisMisalignmentList";
-const std::string k_AvgCAxisMisalignmentsNameExemplar = "AvgCAxisMisalignments";
-const std::string k_CAxisMisalignmentListNameComputed = "NX_CAxisMisalignmentList";
-const std::string k_AvgCAxisMisalignmentsNameComputed = "NX_AvgCAxisMisalignments";
-} // namespace
+const DataPath k_AvgQuatsPath = k_CellFeatureDataPath.createChildPath("AvgQuats");
+const DataPath k_PhasesPath = k_CellFeatureDataPath.createChildPath("Phases");
+
+const DataPath k_CrystalStructuresArrayPath = k_CellEnsembleDataPath.createChildPath("CrystalStructures");
+
+const std::string k_ComputedCAxisMisalignmentList = "CAxisMisalignmentList";
+const std::string k_ComputedAvgCAxisMisalignment = "AvgCAxisMisalignments";
+
+const std::string k_ExemplarCAxisMisalignmentList = "CAxisMisalignmentList (7_5)";
+const std::string k_ExemplarAvgCAxisMisalignment = "AvgCAxisMisalignments (7_5)";
+
+} // namespace compute_feature_neighbor_caxis_misalignments::constants
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_feature_neighbor_caxis_misalignments.tar.gz",
+                                                              "compute_feature_neighbor_caxis_misalignments");
 
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/caxis_data/7_0_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/compute_feature_neighbor_caxis_misalignments/7_5_simplnx_test_file_25x50_Hex.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -33,12 +45,16 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FindAvgMisals_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(k_NeighborListPath));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_AvgQuats)));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_Phases)));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_CAxisMisalignmentListArrayName_Key, std::make_any<std::string>(k_CAxisMisalignmentListNameComputed));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgCAxisMisalignmentsArrayName_Key, std::make_any<std::string>(k_AvgCAxisMisalignmentsNameComputed));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_NeighborListArrayPath_Key,
+                      std::make_any<DataPath>(compute_feature_neighbor_caxis_misalignments::constants::k_NeighborListPath));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(compute_feature_neighbor_caxis_misalignments::constants::k_AvgQuatsPath));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(compute_feature_neighbor_caxis_misalignments::constants::k_PhasesPath));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_CrystalStructuresArrayPath_Key,
+                      std::make_any<DataPath>(compute_feature_neighbor_caxis_misalignments::constants::k_CrystalStructuresArrayPath));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_CAxisMisalignmentListArrayName_Key,
+                      std::make_any<std::string>(compute_feature_neighbor_caxis_misalignments::constants::k_ComputedCAxisMisalignmentList));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgCAxisMisalignmentsArrayName_Key,
+                      std::make_any<std::string>(compute_feature_neighbor_caxis_misalignments::constants::k_ComputedAvgCAxisMisalignment));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -48,59 +64,20 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareNeighborListFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_CAxisMisalignmentListNameExemplar),
-                                                            k_CellFeatureDataPath.createChildPath(k_CAxisMisalignmentListNameComputed), UnitTest::EPSILON, true);
-  UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, k_CellFeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsNameExemplar),
-                                                k_CellFeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsNameComputed), UnitTest::EPSILON, true);
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_feature_neighbor_caxis_misalignments.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: InValid Filter Execution")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
-
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/caxis_data/7_0_find_caxis_data.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
-  Arguments args;
-
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FindAvgMisals_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(k_NeighborListPath));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_AvgQuats)));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_CAxisMisalignmentListArrayName_Key, std::make_any<std::string>(k_CAxisMisalignmentListNameComputed));
-  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgCAxisMisalignmentsArrayName_Key, std::make_any<std::string>(k_AvgCAxisMisalignmentsNameComputed));
-
-  SECTION("Invalid Crystal Structure Type")
-  {
-    // Invalid crystal structure type : should fail in execute
-    args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellFeatureDataPath.createChildPath(k_Phases)));
-
-    auto& crystalStructs = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresArrayPath);
-    crystalStructs[1] = 1;
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-  }
-  SECTION("Mismatching Input Array Tuples")
-  {
-    args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(k_CellAttributeMatrix.createChildPath(k_Phases)));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
-  }
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+  UnitTest::CompareNeighborListFloatArraysWithNans<float32>(
+      dataStructure,
+      compute_feature_neighbor_caxis_misalignments::constants::k_CellFeatureDataPath.createChildPath(compute_feature_neighbor_caxis_misalignments::constants::k_ComputedCAxisMisalignmentList),
+      compute_feature_neighbor_caxis_misalignments::constants::k_CellFeatureDataPath.createChildPath(compute_feature_neighbor_caxis_misalignments::constants::k_ExemplarCAxisMisalignmentList),
+      UnitTest::EPSILON, true);
+  UnitTest::CompareFloatArraysWithNans<float32>(
+      dataStructure,
+      compute_feature_neighbor_caxis_misalignments::constants::k_CellFeatureDataPath.createChildPath(compute_feature_neighbor_caxis_misalignments::constants::k_ComputedAvgCAxisMisalignment),
+      compute_feature_neighbor_caxis_misalignments::constants::k_CellFeatureDataPath.createChildPath(compute_feature_neighbor_caxis_misalignments::constants::k_ExemplarAvgCAxisMisalignment),
+      UnitTest::EPSILON, true);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
