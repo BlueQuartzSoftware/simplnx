@@ -15,6 +15,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataObjectUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -101,9 +102,7 @@ std::string CreateGeometryFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CreateGeometryFilter::defaultTags() const
 {
-  return {className(), "Core", "Generation",
-          "Geometry"
-          "Create Geometry"};
+  return {className(), "Core", "Generation", "Geometry", "Create Geometry"};
 }
 
 //------------------------------------------------------------------------------
@@ -610,7 +609,7 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedQuadListArrayPathKey, k_QuadrilateralListPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedTetListArrayPathKey, k_TetrahedralListPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SharedHexListArrayPathKey, k_HexahedralListPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_GeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_GeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixNameFilterParameterConverter>(args, json, SIMPL::k_EdgeAttributeMatrixNameKey, k_EdgeAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

@@ -150,7 +150,7 @@ Result<Arguments> ComputeAvgCAxesFilter::FromSIMPLJson(const nlohmann::json& jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

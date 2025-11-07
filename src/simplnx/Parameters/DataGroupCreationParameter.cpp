@@ -234,6 +234,29 @@ Result<DAPathBuilderFilterParameterConverter::ValueType> DAPathBuilderFilterPara
   return {std::move(dataPath)};
 }
 
+Result<DCPathBuilderFilterParameterConverter::ValueType> DCPathBuilderFilterParameterConverter::convert(const nlohmann::json& json)
+{
+  std::string dcName;
+
+  if(json.is_string())
+  {
+    dcName = json.get<std::string>();
+  }
+  else
+  {
+    auto dataContainerNameResult = ReadDataContainerName(json, "DCPathBuilderFilterParameterConverter");
+    if(dataContainerNameResult.invalid())
+    {
+      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
+    }
+    dcName = std::move(dataContainerNameResult.value());
+  }
+
+  DataPath dataPath({dcName});
+
+  return {std::move(dataPath)};
+}
+
 Result<AttributeMatrixCreationFilterParameterConverter::ValueType> AttributeMatrixCreationFilterParameterConverter::convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "AttributeMatrixCreationFilterParameter");

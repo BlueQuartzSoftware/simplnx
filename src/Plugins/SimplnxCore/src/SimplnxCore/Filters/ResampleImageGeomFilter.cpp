@@ -426,7 +426,7 @@ Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& j
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellFeatureAttributeMatrixPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerPathKey, k_CreatedImageGeometry_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_NewDataContainerPathKey, k_CreatedImageGeometry_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -376,7 +376,7 @@ Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, k_ReadH5EbsdParameter_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));

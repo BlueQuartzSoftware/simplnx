@@ -148,6 +148,14 @@ struct SIMPLNX_EXPORT DAPathBuilderFilterParameterConverter
   static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
 };
 
+struct SIMPLNX_EXPORT DCPathBuilderFilterParameterConverter
+{
+  using ParameterType = DataGroupCreationParameter;
+  using ValueType = ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
 struct SIMPLNX_EXPORT AttributeMatrixCreationFilterParameterConverter
 {
   using ParameterType = DataGroupCreationParameter;

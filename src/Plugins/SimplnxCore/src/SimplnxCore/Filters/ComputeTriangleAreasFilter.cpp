@@ -197,8 +197,8 @@ Result<Arguments> ComputeTriangleAreasFilter::FromSIMPLJson(const nlohmann::json
 
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_TriangleGeometryDataPath_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey, k_CalculatedAreasDataName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey,
+                                                                                                                                  k_CalculatedAreasDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -2,7 +2,6 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/Filter/AnyCloneable.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/CalculatorParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -21,7 +20,6 @@
 
 #include <filesystem>
 #include <map>
-#include <sstream>
 #include <string>
 
 using namespace nx::core;
@@ -252,10 +250,10 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("b6936d18-7476-4855-9e13-e795d717c50f").value(), true);
 
   // ArrayCreationParameter <- DataArrayCreationFilterParameter
-  CreateMapInput(Uuid::FromString("ab047a7d-f81b-4e6f-99b5-610e7b69fc5b").value(), DataPath({"DataArray", "Creation", "Parameter"}));
+  CreateMapInput(Uuid::FromString("ab047a7d-f81b-4e6f-99b5-610e7b69fc5b").value(), DataPath({"DC-A", "AM-A", "DA-A"}));
 
   // ArraySelectionParameter <- DataArraySelectionFilterParameter
-  CreateMapInput(Uuid::FromString("ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b").value(), DataPath({"DataArray", "Selection", "Parameter"}));
+  CreateMapInput(Uuid::FromString("ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b").value(), DataPath({"DC-B", "AM-B", "DA-B"}));
 
   // ChoicesParameter <- ChoiceFilterParameter
   CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(42));
@@ -263,17 +261,24 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(1));
 
   // DataGroupCreationParameter <- AttributeMatrixCreationFilterParameter
-  CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath::FromString("/AttributeMatrix/CreationParameter").value());
+  CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"DC-C", "AM-C"}));
   // DataGroupCreationParameter <- DataContainerCreationFilterParameter
-  CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath::FromString("/DataContainerCreationParameter").value());
+  CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"DC-E"}));
+  // DataGroupCreationParameter <- StringFilterParameter
+  CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"StringFilterParameter"}));
 
   // AttributeMatrixSelectionParameter <- AttributeMatrixSelectionFilterParameter
-  CreateMapInput(Uuid::FromString("a3619d74-a1d9-4bc2-9e03-ca001d65b119").value(), DataPath::FromString("/AttributeMatrix/SelectionParameter").value());
+  CreateMapInput(Uuid::FromString("a3619d74-a1d9-4bc2-9e03-ca001d65b119").value(), DataPath({"DC-D", "AM-D"}));
 
   // DataGroupSelectionParameter <- DataContainerSelectionFilterParameter
-  CreateMapInput(Uuid::FromString("bff3d4ac-04a6-5251-b178-4f83f7865074").value(), DataPath::FromString("/DataContainerSelectionParameter").value());
+  CreateMapInput(Uuid::FromString("bff3d4ac-04a6-5251-b178-4f83f7865074").value(), DataPath({"DC-F"}));
   // DataGroupSelectionParameter <- LinkedDataContainerSelectionFilterParameter
-  CreateMapInput(Uuid::FromString("bff3d4ac-04a6-5251-b178-4f83f7865074").value(), DataPath::FromString("/LinkedDataContainerSelectionFilterParameter").value());
+  CreateMapInput(Uuid::FromString("bff3d4ac-04a6-5251-b178-4f83f7865074").value(), DataPath({"DC-G"}));
+
+  // GeometrySelectionParameter <- DataArraySelectionFilterParameter
+  CreateMapInput(Uuid::FromString("3804cd7f-4ee4-400f-80ad-c5af17735de2").value(), DataPath({"DC-B"}));
+  // GeometrySelectionParameter <- DataContainerSelectionFilterParameter
+  CreateMapInput(Uuid::FromString("3804cd7f-4ee4-400f-80ad-c5af17735de2").value(), DataPath({"DC-F"}));
 
   // DO NOT REORDER THE FOLLOWING SET OF 4, ORDER CORRESPONDS TO PathType for Indexing
   // FileSystemPathParameter <- InputFileFilterParameter
@@ -323,6 +328,10 @@ void InitializeMap()
 
   // VectorFloat64Parameter <- RangeFilterParameter
   CreateMapInput(Uuid::FromString("57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96").value(), std::vector<float64>{-2.8, 77.36});
+  // VectorFloat64Parameter <- FloatVec2FilterParameter
+  CreateMapInput(Uuid::FromString("57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96").value(), std::vector<float64>{71.63, 26.81}); // These should map to float32 but some are upscaled to double
+  // VectorFloat64Parameter <- FloatVec3FilterParameter
+  CreateMapInput(Uuid::FromString("57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96").value(), std::vector<float64>{782.62, 15.48, 49.11}); // These should map to float32 but some are upscaled to double
 
   // VectorInt32Parameter <- IntVec2FilterParameter
   CreateMapInput(Uuid::FromString("d3188e18-e383-4727-ab32-88b5fda56ae8").value(), std::vector<int32>{23, 61});
@@ -340,9 +349,13 @@ void InitializeMap()
 
   // DataObjectNameParameter <- LinkedPathCreationFilterParameter
   CreateMapInput(Uuid::FromString("fbc89375-3ca4-4eb2-8257-aad9bf8e1c94").value(), std::string("LinkedPathCreationFilterParameter"));
+  // DataObjectNameParameter <- DataArrayCreationFilterParameter
+  CreateMapInput(Uuid::FromString("fbc89375-3ca4-4eb2-8257-aad9bf8e1c94").value(), std::string("DA-A"));
+  // DataObjectNameParameter <- StringFilterParameter
+  CreateMapInput(Uuid::FromString("fbc89375-3ca4-4eb2-8257-aad9bf8e1c94").value(), std::string("StringFilterParameter"));
 
   // MultiArraySelectionParameter <- MultiDataArraySelectionFilterParameter
-  CreateMapInput(Uuid::FromString("d11e0bd8-f227-4fd1-b618-b6f16b259fc8").value(), std::vector<DataPath>{DataPath({"Multi", "Data", "Array"}), DataPath({"Selection", "Filter", "Parameter"})});
+  CreateMapInput(Uuid::FromString("d11e0bd8-f227-4fd1-b618-b6f16b259fc8").value(), std::vector<DataPath>{DataPath({"DC-H", "AM-E", "DA-C"}), DataPath({"DC-I", "AM-F", "DA-D"})});
 
   // CalculatorParameter <- CalculatorFilterParameter
   CreateMapInput(Uuid::FromString("ba2d4937-dbec-5536-8c5c-c0a406e80f77").value(), CalculatorParameter::ValueType{.m_SelectedGroup = DataPath{}, .m_Equation = "57+92"});
@@ -351,7 +364,7 @@ void InitializeMap()
   {
     ArrayThreshold arrayThreshold = ArrayThreshold{};
     arrayThreshold.setUnionOperator(static_cast<ArrayThreshold::UnionOperator>(1));
-    arrayThreshold.setArrayPath(DataPath({"ComparisonSelectionAdvancedFilterParameter"}));
+    arrayThreshold.setArrayPath(DataPath({"DC-J", "AM-G", "DA-E"}));
     arrayThreshold.setComparisonType(static_cast<ArrayThreshold::ComparisonType>(1));
     arrayThreshold.setComparisonValue(3.76);
     ArrayThresholdsParameter::ValueType atSet = ArrayThresholdsParameter::ValueType{};
@@ -361,7 +374,7 @@ void InitializeMap()
   // ArrayThresholdsParameter <- ComparisonSelectionFilterParameter
   {
     ArrayThreshold arrayThreshold = ArrayThreshold{};
-    arrayThreshold.setArrayPath(DataPath({"Comparison", "Selection", "FilterParameter"}));
+    arrayThreshold.setArrayPath(DataPath({"DC-K", "AM-H", "DA-F"}));
     arrayThreshold.setComparisonType(static_cast<ArrayThreshold::ComparisonType>(1));
     arrayThreshold.setComparisonValue(84.301);
     ArrayThresholdsParameter::ValueType atSet = ArrayThresholdsParameter::ValueType{};
@@ -390,16 +403,16 @@ void InitializeMap()
 
   // MultiPathSelectionParameter <- DataContainerArrayProxyFilterParameter
   CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(),
-                 std::vector<DataPath>{DataPath({"Data"}), DataPath({"Container", "Array"}), DataPath({"Proxy", "Filter", "Parameter"})});
+                 std::vector<DataPath>{DataPath({"DC-L", "AM-I", "DA-G"}), DataPath({"DC-M", "AM-J"}), DataPath({"DC-N"})});
   // MultiPathSelectionParameter <- MultiAttributeMatrixSelectionFilterParameter
   CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(),
-                 std::vector<DataPath>{DataPath({"Multi", "Attribute"}), DataPath({"Matrix", "Selection"}), DataPath({"Filter", "Parameter"})});
+                 std::vector<DataPath>{DataPath({"DC-O", "AM-K"}), DataPath({"DC-P", "AM-L"}), DataPath({"DC-Q", "AM-M"})});
   // MultiPathSelectionParameter <- MultiDataContainerSelectionFilterParameter
-  CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"MultiDataContainer"}), DataPath({"SelectionFilterParameter"})});
+  CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"DC-R"}), DataPath({"DC-S"})});
 
   // OEMEbsdScanSelectionParameter <- OEMEbsdScanSelectionFilterParameter (in OrientationAnalysis parameter)
   CreateMapInput(Uuid::FromString("3935c833-aa51-4a58-81e9-3a51972c05ea").value(),
-                 OEMEbsdScanSelectionParameter::ValueType{.inputFilePath = "/Input/File/Filter/Parameter.txt", .scanNames = std::list<std::string>{"OEMEbsd", "ScanSelection", "FilterParameter"}});
+                 OEMEbsdScanSelectionParameter::ValueType{.inputFilePath = "/Input/File/Filter/Parameter.txt", .scanNames = std::list<std::string>{"Scan A", "Scan B", "Scan C"}});
   // ReadH5EbsdFileParameter <- ReadH5EbsdFilterParameter (in OrientationAnalysis parameter)
   CreateMapInput(Uuid::FromString("FAC15aa6-b367-508e-bf73-94ab6be0058b").value(), ReadH5EbsdFileParameter::ValueType{.inputFilePath = "/Read/H5Ebsd/Filter/Parameter.h5ebsd"});
 
@@ -505,7 +518,7 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
       std::string prefix = fmt::format("Filter: '{}' ", filterName);
       for(const auto& error : argumentsResult.errors())
       {
-        errorStrings.emplace_back(prefix + error.message);
+        errorStrings.emplace_back(prefix + error.message + "\n" + std::string{k_Separator});
       }
       pipelineFilter->setArguments(defaultArguments);
       continue;
@@ -523,6 +536,7 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
                                            "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.\n" + std::string{k_Separator});
       }
 
+      auto paramUUID = parameter->uuid().str();
       std::pair<std::vector<std::any>, std::function<bool(const std::any&, const std::any&)>> parameterCheck = k_ParamMap[parameter->uuid()];
       std::any importedValue = argumentsResult.value().at(parameterName);
       bool found = false;

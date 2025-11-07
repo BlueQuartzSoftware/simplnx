@@ -347,7 +347,8 @@ Result<Arguments> ComputeSurfaceFeaturesFilter::FromSIMPLJson(const nlohmann::js
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayPathKey, k_SurfaceFeaturesArrayName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceFeaturesArrayPathKey, k_SurfaceFeaturesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -87,7 +87,7 @@ Result<Arguments> CreateDataGroupFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataObjectPath));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataObjectPath));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -216,9 +216,9 @@ Result<Arguments> ComputeTwinBoundariesFilter::FromSIMPLJson(const nlohmann::jso
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
 
   // Output Face Data
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTwinBoundaryArrayNameKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTwinBoundaryArrayNameKey,
                                                                                                                                   k_TwinBoundariesName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey,
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey,
                                                                                                                                   k_TwinBoundariesIncoherenceName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
