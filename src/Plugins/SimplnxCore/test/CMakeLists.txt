@@ -131,7 +131,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReverseTriangleWindingTest.cpp
   RobustAutomaticThresholdTest.cpp
   RotateSampleRefFrameTest.cpp
-  ScalarSegmentFeaturesFilterTest.cpp
+  ScalarSegmentFeaturesTest.cpp
   SetImageGeomOriginScalingFilterTest.cpp
   SharedFeatureFaceTest.cpp
   SilhouetteTest.cpp
