@@ -57,6 +57,7 @@ set(FilterList
   ComputeTwinBoundariesFilter
   ConvertHexGridToSquareGridFilter
   ConvertOrientationsFilter
+  ConvertOrientationsToVertexGeometryFilter
   ConvertQuaternionFilter
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
@@ -193,6 +194,7 @@ set(filter_algorithms
   ComputeTwinBoundaries
   ConvertHexGridToSquareGrid
   ConvertOrientations
+  ConvertOrientationsToVertexGeometry
   ConvertQuaternion
   CreateEnsembleInfo
   EBSDSegmentFeatures
