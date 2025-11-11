@@ -19,6 +19,7 @@
  * from the TEST_CASE macro. This will enable this unit test to be run by default
  * and report errors.
  */
+#include "OrientationAnalysis/Filters/Algorithms/ConvertOrientations.hpp"
 #include "OrientationAnalysis/Filters/ConvertOrientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
@@ -26,6 +27,10 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+
+#include "EbsdLib/Core/EbsdDataArray.hpp"
+#include "EbsdLib/Core/OrientationRepresentation.h"
+#include "EbsdLib/OrientationMath/OrientationConverter.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -228,4 +233,42 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
+}
+
+TEST_CASE("OrientationAnalysis::ConvertOrientations: Equal Representations")
+{
+  typedef OrientationConverter<EbsdDataArray<float32>, float32> OCType;
+  const std::vector<OrientationRepresentation::Type> ocTypes = OCType::GetOrientationTypes();
+
+  OrientationRepresentation::Type ocType = GENERATE_COPY(from_range(OCType::GetOrientationTypes()));
+
+  ConvertOrientationsFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+
+  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
+  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
+
+  std::vector<usize> tupleShape = {12};
+  std::vector<usize> componentShape = {4};
+  Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+
+  for(size_t t = 0; t < tupleShape[0]; t++)
+  {
+    for(size_t c = 0; c < componentShape[0]; c++)
+    {
+      (*angles)[t * componentShape[0] + c] = 0;
+    }
+  }
+
+  // Create default Parameters for the filter.
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ocType)));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ocType)));
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(Constants::k_AxisAngles));
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == ::k_MatchingTypesError);
 }
