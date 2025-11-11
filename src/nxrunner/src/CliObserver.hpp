@@ -15,7 +15,7 @@ class PipelineObserver : public PipelineNodeObserver
 {
 public:
   PipelineObserver(Pipeline* pipeline = nullptr);
-  virtual ~PipelineObserver();
+  ~PipelineObserver() override;
 
 protected:
   /**

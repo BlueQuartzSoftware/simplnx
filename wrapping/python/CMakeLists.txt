@@ -35,6 +35,12 @@ set_target_properties(simplnxpy
     LIBRARY_OUTPUT_DIRECTORY $<TARGET_FILE_DIR:simplnx>
 )
 
+
+#--------------------------------------------------------------------------------------------------
+# Turn on some warnings, Turn other warnings into errors
+#--------------------------------------------------------------------------------------------------
+simplnx_enable_warnings(TARGET simplnxpy)
+
 # pybind11 sets CXX_VISIBILITY_PRESET to hidden (though this may change in the future see https://github.com/pybind/pybind11/pull/4072)
 # This can cause issues when using libc++ and std::any across shared libraries
 # The hidden visibility causes some objects to have different RTTI which then results in std::bad_any_cast

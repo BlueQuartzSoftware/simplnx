@@ -377,9 +377,9 @@ inline IFilter::MessageHandler CreatePyMessageHandler()
 }
 
 template <class T>
-void CreatePythonCleanupCallback(py::handle object, std::unique_ptr<T> holder)
+void CreatePythonCleanupCallback(py::handle object, std::unique_ptr<T> holderPtr)
 {
-  py::cpp_function nameCleanupCallback([holder = std::move(holder)](py::handle weakref) mutable {
+  py::cpp_function nameCleanupCallback([holder = std::move(holderPtr)](py::handle weakref) mutable {
     holder.reset();
     weakref.dec_ref();
   });
@@ -401,23 +401,23 @@ auto BindFilter(py::handle scope, const Internals& internals)
     std::string executeSig = MakePythonSignature<FilterT>("execute", internals);
     auto executeDocStringHolder = std::make_unique<std::string>(fmt::format("{}\n\nExecutes the filter\n", executeSig));
     filter.def_static("human_name", []() {
-      FilterT filter;
-      return filter.humanName();
+      FilterT filterImp;
+      return filterImp.humanName();
     });
     filter.def_static("name", []() {
-      FilterT filter;
-      return filter.name();
+      FilterT filterImp;
+      return filterImp.name();
     });
     filter.def_static("uuid", []() {
-      FilterT filter;
-      return filter.uuid();
+      FilterT filterImp;
+      return filterImp.uuid();
     });
     filter.def_static(
         "execute",
         [&internals](DataStructure& dataStructure, const py::kwargs& kwargs) {
-          FilterT filter;
+          FilterT filterImp;
 
-          Parameters parameters = filter.parameters();
+          Parameters parameters = filterImp.parameters();
 
           for(auto item : kwargs)
           {
@@ -428,9 +428,9 @@ auto BindFilter(py::handle scope, const Internals& internals)
             }
           }
 
-          Arguments convertedArgs = ConvertDictToArgs(internals, filter.parameters(), kwargs);
+          Arguments convertedArgs = ConvertDictToArgs(internals, filterImp.parameters(), kwargs);
           py::gil_scoped_release releaseGIL{};
-          IFilter::ExecuteResult result = filter.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
+          IFilter::ExecuteResult result = filterImp.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
           return result;
         },
         "data_structure"_a, executeDocStringHolder->c_str());
@@ -536,7 +536,7 @@ public:
     m_ParametersVersion = m_Object.attr("parameters_version")().cast<VersionType>();
   }
 
-  ~PyFilter() noexcept
+  ~PyFilter() noexcept override
   {
     py::gil_scoped_acquire gil;
     m_Object = {};
@@ -670,7 +670,7 @@ public:
     for(py::handle filterTypeHandle : filters)
     {
       FilterCreationFunc filterCreationFunc = [filterType = py::reinterpret_borrow<py::object>(filterTypeHandle)]() -> IFilter::UniquePointer {
-        py::gil_scoped_acquire gil;
+        py::gil_scoped_acquire global_interpreter_lock;
         return std::make_unique<PyFilter>(filterType());
       };
       plugin->addFilter(std::move(filterCreationFunc));

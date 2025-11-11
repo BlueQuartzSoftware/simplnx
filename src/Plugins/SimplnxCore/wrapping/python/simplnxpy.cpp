@@ -209,11 +209,11 @@ auto BindDataStore(py::handle scope, const char* name)
   dataStore.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
   dataStore.def(
       "npview",
-      [](DataStore<T>& dataStore) {
-        ShapeType shape = dataStore.getTupleShape();
-        ShapeType componentShape = dataStore.getComponentShape();
+      [](DataStore<T>& dataStore_) {
+        ShapeType shape = dataStore_.getTupleShape();
+        ShapeType componentShape = dataStore_.getComponentShape();
         shape.insert(shape.end(), componentShape.cbegin(), componentShape.cend());
-        return py::array_t<T, py::array::c_style>(shape, dataStore.data(), py::cast(dataStore));
+        return py::array_t<T, py::array::c_style>(shape, dataStore_.data(), py::cast(dataStore_));
       },
       py::return_value_policy::reference_internal);
   dataStore.def("__getitem__", &DataStore<T>::at);
@@ -229,10 +229,10 @@ auto BindDataArray(py::handle scope, const char* name)
   dataArray.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
   dataArray.def(
       "npview",
-      [](DataArray<T>& dataArray) {
+      [](DataArray<T>& dataArray_) {
         using DataArrayType = DataArray<T>;
         using DataStoreType = DataStore<T>;
-        const typename DataArrayType::store_type& abstractDataStore = dataArray.getDataStoreRef();
+        const typename DataArrayType::store_type& abstractDataStore = dataArray_.getDataStoreRef();
         const DataStoreType& dataStore = dynamic_cast<const DataStoreType&>(abstractDataStore);
         ShapeType shape = dataStore.getTupleShape();
         ShapeType componentShape = dataStore.getComponentShape();
@@ -478,16 +478,16 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<Result<>> result(mod, "Result");
   result.def(py::init<>([](std::optional<std::vector<Error>> errors, std::optional<std::vector<Warning>> warnings) {
-               Result<> result;
+               Result<> result_;
                if(errors.has_value())
                {
-                 result.m_Expected = nonstd::make_unexpected(std::move(*errors));
+                 result_.m_Expected = nonstd::make_unexpected(std::move(*errors));
                }
                if(warnings.has_value())
                {
-                 result.warnings() = std::move(*warnings);
+                 result_.warnings() = std::move(*warnings);
                }
-               return result;
+               return result_;
              }),
              "errors"_a = py::none(), "warnings"_a = py::none());
   result.def_property_readonly("errors", [](Result<>& self) {
@@ -660,12 +660,12 @@ PYBIND11_MODULE(simplnx, mod)
   py::class_<Uuid> uuid(mod, "Uuid");
   uuid.def(py::init<>());
   uuid.def(py::init([](std::string_view text) {
-    std::optional<Uuid> uuid = Uuid::FromString(text);
-    if(!uuid.has_value())
+    std::optional<Uuid> uuid_ = Uuid::FromString(text);
+    if(!uuid_.has_value())
     {
       throw std::invalid_argument(fmt::format("Invalid uuid string '{}'", text));
     }
-    return *uuid;
+    return *uuid_;
   }));
   uuid.def("__str__", &Uuid::str);
   uuid.def("__repr__", [](const Uuid& self) { return fmt::format("<simplnx.Uuid('{}')>", self.str()); });
@@ -886,10 +886,10 @@ PYBIND11_MODULE(simplnx, mod)
     }
     else
     {
-      auto result = nx::core::GetAllChildDataPaths(self, parentPath);
-      if(result)
+      auto result_ = nx::core::GetAllChildDataPaths(self, parentPath);
+      if(result_)
       {
-        return result.value();
+        return result_.value();
       }
       return std::vector<DataPath>{};
     }
@@ -913,10 +913,10 @@ PYBIND11_MODULE(simplnx, mod)
         return std::vector<DataPath>{};
       }
 
-      auto result = nx::core::GetAllChildDataPaths(self, pathConversionResult.value());
-      if(result)
+      auto result_ = nx::core::GetAllChildDataPaths(self, pathConversionResult.value());
+      if(result_)
       {
-        return result.value();
+        return result_.value();
       }
       return std::vector<DataPath>{};
     }
@@ -1486,11 +1486,11 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<IFilter::ProgressMessage, IFilter::Message> progressMessage(filter, "ProgressMessage");
   progressMessage.def(py::init([](std::string message, int32 progress) {
-                        IFilter::ProgressMessage progressMessage;
-                        progressMessage.type = IFilter::Message::Type::Progress;
-                        progressMessage.message = std::move(message);
-                        progressMessage.progress = progress;
-                        return progressMessage;
+                        IFilter::ProgressMessage progressMessage_;
+                        progressMessage_.type = IFilter::Message::Type::Progress;
+                        progressMessage_.message = std::move(message);
+                        progressMessage_.progress = progress;
+                        return progressMessage_;
                       }),
                       "message"_a, "progress"_a);
   progressMessage.def_readwrite("progress", &IFilter::ProgressMessage::progress);
@@ -1508,30 +1508,30 @@ PYBIND11_MODULE(simplnx, mod)
 
   py::class_<IFilter::PreflightResult> preflightResult(filter, "PreflightResult");
   preflightResult.def(py::init<>());
-  preflightResult.def(py::init<>([](std::optional<OutputActions> outputActions, std::optional<std::vector<Error>> errors, std::optional<std::vector<Warning>> warnings,
+  preflightResult.def(py::init<>([](std::optional<OutputActions> outputActions_, std::optional<std::vector<Error>> errors, std::optional<std::vector<Warning>> warnings,
                                     std::optional<std::vector<IFilter::PreflightValue>> preflightValues) {
-                        IFilter::PreflightResult result{};
-                        if(outputActions.has_value() && errors.has_value())
+                        IFilter::PreflightResult result_{};
+                        if(outputActions_.has_value() && errors.has_value())
                         {
                           throw std::invalid_argument("IFilter.PreflightResult cannot be constructed with both output_actions and errors set");
                         }
-                        if(outputActions.has_value())
+                        if(outputActions_.has_value())
                         {
-                          result.outputActions = {std::move(*outputActions)};
+                          result_.outputActions = {std::move(*outputActions_)};
                         }
                         if(errors.has_value())
                         {
-                          result.outputActions = {nonstd::make_unexpected(std::move(*errors))};
+                          result_.outputActions = {nonstd::make_unexpected(std::move(*errors))};
                         }
                         if(warnings.has_value())
                         {
-                          result.outputActions.warnings() = std::move(*warnings);
+                          result_.outputActions.warnings() = std::move(*warnings);
                         }
                         if(preflightValues.has_value())
                         {
-                          result.outputValues = std::move(*preflightValues);
+                          result_.outputValues = std::move(*preflightValues);
                         }
-                        return result;
+                        return result_;
                       }),
                       "output_actions"_a = py::none(), "errors"_a = py::none(), "warnings"_a = py::none(), "preflight_values"_a = py::none());
   preflightResult.def("set_errors", [](IFilter::PreflightResult& self, std::vector<Error> errors) { self.outputActions.m_Expected = nonstd::make_unexpected(std::move(errors)); });
@@ -1565,19 +1565,19 @@ PYBIND11_MODULE(simplnx, mod)
   filter.def("uuid", &IFilter::uuid);
   filter.def("human_name", &IFilter::humanName);
   filter.def("parameters_version", &IFilter::parametersVersion);
-  filter.def("preflight2", [internals](const IFilter& self, DataStructure& dataStructure, const py::kwargs& kwargs) {
+  filter.def("preflight2", [internals](const IFilter& self, DataStructure& dataStructure_, const py::kwargs& kwargs) {
     Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
     py::gil_scoped_release releaseGIL{};
-    IFilter::PreflightResult result = self.preflight(dataStructure, convertedArgs, CreatePyMessageHandler());
-    return result;
+    IFilter::PreflightResult result_ = self.preflight(dataStructure_, convertedArgs, CreatePyMessageHandler());
+    return result_;
   });
   filter.def(
       "execute2",
-      [internals](const IFilter& self, DataStructure& dataStructure, const py::kwargs& kwargs) {
+      [internals](const IFilter& self, DataStructure& dataStructure_, const py::kwargs& kwargs) {
         Arguments convertedArgs = ConvertDictToArgs(*internals, self.parameters(), kwargs);
         py::gil_scoped_release releaseGIL{};
-        IFilter::ExecuteResult result = self.execute(dataStructure, convertedArgs, nullptr, CreatePyMessageHandler());
-        return result;
+        IFilter::ExecuteResult result_ = self.execute(dataStructure_, convertedArgs, nullptr, CreatePyMessageHandler());
+        return result_;
       },
       "data_structure"_a, "Executes the filter");
 
@@ -1621,12 +1621,12 @@ PYBIND11_MODULE(simplnx, mod)
       "__iter__", [](Pipeline& self) { return py::make_iterator(self.begin(), self.end()); }, py::keep_alive<0, 1>());
   pipeline.def(
       "insert",
-      [internals](Pipeline& self, Pipeline::index_type index, const IFilter& filter, const py::dict& args) {
-        self.insertAt(index, filter.clone(), ConvertDictToArgs(*internals, filter.parameters(), args));
+      [internals](Pipeline& self, Pipeline::index_type index, const IFilter& filter_, const py::dict& args) {
+        self.insertAt(index, filter_.clone(), ConvertDictToArgs(*internals, filter_.parameters(), args));
       },
       "index"_a, "filter"_a, "args"_a = py::dict());
   pipeline.def(
-      "append", [internals](Pipeline& self, const IFilter& filter, const py::dict& args) { self.insertAt(self.size(), filter.clone(), ConvertDictToArgs(*internals, filter.parameters(), args)); },
+      "append", [internals](Pipeline& self, const IFilter& filter_, const py::dict& args) { self.insertAt(self.size(), filter_.clone(), ConvertDictToArgs(*internals, filter_.parameters(), args)); },
       "filter"_a, "args"_a = py::dict());
   pipeline.def("clear", &Pipeline::clear);
   pipeline.def("remove", &Pipeline::removeAt, "index"_a);
@@ -1639,23 +1639,23 @@ PYBIND11_MODULE(simplnx, mod)
   pipelineFilter.def(
       "name",
       [](const PipelineFilter& self) {
-        const IFilter* filter = self.getFilter();
-        if(filter == nullptr)
+        const IFilter* filter_ = self.getFilter();
+        if(filter_ == nullptr)
         {
           throw std::runtime_error("PipelineFilter doesn't contain a filter (nullptr)");
         }
-        return filter->name();
+        return filter_->name();
       },
       "Returns the C++ name of the filter");
   pipelineFilter.def(
       "human_name",
       [](const PipelineFilter& self) {
-        const IFilter* filter = self.getFilter();
-        if(filter == nullptr)
+        const IFilter* filter_ = self.getFilter();
+        if(filter_ == nullptr)
         {
           throw std::runtime_error("PipelineFilter doesn't contain a filter (nullptr)");
         }
-        return filter->humanName();
+        return filter_->humanName();
       },
       "Returns the human facing name of the filter");
   pipelineFilter.def_property("comments", &PipelineFilter::getComments, &PipelineFilter::setComments);
@@ -1727,16 +1727,16 @@ PYBIND11_MODULE(simplnx, mod)
     std::vector<py::type> filterList;
     for(const auto& handle : filterHandles)
     {
-      py::object filter = py::cast(corePlugin->createFilter(handle.getFilterId()));
-      py::type filterType = py::type::of(filter);
+      py::object filter_ = py::cast(corePlugin->createFilter(handle.getFilterId()));
+      py::type filterType = py::type::of(filter_);
       filterList.push_back(filterType);
     }
     return filterList;
   });
 
-  mod.def("test_filter", [](const IFilter& filter) { return py::make_tuple(filter.uuid(), filter.name(), filter.humanName(), filter.className(), filter.defaultTags()); });
+  mod.def("test_filter", [](const IFilter& filter_) { return py::make_tuple(filter_.uuid(), filter_.name(), filter_.humanName(), filter_.className(), filter_.defaultTags()); });
 
-  mod.def("load_python_plugin", [internals](py::module_& mod) { internals->loadPythonPlugin(mod); });
+  mod.def("load_python_plugin", [internals](py::module_& mod_) { internals->loadPythonPlugin(mod_); });
 
   mod.def("get_python_plugins", [internals]() {
     auto plugins = internals->getPythonPlugins();
@@ -1776,7 +1776,7 @@ PYBIND11_MODULE(simplnx, mod)
       "create_image_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const std::vector<uint64>& dims, const std::vector<float32>& origin, const std::vector<float32>& spacing,
          const std::string& cellAttrMatrixName) {
-        CreateGeometryFilter filter;
+        CreateGeometryFilter filter_;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_ImageGeometry));
@@ -1786,8 +1786,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(spacing));
         args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAttrMatrixName));
 
-        IFilter::ExecuteResult executeResult = filter.execute(ds, args);
-        return executeResult.result;
+        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
+        return executeResult_.result;
       },
       "data_structure"_a, "geometry_path"_a, "dimensions"_a, "origin"_a, "spacing"_a, "cell_attr_matrix_name"_a = "Cell Data");
 
@@ -1795,7 +1795,7 @@ PYBIND11_MODULE(simplnx, mod)
       "create_rect_grid_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& xBoundsPath, const DataPath& yBoundsPath, const DataPath& zBoundsPath, const std::string& cellAttrMatrixName,
          ArrayHandlingType arrayHandling) {
-        CreateGeometryFilter filter;
+        CreateGeometryFilter filter_;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_RectGridGeometry));
@@ -1806,15 +1806,15 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAttrMatrixName));
         args.insertOrAssign(CreateGeometryFilter::k_ArrayHandling_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(arrayHandling)));
 
-        IFilter::ExecuteResult executeResult = filter.execute(ds, args);
-        return executeResult.result;
+        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
+        return executeResult_.result;
       },
       "data_structure"_a, "geometry_path"_a, "x_bounds_path"_a, "y_bounds_path"_a, "z_bounds_path"_a, "cell_attr_matrix_name"_a = "Cell Data", "array_handling"_a = ArrayHandlingType::Copy);
 
   mod.def(
       "create_vertex_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const std::string& vertexAttrMatrixName, ArrayHandlingType arrayHandling) {
-        CreateGeometryFilter filter;
+        CreateGeometryFilter filter_;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_VertexGeometry));
@@ -1823,8 +1823,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_VertexListPath_Key, std::make_any<DataPath>(verticesPath));
         args.insertOrAssign(CreateGeometryFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(vertexAttrMatrixName));
 
-        IFilter::ExecuteResult executeResult = filter.execute(ds, args);
-        return executeResult.result;
+        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
+        return executeResult_.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "array_handling"_a = ArrayHandlingType::Copy);
 
@@ -1832,7 +1832,7 @@ PYBIND11_MODULE(simplnx, mod)
       "create_edge_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& edgeListPath, const std::string& vertexAttrMatrixName, const std::string& edgeAttrMatrixName,
          ArrayHandlingType arrayHandling) {
-        CreateGeometryFilter filter;
+        CreateGeometryFilter filter_;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_EdgeGeometry));
@@ -1843,8 +1843,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_EdgeListPath_Key, std::make_any<DataPath>(edgeListPath));
         args.insertOrAssign(CreateGeometryFilter::k_EdgeAttributeMatrixName_Key, std::make_any<std::string>(edgeAttrMatrixName));
 
-        IFilter::ExecuteResult executeResult = filter.execute(ds, args);
-        return executeResult.result;
+        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
+        return executeResult_.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "edge_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "edge_attr_matrix_name"_a = "Edge Data",
       "array_handling"_a = ArrayHandlingType::Copy);
@@ -1853,7 +1853,7 @@ PYBIND11_MODULE(simplnx, mod)
       "create_triangle_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& triangleListPath, const std::string& vertexAttrMatrixName,
          const std::string& faceAttrMatrixName, ArrayHandlingType arrayHandling) {
-        CreateGeometryFilter filter;
+        CreateGeometryFilter filter_;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_TriangleGeometry));
@@ -1864,8 +1864,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_TriangleListPath_Key, std::make_any<DataPath>(triangleListPath));
         args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(faceAttrMatrixName));
 
-        IFilter::ExecuteResult executeResult = filter.execute(ds, args);
-        return executeResult.result;
+        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
+        return executeResult_.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "triangle_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "face_attr_matrix_name"_a = "Face Data",
       "array_handling"_a = ArrayHandlingType::Copy);
@@ -1874,7 +1874,7 @@ PYBIND11_MODULE(simplnx, mod)
       "create_quad_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& quadListPath, const std::string& vertexAttrMatrixName, const std::string& faceAttrMatrixName,
          ArrayHandlingType arrayHandling) {
-        CreateGeometryFilter filter;
+        CreateGeometryFilter filter_;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_QuadGeometry));
@@ -1885,8 +1885,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_QuadrilateralListPath_Key, std::make_any<DataPath>(quadListPath));
         args.insertOrAssign(CreateGeometryFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(faceAttrMatrixName));
 
-        IFilter::ExecuteResult executeResult = filter.execute(ds, args);
-        return executeResult.result;
+        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
+        return executeResult_.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "quad_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "face_attr_matrix_name"_a = "Quad Data",
       "array_handling"_a = ArrayHandlingType::Copy);
@@ -1895,7 +1895,7 @@ PYBIND11_MODULE(simplnx, mod)
       "create_tetrahedral_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& tetrahedralListPath, const std::string& vertexAttrMatrixName,
          const std::string& cellAttrMatrixName, ArrayHandlingType arrayHandling) {
-        CreateGeometryFilter filter;
+        CreateGeometryFilter filter_;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_TetGeometry));
@@ -1906,8 +1906,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_TetrahedralListPath_Key, std::make_any<DataPath>(tetrahedralListPath));
         args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAttrMatrixName));
 
-        IFilter::ExecuteResult executeResult = filter.execute(ds, args);
-        return executeResult.result;
+        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
+        return executeResult_.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "tetrahedral_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "cell_attr_matrix_name"_a = "Cell Data",
       "array_handling"_a = ArrayHandlingType::Copy);
@@ -1916,7 +1916,7 @@ PYBIND11_MODULE(simplnx, mod)
       "create_hexahedral_geometry",
       [](DataStructure& ds, const DataPath& geometryPath, const DataPath& verticesPath, const DataPath& hexahedralListPath, const std::string& vertexAttrMatrixName,
          const std::string& cellAttrMatrixName, ArrayHandlingType arrayHandling) {
-        CreateGeometryFilter filter;
+        CreateGeometryFilter filter_;
         Arguments args;
 
         args.insertOrAssign(CreateGeometryFilter::k_GeometryType_Key, std::make_any<ChoicesParameter::ValueType>(CreateGeometryFilter::k_HexGeometry));
@@ -1927,8 +1927,8 @@ PYBIND11_MODULE(simplnx, mod)
         args.insertOrAssign(CreateGeometryFilter::k_HexahedralListPath_Key, std::make_any<DataPath>(hexahedralListPath));
         args.insertOrAssign(CreateGeometryFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(cellAttrMatrixName));
 
-        IFilter::ExecuteResult executeResult = filter.execute(ds, args);
-        return executeResult.result;
+        IFilter::ExecuteResult executeResult_ = filter_.execute(ds, args);
+        return executeResult_.result;
       },
       "data_structure"_a, "geometry_path"_a, "vertices_path"_a, "hexahedral_list_path"_a, "vertex_attr_matrix_name"_a = "Vertex Data", "cell_attr_matrix_name"_a = "Cell Data",
       "array_handling"_a = ArrayHandlingType::Copy);
