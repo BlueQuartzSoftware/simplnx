@@ -6,11 +6,19 @@ Statistics (Morphological)
 
 ## Description
 
-This **Filter** determines the number of **Features**, for each **Feature**, whose *centroids* lie within a distance equal to a user defined multiple of the average *Equivalent Sphere Diameter* (*average of all **Features**).  The algorithm for determining the number of **Features** is given below:
+For each feature, determine how many other features are within a user defined multiple of the average *Equivalent Sphere Diameter* of the centroid of the feature.
+
+The algorithm for determining the number of **Features** is given below:
 
 1. Define a sphere centered at the **Feature**'s *centroid* and with radius equal to the average equivalent sphere diameter multiplied by the user defined multiple
 2. Check every other **Feature**'s *centroid* to see if it lies within the sphere and keep count and list of those that satisfy
 3. Repeat 1. & 2. for all **Features**
+
+## Output Notes
+
+There are 2 outputs from this filter:
+- The "Number of Neighbors" for each feature
+- The list of "neighbor" features for each neighbor
 
 % Auto generated parameter table will be inserted here
 

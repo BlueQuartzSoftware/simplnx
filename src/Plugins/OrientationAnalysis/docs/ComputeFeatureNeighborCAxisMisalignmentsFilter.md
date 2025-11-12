@@ -6,13 +6,19 @@ Statistics (Crystallographic)
 
 ## Description
 
-This **Filter** determines, for each **Feature**, the C-axis misalignments with the **Features** that are in contact with it.  The C-axis misalignments are stored as a list (for each **Feature**) of angles (in degrees).
+For each feature, the C-Axis misalignments are determined for each neighbor of the feature. The neighbor list is a variable that is passed in by the user. This "NeighborList" could have been generated from any other appropriate filter. This means that a neighbor list could represent all neighbors that are physically connected to the current feature (Find Feature Neighbors), within a certain radius of the feature (Compute Feature Neighborhoods) or any other custom filter.
+
+There are 2 outputs from this filter:
+- The list of misalignments
+- Optionally the average of all misalignments.
+
+**The misalignment values are stored as Degrees.**
 
 ### Notes
 
 **NOTE:** Only features with identical phase values and a crystal structure of **Hexagonal_High** will be calculated. If two features have different phase values or a crystal structure that is *not* Hexagonal_High then a value of NaN is set for the misorientation.
 
-Results from this filter can differ from its original version in DREAM3D 6.6 by around 0.0001. This version uses double precision in part of its calculation to improve agreement and accuracy between platforms (notably ARM).
+Results from this filter can differ from its original version in DREAM.3D 6.5.171 by around 0.0001. This version uses double precision and Eigen for matrix operations which account for the differences in output.
 
 % Auto generated parameter table will be inserted here
 
