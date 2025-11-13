@@ -30,113 +30,113 @@ struct ReaderTraits;
 
 // 2. Specialization for AngReader
 template <>
-struct ReaderTraits<AngReader>
+struct ReaderTraits<ebsdlib::AngReader>
 {
   static auto getCols()
   {
-    return std::mem_fn(&AngReader::getNumEvenCols);
+    return std::mem_fn(&ebsdlib::AngReader::getNumEvenCols);
   }
   static auto getRows()
   {
-    return std::mem_fn(&AngReader::getNumRows);
+    return std::mem_fn(&ebsdlib::AngReader::getNumRows);
   }
   static auto getXSpacing()
   {
-    return std::mem_fn(&AngReader::getXStep);
+    return std::mem_fn(&ebsdlib::AngReader::getXStep);
   }
   static auto getYSpacing()
   {
-    return std::mem_fn(&AngReader::getYStep);
+    return std::mem_fn(&ebsdlib::AngReader::getYStep);
   }
 };
 
 template <>
-struct ReaderTraits<H5OIMReader> : public ReaderTraits<AngReader>
+struct ReaderTraits<ebsdlib::H5OIMReader> : public ReaderTraits<ebsdlib::AngReader>
 {
 };
 
 // 2. Specialization for CtfReader
 template <>
-struct ReaderTraits<CtfReader>
+struct ReaderTraits<ebsdlib::CtfReader>
 {
   static auto getCols()
   {
-    return std::mem_fn(&CtfReader::getXCells);
+    return std::mem_fn(&ebsdlib::CtfReader::getXCells);
   }
   static auto getRows()
   {
-    return std::mem_fn(&CtfReader::getYCells);
+    return std::mem_fn(&ebsdlib::CtfReader::getYCells);
   }
   static auto getXSpacing()
   {
-    return std::mem_fn(&CtfReader::getXStep);
+    return std::mem_fn(&ebsdlib::CtfReader::getXStep);
   }
   static auto getYSpacing()
   {
-    return std::mem_fn(&CtfReader::getYStep);
+    return std::mem_fn(&ebsdlib::CtfReader::getYStep);
   }
 };
 
 template <>
-struct ReaderTraits<H5OINAReader>
+struct ReaderTraits<ebsdlib::H5OINAReader>
 {
   static auto getCols()
   {
-    return std::mem_fn(&H5OINAReader::getXCells);
+    return std::mem_fn(&ebsdlib::H5OINAReader::getXCells);
   }
   static auto getRows()
   {
-    return std::mem_fn(&H5OINAReader::getYCells);
+    return std::mem_fn(&ebsdlib::H5OINAReader::getYCells);
   }
   static auto getXSpacing()
   {
-    return std::mem_fn(&H5OINAReader::getXStep);
+    return std::mem_fn(&ebsdlib::H5OINAReader::getXStep);
   }
   static auto getYSpacing()
   {
-    return std::mem_fn(&H5OINAReader::getYStep);
+    return std::mem_fn(&ebsdlib::H5OINAReader::getYStep);
   }
 };
 
 template <>
-struct ReaderTraits<CprReader> : public ReaderTraits<CtfReader>
+struct ReaderTraits<ebsdlib::CprReader> : public ReaderTraits<ebsdlib::CtfReader>
 {
   static auto getCols()
   {
-    return std::mem_fn(&CprReader::getXCells);
+    return std::mem_fn(&ebsdlib::CprReader::getXCells);
   }
   static auto getRows()
   {
-    return std::mem_fn(&CprReader::getYCells);
+    return std::mem_fn(&ebsdlib::CprReader::getYCells);
   }
   static auto getXSpacing()
   {
-    return std::mem_fn(&CprReader::getXStep);
+    return std::mem_fn(&ebsdlib::CprReader::getXStep);
   }
   static auto getYSpacing()
   {
-    return std::mem_fn(&CprReader::getYStep);
+    return std::mem_fn(&ebsdlib::CprReader::getYStep);
   }
 };
 
 template <>
-struct ReaderTraits<H5EspritReader>
+struct ReaderTraits<ebsdlib::H5EspritReader>
 {
   static auto getCols()
   {
-    return std::mem_fn(&H5EspritReader::getNumColumns);
+    return std::mem_fn(&ebsdlib::H5EspritReader::getNumColumns);
   }
   static auto getRows()
   {
-    return std::mem_fn(&H5EspritReader::getNumRows);
+    return std::mem_fn(&ebsdlib::H5EspritReader::getNumRows);
   }
   static auto getXSpacing()
   {
-    return std::mem_fn(&H5EspritReader::getXStep);
+    return std::mem_fn(&ebsdlib::H5EspritReader::getXStep);
   }
   static auto getYSpacing()
   {
-    return std::mem_fn(&H5EspritReader::getYStep);
+    return std::mem_fn(&ebsdlib::H5EspritReader::getYStep);
   }
 };
 
@@ -162,44 +162,44 @@ struct ReaderTraits<GrainMapper3DUtilities::GrainMapperReader>
 };
 
 template <>
-struct ReaderTraits<H5AngVolumeReader>
+struct ReaderTraits<ebsdlib::H5AngVolumeReader>
 {
   static auto getCols()
   {
-    return std::mem_fn(&H5AngVolumeReader::getNumEvenCols);
+    return std::mem_fn(&ebsdlib::H5AngVolumeReader::getNumEvenCols);
   }
   static auto getRows()
   {
-    return std::mem_fn(&H5AngVolumeReader::getNumRows);
+    return std::mem_fn(&ebsdlib::H5AngVolumeReader::getNumRows);
   }
   static auto getXSpacing()
   {
-    return std::mem_fn(&H5AngVolumeReader::getXStep);
+    return std::mem_fn(&ebsdlib::H5AngVolumeReader::getXStep);
   }
   static auto getYSpacing()
   {
-    return std::mem_fn(&H5AngVolumeReader::getYStep);
+    return std::mem_fn(&ebsdlib::H5AngVolumeReader::getYStep);
   }
 };
 
 template <>
-struct ReaderTraits<H5CtfVolumeReader>
+struct ReaderTraits<ebsdlib::H5CtfVolumeReader>
 {
   static auto getCols()
   {
-    return std::mem_fn(&H5CtfVolumeReader::getXCells);
+    return std::mem_fn(&ebsdlib::H5CtfVolumeReader::getXCells);
   }
   static auto getRows()
   {
-    return std::mem_fn(&H5CtfVolumeReader::getYCells);
+    return std::mem_fn(&ebsdlib::H5CtfVolumeReader::getYCells);
   }
   static auto getXSpacing()
   {
-    return std::mem_fn(&H5CtfVolumeReader::getXStep);
+    return std::mem_fn(&ebsdlib::H5CtfVolumeReader::getXStep);
   }
   static auto getYSpacing()
   {
-    return std::mem_fn(&H5CtfVolumeReader::getYStep);
+    return std::mem_fn(&ebsdlib::H5CtfVolumeReader::getYStep);
   }
 };
 
@@ -213,13 +213,13 @@ void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::P
 
   std::stringstream ss;
 
-  if constexpr(std::is_same_v<ReaderType, AngReader>)
+  if constexpr(std::is_same_v<ReaderType, ebsdlib::AngReader>)
   {
     ss << "Grid: " << reader.getGrid() << "\n";
   }
 
   ss << "X Step: " << xStep << "    Y Step: " << yStep << "\n";
-  if constexpr(std::is_same_v<ReaderType, AngReader>)
+  if constexpr(std::is_same_v<ReaderType, ebsdlib::AngReader>)
   {
     ss << "Num Odd Cols: " << reader.getNumOddCols() << "    ";
     ss << "Num Even Cols: " << reader.getNumEvenCols() << "    ";
@@ -244,24 +244,25 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
   {
     preflightUpdatedValues.push_back({"Phase Information", ""});
   }
-  auto laueOps = LaueOps::GetAllOrientationOps();
+  auto laueOps = ebsdlib::LaueOps::GetAllOrientationOps();
   int phaseIndex = 1;
   for(const auto& phaseInfo : phaseInfos)
   {
 
-    if constexpr(std::is_same_v<ReaderType, AngReader> || std::is_same_v<ReaderType, H5OIMReader> || std::is_same_v<ReaderType, H5AngVolumeReader>)
+    if constexpr(std::is_same_v<ReaderType, ebsdlib::AngReader> || std::is_same_v<ReaderType, ebsdlib::H5OIMReader> || std::is_same_v<ReaderType, ebsdlib::H5AngVolumeReader>)
     {
       preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Formula: {}    |    Crystal Symmetry: {}", phaseInfo->getMaterialName(),
                                                                                        phaseInfo->getFormula(), laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName())});
     }
 
-    if constexpr(std::is_same_v<ReaderType, CtfReader> || std::is_same_v<ReaderType, H5OINAReader> || std::is_same_v<ReaderType, CprReader> || std::is_same_v<ReaderType, H5CtfVolumeReader>)
+    if constexpr(std::is_same_v<ReaderType, ebsdlib::CtfReader> || std::is_same_v<ReaderType, ebsdlib::H5OINAReader> || std::is_same_v<ReaderType, ebsdlib::CprReader> ||
+                 std::is_same_v<ReaderType, ebsdlib::H5CtfVolumeReader>)
     {
       preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Comment: {}", phaseInfo->getMaterialName(),
                                                                                        laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
     }
 
-    if constexpr(std::is_same_v<ReaderType, H5EspritReader>)
+    if constexpr(std::is_same_v<ReaderType, ebsdlib::H5EspritReader>)
     {
       preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo->getMaterialName(),
                                                                                        laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getSpaceGroup())});
@@ -269,8 +270,9 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
 
     if constexpr(std::is_same_v<ReaderType, GrainMapper3DUtilities::GrainMapperReader>)
     {
-      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
-                                                                                       LaueOps::GetOrientationOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup)->getSymmetryName(), phaseInfo.SpaceGroup)});
+      preflightUpdatedValues.push_back(
+          {fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
+                                                          ebsdlib::LaueOps::GetOrientationOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup)->getSymmetryName(), phaseInfo.SpaceGroup)});
     }
   }
 }

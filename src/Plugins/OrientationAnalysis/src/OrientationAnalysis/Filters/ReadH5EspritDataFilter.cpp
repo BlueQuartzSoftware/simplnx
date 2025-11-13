@@ -70,7 +70,7 @@ Parameters ReadH5EspritDataFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan(s) in the .h5 file. Esprit can store multiple scans in a single file",
                                                                 OEMEbsdScanSelectionParameter::ValueType{},
-                                                                /* OEMEbsdScanSelectionParameter::AllowedManufacturers{EbsdLib::OEM::Bruker, EbsdLib::OEM::DREAM3D},*/
+                                                                /* OEMEbsdScanSelectionParameter::AllowedManufacturers{ebsdlib::OEM::Bruker, ebsdlib::OEM::DREAM3D},*/
                                                                 OEMEbsdScanSelectionParameter::EbsdReaderType::Esprit, OEMEbsdScanSelectionParameter::ExtensionsType{".h5", ".hdf5"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
@@ -130,7 +130,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
   }
 
   // read in the necessary info from the input h5 file
-  H5EspritReader::Pointer reader = H5EspritReader::New();
+  ebsdlib::H5EspritReader::Pointer reader = ebsdlib::H5EspritReader::New();
   reader->setFileName(pSelectedScanNamesValue.inputFilePath.string());
   reader->setReadPatternData(pReadPatternDataValue);
   reader->setHDF5Path(pSelectedScanNamesValue.scanNames.front());
@@ -152,8 +152,8 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<H5EspritReader>(*reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5EspritReader>(*reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5EspritReader>(*reader, preflightUpdatedValues);
 
   const auto phases = reader->getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
@@ -164,41 +164,41 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
 
   // create the cell ensemble arrays : these arrays are purposely created using the AngFile constant names to match the corresponding Oim import filter!
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
-    auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::MaterialName));
+    auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(ebsdlib::AngFile::MaterialName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // create the cell data arrays
-  H5EspritFields espritFeatures;
+  ebsdlib::H5EspritFields espritFeatures;
   const auto names = espritFeatures.getFilterFeatures<std::vector<std::string>>();
   for(const auto& name : names)
   {
-    if(name == EbsdLib::H5Esprit::phi1 || name == EbsdLib::H5Esprit::PHI || name == EbsdLib::H5Esprit::phi2)
+    if(name == ebsdlib::H5Esprit::phi1 || name == ebsdlib::H5Esprit::PHI || name == ebsdlib::H5Esprit::phi2)
     {
       continue;
     }
 
-    if(reader->getPointerType(name) == EbsdLib::NumericTypes::Type::Int32)
+    if(reader->getPointerType(name) == ebsdlib::NumericTypes::Type::Int32)
     {
       auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(name));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-    else if(reader->getPointerType(name) == EbsdLib::NumericTypes::Type::Float)
+    else if(reader->getPointerType(name) == ebsdlib::NumericTypes::Type::Float)
     {
       auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(name));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(EbsdLib::Esprit::EulerAngles));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(ebsdlib::Esprit::EulerAngles));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   if(pReadPatternDataValue)
@@ -210,7 +210,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
       return MakePreflightErrorResult(-9683, fmt::format("The parameter 'Read Pattern Data' has been enabled but there does not seem to be any pattern data in the file for the scan name selected"));
     }
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{static_cast<usize>(patternDims[0]), static_cast<usize>(patternDims[1])},
-                                                                 cellAMPath.createChildPath(EbsdLib::H5Esprit::RawPatterns));
+                                                                 cellAMPath.createChildPath(ebsdlib::H5Esprit::RawPatterns));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

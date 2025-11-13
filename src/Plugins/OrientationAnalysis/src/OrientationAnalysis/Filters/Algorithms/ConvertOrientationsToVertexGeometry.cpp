@@ -2,7 +2,7 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ConvertOrientations.hpp"
 
-#include "EbsdLib/LaueOps/LaueOps.h"
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -50,7 +50,7 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
   }
 
   DataPath quatsArrayPath;
-  if(m_InputValues->InputOrientationType == OrientationRepresentation::Type::Quaternion)
+  if(m_InputValues->InputOrientationType == ebsdlib::orientations::Type::Quaternion)
   {
     quatsArrayPath = DataPath({m_InputValues->InputOrientationArrayPath.getTargetName()});
   }
@@ -63,9 +63,9 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
 
     ConvertOrientationsInputValues inputValues;
     inputValues.InputType = m_InputValues->InputOrientationType;
-    inputValues.OutputType = OrientationRepresentation::Type::Quaternion;
+    inputValues.OutputType = ebsdlib::orientations::Type::Quaternion;
     inputValues.InputOrientationArrayPath = DataPath({m_InputValues->InputOrientationArrayPath.getTargetName()});
-    inputValues.OutputOrientationArrayPath = quatsArrayPath;
+    inputValues.OutputOrientationArrayName = quatsArrayName;
     Result<> result = ConvertOrientations(tmpDs, m_MessageHandler, m_ShouldCancel, &inputValues)();
     if(result.invalid())
     {
@@ -78,18 +78,18 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
   auto* phasesArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   auto& outputVertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);
   Float32Array& vertices = outputVertexGeom.getVerticesRef();
-  std::vector<LaueOps::Pointer> ops = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
   for(usize i = 0; i < quatsArray.getNumberOfTuples(); i++)
   {
-    QuatD quat(quatsArray[i * 4 + 0], quatsArray[i * 4 + 1], quatsArray[i * 4 + 2], quatsArray[i * 4 + 3]);
+    ebsdlib::QuatD quat(quatsArray[i * 4 + 0], quatsArray[i * 4 + 1], quatsArray[i * 4 + 2], quatsArray[i * 4 + 3]);
     if(m_InputValues->ConvertToFundamentalZone)
     {
       int32 currentPhaseId = phasesArray->getValue(i);
       uint32 laueClass = crystalStructuresArray->getValue(currentPhaseId);
-      quat = (laueClass < ops.size()) ? ops[laueClass]->getFZQuat(quat) : QuatD(0, 0, 0, 1);
+      quat = (laueClass < ops.size()) ? ops[laueClass]->getFZQuat(quat) : ebsdlib::QuatD(0, 0, 0, 1);
     }
 
-    OrientationD st = OrientationTransformation::qu2st<QuatD, OrientationD>(quat.getPositiveOrientation());
+    ebsdlib::StereographicDType st = ebsdlib::QuaternionDType(quat.getPositiveOrientation()).toStereographic();
     vertices.setComponent(i, 0, static_cast<float32>(st[0]));
     vertices.setComponent(i, 1, static_cast<float32>(st[1]));
     vertices.setComponent(i, 2, static_cast<float32>(st[2]));

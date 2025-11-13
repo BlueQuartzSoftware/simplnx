@@ -86,7 +86,7 @@ private:
 
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
 
-  std::vector<LaueOps::Pointer> m_OrientationOps;
+  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
 };
 
 } // namespace nx::core

@@ -3,9 +3,9 @@
 // #include "OrientationAnalysis/Math/Matrix3X1.hpp"
 // #include "OrientationAnalysis/Math/Matrix3X3.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/OrientationTransformation.hpp"
+#include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -35,13 +35,15 @@ bool GetSquareCoord(std::array<T, 3> crystalNormal, std::array<T, 2>& sqCoord)
   }
   if(fabs(crystalNormal[0]) >= fabs(crystalNormal[1]))
   {
-    sqCoord[0] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (Constants::k_SqrtPiD / 2.0);
-    sqCoord[1] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0 / Constants::k_SqrtPiD) * atanf(crystalNormal[1] / crystalNormal[0]));
+    sqCoord[0] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiD / 2.0);
+    sqCoord[1] =
+        (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0 / nx::core::Constants::k_SqrtPiD) * atanf(crystalNormal[1] / crystalNormal[0]));
   }
   else
   {
-    sqCoord[0] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0f / Constants::k_SqrtPiD) * atanf(crystalNormal[0] / crystalNormal[1]));
-    sqCoord[1] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (Constants::k_SqrtPiD / 2.0);
+    sqCoord[0] =
+        (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0f / nx::core::Constants::k_SqrtPiD) * atanf(crystalNormal[0] / crystalNormal[1]));
+    sqCoord[1] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiD / 2.0);
   }
   return nhCheck;
 }
@@ -134,18 +136,18 @@ Result<> WriteGBCDGMTFile::operator()()
   Matrix3X3Type dg;
 
   {
-    const float32 misAngle = m_InputValues->MisorientationRotation[0] * Constants::k_PiOver180F;
+    const float32 misAngle = m_InputValues->MisorientationRotation[0] * nx::core::Constants::k_PiOver180F;
     std::array<float32, 3> normAxis = {m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]};
     MatrixMath::Normalize3x1(normAxis.data());
     // convert axis angle to matrix representation of misorientation
-    auto out = OrientationTransformation::ax2om<OrientationD, OrientationD>(OrientationF(normAxis[0], normAxis[1], normAxis[2], misAngle));
+    auto out = ebsdlib::AxisAngleDType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix();
     dg = Matrix3X3Type(out.data());
   }
   // take inverse of misorientation variable to use for switching symmetry
   Matrix3X3Type dgt = dg.transpose();
 
   // Get our LaueOps pointer for the selected crystal structure
-  const LaueOps::Pointer orientOps = LaueOps::GetAllOrientationOps()[crystalStructures[m_InputValues->PhaseOfInterest]];
+  const ebsdlib::LaueOps::Pointer orientOps = ebsdlib::LaueOps::GetAllOrientationOps()[crystalStructures[m_InputValues->PhaseOfInterest]];
 
   // get number of symmetry operators
   const int32 nSym = orientOps->getNumSymOps();
@@ -185,7 +187,7 @@ Result<> WriteGBCDGMTFile::operator()()
       for(int32 i = 0; i < nSym; i++)
       {
         // get symmetry operator1
-        EbsdLib::Matrix3X3D tSymOp = orientOps->getMatSymOpD(i);
+        ebsdlib::Matrix3X3D tSymOp = orientOps->getMatSymOpD(i);
         const Matrix3X3Type sym1 = (Matrix3X3Type() << tSymOp[0], tSymOp[1], tSymOp[2], tSymOp[3], tSymOp[4], tSymOp[5], tSymOp[6], tSymOp[7], tSymOp[8]).finished();
 
         for(int32 j = 0; j < nSym; j++)
@@ -197,7 +199,7 @@ Result<> WriteGBCDGMTFile::operator()()
           //  calculate symmetric misorientation
           Matrix3X3Type dg2 = sym1 * (dg * sym2.transpose());
           // convert to euler angle
-          auto misEuler1 = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(dg2.data(), 9));
+          auto misEuler1 = ebsdlib::OrientationMatrixDType(dg2.data()).toEuler();
           if(misEuler1[0] < Constants::k_PiOver2D && misEuler1[1] < Constants::k_PiOver2D && misEuler1[2] < Constants::k_PiOver2D)
           {
             misEuler1[1] = std::cos(misEuler1[1]);
@@ -247,7 +249,7 @@ Result<> WriteGBCDGMTFile::operator()()
           // calculate symmetric misorientation
           dg2 = sym1 * (dgt * sym2);
           // convert to euler angle
-          misEuler1 = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(dg2.data(), 9));
+          misEuler1 = ebsdlib::OrientationMatrixDType(dg2.data()).toEuler();
           if(misEuler1[0] < Constants::k_PiOver2D && misEuler1[1] < Constants::k_PiOver2D && misEuler1[2] < Constants::k_PiOver2D)
           {
             misEuler1[1] = std::cos(misEuler1[1]);

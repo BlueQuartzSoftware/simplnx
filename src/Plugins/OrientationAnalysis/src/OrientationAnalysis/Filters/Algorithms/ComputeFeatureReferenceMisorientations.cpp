@@ -51,7 +51,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
     return validateNumFeatResult;
   }
 
-  std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   size_t totalPoints = featureIds.getNumberOfTuples();
   size_t totalFeatures = avgQuats.getNumberOfTuples();
@@ -79,22 +79,22 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
   {
     if(featureIds[point] > 0 && cellPhases[point] > 0)
     {
-      QuatF q1(quats[point * 4 + 0], quats[point * 4 + 1], quats[point * 4 + 2], quats[point * 4 + 3]);
-      QuatF q2;
+      ebsdlib::QuatD q1(quats[point * 4 + 0], quats[point * 4 + 1], quats[point * 4 + 2], quats[point * 4 + 3]);
+      ebsdlib::QuatD q2;
       uint32 laueClass1 = crystalStructures[cellPhases[point]];
       if(m_InputValues->ReferenceOrientation == 0)
       {
         auto gnum = static_cast<size_t>(featureIds[point]);
-        q2 = QuatF(avgQuats[gnum * 4 + 0], avgQuats[gnum * 4 + 1], avgQuats[gnum * 4 + 2], avgQuats[gnum * 4 + 3]);
+        q2 = ebsdlib::QuatD(avgQuats[gnum * 4 + 0], avgQuats[gnum * 4 + 1], avgQuats[gnum * 4 + 2], avgQuats[gnum * 4 + 3]);
       }
       else if(m_InputValues->ReferenceOrientation == 1)
       {
         auto gnum = static_cast<size_t>(featureIds[point]);
         size_t centerGNum = m_Centers[gnum];
-        q2 = QuatF(avgQuats[centerGNum * 4 + 0], avgQuats[centerGNum * 4 + 1], avgQuats[centerGNum * 4 + 2], avgQuats[centerGNum * 4 + 3]);
+        q2 = ebsdlib::QuatD(avgQuats[centerGNum * 4 + 0], avgQuats[centerGNum * 4 + 1], avgQuats[centerGNum * 4 + 2], avgQuats[centerGNum * 4 + 3]);
       }
 
-      OrientationD axisAngle = m_OrientationOps[laueClass1]->calculateMisorientation(q1, q2);
+      ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass1]->calculateMisorientation(q1, q2);
 
       featureReferenceMisorientations[point] = static_cast<float>((180.0 / nx::core::numbers::pi) * axisAngle[3]); // convert to degrees
       int32_t idx = featureIds[point] * 2;

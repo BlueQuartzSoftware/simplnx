@@ -84,7 +84,7 @@ T CosThetaBetweenVectors(const T a[3], const T b[3])
  * @return T
  */
 template <typename T>
-inline T CosThetaBetweenVectors(const nx::core::Point3D<T>& a, const nx::core::Point3D<T>& b)
+T CosThetaBetweenVectors(const nx::core::Point3D<T>& a, const nx::core::Point3D<T>& b)
 {
   T norm1 = a.magnitude();
   T norm2 = b.magnitude();
@@ -103,7 +103,7 @@ inline T CosThetaBetweenVectors(const nx::core::Point3D<T>& a, const nx::core::P
  * @return T
  */
 template <typename T>
-inline T CosThetaBetweenVectors(const Eigen::Vector3<T>& a, const Eigen::Vector3<T>& b)
+T CosThetaBetweenVectors(const Eigen::Vector3<T>& a, const Eigen::Vector3<T>& b)
 {
   T norm1 = a.norm();
   T norm2 = b.norm();

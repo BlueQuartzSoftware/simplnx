@@ -140,11 +140,11 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     inputPath = fs::path(files[0]);
   }
 
-  if(inputPath.extension() == ("." + EbsdLib::Ctf::FileExt))
+  if(inputPath.extension() == ("." + ebsdlib::Ctf::FileExt))
   {
     return MakePreflightErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
   }
-  else if(inputPath.extension() != ("." + EbsdLib::Ang::FileExt))
+  else if(inputPath.extension() != ("." + ebsdlib::Ang::FileExt))
   {
     return MakePreflightErrorResult(-44602, "The file extension was not detected correctly");
   }
@@ -159,7 +159,7 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
   {
     s_HeaderCache[m_InstanceId].workingPath = inputPath;
     s_HeaderCache[m_InstanceId].lastWrite = fs::last_write_time(inputPath);
-    AngReader reader;
+    ebsdlib::AngReader reader;
     reader.setFileName(inputPath.string());
     reader.setReadHexGrid(true);
     int32 err = reader.readFile();

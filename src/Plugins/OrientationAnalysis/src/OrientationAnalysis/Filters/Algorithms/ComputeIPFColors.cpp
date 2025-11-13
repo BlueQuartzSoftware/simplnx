@@ -6,8 +6,8 @@
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include "EbsdLib/Core/OrientationTransformation.hpp"
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
 
 using namespace nx::core;
 
@@ -48,7 +48,7 @@ public:
       maskArray = dynamic_cast<const MaskArrayType*>(m_GoodVoxels);
     }
 
-    std::vector<LaueOps::Pointer> ops = LaueOps::GetAllOrientationOps();
+    std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
     std::array<double, 3> refDir = {m_ReferenceDir[0], m_ReferenceDir[1], m_ReferenceDir[2]};
     std::array<double, 3> dEuler = {0.0, 0.0, 0.0};
     Rgba argb = 0x00000000;
@@ -82,7 +82,7 @@ public:
         m_Filter->incrementPhaseWarningCount();
       }
 
-      if(phase < m_NumPhases && calcIPF && m_CrystalStructures[phase] < EbsdLib::CrystalStructure::LaueGroupEnd)
+      if(phase < m_NumPhases && calcIPF && m_CrystalStructures[phase] < ebsdlib::CrystalStructure::LaueGroupEnd)
       {
         argb = ops[m_CrystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false);
         m_CellIPFColors.setValue(index, static_cast<uint8_t>(nx::core::RgbColor::dRed(argb)));
@@ -144,7 +144,7 @@ ComputeIPFColors::~ComputeIPFColors() noexcept = default;
 Result<> ComputeIPFColors::operator()()
 {
 
-  std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   nx::core::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellEulerAnglesArrayPath);
   nx::core::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);

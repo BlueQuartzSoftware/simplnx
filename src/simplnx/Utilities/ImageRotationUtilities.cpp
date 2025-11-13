@@ -181,7 +181,7 @@ Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::Val
   transformationMatrix.fill(0.0F);
 
   // Convert Degrees to Radians for the last element
-  const float rotAngle = pRotationValue[3] * Constants::k_PiOver180F;
+  const float rotAngle = pRotationValue[3] * nx::core::Constants::k_PiOver180F;
   // Ensure the axis part is normalized
   FloatVec3 normalizedAxis(pRotationValue[0], pRotationValue[1], pRotationValue[2]);
   MatrixMath::Normalize3x1<float32>(normalizedAxis.data());

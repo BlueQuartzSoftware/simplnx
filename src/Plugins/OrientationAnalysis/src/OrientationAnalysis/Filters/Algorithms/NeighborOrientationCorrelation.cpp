@@ -78,7 +78,7 @@ Result<> NeighborOrientationCorrelation::operator()()
   size_t progress = 0;
   size_t totalProgress = 0;
 
-  std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   const auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ConfidenceIndexArrayPath);
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
@@ -171,9 +171,9 @@ Result<> NeighborOrientationCorrelation::operator()()
           if(good)
           {
             uint32 laueClass = crystalStructures[cellPhases[i]];
-            QuatF quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-            QuatF quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
-            OrientationD axisAngle(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
+            ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
+            ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
+            ebsdlib::AxisAngleDType axisAngle(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
             if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
             {
               axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
@@ -213,9 +213,9 @@ Result<> NeighborOrientationCorrelation::operator()()
               if(good2)
               {
                 laueClass = crystalStructures[cellPhases[neighbor2]];
-                quat1 = QuatF(quats[neighbor2 * 4], quats[neighbor2 * 4 + 1], quats[neighbor2 * 4 + 2], quats[neighbor2 * 4 + 3]);
-                quat2 = QuatF(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
-                axisAngle = OrientationD(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
+                quat1 = ebsdlib::QuatD(quats[neighbor2 * 4], quats[neighbor2 * 4 + 1], quats[neighbor2 * 4 + 2], quats[neighbor2 * 4 + 3]);
+                quat2 = ebsdlib::QuatD(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
+                axisAngle = ebsdlib::AxisAngleDType(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
                 if(cellPhases[neighbor2] == cellPhases[neighbor] && cellPhases[neighbor2] > 0)
                 {
                   axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);

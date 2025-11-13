@@ -125,7 +125,7 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
   }
 
   // read in the necessary info from the input h5 file
-  H5OIMReader::Pointer reader = H5OIMReader::New();
+  ebsdlib::H5OIMReader::Pointer reader = ebsdlib::H5OIMReader::New();
   reader->setFileName(pSelectedScanNamesValue.inputFilePath.string());
   reader->setReadPatternData(pReadPatternDataValue);
   reader->setHDF5Path(pSelectedScanNamesValue.scanNames.front());
@@ -144,8 +144,8 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<H5OIMReader>(*reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5OIMReader>(*reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5OIMReader>(*reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5OIMReader>(*reader, preflightUpdatedValues);
 
   auto phases = reader->getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
@@ -156,41 +156,41 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
 
   // create the cell ensemble arrays
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
-    auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(EbsdLib::AngFile::MaterialName));
+    auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(ebsdlib::AngFile::MaterialName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // create the cell data arrays
 
-  AngFields angFeatures;
+  ebsdlib::AngFields angFeatures;
   const auto names = angFeatures.getFilterFeatures<std::vector<std::string>>();
   for(const auto& name : names)
   {
-    if(reader->getPointerType(name) == EbsdLib::NumericTypes::Type::Int32)
+    if(reader->getPointerType(name) == ebsdlib::NumericTypes::Type::Int32)
     {
       auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(name));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-    else if(reader->getPointerType(name) == EbsdLib::NumericTypes::Type::Float)
+    else if(reader->getPointerType(name) == ebsdlib::NumericTypes::Type::Float)
     {
       auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(name));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(EbsdLib::AngFile::EulerAngles));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(ebsdlib::AngFile::EulerAngles));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::AngFile::Phases));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::AngFile::Phases));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   if(pReadPatternDataValue)
@@ -202,7 +202,7 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
       return MakePreflightErrorResult(-9583, fmt::format("The parameter 'Read Pattern Data' has been enabled but there does not seem to be any pattern data in the file for the scan name selected"));
     }
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{static_cast<usize>(patternDims[0]), static_cast<usize>(patternDims[1])},
-                                                                 cellAMPath.createChildPath(EbsdLib::Ang::PatternData));
+                                                                 cellAMPath.createChildPath(ebsdlib::Ang::PatternData));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

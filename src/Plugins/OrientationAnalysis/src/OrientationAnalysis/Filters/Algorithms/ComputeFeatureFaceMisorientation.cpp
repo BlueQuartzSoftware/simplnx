@@ -8,7 +8,7 @@
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
 
-using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
+using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
 
 using namespace nx::core;
@@ -34,7 +34,7 @@ public:
   , m_CrystalStructures(crystalStructures)
   , m_Colors(colors)
   {
-    m_OrientationOps = LaueOps::GetAllOrientationOps();
+    m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   }
   virtual ~CalculateFaceMisorientationColorsImpl() = default;
 
@@ -64,23 +64,23 @@ public:
       }
       if(phase1 > 0 && phase1 == phase2)
       {
-        if((m_CrystalStructures[phase1] == EbsdLib::CrystalStructure::Hexagonal_High) || (m_CrystalStructures[phase1] == EbsdLib::CrystalStructure::Cubic_High))
+        if((m_CrystalStructures[phase1] == ebsdlib::CrystalStructure::Hexagonal_High) || (m_CrystalStructures[phase1] == ebsdlib::CrystalStructure::Cubic_High))
         {
           float32 quat0 = m_Quats[feature1 * 4];
           float32 quat1 = m_Quats[feature1 * 4 + 1];
           float32 quat2 = m_Quats[feature1 * 4 + 2];
           float32 quat3 = m_Quats[feature1 * 4 + 3];
-          QuatD q1(quat0, quat1, quat2, quat3);
+          ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
           quat0 = m_Quats[feature2 * 4];
           quat1 = m_Quats[feature2 * 4 + 1];
           quat2 = m_Quats[feature2 * 4 + 2];
           quat3 = m_Quats[feature2 * 4 + 3];
-          QuatD q2(quat0, quat1, quat2, quat3);
-          OrientationD axisAngle = m_OrientationOps[m_CrystalStructures[phase1]]->calculateMisorientation(q1, q2);
+          ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
+          ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[m_CrystalStructures[phase1]]->calculateMisorientation(q1, q2);
 
-          m_Colors[3 * i + 0] = axisAngle[0] * (axisAngle[3] * Constants::k_180OverPiD);
-          m_Colors[3 * i + 1] = axisAngle[1] * (axisAngle[3] * Constants::k_180OverPiD);
-          m_Colors[3 * i + 2] = axisAngle[2] * (axisAngle[3] * Constants::k_180OverPiD);
+          m_Colors[3 * i + 0] = axisAngle[0] * (axisAngle[3] * nx::core::Constants::k_180OverPiD);
+          m_Colors[3 * i + 1] = axisAngle[1] * (axisAngle[3] * nx::core::Constants::k_180OverPiD);
+          m_Colors[3 * i + 2] = axisAngle[2] * (axisAngle[3] * nx::core::Constants::k_180OverPiD);
         }
       }
       else

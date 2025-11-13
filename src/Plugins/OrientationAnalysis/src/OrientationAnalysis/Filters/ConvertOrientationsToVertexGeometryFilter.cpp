@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ConvertOrientationsToVertexGeometry.hpp"
 
-#include "EbsdLib/Core/EbsdDataArray.hpp"
-#include "EbsdLib/OrientationMath/OrientationConverter.hpp"
+#include <EbsdLib/Core/EbsdDataArray.hpp>
+#include <EbsdLib/OrientationMath/OrientationConverter.hpp>
 
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
@@ -56,7 +56,7 @@ Parameters ConvertOrientationsToVertexGeometryFilter::parameters() const
 {
   Parameters params;
 
-  using OrientationConverterType = OrientationConverter<EbsdDataArray<float32>, float32>;
+  using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float32>, float32>;
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
@@ -107,7 +107,7 @@ IFilter::UniquePointer ConvertOrientationsToVertexGeometryFilter::clone() const
 IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto inputRepType = static_cast<OrientationRepresentation::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
+  auto inputRepType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto inputOrientationsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
   auto vertexPathsToCopy = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
   auto convertToFundamentalZone = filterArgs.value<BoolParameter::ValueType>(k_ConvertToFundamentalZone_Key);
@@ -119,7 +119,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  if(static_cast<int>(inputRepType) < 0 || inputRepType >= OrientationRepresentation::Type::Unknown)
+  if(static_cast<int>(inputRepType) < 0 || inputRepType >= ebsdlib::orientations::Type::Unknown)
   {
     return {MakeErrorResult<OutputActions>(-1001, fmt::format("Input Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(inputRepType)))};
   }
@@ -132,7 +132,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
     return {MakeErrorResult<OutputActions>(-1002, fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
   }
 
-  using OrientationConverterType = OrientationConverter<EbsdDataArray<float32>, float32>;
+  using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float32>, float32>;
   auto representationNames = OrientationConverterType::GetOrientationTypeStrings<std::vector<std::string>>();
   auto representationElementCount = OrientationConverterType::GetComponentCounts<std::vector<usize>>();
   if(inputCompShape[0] != representationElementCount[static_cast<usize>(inputRepType)])
@@ -193,7 +193,7 @@ Result<> ConvertOrientationsToVertexGeometryFilter::executeImpl(DataStructure& d
 {
   ConvertOrientationsToVertexGeometryInputValues inputValues;
 
-  inputValues.InputOrientationType = static_cast<OrientationRepresentation::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
+  inputValues.InputOrientationType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   inputValues.InputOrientationArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
   inputValues.CopyVertexArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
   inputValues.ConvertToFundamentalZone = filterArgs.value<BoolParameter::ValueType>(k_ConvertToFundamentalZone_Key);

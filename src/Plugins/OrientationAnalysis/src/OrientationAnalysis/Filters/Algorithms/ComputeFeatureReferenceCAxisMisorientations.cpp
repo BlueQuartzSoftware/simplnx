@@ -9,8 +9,8 @@
 
 #include <EbsdLib/Core/EbsdDataArray.hpp>
 #include <EbsdLib/Core/Orientation.hpp>
-#include <EbsdLib/Core/OrientationTransformation.hpp>
-#include <EbsdLib/Core/Quaternion.hpp>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <EbsdLib/Orientation/Quaternion.hpp>
 
 #include <algorithm>
 
@@ -44,7 +44,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   for(usize i = 1; i < crystalStructures.size(); ++i)
   {
     const auto crystalStructureType = crystalStructures[i];
-    const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low;
+    const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
     allPhasesHexagonal = allPhasesHexagonal && isHex;
     noPhasesHexagonal = noPhasesHexagonal && !isHex;
   }
@@ -109,7 +109,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
         int64 cellIdx = (plane * xPoints * yPoints) + (row * xPoints) + col;
         const usize quatTupleIndex = cellIdx * numQuatComps;
         const uint32 crystalStructureType = crystalStructures[cellPhases[cellIdx]];
-        const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low;
+        const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
         int32_t cellFeatureId = featureIds[cellIdx];
         int32_t cellPhase = cellPhases[cellIdx];
 
@@ -119,10 +119,11 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
         if(isHex && cellFeatureId > 0 && cellPhase > 0)
         {
           // Create the OrientationMatrix from the Quaternion
-          OrientationD oMatrix = OrientationTransformation::qu2om<QuatD, OrientationD>({quats[quatTupleIndex], quats[quatTupleIndex + 1], quats[quatTupleIndex + 2], quats[quatTupleIndex + 3]});
-          // Transpose the OM
-          Matrix3dR g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
-          Eigen::Vector3d c1 = g1T * cAxis;
+          ebsdlib::OrientationMatrixDType oMatrix =
+              ebsdlib::QuaternionDType(quats[quatTupleIndex], quats[quatTupleIndex + 1], quats[quatTupleIndex + 2], quats[quatTupleIndex + 3]).toOrientationMatrix();
+          // Transpose the OM and multiply by cAxis to rotate cAxis
+          Eigen::Vector3d c1 = oMatrix.transpose() * cAxis;
+
           // normalize so that the magnitude is 1
           c1.normalize();
 

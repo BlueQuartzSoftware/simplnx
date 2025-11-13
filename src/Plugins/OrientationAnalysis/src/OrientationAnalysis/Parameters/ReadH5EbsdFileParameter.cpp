@@ -133,11 +133,11 @@ Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& jso
   }
 
   auto ordering_check = json[k_EulerRepresentation].get<int32>();
-  if(ordering_check != EbsdLib::AngleRepresentation::Radians && ordering_check != EbsdLib::AngleRepresentation::Degrees)
+  if(ordering_check != ebsdlib::AngleRepresentation::Radians && ordering_check != ebsdlib::AngleRepresentation::Degrees)
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Enumeration,
                                      fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", prefix.view(), k_UseRecommendedTransform.view(),
-                                                 EbsdLib::AngleRepresentation::Radians, EbsdLib::AngleRepresentation::Degrees));
+                                                 ebsdlib::AngleRepresentation::Radians, ebsdlib::AngleRepresentation::Degrees));
   }
 
   ValueType value;
@@ -228,7 +228,7 @@ Result<> ReadH5EbsdFileParameter::validate(const std::any& valueRef) const
     return {nonstd::make_unexpected(std::move(errors))};
   }
 
-  H5EbsdVolumeInfo::Pointer reader = H5EbsdVolumeInfo::New();
+  ebsdlib::H5EbsdVolumeInfo::Pointer reader = ebsdlib::H5EbsdVolumeInfo::New();
   reader->setFileName(value.inputFilePath);
   int32_t err = reader->readVolumeInfo();
   if(err < 0)
@@ -238,7 +238,7 @@ Result<> ReadH5EbsdFileParameter::validate(const std::any& valueRef) const
   }
 
   std::string manufacturerString = reader->getManufacturer();
-  if(manufacturerString != EbsdLib::Ang::Manufacturer && manufacturerString != EbsdLib::Ctf::Manufacturer)
+  if(manufacturerString != ebsdlib::Ang::Manufacturer && manufacturerString != ebsdlib::Ctf::Manufacturer)
   {
     errors.push_back({-2004, fmt::format("Original Data source could not be determined. It should be TSL, HKL or HEDM")});
     return {nonstd::make_unexpected(std::move(errors))};

@@ -5,25 +5,27 @@
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
+#include <iostream>
+
 using namespace nx::core;
 
 namespace
 {
 
-std::ostream& operator<<(std::ostream& os, const QuatF& q)
-{
-  os << ", " << q.x() << ", " << q.y() << ", " << q.z() << ", " << q.w();
-  return os;
-}
-
-std::ostream& operator<<(std::ostream& os, const QuatD& q)
-{
-  os << ", " << q.x() << ", " << q.y() << ", " << q.z() << ", " << q.w();
-  return os;
-}
+// std::ostream& operator<<(std::ostream& os, const ebsdlib::QuatF& q)
+// {
+//   os << ", " << q.x() << ", " << q.y() << ", " << q.z() << ", " << q.w();
+//   return os;
+// }
+//
+// std::ostream& operator<<(std::ostream& os, const ebsdlib::QuatD& q)
+// {
+//   os << ", " << q.x() << ", " << q.y() << ", " << q.z() << ", " << q.w();
+//   return os;
+// }
 
 template <typename T>
-void UpdateQuaternionArray(AbstractDataStore<T>& quatArray, const Quaternion<T>& quat, int32 tupleIndex)
+void UpdateQuaternionArray(AbstractDataStore<T>& quatArray, const ebsdlib::Quaternion<T>& quat, int32 tupleIndex)
 {
   quatArray.setValue(tupleIndex * 4, quat.x());
   quatArray.setValue(tupleIndex * 4 + 1, quat.y());
@@ -32,7 +34,7 @@ void UpdateQuaternionArray(AbstractDataStore<T>& quatArray, const Quaternion<T>&
 }
 
 template <typename T>
-void UpdateEulerArray(AbstractDataStore<T>& eulerArray, const Orientation<T>& euler, int32 tupleIndex)
+void UpdateEulerArray(AbstractDataStore<T>& eulerArray, const ebsdlib::Euler<T>& euler, int32 tupleIndex)
 {
   eulerArray.setValue(tupleIndex * 3, euler[0]);
   eulerArray.setValue(tupleIndex * 3 + 1, euler[1]);
@@ -57,7 +59,7 @@ ComputeAvgOrientations::~ComputeAvgOrientations() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeAvgOrientations::operator()()
 {
-  std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
   Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
@@ -84,7 +86,7 @@ Result<> ComputeAvgOrientations::operator()()
   avgEuler.fill(0.0F);
 
   // Get the Identity Quaternion
-  static const QuatF identityQuat(0.0f, 0.0f, 0.0f, 1.0f);
+  static const ebsdlib::QuatF identityQuat(0.0f, 0.0f, 0.0f, 1.0f);
 
   for(size_t i = 0; i < totalPoints; i++)
   {
@@ -98,15 +100,15 @@ Result<> ComputeAvgOrientations::operator()()
     {
       const uint32 xtal = crystalStructures[currentPhase];
       counts[currentFeatureId] += 1.0f;
-      QuatF voxQuat(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-      QuatF curAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);
-      QuatF finalAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);
+      ebsdlib::QuatF voxQuat(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
+      ebsdlib::QuatF curAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);
+      ebsdlib::QuatF finalAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);
 
       curAvgQuat = curAvgQuat.scalarDivide(counts[currentFeatureId]);
 
       if(counts[currentFeatureId] == 1.0f)
       {
-        curAvgQuat = QuatF::identity();
+        curAvgQuat = ebsdlib::QuatF::identity();
       }
       voxQuat = orientationOps[xtal]->getNearestQuat(curAvgQuat, voxQuat);
       curAvgQuat = finalAvgQuat + voxQuat;
@@ -127,14 +129,14 @@ Result<> ComputeAvgOrientations::operator()()
       UpdateQuaternionArray(avgQuats, identityQuat, featureId);
     }
 
-    QuatF curAvgQuat(avgQuats[featureId * 4], avgQuats[featureId * 4 + 1], avgQuats[featureId * 4 + 2], avgQuats[featureId * 4 + 3]);
+    ebsdlib::QuatF curAvgQuat(avgQuats[featureId * 4], avgQuats[featureId * 4 + 1], avgQuats[featureId * 4 + 2], avgQuats[featureId * 4 + 3]);
     curAvgQuat = curAvgQuat.scalarDivide(counts[featureId]);
     curAvgQuat = curAvgQuat.normalize().getPositiveOrientation();
     UpdateQuaternionArray(avgQuats, curAvgQuat, featureId);
 
     // Update the value for the average Euler. Be sure to make sure the Quaterion is in the northern hemisphere
     // before converting it to a Euler Angle
-    OrientationF eu = OrientationTransformation::qu2eu<QuatF, OrientationF>(curAvgQuat);
+    ebsdlib::EulerFType eu = ebsdlib::QuaternionFType(curAvgQuat).toEuler();
     UpdateEulerArray(avgEuler, eu, featureId);
   }
 

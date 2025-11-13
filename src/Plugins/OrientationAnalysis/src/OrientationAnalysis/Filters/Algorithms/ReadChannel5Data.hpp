@@ -32,7 +32,7 @@ struct ORIENTATIONANALYSIS_EXPORT Ang_Private_Data
   std::array<size_t, 3> dims = {0, 0, 0};
   std::array<float, 3> resolution = {0.0F, 0.0F, 0.0F};
   std::array<float, 3> origin = {0.0F, 0.0F, 0.0F};
-  std::vector<CtfPhase::Pointer> phases;
+  std::vector<ebsdlib::CtfPhase::Pointer> phases;
   int32_t units = 0;
 };
 
@@ -85,13 +85,13 @@ private:
    * @param reader
    * @return Error code.
    */
-  std::pair<int32, std::string> loadMaterialInfo(CprReader* reader) const;
+  std::pair<int32, std::string> loadMaterialInfo(ebsdlib::CprReader* reader) const;
 
   /**
    * @brief
    * @param reader
    */
-  void copyRawEbsdData(CprReader* reader) const;
+  void copyRawEbsdData(ebsdlib::CprReader* reader) const;
 };
 
 } // namespace nx::core

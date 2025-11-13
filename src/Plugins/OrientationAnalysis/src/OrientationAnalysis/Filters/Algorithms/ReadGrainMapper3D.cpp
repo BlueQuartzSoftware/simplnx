@@ -31,7 +31,7 @@ namespace
 
 } // namespace
 
-namespace EbsdLib::CrystalStructure
+namespace ebsdlib::CrystalStructure
 {
 inline constexpr uint32_t UnknownCrystalStructure = 999; //!< UnknownCrystalStructure
 }
@@ -72,7 +72,7 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
   auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_LatticeConstants));
   Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
 
-  crystalStructures[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
+  crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   materialNames[0] = "Invalid Phase";
   latticeConstants->setComponent(0, 0, 0.0f);
   latticeConstants->setComponent(0, 1, 0.0f);

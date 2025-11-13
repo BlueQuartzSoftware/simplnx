@@ -49,7 +49,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
   const DataPath k_CellFeauteAttributeMatrix = k_DataContainerPath.createChildPath(k_FeatureAttributeMatrix);
   const DataPath k_CellFeaturePhasesPath = k_CellFeauteAttributeMatrix.createChildPath(k_Phases);
   const DataPath k_AvgQuatsPath = k_CellFeauteAttributeMatrix.createChildPath(k_AvgQuatsName);
-  const DataPath k_CellFeatureEulerAnglesPath = k_CellFeauteAttributeMatrix.createChildPath(EbsdLib::CellData::EulerAngles);
+  const DataPath k_CellFeatureEulerAnglesPath = k_CellFeauteAttributeMatrix.createChildPath(ebsdlib::CellData::EulerAngles);
   const DataPath k_NumNeighborsPath = k_CellFeauteAttributeMatrix.createChildPath(k_NumNeighborsName);
   const DataPath k_NeighborListPath = k_CellFeauteAttributeMatrix.createChildPath(k_NeighborListName);
   const DataPath k_SharedSurfaceAreaListPath = k_CellFeauteAttributeMatrix.createChildPath(k_SharedSurfaceAreaListName);
@@ -143,7 +143,7 @@ TEST_CASE("Reconstruction::MergeTwinsFilter: Valid Execution", "[Reconstruction]
     args.insertOrAssign(ComputeAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresArrayPath));
     args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_CellFeauteAttributeMatrix));
     args.insertOrAssign(ComputeAvgOrientationsFilter::k_AvgQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuatsName));
-    args.insertOrAssign(ComputeAvgOrientationsFilter::k_AvgEulerAnglesArrayName_Key, std::make_any<std::string>(EbsdLib::CellData::EulerAngles));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_AvgEulerAnglesArrayName_Key, std::make_any<std::string>(ebsdlib::CellData::EulerAngles));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

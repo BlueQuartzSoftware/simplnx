@@ -8,13 +8,13 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/TimeUtilities.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/OrientationTransformation.hpp"
+#include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
 
 #include <cmath>
 
-using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
+using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
 using namespace nx::core;
@@ -53,7 +53,7 @@ public:
   , m_CrystalStructuresArray(crystalStructures)
   , m_SizeGBCD(sizeGBCD)
   {
-    m_OrientationOps = LaueOps::GetAllOrientationOps();
+    m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   }
 
   CalculateGBCDImpl(CalculateGBCDImpl&&) = default;                // Move Constructor Not Implemented
@@ -74,14 +74,15 @@ public:
 
     int32 feature1 = 0, feature2 = 0;
     int32 inversion = 1;
-    float32 g1ea[3] = {0.0f, 0.0f, 0.0f}, g2ea[3] = {0.0f, 0.0f, 0.0f};
-    float32 g1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, g2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 g1s[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, g2s[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 sym1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, sym2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 g2t[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, dg[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    float32 eulerMis[3] = {0.0f, 0.0f, 0.0f};
-    float32 normal[3] = {0.0f, 0.0f, 0.0f};
-    float32 xstl1Norm1[3] = {0.0f, 0.0f, 0.0f};
+    float32 g1ea[3] = {0.0f, 0.0f, 0.0f};
+    float32 g2ea[3] = {0.0f, 0.0f, 0.0f};
+    // float32 g1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, g2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    //  float32 g1s[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, g2s[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    //  float32 sym1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, sym2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    //  float32 g2t[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, dg[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    std::array<float, 3> eulerMis = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X1<float> normal;     // = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X1<float> xstl1Norm1; // {0.0f, 0.0f, 0.0f};
     float32 sqCoord[2] = {0.0f, 0.0f}, sqCoordInv[2] = {0.0f, 0.0f};
 
     for(usize triangleIndex = start; triangleIndex < end; triangleIndex++)
@@ -122,20 +123,19 @@ public:
             g2ea[m] = eulers[3 * feature2 + m];
           }
 
-          OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g1ea, 3)).toGMatrix(g1);
-
-          OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(g2ea, 3)).toGMatrix(g2);
+          ebsdlib::Matrix3X3<float> g1 = ebsdlib::EulerFType(g1ea).toOrientationMatrix().toGMatrix();
+          ebsdlib::Matrix3X3<float> g2 = ebsdlib::EulerFType(g2ea).toOrientationMatrix().toGMatrix();
 
           int32 nSym = m_OrientationOps[laueClass1]->getNumSymOps();
           for(int32 j = 0; j < nSym; j++)
           {
             // rotate g1 by symOp
-            m_OrientationOps[laueClass1]->getMatSymOp(j, sym1);
-            MatrixMath::Multiply3x3with3x3(sym1, g1, g1s);
+            ebsdlib::Matrix3X3<float> sym1 = m_OrientationOps[laueClass1]->getMatSymOpF(j);
+            ebsdlib::Matrix3X3<float> g1s = sym1 * g1;
             // get the crystal directions along the triangle normals
-            MatrixMath::Multiply3x3with3x1(g1s, normal, xstl1Norm1);
+            xstl1Norm1 = g1s * normal;
             // get coordinates in square projection of crystal normal parallel to boundary normal
-            bool nhCheck = getSquareCoord(xstl1Norm1, sqCoord);
+            bool nhCheck = getSquareCoord(xstl1Norm1.data(), sqCoord);
             bool nhCheckInv = !nhCheck;
             if(inversion == 1)
             {
@@ -147,25 +147,25 @@ public:
             for(int32 k = 0; k < nSym; k++)
             {
               // calculate the symmetric misorienation
-              m_OrientationOps[laueClass1]->getMatSymOp(k, sym2);
+              ebsdlib::Matrix3X3<float> sym2 = m_OrientationOps[laueClass1]->getMatSymOpF(k);
               // rotate g2 by symOp
-              MatrixMath::Multiply3x3with3x3(sym2, g2, g2s);
+              ebsdlib::Matrix3X3<float> g2s = sym2 * g2;
               // transpose rotated g2
-              MatrixMath::Transpose3x3(g2s, g2t);
+              ebsdlib::Matrix3X3<float> g2t = g2s.transpose();
               // calculate delta g
-              MatrixMath::Multiply3x3with3x3(g1s, g2t, dg);
+              ebsdlib::Matrix3X3<float> dg = g1s * g2t;
               // translate matrix to euler angles
-              OrientationF om(dg);
+              ebsdlib::OrientationMatrixFType om(dg);
 
-              OrientationF eu(eulerMis, 3);
-              eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(om); // This will actually copy the result of om2eu into the euler_mis location. Not obvious at all.
+              ebsdlib::EulerFType eu = om.toEuler();
+              eu.copyTo(eulerMis.data());
 
-              if(eulerMis[0] < Constants::k_PiOver2D && eulerMis[1] < Constants::k_PiOver2D && eulerMis[2] < Constants::k_PiOver2D)
+              if(eulerMis[0] < nx::core::Constants::k_PiOver2D && eulerMis[1] < nx::core::Constants::k_PiOver2D && eulerMis[2] < nx::core::Constants::k_PiOver2D)
               {
                 // PHI euler angle is stored in GBCD as cos(PHI)
                 eulerMis[1] = cosf(eulerMis[1]);
                 // get the indexes that this point would be in the GBCD histogram
-                int32 gbcd_index = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis, sqCoord);
+                int32 gbcd_index = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis.data(), sqCoord);
                 if(gbcd_index != -1)
                 {
                   const usize k_GbcdBinIndex = minGbcdBinIndex + symCounter;
@@ -175,7 +175,7 @@ public:
                 symCounter++;
                 if(inversion == 1)
                 {
-                  gbcd_index = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis, sqCoordInv);
+                  gbcd_index = GBCDIndex(m_SizeGBCD.m_GbcdDeltas, m_SizeGBCD.m_GbcdSizes, m_SizeGBCD.m_GbcdLimits, eulerMis.data(), sqCoordInv);
                   if(gbcd_index != -1)
                   {
                     const usize k_GbcdBinIndex = minGbcdBinIndex + symCounter;
@@ -271,13 +271,15 @@ public:
     }
     if(fabs(crystalNormal[0]) >= fabs(crystalNormal[1]))
     {
-      sqCoord[0] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (Constants::k_SqrtPiD / 2.0);
-      sqCoord[1] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0 / Constants::k_SqrtPiD) * atanf(crystalNormal[1] / crystalNormal[0]));
+      sqCoord[0] = (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiD / 2.0);
+      sqCoord[1] =
+          (crystalNormal[0] / fabs(crystalNormal[0])) * sqrt(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0 / nx::core::Constants::k_SqrtPiD) * atanf(crystalNormal[1] / crystalNormal[0]));
     }
     else
     {
-      sqCoord[0] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0f / Constants::k_SqrtPiD) * atanf(crystalNormal[0] / crystalNormal[1]));
-      sqCoord[1] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (Constants::k_SqrtPiD / 2.0);
+      sqCoord[0] =
+          (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * ((2.0f / nx::core::Constants::k_SqrtPiD) * atanf(crystalNormal[0] / crystalNormal[1]));
+      sqCoord[1] = (crystalNormal[1] / fabs(crystalNormal[1])) * sqrtf(2.0 * 1.0 * (1.0 + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiD / 2.0);
     }
     return nhCheck;
   }

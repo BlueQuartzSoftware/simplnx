@@ -41,9 +41,9 @@ public:
   {
     // Write the Manufacturer of the OIM file here
     // This list will grow to be the number of EBSD file formats we support
-    if(inputPath.extension() == ("." + EbsdLib::Ang::FileExt))
+    if(inputPath.extension() == ("." + ebsdlib::Ang::FileExt))
     {
-      AngReader reader;
+      ebsdlib::AngReader reader;
       reader.setFileName(inputPath.string());
       reader.setReadHexGrid(true);
       int32 err = reader.readFile();
@@ -57,7 +57,7 @@ public:
         m_Valid = false;
         return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
       }
-      if(reader.getGrid().find(EbsdLib::Ang::SquareGrid) == 0)
+      if(reader.getGrid().find(ebsdlib::Ang::SquareGrid) == 0)
       {
         m_Valid = false;
         return MakeErrorResult(-55000, fmt::format("Ang file is already a square grid: {}", inputPath.string()));
@@ -294,29 +294,29 @@ private:
       return line;
     }
 
-    if(StringUtilities::contains(buf, EbsdLib::Ang::HexGrid))
+    if(StringUtilities::contains(buf, ebsdlib::Ang::HexGrid))
     {
-      line = StringUtilities::replace(buf, EbsdLib::Ang::HexGrid, EbsdLib::Ang::SquareGrid);
+      line = StringUtilities::replace(buf, ebsdlib::Ang::HexGrid, ebsdlib::Ang::SquareGrid);
     }
-    else if(StringUtilities::contains(buf, EbsdLib::Ang::XStep))
+    else if(StringUtilities::contains(buf, ebsdlib::Ang::XStep))
     {
-      line = "# " + EbsdLib::Ang::XStep + ": " + StringUtilities::number(m_SqrXStep);
+      line = "# " + ebsdlib::Ang::XStep + ": " + StringUtilities::number(m_SqrXStep);
     }
-    else if(StringUtilities::contains(buf, EbsdLib::Ang::YStep))
+    else if(StringUtilities::contains(buf, ebsdlib::Ang::YStep))
     {
-      line = "# " + EbsdLib::Ang::YStep + ": " + StringUtilities::number(m_SqrYStep);
+      line = "# " + ebsdlib::Ang::YStep + ": " + StringUtilities::number(m_SqrYStep);
     }
-    else if(StringUtilities::contains(buf, EbsdLib::Ang::NColsOdd))
+    else if(StringUtilities::contains(buf, ebsdlib::Ang::NColsOdd))
     {
-      line = "# " + EbsdLib::Ang::NColsOdd + ": " + StringUtilities::number(m_SqrNumCols);
+      line = "# " + ebsdlib::Ang::NColsOdd + ": " + StringUtilities::number(m_SqrNumCols);
     }
-    else if(StringUtilities::contains(buf, EbsdLib::Ang::NColsEven))
+    else if(StringUtilities::contains(buf, ebsdlib::Ang::NColsEven))
     {
-      line = "# " + EbsdLib::Ang::NColsEven + ": " + StringUtilities::number(m_SqrNumCols);
+      line = "# " + ebsdlib::Ang::NColsEven + ": " + StringUtilities::number(m_SqrNumCols);
     }
-    else if(StringUtilities::contains(buf, EbsdLib::Ang::NRows))
+    else if(StringUtilities::contains(buf, ebsdlib::Ang::NRows))
     {
-      line = "# " + EbsdLib::Ang::NRows + ": " + StringUtilities::number(m_SqrNumRows);
+      line = "# " + ebsdlib::Ang::NRows + ": " + StringUtilities::number(m_SqrNumRows);
     }
     else
     {

@@ -10,7 +10,7 @@ EBSDSegmentFeatures::EBSDSegmentFeatures(DataStructure& dataStructure, const IFi
 : SegmentFeatures(dataStructure, shouldCancel, mesgHandler)
 , m_InputValues(inputValues)
 {
-  m_OrientationOps = LaueOps::GetAllOrientationOps();
+  m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   m_IsPeriodic = inputValues->IsPeriodic;
 }
 
@@ -135,13 +135,13 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencePoint, int64 neighbor
   if(featureIds[neighborPoint] == 0 && (m_GoodVoxelsArray == nullptr || neighborPointIsGood))
   {
     float w = std::numeric_limits<float>::max();
-    QuatF q1(currentQuatPtr[referencePoint * 4], currentQuatPtr[referencePoint * 4 + 1], currentQuatPtr[referencePoint * 4 + 2], currentQuatPtr[referencePoint * 4 + 3]);
-    QuatF q2(currentQuatPtr[neighborPoint * 4 + 0], currentQuatPtr[neighborPoint * 4 + 1], currentQuatPtr[neighborPoint * 4 + 2], currentQuatPtr[neighborPoint * 4 + 3]);
+    const ebsdlib::QuatD q1(currentQuatPtr[referencePoint * 4], currentQuatPtr[referencePoint * 4 + 1], currentQuatPtr[referencePoint * 4 + 2], currentQuatPtr[referencePoint * 4 + 3]);
+    const ebsdlib::QuatD q2(currentQuatPtr[neighborPoint * 4], currentQuatPtr[neighborPoint * 4 + 1], currentQuatPtr[neighborPoint * 4 + 2], currentQuatPtr[neighborPoint * 4 + 3]);
 
     if((*cellPhases)[referencePoint] == (*cellPhases)[neighborPoint])
     {
-      OrientationF axisAngle = m_OrientationOps[laueClass1]->calculateMisorientation(q1, q2);
-      w = axisAngle[3];
+      ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass1]->calculateMisorientation(q1, q2);
+      w = static_cast<float>(axisAngle[3]);
     }
     if(w < m_InputValues->MisorientationTolerance)
     {

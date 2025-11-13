@@ -12,7 +12,7 @@ namespace nx::core
  * intermediate .h5ebsd file.
  */
 
-class ORIENTATIONANALYSIS_EXPORT ReadH5OinaData : public IEbsdOemReader<H5OINAReader>
+class ORIENTATIONANALYSIS_EXPORT ReadH5OinaData : public IEbsdOemReader<ebsdlib::H5OINAReader>
 {
 public:
   ReadH5OinaData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5DataInputValues* inputValues);

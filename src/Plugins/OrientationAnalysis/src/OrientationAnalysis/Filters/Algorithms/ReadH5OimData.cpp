@@ -7,7 +7,7 @@ using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ReadH5OimData::ReadH5OimData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5DataInputValues* inputValues)
-: IEbsdOemReader<H5OIMReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
+: IEbsdOemReader<ebsdlib::H5OIMReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
 {
 }
 
@@ -28,25 +28,25 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
   const usize sliceTupleStart = sliceIndex * tuplesPerScan;
 
   // Adjust the values of the 'phase' data to correct for invalid values
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::AngFile::Phases));
-  auto* phasePtr = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::Ang::PhaseData));
+  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::Phases));
+  auto* phasePtr = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::Ang::PhaseData));
 
-  const auto* phi1Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::Phi1));
-  const auto* phiPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::Phi));
-  const auto* phi2Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::Phi2));
-  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::AngFile::EulerAngles));
+  const auto* phi1Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Phi1));
+  const auto* phiPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Phi));
+  const auto* phi2Ptr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Phi2));
+  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::EulerAngles));
 
-  const auto* imageQualPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::ImageQuality));
-  auto& imageQuality = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::Ang::ImageQuality));
+  const auto* imageQualPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::ImageQuality));
+  auto& imageQuality = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::ImageQuality));
 
-  const auto* confIndexPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::ConfidenceIndex));
-  auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::Ang::ConfidenceIndex));
+  const auto* confIndexPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::ConfidenceIndex));
+  auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::ConfidenceIndex));
 
-  const auto* semSigPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::SEMSignal));
-  auto& semSignal = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::Ang::SEMSignal));
+  const auto* semSigPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::SEMSignal));
+  auto& semSignal = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::SEMSignal));
 
-  const auto* fitPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::Ang::Fit));
-  auto& fit = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::Ang::Fit));
+  const auto* fitPtr = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::Ang::Fit));
+  auto& fit = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::Fit));
 
   for(size_t i = 0; i < tuplesPerScan; i++)
   {
@@ -84,7 +84,7 @@ Result<> ReadH5OimData::copyRawEbsdData(int sliceIndex)
       std::vector<usize> pDimsV(2);
       pDimsV[0] = pDims[0];
       pDimsV[1] = pDims[1];
-      auto& patternData = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::Ang::PatternData));
+      auto& patternData = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Ang::PatternData));
       const usize numComponents = patternData.getNumberOfComponents();
       for(usize i = 0; i < tuplesPerScan; i++)
       {

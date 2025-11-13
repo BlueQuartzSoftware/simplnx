@@ -5,21 +5,21 @@
 #include "simplnx/Common/Constants.hpp"
 #include <EbsdLib/LaueOps/LaueOps.h>
 
-#include <EbsdLib/Core/OrientationRepresentation.h>
-#include <EbsdLib/Core/OrientationTransformation.hpp>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
 
 using namespace nx::core;
 
 namespace
 {
-inline void ComputeMisorientation(const QuatD& q1, const QuatD& q2, Float32Array& outputMisorientations, size_t laueClass, const std::vector<LaueOps::Pointer>& m_OrientationOps, size_t tupleIdx)
+inline void ComputeMisorientation(const ebsdlib::QuatD& q1, const ebsdlib::QuatD& q2, Float32Array& outputMisorientations, size_t laueClass,
+                                  const std::vector<ebsdlib::LaueOps::Pointer>& m_OrientationOps, size_t tupleIdx)
 {
-  OrientationD axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
+  ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
 
   outputMisorientations[tupleIdx * 4 + 0] = axisAngle[0];
   outputMisorientations[tupleIdx * 4 + 1] = axisAngle[1];
   outputMisorientations[tupleIdx * 4 + 2] = axisAngle[2];
-  outputMisorientations[tupleIdx * 4 + 3] = axisAngle[3] * Constants::k_180OverPiD; // Convert the output Angle to Degrees.
+  outputMisorientations[tupleIdx * 4 + 3] = axisAngle[3] * nx::core::Constants::k_180OverPiD; // Convert the output Angle to Degrees.
 }
 
 Result<> ComputeUsingArrays(DataStructure& m_DataStructure, const ComputeMisorientationsInputValues* inputValues, const std::atomic_bool& m_ShouldCancel)
@@ -32,7 +32,7 @@ Result<> ComputeUsingArrays(DataStructure& m_DataStructure, const ComputeMisorie
 
   auto& outputMisorientations = m_DataStructure.getDataRefAs<Float32Array>(inputValues->OutputMisorientationsPath);
 
-  std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   size_t totalPoints = inputOrientations1.getNumberOfTuples();
 
@@ -47,10 +47,8 @@ Result<> ComputeUsingArrays(DataStructure& m_DataStructure, const ComputeMisorie
       size_t laueClass = static_cast<size_t>(crystalStructures[cellPhases[tupleIdx]]);
 
       // Convert to a Quaternion
-      OrientationType orientation1(inputOrientations1[tupleIdx * 3], inputOrientations1[tupleIdx * 3 + 1], inputOrientations1[tupleIdx * 3 + 2]);
-      const QuatD q1 = OrientationTransformation::eu2qu<OrientationType, QuatD>(orientation1);
-      OrientationType orientation2(inputOrientations2[tupleIdx * 3], inputOrientations2[tupleIdx * 3 + 1], inputOrientations2[tupleIdx * 3 + 2]);
-      const QuatD q2 = OrientationTransformation::eu2qu<OrientationType, QuatD>(orientation2);
+      const ebsdlib::QuatD q1 = ebsdlib::EulerDType(inputOrientations1[tupleIdx * 3], inputOrientations1[tupleIdx * 3 + 1], inputOrientations1[tupleIdx * 3 + 2]).toQuaternion();
+      const ebsdlib::QuatD q2 = ebsdlib::EulerDType(inputOrientations2[tupleIdx * 3], inputOrientations2[tupleIdx * 3 + 1], inputOrientations2[tupleIdx * 3 + 2]).toQuaternion();
 
       ComputeMisorientation(q1, q2, outputMisorientations, laueClass, m_OrientationOps, tupleIdx);
     }
@@ -75,16 +73,15 @@ Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const 
 
   auto& outputMisorientations = m_DataStructure.getDataRefAs<Float32Array>(inputValues->OutputMisorientationsPath);
 
-  std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   size_t totalPoints = inputOrientations1.getNumberOfTuples();
 
-  using OrientationType = Orientation<float64>;
   Eigen::Vector3d axis(inputValues->ReferenceOrientation[0], inputValues->ReferenceOrientation[1], inputValues->ReferenceOrientation[2]);
   axis.normalize();
-  const OrientationType referenceOrientation(axis[0], axis[1], axis[2], inputValues->ReferenceOrientation[3] * Constants::k_PiOver180D);
+  const ebsdlib::AxisAngleDType referenceOrientation(axis[0], axis[1], axis[2], inputValues->ReferenceOrientation[3] * nx::core::Constants::k_PiOver180D);
 
-  const QuatD q2 = OrientationTransformation::ax2qu<OrientationType, QuatD>(referenceOrientation);
+  const ebsdlib::QuatD q2 = referenceOrientation.toQuaternion();
 
   for(int64_t tupleIdx = 0; tupleIdx < totalPoints; tupleIdx++)
   {
@@ -97,8 +94,7 @@ Result<> ComputeUsingReferenceOrientation(DataStructure& m_DataStructure, const 
       size_t phase1 = static_cast<size_t>(crystalStructures[cellPhases[tupleIdx]]);
 
       // Convert to a Quaternion
-      OrientationType orientation1(inputOrientations1[tupleIdx * 3], inputOrientations1[tupleIdx * 3 + 1], inputOrientations1[tupleIdx * 3 + 2]);
-      QuatD q1 = OrientationTransformation::eu2qu<OrientationType, QuatD>(orientation1);
+      ebsdlib::QuatD q1 = ebsdlib::EulerDType(inputOrientations1[tupleIdx * 3], inputOrientations1[tupleIdx * 3 + 1], inputOrientations1[tupleIdx * 3 + 2]).toQuaternion();
 
       ComputeMisorientation(q1, q2, outputMisorientations, phase1, m_OrientationOps, tupleIdx);
     }

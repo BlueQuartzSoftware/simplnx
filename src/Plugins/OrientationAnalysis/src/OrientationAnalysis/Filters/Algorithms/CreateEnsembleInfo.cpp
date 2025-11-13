@@ -19,7 +19,7 @@ uint32 CrystalStructureFromString(const std::string& structure)
 
   if(iterator == std::end(EnsembleInfoParameter::k_CrystalStructures))
   {
-    return EbsdLib::CrystalStructure::UnknownCrystalStructure;
+    return ebsdlib::CrystalStructure::UnknownCrystalStructure;
   }
 
   return static_cast<uint32>(iterator - EnsembleInfoParameter::k_CrystalStructures.begin());
@@ -70,14 +70,14 @@ Result<> CreateEnsembleInfo::operator()()
     return MakeErrorResult(-10001, "Check the group name EnsembleInfo and that the number of phases > 0");
   }
 
-  crystalStructures[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
+  crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   phaseTypes[0] = static_cast<uint32>(PhaseType::Type::Unknown);
 
   for(int i = 0; i < numPhases; i++)
   {
     // Crystal Structure
     uint32 crystalStructure = CrystalStructureFromString(m_InputValues->Ensemble[i][0]);
-    if(crystalStructure == EbsdLib::CrystalStructure::UnknownCrystalStructure)
+    if(crystalStructure == ebsdlib::CrystalStructure::UnknownCrystalStructure)
     {
       return MakeErrorResult(-10006, fmt::format("Incorrect crystal structure name '{}'", crystalStructure));
     }

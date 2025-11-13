@@ -40,7 +40,7 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
     h5ebsdParamVal.inputFilePath = fmt::format("{}/Small_IN100.h5ebsd", unit_test::k_TestFilesDir);
     h5ebsdParamVal.startSlice = 1;
     h5ebsdParamVal.endSlice = 117;
-    h5ebsdParamVal.eulerRepresentation = EbsdLib::AngleRepresentation::Radians;
+    h5ebsdParamVal.eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
     h5ebsdParamVal.selectedArrayNames = {Constants::k_ConfidenceIndex, Constants::k_EulerAngles, Constants::k_Fit, Constants::k_ImageQuality, Constants::k_Phases, Constants::k_SEMSignal};
     h5ebsdParamVal.useRecommendedTransform = true;
 

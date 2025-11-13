@@ -14,7 +14,7 @@
 class H5EbsdVolumeReader;
 using H5EbsdVolumeReaderShrPtr = std::shared_ptr<H5EbsdVolumeReader>;
 
-namespace EbsdLib
+namespace ebsdlib
 {
 namespace EnsembleData
 {
@@ -22,7 +22,7 @@ inline const std::string CrystalStructures("CrystalStructures");
 inline const std::string LatticeConstants("LatticeConstants");
 inline const std::string MaterialName("MaterialName");
 } // namespace EnsembleData
-} // namespace EbsdLib
+} // namespace ebsdlib
 
 namespace nx::core
 {
@@ -35,7 +35,7 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5EbsdInputValues
   std::string inputFilePath;
   int32 startSlice = 0;
   int32 endSlice = 0;
-  int32 eulerRepresentation = EbsdLib::AngleRepresentation::Radians;
+  int32 eulerRepresentation = ebsdlib::AngleRepresentation::Radians;
   std::vector<std::string> hdf5DataPaths = {};
   bool useRecommendedTransform = {true};
   DataPath dataContainerPath;

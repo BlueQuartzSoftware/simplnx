@@ -78,21 +78,21 @@ Result<> EbsdToH5Ebsd::operator()()
 
     H5Support::H5ScopedFileSentinel sentinel(fileId, true);
 
-    herr_t err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::ZResolution, m_InputValues->ZSpacing);
+    herr_t err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::ZResolution, m_InputValues->ZSpacing);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Z Spacing Scalar to the HDF5 File");
       return MakeErrorResult(-99502, ss);
     }
 
-    err = H5Support::H5Lite::writeScalarDataset<uint32>(fileId, EbsdLib::H5Ebsd::StackingOrder, static_cast<uint32>(m_InputValues->StackingOrder));
+    err = H5Support::H5Lite::writeScalarDataset<uint32>(fileId, ebsdlib::H5Ebsd::StackingOrder, static_cast<uint32>(m_InputValues->StackingOrder));
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Stacking Order Scalar to the HDF5 File");
       return MakeErrorResult(-99503, ss);
     }
 
-    err = H5Support::H5Lite::writeStringAttribute(fileId, EbsdLib::H5Ebsd::StackingOrder, "Name", EbsdToH5EbsdInputConstants::k_StackingChoices[m_InputValues->StackingOrder]);
+    err = H5Support::H5Lite::writeStringAttribute(fileId, ebsdlib::H5Ebsd::StackingOrder, "Name", EbsdToH5EbsdInputConstants::k_StackingChoices[m_InputValues->StackingOrder]);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Stacking Order Name Attribute to the HDF5 File");
@@ -119,7 +119,7 @@ Result<> EbsdToH5Ebsd::operator()()
       break;
     }
 
-    err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::SampleTransformationAngle, sampleTransformation[EbsdToH5EbsdInputConstants::k_AngleIndex]);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::SampleTransformationAngle, sampleTransformation[EbsdToH5EbsdInputConstants::k_AngleIndex]);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Sample Transformation Angle to the HDF5 File");
@@ -128,21 +128,21 @@ Result<> EbsdToH5Ebsd::operator()()
 
     int32_t rank = 1;
     hsize_t dims[3] = {3, 0, 0};
-    err = H5Support::H5Lite::writePointerDataset<float>(fileId, EbsdLib::H5Ebsd::SampleTransformationAxis, rank, dims, sampleTransformation.data());
+    err = H5Support::H5Lite::writePointerDataset<float>(fileId, ebsdlib::H5Ebsd::SampleTransformationAxis, rank, dims, sampleTransformation.data());
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Sample Transformation Axis to the HDF5 File");
       return MakeErrorResult(-99506, ss);
     }
 
-    err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::EulerTransformationAngle, eulerTransformation[EbsdToH5EbsdInputConstants::k_AngleIndex]);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::EulerTransformationAngle, eulerTransformation[EbsdToH5EbsdInputConstants::k_AngleIndex]);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Euler Transformation Angle to the HDF5 File");
       return MakeErrorResult(-99507, ss);
     }
 
-    err = H5Support::H5Lite::writePointerDataset<float>(fileId, EbsdLib::H5Ebsd::EulerTransformationAxis, rank, dims, eulerTransformation.data());
+    err = H5Support::H5Lite::writePointerDataset<float>(fileId, ebsdlib::H5Ebsd::EulerTransformationAxis, rank, dims, eulerTransformation.data());
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Euler Transformation Axis to the HDF5 File");
@@ -155,7 +155,7 @@ Result<> EbsdToH5Ebsd::operator()()
     {
       return MakeErrorResult(-99509, fmt::format("Generated File List was empty. Parent path to files is '{}'", m_InputValues->InputFileListInfo.inputPath));
     }
-    EbsdImporter::Pointer fileImporter;
+    ebsdlib::EbsdImporter::Pointer fileImporter;
 
     int32 zStartIndex = m_InputValues->InputFileListInfo.startIndex;
 
@@ -164,27 +164,27 @@ Result<> EbsdToH5Ebsd::operator()()
     auto firstFilePath = fs::path(fileList[0]);
     std::string ext = firstFilePath.extension().string();
     ext.erase(0, 1); // Remove the '.' from the string
-    if(ext == EbsdLib::Ang::FileExt)
+    if(ext == ebsdlib::Ang::FileExt)
     {
-      err = H5Support::H5Lite::writeStringDataset(fileId, EbsdLib::H5Ebsd::Manufacturer, EbsdLib::Ang::Manufacturer);
+      err = H5Support::H5Lite::writeStringDataset(fileId, ebsdlib::H5Ebsd::Manufacturer, ebsdlib::Ang::Manufacturer);
       if(err < 0)
       {
 
         std::string ss = fmt::format("Could not write the Manufacturer Data to the HDF5 File");
         return MakeErrorResult(-99509, ss);
       }
-      fileImporter = H5AngImporter::New();
+      fileImporter = ebsdlib::H5AngImporter::New();
     }
-    else if(ext == EbsdLib::Ctf::FileExt)
+    else if(ext == ebsdlib::Ctf::FileExt)
     {
-      err = H5Support::H5Lite::writeStringDataset(fileId, EbsdLib::H5Ebsd::Manufacturer, EbsdLib::Ctf::Manufacturer);
+      err = H5Support::H5Lite::writeStringDataset(fileId, ebsdlib::H5Ebsd::Manufacturer, ebsdlib::Ctf::Manufacturer);
       if(err < 0)
       {
         std::string ss = fmt::format("Could not write the Manufacturer Data to the HDF5 File");
         return MakeErrorResult(-99510, ss);
       }
-      fileImporter = H5CtfImporter::New();
-      CtfReader ctfReader;
+      fileImporter = ebsdlib::H5CtfImporter::New();
+      ebsdlib::CtfReader ctfReader;
       ctfReader.setFileName(fileList.front());
       err = ctfReader.readHeaderOnly();
       if(ctfReader.getZCells() > 1 && fileList.size() == 1)
@@ -265,7 +265,7 @@ Result<> EbsdToH5Ebsd::operator()()
     }
 
     // Write Z index start, Z index end and Z Spacing to the HDF5 file
-    err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::ZStartIndex, zStartIndex);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::ZStartIndex, zStartIndex);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Z Start Index Scalar to the HDF5 File");
@@ -273,35 +273,35 @@ Result<> EbsdToH5Ebsd::operator()()
     }
 
     auto zEndIndex = zStartIndex + totalSlicesImported - 1;
-    err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::ZEndIndex, zEndIndex);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::ZEndIndex, zEndIndex);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Z End Index Scalar to the HDF5 File");
       return MakeErrorResult(-99515, ss);
     }
 
-    err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::XPoints, biggestXDim);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::XPoints, biggestXDim);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the XPoints Scalar to HDF5 file");
       return MakeErrorResult(-99516, ss);
     }
 
-    err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::YPoints, biggestYDim);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::YPoints, biggestYDim);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the YPoints Scalar to HDF5 file");
       return MakeErrorResult(-99517, ss);
     }
 
-    err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::XResolution, xRes);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::XResolution, xRes);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the XResolution Scalar to HDF5 file");
       return MakeErrorResult(-99518, ss);
     }
 
-    err = H5Support::H5Lite::writeScalarDataset(fileId, EbsdLib::H5Ebsd::YResolution, yRes);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::YResolution, yRes);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the YResolution Scalar to HDF5 file");
@@ -313,7 +313,7 @@ Result<> EbsdToH5Ebsd::operator()()
       // Write an Index data set which contains all the z index values which
       // should help speed up the reading side of this file
       std::vector<hsize_t> dimsL = {static_cast<hsize_t>(indices.size())};
-      err = H5Support::H5Lite::writeVectorDataset(fileId, std::string(EbsdLib::H5Ebsd::Index), dimsL, indices);
+      err = H5Support::H5Lite::writeVectorDataset(fileId, std::string(ebsdlib::H5Ebsd::Index), dimsL, indices);
       if(err < 0)
       {
         std::string ss = fmt::format("Error writing index dataset to H5Ebsd");

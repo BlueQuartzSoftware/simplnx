@@ -2,11 +2,14 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "EbsdLib/Core/OrientationRepresentation.h"
-
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
+
+#include <string>
 
 namespace nx::core
 {
@@ -16,7 +19,7 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ConvertOrientationsToVertexGeometryInputValues
 {
-  OrientationRepresentation::Type InputOrientationType;
+  ebsdlib::orientations::Type InputOrientationType;
   DataPath InputOrientationArrayPath;
   std::vector<DataPath> CopyVertexArrayPaths;
   bool ConvertToFundamentalZone;

@@ -7,9 +7,10 @@
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/OrientationTransformation.hpp"
-#include "EbsdLib/Core/Quaternion.hpp"
+#include <EbsdLib/Core/Orientation.hpp>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <EbsdLib/Orientation/OrientationMatrix.hpp>
+#include <EbsdLib/Orientation/Quaternion.hpp>
 
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
@@ -43,7 +44,7 @@ Result<> ComputeAvgCAxes::operator()()
   for(usize i = 1; i < crystalStructures.size(); ++i)
   {
     const auto crystalStructureType = crystalStructures[i];
-    const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low;
+    const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
     allPhasesHexagonal = allPhasesHexagonal && isHex;
     noPhasesHexagonal = noPhasesHexagonal && !isHex;
   }
@@ -70,8 +71,6 @@ Result<> ComputeAvgCAxes::operator()()
   const usize totalPoints = featureIds.getNumberOfTuples();
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
 
-  Matrix3dR g1T;
-  g1T.fill(0.0f);
   const Eigen::Vector3d cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3d c1{0.0f, 0.0f, 0.0f};
 
@@ -89,7 +88,7 @@ Result<> ComputeAvgCAxes::operator()()
       const usize cAxesIndex = 3 * currentFeatureId;
 
       // Ensure the Laue class is correct, otherwise mark the values with a NaN and continue
-      if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
+      if(crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_Low)
       {
         avgCAxes[cAxesIndex] = NAN;
         avgCAxes[cAxesIndex + 1] = NAN;
@@ -101,15 +100,13 @@ Result<> ComputeAvgCAxes::operator()()
       const usize quatIndex = i * 4;
 
       // Create the 3x3 Orientation Matrix from the Quaternion. This represents a passive rotation matrix
-      OrientationD oMatrix = OrientationTransformation::qu2om<QuatD, OrientationD>({quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]});
+      ebsdlib::OrientationMatrixDType oMatrix = ebsdlib::QuaternionDType(quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]).toOrientationMatrix();
 
       // Convert the passive rotation matrix to an active rotation matrix by taking the transpose
-      g1T = OrientationMatrixToGMatrixTranspose(oMatrix);
-
       // Multiply the active transformation matrix by the C-Axis (as Miller Index). This actively rotates
       // the crystallographic C-Axis (which is along the <0,0,1> direction) into the physical sample
       // reference frame
-      c1 = g1T * cAxis;
+      c1 = oMatrix.transpose() * cAxis;
 
       // normalize so that the magnitude is 1
       c1.normalize();
@@ -124,7 +121,7 @@ Result<> ComputeAvgCAxes::operator()()
       // Ensure that angle between the current point's sample reference frame C-Axis
       // and the running average sample C-Axis is positive
       float64 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
-      if(w < 0)
+      if(w < 0.0)
       {
         c1 *= -1.0f;
       }
