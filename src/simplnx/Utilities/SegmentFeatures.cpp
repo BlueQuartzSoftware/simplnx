@@ -148,7 +148,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   // Initialize a sequence of execution modifiers
   int32 gnum = 1;
   int64 nextSeed = 0;
-  int64 seed = getSeed(gnum, nextSeed);
+  int64 seed = 0; // Always use the very first value of the array that we are using to segment
   usize size = 0;
 
   // Initialize containers
@@ -205,18 +205,18 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
       totalVoxelsSegmented += size;
     }
 
+    // Send a progress message
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{:.2f}% - Features Found: {}", 100.0f * static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels), gnum); });
+    // Increment or set values for the next iteration
     voxelsList.assign(size + 1, -1);
     gnum++;
-
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{:.2f}% - Features Found: {}", 100.0f * static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels), gnum); });
-
+    // Get the next seed value
+    seed = getSeed(gnum, nextSeed); // If seed ends up being -1, then we will exit the loop.
     nextSeed = seed + 1;
-    seed = getSeed(gnum, nextSeed);
   }
 
-  m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", gnum));
-
-  m_FoundFeatures = gnum;
+  m_FoundFeatures = gnum - 1; // Decrement the gnum because it will end up 1 larger than it should have been.
+  m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
   return {};
 }
 

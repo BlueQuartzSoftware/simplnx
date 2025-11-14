@@ -40,7 +40,7 @@ Uuid RandomizeFeatureIdsFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string RandomizeFeatureIdsFilter::humanName() const
 {
-  return "Randomize Feature IDs";
+  return "Randomize Feature Ids";
 }
 
 //------------------------------------------------------------------------------
