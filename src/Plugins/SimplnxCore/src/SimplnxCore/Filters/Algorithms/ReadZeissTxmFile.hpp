@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/CropGeometryParameter.hpp"
 
 #include "oless/pole.h"
 
@@ -34,9 +35,7 @@ struct SIMPLNXCORE_EXPORT ReadZeissTxmFileInputValues
   std::string CellAttributeMatrixName;
   std::string DensityArrayName;
   std::filesystem::path TxmDataFile;
-  bool UseSubVolume;
-  usize SubVolumeStartSlice;
-  usize SubVolumeEndSlice;
+  CropGeometryParameter::ValueType CroppingOptions;
 };
 
 /**
