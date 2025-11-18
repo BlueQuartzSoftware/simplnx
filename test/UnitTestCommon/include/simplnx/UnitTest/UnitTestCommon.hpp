@@ -17,6 +17,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ArrayThresholdsParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -1313,6 +1314,129 @@ inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, std:
     }
   }
 }
+
+namespace Cropping
+{
+inline std::string BoolToString(bool v)
+{
+  return v ? "True" : "False";
+}
+
+inline std::string CropTypeToString(CropGeometryParameter::CropValues::TypeEnum t)
+{
+  using T = CropGeometryParameter::CropValues::TypeEnum;
+  switch(t)
+  {
+  case T::NoCropping:
+    return "NoCropping";
+  case T::VoxelSubvolume:
+    return "VoxelSubvolume";
+  case T::PhysicalSubvolume:
+    return "PhysicalSubvolume";
+  }
+  return "Unknown";
+}
+
+struct AxisBoundsChoices
+{
+  std::vector<IntVec2Type> voxelX;
+  std::vector<IntVec2Type> voxelY;
+  std::vector<IntVec2Type> voxelZ;
+  std::vector<FloatVec2Type> physX;
+  std::vector<FloatVec2Type> physY;
+  std::vector<FloatVec2Type> physZ;
+};
+
+//------------------------------------------------------------------------------
+inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBoundsChoices& C)
+{
+  std::vector<CropGeometryParameter::ValueType> out;
+
+  // NoCropping
+  {
+    CropGeometryParameter::ValueType cv;
+    cv.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
+    cv.cropX = false;
+    cv.cropY = false;
+    cv.cropZ = false;
+    out.push_back(cv);
+  }
+
+  const std::array<std::tuple<bool, bool, bool>, 7> kFlagOrder = {std::tuple{false, false, true}, std::tuple{false, true, false}, std::tuple{false, true, true}, std::tuple{true, false, false},
+                                                                  std::tuple{true, false, true},  std::tuple{true, true, false},  std::tuple{true, true, true}};
+
+  for(const auto& [cx, cy, cz] : kFlagOrder)
+  {
+    std::vector<std::optional<IntVec2Type>> xOpts = cx ? std::vector<std::optional<IntVec2Type>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+    std::vector<std::optional<IntVec2Type>> yOpts = cy ? std::vector<std::optional<IntVec2Type>>(C.voxelY.begin(), C.voxelY.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+    std::vector<std::optional<IntVec2Type>> zOpts = cz ? std::vector<std::optional<IntVec2Type>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+
+    for(const auto& xb : xOpts)
+    {
+      for(const auto& yb : yOpts)
+      {
+        for(const auto& zb : zOpts)
+        {
+          CropGeometryParameter::ValueType cv;
+          cv.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
+          cv.cropX = cx;
+          cv.cropY = cy;
+          cv.cropZ = cz;
+          if(xb)
+          {
+            cv.xBoundVoxels = *xb;
+          }
+          if(yb)
+          {
+            cv.yBoundVoxels = *yb;
+          }
+          if(zb)
+          {
+            cv.zBoundVoxels = *zb;
+          }
+          out.push_back(cv);
+        }
+      }
+    }
+  }
+  for(const auto& [cx, cy, cz] : kFlagOrder)
+  {
+    std::vector<std::optional<FloatVec2Type>> xOpts = cx ? std::vector<std::optional<FloatVec2Type>>(C.physX.begin(), C.physX.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+    std::vector<std::optional<FloatVec2Type>> yOpts = cy ? std::vector<std::optional<FloatVec2Type>>(C.physY.begin(), C.physY.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+    std::vector<std::optional<FloatVec2Type>> zOpts = cz ? std::vector<std::optional<FloatVec2Type>>(C.physZ.begin(), C.physZ.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+
+    for(const auto& xb : xOpts)
+    {
+      for(const auto& yb : yOpts)
+      {
+        for(const auto& zb : zOpts)
+        {
+          CropGeometryParameter::ValueType cv;
+          cv.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+          cv.cropX = cx;
+          cv.cropY = cy;
+          cv.cropZ = cz;
+          if(xb)
+          {
+            cv.xBoundPhysical = *xb;
+          }
+          if(yb)
+          {
+            cv.yBoundPhysical = *yb;
+          }
+          if(zb)
+          {
+            cv.zBoundPhysical = *zb;
+          }
+          out.push_back(cv);
+        }
+      }
+    }
+  }
+
+  return out;
+}
+} // namespace Cropping
 
 } // namespace UnitTest
 
