@@ -34,7 +34,7 @@ const DataPath k_ExemplarSubVolumePath({"Exemplar Sub Volume"});
 TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Full_Volume", "[SimplnxReview][ReadZeissTxmFileFilter]")
 {
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest.tar.gz", "ReadZeissTxmFileTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.dream3d", unit_test::k_TestFilesDir));
@@ -43,6 +43,9 @@ TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Full_Volume", "[SimplnxRev
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadZeissTxmFileFilter filter;
   Arguments args;
+
+  const std::string exemplaryGeomName = "ImageGeometry 001 (CroppingOptions=[NoCropping, False, False, False])";
+  auto exemplarFullVolumePath = DataPath({exemplaryGeomName});
 
   std::filesystem::path filePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.txm", unit_test::k_TestFilesDir));
 
@@ -65,9 +68,9 @@ TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Full_Volume", "[SimplnxRev
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_zeiss_txm_file_test_output.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CompareImageGeometry(dataStructure, ::k_ExemplarFullVolumePath, ::k_CreatedImageGeometryPath);
+  UnitTest::CompareImageGeometry(dataStructure, exemplarFullVolumePath, ::k_CreatedImageGeometryPath);
 
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, ::k_ExemplarFullVolumePath.createChildPath("Cell Data"), dataStructure, ::k_CreatedImageGeometryPath.createChildPath("Cell Data"));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFullVolumePath.createChildPath("Cell Data"), dataStructure, ::k_CreatedImageGeometryPath.createChildPath("Cell Data"));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
