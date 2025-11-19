@@ -6,11 +6,9 @@ IO (Read)
 
 ## Description ##
 
-This filter will read the entire volume or optionally a subvolume from a .txm or .txrm file. These files
-are Zeiss xCT reconstruction files.
+This filter will read the entire volume or optionally a cropped subvolume from a .txm or .txrm file. These files are Zeiss xCT reconstruction files.
 
-The minimum slice always starts at 1.
-The last slice is inclusive.
+The cropping type options in the Cropping Options section are `No Cropping` to read the full volume into an image geometry, `Voxel Subvolume` to read a subvolume into an image geometry using voxel coordinates, and `Physical Subvolume` to read a subvolume into an image geometry using physical coordinates.  Both subvolume cropping types have checkboxes to turn on/off cropping in each of the X, Y, and Z dimensions.  So for example, if the cropping type `Physical Subvolume` is selected, `Crop Y Dimension` is turned on, and `Crop X Dimension` and `Crop Z Dimension` are turned off, then the incoming volume will be cropped in the Y dimension only and the cropping bounds will be in physical units.
 
 ## WARNING
 
