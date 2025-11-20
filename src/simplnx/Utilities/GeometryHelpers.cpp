@@ -18,7 +18,7 @@ std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core:
   for(size_t i = 0; i < 3; i++)
   {
     description << label[i] << " Bounds: " << origin[i] << " to " << (origin[i] + (static_cast<float>(dims[i]) * spacing[i])) << " (Delta: " << (dims[i] * spacing[i]) << ") " << unitStr
-                << "     Extent: " << 0 << "-" << dims[i] - 1 << "  Dims: " << dims[i] << " Voxels  Spacing: " << spacing[i] << "\n";
+                << "    |  Extent: " << 0 << "-" << dims[i] - 1 << "    |  Dims: " << dims[i] << " Voxels    |  Spacing: " << spacing[i] << "\n";
   }
 
   return description.str();
