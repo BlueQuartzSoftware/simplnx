@@ -164,126 +164,6 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
   UnitTest::CompareDataArrays<uint8>(xGeneratedImageData, xFlippedImageData);
   UnitTest::CompareDataArrays<uint8>(yGeneratedImageData, yFlippedImageData);
 }
-
-struct AxisBoundsChoices
-{
-  std::vector<IntVec2Type> voxelX{{IntVec2Type{50, 150}}};
-  std::vector<IntVec2Type> voxelY{{IntVec2Type{50, 150}}};
-  std::vector<IntVec2Type> voxelZ{{IntVec2Type{0, 1}}};
-
-  std::vector<FloatVec2Type> physX{{FloatVec2Type{100.0f, 300.0f}}};
-  std::vector<FloatVec2Type> physY{{FloatVec2Type{100.0f, 300.0f}}};
-  std::vector<FloatVec2Type> physZ{{FloatVec2Type{10.0f, 30.0f}}};
-};
-
-std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBoundsChoices& C)
-{
-  std::vector<CropGeometryParameter::ValueType> out;
-
-  // NoCropping
-  {
-    CropGeometryParameter::ValueType cv;
-    cv.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
-    cv.cropX = false;
-    cv.cropY = false;
-    cv.cropZ = false;
-    out.push_back(cv);
-  }
-
-  const std::array<std::tuple<bool, bool, bool>, 7> kFlagOrder = {std::tuple{false, false, true}, std::tuple{false, true, false}, std::tuple{false, true, true}, std::tuple{true, false, false},
-                                                                  std::tuple{true, false, true},  std::tuple{true, true, false},  std::tuple{true, true, true}};
-
-  for(const auto& [cx, cy, cz] : kFlagOrder)
-  {
-    std::vector<std::optional<IntVec2Type>> xOpts = cx ? std::vector<std::optional<IntVec2Type>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
-    std::vector<std::optional<IntVec2Type>> yOpts = cy ? std::vector<std::optional<IntVec2Type>>(C.voxelY.begin(), C.voxelY.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
-    std::vector<std::optional<IntVec2Type>> zOpts = cz ? std::vector<std::optional<IntVec2Type>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
-
-    for(const auto& xb : xOpts)
-    {
-      for(const auto& yb : yOpts)
-      {
-        for(const auto& zb : zOpts)
-        {
-          CropGeometryParameter::ValueType cv;
-          cv.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-          cv.cropX = cx;
-          cv.cropY = cy;
-          cv.cropZ = cz;
-          if(xb)
-          {
-            cv.xBoundVoxels = *xb;
-          }
-          if(yb)
-          {
-            cv.yBoundVoxels = *yb;
-          }
-          if(zb)
-          {
-            cv.zBoundVoxels = *zb;
-          }
-          out.push_back(cv);
-        }
-      }
-    }
-  }
-  for(const auto& [cx, cy, cz] : kFlagOrder)
-  {
-    std::vector<std::optional<FloatVec2Type>> xOpts = cx ? std::vector<std::optional<FloatVec2Type>>(C.physX.begin(), C.physX.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
-    std::vector<std::optional<FloatVec2Type>> yOpts = cy ? std::vector<std::optional<FloatVec2Type>>(C.physY.begin(), C.physY.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
-    std::vector<std::optional<FloatVec2Type>> zOpts = cz ? std::vector<std::optional<FloatVec2Type>>(C.physZ.begin(), C.physZ.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
-
-    for(const auto& xb : xOpts)
-    {
-      for(const auto& yb : yOpts)
-      {
-        for(const auto& zb : zOpts)
-        {
-          CropGeometryParameter::ValueType cv;
-          cv.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-          cv.cropX = cx;
-          cv.cropY = cy;
-          cv.cropZ = cz;
-          if(xb)
-          {
-            cv.xBoundPhysical = *xb;
-          }
-          if(yb)
-          {
-            cv.yBoundPhysical = *yb;
-          }
-          if(zb)
-          {
-            cv.zBoundPhysical = *zb;
-          }
-          out.push_back(cv);
-        }
-      }
-    }
-  }
-
-  return out;
-}
-
-std::string BoolToString(bool v)
-{
-  return v ? "True" : "False";
-}
-
-std::string CropTypeToString(CropGeometryParameter::CropValues::TypeEnum t)
-{
-  using T = CropGeometryParameter::CropValues::TypeEnum;
-  switch(t)
-  {
-  case T::NoCropping:
-    return "NoCropping";
-  case T::VoxelSubvolume:
-    return "VoxelSubvolume";
-  case T::PhysicalSubvolume:
-    return "PhysicalSubvolume";
-  }
-  return "Unknown";
-}
 } // namespace
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoInput", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -553,8 +433,14 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: All Combinations", "[I
   fileList.endIndex = 2;
   fileList.paddingDigits = 1;
 
-  const AxisBoundsChoices bounds{};
-  auto allCropVals = GenerateAllCropValues(bounds);
+  UnitTest::Cropping::AxisBoundsChoices bounds;
+  bounds.voxelX = {IntVec2Type{50, 150}};
+  bounds.voxelY = {IntVec2Type{50, 150}};
+  bounds.voxelZ = {IntVec2Type{0, 1}};
+  bounds.physX = {FloatVec2Type{100.0f, 300.0f}};
+  bounds.physY = {FloatVec2Type{100.0f, 300.0f}};
+  bounds.physZ = {FloatVec2Type{10.0f, 30.0f}};
+  auto allCropVals = UnitTest::Cropping::GenerateAllCropValues(bounds);
 
   bool convertToGrayScale = GENERATE(false, true);
   ChoicesParameter::ValueType resampleIdx = GENERATE(0, 1, 2);
@@ -567,8 +453,9 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: All Combinations", "[I
   const int myId = geomCounter.fetch_add(1);
 
   const std::string exemplaryGeomName =
-      fmt::format("ImageGeometry {:0>3} (CroppingOptions=[{}, {}, {}, {}] Resample={} ImageFlip={} Grayscale={})", myId, CropTypeToString(croppingOptions.type), BoolToString(croppingOptions.cropX),
-                  BoolToString(croppingOptions.cropY), BoolToString(croppingOptions.cropZ), resampleIdx, imageTransformIdx, BoolToString(convertToGrayScale));
+      fmt::format("ImageGeometry {:0>3} (CroppingOptions=[{}, {}, {}, {}] Resample={} ImageFlip={} Grayscale={})", myId, UnitTest::Cropping::CropTypeToString(croppingOptions.type),
+                  UnitTest::Cropping::BoolToString(croppingOptions.cropX), UnitTest::Cropping::BoolToString(croppingOptions.cropY), UnitTest::Cropping::BoolToString(croppingOptions.cropZ),
+                  resampleIdx, imageTransformIdx, UnitTest::Cropping::BoolToString(convertToGrayScale));
   const std::string computedGeomName = "ImageGeometry";
 
   DYNAMIC_SECTION(exemplaryGeomName)

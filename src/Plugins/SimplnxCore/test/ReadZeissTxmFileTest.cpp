@@ -34,7 +34,7 @@ const DataPath k_ExemplarSubVolumePath({"Exemplar Sub Volume"});
 TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Full_Volume", "[SimplnxReview][ReadZeissTxmFileFilter]")
 {
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest.tar.gz", "ReadZeissTxmFileTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.dream3d", unit_test::k_TestFilesDir));
@@ -44,6 +44,9 @@ TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Full_Volume", "[SimplnxRev
   ReadZeissTxmFileFilter filter;
   Arguments args;
 
+  const std::string exemplaryGeomName = "ImageGeometry 001 (CroppingOptions=[NoCropping, False, False, False])";
+  auto exemplarFullVolumePath = DataPath({exemplaryGeomName});
+
   std::filesystem::path filePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.txm", unit_test::k_TestFilesDir));
 
   // Create default Parameters for the filter.
@@ -51,10 +54,6 @@ TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Full_Volume", "[SimplnxRev
   args.insertOrAssign(ReadZeissTxmFileFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataGroupCreationParameter::ValueType>(k_CreatedImageGeometryPath));
   args.insertOrAssign(ReadZeissTxmFileFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName));
   args.insertOrAssign(ReadZeissTxmFileFilter::k_CTDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_CTDataArrayName));
-
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_Use_SubVolume_Key, std::make_any<BoolParameter::ValueType>(false));
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_SubVolumeStartSlice_Key, std::make_any<UInt32Parameter::ValueType>(1));
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_SubVolumeEndSlice_Key, std::make_any<UInt32Parameter::ValueType>(1));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -69,54 +68,74 @@ TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Full_Volume", "[SimplnxRev
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_zeiss_txm_file_test_output.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CompareImageGeometry(dataStructure, ::k_ExemplarFullVolumePath, ::k_CreatedImageGeometryPath);
+  UnitTest::CompareImageGeometry(dataStructure, exemplarFullVolumePath, ::k_CreatedImageGeometryPath);
 
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, ::k_ExemplarFullVolumePath.createChildPath("Cell Data"), dataStructure, ::k_CreatedImageGeometryPath.createChildPath("Cell Data"));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarFullVolumePath.createChildPath("Cell Data"), dataStructure, ::k_CreatedImageGeometryPath.createChildPath("Cell Data"));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Sub_Volume", "[SimplnxReview][ReadZeissTxmFileFilter]")
 {
+  // ************************************************************************************************
+  // This section creates all the possible cropping options and then uses GENERATE_COPY to execute the full test case for each cropping option
+  UnitTest::Cropping::AxisBoundsChoices bounds;
+  bounds.voxelX = {IntVec2Type{10, 30}};
+  bounds.voxelY = {IntVec2Type{10, 30}};
+  bounds.voxelZ = {IntVec2Type{50, 100}};
+  bounds.physX = {FloatVec2Type{10.0f, 100.0f}};
+  bounds.physY = {FloatVec2Type{80.0f, 120.0f}};
+  bounds.physZ = {FloatVec2Type{150.0f, 200.0f}};
+  auto allCropVals = GenerateAllCropValues(bounds);
+  auto croppingOptions = GENERATE_COPY(from_range(allCropVals));
+  // ************************************************************************************************
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest.tar.gz", "ReadZeissTxmFileTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  ReadZeissTxmFileFilter filter;
-  Arguments args;
+  static std::atomic<int> geomCounter{1};
+  const int myId = geomCounter.fetch_add(1);
 
-  std::filesystem::path filePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.txm", unit_test::k_TestFilesDir));
+  const std::string exemplaryGeomName =
+      fmt::format("ImageGeometry {:0>3} (CroppingOptions=[{}, {}, {}, {}])", myId, UnitTest::Cropping::CropTypeToString(croppingOptions.type), UnitTest::Cropping::BoolToString(croppingOptions.cropX),
+                  UnitTest::Cropping::BoolToString(croppingOptions.cropY), UnitTest::Cropping::BoolToString(croppingOptions.cropZ));
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_TxmInputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(filePath));
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataGroupCreationParameter::ValueType>(k_CreatedImageGeometryPath));
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName));
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_CTDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_CTDataArrayName));
+  DYNAMIC_SECTION(exemplaryGeomName)
+  {
+    ReadZeissTxmFileFilter filter;
+    Arguments args;
 
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_Use_SubVolume_Key, std::make_any<BoolParameter::ValueType>(true));
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_SubVolumeStartSlice_Key, std::make_any<UInt32Parameter::ValueType>(50));
-  args.insertOrAssign(ReadZeissTxmFileFilter::k_SubVolumeEndSlice_Key, std::make_any<UInt32Parameter::ValueType>(55));
+    std::filesystem::path filePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.txm", unit_test::k_TestFilesDir));
 
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    // Create default Parameters for the filter.
+    args.insertOrAssign(ReadZeissTxmFileFilter::k_TxmInputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(filePath));
+    args.insertOrAssign(ReadZeissTxmFileFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataGroupCreationParameter::ValueType>(k_CreatedImageGeometryPath));
+    args.insertOrAssign(ReadZeissTxmFileFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName));
+    args.insertOrAssign(ReadZeissTxmFileFilter::k_CTDataArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_CTDataArrayName));
+    args.insertOrAssign(ReadZeissTxmFileFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(croppingOptions));
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-  // Write the DataStructure out to the file system
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_zeiss_txm_file_test_output.dream3d", unit_test::k_BinaryTestOutputDir)));
+    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_zeiss_txm_file_test_output.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CompareImageGeometry(dataStructure, ::k_ExemplarSubVolumePath, ::k_CreatedImageGeometryPath);
+    UnitTest::CompareImageGeometry(dataStructure, DataPath({exemplaryGeomName}), DataPath({k_CreatedImageGeometryPath}));
 
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, ::k_ExemplarSubVolumePath.createChildPath("Cell Data"), dataStructure, ::k_CreatedImageGeometryPath.createChildPath("Cell Data"));
+    auto exemplaryAttrMatrixPath = DataPath({exemplaryGeomName}).createChildPath(Constants::k_Cell_Data);
+    auto computedAttrMatrixPath = DataPath({k_CreatedImageGeometryPath}).createChildPath(Constants::k_Cell_Data);
+    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplaryAttrMatrixPath, dataStructure, computedAttrMatrixPath, true);
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

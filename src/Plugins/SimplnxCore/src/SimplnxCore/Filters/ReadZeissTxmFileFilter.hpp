@@ -29,9 +29,7 @@ public:
   static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
   static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
   static constexpr StringLiteral k_CTDataArrayName_Key = "ct_data_array_name";
-  static constexpr StringLiteral k_Use_SubVolume_Key = "use_sub_volume";
-  static constexpr StringLiteral k_SubVolumeStartSlice_Key = "sub_volume_start_slice";
-  static constexpr StringLiteral k_SubVolumeEndSlice_Key = "sub_volume_end_slice";
+  static constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
 
   /**
    * @brief Returns the name of the filter.

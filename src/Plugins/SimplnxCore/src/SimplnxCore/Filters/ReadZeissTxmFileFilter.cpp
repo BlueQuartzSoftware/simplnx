@@ -1,6 +1,7 @@
 #include "ReadZeissTxmFileFilter.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/ReadZeissTxmFile.hpp"
+#include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -10,10 +11,9 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
 using namespace read_zeiss_txm;
@@ -78,11 +78,11 @@ Parameters ReadZeissTxmFileFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_TxmInputFilePath_Key, "Zeiss TXM/TXRM File", "The input Zeiss TXM/TXRM file", fs::path("input.txm"),
                                                           FileSystemPathParameter::ExtensionsType{".txm", ".txrm"}, FileSystemPathParameter::PathType::InputFile));
 
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Use_SubVolume_Key, "Use Z Sub-volume", "Only import a sub-set of the slices", false));
-  params.insert(std::make_unique<UInt32Parameter>(k_SubVolumeStartSlice_Key, "Slice Start", "The starting slice to import", 1));
-  params.insert(std::make_unique<UInt32Parameter>(k_SubVolumeEndSlice_Key, "Slice End (inclusive)", "The ending slice to import (inclusive)", 2));
-  params.linkParameters(k_Use_SubVolume_Key, k_SubVolumeStartSlice_Key, true);
-  params.linkParameters(k_Use_SubVolume_Key, k_SubVolumeEndSlice_Key, true);
+  params.insertSeparator(Parameters::Separator{"Cropping Options"});
+  params.insert(std::make_unique<CropGeometryParameter>(
+      k_CroppingOptions_Key, "Cropping Options",
+      "The cropping options used to crop the incoming data.  These include picking the cropping type, the cropping dimensions, and the cropping ranges for each chosen dimension.",
+      CropGeometryParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to create the Image Geometry", DataPath({"Zeiss CT"})));
@@ -114,10 +114,7 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   auto pNewImageGeometryPathValue = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pDensityArrayNameValue = filterArgs.value<std::string>(k_CTDataArrayName_Key);
-
-  auto pUseSubVolume = filterArgs.value<bool>(k_Use_SubVolume_Key);
-  auto pSliceStart = filterArgs.value<uint32>(k_SubVolumeStartSlice_Key);
-  auto pSliceEnd = filterArgs.value<uint32>(k_SubVolumeEndSlice_Key);
+  auto pCroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -142,57 +139,113 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   ZeissTxmHeaderMetadata& metadata = s_HeaderCache[m_InstanceId].metaData;
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(metadata.Dimensions, metadata.Spacing, metadata.Origin, metadata.Units)});
 
-  // Sanity Check Sub-Volumes
-  if(pUseSubVolume && pSliceEnd < pSliceStart)
-  {
-    return {MakeErrorResult<OutputActions>(-33530, fmt::format("The start slice '{}' is greater than the slice end '{}'", pSliceStart, pSliceEnd)), preflightUpdatedValues};
-  }
-  if(pUseSubVolume && pSliceStart >= metadata.Dimensions[2])
-  {
-    return {MakeErrorResult<OutputActions>(-33531, fmt::format("The start slice '{}' is greater than the total number of slices", pSliceStart, metadata.Dimensions[2])), preflightUpdatedValues};
-  }
-  if(pUseSubVolume && pSliceEnd > metadata.Dimensions[2])
-  {
-    return {MakeErrorResult<OutputActions>(-33532, fmt::format("The end slice '{}' is greater than the total number of slices", pSliceEnd, metadata.Dimensions[2])), preflightUpdatedValues};
-  }
-  if(pUseSubVolume && pSliceStart < 1)
-  {
-    return {MakeErrorResult<OutputActions>(-33533, fmt::format("The start slice '{}' must be 0 or greater", pSliceStart)), preflightUpdatedValues};
-  }
+  CreateImageGeometryAction::DimensionType dims = metadata.Dimensions;
+  CreateImageGeometryAction::OriginType origin = metadata.Origin;
+  CreateImageGeometryAction::SpacingType spacing = metadata.Spacing;
 
-  CreateImageGeometryAction::DimensionType finalDimensions = metadata.Dimensions;
-  CreateImageGeometryAction::OriginType finalOrigin = metadata.Origin;
-  // If we are using a sub-volume, update the dimensions
-  if(pUseSubVolume)
-  {
-    finalDimensions[2] = pSliceEnd - pSliceStart + 1;
-    finalOrigin[2] = metadata.Spacing[2] * static_cast<float>(pSliceStart - 1);
-  }
+  DataStructure tmpDs;
+  OutputActions tmpActions;
 
-  auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeometryPathValue, finalDimensions, finalOrigin, metadata.Spacing, pCellAttributeMatrixNameValue);
-  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
+  auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeometryPathValue, dims, origin, spacing, pCellAttributeMatrixNameValue);
+  tmpActions.appendAction(std::move(createImageGeometryAction));
 
   // Create the input data array
   const DataPath dap = pNewImageGeometryPathValue.createChildPath(pCellAttributeMatrixNameValue).createChildPath(pDensityArrayNameValue);
-  CreateImageGeometryAction::DimensionType revDimensions = {finalDimensions[2], finalDimensions[1], finalDimensions[0]};
+  CreateImageGeometryAction::DimensionType revDims = {dims[2], dims[1], dims[0]};
 
   if(metadata.DataType == ZeissTxmDataType::FLOAT_TYPE)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, revDimensions, std::vector<usize>{1}, dap);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, revDims, std::vector<usize>{1}, dap);
+    tmpActions.appendAction(std::move(createArrayAction));
+  }
+  if(metadata.DataType == ZeissTxmDataType::INT16_TYPE)
+  {
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint16, revDims, std::vector<usize>{1}, dap);
+    tmpActions.appendAction(std::move(createArrayAction));
+  }
+  if(metadata.DataType == ZeissTxmDataType::UCHAR_TYPE)
+  {
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, revDims, std::vector<usize>{1}, dap);
+    tmpActions.appendAction(std::move(createArrayAction));
+  }
+
+  Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
+  if(tmpActionsResult.invalid())
+  {
+    return {ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+  }
+
+  if(pCroppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
+  {
+    CropImageGeometryFilter cropImageGeomFilter;
+    Arguments cropImageGeomArgs;
+    cropImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(pNewImageGeometryPathValue));
+    cropImageGeomArgs.insertOrAssign("use_physical_bounds", std::make_any<bool>(pCroppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume));
+    cropImageGeomArgs.insertOrAssign("crop_x_dim", std::make_any<bool>(pCroppingOptions.cropX));
+    cropImageGeomArgs.insertOrAssign("crop_y_dim", std::make_any<bool>(pCroppingOptions.cropY));
+    cropImageGeomArgs.insertOrAssign("crop_z_dim", std::make_any<bool>(pCroppingOptions.cropZ));
+    if(pCroppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
+    {
+      cropImageGeomArgs.insertOrAssign("min_voxel",
+                                       std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(pCroppingOptions.xBoundVoxels[0]), static_cast<uint64>(pCroppingOptions.yBoundVoxels[0]),
+                                                                                        static_cast<uint64>(pCroppingOptions.zBoundVoxels[0])}));
+      cropImageGeomArgs.insertOrAssign("max_voxel",
+                                       std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(pCroppingOptions.xBoundVoxels[1]), static_cast<uint64>(pCroppingOptions.yBoundVoxels[1]),
+                                                                                        static_cast<uint64>(pCroppingOptions.zBoundVoxels[1])}));
+    }
+    else
+    {
+      cropImageGeomArgs.insertOrAssign(
+          "min_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(pCroppingOptions.xBoundPhysical[0]), static_cast<float64>(pCroppingOptions.yBoundPhysical[0]),
+                                                                         static_cast<float64>(pCroppingOptions.zBoundPhysical[0])}));
+      cropImageGeomArgs.insertOrAssign(
+          "max_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(pCroppingOptions.xBoundPhysical[1]), static_cast<float64>(pCroppingOptions.yBoundPhysical[1]),
+                                                                         static_cast<float64>(pCroppingOptions.zBoundPhysical[1])}));
+    }
+    cropImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(false));
+    cropImageGeomArgs.insertOrAssign("output_image_geometry_path", std::make_any<DataPath>(DataPath({pNewImageGeometryPathValue.getTargetName() + "_cropped"})));
+
+    PreflightResult cropImageResult = cropImageGeomFilter.preflight(tmpDs, cropImageGeomArgs, messageHandler, shouldCancel);
+    if(cropImageResult.outputActions.invalid())
+    {
+      return cropImageResult;
+    }
+
+    Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    if(actionsResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+    }
+
+    auto croppedGeom = tmpDs.getDataRefAs<ImageGeom>(DataPath({pNewImageGeometryPathValue.getTargetName() + "_cropped"}));
+    dims = croppedGeom.getDimensions().toContainer<std::vector<usize>>();
+    origin = croppedGeom.getOrigin().toContainer<std::vector<float32>>();
+    spacing = croppedGeom.getSpacing().toContainer<std::vector<float32>>();
+  }
+
+  createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pNewImageGeometryPathValue, dims, origin, spacing, pCellAttributeMatrixNameValue);
+  resultOutputActions.value().appendAction(std::move(createImageGeometryAction));
+
+  // Create the input data array
+  revDims = {dims[2], dims[1], dims[0]};
+
+  if(metadata.DataType == ZeissTxmDataType::FLOAT_TYPE)
+  {
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, revDims, std::vector<usize>{1}, dap);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   if(metadata.DataType == ZeissTxmDataType::INT16_TYPE)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint16, revDimensions, std::vector<usize>{1}, dap);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint16, revDims, std::vector<usize>{1}, dap);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   if(metadata.DataType == ZeissTxmDataType::UCHAR_TYPE)
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, revDimensions, std::vector<usize>{1}, dap);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, revDims, std::vector<usize>{1}, dap);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(finalDimensions, metadata.Spacing, finalOrigin, metadata.Units)});
+  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, metadata.Units)});
 
   return {std::move(resultOutputActions), preflightUpdatedValues};
 }
@@ -207,10 +260,7 @@ Result<> ReadZeissTxmFileFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.DensityArrayName = filterArgs.value<std::string>(k_CTDataArrayName_Key);
   inputValues.TxmDataFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_TxmInputFilePath_Key);
-
-  inputValues.UseSubVolume = filterArgs.value<bool>(k_Use_SubVolume_Key);
-  inputValues.SubVolumeStartSlice = filterArgs.value<uint32>(k_SubVolumeStartSlice_Key);
-  inputValues.SubVolumeEndSlice = filterArgs.value<uint32>(k_SubVolumeEndSlice_Key);
+  inputValues.CroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
 
   return ReadZeissTxmFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

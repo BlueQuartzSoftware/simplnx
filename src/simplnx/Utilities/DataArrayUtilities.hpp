@@ -613,6 +613,42 @@ Result<> CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usiz
   return {};
 }
 
+template <class T, class K>
+Result<> CopyData(const std::vector<T>& src, K& dst, usize dstTupleOffset, usize srcTupleOffset, usize totalSrcTuples, usize srcNumComponents)
+{
+  static_assert(std::is_same_v<T, typename K::value_type>, "Element type mismatch between std::vector<T> and DataArray<value_type>");
+
+  const usize dstNumComponents = dst.getNumberOfComponents();
+  if(srcNumComponents != dstNumComponents)
+  {
+    return MakeErrorResult(-2033, fmt::format("Component mismatch: source vector comps ({}) vs dest array comps ({})", srcNumComponents, dstNumComponents));
+  }
+
+  if(srcTupleOffset * srcNumComponents >= src.size())
+  {
+    return MakeErrorResult(-2032, fmt::format("Source tuple offset ({}) is not smaller than total source tuples ({})", srcTupleOffset, src.size() / srcNumComponents));
+  }
+
+  if(dstTupleOffset >= dst.getNumberOfTuples())
+  {
+    return MakeErrorResult(-2032, fmt::format("Destination tuple offset ({}) is not smaller than destination tuples ({})", dstTupleOffset, dst.getNumberOfTuples()));
+  }
+
+  const usize dstAvailableElems = dst.getNumberOfTuples() * dstNumComponents;
+  const usize elementsToCopy = totalSrcTuples * dstNumComponents + dstTupleOffset * dstNumComponents;
+  if(elementsToCopy > dstAvailableElems)
+  {
+    return MakeErrorResult(-2034, fmt::format("The total number of elements to copy ({}) is larger than the total available elements ({}).", elementsToCopy, dstAvailableElems));
+  }
+
+  auto srcBegin = src.begin() + (srcTupleOffset * srcNumComponents);
+  auto srcEnd = srcBegin + (totalSrcTuples * srcNumComponents);
+  auto dstBegin = dst.begin() + (dstTupleOffset * dstNumComponents);
+  std::copy(srcBegin, srcEnd, dstBegin);
+
+  return {};
+}
+
 /**
  * @brief Copy a block of tuples from inputArray into destArray.
  *
