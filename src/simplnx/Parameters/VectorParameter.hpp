@@ -197,6 +197,36 @@ using FloatToVec3FilterParameterConverter = MultiToVec3FilterParameterConverter<
 using DoubleToVec3FilterParameterConverter = MultiToVec3FilterParameterConverter<float64>;
 
 template <typename T>
+struct Vec2FilterParameterConverter
+{
+  using ParameterType = VectorParameter<T>;
+  using ValueType = typename ParameterType::ValueType;
+
+  static Result<ValueType> convert(const nlohmann::json& json);
+};
+
+extern template struct Vec2FilterParameterConverter<int8>;
+extern template struct Vec2FilterParameterConverter<uint8>;
+
+extern template struct Vec2FilterParameterConverter<int16>;
+extern template struct Vec2FilterParameterConverter<uint16>;
+
+extern template struct Vec2FilterParameterConverter<int32>;
+extern template struct Vec2FilterParameterConverter<uint32>;
+
+extern template struct Vec2FilterParameterConverter<int64>;
+extern template struct Vec2FilterParameterConverter<uint64>;
+
+extern template struct Vec2FilterParameterConverter<float32>;
+extern template struct Vec2FilterParameterConverter<float64>;
+
+using IntVec2FilterParameterConverter = Vec2FilterParameterConverter<int32>;
+using UInt32Vec2FilterParameterConverter = Vec2FilterParameterConverter<uint32>;
+using UInt64Vec2FilterParameterConverter = Vec2FilterParameterConverter<uint64>;
+using FloatVec2FilterParameterConverter = Vec2FilterParameterConverter<float32>;
+using DoubleVec2FilterParameterConverter = Vec2FilterParameterConverter<float64>;
+
+template <typename T>
 struct Vec3FilterParameterConverter
 {
   using ParameterType = VectorParameter<T>;

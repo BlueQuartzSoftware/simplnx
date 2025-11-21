@@ -436,6 +436,7 @@ namespace SIMPL
 {
 constexpr StringLiteral k_TriangleDataContainerNameKey = "TriangleDataContainerName";
 constexpr StringLiteral k_NodeTypesArrayPathKey = "NodeTypesArrayPath";
+constexpr StringLiteral k_InternalTrianglesNameKey = "InternalTrianglesName";
 } // namespace SIMPL
 } // namespace
 
@@ -448,6 +449,7 @@ Result<Arguments> ExtractInternalSurfacesFromTriangleGeometryFilter::FromSIMPLJs
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerNameKey, k_SelectedTriangleGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NodeTypesArrayPathKey, k_NodeTypesPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_InternalTrianglesNameKey, k_CreatedTriangleGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -301,7 +301,7 @@ IFilter::VersionType ComputeArrayStatisticsFilter::parametersVersion() const
   // Added - range based gating of feature ids and mapping
   // Solution - accept default values
   // New key list:
-  // - k_RangeType_Key = "range_type";
+  // - k_RangeType_Key = "range_type_index";
   // - k_Range_Key = "range";
   // - k_FeatureIdsIndexingName_Key = "feature_ids_indexing_name";
 }
