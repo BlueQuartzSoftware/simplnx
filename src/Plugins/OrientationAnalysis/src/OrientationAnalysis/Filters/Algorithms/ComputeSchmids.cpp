@@ -30,7 +30,7 @@ const std::atomic_bool& ComputeSchmids::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeSchmids::operator()()
 {
-  std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   const auto& avgQuatPtr = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
   const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
@@ -76,13 +76,12 @@ Result<> ComputeSchmids::operator()()
   for(size_t i = 1; i < totalFeatures; i++)
   {
     uint32_t laueClass = crystalStructures[featurePhases[i]];
-    if(laueClass >= EbsdLib::CrystalStructure::LaueGroupEnd)
+    if(laueClass >= ebsdlib::CrystalStructure::LaueGroupEnd)
     {
       continue;
     }
-    auto om = OrientationTransformation::qu2om<QuatF, OrientationD>({avgQuatPtr[i * 4 + 0], avgQuatPtr[i * 4 + 1], avgQuatPtr[i * 4 + 2], avgQuatPtr[i * 4 + 3]});
-    auto g = OrientationUtilities::OrientationMatrixToGMatrix(om);
-    Eigen::Vector3d crystalLoading = g * sampleLoading;
+    auto om = ebsdlib::QuaternionDType(avgQuatPtr[i * 4 + 0], avgQuatPtr[i * 4 + 1], avgQuatPtr[i * 4 + 2], avgQuatPtr[i * 4 + 3]).toOrientationMatrix();
+    Eigen::Vector3d crystalLoading = om * sampleLoading;
 
     if(!m_InputValues->OverrideSystem)
     {

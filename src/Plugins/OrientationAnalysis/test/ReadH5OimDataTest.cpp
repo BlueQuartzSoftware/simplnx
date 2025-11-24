@@ -41,7 +41,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Single Scan", "[Orientation
   Arguments args;
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/EdaxOIMData.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName_1}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_1}};
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
@@ -94,7 +94,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Multi Scan", "[OrientationA
   Arguments args;
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/EdaxOIMData.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName_1, k_ScanName_2, k_ScanName_3}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_1, k_ScanName_2, k_ScanName_3}};
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadH5OimDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
@@ -148,7 +148,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: InValid Filter Execution", 
   args.insertOrAssign(ReadH5OimDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/EdaxOIMData.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName_1}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_1}};
 
   SECTION("Invalid Z Spacing")
   {

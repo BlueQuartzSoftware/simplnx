@@ -6,9 +6,9 @@
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/Quaternion.hpp"
 #include <EbsdLib/Core/EbsdLibConstants.h>
+#include <EbsdLib/Core/Orientation.hpp>
+#include <EbsdLib/Orientation/Quaternion.hpp>
 
 #include <random>
 
@@ -21,7 +21,7 @@ MergeTwins::MergeTwins(DataStructure& dataStructure, const IFilter::MessageHandl
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
-  m_OrientationOps = LaueOps::GetAllOrientationOps();
+  m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 }
 
 // -----------------------------------------------------------------------------
@@ -82,13 +82,13 @@ bool MergeTwins::determineGrouping(int32 referenceFeature, int32 neighborFeature
   {
     uint32 laueClass = crystalStructures[phases[referenceFeature]];
 
-    QuatF q1(avgQuats[referenceFeature * 4], avgQuats[referenceFeature * 4 + 1], avgQuats[referenceFeature * 4 + 2], avgQuats[referenceFeature * 4 + 3]);
-    QuatF q2(avgQuats[neighborFeature * 4], avgQuats[neighborFeature * 4 + 1], avgQuats[neighborFeature * 4 + 2], avgQuats[neighborFeature * 4 + 3]);
+    ebsdlib::QuatD q1(avgQuats[referenceFeature * 4], avgQuats[referenceFeature * 4 + 1], avgQuats[referenceFeature * 4 + 2], avgQuats[referenceFeature * 4 + 3]);
+    ebsdlib::QuatD q2(avgQuats[neighborFeature * 4], avgQuats[neighborFeature * 4 + 1], avgQuats[neighborFeature * 4 + 2], avgQuats[neighborFeature * 4 + 3]);
 
     uint32 phase2 = crystalStructures[phases[neighborFeature]];
-    if(laueClass == phase2 && (laueClass == EbsdLib::CrystalStructure::Cubic_High))
+    if(laueClass == phase2 && (laueClass == ebsdlib::CrystalStructure::Cubic_High))
     {
-      OrientationD axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
+      ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
       double w = axisAngle[3];
       w *= (180.0f / numbers::pi);
       double axisDiff111 = std::acos(std::fabs(axisAngle[0]) * 0.57735f + std::fabs(axisAngle[1]) * 0.57735f + fabs(axisAngle[2]) * 0.57735f);
@@ -125,7 +125,7 @@ Result<> MergeTwins::operator()()
 
   for(usize i = 1; i < laueClasses.getSize(); i++)
   {
-    if(laueClasses[i] != EbsdLib::CrystalStructure::Cubic_High)
+    if(laueClasses[i] != ebsdlib::CrystalStructure::Cubic_High)
     {
       std::string msg = fmt::format("Phase '{}' is NOT m3m crystal symmetry. Data from this phase will not be used in this filter.", i);
       result = MakeWarningVoidResult(-23500, msg);

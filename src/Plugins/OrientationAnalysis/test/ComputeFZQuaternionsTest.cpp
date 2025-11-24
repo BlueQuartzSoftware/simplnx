@@ -49,8 +49,8 @@ DataStructure CreateDataStructure()
   // Add in another group that is just information about the grid data.
   DataGroup* phaseGroup = nx::core::DataGroup::Create(dataStructure, k_PhaseData, group->getId());
   UInt32Array* laueClass = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_LaueClass, {2}, {1}, phaseGroup->getId());
-  (*laueClass)[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
-  (*laueClass)[1] = EbsdLib::CrystalStructure::Cubic_High;
+  (*laueClass)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  (*laueClass)[1] = ebsdlib::CrystalStructure::Cubic_High;
 
   return dataStructure;
 }

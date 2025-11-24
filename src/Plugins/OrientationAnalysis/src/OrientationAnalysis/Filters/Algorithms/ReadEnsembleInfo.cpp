@@ -36,10 +36,10 @@ const std::string k_BoundaryPhase("BoundaryPhase");
 const std::string k_Unknown("Unknown");
 
 std::map<std::string, uint32> k_EnsembleCrystalInfoLookup = {
-    {k_HexagonalHigh, EbsdLib::CrystalStructure::Hexagonal_High}, {k_CubicHigh, EbsdLib::CrystalStructure::Cubic_High},         {k_HexagonalLow, EbsdLib::CrystalStructure::Hexagonal_Low},
-    {k_CubicLow, EbsdLib::CrystalStructure::Cubic_Low},           {k_TriClinic, EbsdLib::CrystalStructure::Triclinic},          {k_MonoClinic, EbsdLib::CrystalStructure::Monoclinic},
-    {k_OrthoRhombic, EbsdLib::CrystalStructure::OrthoRhombic},    {k_TetragonalLow, EbsdLib::CrystalStructure::Tetragonal_Low}, {k_TetragonalHigh, EbsdLib::CrystalStructure::Tetragonal_High},
-    {k_TrigonalLow, EbsdLib::CrystalStructure::Trigonal_Low},     {k_TrigonalHigh, EbsdLib::CrystalStructure::Trigonal_High}};
+    {k_HexagonalHigh, ebsdlib::CrystalStructure::Hexagonal_High}, {k_CubicHigh, ebsdlib::CrystalStructure::Cubic_High},         {k_HexagonalLow, ebsdlib::CrystalStructure::Hexagonal_Low},
+    {k_CubicLow, ebsdlib::CrystalStructure::Cubic_Low},           {k_TriClinic, ebsdlib::CrystalStructure::Triclinic},          {k_MonoClinic, ebsdlib::CrystalStructure::Monoclinic},
+    {k_OrthoRhombic, ebsdlib::CrystalStructure::OrthoRhombic},    {k_TetragonalLow, ebsdlib::CrystalStructure::Tetragonal_Low}, {k_TetragonalHigh, ebsdlib::CrystalStructure::Tetragonal_High},
+    {k_TrigonalLow, ebsdlib::CrystalStructure::Trigonal_Low},     {k_TrigonalHigh, ebsdlib::CrystalStructure::Trigonal_High}};
 
 std::map<std::string, uint32> k_EnsemblePhaseTypeInfoLookup = {{k_PrimaryPhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Primary)},
                                                                {k_PrecipitatePhase, static_cast<PhaseType::EnumType>(PhaseType::Type::Precipitate)},
@@ -89,7 +89,7 @@ Result<> ReadEnsembleInfo::readFile()
   std::vector<bool> visited(numPhases + 1, false);
   visited[0] = true; // this is DREAM3D's internal, which is always visited.
 
-  crystalStructures.fill(EbsdLib::CrystalStructure::UnknownCrystalStructure);
+  crystalStructures.fill(ebsdlib::CrystalStructure::UnknownCrystalStructure);
   phaseTypes.fill(static_cast<PhaseType::EnumType>(PhaseType::Type::Unknown));
   for(int32 index = 1; index < numPhases + 1; index++)
   {
@@ -112,7 +112,7 @@ Result<> ReadEnsembleInfo::readFile()
     auto crystalString = inputIni[group][k_CrystalStructure].as<std::string>();
     auto phaseTypeString = inputIni[group][k_PhaseType].as<std::string>();
 
-    uint32 crystalStruct = EbsdLib::CrystalStructure::UnknownCrystalStructure;
+    uint32 crystalStruct = ebsdlib::CrystalStructure::UnknownCrystalStructure;
     if(k_EnsembleCrystalInfoLookup.count(crystalString) > 0)
     {
       crystalStruct = k_EnsembleCrystalInfoLookup[crystalString];
@@ -124,7 +124,7 @@ Result<> ReadEnsembleInfo::readFile()
     }
 
     // Check to see if the Crystal Structure string was valid
-    if(crystalStruct == EbsdLib::CrystalStructure::UnknownCrystalStructure) // The crystal structure name read from the file was not found in the lookup table
+    if(crystalStruct == ebsdlib::CrystalStructure::UnknownCrystalStructure) // The crystal structure name read from the file was not found in the lookup table
     {
       return MakeErrorResult(-13007, fmt::format("Incorrect crystal structure name '{}'", crystalString));
     }

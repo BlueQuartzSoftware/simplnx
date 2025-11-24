@@ -129,7 +129,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   }
 
   // read in the necessary info from the input h5 file
-  H5OINAReader reader;
+  ebsdlib::H5OINAReader reader;
   reader.setFileName(pSelectedScanNamesValue.inputFilePath.string());
   reader.setReadPatternData(pReadPatternDataValue);
   reader.setHDF5Path(pSelectedScanNamesValue.scanNames.front());
@@ -148,8 +148,8 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<H5OINAReader>(reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5OINAReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues);
 
   const auto phases = reader.getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
@@ -160,35 +160,35 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
 
   // create the cell ensemble arrays
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(EbsdLib::CtfFile::CrystalStructures));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(EbsdLib::CtfFile::LatticeConstants));
+    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(ebsdlib::CtfFile::LatticeConstants));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   {
-    auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(EbsdLib::CtfFile::MaterialName));
+    auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(ebsdlib::CtfFile::MaterialName));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
   // create the cell data arrays
-  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::BandContrast)));
-  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::BandSlope)));
-  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::Bands)));
-  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::Error)));
-  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(EbsdLib::H5OINA::Euler)));
-  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::MeanAngularDeviation)));
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::BandContrast)));
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::BandSlope)));
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::Bands)));
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::Error)));
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{3}, cellAMPath.createChildPath(ebsdlib::H5OINA::Euler)));
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::MeanAngularDeviation)));
   if(pConvertPhaseData)
   {
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::Phase)));
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::Phase)));
   }
   else
   {
-    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::Phase)));
+    resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::Phase)));
   }
-  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::X)));
-  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(EbsdLib::H5OINA::Y)));
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::X)));
+  resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::Y)));
 
   if(pReadPatternDataValue)
   {
@@ -199,7 +199,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
       return MakePreflightErrorResult(-9583, fmt::format("The parameter 'Read Pattern Data' has been enabled but there does not seem to be any pattern data in the file for the scan name selected"));
     }
     auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint16, tupleDims, std::vector<usize>{static_cast<usize>(patternDims[0]), static_cast<usize>(patternDims[1])},
-                                                                 cellAMPath.createChildPath(EbsdLib::H5OINA::UnprocessedPatterns));
+                                                                 cellAMPath.createChildPath(ebsdlib::H5OINA::UnprocessedPatterns));
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

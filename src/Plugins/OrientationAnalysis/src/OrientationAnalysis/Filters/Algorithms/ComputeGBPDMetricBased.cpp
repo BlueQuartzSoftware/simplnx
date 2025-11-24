@@ -20,7 +20,7 @@
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
 namespace fs = std::filesystem;
-using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
+using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
 namespace gbpd_metric_based
@@ -84,7 +84,7 @@ public:
   , m_FaceNormals(faceNormals)
   , m_FaceAreas(faceAreas)
   {
-    m_OrientationOps = LaueOps::GetAllOrientationOps();
+    m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
     m_Crystal = crystalStructures[phaseOfInterest];
     m_NSym = m_OrientationOps[m_Crystal]->getNumSymOps();
   }
@@ -123,9 +123,9 @@ public:
         }
       }
 
-      normalLab[0] = static_cast<float64>(m_FaceNormals[3 * triIdx]);
-      normalLab[1] = static_cast<float64>(m_FaceNormals[3 * triIdx + 1]);
-      normalLab[2] = static_cast<float64>(m_FaceNormals[3 * triIdx + 2]);
+      normalLab[0] = m_FaceNormals[3 * triIdx];
+      normalLab[1] = m_FaceNormals[3 * triIdx + 1];
+      normalLab[2] = m_FaceNormals[3 * triIdx + 2];
 
       for(int32 whichEa = 0; whichEa < 3; whichEa++)
       {
@@ -133,11 +133,11 @@ public:
         g2ea[whichEa] = m_EulerAngles[3 * feature2 + whichEa];
       }
 
-      auto oMatrix1 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g1ea[0], g1ea[1], g1ea[2], 3.0));
-      auto oMatrix2 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g2ea[0], g2ea[1], g2ea[2], 3.0));
+      auto oMatrix1 = ebsdlib::EulerDType(g1ea[0], g1ea[1], g1ea[2]).toOrientationMatrix();
+      auto oMatrix2 = ebsdlib::EulerDType(g2ea[0], g2ea[1], g2ea[2]).toOrientationMatrix();
 
-      normalGrain1 = OrientationMatrixToGMatrix(oMatrix1) * normalLab;
-      normalGrain2 = OrientationMatrixToGMatrix(oMatrix2) * normalLab;
+      normalGrain1 = oMatrix1 * normalLab;
+      normalGrain2 = oMatrix2 * normalLab;
 
       m_SelectedTriangles.push_back(TriAreaAndNormals(m_FaceAreas[triIdx], normalGrain1[0], normalGrain1[1], normalGrain1[2], -normalGrain2[0], -normalGrain2[1], -normalGrain2[2]));
     }
@@ -196,7 +196,7 @@ public:
   , m_BallVolume(ballVolume)
   , m_Crystal(crystal)
   {
-    m_OrientationOps = LaueOps::GetAllOrientationOps();
+    m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
     m_NSym = m_OrientationOps[crystal]->getNumSymOps();
   }
 
@@ -214,7 +214,7 @@ public:
 
         for(int32 j = 0; j < m_NSym; j++)
         {
-          const Matrix3dR sym = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
+          const Matrix3dR sym = m_OrientationOps[m_Crystal]->getMatSymOpD(j).toEigenMatrix(); //    EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
 
           Eigen::Vector3d symNormal1 = sym * normal1;
           Eigen::Vector3d symNormal2 = sym * normal2;
@@ -366,7 +366,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   }
 
   // ------------------- before computing the distribution, we must find normalization factors -----
-  std::vector<LaueOps::Pointer> mOrientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> mOrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   auto crystal = static_cast<int32>(crystalStructures[m_InputValues->PhaseOfInterest]);
   const int32 nSym = mOrientationOps[crystal]->getNumSymOps();
   auto ballVolume = static_cast<float64>(nSym) * 2.0 * (1.0 - std::cos(limitDist));
@@ -666,7 +666,7 @@ Result<> ComputeGBPDMetricBased::operator()()
 
     for(int32 j = 0; j < nSym; j++)
     {
-      sym = EbsdLibMatrixToEigenMatrix(mOrientationOps[crystal]->getMatSymOpD(j));
+      sym = mOrientationOps[crystal]->getMatSymOpD(j).toEigenMatrix();
       Eigen::Vector3d symPoint = {0.0, 0.0, 0.0};
       symPoint = sym * point;
 

@@ -125,7 +125,7 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   }
 
   // Read the CPR file to gather the Geometry information and what arrays are present in the file.
-  CprReader reader;
+  ebsdlib::CprReader reader;
   reader.setFileName(pInputFileValue.string());
   int32_t err = reader.readHeaderOnly();
   if(err < 0)
@@ -143,8 +143,8 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   // These will be returned through the preflightResult variable to the
   // user interface.
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<CprReader>(reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<CprReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues);
+  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::CprReader>(reader, preflightUpdatedValues);
 
   // Define an Action that makes changes to the DataStructure
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),
@@ -167,17 +167,17 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
     }
     DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(parser.FieldDefinition.FieldName);
 
-    if(parser.FieldDefinition.numericType == EbsdLib::NumericTypes::Type::Int32)
+    if(parser.FieldDefinition.numericType == ebsdlib::NumericTypes::Type::Int32)
     {
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
-    else if(parser.FieldDefinition.numericType == EbsdLib::NumericTypes::Type::Float)
+    else if(parser.FieldDefinition.numericType == ebsdlib::NumericTypes::Type::Float)
     {
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
-    else if(parser.FieldDefinition.numericType == EbsdLib::NumericTypes::Type::UInt8)
+    else if(parser.FieldDefinition.numericType == ebsdlib::NumericTypes::Type::UInt8)
     {
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::uint8, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
@@ -188,11 +188,11 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   if(pCreateCompatibleTypes)
   {
     cDims[0] = 1;
-    DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::Phases);
+    DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
 
-    dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::Phase);
+    dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Phase);
     ;
     auto removeTempArrayAction = std::make_unique<DeleteDataAction>(dataArrayPath);
     resultOutputActions.value().appendDeferredAction(std::move(removeTempArrayAction));
@@ -202,28 +202,28 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   if(pCreateCompatibleTypes)
   {
     cDims[0] = 3;
-    DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::EulerAngles);
+    DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
 
-    dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::phi1);
+    dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::phi1);
     ;
     auto removeTempArrayAction = std::make_unique<DeleteDataAction>(dataArrayPath);
     resultOutputActions.value().appendDeferredAction(std::move(removeTempArrayAction));
 
-    dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::Phi);
+    dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Phi);
     ;
     removeTempArrayAction = std::make_unique<DeleteDataAction>(dataArrayPath);
     resultOutputActions.value().appendDeferredAction(std::move(removeTempArrayAction));
 
-    dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::Ctf::phi2);
+    dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::phi2);
     ;
     removeTempArrayAction = std::make_unique<DeleteDataAction>(dataArrayPath);
     resultOutputActions.value().appendDeferredAction(std::move(removeTempArrayAction));
   }
 
   // Create the Ensemble AttributeMatrix
-  std::vector<std::shared_ptr<CtfPhase>> angPhases = reader.getPhaseVector();
+  std::vector<std::shared_ptr<ebsdlib::CtfPhase>> angPhases = reader.getPhaseVector();
   tupleDims = {angPhases.size() + 1}; // Always create 1 extra slot for the phases.
   DataPath ensembleAttributeMatrixPath = pImageGeometryPath.createChildPath(pCellEnsembleAttributeMatrixNameValue);
   {
@@ -234,20 +234,20 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
   // Create the Crystal Structures Array
   {
     cDims[0] = 1;
-    DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::CrystalStructures);
+    DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the Lattice Constants Array
   {
     cDims[0] = 6;
-    DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::LatticeConstants);
+    DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::LatticeConstants);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the Material Names Array
   {
-    DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(EbsdLib::CtfFile::MaterialName);
+    DataPath dataArrayPath = ensembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::MaterialName);
     auto action = std::make_unique<CreateStringArrayAction>(tupleDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }

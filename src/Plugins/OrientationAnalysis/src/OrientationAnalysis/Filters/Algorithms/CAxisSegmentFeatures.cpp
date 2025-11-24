@@ -8,7 +8,9 @@
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
-#include <EbsdLib/Core/OrientationTransformation.hpp>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <EbsdLib/Orientation/OrientationMatrix.hpp>
+#include <EbsdLib/Orientation/Quaternion.hpp>
 
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
@@ -52,7 +54,7 @@ Result<> CAxisSegmentFeatures::operator()()
   {
     int32 currentPhaseIdx = m_CellPhases->getValue(cellIdx);
     const auto crystalStructureType = crystalStructures[currentPhaseIdx];
-    if(crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_High && crystalStructureType != EbsdLib::CrystalStructure::Hexagonal_Low)
+    if(crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_Low)
     {
       return MakeErrorResult(-8363, fmt::format("Input data is using {} type crystal structures but segmenting features via c-axis mis orientation requires all phases to be either Hexagonal-Low 6/m "
                                                 "or Hexagonal-High 6/mmm type crystal structures.",
@@ -138,10 +140,6 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
   bool group = false;
   float32 w = std::numeric_limits<float32>::max();
 
-  Matrix3fR g1T;
-  g1T.fill(0.0f);
-  Matrix3fR g2T;
-  g2T.fill(0.0f);
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
   Eigen::Vector3f c2{0.0f, 0.0f, 0.0f};
@@ -155,20 +153,17 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
   }
   if(featureIds[neighborpoint] == 0 && (!m_InputValues->UseMask || neighborPointIsGood))
   {
-    const QuatF q1(currentQuat[referencepoint * 4], currentQuat[referencepoint * 4 + 1], currentQuat[referencepoint * 4 + 2], currentQuat[referencepoint * 4 + 3]);
-    const QuatF q2(currentQuat[neighborpoint * 4 + 0], currentQuat[neighborpoint * 4 + 1], currentQuat[neighborpoint * 4 + 2], currentQuat[neighborpoint * 4 + 3]);
-
     if(cellPhases[referencepoint] == cellPhases[neighborpoint])
     {
-      const OrientationF oMatrix1 = OrientationTransformation::qu2om<QuatF, Orientation<float32>>(q1);
-      const OrientationF oMatrix2 = OrientationTransformation::qu2om<QuatF, Orientation<float32>>(q2);
+      const ebsdlib::QuatF q1(currentQuat[referencepoint * 4], currentQuat[referencepoint * 4 + 1], currentQuat[referencepoint * 4 + 2], currentQuat[referencepoint * 4 + 3]);
+      const ebsdlib::QuatF q2(currentQuat[neighborpoint * 4 + 0], currentQuat[neighborpoint * 4 + 1], currentQuat[neighborpoint * 4 + 2], currentQuat[neighborpoint * 4 + 3]);
+
+      const ebsdlib::OrientationMatrixFType oMatrix1 = q1.toOrientationMatrix();
+      const ebsdlib::OrientationMatrixFType oMatrix2 = q2.toOrientationMatrix();
 
       // Convert the quaternion matrices to transposed g matrices so when caxis is multiplied by it, it will give the sample direction that the caxis is along
-      g1T = OrientationMatrixToGMatrixTranspose(oMatrix1);
-      g2T = OrientationMatrixToGMatrixTranspose(oMatrix2);
-
-      c1 = g1T * cAxis;
-      c2 = g2T * cAxis;
+      c1 = oMatrix1.transpose() * cAxis;
+      c2 = oMatrix2.transpose() * cAxis;
 
       // normalize so that the dot product can be taken below without
       // dividing by the magnitudes (they would be 1)

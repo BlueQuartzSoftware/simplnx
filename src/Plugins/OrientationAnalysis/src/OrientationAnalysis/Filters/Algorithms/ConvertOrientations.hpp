@@ -8,10 +8,10 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
-#include "EbsdLib/Core/OrientationRepresentation.h"
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
 
 #include <concepts>
 
@@ -26,10 +26,10 @@ constexpr nx::core::int32 k_MatchingTypesError = -67005;
 
 struct ORIENTATIONANALYSIS_EXPORT ConvertOrientationsInputValues
 {
-  OrientationRepresentation::Type InputType;
-  OrientationRepresentation::Type OutputType;
-  DataPath InputOrientationArrayPath;
-  DataPath OutputOrientationArrayPath;
+  ArraySelectionParameter::ValueType InputOrientationArrayPath;
+  ebsdlib::orientations::Type InputType;
+  DataObjectNameParameter::ValueType OutputOrientationArrayName;
+  ebsdlib::orientations::Type OutputType;
 };
 
 /**

@@ -20,7 +20,7 @@
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
 namespace fs = std::filesystem;
-using LaueOpsShPtrType = std::shared_ptr<LaueOps>;
+using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
 namespace
@@ -86,7 +86,7 @@ public:
   , m_FaceNormals(faceNormals)
   , m_FaceAreas(faceAreas)
   {
-    m_OrientationOps = LaueOps::GetAllOrientationOps();
+    m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
     m_Crystal = crystalStructures[phaseOfInterest];
     m_NSym = m_OrientationOps[m_Crystal]->getNumSymOps();
   }
@@ -150,13 +150,13 @@ public:
         g2ea[whichEa] = m_Euler[3 * feature2 + whichEa];
       }
 
-      auto oMatrix1 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g1ea[0], g1ea[1], g1ea[2]));
-      auto oMatrix2 = OrientationTransformation::eu2om<OrientationD, OrientationD>(OrientationD(g2ea[0], g2ea[1], g2ea[2]));
+      auto oMatrix1 = ebsdlib::EulerDType(g1ea[0], g1ea[1], g1ea[2]).toOrientationMatrix();
+      auto oMatrix2 = ebsdlib::EulerDType(g2ea[0], g2ea[1], g2ea[2]).toOrientationMatrix();
 
       for(int j = 0; j < m_NSym; j++)
       {
         // rotate g1 by symOp
-        g1s = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j)) * OrientationMatrixToGMatrix(oMatrix1);
+        g1s = m_OrientationOps[m_Crystal]->getMatSymOpD(j).toEigenMatrix() * oMatrix1.toEigenGMatrix();
         // get the crystal directions along the triangle normals
         normalGrain1 = g1s * normalLab;
 
@@ -164,7 +164,7 @@ public:
         {
           // calculate the symmetric mis orientation
           // rotate g2 by symOp
-          g2s = EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(k)) * OrientationMatrixToGMatrix(oMatrix2);
+          g2s = m_OrientationOps[m_Crystal]->getMatSymOpD(k).toEigenMatrix() * oMatrix2.toEigenGMatrix();
           // transpose rotated g2
           // calculate delta g
           dg = g1s * g2s.transpose(); // dg -- the mis orientation between adjacent grains
@@ -383,8 +383,8 @@ Result<> ComputeGBCDMetricBased::operator()()
   float64 misResolution = k_ResolutionChoices[m_InputValues->ChosenLimitDists][0];
   float64 planeResolution = k_ResolutionChoices[m_InputValues->ChosenLimitDists][1];
 
-  misResolution *= Constants::k_PiOver180F;
-  planeResolution *= Constants::k_PiOver180F;
+  misResolution *= nx::core::Constants::k_PiOver180F;
+  planeResolution *= nx::core::Constants::k_PiOver180F;
   const float64 planeResolutionSq = planeResolution * planeResolution;
 
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
@@ -402,7 +402,7 @@ Result<> ComputeGBCDMetricBased::operator()()
   // ------------------- before computing the distribution, we must find normalization factors -----
   float64 ballVolume = k_BallVolumesM3M[m_InputValues->ChosenLimitDists];
   {
-    std::vector<LaueOps::Pointer> ops = LaueOps::GetAllOrientationOps();
+    std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
     auto crystalStruct = static_cast<int32>(crystalStructures[m_InputValues->PhaseOfInterest]);
     const int32 nSym = ops[crystalStruct]->getNumSymOps();
 
@@ -455,11 +455,11 @@ Result<> ComputeGBCDMetricBased::operator()()
   }
 
   // Convert axis angle to matrix representation of mis orientation
-  auto gFixedAngle = m_InputValues->MisorientationRotation[3] * Constants::k_PiOver180F;
+  auto gFixedAngle = m_InputValues->MisorientationRotation[3] * nx::core::Constants::k_PiOver180F;
   Eigen::Vector3d gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
   gFixedAxis.normalize();
-  auto oMatrix = OrientationTransformation::ax2om<OrientationD, OrientationD>(OrientationD(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle));
-  const Matrix3dR gFixedT = OrientationMatrixToGMatrixTranspose(oMatrix);
+  auto oMatrix = ebsdlib::AxisAngleDType(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle).toOrientationMatrix();
+  const Matrix3dR gFixedT = oMatrix.transpose().toEigenGMatrix();
 
   const usize numMeshTriangles = faceAreas.getNumberOfTuples();
 

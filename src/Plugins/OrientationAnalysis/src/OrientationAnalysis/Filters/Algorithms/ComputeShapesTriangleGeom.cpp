@@ -7,8 +7,10 @@
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/OrientationTransformation.hpp"
+#include <EbsdLib/Core/Orientation.hpp>
+#include <EbsdLib/Orientation/Euler.hpp>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <EbsdLib/Orientation/OrientationMatrix.hpp>
 
 #include <unordered_set>
 
@@ -389,7 +391,7 @@ public:
       orientationMatrix.row(1) = col2.real();
       orientationMatrix.row(2) = col3.real();
 
-      auto euler = OrientationTransformation::om2eu<OrientationD, OrientationD>(OrientationD(orientationMatrix.data(), 9));
+      auto euler = ebsdlib::OrientationMatrixDType(orientationMatrix.data()).toEuler();
 
       currentResult.axisEulerAngles[0] = static_cast<float32>(euler[0]);
       currentResult.axisEulerAngles[1] = static_cast<float32>(euler[1]);

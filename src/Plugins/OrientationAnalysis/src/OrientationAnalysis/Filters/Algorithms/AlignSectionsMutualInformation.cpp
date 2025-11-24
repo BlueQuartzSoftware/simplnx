@@ -342,7 +342,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
       static_cast<int64>(udims[2]),
   };
 
-  auto orientationOps = LaueOps::GetAllOrientationOps();
+  auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   auto& m_CellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
@@ -401,7 +401,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
           int64 row = (currentpoint / dims[0]) % dims[1];
 
           auto q1TupleIndex = currentpoint * 4;
-          QuatF quat1(quats[q1TupleIndex], quats[q1TupleIndex + 1], quats[q1TupleIndex + 2], quats[q1TupleIndex + 3]);
+          ebsdlib::QuatD quat1(quats[q1TupleIndex], quats[q1TupleIndex + 1], quats[q1TupleIndex + 2], quats[q1TupleIndex + 3]);
           uint32_t laueClass1 = m_CrystalStructures[m_CellPhases[currentpoint]];
           for(int32_t i = 0; i < 4; i++)
           {
@@ -426,12 +426,12 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
             {
               float32 angle = std::numeric_limits<float>::max();
               auto q2TupleIndex = neighbor * 4;
-              QuatF quat2(quats[q2TupleIndex], quats[q2TupleIndex + 1], quats[q2TupleIndex + 2], quats[q2TupleIndex + 3]);
+              ebsdlib::QuatD quat2(quats[q2TupleIndex], quats[q2TupleIndex + 1], quats[q2TupleIndex + 2], quats[q2TupleIndex + 3]);
               uint32_t phase2 = m_CrystalStructures[m_CellPhases[neighbor]];
 
               if(laueClass1 == phase2)
               {
-                OrientationF axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
+                ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                 angle = axisAngle[3];
               }
               if(angle < misorientationTolerance)

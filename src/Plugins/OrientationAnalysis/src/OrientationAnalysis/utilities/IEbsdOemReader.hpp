@@ -103,12 +103,12 @@ public:
     }
 
     // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!
-    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::CrystalStructures));
-    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::MaterialName));
-    auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(EbsdLib::AngFile::LatticeConstants));
+    auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::CrystalStructures));
+    auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::MaterialName));
+    auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::AngFile::LatticeConstants));
     Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
 
-    crystalStructures[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
+    crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
     materialNames[0] = "Invalid Phase";
     latticeConstants->setComponent(0, 0, 0.0f);
     latticeConstants->setComponent(0, 1, 0.0f);

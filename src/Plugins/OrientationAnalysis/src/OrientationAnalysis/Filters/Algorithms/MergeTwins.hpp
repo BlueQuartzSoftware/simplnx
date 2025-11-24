@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 namespace nx::core
@@ -52,7 +53,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  std::vector<LaueOps::Pointer> m_OrientationOps;
+  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
 };
 
 } // namespace nx::core

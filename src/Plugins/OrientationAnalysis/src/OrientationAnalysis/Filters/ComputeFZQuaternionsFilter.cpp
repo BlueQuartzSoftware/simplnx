@@ -47,7 +47,7 @@ public:
    */
   void convert(size_t start, size_t end) const
   {
-    std::vector<LaueOps::Pointer> ops = LaueOps::GetAllOrientationOps();
+    std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
     int32 phase = 0;
     size_t index = 0;
 
@@ -67,10 +67,10 @@ public:
 
       // Output initialized to zero by default
       index = i * 4;
-      if(phase < m_NumPhases && m_GoodVoxels->isTrue(i) && m_CrystalStructures.getValue(phase) < EbsdLib::CrystalStructure::LaueGroupEnd)
+      if(phase < m_NumPhases && m_GoodVoxels->isTrue(i) && m_CrystalStructures.getValue(phase) < ebsdlib::CrystalStructure::LaueGroupEnd)
       {
-        QuatD quatD = QuatD(m_Quats.getValue(index), m_Quats.getValue(index + 1), m_Quats.getValue(index + 2), m_Quats.getValue(index + 3)); // Makes a copy into q
-        auto xtal = static_cast<int32_t>(m_CrystalStructures.getValue(phase));                                                               // get the Laue Group
+        ebsdlib::QuatD quatD = ebsdlib::QuatD(m_Quats.getValue(index), m_Quats.getValue(index + 1), m_Quats.getValue(index + 2), m_Quats.getValue(index + 3)); // Makes a copy into q
+        auto xtal = static_cast<int32_t>(m_CrystalStructures.getValue(phase));                                                                                 // get the Laue Group
         quatD = ops[xtal]->getFZQuat(quatD);
         m_FZQuats.setValue(index, static_cast<float32>(quatD.x()));
         m_FZQuats.setValue(index + 1, static_cast<float32>(quatD.y()));
@@ -120,7 +120,7 @@ public:
    */
   void convert(size_t start, size_t end) const
   {
-    std::vector<LaueOps::Pointer> ops = LaueOps::GetAllOrientationOps();
+    std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
     int32 phase = 0;
     size_t index = 0;
 
@@ -140,10 +140,10 @@ public:
 
       // Output initialized to zero by default
       index = i * 4;
-      if(phase < m_NumPhases && m_CrystalStructures.getValue(phase) < EbsdLib::CrystalStructure::LaueGroupEnd)
+      if(phase < m_NumPhases && m_CrystalStructures.getValue(phase) < ebsdlib::CrystalStructure::LaueGroupEnd)
       {
-        QuatD quatD = QuatD(m_Quats.getValue(index), m_Quats.getValue(index + 1), m_Quats.getValue(index + 2), m_Quats.getValue(index + 3)); // Makes a copy into q
-        auto xtal = static_cast<int32_t>(m_CrystalStructures.getValue(phase));                                                               // get the Laue Group
+        ebsdlib::QuatD quatD = ebsdlib::QuatD(m_Quats.getValue(index), m_Quats.getValue(index + 1), m_Quats.getValue(index + 2), m_Quats.getValue(index + 3)); // Makes a copy into q
+        auto xtal = static_cast<int32_t>(m_CrystalStructures.getValue(phase));                                                                                 // get the Laue Group
         quatD = ops[xtal]->getFZQuat(quatD);
         m_FZQuats.setValue(index, static_cast<float32>(quatD.x()));
         m_FZQuats.setValue(index + 1, static_cast<float32>(quatD.y()));
@@ -206,7 +206,7 @@ Parameters ComputeFZQuaternionsFilter::parameters() const
 {
   Parameters params;
 
-  std::vector<std::string> names = LaueOps::GetLaueNames();
+  std::vector<std::string> names = ebsdlib::LaueOps::GetLaueNames();
   names.pop_back();
 
   // Create the parameter descriptors that are needed for this filter
@@ -350,7 +350,7 @@ Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, c
 
       return {MakeErrorResult<>(-49004, errorMessage)};
     }
-  } catch(const EbsdLib::method_not_implemented& e)
+  } catch(const ebsdlib::method_not_implemented& e)
   {
     return {MakeErrorResult<>(-49005, fmt::format("EbsdLib threw an exception when computing the fundamental zone data. {}", e.what()))};
   }

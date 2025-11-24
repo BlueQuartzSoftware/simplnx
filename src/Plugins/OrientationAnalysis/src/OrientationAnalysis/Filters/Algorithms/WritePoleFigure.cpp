@@ -53,7 +53,7 @@ const bool k_UseDiscreteHeatMap = false;
 class ComputeIntensityStereographicProjection
 {
 public:
-  ComputeIntensityStereographicProjection(EbsdLib::FloatArrayType* xyzCoords, PoleFigureConfiguration_t* config, EbsdLib::DoubleArrayType* intensity, bool normalizeToMRD)
+  ComputeIntensityStereographicProjection(ebsdlib::FloatArrayType* xyzCoords, ebsdlib::PoleFigureConfiguration_t* config, ebsdlib::DoubleArrayType* intensity, bool normalizeToMRD)
   : m_XYZCoords(xyzCoords)
   , m_Config(config)
   , m_Intensity(intensity)
@@ -93,7 +93,7 @@ public:
     }
     else
     {
-      ModifiedLambertProjection::Pointer lambert = ModifiedLambertProjection::LambertBallToSquare(m_XYZCoords, m_Config->lambertDim, m_Config->sphereRadius);
+      ebsdlib::ModifiedLambertProjection::Pointer lambert = ebsdlib::ModifiedLambertProjection::LambertBallToSquare(m_XYZCoords, m_Config->lambertDim, m_Config->sphereRadius);
       if(m_NormalizeToMRD)
       {
         lambert->normalizeSquaresToMRD();
@@ -188,17 +188,17 @@ public:
     }
   }
 
-  int writeLambertData(ModifiedLambertProjection::Pointer lambert) const
+  int writeLambertData(ebsdlib::ModifiedLambertProjection::Pointer lambert) const
   {
     int err = -1;
 
     int m_Dimension = lambert->getDimension();
-    EbsdLib::DoubleArrayType::Pointer m_NorthSquare = lambert->getNorthSquare();
-    EbsdLib::DoubleArrayType::Pointer m_SouthSquare = lambert->getSouthSquare();
+    ebsdlib::DoubleArrayType::Pointer m_NorthSquare = lambert->getNorthSquare();
+    ebsdlib::DoubleArrayType::Pointer m_SouthSquare = lambert->getSouthSquare();
 
     // We want half the sphere area for each square because each square represents a hemisphere.
     const float32 sphereRadius = 1.0f;
-    float halfSphereArea = 4.0f * EbsdLib::Constants::k_PiF * sphereRadius * sphereRadius / 2.0f;
+    float halfSphereArea = 4.0f * ebsdlib::constants::k_PiF * sphereRadius * sphereRadius / 2.0f;
     // The length of a side of the square is the square root of the area
     float squareEdge = std::sqrt(halfSphereArea);
     float32 m_StepSize = squareEdge / static_cast<float>(m_Dimension);
@@ -231,7 +231,7 @@ public:
         squareCoords[index * 3 + 1] = vert[1];
         squareCoords[index * 3 + 2] = 0.0f;
 
-        LambertUtilities::LambertSquareVertToSphereVert(vert.data(), LambertUtilities::Hemisphere::North);
+        ebsdlib::LambertUtilities::LambertSquareVertToSphereVert(vert.data(), ebsdlib::LambertUtilities::Hemisphere::North);
 
         northSphereCoords[index * 3] = vert[0];
         northSphereCoords[index * 3 + 1] = vert[1];
@@ -244,7 +244,7 @@ public:
         // Reset the Lambert Square Coord
         vert[0] = origin + (static_cast<float>(x) * m_StepSize);
         vert[1] = origin + (static_cast<float>(y) * m_StepSize);
-        LambertUtilities::LambertSquareVertToSphereVert(vert.data(), LambertUtilities::Hemisphere::South);
+        ebsdlib::LambertUtilities::LambertSquareVertToSphereVert(vert.data(), ebsdlib::LambertUtilities::Hemisphere::South);
 
         southSphereCoords[index * 3] = vert[0];
         southSphereCoords[index * 3 + 1] = vert[1];
@@ -405,22 +405,22 @@ public:
   }
 
 private:
-  EbsdLib::FloatArrayType* m_XYZCoords = nullptr;
-  PoleFigureConfiguration_t* m_Config = nullptr;
-  EbsdLib::DoubleArrayType* m_Intensity = nullptr;
+  ebsdlib::FloatArrayType* m_XYZCoords = nullptr;
+  ebsdlib::PoleFigureConfiguration_t* m_Config = nullptr;
+  ebsdlib::DoubleArrayType* m_Intensity = nullptr;
   bool m_NormalizeToMRD = false;
 };
 
 // -----------------------------------------------------------------------------
 template <typename Ops>
-std::vector<EbsdLib::UInt8ArrayType::Pointer> makePoleFigures(PoleFigureConfiguration_t& config)
+std::vector<ebsdlib::UInt8ArrayType::Pointer> makePoleFigures(ebsdlib::PoleFigureConfiguration_t& config)
 {
   Ops ops;
   return ops.generatePoleFigure(config);
 }
 
 template <typename OpsType>
-std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFigureConfiguration_t& config, bool normalizeToMRD)
+std::vector<ebsdlib::DoubleArrayType::Pointer> createIntensityPoleFigures(ebsdlib::PoleFigureConfiguration_t& config, bool normalizeToMRD)
 {
   OpsType ops;
   std::string label0 = std::string("<001>");
@@ -446,11 +446,11 @@ std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFi
   std::array<int32_t, 3> symSize = ops.getNumSymmetry();
 
   const std::vector<size_t> dims = {3};
-  const EbsdLib::FloatArrayType::Pointer xyz001 = EbsdLib::FloatArrayType::CreateArray(numOrientations * symSize[0], dims, label0 + std::string("xyzCoords"), true);
+  const ebsdlib::FloatArrayType::Pointer xyz001 = ebsdlib::FloatArrayType::CreateArray(numOrientations * symSize[0], dims, label0 + std::string("xyzCoords"), true);
   // this is size for CUBIC ONLY, <011> Family
-  const EbsdLib::FloatArrayType::Pointer xyz011 = EbsdLib::FloatArrayType::CreateArray(numOrientations * symSize[1], dims, label1 + std::string("xyzCoords"), true);
+  const ebsdlib::FloatArrayType::Pointer xyz011 = ebsdlib::FloatArrayType::CreateArray(numOrientations * symSize[1], dims, label1 + std::string("xyzCoords"), true);
   // this is size for CUBIC ONLY, <111> Family
-  const EbsdLib::FloatArrayType::Pointer xyz111 = EbsdLib::FloatArrayType::CreateArray(numOrientations * symSize[2], dims, label2 + std::string("xyzCoords"), true);
+  const ebsdlib::FloatArrayType::Pointer xyz111 = ebsdlib::FloatArrayType::CreateArray(numOrientations * symSize[2], dims, label2 + std::string("xyzCoords"), true);
 
   config.sphereRadius = 1.0f;
 
@@ -459,9 +459,9 @@ std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFi
 
   // These arrays hold the "intensity" images which eventually get converted to an actual Color RGB image
   // Generate the modified Lambert projection images (Squares, 2 of them, 1 for northern hemisphere, 1 for southern hemisphere
-  const EbsdLib::DoubleArrayType::Pointer intensity001 = EbsdLib::DoubleArrayType::CreateArray(config.imageDim * config.imageDim, label0 + "_Intensity_Image", true);
-  const EbsdLib::DoubleArrayType::Pointer intensity011 = EbsdLib::DoubleArrayType::CreateArray(config.imageDim * config.imageDim, label1 + "_Intensity_Image", true);
-  const EbsdLib::DoubleArrayType::Pointer intensity111 = EbsdLib::DoubleArrayType::CreateArray(config.imageDim * config.imageDim, label2 + "_Intensity_Image", true);
+  const ebsdlib::DoubleArrayType::Pointer intensity001 = ebsdlib::DoubleArrayType::CreateArray(config.imageDim * config.imageDim, label0 + "_Intensity_Image", true);
+  const ebsdlib::DoubleArrayType::Pointer intensity011 = ebsdlib::DoubleArrayType::CreateArray(config.imageDim * config.imageDim, label1 + "_Intensity_Image", true);
+  const ebsdlib::DoubleArrayType::Pointer intensity111 = ebsdlib::DoubleArrayType::CreateArray(config.imageDim * config.imageDim, label2 + "_Intensity_Image", true);
 
   // Compute the Stereographic Data in parallel
   ParallelTaskAlgorithm taskRunner;
@@ -476,7 +476,7 @@ std::vector<EbsdLib::DoubleArrayType::Pointer> createIntensityPoleFigures(PoleFi
 
 // -----------------------------------------------------------------------------
 template <typename T>
-typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src, const PoleFigureConfiguration_t& config)
+typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src, const ebsdlib::PoleFigureConfiguration_t& config)
 {
   typename EbsdDataArray<T>::Pointer converted = EbsdDataArray<T>::CreateArray(config.imageDim * config.imageDim, src->getComponentDimensions(), src->getName(), true);
   // We need to flip the image "vertically", which means the bottom row becomes
@@ -496,7 +496,7 @@ typename EbsdDataArray<T>::Pointer flipAndMirrorPoleFigure(EbsdDataArray<T>* src
 }
 
 template <typename T>
-typename EbsdDataArray<T>::Pointer convertColorOrder(EbsdDataArray<T>* src, const PoleFigureConfiguration_t& config)
+typename EbsdDataArray<T>::Pointer convertColorOrder(EbsdDataArray<T>* src, const ebsdlib::PoleFigureConfiguration_t& config)
 {
   typename EbsdDataArray<T>::Pointer converted = EbsdDataArray<T>::CreateArray(config.imageDim * config.imageDim, src->getComponentDimensions(), src->getName(), true);
   // BGRA to RGBA ordering (This is a Little Endian code)
@@ -515,7 +515,7 @@ typename EbsdDataArray<T>::Pointer convertColorOrder(EbsdDataArray<T>* src, cons
 }
 
 // -----------------------------------------------------------------------------
-void drawInformationBlock(canvas_ity::canvas& context, const PoleFigureConfiguration_t& config, const std::pair<float32, float32>& position, float margins, float fontPtSize, int32_t phaseNum,
+void drawInformationBlock(canvas_ity::canvas& context, const ebsdlib::PoleFigureConfiguration_t& config, const std::pair<float32, float32>& position, float margins, float fontPtSize, int32_t phaseNum,
                           std::vector<unsigned char>& fontData, const std::string& laueGroupName, const std::string& materialName)
 {
   const float scaleBarRelativeWidth = 0.10f;
@@ -556,7 +556,7 @@ void drawInformationBlock(canvas_ity::canvas& context, const PoleFigureConfigura
 }
 
 // -----------------------------------------------------------------------------
-void drawScalarBar(canvas_ity::canvas& context, const PoleFigureConfiguration_t& config, const std::pair<float32, float32>& position, float margins, float fontPtSize, int32_t phaseNum,
+void drawScalarBar(canvas_ity::canvas& context, const ebsdlib::PoleFigureConfiguration_t& config, const std::pair<float32, float32>& position, float margins, float fontPtSize, int32_t phaseNum,
                    std::vector<unsigned char>& fontData, const std::string& laueGroupName, const std::string& materialName)
 {
 
@@ -672,7 +672,7 @@ Result<> WritePoleFigure::operator()()
     }
   }
 
-  const std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
+  const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   const nx::core::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
   auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
@@ -726,9 +726,9 @@ Result<> WritePoleFigure::operator()()
       }
     }
     const std::vector<size_t> eulerCompDim = {3};
-    const EbsdLib::FloatArrayType::Pointer subEulerAnglesPtr = EbsdLib::FloatArrayType::CreateArray(count, eulerCompDim, "Euler_Angles_Per_Phase", true);
+    const ebsdlib::FloatArrayType::Pointer subEulerAnglesPtr = ebsdlib::FloatArrayType::CreateArray(count, eulerCompDim, "Euler_Angles_Per_Phase", true);
     subEulerAnglesPtr->initializeWithValue(std::numeric_limits<float>::signaling_NaN());
-    EbsdLib::FloatArrayType& subEulerAngles = *subEulerAnglesPtr;
+    ebsdlib::FloatArrayType& subEulerAngles = *subEulerAnglesPtr;
 
     // Now loop through the Euler angles again and this time add them to the sub-Euler angle Array
     count = 0;
@@ -750,10 +750,10 @@ Result<> WritePoleFigure::operator()()
       continue;
     } // Skip because we have no Pole Figure data
 
-    std::vector<EbsdLib::UInt8ArrayType::Pointer> figures;
-    std::vector<EbsdLib::DoubleArrayType::Pointer> intensityImages;
+    std::vector<ebsdlib::UInt8ArrayType::Pointer> figures;
+    std::vector<ebsdlib::DoubleArrayType::Pointer> intensityImages;
 
-    PoleFigureConfiguration_t config;
+    ebsdlib::PoleFigureConfiguration_t config;
     config.eulers = subEulerAnglesPtr.get();
     config.imageDim = m_InputValues->ImageSize;
     config.lambertDim = m_InputValues->LambertSize;
@@ -765,53 +765,53 @@ Result<> WritePoleFigure::operator()()
 
     switch(crystalStructures[phase])
     {
-    case EbsdLib::CrystalStructure::Cubic_High:
-      figures = makePoleFigures<CubicOps>(config);
-      intensityImages = createIntensityPoleFigures<CubicOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Cubic_High:
+      figures = makePoleFigures<ebsdlib::CubicOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::CubicOps>(config, m_InputValues->NormalizeToMRD);
       break;
-    case EbsdLib::CrystalStructure::Cubic_Low:
-      figures = makePoleFigures<CubicLowOps>(config);
-      intensityImages = createIntensityPoleFigures<CubicLowOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Cubic_Low:
+      figures = makePoleFigures<ebsdlib::CubicLowOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::CubicLowOps>(config, m_InputValues->NormalizeToMRD);
       break;
-    case EbsdLib::CrystalStructure::Hexagonal_High:
-      figures = makePoleFigures<HexagonalOps>(config);
-      intensityImages = createIntensityPoleFigures<HexagonalOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Hexagonal_High:
+      figures = makePoleFigures<ebsdlib::HexagonalOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::HexagonalOps>(config, m_InputValues->NormalizeToMRD);
       break;
-    case EbsdLib::CrystalStructure::Hexagonal_Low:
-      figures = makePoleFigures<HexagonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<HexagonalLowOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Hexagonal_Low:
+      figures = makePoleFigures<ebsdlib::HexagonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::HexagonalLowOps>(config, m_InputValues->NormalizeToMRD);
       break;
-    case EbsdLib::CrystalStructure::Trigonal_High:
-      figures = makePoleFigures<TrigonalOps>(config);
-      intensityImages = createIntensityPoleFigures<TrigonalOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Trigonal_High:
+      figures = makePoleFigures<ebsdlib::TrigonalOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::TrigonalOps>(config, m_InputValues->NormalizeToMRD);
       //   setWarningCondition(-1010, "Trigonal High Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
-    case EbsdLib::CrystalStructure::Trigonal_Low:
-      figures = makePoleFigures<TrigonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<TrigonalLowOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Trigonal_Low:
+      figures = makePoleFigures<ebsdlib::TrigonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::TrigonalLowOps>(config, m_InputValues->NormalizeToMRD);
       //  setWarningCondition(-1010, "Trigonal Low Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
-    case EbsdLib::CrystalStructure::Tetragonal_High:
-      figures = makePoleFigures<TetragonalOps>(config);
-      intensityImages = createIntensityPoleFigures<TetragonalOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Tetragonal_High:
+      figures = makePoleFigures<ebsdlib::TetragonalOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::TetragonalOps>(config, m_InputValues->NormalizeToMRD);
       //  setWarningCondition(-1010, "Tetragonal High Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
-    case EbsdLib::CrystalStructure::Tetragonal_Low:
-      figures = makePoleFigures<TetragonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<TetragonalLowOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Tetragonal_Low:
+      figures = makePoleFigures<ebsdlib::TetragonalLowOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::TetragonalLowOps>(config, m_InputValues->NormalizeToMRD);
       // setWarningCondition(-1010, "Tetragonal Low Symmetry is not supported for Pole figures. This phase will be omitted from results");
       break;
-    case EbsdLib::CrystalStructure::OrthoRhombic:
-      figures = makePoleFigures<OrthoRhombicOps>(config);
-      intensityImages = createIntensityPoleFigures<OrthoRhombicOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::OrthoRhombic:
+      figures = makePoleFigures<ebsdlib::OrthoRhombicOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::OrthoRhombicOps>(config, m_InputValues->NormalizeToMRD);
       break;
-    case EbsdLib::CrystalStructure::Monoclinic:
-      figures = makePoleFigures<MonoclinicOps>(config);
-      intensityImages = createIntensityPoleFigures<MonoclinicOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Monoclinic:
+      figures = makePoleFigures<ebsdlib::MonoclinicOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::MonoclinicOps>(config, m_InputValues->NormalizeToMRD);
       break;
-    case EbsdLib::CrystalStructure::Triclinic:
-      figures = makePoleFigures<TriclinicOps>(config);
-      intensityImages = createIntensityPoleFigures<TriclinicOps>(config, m_InputValues->NormalizeToMRD);
+    case ebsdlib::CrystalStructure::Triclinic:
+      figures = makePoleFigures<ebsdlib::TriclinicOps>(config);
+      intensityImages = createIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->NormalizeToMRD);
       break;
     default:
       break;
@@ -855,7 +855,7 @@ Result<> WritePoleFigure::operator()()
         metaDataArrayRef.resizeTuples(std::vector<usize>{numPhases});
       }
 
-      std::vector<std::string> laueNames = LaueOps::GetLaueNames();
+      std::vector<std::string> laueNames = ebsdlib::LaueOps::GetLaueNames();
       const uint32_t laueIndex = crystalStructures[phase];
       const std::string materialName = materialNames[phase];
 
@@ -1047,7 +1047,7 @@ Result<> WritePoleFigure::operator()()
       context.text_baseline = baselines[0];
       context.fill_text(m_InputValues->Title.c_str(), margins, margins + fontPtSize);
 
-      std::vector<std::string> laueNames = LaueOps::GetLaueNames();
+      std::vector<std::string> laueNames = ebsdlib::LaueOps::GetLaueNames();
       const uint32_t laueIndex = crystalStructures[phase];
       const std::string materialName = materialNames[phase];
 

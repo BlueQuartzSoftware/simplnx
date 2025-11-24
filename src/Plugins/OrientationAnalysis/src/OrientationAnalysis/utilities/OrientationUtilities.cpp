@@ -13,7 +13,7 @@ std::string CrystalStructureEnumToString(uint32_t crystalStructureType)
   {
     return "UnknownCrystalStructure";
   }
-  const std::vector<std::string> allLaueNames = LaueOps::GetLaueNames();
+  const std::vector<std::string> allLaueNames = ebsdlib::LaueOps::GetLaueNames();
   return allLaueNames[crystalStructureType];
 }
 

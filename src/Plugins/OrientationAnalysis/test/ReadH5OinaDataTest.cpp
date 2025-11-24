@@ -39,7 +39,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Valid Filter Execution", "
   Arguments args;
 
   auto h5TestFile = fs::path(fmt::format("{}/H5Oina_Test_Data/H5Oina_Test_Data.h5oina", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName}};
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadH5OinaDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
@@ -69,14 +69,14 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Valid Filter Execution", "
 
   const DataPath cellEnsemblePath({ImageGeom::k_TypeName, k_CellEnsembleData});
   const DataPath exemplarCellEnsemblePath({k_ExemplarDataContainer, k_CellEnsembleData});
-  const auto& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(cellEnsemblePath.createChildPath(EbsdLib::AngFile::CrystalStructures));
-  const auto& crystalStructuresExemplar = exemplarDataStructure.getDataRefAs<UInt32Array>(exemplarCellEnsemblePath.createChildPath(EbsdLib::AngFile::CrystalStructures));
+  const auto& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(cellEnsemblePath.createChildPath(ebsdlib::AngFile::CrystalStructures));
+  const auto& crystalStructuresExemplar = exemplarDataStructure.getDataRefAs<UInt32Array>(exemplarCellEnsemblePath.createChildPath(ebsdlib::AngFile::CrystalStructures));
   UnitTest::CompareDataArrays<uint32>(crystalStructures, crystalStructuresExemplar);
-  const auto& latticeConstants = dataStructure.getDataRefAs<Float32Array>(cellEnsemblePath.createChildPath(EbsdLib::AngFile::LatticeConstants));
-  const auto& latticeConstantsExemplar = exemplarDataStructure.getDataRefAs<Float32Array>(exemplarCellEnsemblePath.createChildPath(EbsdLib::AngFile::LatticeConstants));
+  const auto& latticeConstants = dataStructure.getDataRefAs<Float32Array>(cellEnsemblePath.createChildPath(ebsdlib::AngFile::LatticeConstants));
+  const auto& latticeConstantsExemplar = exemplarDataStructure.getDataRefAs<Float32Array>(exemplarCellEnsemblePath.createChildPath(ebsdlib::AngFile::LatticeConstants));
   UnitTest::CompareDataArrays<float32>(latticeConstants, latticeConstantsExemplar);
-  const auto& materialName = dataStructure.getDataRefAs<StringArray>(cellEnsemblePath.createChildPath(EbsdLib::AngFile::MaterialName));
-  const auto& materialNameExemplar = exemplarDataStructure.getDataRefAs<StringArray>(exemplarCellEnsemblePath.createChildPath(EbsdLib::AngFile::MaterialName));
+  const auto& materialName = dataStructure.getDataRefAs<StringArray>(cellEnsemblePath.createChildPath(ebsdlib::AngFile::MaterialName));
+  const auto& materialNameExemplar = exemplarDataStructure.getDataRefAs<StringArray>(exemplarCellEnsemblePath.createChildPath(ebsdlib::AngFile::MaterialName));
   UnitTest::CompareStringArrays(materialNameExemplar, materialName);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -98,7 +98,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: InValid Filter Execution",
   args.insertOrAssign(ReadH5OinaDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
   auto h5TestFile = fs::path(fmt::format("{}/H5Oina_Test_Data/FirstLook AB Site 1 Map Data 4.h5oina", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName}};
 
   SECTION("Invalid Z Spacing")
   {

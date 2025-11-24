@@ -67,13 +67,13 @@ Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
     {
       for(size_t phi2 = 0; phi2 < size; phi2++)
       {
-        eulersRef[tupleIdx * 3 + 0] = (phi1 * increment) * Constants::k_PiOver180F;
-        eulersRef[tupleIdx * 3 + 1] = (Phi * increment) * Constants::k_PiOver180F;
-        eulersRef[tupleIdx * 3 + 2] = (phi2 * increment) * Constants::k_PiOver180F;
+        eulersRef[tupleIdx * 3 + 0] = (phi1 * increment) * nx::core::Constants::k_PiOver180F;
+        eulersRef[tupleIdx * 3 + 1] = (Phi * increment) * nx::core::Constants::k_PiOver180F;
+        eulersRef[tupleIdx * 3 + 2] = (phi2 * increment) * nx::core::Constants::k_PiOver180F;
 
-        eulers2Ref[tupleIdx * 3 + 0] = (phi1 * increment * 0.5) * Constants::k_PiOver180F;
-        eulers2Ref[tupleIdx * 3 + 1] = (Phi * increment * 2.0f) * Constants::k_PiOver180F;
-        eulers2Ref[tupleIdx * 3 + 2] = (phi2 * increment) * Constants::k_PiOver180F;
+        eulers2Ref[tupleIdx * 3 + 0] = (phi1 * increment * 0.5) * nx::core::Constants::k_PiOver180F;
+        eulers2Ref[tupleIdx * 3 + 1] = (Phi * increment * 2.0f) * nx::core::Constants::k_PiOver180F;
+        eulers2Ref[tupleIdx * 3 + 2] = (phi2 * increment) * nx::core::Constants::k_PiOver180F;
 
         phasesRef[tupleIdx] = static_cast<int32>(xtal + 1);
         tupleIdx++;
@@ -91,7 +91,7 @@ void GenerateReferenceOrientationTestData()
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   auto& xtalRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath);
-  xtalRef[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
+  xtalRef[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   for(uint32 i = 1; i < 12; i++)
   {
     xtalRef[i] = i - 1;
@@ -136,7 +136,7 @@ void GenerateTestDataInputArrays()
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   auto& xtalRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath);
-  xtalRef[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
+  xtalRef[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   for(uint32 i = 1; i < 12; i++)
   {
     xtalRef[i] = i - 1;

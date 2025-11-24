@@ -195,7 +195,7 @@ Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, c
   CAxisSegmentFeaturesInputValues inputValues;
 
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.MisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key) * Constants::k_PiOver180F;
+  inputValues.MisorientationTolerance = filterArgs.value<float32>(k_MisorientationTolerance_Key) * nx::core::Constants::k_PiOver180F;
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.RandomizeFeatureIds = filterArgs.value<bool>(k_RandomizeFeatureIds_Key);
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);

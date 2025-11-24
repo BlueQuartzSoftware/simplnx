@@ -1,12 +1,13 @@
 #include "ComputeShapes.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/OrientationTransformation.hpp"
-
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+
+#include <EbsdLib/Orientation/Euler.hpp>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <EbsdLib/Orientation/OrientationMatrix.hpp>
 
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
@@ -571,13 +572,13 @@ void ComputeShapes::findAxisEulers()
     // (Note that the 3 directions are actually the long axis and the 1 direction is actually the short axis)
     // clang-format off
     size_t idx = featureId*9;
-    OrientationF g = {m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6],
+    ebsdlib::OrientationMatrixDType g = {m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6],
                      m_EFVec[idx + 1], m_EFVec[idx + 4], m_EFVec[idx + 7],
                      m_EFVec[idx + 2], m_EFVec[idx + 5], m_EFVec[idx + 8]};
     // clang-format on
 
     // check for right-handedness
-    OrientationTransformation::ResultType result = OrientationTransformation::om_check(g);
+    ebsdlib::ResultType result = g.isValid();
     if(result.result == 0)
     {
       g[6] *= -1.0f;
@@ -585,7 +586,7 @@ void ComputeShapes::findAxisEulers()
       g[8] *= -1.0f;
     }
 
-    OrientationF eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(g);
+    ebsdlib::EulerDType eu = g.toEuler();
 
     axisEulerAngles[3 * featureId] = eu[0];
     axisEulerAngles[3 * featureId + 1] = eu[1];

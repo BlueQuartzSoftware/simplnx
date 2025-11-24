@@ -7,8 +7,8 @@
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include "EbsdLib/Core/OrientationTransformation.hpp"
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
 
 #include <Eigen/Dense>
 
@@ -19,7 +19,7 @@ using namespace nx::core;
 namespace
 {
 template <typename T>
-bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2, const std::vector<LaueOps::Pointer>& orientationOps, uint32 laueClass, float32 angTolerance,
+bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2, const std::vector<ebsdlib::LaueOps::Pointer>& orientationOps, uint32 laueClass, float32 angTolerance,
                     float32 axisTolerance)
 {
   T real = std::numeric_limits<T>::max();
@@ -40,7 +40,7 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
 
   for(int32 j = 0; j < nsym; j++)
   {
-    Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
+    ebsdlib::Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
     sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
 
     // calculate crystal direction parallel to normal
@@ -49,12 +49,18 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
     for(int32 k = 0; k < nsym; k++)
     {
       // calculate the symmetric misorienation
-      Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
+      ebsdlib::Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
       sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
       sym_q = sym_q.conjugate();
       s2_misq = sym_q * s1_misq;
 
-      OrientationTransformation::qu2ax<Eigen::Vector4<T>, Orientation<T>>(s2_misq.coeffs(), Quaternion<T>::Order::VectorScalar).toAxisAngle(xVal, yVal, zVal, real);
+      ebsdlib::Quaternion<T> quat(s2_misq.coeffs());
+      ebsdlib::AxisAngleDType ax = quat.toAxisAngle();
+
+      xVal = ax[0];
+      yVal = ax[1];
+      zVal = ax[2];
+      real = ax[3];
 
       real = real * 180.0f / nx::core::Constants::k_PiD;
       axisdiff111 = acos((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>));
@@ -71,7 +77,7 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
 
 template <typename T>
 std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T>& quat2,
-                                             const std::vector<LaueOps::Pointer>& orientationOps, uint32 laueClass, float32 angTolerance, float32 axisTolerance)
+                                             const std::vector<ebsdlib::LaueOps::Pointer>& orientationOps, uint32 laueClass, float32 angTolerance, float32 axisTolerance)
 {
   T real = std::numeric_limits<T>::max();
   T axisdiff111;
@@ -94,7 +100,7 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
   bool valid = false;
   for(int32 j = 0; j < nsym; j++)
   {
-    Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
+    ebsdlib::Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
     j_sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
 
     // calculate crystal direction parallel to normal
@@ -103,12 +109,18 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
     for(int32 k = 0; k < nsym; k++)
     {
       // calculate the symmetric misorienation
-      Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
+      ebsdlib::Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
       sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
       sym_q = sym_q.conjugate();
       s2_misq = sym_q * s1_misq;
 
-      OrientationTransformation::qu2ax<Eigen::Vector4<T>, Orientation<T>>(s2_misq.coeffs(), Quaternion<T>::Order::VectorScalar).toAxisAngle(xVal, yVal, zVal, real);
+      ebsdlib::Quaternion<T> quat(s2_misq.coeffs());
+      ebsdlib::AxisAngleDType ax = quat.toAxisAngle();
+
+      xVal = ax[0];
+      yVal = ax[1];
+      zVal = ax[2];
+      real = ax[3];
 
       real = real * 180.0f / nx::core::Constants::k_PiD;
       axisdiff111 = acos((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>));
@@ -164,7 +176,7 @@ public:
   , m_TwinBoundaryIncoherence(twinBoundaryIncoherence)
   , m_ShouldCancel(shouldCancel)
   , m_HasNaN(hasNaN)
-  , m_OrientationOps(LaueOps::GetAllOrientationOps())
+  , m_OrientationOps(ebsdlib::LaueOps::GetAllOrientationOps())
   {
   }
 
@@ -182,7 +194,7 @@ public:
       if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
       {
         const uint32 crystalStructure = m_CrystalStructures[m_FeaturePhases[feature1]]; // Feature1 was arbitrarily selected the feature phase index is identical
-        if(crystalStructure != EbsdLib::CrystalStructure::Cubic_High && crystalStructure != EbsdLib::CrystalStructure::Cubic_Low)
+        if(crystalStructure != ebsdlib::CrystalStructure::Cubic_High && crystalStructure != ebsdlib::CrystalStructure::Cubic_Low)
         {
           continue;
         }
@@ -229,7 +241,7 @@ private:
   Float32AbstractDataStore& m_TwinBoundaryIncoherence;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_bool& m_HasNaN;
-  std::vector<LaueOps::Pointer> m_OrientationOps;
+  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
 };
 
 /**
@@ -249,7 +261,7 @@ public:
   , m_CrystalStructures(crystalStructures)
   , m_TwinBoundaries(twinBoundaries)
   , m_ShouldCancel(shouldCancel)
-  , m_OrientationOps(LaueOps::GetAllOrientationOps())
+  , m_OrientationOps(ebsdlib::LaueOps::GetAllOrientationOps())
   {
   }
 
@@ -267,7 +279,7 @@ public:
       if(feature1 > 0 && feature2 > 0 && m_FeaturePhases[feature1] == m_FeaturePhases[feature2])
       {
         const uint32 crystalStructure = m_CrystalStructures[m_FeaturePhases[feature1]]; // Feature1 was arbitrarily selected the feature phase index is identical
-        if(crystalStructure != EbsdLib::CrystalStructure::Cubic_High && crystalStructure != EbsdLib::CrystalStructure::Cubic_Low)
+        if(crystalStructure != ebsdlib::CrystalStructure::Cubic_High && crystalStructure != ebsdlib::CrystalStructure::Cubic_Low)
         {
           continue;
         }
@@ -294,7 +306,7 @@ private:
   const UInt32AbstractDataStore& m_CrystalStructures;
   std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_TwinBoundaries;
   const std::atomic_bool& m_ShouldCancel;
-  std::vector<LaueOps::Pointer> m_OrientationOps;
+  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
 };
 } // namespace
 
@@ -327,7 +339,7 @@ Result<> ComputeTwinBoundaries::operator()()
   for(usize i = 1; i < crystalStructures.size(); ++i)
   {
     const auto crystalStructureType = crystalStructures[i];
-    const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Cubic_High || crystalStructureType == EbsdLib::CrystalStructure::Cubic_Low;
+    const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Cubic_High || crystalStructureType == ebsdlib::CrystalStructure::Cubic_Low;
     allPhasesCubic = allPhasesCubic && isHex;
     noPhasesCubic = noPhasesCubic && !isHex;
   }

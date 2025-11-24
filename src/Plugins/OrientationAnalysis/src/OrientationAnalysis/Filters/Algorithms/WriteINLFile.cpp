@@ -21,33 +21,33 @@ uint32 mapCrystalSymmetryToTslSymmetry(uint32 symmetry)
 {
   switch(symmetry)
   {
-  case EbsdLib::CrystalStructure::Cubic_High:
-    return EbsdLib::Ang::PhaseSymmetry::Cubic;
-  case EbsdLib::CrystalStructure::Cubic_Low:
-    return EbsdLib::Ang::PhaseSymmetry::Tetrahedral;
-  case EbsdLib::CrystalStructure::Tetragonal_High:
-    return EbsdLib::Ang::PhaseSymmetry::DiTetragonal;
-  case EbsdLib::CrystalStructure::Tetragonal_Low:
-    return EbsdLib::Ang::PhaseSymmetry::Tetragonal;
-  case EbsdLib::CrystalStructure::OrthoRhombic:
-    return EbsdLib::Ang::PhaseSymmetry::Orthorhombic;
-  case EbsdLib::CrystalStructure::Monoclinic:
-    return EbsdLib::Ang::PhaseSymmetry::Monoclinic_c;
+  case ebsdlib::CrystalStructure::Cubic_High:
+    return ebsdlib::Ang::PhaseSymmetry::Cubic;
+  case ebsdlib::CrystalStructure::Cubic_Low:
+    return ebsdlib::Ang::PhaseSymmetry::Tetrahedral;
+  case ebsdlib::CrystalStructure::Tetragonal_High:
+    return ebsdlib::Ang::PhaseSymmetry::DiTetragonal;
+  case ebsdlib::CrystalStructure::Tetragonal_Low:
+    return ebsdlib::Ang::PhaseSymmetry::Tetragonal;
+  case ebsdlib::CrystalStructure::OrthoRhombic:
+    return ebsdlib::Ang::PhaseSymmetry::Orthorhombic;
+  case ebsdlib::CrystalStructure::Monoclinic:
+    return ebsdlib::Ang::PhaseSymmetry::Monoclinic_c;
     // Not sure why these are here, but they were in the original filter and will never be reached so commented out
-    //    return EbsdLib::Ang::PhaseSymmetry::Monoclinic_b;
-    //    return EbsdLib::Ang::PhaseSymmetry::Monoclinic_a;
-  case EbsdLib::CrystalStructure::Triclinic:
-    return EbsdLib::Ang::PhaseSymmetry::Triclinic;
-  case EbsdLib::CrystalStructure::Hexagonal_High:
-    return EbsdLib::Ang::PhaseSymmetry::DiHexagonal;
-  case EbsdLib::CrystalStructure::Hexagonal_Low:
-    return EbsdLib::Ang::PhaseSymmetry::Hexagonal;
-  case EbsdLib::CrystalStructure::Trigonal_High:
-    return EbsdLib::Ang::PhaseSymmetry::DiTrigonal;
-  case EbsdLib::CrystalStructure::Trigonal_Low:
-    return EbsdLib::Ang::PhaseSymmetry::Trigonal;
+    //    return ebsdlib::Ang::PhaseSymmetry::Monoclinic_b;
+    //    return ebsdlib::Ang::PhaseSymmetry::Monoclinic_a;
+  case ebsdlib::CrystalStructure::Triclinic:
+    return ebsdlib::Ang::PhaseSymmetry::Triclinic;
+  case ebsdlib::CrystalStructure::Hexagonal_High:
+    return ebsdlib::Ang::PhaseSymmetry::DiHexagonal;
+  case ebsdlib::CrystalStructure::Hexagonal_Low:
+    return ebsdlib::Ang::PhaseSymmetry::Hexagonal;
+  case ebsdlib::CrystalStructure::Trigonal_High:
+    return ebsdlib::Ang::PhaseSymmetry::DiTrigonal;
+  case ebsdlib::CrystalStructure::Trigonal_Low:
+    return ebsdlib::Ang::PhaseSymmetry::Trigonal;
   default:
-    return EbsdLib::CrystalStructure::UnknownCrystalStructure;
+    return ebsdlib::CrystalStructure::UnknownCrystalStructure;
   }
 }
 } // namespace
@@ -178,22 +178,22 @@ Result<> WriteINLFile::operator()()
         uint32 symmetry = crystalStructures[phaseId];
         if(phaseId > 0)
         {
-          if(symmetry == EbsdLib::CrystalStructure::Cubic_High)
+          if(symmetry == ebsdlib::CrystalStructure::Cubic_High)
           {
-            symmetry = EbsdLib::Ang::PhaseSymmetry::Cubic;
+            symmetry = ebsdlib::Ang::PhaseSymmetry::Cubic;
           }
-          else if(symmetry == EbsdLib::CrystalStructure::Hexagonal_High)
+          else if(symmetry == ebsdlib::CrystalStructure::Hexagonal_High)
           {
-            symmetry = EbsdLib::Ang::PhaseSymmetry::DiHexagonal;
+            symmetry = ebsdlib::Ang::PhaseSymmetry::DiHexagonal;
           }
           else
           {
-            symmetry = EbsdLib::Ang::PhaseSymmetry::UnknownSymmetry;
+            symmetry = ebsdlib::Ang::PhaseSymmetry::UnknownSymmetry;
           }
         }
         else
         {
-          symmetry = EbsdLib::Ang::PhaseSymmetry::UnknownSymmetry;
+          symmetry = ebsdlib::Ang::PhaseSymmetry::UnknownSymmetry;
         }
 
         fout << std::fixed << phi1 << " " << phi << " " << phi2 << " " << xPos << " " << yPos << " " << zPos << " " << featureIds[index] << " " << phaseId << " " << symmetry << "\n";

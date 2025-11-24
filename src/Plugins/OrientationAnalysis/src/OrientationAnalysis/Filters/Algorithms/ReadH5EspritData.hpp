@@ -19,7 +19,7 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5EspritDataInputValues
  * @brief This filter will read a single .h5 file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the intermediate .h5ebsd file.
  */
 
-class ORIENTATIONANALYSIS_EXPORT ReadH5EspritData : public IEbsdOemReader<H5EspritReader>
+class ORIENTATIONANALYSIS_EXPORT ReadH5EspritData : public IEbsdOemReader<ebsdlib::H5EspritReader>
 {
 public:
   ReadH5EspritData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues,

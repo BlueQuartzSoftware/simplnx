@@ -3,9 +3,9 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 
-#include "EbsdLib/Core/Quaternion.hpp"
 #include <EbsdLib/EbsdLibVersion.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Orientation/Quaternion.hpp>
 
 using namespace nx::core;
 
@@ -31,7 +31,7 @@ const std::atomic_bool& ComputeSlipTransmissionMetrics::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeSlipTransmissionMetrics::operator()()
 {
-  auto orientationOps = LaueOps::GetAllOrientationOps();
+  auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
   auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
@@ -63,8 +63,8 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
     for(usize j = 0; j < listLength; j++)
     {
       nName = neighborList[i][j];
-      QuatD q1(avgQuats[i * 4], avgQuats[i * 4 + 1], avgQuats[i * 4 + 2], avgQuats[i * 4 + 3]);
-      QuatD q2(avgQuats[nName * 4], avgQuats[nName * 4 + 1], avgQuats[nName * 4 + 2], avgQuats[nName * 4 + 3]);
+      ebsdlib::QuatD q1(avgQuats[i * 4], avgQuats[i * 4 + 1], avgQuats[i * 4 + 2], avgQuats[i * 4 + 3]);
+      ebsdlib::QuatD q2(avgQuats[nName * 4], avgQuats[nName * 4 + 1], avgQuats[nName * 4 + 2], avgQuats[nName * 4 + 3]);
 
       uint32 laueClassI = static_cast<uint32>(featurePhases[i]);
       uint32 laueClassN = static_cast<uint32>(featurePhases[nName]);

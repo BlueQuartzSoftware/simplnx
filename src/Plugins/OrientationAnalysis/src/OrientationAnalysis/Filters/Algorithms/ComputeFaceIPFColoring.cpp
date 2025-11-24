@@ -51,19 +51,7 @@ public:
 
   void generate(usize start, usize end) const
   {
-    // Create 1 of every type of Ops class. This condenses the code below
-    std::vector<LaueOps::Pointer> ops;
-    ops.push_back(HexagonalOps::New());
-    ops.push_back(CubicOps::New());
-    ops.push_back(HexagonalLowOps::New());
-    ops.push_back(CubicLowOps::New());
-    ops.push_back(TriclinicOps::New());
-    ops.push_back(MonoclinicOps::New());
-    ops.push_back(OrthoRhombicOps::New());
-    ops.push_back(TetragonalLowOps::New());
-    ops.push_back(TetragonalOps::New());
-    ops.push_back(TrigonalLowOps::New());
-    ops.push_back(TrigonalOps::New());
+    std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
 
     double refDir[3] = {0.0, 0.0, 0.0};
     double dEuler[3] = {0.0, 0.0, 0.0};
@@ -95,7 +83,7 @@ public:
       if(phase1 > 0)
       {
         // Make sure we are using a valid Euler Angles with valid crystal symmetry
-        if(m_CrystalStructures[phase1] < EbsdLib::CrystalStructure::LaueGroupEnd)
+        if(m_CrystalStructures[phase1] < ebsdlib::CrystalStructure::LaueGroupEnd)
         {
           dEuler[0] = m_Eulers[3 * feature1 + 0];
           dEuler[1] = m_Eulers[3 * feature1 + 1];
@@ -121,7 +109,7 @@ public:
       if(phase2 > 0)
       {
         // Make sure we are using a valid Euler Angles with valid crystal symmetry
-        if(m_CrystalStructures[phase1] < EbsdLib::CrystalStructure::LaueGroupEnd)
+        if(m_CrystalStructures[phase1] < ebsdlib::CrystalStructure::LaueGroupEnd)
         {
           dEuler[0] = m_Eulers[3 * feature2 + 0];
           dEuler[1] = m_Eulers[3 * feature2 + 1];

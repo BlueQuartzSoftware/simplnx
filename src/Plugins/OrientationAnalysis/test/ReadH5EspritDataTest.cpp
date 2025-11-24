@@ -41,7 +41,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
   Arguments args;
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName_435}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_435}};
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadH5EspritDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
@@ -95,7 +95,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
   Arguments args;
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName_435, k_ScanName_436, k_ScanName_437}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_435, k_ScanName_436, k_ScanName_437}};
 
   // Create default Parameters for the filter.
   args.insertOrAssign(ReadH5EspritDataFilter::k_SelectedScanNames_Key, std::make_any<OEMEbsdScanSelectionParameter::ValueType>(scanSelections));
@@ -151,7 +151,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: InValid Filter Execution
   args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleData));
 
   auto h5TestFile = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/H5EspritReaderTest.h5", unit_test::k_TestFilesDir));
-  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, EbsdLib::RefFrameZDir::LowtoHigh, {k_ScanName_435}};
+  OEMEbsdScanSelectionParameter::ValueType scanSelections = {h5TestFile, ebsdlib::RefFrameZDir::LowtoHigh, {k_ScanName_435}};
 
   SECTION("Invalid Z Spacing")
   {

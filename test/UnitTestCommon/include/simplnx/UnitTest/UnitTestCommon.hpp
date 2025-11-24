@@ -1496,13 +1496,13 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
   ArrayThresholdSet::CollectionType thresholds;
 
   std::shared_ptr<ArrayThreshold> ciThreshold = std::make_shared<ArrayThreshold>();
-  ciThreshold->setArrayPath(Constants::k_ConfidenceIndexArrayPath);
+  ciThreshold->setArrayPath(nx::core::Constants::k_ConfidenceIndexArrayPath);
   ciThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
   ciThreshold->setComparisonValue(0.1);
   thresholds.push_back(ciThreshold);
 
   std::shared_ptr<ArrayThreshold> iqThreshold = std::make_shared<ArrayThreshold>();
-  iqThreshold->setArrayPath(Constants::k_ImageQualityArrayPath);
+  iqThreshold->setArrayPath(nx::core::Constants::k_ImageQualityArrayPath);
   iqThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
   iqThreshold->setComparisonValue(120.0);
   thresholds.push_back(iqThreshold);
@@ -1510,7 +1510,7 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
   arrayThresholdset.setArrayThresholds(thresholds);
 
   args.insertOrAssign(k_ArrayThresholds_Key, std::make_any<ArrayThresholdsParameter::ValueType>(arrayThresholdset));
-  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<std::string>(Constants::k_Mask));
+  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<std::string>(nx::core::Constants::k_Mask));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);
@@ -1537,8 +1537,8 @@ inline void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList
 
   Arguments args;
   args.insertOrAssign(k_FillHoles_Key, std::make_any<BoolParameter::ValueType>(false));
-  args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(Constants::k_DataContainerPath));
-  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(nx::core::Constants::k_DataContainerPath));
+  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(nx::core::Constants::k_MaskArrayPath));
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);

@@ -7,7 +7,7 @@
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
+#include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
@@ -75,7 +75,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 
   float w = 10000.0f;
 
-  std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   std::vector<int32_t> neighborCount(totalPoints, 0);
 
@@ -121,12 +121,12 @@ Result<> BadDataNeighborOrientationCheck::operator()()
         if(good == 1 && maskCompare->isTrue(neighbor))
         {
           uint32 laueClass1 = crystalStructures[cellPhases[i]];
-          QuatF quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-          QuatF quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
+          ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
+          ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
 
           if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
           {
-            OrientationD axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
+            ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
             w = axisAngle[3];
           }
           if(w < misorientationTolerance)
@@ -193,13 +193,13 @@ Result<> BadDataNeighborOrientationCheck::operator()()
             }
             if(good == 1 && !maskCompare->isTrue(neighbor))
             {
-              QuatF quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-              QuatF quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
+              ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
+              ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
 
               if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
               {
                 uint32 laueClass1 = crystalStructures[cellPhases[i]];
-                OrientationD axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
+                ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                 w = axisAngle[3];
               }
               if(w < misorientationTolerance)

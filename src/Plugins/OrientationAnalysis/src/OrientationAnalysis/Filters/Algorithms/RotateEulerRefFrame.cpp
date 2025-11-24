@@ -8,8 +8,9 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/OrientationTransformation.hpp"
+#include <EbsdLib/Orientation/AxisAngle.hpp>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <EbsdLib/Orientation/OrientationMatrix.hpp>
 
 using namespace nx::core;
 
@@ -36,15 +37,15 @@ public:
 
   void convert(size_t start, size_t end) const
   {
-    auto om = OrientationTransformation::ax2om<OrientationF, OrientationF>(OrientationF(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * nx::core::numbers::pi / 180.0F));
+    ebsdlib::OrientationMatrixDType om = ebsdlib::AxisAngleDType(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * nx::core::numbers::pi / 180.0).toOrientationMatrix();
 
-    OrientationUtilities::Matrix3fR rotMat = OrientationUtilities::OrientationMatrixToGMatrix(om);
+    OrientationUtilities::Matrix3dR rotMat = om.toEigenGMatrix();
 
     ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
     usize counter = 0;
     usize counterIncrement = (end - start) / 100;
-    float ea1 = 0, ea2 = 0, ea3 = 0;
+    // float ea1 = 0, ea2 = 0, ea3 = 0;
     for(size_t i = start; i < end; i++)
     {
       if(m_ShouldCancel)
@@ -56,14 +57,11 @@ public:
         progressMessenger.sendProgressMessage(counter);
         counter = 0;
       }
-      ea1 = m_CellEulerAngles[3 * i + 0];
-      ea2 = m_CellEulerAngles[3 * i + 1];
-      ea3 = m_CellEulerAngles[3 * i + 2];
-      om = OrientationTransformation::eu2om<OrientationF, OrientationF>(OrientationF(ea1, ea2, ea3));
-      OrientationUtilities::Matrix3fR g = OrientationUtilities::OrientationMatrixToGMatrix(om);
-      OrientationUtilities::Matrix3fR gNew = (g * rotMat).colwise().normalized();
 
-      auto eu = OrientationTransformation::om2eu<OrientationF, OrientationF>(OrientationF(gNew.data(), 9));
+      om = ebsdlib::EulerDType(m_CellEulerAngles[3 * i + 0], m_CellEulerAngles[3 * i + 1], m_CellEulerAngles[3 * i + 2]).toOrientationMatrix();
+      OrientationUtilities::Matrix3dR gNew = (om * rotMat).colwise().normalized();
+
+      ebsdlib::EulerDType eu = ebsdlib::OrientationMatrixDType(gNew.data()).toEuler();
       m_CellEulerAngles[3 * i] = eu[0];
       m_CellEulerAngles[3 * i + 1] = eu[1];
       m_CellEulerAngles[3 * i + 2] = eu[2];

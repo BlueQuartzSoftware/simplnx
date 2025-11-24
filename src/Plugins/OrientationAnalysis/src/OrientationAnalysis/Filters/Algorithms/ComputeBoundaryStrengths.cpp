@@ -4,8 +4,8 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 
-#include "EbsdLib/Core/Quaternion.hpp"
 #include <EbsdLib/LaueOps/LaueOps.h>
+#include <EbsdLib/Orientation/Quaternion.hpp>
 
 using namespace nx::core;
 
@@ -31,7 +31,7 @@ const std::atomic_bool& ComputeBoundaryStrengths::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundaryStrengths::operator()()
 {
-  auto orientationOps = LaueOps::GetAllOrientationOps();
+  auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   auto& surfaceMeshFaceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
   auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
@@ -58,8 +58,8 @@ Result<> ComputeBoundaryStrengths::operator()()
     gName2 = surfaceMeshFaceLabels[i * 2 + 1];
     if(gName1 > 0 && gName2 > 0)
     {
-      QuatD q1(avgQuats[gName1 * 4], avgQuats[gName1 * 4 + 1], avgQuats[gName1 * 4 + 2], avgQuats[gName1 * 4 + 3]);
-      QuatD q2(avgQuats[gName2 * 4], avgQuats[gName2 * 4 + 1], avgQuats[gName2 * 4 + 2], avgQuats[gName2 * 4 + 3]);
+      ebsdlib::QuatD q1(avgQuats[gName1 * 4], avgQuats[gName1 * 4 + 1], avgQuats[gName1 * 4 + 2], avgQuats[gName1 * 4 + 3]);
+      ebsdlib::QuatD q2(avgQuats[gName2 * 4], avgQuats[gName2 * 4 + 1], avgQuats[gName2 * 4 + 2], avgQuats[gName2 * 4 + 3]);
 
       uint32 laueClassG1 = static_cast<uint32>(featurePhases[gName1]);
       uint32 laueClassG2 = static_cast<uint32>(featurePhases[gName2]);
@@ -69,7 +69,7 @@ Result<> ComputeBoundaryStrengths::operator()()
       }
       if(crystalStructures[laueClassG1] == crystalStructures[laueClassG2] && featurePhases[gName1] > 0)
       {
-        LaueOps::Pointer laueClass = orientationOps[crystalStructures[featurePhases[gName1]]];
+        ebsdlib::LaueOps::Pointer laueClass = orientationOps[crystalStructures[featurePhases[gName1]]];
         mPrime_1 = static_cast<float32>(laueClass->getmPrime(q1, q2, LD));
         mPrime_2 = static_cast<float32>(laueClass->getmPrime(q2, q1, LD));
         F1_1 = static_cast<float32>(laueClass->getF1(q1, q2, LD, true));

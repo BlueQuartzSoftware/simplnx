@@ -70,7 +70,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
       static_cast<int64_t>(udims[2]),
   };
 
-  std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   // Allocate a 2D Array which will be reused from slice to slice
   std::vector<bool> misorients(dims[0] * dims[1], false);
@@ -139,13 +139,13 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
                       float angle = std::numeric_limits<float>::max();
                       if(cellPhases[refposition] > 0 && cellPhases[curposition] > 0)
                       {
-                        QuatF quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
+                        ebsdlib::QuatD quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
                         auto laueClass1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
-                        QuatF quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
+                        ebsdlib::QuatD quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
                         auto laueClass2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
                         if(laueClass1 == laueClass2 && laueClass1 < static_cast<uint32_t>(orientationOps.size()))
                         {
-                          OrientationF axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
+                          ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                           angle = axisAngle[3];
                         }
                       }
@@ -247,13 +247,13 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
                       float angle = std::numeric_limits<float>::max();
                       if(cellPhases[refposition] > 0 && cellPhases[curposition] > 0)
                       {
-                        QuatF quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
+                        ebsdlib::QuatD quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
                         auto laueClass1 = static_cast<int32_t>(crystalStructures[cellPhases[refposition]]);
-                        QuatF quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
+                        ebsdlib::QuatD quat2(quats[curposition * 4], quats[curposition * 4 + 1], quats[curposition * 4 + 2], quats[curposition * 4 + 3]); // Makes a copy into voxQuat!!!!
                         auto laueClass2 = static_cast<int32_t>(crystalStructures[cellPhases[curposition]]);
                         if(laueClass1 == laueClass2 && laueClass1 < static_cast<uint32_t>(orientationOps.size()))
                         {
-                          OrientationF axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
+                          ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                           angle = axisAngle[3];
                         }
                       }

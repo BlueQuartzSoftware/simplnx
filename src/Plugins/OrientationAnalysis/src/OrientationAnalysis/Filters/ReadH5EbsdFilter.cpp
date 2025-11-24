@@ -103,7 +103,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  H5EbsdVolumeReader::Pointer reader = H5EbsdVolumeReader::New();
+  ebsdlib::H5EbsdVolumeReader::Pointer reader = ebsdlib::H5EbsdVolumeReader::New();
   reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
   int32_t err = reader->readVolumeInfo();
   if(err < 0)
@@ -127,36 +127,36 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
 
   resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(imageGeomPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue));
 
-  EbsdLib::OEM m_Manufacturer = {EbsdLib::OEM::Unknown};
+  ebsdlib::OEM m_Manufacturer = {ebsdlib::OEM::Unknown};
   std::string manufacturer = reader->getManufacturer();
-  if(manufacturer == EbsdLib::Ang::Manufacturer)
+  if(manufacturer == ebsdlib::Ang::Manufacturer)
   {
-    m_Manufacturer = EbsdLib::OEM::EDAX;
+    m_Manufacturer = ebsdlib::OEM::EDAX;
   }
-  else if(manufacturer == EbsdLib::Ctf::Manufacturer)
+  else if(manufacturer == ebsdlib::Ctf::Manufacturer)
   {
-    m_Manufacturer = EbsdLib::OEM::Oxford;
+    m_Manufacturer = ebsdlib::OEM::Oxford;
   }
 
   std::vector<std::string> names;
-  if(m_Manufacturer == EbsdLib::OEM::EDAX)
+  if(m_Manufacturer == ebsdlib::OEM::EDAX)
   {
-    AngFields angFeatures;
-    reader = H5AngVolumeReader::New();
+    ebsdlib::AngFields angFeatures;
+    reader = ebsdlib::H5AngVolumeReader::New();
     reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = angFeatures.getFilterFeatures<std::vector<std::string>>();
 
-    EbsdReaderUtilities::GeneratePreflightScanInformation<H5AngVolumeReader>(dynamic_cast<H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5AngVolumeReader>(dynamic_cast<H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
-  else if(m_Manufacturer == EbsdLib::OEM::Oxford)
+  else if(m_Manufacturer == ebsdlib::OEM::Oxford)
   {
-    CtfFields cfeatures;
-    reader = H5CtfVolumeReader::New();
+    ebsdlib::CtfFields cfeatures;
+    reader = ebsdlib::H5CtfVolumeReader::New();
     reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
     names = cfeatures.getFilterFeatures<std::vector<std::string>>();
-    EbsdReaderUtilities::GeneratePreflightScanInformation<H5CtfVolumeReader>(dynamic_cast<H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<H5CtfVolumeReader>(dynamic_cast<H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
   else
   {
@@ -177,13 +177,13 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
     {
       continue;
     }
-    if(reader->getPointerType(names[i]) == EbsdLib::NumericTypes::Type::Int32)
+    if(reader->getPointerType(names[i]) == ebsdlib::NumericTypes::Type::Int32)
     {
       const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
-    else if(reader->getPointerType(names[i]) == EbsdLib::NumericTypes::Type::Float)
+    else if(reader->getPointerType(names[i]) == ebsdlib::NumericTypes::Type::Float)
     {
       const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
@@ -192,19 +192,19 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   }
 
   // Only read these arrays if the user wants them
-  if(m_SelectedArrayNames.find(EbsdLib::CellData::EulerAngles) != m_SelectedArrayNames.end())
+  if(m_SelectedArrayNames.find(ebsdlib::CellData::EulerAngles) != m_SelectedArrayNames.end())
   {
     cDims[0] = 3;
-    const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles);
+    const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Only read the phases if the user wants it.
-  if(m_SelectedArrayNames.find(EbsdLib::H5Ebsd::Phases) != m_SelectedArrayNames.end())
+  if(m_SelectedArrayNames.find(ebsdlib::H5Ebsd::Phases) != m_SelectedArrayNames.end())
   {
     cDims[0] = 1;
-    const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(EbsdLib::H5Ebsd::Phases);
+    const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::H5Ebsd::Phases);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
@@ -226,20 +226,20 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   }
 
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::CrystalStructures);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(EbsdLib::EnsembleData::MaterialName);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::MaterialName);
     auto action = std::make_unique<CreateStringArrayAction>(tupleDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   cDims[0] = 6;
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::LatticeConstants);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }

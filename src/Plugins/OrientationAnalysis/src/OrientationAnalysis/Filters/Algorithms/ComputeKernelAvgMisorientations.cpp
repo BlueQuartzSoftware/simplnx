@@ -44,13 +44,13 @@ public:
     auto& kernelAvgMisorientationsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->KernelAverageMisorientationsArrayName);
     auto& kernelAvgMisorientations = kernelAvgMisorientationsArray.getDataStoreRef();
 
-    std::vector<LaueOps::Pointer> m_OrientationOps = LaueOps::GetAllOrientationOps();
+    std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
     auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
     SizeVec3 udims = gridGeom->getDimensions();
 
-    QuatD q1;
-    QuatD q2;
+    ebsdlib::QuatD q1;
+    ebsdlib::QuatD q2;
 
     // messenger values
     usize counter = 0;
@@ -120,7 +120,7 @@ public:
                     q2[2] = quats[quatIndex + 2];
                     q2[3] = quats[quatIndex + 3];
                     uint32_t laueClass = crystalStructures[cellPhases[point]];
-                    OrientationF axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
+                    ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
                     totalMisorientation = totalMisorientation + (axisAngle[3] * nx::core::Constants::k_180OverPiF);
                     numVoxel++;
                   }

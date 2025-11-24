@@ -32,7 +32,7 @@ const std::atomic_bool& ComputeFeatureNeighborMisorientations::getCancel()
 Result<> ComputeFeatureNeighborMisorientations::operator()()
 {
 
-  std::vector<LaueOps::Pointer> orientationOps = LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   // Input Arrays
   const auto& inFeaturePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
@@ -54,7 +54,7 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
   {
     quatIndex = i * 4;
 
-    QuatF q1(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
+    ebsdlib::QuatD q1(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
     uint32_t laueClass1 = inXtalStruct[inFeaturePhases[i]];
 
     const NeighborList<int32_t>::VectorType featureNeighborList = inNeighborList.at(static_cast<int32_t>(i));
@@ -65,12 +65,12 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
     {
       int32_t neighborFeatureId = featureNeighborList[j];
       quatIndex = neighborFeatureId * 4;
-      QuatF q2(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
+      ebsdlib::QuatD q2(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
       uint32_t xtalType2 = inXtalStruct[inFeaturePhases[neighborFeatureId]];
       tempMisoList = featureNeighborList.size();
       if(laueClass1 == xtalType2 && static_cast<int64_t>(laueClass1) < static_cast<int64_t>(orientationOps.size()))
       {
-        OrientationD axisAngle = orientationOps[laueClass1]->calculateMisorientation(q1, q2);
+        ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(q1, q2);
 
         tempMisorientationLists[i][j] = static_cast<float>(axisAngle[3] * nx::core::Constants::k_180OverPiF);
         if(m_InputValues->ComputeAvgMisors)

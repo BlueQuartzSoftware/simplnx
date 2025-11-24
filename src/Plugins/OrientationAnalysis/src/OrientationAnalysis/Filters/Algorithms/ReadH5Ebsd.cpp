@@ -63,22 +63,22 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
 
   nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
 
-  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
+  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(ebsdlib::EnsembleData::CrystalStructures);
   auto& xtalData = mDataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
   xtalData.getIDataStore()->resizeTuples(tDims);
 
-  nx::core::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::LatticeConstants);
+  nx::core::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(ebsdlib::EnsembleData::LatticeConstants);
   auto& latticData = mDataStructure.getDataRefAs<nx::core::Float32Array>(latticeDataPath);
   latticData.getIDataStore()->resizeTuples(tDims);
 
   // Reshape the Material Names here also.
-  nx::core::DataPath matNamesDataath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::MaterialName);
+  nx::core::DataPath matNamesDataath = cellEnsembleMatrixPath.createChildPath(ebsdlib::EnsembleData::MaterialName);
   auto& matNameData = mDataStructure.getDataRefAs<nx::core::StringArray>(matNamesDataath);
   matNameData.resizeTuples(tDims);
 
   // Initialize the zero'th element to unknowns. The other elements will
   // be filled in based on values from the data file
-  xtalData[0] = EbsdLib::CrystalStructure::UnknownCrystalStructure;
+  xtalData[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   // materialNames->setValue(0, QString("Invalid Phase"));
   latticData[0] = 0.0f;
   latticData[1] = 0.0f;
@@ -157,13 +157,13 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
 
   std::string manufacturer = ebsdReader->getManufacturer();
 
-  if(selectedArrayNames.find(EbsdLib::CellData::EulerAngles) != selectedArrayNames.end())
+  if(selectedArrayNames.find(ebsdlib::CellData::EulerAngles) != selectedArrayNames.end())
   {
     selectedArrayNames.insert(eulerNames[0]);
     selectedArrayNames.insert(eulerNames[1]);
     selectedArrayNames.insert(eulerNames[2]);
   }
-  if(selectedArrayNames.find(EbsdLib::CellData::Phases) != selectedArrayNames.end())
+  if(selectedArrayNames.find(ebsdlib::CellData::Phases) != selectedArrayNames.end())
   {
     selectedArrayNames.insert(eulerNames[3]);
   }
@@ -189,12 +189,12 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
 
   // Get the Crystal Structure data which should have already been read from the file and copied to the array
   nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
-  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(EbsdLib::EnsembleData::CrystalStructures);
+  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(ebsdlib::EnsembleData::CrystalStructures);
   auto& xtalData = dataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
 
   // Copy the Phase Values from the EBSDReader to the DataStructure
   auto* phasePtr = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(eulerNames[3]));            // get the phase data from the EbsdReader
-  nx::core::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::H5Ebsd::Phases); // get the phase data from the DataStructure
+  nx::core::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(ebsdlib::H5Ebsd::Phases); // get the phase data from the DataStructure
   nx::core::Int32Array* phaseDataArrayPtr = nullptr;
 
   if(selectedArrayNames.find(eulerNames[3]) != selectedArrayNames.end())
@@ -206,18 +206,18 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
     }
   }
 
-  if(selectedArrayNames.find(EbsdLib::CellData::EulerAngles) != selectedArrayNames.end())
+  if(selectedArrayNames.find(ebsdlib::CellData::EulerAngles) != selectedArrayNames.end())
   {
     //  radian conversion = M_PI / 180.0;
     auto* euler0 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[0]));
     auto* euler1 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[1]));
     auto* euler2 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[2]));
     //  std::vector<size_t> cDims = {3};
-    nx::core::DataPath eulerDataPath = cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
+    nx::core::DataPath eulerDataPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles); // get the Euler data from the DataStructure
     auto& eulerData = dataStructure.getDataRefAs<nx::core::Float32Array>(eulerDataPath);
 
     float degToRad = 1.0f;
-    if(mInputValues->eulerRepresentation != EbsdLib::AngleRepresentation::Radians && mInputValues->useRecommendedTransform)
+    if(mInputValues->eulerRepresentation != ebsdlib::AngleRepresentation::Radians && mInputValues->useRecommendedTransform)
     {
       degToRad = nx::core::numbers::pi_v<float> / 180.0F;
     }
@@ -228,11 +228,11 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
       eulerData[3 * elementIndex + 2] = euler2[elementIndex] * degToRad;
     }
     // THIS IS ONLY TO BRING OXFORD DATA INTO THE SAME HEX REFERENCE AS EDAX HEX REFERENCE
-    if(manufacturer == EbsdLib::Ctf::Manufacturer && phaseDataArrayPtr != nullptr)
+    if(manufacturer == ebsdlib::Ctf::Manufacturer && phaseDataArrayPtr != nullptr)
     {
       for(size_t elementIndex = 0; elementIndex < totalPoints; elementIndex++)
       {
-        if(xtalData[(*phaseDataArrayPtr)[elementIndex]] == EbsdLib::CrystalStructure::Hexagonal_High)
+        if(xtalData[(*phaseDataArrayPtr)[elementIndex]] == ebsdlib::CrystalStructure::Hexagonal_High)
         {
           eulerData[3 * elementIndex + 2] = eulerData[3 * elementIndex + 2] + (30.0F * degToRad);
         }
@@ -267,7 +267,7 @@ ReadH5Ebsd::~ReadH5Ebsd() noexcept = default;
 Result<> ReadH5Ebsd::operator()()
 {
   // Get the Size and Spacing of the Volume
-  H5EbsdVolumeInfo::Pointer volumeInfoReader = H5EbsdVolumeInfo::New();
+  ebsdlib::H5EbsdVolumeInfo::Pointer volumeInfoReader = ebsdlib::H5EbsdVolumeInfo::New();
   volumeInfoReader->setFileName(m_InputValues->inputFilePath);
   int err = volumeInfoReader->readVolumeInfo();
   if(err < 0)
@@ -292,7 +292,7 @@ Result<> ReadH5Ebsd::operator()()
   float eulerTransAngle = volumeInfoReader->getEulerTransformationAngle();
 
   // This will effectively close the reader and free any memory being used
-  volumeInfoReader = H5EbsdVolumeInfo::NullPointer();
+  volumeInfoReader = ebsdlib::H5EbsdVolumeInfo::NullPointer();
 
   std::set<std::string> mSelectedArrayNames;
   for(const auto& selectedArrayName : m_InputValues->hdf5DataPaths)
@@ -300,23 +300,25 @@ Result<> ReadH5Ebsd::operator()()
     mSelectedArrayNames.insert(selectedArrayName);
   }
 
-  if(manufacturer == EbsdLib::Ang::Manufacturer)
+  if(manufacturer == ebsdlib::Ang::Manufacturer)
   {
-    std::vector<std::string> eulerPhaseArrays = {EbsdLib::Ang::Phi1, EbsdLib::Ang::Phi, EbsdLib::Ang::Phi2, EbsdLib::Ang::PhaseData};
-    std::vector<std::string> floatArrays = {EbsdLib::Ang::ImageQuality, EbsdLib::Ang::ConfidenceIndex, EbsdLib::Ang::SEMSignal, EbsdLib::Ang::Fit, EbsdLib::Ang::XPosition, EbsdLib::Ang::YPosition};
+    std::vector<std::string> eulerPhaseArrays = {ebsdlib::Ang::Phi1, ebsdlib::Ang::Phi, ebsdlib::Ang::Phi2, ebsdlib::Ang::PhaseData};
+    std::vector<std::string> floatArrays = {ebsdlib::Ang::ImageQuality, ebsdlib::Ang::ConfidenceIndex, ebsdlib::Ang::SEMSignal, ebsdlib::Ang::Fit, ebsdlib::Ang::XPosition, ebsdlib::Ang::YPosition};
     std::vector<std::string> intArrays = {};
-    Result<> result = LoadEbsdData<H5AngVolumeReader, AngPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, mSelectedArrayNames, dcDims, floatArrays, intArrays);
+    Result<> result =
+        LoadEbsdData<ebsdlib::H5AngVolumeReader, ebsdlib::AngPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, mSelectedArrayNames, dcDims, floatArrays, intArrays);
     if(result.invalid())
     {
       return result;
     }
   }
-  else if(manufacturer == EbsdLib::Ctf::Manufacturer)
+  else if(manufacturer == ebsdlib::Ctf::Manufacturer)
   {
-    std::vector<std::string> eulerPhaseArrays = {EbsdLib::Ctf::Euler1, EbsdLib::Ctf::Euler2, EbsdLib::Ctf::Euler3, EbsdLib::Ctf::Phase};
-    std::vector<std::string> floatArrays = {EbsdLib::Ctf::MAD, EbsdLib::Ctf::X, EbsdLib::Ctf::Y};
-    std::vector<std::string> intArrays = {EbsdLib::Ctf::Bands, EbsdLib::Ctf::Error, EbsdLib::Ctf::BC, EbsdLib::Ctf::BS};
-    Result<> result = LoadEbsdData<H5CtfVolumeReader, CtfPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, mSelectedArrayNames, dcDims, floatArrays, intArrays);
+    std::vector<std::string> eulerPhaseArrays = {ebsdlib::Ctf::Euler1, ebsdlib::Ctf::Euler2, ebsdlib::Ctf::Euler3, ebsdlib::Ctf::Phase};
+    std::vector<std::string> floatArrays = {ebsdlib::Ctf::MAD, ebsdlib::Ctf::X, ebsdlib::Ctf::Y};
+    std::vector<std::string> intArrays = {ebsdlib::Ctf::Bands, ebsdlib::Ctf::Error, ebsdlib::Ctf::BC, ebsdlib::Ctf::BS};
+    Result<> result =
+        LoadEbsdData<ebsdlib::H5CtfVolumeReader, ebsdlib::CtfPhase>(m_InputValues, m_DataStructure, eulerPhaseArrays, m_MessageHandler, mSelectedArrayNames, dcDims, floatArrays, intArrays);
     if(result.invalid())
     {
       return result;
@@ -324,14 +326,14 @@ Result<> ReadH5Ebsd::operator()()
   }
   else
   {
-    return {MakeErrorResult(-50001, fmt::format("Could not determine or match a supported manufacturer from the data file. Supported manufacturer codes are: '{}' and '{}'", EbsdLib::Ctf::Manufacturer,
-                                                EbsdLib::Ang::Manufacturer))};
+    return {MakeErrorResult(-50001, fmt::format("Could not determine or match a supported manufacturer from the data file. Supported manufacturer codes are: '{}' and '{}'", ebsdlib::Ctf::Manufacturer,
+                                                ebsdlib::Ang::Manufacturer))};
   }
   // Sanity Check the Error Condition or the state of the EBSD Reader Object.
   if(m_InputValues->useRecommendedTransform)
   {
 
-    nx::core::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(EbsdLib::CellData::EulerAngles); // get the Euler data from the DataStructure
+    nx::core::DataPath eulerDataPath = m_InputValues->cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles); // get the Euler data from the DataStructure
 
     if(eulerTransAngle > 0 && m_DataStructure.containsData(eulerDataPath))
     {

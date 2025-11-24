@@ -9,7 +9,7 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 ReadH5EspritData::ReadH5EspritData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadH5DataInputValues* inputValues,
                                    ReadH5EspritDataInputValues* espritInputValues)
-: IEbsdOemReader<H5EspritReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
+: IEbsdOemReader<ebsdlib::H5EspritReader>(dataStructure, mesgHandler, shouldCancel, inputValues)
 , m_EspritInputValues(espritInputValues)
 {
 }
@@ -31,32 +31,32 @@ Result<> ReadH5EspritData::copyRawEbsdData(int index)
   const usize offset = index * totalPoints;
 
   {
-    const float32 degToRad = m_EspritInputValues->DegreesToRadians ? Constants::k_PiOver180F : 1.0f;
-    const auto* phi1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi1));
-    const auto* phi = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::PHI));
-    const auto* phi2 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::phi2));
-    auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::Esprit::EulerAngles));
+    const float32 degToRad = m_EspritInputValues->DegreesToRadians ? nx::core::Constants::k_PiOver180F : 1.0f;
+    const auto* phi1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::phi1));
+    const auto* phi = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::PHI));
+    const auto* phi2 = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::phi2));
+    auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::Esprit::EulerAngles));
 
-    const auto* m1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::MAD));
-    auto& mad = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::MAD));
+    const auto* m1 = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::MAD));
+    auto& mad = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::MAD));
 
-    const auto* nIndBands = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::NIndexedBands));
-    auto& nIndexBands = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::NIndexedBands));
+    const auto* nIndBands = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::NIndexedBands));
+    auto& nIndexBands = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::NIndexedBands));
 
-    const auto* p1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::Phase));
-    auto& phase = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::Phase));
+    const auto* p1 = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::Phase));
+    auto& phase = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::Phase));
 
-    const auto* radBandCnt = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::RadonBandCount));
-    auto& radonBandCount = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::RadonBandCount));
+    const auto* radBandCnt = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::RadonBandCount));
+    auto& radonBandCount = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::RadonBandCount));
 
-    const auto* radQual = reinterpret_cast<float32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::RadonQuality));
-    auto& radonQuality = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::RadonQuality));
+    const auto* radQual = reinterpret_cast<float32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::RadonQuality));
+    auto& radonQuality = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::RadonQuality));
 
-    const auto* xBm = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::XBEAM));
-    auto& xBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::XBEAM));
+    const auto* xBm = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::XBEAM));
+    auto& xBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::XBEAM));
 
-    const auto* yBm = reinterpret_cast<int32*>(m_Reader->getPointerByName(EbsdLib::H5Esprit::YBEAM));
-    auto& yBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::YBEAM));
+    const auto* yBm = reinterpret_cast<int32*>(m_Reader->getPointerByName(ebsdlib::H5Esprit::YBEAM));
+    auto& yBeam = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::YBEAM));
 
     for(size_t i = 0; i < totalPoints; i++)
     {
@@ -95,7 +95,7 @@ Result<> ReadH5EspritData::copyRawEbsdData(int index)
       std::vector<usize> pDimsV(2);
       pDimsV[0] = pDims[0];
       pDimsV[1] = pDims[1];
-      auto& patternData = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(EbsdLib::H5Esprit::RawPatterns));
+      auto& patternData = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellAttributeMatrixPath.createChildPath(ebsdlib::H5Esprit::RawPatterns));
       const usize numComponents = patternData.getNumberOfComponents();
       for(usize i = 0; i < totalPoints; i++)
       {

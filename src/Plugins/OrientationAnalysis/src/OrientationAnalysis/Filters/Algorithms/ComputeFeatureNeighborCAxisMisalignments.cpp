@@ -6,9 +6,9 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 
-#include "EbsdLib/Core/Orientation.hpp"
-#include "EbsdLib/Core/OrientationTransformation.hpp"
-#include "EbsdLib/Core/Quaternion.hpp"
+#include <EbsdLib/Core/Orientation.hpp>
+#include <EbsdLib/Orientation/OrientationFwd.hpp>
+#include <EbsdLib/Orientation/Quaternion.hpp>
 
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
@@ -37,7 +37,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   for(usize i = 1; i < crystalStructures.size(); ++i)
   {
     const auto crystalStructureType = crystalStructures[i];
-    const bool isHex = crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_High || crystalStructureType == EbsdLib::CrystalStructure::Hexagonal_Low;
+    const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
     allPhasesHexagonal = allPhasesHexagonal && isHex;
     noPhasesHexagonal = noPhasesHexagonal && !isHex;
   }
@@ -85,12 +85,12 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     xtalPhase1 = crystalStructures[featurePhases[featureIdx]];
 
     const usize quatTupleIndex1 = featureIdx * numQuatComps;
-    OrientationD oMatrix1 = OrientationTransformation::qu2om<QuatD, OrientationD>(
-        {featureAvgQuat[quatTupleIndex1], featureAvgQuat[quatTupleIndex1 + 1], featureAvgQuat[quatTupleIndex1 + 2], featureAvgQuat[quatTupleIndex1 + 3]});
+    ebsdlib::OrientationMatrixDType oMatrix1 =
+        ebsdlib::QuaternionDType(featureAvgQuat[quatTupleIndex1], featureAvgQuat[quatTupleIndex1 + 1], featureAvgQuat[quatTupleIndex1 + 2], featureAvgQuat[quatTupleIndex1 + 3]).toOrientationMatrix();
 
     // transpose the g matrix so when c-axis is multiplied by `g`
     // it will give the sample direction that the c-axis is along
-    Eigen::Vector3d c1 = OrientationMatrixToGMatrixTranspose(oMatrix1) * cAxis;
+    Eigen::Vector3d c1 = oMatrix1.transpose() * cAxis;
     // normalize so that the dot product can be taken below without
     // dividing by the magnitudes (they would be 1)
     c1.normalize();
@@ -106,15 +106,16 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
       hexNeighborListSize = currentNeighborList.size();
 
       // If both the feature and the neighbor are both Hexagonal Phases
-      if(xtalPhase1 == xtalPhase2 && (xtalPhase1 == EbsdLib::CrystalStructure::Hexagonal_High || xtalPhase1 == EbsdLib::CrystalStructure::Hexagonal_Low))
+      if(xtalPhase1 == xtalPhase2 && (xtalPhase1 == ebsdlib::CrystalStructure::Hexagonal_High || xtalPhase1 == ebsdlib::CrystalStructure::Hexagonal_Low))
       {
         const usize quatTupleIndex2 = neighborFeatureId * numQuatComps;
-        OrientationD oMatrix2 = OrientationTransformation::qu2om<QuatD, OrientationD>(
-            {featureAvgQuat[quatTupleIndex2], featureAvgQuat[quatTupleIndex2 + 1], featureAvgQuat[quatTupleIndex2 + 2], featureAvgQuat[quatTupleIndex2 + 3]});
+        ebsdlib::OrientationMatrixDType oMatrix2 =
+            ebsdlib::QuaternionDType(featureAvgQuat[quatTupleIndex2], featureAvgQuat[quatTupleIndex2 + 1], featureAvgQuat[quatTupleIndex2 + 2], featureAvgQuat[quatTupleIndex2 + 3])
+                .toOrientationMatrix();
 
         // transpose the g matrix so when c-axis is multiplied by `g`
         // it will give the sample direction that the c-axis is along
-        Eigen::Vector3d c2 = OrientationMatrixToGMatrixTranspose(oMatrix2) * cAxis;
+        Eigen::Vector3d c2 = oMatrix2.transpose() * cAxis;
         // normalize so that the dot product can be taken below without
         // dividing by the magnitudes (they would be 1)
         c2.normalize();
