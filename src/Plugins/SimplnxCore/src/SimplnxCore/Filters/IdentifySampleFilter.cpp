@@ -17,7 +17,7 @@ namespace
 struct IdentifySampleFunctor
 {
   template <typename T>
-  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles)
+  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     ShapeType cDims = {1};
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -55,9 +55,14 @@ struct IdentifySampleFunctor
     float threshold = 0.0f;
     for(int64 i = 0; i < totalPoints; i++)
     {
+      if(shouldCancel)
+      {
+        return;
+      }
       const float percentIncrement = static_cast<float>(i) / static_cast<float>(totalPoints) * 100.0f;
       if(percentIncrement > threshold)
       {
+        messageHandler(IFilter::Message::Type::Info, fmt::format("Completed: {}", percentIncrement));
         threshold = threshold + 5.0f;
         if(threshold < percentIncrement)
         {
@@ -138,9 +143,15 @@ struct IdentifySampleFunctor
     threshold = 0.0F;
     if(fillHoles)
     {
+      messageHandler(IFilter::Message::Type::Info, fmt::format("Filling holes in sample..."));
+
       bool touchesBoundary = false;
       for(int64 i = 0; i < totalPoints; i++)
       {
+        if(shouldCancel)
+        {
+          return;
+        }
         const float percentIncrement = static_cast<float>(i) / static_cast<float>(totalPoints) * 100.0f;
         if(percentIncrement > threshold)
         {
@@ -227,7 +238,7 @@ struct IdentifySampleSliceBySliceFunctor
   };
 
   template <typename T>
-  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, Plane plane)
+  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, Plane plane, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
@@ -271,6 +282,12 @@ struct IdentifySampleSliceBySliceFunctor
 
     for(int64 fixedIdx = 0; fixedIdx < fixedDim; ++fixedIdx) // Process each slice
     {
+      if(shouldCancel)
+      {
+        return;
+      }
+      messageHandler(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
+
       std::vector<bool> checked(planeDim1 * planeDim2, false);
       std::vector<bool> sample(planeDim1 * planeDim2, false);
       std::vector<int64> currentVList;
@@ -331,6 +348,10 @@ struct IdentifySampleSliceBySliceFunctor
           }
         }
       }
+      if(shouldCancel)
+      {
+        return;
+      }
 
       for(int64 p2 = 0; p2 < planeDim2; ++p2)
       {
@@ -345,7 +366,10 @@ struct IdentifySampleSliceBySliceFunctor
           }
         }
       }
-
+      if(shouldCancel)
+      {
+        return;
+      }
       if(fillHoles)
       {
         for(int64 p2 = 0; p2 < planeDim2; ++p2)
@@ -518,11 +542,11 @@ Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const A
 
   if(sliceBySlice)
   {
-    ExecuteDataFunction(IdentifySampleSliceBySliceFunctor{}, inputData->getDataType(), imageGeom, inputData, fillHoles, sliceBySlicePlane);
+    ExecuteDataFunction(IdentifySampleSliceBySliceFunctor{}, inputData->getDataType(), imageGeom, inputData, fillHoles, sliceBySlicePlane, messageHandler, shouldCancel);
   }
   else
   {
-    ExecuteDataFunction(IdentifySampleFunctor{}, inputData->getDataType(), imageGeom, inputData, fillHoles);
+    ExecuteDataFunction(IdentifySampleFunctor{}, inputData->getDataType(), imageGeom, inputData, fillHoles, messageHandler, shouldCancel);
   }
 
   return {};
