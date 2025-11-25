@@ -542,11 +542,11 @@ public:
         {
           if(m_FindMedian)
           {
-            values.push_back(m_Source[i]);
+            values.push_back(static_cast<float>(m_Source[i]));
           }
           if(m_FindNumUniqueValues)
           {
-            valuesSet.emplace(m_Source[i]);
+            valuesSet.emplace(static_cast<int32>(m_Source[i]));
           }
         }
       }

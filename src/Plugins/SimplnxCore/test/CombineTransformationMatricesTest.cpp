@@ -84,8 +84,8 @@ void CreateTestImageGeometry(DataStructure& dataStructure, const std::string& ge
   geom->setCellData(*am);
   UInt32Array* testArray = UInt32Array::CreateWithStore<UInt32DataStore>(dataStructure, k_CellArrayName, amDims, cDims, am->getId());
 
-  auto numComps = std::accumulate(cDims.begin(), cDims.end(), 1, std::multiplies<>());
-  std::generate(testArray->begin(), testArray->end(), [n = 0, numComps]() mutable { return 1 + (n++ / numComps); });
+  usize numComps = std::accumulate(cDims.begin(), cDims.end(), 1ULL, std::multiplies<>());
+  std::generate(testArray->begin(), testArray->end(), [n = 0, numComps]() mutable { return static_cast<uint32>(1 + (n++ / numComps)); });
 }
 
 void CreateTestVertexGeometry(DataStructure& dataStructure, const std::string& geomName)
@@ -97,7 +97,7 @@ void CreateTestVertexGeometry(DataStructure& dataStructure, const std::string& g
   AttributeMatrix* am = AttributeMatrix::Create(dataStructure, VertexGeom::k_VertexAttributeMatrixName, {16}, geom->getId());
   geom->setVertexAttributeMatrix(*am);
   Int64Array* testArray = Int64Array::CreateWithStore<Int64DataStore>(dataStructure, k_CellArrayName, {16}, {2}, am->getId());
-  std::iota(testArray->begin(), testArray->end(), 0.0f);
+  std::iota(testArray->begin(), testArray->end(), static_cast<int64_t>(0));
 }
 
 void CompareGeometries(const DataStructure& dataStructure, const DataPath& exemplaryGeomPath, const DataPath& resultGeomPath)

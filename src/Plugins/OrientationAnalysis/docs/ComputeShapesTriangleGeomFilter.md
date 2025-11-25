@@ -4,7 +4,7 @@
 
 Statistics (Morphological)
 
-## Warning
+## Caveats
 
 This filter has two caveats.
 

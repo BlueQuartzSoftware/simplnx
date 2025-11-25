@@ -51,7 +51,7 @@ template <typename T>
 std::string valuesToString(const std::vector<T>& values, const std::string& token = " x ")
 {
   std::vector<std::string> shapeStrs;
-  std::transform(values.cbegin(), values.cend(), std::back_inserter(shapeStrs), [](usize val) { return std::to_string(val); });
+  std::transform(values.cbegin(), values.cend(), std::back_inserter(shapeStrs), [](T val) { return std::to_string(val); });
   std::vector<std::string_view> shapeStrViews(shapeStrs.begin(), shapeStrs.end());
   return StringUtilities::join(shapeStrViews, token);
 }
@@ -229,8 +229,11 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
                                 fmt::format("Attribute matrix tuple shape contains \"{}\" at Tuple Dim {}.  All tuple shape values must be >= 1.", newAttrMatrixTupleShape[j], j))};
       }
     }
-
-    tupleShape = std::vector<usize>(newAttrMatrixTupleShape.begin(), newAttrMatrixTupleShape.end());
+    tupleShape.resize(newAttrMatrixTupleShape.size());
+    for(size_t i = 0; i < newAttrMatrixTupleShape.size(); i++)
+    {
+      tupleShape[i] = static_cast<usize>(newAttrMatrixTupleShape[i]);
+    }
   }
   else
   {

@@ -71,7 +71,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   const usize totalFeatures = featurePhases.getNumberOfTuples();
   const usize numQuatComps = featureAvgQuat.getNumberOfComponents();
 
-  std::vector<std::vector<double>> misalignmentLists(totalFeatures);
+  std::vector<std::vector<float32>> misalignmentLists(totalFeatures);
 
   const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
   usize hexNeighborListSize = 0;
@@ -129,7 +129,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
         }
 
         // Convert the misorientation to Degrees and store the value
-        currentMisalignmentList[j] = w * Constants::k_180OverPiD;
+        currentMisalignmentList[j] = static_cast<float32>(w * Constants::k_180OverPiD);
 
         // If we are finding the average misorientation, then start accumulating those values
         if(m_InputValues->FindAvgMisals)

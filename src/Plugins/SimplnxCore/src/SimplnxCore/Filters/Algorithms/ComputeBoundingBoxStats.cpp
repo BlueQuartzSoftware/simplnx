@@ -19,6 +19,9 @@ constexpr usize k_MaxXIndex = 3;
 constexpr usize k_MaxYIndex = 4;
 constexpr usize k_MaxZIndex = 5;
 
+template <class T>
+concept ArithmeticNotBool = std::is_arithmetic_v<T> && !std::is_same_v<T, bool>;
+
 std::array<usize, 6> GetVoxelIndices(const Float32AbstractDataStore& unifiedBounds, usize targetBoundsIndex, const ImageGeom& image)
 {
   std::array<usize, 6> voxelIndices = {};
@@ -373,7 +376,6 @@ public:
             minValue = std::min(minValue, value);
             maxValue = std::max(maxValue, value);
             summationValue += value;
-
             // modes
             frequencyMap[value]++;
           }
@@ -490,7 +492,8 @@ public:
 
       // We are working with primitives here for their trivially copyable nature, this lets us cut accesses to output vector
       float64 sumOfDiffs = 0.0f;
-      float32 meanValue = m_StatsVector[targetBoundsIndex].summationValue / static_cast<float32>(m_StatsVector[targetBoundsIndex].count);
+      float32 meanValue = 0.0f;
+      meanValue = m_StatsVector[targetBoundsIndex].summationValue / static_cast<float32>(m_StatsVector[targetBoundsIndex].count);
 
       usize zStride = 0, yStride = 0;
       for(usize zIndex = voxelIndices[k_MinZIndex]; zIndex < voxelIndices[k_MaxZIndex]; zIndex++)
@@ -628,14 +631,7 @@ Result<> FillStatsArrays(const std::vector<StatsCacheT>& statsVector, DataStruct
       if(meanArray != nullptr)
       {
         float32 meanValue = 0.0f;
-        if constexpr(std::is_same_v<T, bool>)
-        {
-          meanValue = static_cast<float32>(statsVector[i].summationValue >= (statsVector.size() - statsVector[i].summationValue));
-        }
-        else
-        {
-          meanValue = statsVector[i].summationValue / static_cast<float32>(statsVector[i].count);
-        }
+        meanValue = statsVector[i].summationValue / static_cast<float32>(statsVector[i].count);
         meanArray->setValue(i, meanValue);
       }
       if constexpr(std::is_same_v<StatsCacheT, CompleteStatsCache<typename StatsCacheT::value_type>>)
@@ -735,12 +731,14 @@ Result<> ComputeBoundingBoxStats::operator()()
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
   auto& unifiedArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->UnifiedPath).getDataStoreRef();
   auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputPath);
+  if(inputArray.getDataType() == DataType::boolean)
+  {
+    return MakeErrorResult(-98500, "Boolean arrays cannot be used as inputs to this filter.");
+  }
   if(m_InputValues->CalculateMode)
   {
     return ExecuteNeighborFunction(ExecuteBoundsStatsCalculations<true>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray);
   }
-  else
-  {
-    return ExecuteDataFunction(ExecuteBoundsStatsCalculations<false>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray);
-  }
+
+  return ExecuteDataFunctionNoBool(ExecuteBoundsStatsCalculations<false>{}, inputArray.getDataType(), m_DataStructure, m_InputValues, geom, unifiedArray, inputArray);
 }
