@@ -154,6 +154,7 @@ Result<Arguments> LaplacianSmoothingFilter::FromSIMPLJson(const nlohmann::json& 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_SurfacePointLambdaKey, k_SurfacePointLambda_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_SurfaceTripleLineLambdaKey, k_SurfaceTripleLineLambda_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_SurfaceQuadPointLambdaKey, k_SurfaceQuadPointLambda_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeometryDataPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshNodeTypeArrayPathKey, k_SurfaceMeshNodeTypeArrayPath_Key));
   results.push_back(

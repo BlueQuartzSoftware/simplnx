@@ -262,6 +262,12 @@ void InitializeMap()
 
   // ChoicesParameter <- ChoiceFilterParameter
   CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(42));
+  // ChoicesParameter <- ChoicesFilterParameter
+  CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(0));
+  // ChoicesParameter <- NumericTypeFilterParameter
+  CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(2));
+  // ChoicesParameter <- ScalarTypeFilterParameter
+  CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(3));
   // ChoicesParameter <- LinkedChoicesFilterParameter
   CreateMapInput(Uuid::FromString("ee4d5ce2-9582-48fa-b182-8a766ce0feff").value(), static_cast<ChoicesParameter::ValueType>(1));
 
@@ -269,12 +275,16 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"DC-C", "AM-C"}));
   // DataGroupCreationParameter <- DataContainerCreationFilterParameter
   CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"DC-E"}));
+  // DataGroupCreationParameter <- DataContainerSelectionFilterParameter
+  CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"DC-F"}));
   // DataGroupCreationParameter <- StringFilterParameter
   CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"StringFilterParameter"}));
   // DataGroupCreationParameter <- AttributeMatrixSelectionFilterParameter
   CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"DC-D", "AM-D"}));
   // DataGroupSelectionParameter <- DataArraySelectionFilterParameter + LinkedPathCreationFilterParameter
   CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"DC-B", "LinkedPathCreationFilterParameter"}));
+  // DataGroupSelectionParameter <- DataContainerSelectionFilterParameter + LinkedPathCreationFilterParameter
+  CreateMapInput(Uuid::FromString("bff2d4ac-04a6-5251-b188-4f83f7865074").value(), DataPath({"DC-F", "LinkedPathCreationFilterParameter"}));
 
   // AttributeMatrixSelectionParameter <- AttributeMatrixSelectionFilterParameter
   CreateMapInput(Uuid::FromString("a3619d74-a1d9-4bc2-9e03-ca001d65b119").value(), DataPath({"DC-D", "AM-D"}));
@@ -287,6 +297,8 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("bff3d4ac-04a6-5251-b178-4f83f7865074").value(), DataPath({"DC-F"}));
   // DataGroupSelectionParameter <- LinkedDataContainerSelectionFilterParameter
   CreateMapInput(Uuid::FromString("bff3d4ac-04a6-5251-b178-4f83f7865074").value(), DataPath({"DC-G"}));
+  // DataGroupSelectionParameter <- AttributeMatrixSelectionFilterParameter
+  CreateMapInput(Uuid::FromString("bff3d4ac-04a6-5251-b178-4f83f7865074").value(), DataPath({"DC-D", "AM-D"}));
 
   // GeometrySelectionParameter <- DataArraySelectionFilterParameter
   CreateMapInput(Uuid::FromString("3804cd7f-4ee4-400f-80ad-c5af17735de2").value(), DataPath({"DC-B"}));
@@ -296,6 +308,8 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("3804cd7f-4ee4-400f-80ad-c5af17735de2").value(), DataPath({"DC-D"}));
   // GeometrySelectionParameter <- MultiDataArraySelectionFilterParameter
   CreateMapInput(Uuid::FromString("3804cd7f-4ee4-400f-80ad-c5af17735de2").value(), DataPath({"DC-H"}));
+  // GeometrySelectionParameter <- DataArrayCreationFilterParameter
+  CreateMapInput(Uuid::FromString("3804cd7f-4ee4-400f-80ad-c5af17735de2").value(), DataPath({"DC-A"}));
 
   // DataPathSelectionParameter <- DataArraySelectionFilterParameter
   CreateMapInput(Uuid::FromString("cd12d081-fbf0-46c4-8f4a-15e2e06e98b8").value(), DataPath({"DC-B", "AM-B", "DA-B"}));
@@ -329,6 +343,8 @@ void InitializeMap()
 
   // Float32Parameter <- FloatFilterParameter
   CreateMapInput(Uuid::FromString("e4452dfe-2f70-4833-819e-0cbbec21289b").value(), 92.27f);
+  // Float32Parameter <- DoubleFilterParameter
+  CreateMapInput(Uuid::FromString("e4452dfe-2f70-4833-819e-0cbbec21289b").value(), 184.54f);
 
   // Float64Parameter <- DoubleFilterParameter
   CreateMapInput(Uuid::FromString("f2a18fff-a095-47d7-b436-ede41b5ea21a").value(), 184.54);
@@ -338,6 +354,8 @@ void InitializeMap()
 
   // Int32Parameter <- IntFilterParameter
   CreateMapInput(Uuid::FromString("21acff45-a653-45db-a0d1-f43cd344b93a").value(), -132);
+  // Int32Parameter <- IntFilterParameter
+  CreateMapInput(Uuid::FromString("21acff45-a653-45db-a0d1-f43cd344b93a").value(), 1);
   // Int32Parameter <- FloatFilterParameter
   CreateMapInput(Uuid::FromString("21acff45-a653-45db-a0d1-f43cd344b93a").value(), static_cast<int32>(92.27f));
 
@@ -345,6 +363,9 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("e9521130-276c-40c7-95d7-0b4cb4f80649").value(), static_cast<uint32>(184.54));
   // UInt32Parameter <- IntFilterParameter
   CreateMapInput(Uuid::FromString("e9521130-276c-40c7-95d7-0b4cb4f80649").value(), static_cast<uint32>(0));
+
+  // Int64Parameter <- IntFilterParameter
+  CreateMapInput(Uuid::FromString("b2039349-bd3a-4dbb-93d2-b4b5c633e697").value(), static_cast<int64>(-132));
 
   // UInt64Parameter <- UInt64FilterParameter
   CreateMapInput(Uuid::FromString("36d91b23-5500-4ed4-bdf3-d680f54ee5d1").value(), static_cast<uint64>(132));
@@ -383,8 +404,15 @@ void InitializeMap()
   // VectorUInt32Parameter <- FloatVec3FilterParameter
   CreateMapInput(Uuid::FromString("37322aa6-1a2f-4ecb-9aa1-8922d7ac1e49").value(), std::vector<uint32>{782, 0, 49});
 
+  // VectorUInt64Parameter <- 3 IntFilterParameter
+  CreateMapInput(Uuid::FromString("17309744-c4e8-4d1e-807e-e7012387f1ec").value(), std::vector<uint64>{0, 0, 0});
+  // VectorUInt64Parameter <- IntVec3FilterParameter
+  CreateMapInput(Uuid::FromString("17309744-c4e8-4d1e-807e-e7012387f1ec").value(), std::vector<uint64>{35, 0, 92});
+
   // NumericTypeParameter <- NumericTypeFilterParameter
   CreateMapInput(Uuid::FromString("a8ff9dbd-45e7-4ed6-8537-12dd53069bce").value(), NumericType::uint16);
+  // NumericTypeParameter <- ScalarTypeFilterParameter
+  CreateMapInput(Uuid::FromString("a8ff9dbd-45e7-4ed6-8537-12dd53069bce").value(), NumericType::int16);
 
   // StringParameter <- StringFilterParameter
   CreateMapInput(Uuid::FromString("5d6d1868-05f8-11ec-9a03-0242ac130003").value(), std::string("StringFilterParameter"));
@@ -460,6 +488,10 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"DC-O", "AM-K"}), DataPath({"DC-P", "AM-L"}), DataPath({"DC-Q", "AM-M"})});
   // MultiPathSelectionParameter <- MultiDataContainerSelectionFilterParameter
   CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"DC-R"}), DataPath({"DC-S"})});
+  // MultiPathSelectionParameter <- DataArraySelectionFilterParameter
+  CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"DC-B", "AM-B", "DA-B"})});
+  // MultiPathSelectionParameter <- AttributeMatrixSelectionFilterParameter
+  CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"DC-D", "AM-D"})});
 
   // OEMEbsdScanSelectionParameter <- OEMEbsdScanSelectionFilterParameter (in OrientationAnalysis parameter)
   CreateMapInput(Uuid::FromString("3935c833-aa51-4a58-81e9-3a51972c05ea").value(),
@@ -561,6 +593,70 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("911a3aa9-d3c2-4f66-9451-8861c4b726d5").value(), std::vector<std::string>{"allow_overwrite"}},
     // ExtractComponentAsArrayFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("fcc1c1cc-c37a-40fc-97fa-ce40201d34e3").value(), std::vector<std::string>{"remove_components_from_array", "move_components_to_new_array"}},
+    // UncertainRegularGridSampleSurfaceMeshFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("c594cc3b-3f45-43b1-9030-1aa56c755fc8").value(), std::vector<std::string>{"use_seed", "seed_value", "seed_array_name"}},
+    // ResampleImageGeomFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("9783ea2c-4cf7-46de-ab21-b40d91a48c5b").value(), std::vector<std::string>{"scaling", "resampling_mode_index", "remove_original_geometry", "exact_dimensions"}},
+    // RegularGridSampleSurfaceMeshFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("7d061fe1-7c88-45ef-a7ee-f8ab027c8e85").value(), std::vector<std::string>{"use_existing_geometry_index", "existing_image_geometry_path"}},
+    // NearestPointFuseRegularGridsFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("c8746bf8-fa5f-48b0-8a47-11023402e543").value(), std::vector<std::string>{"use_fill", "fill_value"}},
+    // RemoveFlaggedFeaturesFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("6e8cc6ec-8b9b-402e-9deb-85bd1cdba743").value(), std::vector<std::string>{"output_image_geometry_prefix", "operation_type_index", "ignored_data_array_paths", "fill_removed_features"}},
+    // CropImageGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("e6476737-4aa7-48ba-a702-3dfab82c96e2").value(), std::vector<std::string>{"remove_original_geometry", "min_coord", "max_coord"}},
+    // AppendImageGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("c62c5c89-5ea8-4948-99ca-51cbc5b54b05").value(), std::vector<std::string>{"save_as_new_geometry", "output_image_geometry_path", "mirror_geometry", "input_image_geometries_paths", "direction_index", "default_value"}},
+    // RemoveFlaggedTrianglesFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("38155c61-2709-4731-be95-43745bb3f8d8").value(), std::vector<std::string>{"vertex_data_selected_attribute_matrix_path", "vertex_data_selected_array_paths", "vertex_data_handling_index", "triangle_data_selected_attribute_matrix_path", "triangle_data_selected_array_paths", "triangle_data_handling_index"}},
+    // QuickSurfaceMeshFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("13dd00bd-ad49-4e04-95eb-3267952fd6e5").value(), std::vector<std::string>{"input_feature_data_array_paths"}},
+    // LabelTriangleGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("7a7a2c6f-3b03-444d-8b8c-5976b0e5c82e").value(), std::vector<std::string>{"created_region_ids_path"}},
+    // IdentifySampleFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("94d47495-5a89-4c7f-a0ee-5ff20e6bd273").value(), std::vector<std::string>{"slice_by_slice_plane_index", "slice_by_slice"}},
+    // WritePoleFigureFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("00cbb97e-a5c2-43e6-9a35-17a0f9ce26ed").value(), std::vector<std::string>{"output_image_geometry_path", "intensity_plot_3_name", "intensity_plot_2_name", "intensity_plot_1_name", "intensity_geometry_path"}},
+    // ComputeFaceIPFColoringFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("30759600-7c02-4650-b5ca-e7036d6b568e").value(), std::vector<std::string>{"second_face_ipf_colors_array_name"}},
+    // ComputeTwinBoundariesFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("66156e04-0e62-4478-baf8-88d34ac694c1").value(), std::vector<std::string>{"boundaries_array_type_index"}},
+    // ComputeFeatureReferenceCAxisMisorientationsFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("16c487d2-8f99-4fb5-a4df-d3f70a8e6b25").value(), std::vector<std::string>{"crystal_structures_array_path"}},
+    // ComputeCAxisLocationsFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("a51c257a-ddc1-499a-9b21-f2d25a19d098").value(), std::vector<std::string>{"crystal_structures_array_path", "cell_phases_array_path"}},
+    // ComputeAvgCAxesFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("453cdb58-7bbb-4576-ad5e-f75a1c54d348").value(), std::vector<std::string>{"crystal_structures_array_path", "cell_phases_array_path"}},
+    // ComputeFeatureCentroidsFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("c6875ac7-8bdd-4f69-b6ce-82ac09bd3421").value(), std::vector<std::string>{"is_periodic"}},
+    // ReadCSVFileFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("373be1f8-31cf-49f6-aa5d-e356f4f3f261").value(), std::vector<std::string>{"use_existing_group", "selected_attribute_matrix_path", "created_data_group_path", ""}},
+    // ReadRawBinaryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("dd159366-5f12-42db-af6d-a33592ae8a89").value(), std::vector<std::string>{"tuple_dimensions"}},
+    // PadImageGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("1a003f19-aa26-406c-bbef-061f508fc422").value(), std::vector<std::string>{"output_image_geometry_path"}},
+    // MultiThresholdObjectsFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("4246245e-1011-4add-8436-0af6bed19228").value(), std::vector<std::string>{"custom_false_value", "custom_true_value", "use_custom_false_value", "use_custom_true_value"}},
+    // InitializeImageGeomCellDataFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("447b8909-661f-446a-8c1f-72e0cb568fcf").value(), std::vector<std::string>{"use_seed", "seed_value", "seed_array_name"}},
+    // ReadTextDataArrayFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("25f7df3e-ca3e-4634-adda-732c0e56efd4").value(), std::vector<std::string>{"number_tuples", "data_format"}},
+    // CreateColorMapFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("d1731177-4d70-41c0-9334-566a0b482796").value(), std::vector<std::string>{"use_mask", "mask_array_path", "invalid_color_value"}},
+    // ExecuteProcessFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("fb511a70-2175-4595-8c11-d1b5b6794221").value(), std::vector<std::string>{"output_log_file"}},
+    // CropVertexGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("8b16452f-f75e-4918-9460-d3914fdc0d08").value(), std::vector<std::string>{"vertex_attribute_matrix_name", "target_array_paths", "min_pos", "max_pos"}},
+    // CreateImageGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("c4320659-1a84-461d-939e-c7c10229a504").value(), std::vector<std::string>{"cell_data_name"}},
+    // CreateGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("24768170-5b90-4a9d-82ac-9aeecd9f892e").value(), std::vector<std::string>{"length_unit_index", "vertex_list_path", "vertex_attribute_matrix_name", "face_attribute_matrix_name"}},
+    // CreateDataArrayFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("67041f9b-bdc6-4122-acc6-c9fe9280e90d").value(), std::vector<std::string>{"data_format", "set_tuple_dimensions", "tuple_dimensions"}},
+    // CopyDataObjectFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("ac8d51d8-9167-5628-a060-95a8863a76b1").value(), std::vector<std::string>{"use_new_parent", "new_data_path"}},
+    // CreateImageGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("6dc586cc-59fb-4ee8-90ff-2d3587da12f5").value(), std::vector<std::string>{"delete_original_array"}},
 };
 } // namespace
 
@@ -680,7 +776,7 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
       }
 
       std::pair<std::vector<std::any>, std::function<bool(const std::any&, const std::any&)>> parameterCheck = k_ParamMap[parameter->uuid()];
-      std::any importedValue = argumentsResult.value().at(parameterName);
+      const std::any& importedValue = argumentsResult.value().at(parameterName);
       bool found = false;
       for(const auto& value : parameterCheck.first)
       {
