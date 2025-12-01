@@ -10,6 +10,7 @@ namespace nx::core
 namespace
 {
 constexpr StringLiteral k_Type_Key = "type";
+constexpr StringLiteral k_Is2D_Key = "is_2d";
 constexpr StringLiteral k_CropX_Key = "crop_x";
 constexpr StringLiteral k_CropY_Key = "crop_y";
 constexpr StringLiteral k_CropZ_Key = "crop_z";
@@ -51,6 +52,7 @@ nlohmann::json CropGeometryParameter::toJsonImpl(const std::any& value) const
   const auto& cropValues = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   json[k_Type_Key] = static_cast<uint8>(cropValues.type);
+  json[k_Is2D_Key] = cropValues.is2D;
   json[k_CropX_Key] = cropValues.cropX;
   json[k_CropY_Key] = cropValues.cropY;
   json[k_CropZ_Key] = cropValues.cropZ;
@@ -81,6 +83,15 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
                                      fmt::format("{}JSON value for key '{}' is not an unsigned integer", prefix.view(), nameDiv + k_Type_Key.str()));
   }
   value.type = static_cast<ValueType::TypeEnum>(keyJson.get<uint8>());
+
+  {
+    const auto& is2dJson = json[k_Is2D_Key];
+    if(!is2dJson.is_boolean())
+    {
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", prefix.view(), nameDiv + k_Is2D_Key.str()));
+    }
+    value.is2D = is2dJson.get<bool>();
+  }
 
   {
     const auto& cropXJson = json[k_CropX_Key];
