@@ -20,6 +20,7 @@ public:
       VoxelSubvolume,
       PhysicalSubvolume
     } type;
+    bool is2D = false;
     bool cropX = true;
     bool cropY = true;
     bool cropZ = true;
