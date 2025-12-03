@@ -39,6 +39,27 @@ ITKImageProcessingPlugin::ITKImageProcessingPlugin()
   if(!s_IsRegistered)
   {
     RegisterITKImageIO();
+
+    /*
+      2025-12-02
+      Tested with ITK 5.4.5 and libtiff 4.7.1
+      Primarily affects DREAM3DNX built for conda distribution
+      When ITKIOTIFF is built with an external libtiff, it misconfigures on Windows. It checks for the existence of TIFFFieldReadCount using CMake's check_type_size().
+      check_type_size() uses try_compile() which uses sizeof(). It is against the standard to do `sizeof(func)`. The correct way is to do `sizeof(&func)`. gcc and clang
+      allow the first version without -pedantic but msvc rejects it. This leads to a situation where ITK_TIFF_HAS_TIFFFieldReadCount is not defined but
+      ITK_TIFF_HAS_TIFFField is. Then in itkTIFFImageIO.cxx, different code is selected to access the field name. For certain files, this can come back as nullptr.
+      For the particular file we tested with, the field data type (7) was unsupported by ITK. Then we end up at the default case of a switch where ITK attempts to print
+      out the field name and data type to say that it isn't supported. But since the field name is nullptr it crashes.
+      ITK 6 looks to avoid this issue by increasing the minimum required libtiff version removing the need for workarounds.
+
+      Here we disable the global warning display on Windows which prevents the nullptr from being accessed. This prevents *all* warnings from being printed,
+      but simplnx will primarily be used with DREAM3DNX which, as a GUI application on Windows, doesn't have a terminal by default to print to anyways.
+      Once ITK fixes this issue, this code can be removed.
+    */
+#ifdef _WIN32
+    itk::Object::GlobalWarningDisplayOff();
+#endif
+
     s_IsRegistered = true;
   }
 }
