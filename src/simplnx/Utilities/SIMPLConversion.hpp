@@ -54,18 +54,18 @@ Result<> Convert2Parameters(Arguments& args, const nlohmann::json& json, std::st
 template <class ConverterT>
 Result<> Convert3Parameters(Arguments& args, const nlohmann::json& json, std::string_view simplKey1, std::string_view simplKey2, std::string_view simplKey3, const std::string& complexKey)
 {
-  if(json.contains(simplKey1) && json.contains(simplKey2) && json.contains(simplKey3))
+  if(!json.contains(simplKey1) || !json.contains(simplKey2) || !json.contains(simplKey3))
   {
-    auto result = ConverterT::convert(json[simplKey1], json[simplKey2], json[simplKey3]);
-    if(result.valid())
-    {
-      args.insertOrAssign(complexKey, std::make_any<typename ConverterT::ValueType>(std::move(result.value())));
-    }
-
-    return ConvertResult(std::move(result));
+    return MakeErrorResult(-570, fmt::format("One or more of the supplied keys [`{}`, `{}`, `{}`] was not in the json `{}`", simplKey1, simplKey2, simplKey3, json.dump()));
   }
 
-  return {};
+  auto result = ConverterT::convert(json[simplKey1], json[simplKey2], json[simplKey3]);
+  if(result.valid())
+  {
+    args.insertOrAssign(complexKey, std::make_any<typename ConverterT::ValueType>(std::move(result.value())));
+  }
+
+  return ConvertResult(std::move(result));
 }
 
 //------------------------------------------------------------------------------

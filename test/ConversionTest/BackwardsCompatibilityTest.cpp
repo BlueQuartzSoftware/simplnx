@@ -189,7 +189,7 @@ void CreateMapInput(Uuid&& uuid, ReadHDF5DatasetParameter::ValueType&& value)
     k_ParamMap.emplace(uuid, std::make_pair(std::vector<std::any>{std::make_any<ReadHDF5DatasetParameter::ValueType>(value)}, [](const std::any& imported, const std::any& exemplar) -> bool {
                          auto importedRef = GetAnyRef<ReadHDF5DatasetParameter::ValueType>(imported);
                          auto exemplarRef = GetAnyRef<ReadHDF5DatasetParameter::ValueType>(exemplar);
-                         return importedRef.inputFile == exemplarRef.inputFile;
+                         return importedRef.inputFile == exemplarRef.inputFile && importedRef.parent == exemplarRef.parent;
                        }));
   }
 }
@@ -205,7 +205,7 @@ void CreateMapInput(Uuid&& uuid, ReadCSVFileParameter::ValueType&& value)
     k_ParamMap.emplace(uuid, std::make_pair(std::vector<std::any>{std::make_any<ReadCSVFileParameter::ValueType>(value)}, [](const std::any& imported, const std::any& exemplar) -> bool {
                          auto importedRef = GetAnyRef<ReadCSVFileParameter::ValueType>(imported);
                          auto exemplarRef = GetAnyRef<ReadCSVFileParameter::ValueType>(exemplar);
-                         return importedRef.inputFilePath == exemplarRef.inputFilePath;
+                         return importedRef.inputFilePath == exemplarRef.inputFilePath && importedRef.customHeaders == exemplarRef.customHeaders && importedRef.startImportRow == exemplarRef.startImportRow && importedRef.dataTypes == exemplarRef.dataTypes && importedRef.headersLine == exemplarRef.headersLine && importedRef.tupleDims == exemplarRef.tupleDims && importedRef.inputFilePath == exemplarRef.inputFilePath && importedRef.delimiters == exemplarRef.delimiters;
                        }));
   }
 }
@@ -444,10 +444,10 @@ void InitializeMap()
   // ArrayThresholdsParameter <- ComparisonSelectionAdvancedFilterParameter
   {
     ArrayThreshold arrayThreshold = ArrayThreshold{};
-    arrayThreshold.setUnionOperator(static_cast<ArrayThreshold::UnionOperator>(1));
+    arrayThreshold.setUnionOperator(ArrayThreshold::UnionOperator::And);
     arrayThreshold.setArrayPath(DataPath({"DC-J", "AM-G", "DA-E"}));
-    arrayThreshold.setComparisonType(static_cast<ArrayThreshold::ComparisonType>(1));
-    arrayThreshold.setComparisonValue(3.76);
+    arrayThreshold.setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    arrayThreshold.setComparisonValue(3.759999990463257);
     ArrayThresholdsParameter::ValueType atSet = ArrayThresholdsParameter::ValueType{};
     atSet.setArrayThresholds(ArrayThresholdSet::CollectionType{std::make_shared<ArrayThreshold>(ArrayThreshold(arrayThreshold))});
     CreateMapInput(Uuid::FromString("e93251bc-cdad-44c2-9332-58fe26aedfbe").value(), std::move(atSet));
@@ -456,15 +456,15 @@ void InitializeMap()
   {
     ArrayThreshold arrayThreshold = ArrayThreshold{};
     arrayThreshold.setArrayPath(DataPath({"DC-K", "AM-H", "DA-F"}));
-    arrayThreshold.setComparisonType(static_cast<ArrayThreshold::ComparisonType>(1));
-    arrayThreshold.setComparisonValue(84.301);
+    arrayThreshold.setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    arrayThreshold.setComparisonValue(84.3010025024414);
     ArrayThresholdsParameter::ValueType atSet = ArrayThresholdsParameter::ValueType{};
     atSet.setArrayThresholds(ArrayThresholdSet::CollectionType{std::make_shared<ArrayThreshold>(ArrayThreshold(arrayThreshold))});
     CreateMapInput(Uuid::FromString("e93251bc-cdad-44c2-9332-58fe26aedfbe").value(), std::move(atSet));
   }
 
   // Dream3dImportParameter <- DataContainerReaderFilterParameter
-  CreateMapInput(Uuid::FromString("170a257d-5952-4854-9a91-4281cd06f4f5").value(), Dream3dImportParameter::ValueType(std::filesystem::path("/DataContainer/Reader/Filter/Parameter.dream3d")));
+  CreateMapInput(Uuid::FromString("170a257d-5952-4854-9a91-4281cd06f4f5").value(), Dream3dImportParameter::ValueType(std::filesystem::path("")));
 
   // DynamicTableParameter <- DynamicTableFilterParameter
   CreateMapInput(Uuid::FromString("eea76f1a-fab9-4704-8da5-4c21057cf44e").value(), DynamicTableParameter::ValueType{{1.1, 1.2, 1.3}, {2.1, 2.2, 2.3}, {3.1, 3.2, 3.3}});
@@ -473,14 +473,14 @@ void InitializeMap()
   CreateMapInput(Uuid::FromString("10d3924f-b4c9-4e06-9225-ce11ec8dff89").value(),
                  std::vector<std::array<std::string, 3>>{{"Cubic-High m-3m", "Precipitate", "EnsembleInfo"}, {"Cubic-Low m-3 (Tetrahedral)", "Transformation", "FilterParameter"}});
 
-  // ImportHDF5DatasetParameter <- ImportHDF5DatasetFilterParameter
-  CreateMapInput(Uuid::FromString("32e83e13-ee4c-494e-8bab-4e699df74a5a").value(), ReadHDF5DatasetParameter::ValueType{.inputFile = "/Import/HDF5/Dataset/Filter/Parameter.h5"});
+  // ReadHDF5DatasetParameter <- ImportHDF5DatasetFilterParameter
+  CreateMapInput(Uuid::FromString("32e83e13-ee4c-494e-8bab-4e699df74a5a").value(), ReadHDF5DatasetParameter::ValueType{.parent=DataPath({"DC-D", "AM-D"}), .inputFile = "", .datasets={}});
 
   // DataTypeParameter <- ScalarTypeFilterParameter
   CreateMapInput(Uuid::FromString("d31358d5-3253-4c69-aff0-eb98618f851b").value(), DataType::int16);
 
   // ReadCSVFileParameter <- ReadASCIIDataFilterParameter
-  CreateMapInput(Uuid::FromString("4f6d6a33-48da-427a-8b17-61e07d1d5b45").value(), ReadCSVFileParameter::ValueType{.inputFilePath = "/Read/ASCII/Data/Filter/Parameter.csv"});
+  CreateMapInput(Uuid::FromString("4f6d6a33-48da-427a-8b17-61e07d1d5b45").value(), ReadCSVFileParameter::ValueType{.inputFilePath = "", .customHeaders={}, .startImportRow=0, .dataTypes={}, .skippedArrayMask={}, .headersLine=0, .headerMode=ReadCSVData::HeaderMode::LINE, .tupleDims={}, .delimiters={}, .consecutiveDelimiters=false});
 
   // MultiPathSelectionParameter <- DataContainerArrayProxyFilterParameter
   CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"DC-L", "AM-I", "DA-G"}), DataPath({"DC-M", "AM-J"}), DataPath({"DC-N"})});
@@ -493,11 +493,14 @@ void InitializeMap()
   // MultiPathSelectionParameter <- AttributeMatrixSelectionFilterParameter
   CreateMapInput(Uuid::FromString("b5632f4f-fc13-4234-beb2-8fd8820eb6b6").value(), std::vector<DataPath>{DataPath({"DC-D", "AM-D"})});
 
+  // CreateColorMapParameter <- GenerateColorTableFilterParameter
+  CreateMapInput(Uuid::FromString("7b0e5b25-564e-4797-b154-4324ef276bf0").value(), std::string("GenerateColorTableFilterParameter"));
+
   // OEMEbsdScanSelectionParameter <- OEMEbsdScanSelectionFilterParameter (in OrientationAnalysis parameter)
   CreateMapInput(Uuid::FromString("3935c833-aa51-4a58-81e9-3a51972c05ea").value(),
                  OEMEbsdScanSelectionParameter::ValueType{.inputFilePath = "/Input/File/Filter/Parameter.txt", .scanNames = std::list<std::string>{"Scan A", "Scan B", "Scan C"}});
   // ReadH5EbsdFileParameter <- ReadH5EbsdFilterParameter (in OrientationAnalysis parameter)
-  CreateMapInput(Uuid::FromString("FAC15aa6-b367-508e-bf73-94ab6be0058b").value(), ReadH5EbsdFileParameter::ValueType{.inputFilePath = "/Read/H5Ebsd/Filter/Parameter.h5ebsd"});
+  CreateMapInput(Uuid::FromString("FAC15aa6-b367-508e-bf73-94ab6be0058b").value(), ReadH5EbsdFileParameter::ValueType{.inputFilePath = "", .startSlice = 0, .endSlice = 0, .eulerRepresentation = 1, .selectedArrayNames={}, .useRecommendedTransform=true});
 
   //  // From Filters Not Ported Yet (Parameter Doesn't Exist YET)
   //  s_ParameterMapping["MultiInputFileFilterParameter"] = "MultiInputFileFilterParameter";
@@ -656,9 +659,55 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     // CopyDataObjectFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("ac8d51d8-9167-5628-a060-95a8863a76b1").value(), std::vector<std::string>{"use_new_parent", "new_data_path"}},
     // CreateImageGeometryFilter
-    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("6dc586cc-59fb-4ee8-90ff-2d3587da12f5").value(), std::vector<std::string>{"delete_original_array"}},
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("6dc586cc-59fb-4ee8-90ff-2d3587da12f5").value(), std::vector<std::string>{"delete_original_array"}}
 };
 } // namespace
+
+
+/**
+ * How To Update Test For Filter Changes/Ports
+ *
+ * Case 1: Add any keys NEW to NX (ie new parameters)
+ * To do this you must update the k_KeyIgnoreMap
+ * It has the following structure, be sure to add a comma to the line proceeding
+ * `// FilterNameHere
+ *  std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("nx_filter_uuid_here").value(), std::vector<std::string>{"parameter_key_1", "parameter_key_2"}}`
+ *
+ * Case 2: Porting Filter from SIMPL
+ * Refer to Case 1 for any new parameter key, and ensure the UUIDMapping in the respective plugin is up to date
+ *
+ * Case 3: Porting a New Parameter from SIMPL
+ * Review the `InitializeMap()` function, at the bottom of this method are known parameters that have yet to be ported.
+ * In order to register a new parameter input it with the following structure
+ * `// NXParameterName <- SIMPLFilterParameterName
+ *  CreateMapInput(Uuid::FromString("nx_parameter_uuid_here").value(), parameter_ValueType_object);`
+ * If you are receiving bad any cast after this a potential fix is explicit casting `parameter_ValueType_object` to ValueType
+ * If the ValueType for the parameter does not implement a `==` operator, an overload of `CreateMapInput()` must be defined the structure follows:
+ * `void CreateMapInput(Uuid&& uuid, NXParameter::ValueType&& value)
+ *  {
+ *    if(k_ParamMap.contains(uuid))
+ *    {
+ *      k_ParamMap[uuid].first.emplace_back(std::make_any<NXParameter::ValueType>(value));
+ *    }
+ *    else
+ *    {
+ *      k_ParamMap.emplace(uuid, std::make_pair(std::vector<std::any>{std::make_any<NXParameter::ValueType>(value)}, [](const std::any& imported, const std::any& exemplar) -> bool {
+ *                           auto importedRef = GetAnyRef<NXParameter::ValueType>(imported);
+ *                           auto exemplarRef = GetAnyRef<NXParameter::ValueType>(exemplar);
+ *                           return importedRef.member_1 == exemplarRef.member_1 && importedRef.member_2 == exemplarRef.member_2;
+ *                         }));
+ *    }
+ *  }`
+ *
+ * Case 4: Debugging Tips
+ * If you want to see the read in value and the expected value at the same time add the following if:
+ * `if(parameterName == "parameter_key_here")
+ *  {
+ *    std::cout << "hit";
+ *  }`
+ *  directly after the following line `const std::any& importedValue = argumentsResult.value().at(parameterName);`
+ *  The `importedValue` is the imported object and `parameterCheck.first` contains the vector of acceptable values
+ */
 
 TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
 {
@@ -668,7 +717,9 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
   UnitTest::LoadPlugins();
   auto filterList = app->getFilterList();
 
-  std::string pipelinePath = "/tmp/mega-pipeline.d3dpipeline";
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "backwards_compatibility_test.tar.gz", "backwards_compatibility_test");
+
+  std::string pipelinePath = fmt::format("{}/backwards_compatibility_test/mega-pipeline.d3dpipeline", unit_test::k_TestFilesDir);
 
   std::ifstream file(pipelinePath);
 

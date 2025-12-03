@@ -391,7 +391,7 @@ namespace
 {
 namespace SIMPL
 {
-constexpr StringLiteral k_ImportHDF5FileKey = "ImportHDF5File";
+constexpr StringLiteral k_HDF5FilePathKey = "HDF5FilePath";
 constexpr StringLiteral k_ImportInfoArrayKey = "Dataset Import Info Array";
 constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
 } // namespace SIMPL
@@ -403,7 +403,7 @@ Result<Arguments> ReadHDF5DatasetFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::ImportHDF5DatasetFilterParameterConverter>(args, json, SIMPL::k_ImportInfoArrayKey, SIMPL::k_ImportHDF5FileKey,
+  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::ImportHDF5DatasetFilterParameterConverter>(args, json, SIMPL::k_ImportInfoArrayKey, SIMPL::k_HDF5FilePathKey,
                                                                                                                     SIMPL::k_SelectedAttributeMatrixKey, k_ImportHDF5File_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
