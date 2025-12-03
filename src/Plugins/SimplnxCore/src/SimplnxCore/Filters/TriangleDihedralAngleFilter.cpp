@@ -227,8 +227,8 @@ Result<Arguments> TriangleDihedralAngleFilter::FromSIMPLJson(const nlohmann::jso
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey,
                                                                                                                                   k_SurfaceMeshTriangleDihedralAnglesArrayName_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey, k_TGeometryDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(
+      args, json, SIMPL::k_SurfaceMeshTriangleDihedralAnglesArrayPathKey, k_TGeometryDataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -133,8 +133,8 @@ Result<Arguments> TriangleCentroidFilter::FromSIMPLJson(const nlohmann::json& js
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleCentroidsArrayPathKey,
                                                                                                                                   k_CentroidsArrayName_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleCentroidsArrayPathKey, k_TriGeometryDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleCentroidsArrayPathKey,
+                                                                                                                                      k_TriGeometryDataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -8,8 +8,8 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Utilities/TimeUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/TimeUtilities.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
