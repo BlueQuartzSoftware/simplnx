@@ -41,7 +41,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  size_t totalPoints = quats.getNumberOfTuples();
+  usize totalPoints = quats.getNumberOfTuples();
 
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
   try
@@ -55,33 +55,32 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     return MakeErrorResult(-54900, message);
   }
 
-  int64_t dims[3] = {
-      static_cast<int64_t>(udims[0]),
-      static_cast<int64_t>(udims[1]),
-      static_cast<int64_t>(udims[2]),
+  int64 dims[3] = {
+      static_cast<int64>(udims[0]),
+      static_cast<int64>(udims[1]),
+      static_cast<int64>(udims[2]),
   };
 
-  int32_t good = 1;
-  int64_t neighbor = 0;
-  int64_t column = 0, row = 0, plane = 0;
+  int64 neighbor = 0;
+  int64 column = 0, row = 0, plane = 0;
 
-  int64_t neighpoints[6] = {0, 0, 0, 0, 0, 0};
-  neighpoints[0] = static_cast<int64_t>(-dims[0] * dims[1]);
-  neighpoints[1] = static_cast<int64_t>(-dims[0]);
-  neighpoints[2] = static_cast<int64_t>(-1);
-  neighpoints[3] = static_cast<int64_t>(1);
-  neighpoints[4] = static_cast<int64_t>(dims[0]);
-  neighpoints[5] = static_cast<int64_t>(dims[0] * dims[1]);
+  int64 neighpoints[6] = {0, 0, 0, 0, 0, 0};
+  neighpoints[0] = static_cast<int64>(-dims[0] * dims[1]);
+  neighpoints[1] = static_cast<int64>(-dims[0]);
+  neighpoints[2] = static_cast<int64>(-1);
+  neighpoints[3] = static_cast<int64>(1);
+  neighpoints[4] = static_cast<int64>(dims[0]);
+  neighpoints[5] = static_cast<int64>(dims[0] * dims[1]);
 
   float w = 10000.0f;
 
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  std::vector<int32_t> neighborCount(totalPoints, 0);
+  std::vector<int32> neighborCount(totalPoints, 0);
 
   MessageHelper messageHelper(m_MessageHandler);
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-  for(size_t i = 0; i < totalPoints; i++)
+  for(usize i = 0; i < totalPoints; i++)
   {
     throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(i, totalPoints)); });
 
@@ -90,42 +89,29 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       column = i % dims[0];
       row = (i / dims[0]) % dims[1];
       plane = i / (dims[0] * dims[1]);
-      for(int32_t j = 0; j < 6; j++)
+      for(int32 j = 0; j < 6; j++)
       {
-        good = 1;
         neighbor = i + neighpoints[j];
-        if(j == 0 && plane == 0)
+        // clang-format off
+        if((j == 0 && plane == 0) ||
+           (j == 1 && row == 0) ||
+           (j == 2 && column == 0) ||
+           (j == 3 && column == (dims[0] - 1)) ||
+           (j == 4 && row == (dims[1] - 1)) ||
+           (j == 5 && plane == (dims[2] - 1)))
         {
-          good = 0;
+          continue;
         }
-        if(j == 5 && plane == (dims[2] - 1))
+        // clang-format on
+        else if(maskCompare->isTrue(neighbor))
         {
-          good = 0;
-        }
-        if(j == 1 && row == 0)
-        {
-          good = 0;
-        }
-        if(j == 4 && row == (dims[1] - 1))
-        {
-          good = 0;
-        }
-        if(j == 2 && column == 0)
-        {
-          good = 0;
-        }
-        if(j == 3 && column == (dims[0] - 1))
-        {
-          good = 0;
-        }
-        if(good == 1 && maskCompare->isTrue(neighbor))
-        {
-          uint32 laueClass1 = crystalStructures[cellPhases[i]];
           ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
           ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
 
           if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
           {
+            uint32 laueClass1 = crystalStructures[cellPhases[i]];
+            // Quaternion Math is not commutative so do not reorder
             ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
             w = axisAngle[3];
           }
@@ -138,18 +124,18 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     }
   }
 
-  const int32_t startLevel = 6;
-  int32_t currentLevel = startLevel;
-  int32_t counter = 0;
+  const int32 startLevel = 6;
+  int32 currentLevel = startLevel;
+  int32 counter = 0;
 
   while(currentLevel > m_InputValues->NumberOfNeighbors)
   {
     counter = 1;
-    int32_t loopNumber = 0;
+    int32 loopNumber = 0;
     while(counter > 0)
     {
       counter = 0;
-      for(size_t i = 0; i < totalPoints; i++)
+      for(usize i = 0; i < totalPoints; i++)
       {
         throttledMessenger.sendThrottledMessage([&]() {
           return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
@@ -163,35 +149,21 @@ Result<> BadDataNeighborOrientationCheck::operator()()
           column = i % dims[0];
           row = (i / dims[0]) % dims[1];
           plane = i / (dims[0] * dims[1]);
-          for(int64_t j = 0; j < 6; j++)
+          for(int64 j = 0; j < 6; j++)
           {
-            good = 1;
             neighbor = i + neighpoints[j];
-            if(j == 0 && plane == 0)
+            // clang-format off
+            if((j == 0 && plane == 0) ||
+               (j == 1 && row == 0) ||
+               (j == 2 && column == 0) ||
+               (j == 3 && column == (dims[0] - 1)) ||
+               (j == 4 && row == (dims[1] - 1)) ||
+               (j == 5 && plane == (dims[2] - 1)))
             {
-              good = 0;
+              continue;
             }
-            if(j == 5 && plane == (dims[2] - 1))
-            {
-              good = 0;
-            }
-            if(j == 1 && row == 0)
-            {
-              good = 0;
-            }
-            if(j == 4 && row == (dims[1] - 1))
-            {
-              good = 0;
-            }
-            if(j == 2 && column == 0)
-            {
-              good = 0;
-            }
-            if(j == 3 && column == (dims[0] - 1))
-            {
-              good = 0;
-            }
-            if(good == 1 && !maskCompare->isTrue(neighbor))
+            // clang-format on
+            else if(!maskCompare->isTrue(neighbor))
             {
               ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
               ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
@@ -199,6 +171,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
               if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
               {
                 uint32 laueClass1 = crystalStructures[cellPhases[i]];
+                // Quaternion Math is not commutative so do not reorder
                 ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                 w = axisAngle[3];
               }
