@@ -150,6 +150,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteAvizoUniformCoordinateTest.cpp
   WriteBinaryDataTest.cpp
   WriteFeatureDataCSVTest.cpp
+  WriteLAMMPSFileTest.cpp
   WriteLosAlamosFFTTest.cpp
   WriteNodesAndElementsFilesTest.cpp
   WriteSPParksSitesTest.cpp
@@ -271,6 +272,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME dbscan_test.tar.gz SHA512 77d7886e2550b63176b564e827d7de320b5a28b1c8a55bf107d53acd6962757275bc86b3382ff789f612a6838f55ab8f4af29435aec83a7a804b9487e57a6386)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME ReadZeissTxmFileTest_v2.tar.gz SHA512 2d962655d919480fa7baf0c8720affbcbd1182e8482480f5413b53ead41787d35d0f15487219163ba0dcffad69be90e627730fc780107d80df3d97e14fb15cac)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME segment_features_neighbor_scheme_test.tar.gz SHA512 4700b42eb3a9058dc08520c786d0e6aa20e45bfa06233952462c0c8a428e437406f530125822f1742dfe57405be66e4f0fd5ac2f76db4a13379a7ae189d370cd)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_lammps_test.tar.gz SHA512 82bb5360b76e857f3233d37733c602f67fd2ac667e49b24741a70ab649e8046fb7905493df37d142808b740c2771fe7cdccd71c9d70679afafe398529ee5771e)
 
 endif()
 
