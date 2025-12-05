@@ -132,16 +132,20 @@ Result<> WriteLAMMPSFile::operator()()
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   // Write the Atom positions (Vertices)
   usize numVerts = verts.getNumberOfTuples();
+  usize increment = numVerts / 1000;
   for(usize i = 0; i < numVerts; i++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Exporting Data {:.2f}% completed", CalculatePercentComplete(i, numVerts)); });
+    if(i % increment == 0)
+    {
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Exporting Data {:.2f}% completed", CalculatePercentComplete(i, numVerts)); });
+    }
     // Write the positions to the output file
-    file << fmt::format("{} {:d} {:f} {:f} {:f} {:d} {:d} {:d}\n", (long long int)(i + 1), atomLabels.getValue(i), verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1),
-                        verts.getValue((i * 3) + 2), dummy, dummy, dummy);
+    file << fmt::format("{} {:d} {:f} {:f} {:f} {:d} {:d} {:d}\n", i + 1LL, atomLabels.getValue(i), verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1), verts.getValue((i * 3) + 2), dummy, dummy,
+                        dummy);
   }
 
   // newline at end of file
