@@ -80,7 +80,7 @@ IFilter::UniquePointer WriteLAMMPSFileFilter::clone() const
 
 //------------------------------------------------------------------------------
 IFilter::PreflightResult WriteLAMMPSFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pVertexGeomPathValue = filterArgs.value<DataPath>(k_VertexGeomPath);
   auto pAtomLabelsPathValue = filterArgs.value<DataPath>(k_AtomLabelsPath_Key);
@@ -90,7 +90,9 @@ IFilter::PreflightResult WriteLAMMPSFileFilter::preflightImpl(const DataStructur
 
   if(vertsCount != atomLabelsCount)
   {
-    return MakePreflightErrorResult(-77460, fmt::format("Tuple Dimensions don't match: Number of Vertices - {} || Number of Atom Labels - {}", std::accumulate(vertsCount.begin(), vertsCount.end(), 1, std::multiplies<>()), std::accumulate(atomLabelsCount.begin(), atomLabelsCount.end(), 1, std::multiplies<>())));
+    return MakePreflightErrorResult(-77460, fmt::format("Tuple Dimensions don't match: Number of Vertices - {} || Number of Atom Labels - {}",
+                                                        std::accumulate(vertsCount.begin(), vertsCount.end(), 1, std::multiplies<>()),
+                                                        std::accumulate(atomLabelsCount.begin(), atomLabelsCount.end(), 1, std::multiplies<>())));
   }
 
   return {};
@@ -98,7 +100,7 @@ IFilter::PreflightResult WriteLAMMPSFileFilter::preflightImpl(const DataStructur
 
 //------------------------------------------------------------------------------
 Result<> WriteLAMMPSFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile_Key));
   if(atomicFileResult.invalid())
@@ -142,7 +144,8 @@ Result<Arguments> WriteLAMMPSFileFilter::FromSIMPLJson(const nlohmann::json& jso
   std::vector<Result<>> results;
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_LammpsFileKey, k_OutputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_AtomFeatureLabelsPathKey, k_AtomLabelsPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_AtomFeatureLabelsPathKey, k_AtomLabelsPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AtomFeatureLabelsPathKey, k_AtomLabelsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

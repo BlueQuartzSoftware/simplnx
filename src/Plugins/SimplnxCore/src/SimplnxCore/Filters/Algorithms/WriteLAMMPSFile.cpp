@@ -1,12 +1,11 @@
 #include "WriteLAMMPSFile.hpp"
 
-#include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <fstream>
-#include <simplnx/Utilities/MessageHelper.hpp>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -141,7 +140,8 @@ Result<> WriteLAMMPSFile::operator()()
     }
     throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Exporting Data {:.2f}% completed", CalculatePercentComplete(i, numVerts)); });
     // Write the positions to the output file
-    file << fmt::format("{} {:d} {:f} {:f} {:f} {:d} {:d} {:d}\n", (long long int)(i + 1), atomLabels.getValue(i), verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1), verts.getValue((i * 3) + 2), dummy, dummy, dummy);
+    file << fmt::format("{} {:d} {:f} {:f} {:f} {:d} {:d} {:d}\n", (long long int)(i + 1), atomLabels.getValue(i), verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1),
+                        verts.getValue((i * 3) + 2), dummy, dummy, dummy);
   }
 
   // newline at end of file
