@@ -71,6 +71,7 @@
 #include "SimplnxCore/Filters/ExecuteProcessFilter.hpp"
 #include "SimplnxCore/Filters/ExtractComponentAsArrayFilter.hpp"
 #include "SimplnxCore/Filters/ExtractInternalSurfacesFromTriangleGeometryFilter.hpp"
+#include "SimplnxCore/Filters/ExtractVertexGeometryFilter.hpp"
 #include "SimplnxCore/Filters/FillBadDataFilter.hpp"
 #include "SimplnxCore/Filters/IdentifySampleFilter.hpp"
 #include "SimplnxCore/Filters/InitializeImageGeomCellDataFilter.hpp"
@@ -218,6 +219,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("79d59b85-01e8-5c4a-a6e1-3fd3e2ceffb4").value(), {nx::core::FilterTraits<ExtractComponentAsArrayFilter>::uuid, &ExtractComponentAsArrayFilter::FromSIMPLJson}}, // ExtractComponentAsArray
     {nx::core::Uuid::FromString("8a2308ec-86cd-5636-9a0a-6c7d383e9e7f").value(), {nx::core::FilterTraits<ExecuteProcessFilter>::uuid, &ExecuteProcessFilter::FromSIMPLJson}}, // ExecuteProcessFilter
     {nx::core::Uuid::FromString("1b4b9941-62e4-52f2-9918-15d48147ab88").value(), {nx::core::FilterTraits<ExtractComponentAsArrayFilter>::uuid, &ExtractComponentAsArrayFilter::FromSIMPLJson}}, // RemoveComponentFromArray
+    {nx::core::Uuid::FromString("bc8a91ca-0cee-59c6-b5cb-acc1aab8617f").value(), {nx::core::FilterTraits<ExtractVertexGeometryFilter>::uuid, &ExtractVertexGeometryFilter::FromSIMPLJson}}, // ExtractVertexGeometry
     {nx::core::Uuid::FromString("7aa33007-4186-5d7f-ba9d-d0a561b3351d").value(), {nx::core::FilterTraits<TriangleCentroidFilter>::uuid, &TriangleCentroidFilter::FromSIMPLJson}}, // TriangleCentroid
     {nx::core::Uuid::FromString("1966e540-759c-5798-ae26-0c6a3abc65c0").value(), {nx::core::FilterTraits<ResampleImageGeomFilter>::uuid, &ResampleImageGeomFilter::FromSIMPLJson}}, // ResampleImageGeom
     {nx::core::Uuid::FromString("e25d9b4c-2b37-578c-b1de-cf7032b5ef19").value(), {nx::core::FilterTraits<RotateSampleRefFrameFilter>::uuid, &RotateSampleRefFrameFilter::FromSIMPLJson}}, // RotateSampleRefFrame
