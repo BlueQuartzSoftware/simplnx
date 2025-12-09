@@ -228,6 +228,7 @@ public:
     Result<> result = DataStoreIO::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
     if(result.invalid())
     {
+      result.errors().push_back({-43255, fmt::format("Error writing data array '{}' to hdf5 file.", dataArray.getName())});
       return result;
     }
 

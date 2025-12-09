@@ -2027,14 +2027,14 @@ Result<> DREAM3D::FinishImportingObject(DataStructure& importStructure, DataStru
 
   if(!dataStructure.insert(importData, dataPath.getParent()))
   {
-    return MakeErrorResult(-6202, fmt::format("Unable to import DataObject at '{}'", dataPath.toString()));
+    return MakeErrorResult(-6202, fmt::format("Unable to insert DataObject at DatPath '{}' into the DataStructure", dataPath.toString()));
   }
   if(!preflight)
   {
     const auto dataPtr = dataStructure.getSharedData(dataPath);
     if(dataPtr == nullptr)
     {
-      return MakeErrorResult(-1502234, fmt::format("Cannot finish importing HDF5 data at path '{}'. DataObject does not exist to copy data into.", dataPath.toString()));
+      return MakeErrorResult(-1502234, fmt::format("Cannot finish importing HDF5 data at DataPath '{}'. DataObject does not exist to copy data into.", dataPath.toString()));
     }
 
     const auto fileVersion = GetFileVersion(fileReader);
@@ -2146,7 +2146,7 @@ Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructu
   auto result = WriteFile(fileWriter, pipeline, dataStructure);
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, fmt::format("DREAM3D::WriteFile: Unable to write DREAM3D file with HDF5 error"));
+    return result;
   }
 
   if(writeXdmf)
