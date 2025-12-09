@@ -17,7 +17,6 @@
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
@@ -90,7 +89,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 
   params.linkParameters(k_UseMask_Key, k_InputMaskPath_Key, std::make_any<bool>(true));
   params.linkParameters(k_StoreKernelDistances_Key, k_KernelDistancesArrayName_Key, std::make_any<bool>(true));
-  params.linkParameters(k_InterpolationTechnique_Key, k_GaussianSigmas_Key, std::make_any<uint64>(k_Gaussian));
+  params.linkParameters(k_InterpolationTechnique_Key, k_GaussianSigmas_Key, std::make_any<uint64>(InterpolatePointCloudToRegularGrid::k_Gaussian));
 
   return params;
 }
@@ -125,7 +124,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
 
   OutputActions actions;
 
-  if(interpolationTechnique != k_Uniform && interpolationTechnique != k_Gaussian)
+  if(interpolationTechnique != InterpolatePointCloudToRegularGrid::k_Uniform && interpolationTechnique != InterpolatePointCloudToRegularGrid::k_Gaussian)
   {
     return MakePreflightErrorResult(-11000, fmt::format("Interpolation Technique must be 0 [Uniform] or 1 [Gaussian] "));
   }
@@ -133,14 +132,14 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   if(kernelSize[0] < 0 || kernelSize[1] < 0 || kernelSize[2] < 0)
   {
     return MakePreflightErrorResult(-11000, fmt::format("All kernel dimensions must be positive.\n "
-                                                        "Current kernel dimensions:\n x = %1\n y = %2\n z = %3\n",
+                                                        "Current kernel dimensions:\n x = {}\n y = {}\n z = {}\n",
                                                         kernelSize[0], kernelSize[1], kernelSize[2]));
   }
 
   if(sigmas[0] <= 0 || sigmas[1] <= 0 || sigmas[2] <= 0)
   {
     return MakePreflightErrorResult(-11000, fmt::format("All sigmas must be positive.\n "
-                                                        "Current sigmas:\n x = %1\n y = %2\n z = %3\n",
+                                                        "Current sigmas:\n x = {}\n y = {}\n z = {}\n",
                                                         sigmas[0], sigmas[1], sigmas[2]));
   }
 
@@ -226,20 +225,19 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
 {
   InterpolatePointCloudToRegularGridInputValues inputValues;
 
-  inputValues.UseMask = filterArgs.value<BoolParameter::ValueType>(k_UseMask_Key);
-  inputValues.StoreKernelDistances = filterArgs.value<BoolParameter::ValueType>(k_StoreKernelDistances_Key);
-  inputValues.InterpolationIndex = filterArgs.value<ChoicesParameter::ValueType>(k_InterpolationTechnique_Key);
-  inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeometryPath_Key);
-  inputValues.InterpolatedGroupName = filterArgs.value<DataObjectNameParameter::ValueType>(k_InterpolatedGroupName_Key);
-  inputValues.InterpolateArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InterpolateArrays_Key);
-  inputValues.CopyArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyArrays_Key);
-  inputValues.VoxelIndicesPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_VoxelIndicesPath_Key);
-  inputValues.KernelSize = filterArgs.value<VectorFloat32Parameter::ValueType>(k_KernelSize_Key);
-  inputValues.GaussianSigmas = filterArgs.value<VectorFloat32Parameter::ValueType>(k_GaussianSigmas_Key);
-  inputValues.InputMaskPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputMaskPath_Key);
-  inputValues.KernelDistancesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_KernelDistancesArrayName_Key);
-
+  inputValues.storeKernelDistances = filterArgs.value<bool>(k_StoreKernelDistances_Key);
+  inputValues.interpolationTechnique = filterArgs.value<uint64>(k_InterpolationTechnique_Key);
+  inputValues.vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.interpolatedGroupName = filterArgs.value<std::string>(k_InterpolatedGroupName_Key);
+  inputValues.interpolatedDataPaths = filterArgs.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
+  inputValues.copyDataPaths = filterArgs.value<std::vector<DataPath>>(k_CopyArrays_Key);
+  inputValues.voxelIndicesPath = filterArgs.value<DataPath>(k_VoxelIndicesPath_Key);
+  inputValues.kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
+  inputValues.sigmas = filterArgs.value<std::vector<float32>>(k_GaussianSigmas_Key);
+  inputValues.kernelDistanceArrayName = filterArgs.value<std::string>(k_KernelDistancesArrayName_Key);
+  inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.maskDataPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
   return InterpolatePointCloudToRegularGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 

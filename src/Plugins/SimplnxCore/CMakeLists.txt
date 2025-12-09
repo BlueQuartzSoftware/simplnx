@@ -254,6 +254,7 @@ set(AlgorithmList
   InitializeImageGeomCellData
   InterpolatePointCloudToRegularGrid
   IterativeClosestPoint
+  InterpolatePointCloudToRegularGrid
   LabelTriangleGeometry
   LaplacianSmoothing
   MapPointCloudToRegularGrid

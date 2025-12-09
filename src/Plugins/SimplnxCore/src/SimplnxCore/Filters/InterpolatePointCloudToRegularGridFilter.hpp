@@ -38,8 +38,6 @@ public:
   static constexpr StringLiteral k_CopyArrays_Key = "copy_arrays";
   static constexpr StringLiteral k_InterpolatedGroupName_Key = "interpolated_group_name";
   static constexpr StringLiteral k_KernelDistancesArrayName_Key = "kernel_distances_array_name";
-  static constexpr uint64 k_Uniform = 0;
-  static constexpr uint64 k_Gaussian = 1;
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

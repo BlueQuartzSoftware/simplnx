@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/InterpolatePointCloudToRegularGrid.hpp"
 #include "SimplnxCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -67,7 +68,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
 
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_StoreKernelDistances_Key, std::make_any<bool>(true));
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, std::make_any<uint64>(InterpolatePointCloudToRegularGridFilter::k_Uniform));
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, std::make_any<uint64>(InterpolatePointCloudToRegularGrid::k_Uniform));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::make_any<std::vector<float32>>(std::vector<float32>{1, 1, 1}));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeometryPath));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
@@ -108,7 +109,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
 
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_StoreKernelDistances_Key, std::make_any<bool>(true));
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, std::make_any<uint64>(InterpolatePointCloudToRegularGridFilter::k_Gaussian));
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, std::make_any<uint64>(InterpolatePointCloudToRegularGrid::k_Gaussian));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_KernelSize_Key, std::make_any<std::vector<float32>>(std::vector<float32>{1, 1, 1}));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key, std::make_any<std::vector<float32>>(std::vector<float32>{1, 1, 1}));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeometryPath));
@@ -149,7 +150,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter
 
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key, std::make_any<bool>(false));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_StoreKernelDistances_Key, std::make_any<bool>(true));
-  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, std::make_any<uint64>(InterpolatePointCloudToRegularGridFilter::k_Gaussian));
+  args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key, std::make_any<uint64>(InterpolatePointCloudToRegularGrid::k_Gaussian));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeometryPath));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_VoxelIndicesPath_Key, std::make_any<DataPath>(k_VoxelIndicesPath));

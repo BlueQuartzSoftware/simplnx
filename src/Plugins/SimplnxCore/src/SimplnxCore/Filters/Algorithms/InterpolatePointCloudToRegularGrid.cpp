@@ -5,17 +5,15 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include <cmath>
+#include <tuple>
 
 using namespace nx::core;
 
 namespace
 {
-constexpr uint64 k_Uniform = 0;
-constexpr uint64 k_Gaussian = 1;
-
 struct MapPointCloudDataByKernelFunctor
 {
   template <typename T>
@@ -66,11 +64,11 @@ void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std
     {
       for(int64 x = -kernelNumVoxels[0]; x <= kernelNumVoxels[0]; x++)
       {
-        if(interpolationTechnique == k_Uniform)
+        if(interpolationTechnique == InterpolatePointCloudToRegularGrid::k_Uniform)
         {
           kernel[counter] = 1.0f;
         }
-        else if(interpolationTechnique == k_Gaussian)
+        else if(interpolationTechnique == InterpolatePointCloudToRegularGrid::k_Gaussian)
         {
           kernel[counter] = std::exp(-((x * x) / (2 * sigmas[0] * sigmas[0]) + (y * y) / (2 * sigmas[1] * sigmas[1]) + (z * z) / (2 * sigmas[2] * sigmas[2])));
         }
@@ -98,10 +96,9 @@ void determineKernelDistances(std::vector<float32>& kernelValDistances, const in
   }
 }
 
-void mapKernelDistances(NeighborList<float32>* kernelDistances, std::vector<float32>& kernelValDistances, std::vector<float32>& kernel, const int64 kernelNumVoxels[3], const usize dims[3], usize curX,
-                        usize curY, usize curZ)
+void mapKernelDistances(NeighborList<float32>* kernelDistances, const std::vector<float32>& kernelValDistances, const std::vector<float32>& kernel, const int64 kernelNumVoxels[3], const usize dims[3],
+                        usize curX, usize curY, usize curZ)
 {
-  usize index;
   int64 startKernel[3] = {0, 0, 0};
   int64 endKernel[3] = {0, 0, 0};
   usize counter = 0;
@@ -124,7 +121,7 @@ void mapKernelDistances(NeighborList<float32>* kernelDistances, std::vector<floa
         {
           continue;
         }
-        index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
+        usize index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
         kernelDistances->addEntry(index, kernelValDistances[counter]);
         counter++;
       }
@@ -147,24 +144,26 @@ InterpolatePointCloudToRegularGrid::InterpolatePointCloudToRegularGrid(DataStruc
 InterpolatePointCloudToRegularGrid::~InterpolatePointCloudToRegularGrid() noexcept = default;
 
 // -----------------------------------------------------------------------------
+const std::atomic_bool& InterpolatePointCloudToRegularGrid::getCancel()
+{
+  return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
 Result<> InterpolatePointCloudToRegularGrid::operator()()
 {
-  auto useMask = m_InputValues->UseMask;
-  auto storeKernelDistances = m_InputValues->StoreKernelDistances;
-  auto interpolationTechnique = m_InputValues->InterpolationIndex;
-  auto vertexGeomPath = m_InputValues->InputVertexGeometryPath;
-  auto imageGeomPath = m_InputValues->InputImageGeometryPath;
-  auto interpolatedGroupName = m_InputValues->InterpolatedGroupName;
-  auto interpolatedDataPaths = m_InputValues->InterpolateArrays;
-  auto copyDataPaths = m_InputValues->CopyArrays;
-  auto voxelIndicesPath = m_InputValues->VoxelIndicesPath;
-  auto kernelSize = m_InputValues->KernelSize;
+  const DataPath interpolatedGroupPath = m_InputValues->imageGeomPath.createChildPath(m_InputValues->interpolatedGroupName);
 
-  const DataPath interpolatedGroupPath = imageGeomPath.createChildPath(interpolatedGroupName);
-  const auto sigmas = m_InputValues->GaussianSigmas;
+  const DataPath kernelDistPath = interpolatedGroupPath.createChildPath(m_InputValues->kernelDistanceArrayName);
 
-  auto vertices = m_DataStructure.getDataAs<VertexGeom>(vertexGeomPath);
-  auto image = m_DataStructure.getDataAs<ImageGeom>(imageGeomPath);
+  Float32NeighborList* kernelDistances = nullptr;
+  if(m_InputValues->storeKernelDistances)
+  {
+    kernelDistances = m_DataStructure.getDataAs<Float32NeighborList>(kernelDistPath);
+  }
+
+  auto vertices = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->vertexGeomPath);
+  auto image = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->imageGeomPath);
   SizeVec3 dims = image->getDimensions();
   FloatVec3 res = image->getSpacing();
   int64 kernelNumVoxels[3] = {0, 0, 0};
@@ -178,38 +177,38 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
   std::vector<float32> kernel;
 
   BoolArray::store_type* mask = nullptr;
-  if(useMask)
+  if(m_InputValues->useMask)
   {
-    mask = m_DataStructure.getDataAs<BoolArray>(m_InputValues->InputMaskPath)->getDataStore();
+    mask = m_DataStructure.getDataAs<BoolArray>(m_InputValues->maskDataPath)->getDataStore();
   }
 
-  auto& voxelIndices = m_DataStructure.getDataRefAs<UInt64Array>(voxelIndicesPath);
+  auto& voxelIndices = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->voxelIndicesPath);
 
   // Make sure the NeighborList's outermost vector is resized to the number of tuples and initialized to non-null values (empty vectors)
-  for(const auto& interpolatedDataPath : interpolatedDataPaths)
-  {
-    InitializeNeighborList(m_DataStructure, interpolatedGroupPath.createChildPath(interpolatedDataPath.getTargetName()));
-  }
-  for(const auto& copyDataPath : copyDataPaths)
-  {
-    InitializeNeighborList(m_DataStructure, interpolatedGroupPath.createChildPath(copyDataPath.getTargetName()));
-  }
+  // for(const auto& interpolatedDataPath : m_InputValues->interpolatedDataPaths)
+  // {
+  //   InitializeNeighborList(m_DataStructure, interpolatedGroupPath.createChildPath(interpolatedDataPath.getTargetName()));
+  // }
+  // for(const auto& copyDataPath : m_InputValues->copyDataPaths)
+  // {
+  //   InitializeNeighborList(m_DataStructure, interpolatedGroupPath.createChildPath(copyDataPath.getTargetName()));
+  // }
 
   usize maxImageIndex = ((dims[2] - 1) * dims[0] * dims[1]) + ((dims[1] - 1) * dims[0]) + (dims[0] - 1);
 
-  kernelNumVoxels[0] = static_cast<int64>(std::ceil((kernelSize[0] / res[0]) * 0.5f));
-  kernelNumVoxels[1] = static_cast<int64>(std::ceil((kernelSize[1] / res[1]) * 0.5f));
-  kernelNumVoxels[2] = static_cast<int64>(std::ceil((kernelSize[2] / res[2]) * 0.5f));
+  kernelNumVoxels[0] = static_cast<int64>(std::ceil((m_InputValues->kernelSize[0] / res[0]) * 0.5f));
+  kernelNumVoxels[1] = static_cast<int64>(std::ceil((m_InputValues->kernelSize[1] / res[1]) * 0.5f));
+  kernelNumVoxels[2] = static_cast<int64>(std::ceil((m_InputValues->kernelSize[2] / res[2]) * 0.5f));
 
-  if(kernelSize[0] < res[0])
+  if(m_InputValues->kernelSize[0] < res[0])
   {
     kernelNumVoxels[0] = 0;
   }
-  if(kernelSize[1] < res[1])
+  if(m_InputValues->kernelSize[1] < res[1])
   {
     kernelNumVoxels[1] = 0;
   }
-  if(kernelSize[2] < res[2])
+  if(m_InputValues->kernelSize[2] < res[2])
   {
     kernelNumVoxels[2] = 0;
   }
@@ -224,12 +223,12 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
 
   kernel.resize(totalKernel);
   std::fill(kernel.begin(), kernel.end(), 0.0f);
-  determineKernel(interpolationTechnique, sigmas, kernel, kernelNumVoxels);
+  determineKernel(m_InputValues->interpolationTechnique, m_InputValues->sigmas, kernel, kernelNumVoxels);
 
   std::vector<float32> uniformKernel(totalKernel, 1.0f);
 
   std::vector<float32> kernelValDistances;
-  if(storeKernelDistances)
+  if(m_InputValues->storeKernelDistances)
   {
     kernelValDistances.resize(totalKernel);
     std::fill(kernelValDistances.begin(), kernelValDistances.end(), 0.0f);
@@ -240,31 +239,55 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
   usize prog = 1;
   usize progressInt = 0;
 
+  // ***************************************************************************
+  // Prebuild these values outside the loop since they do not change inside the loop
+  using InterpolatedTupleType = std::tuple<DataPath, INeighborList*, IDataArray*>;
+  std::vector<InterpolatedTupleType> interpolatedDataTypes;
+  for(const auto& interpolatedDataPathItem : m_InputValues->interpolatedDataPaths)
+  {
+    const auto dynamicArrayPath = interpolatedGroupPath.createChildPath(interpolatedDataPathItem.getTargetName());
+    auto* dynamicArrayToInterpolate = m_DataStructure.getDataAs<INeighborList>(dynamicArrayPath);
+    auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(interpolatedDataPathItem);
+    interpolatedDataTypes.emplace_back(dynamicArrayPath, dynamicArrayToInterpolate, sourceArray);
+  }
+
+  std::vector<InterpolatedTupleType> copiedDataTypes;
+  for(const auto& copyDataPath : m_InputValues->copyDataPaths)
+  {
+    auto dynamicArrayPath = interpolatedGroupPath.createChildPath(copyDataPath.getTargetName());
+    auto* dynamicArrayToCopy = m_DataStructure.getDataAs<INeighborList>(dynamicArrayPath);
+    auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(copyDataPath);
+    copiedDataTypes.emplace_back(dynamicArrayPath, dynamicArrayToCopy, sourceArray);
+  }
+  // ***************************************************************************
+
   for(usize i = 0; i < numVerts; i++)
   {
-    if(useMask)
+    if(m_ShouldCancel)
     {
-      if(!mask->getValue(i))
-      {
-        continue;
-      }
+      return {};
+    }
+
+    if(m_InputValues->useMask && nullptr != mask && !mask->getValue(i))
+    {
+      continue;
     }
     index = voxelIndices[i];
     if(index > maxImageIndex)
     {
       return MakeErrorResult(-11004,
-                             fmt::format("Index present in the selected Voxel Indices array that falls outside the selected Image Geometry for interpolation.\n Index = %1\n Max Image Index = %2\n",
+                             fmt::format("Index present in the selected Voxel Indices array that falls outside the selected Image Geometry for interpolation.\n Index = {}\n Max Image Index = {}\n",
                                          index, maxImageIndex));
     }
     x = index % dims[0];
     y = (index / dims[0]) % dims[1];
     z = index / (dims[0] * dims[1]);
 
-    for(const auto& interpolatedDataPathItem : interpolatedDataPaths)
+    for(const auto& interpolatedDataPathItem : interpolatedDataTypes)
     {
-      const auto dynamicArrayPath = interpolatedGroupPath.createChildPath(interpolatedDataPathItem.getTargetName());
-      auto* dynamicArrayToInterpolate = m_DataStructure.getDataAs<INeighborList>(dynamicArrayPath);
-      auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(interpolatedDataPathItem);
+      const auto dynamicArrayPath = std::get<0>(interpolatedDataPathItem);
+      auto* dynamicArrayToInterpolate = std::get<1>(interpolatedDataPathItem);
+      auto* sourceArray = std::get<2>(interpolatedDataPathItem);
 
       const auto& type = sourceArray->getDataType();
       if(type == DataType::boolean) // Can't be executed will throw error
@@ -276,11 +299,11 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, sourceArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
     }
 
-    for(const auto& copyDataPath : copyDataPaths)
+    for(const auto& copyDataPath : copiedDataTypes)
     {
-      auto dynamicArrayPath = interpolatedGroupPath.createChildPath(copyDataPath.getTargetName());
-      auto* dynamicArrayToCopy = m_DataStructure.getDataAs<INeighborList>(dynamicArrayPath);
-      auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(copyDataPath);
+      auto dynamicArrayPath = std::get<0>(copyDataPath); // interpolatedGroupPath.createChildPath(copyDataPath.getTargetName());
+      auto* dynamicArrayToCopy = std::get<1>(copyDataPath);
+      auto* sourceArray = std::get<2>(copyDataPath);
 
       const auto& type = sourceArray->getDataType();
       if(type == DataType::boolean) // Can't be executed will throw error
@@ -292,18 +315,16 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, sourceArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
     }
 
-    if(storeKernelDistances)
+    if(m_InputValues->storeKernelDistances && nullptr != kernelDistances)
     {
-      const DataPath kernelDistPath = interpolatedGroupPath.createChildPath(m_InputValues->KernelDistancesArrayName);
-      InitializeNeighborList(m_DataStructure, kernelDistPath);
-      auto* kernelDistances = m_DataStructure.getDataAs<Float32NeighborList>(kernelDistPath);
+      // InitializeNeighborList(m_DataStructure, kernelDistPath);
       mapKernelDistances(kernelDistances, kernelValDistances, kernel, kernelNumVoxels, dims.data(), x, y, z);
     }
 
     if(i > prog)
     {
       progressInt = static_cast<int64>((static_cast<float>(i) / numVerts) * 100.0f);
-      m_MessageHandler(fmt::format("Interpolating Point Cloud || {}% Completed", progressInt));
+      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Interpolating Point Cloud || {}% Completed", progressInt));
       prog = prog + progIncrement;
     }
   }
