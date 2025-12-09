@@ -41,8 +41,6 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
-
   void updateNeighborHood(usize sourceIndex, usize targetIndex);
 
 private:
