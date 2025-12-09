@@ -151,6 +151,7 @@ set(FilterList
   WriteBinaryDataFilter
   WriteDREAM3DFilter
   WriteFeatureDataCSVFilter
+  WriteLAMMPSFileFilter
   WriteLosAlamosFFTFilter
   WriteNodesAndElementsFilesFilter
   WriteSPParksSitesFilter
@@ -258,6 +259,7 @@ set(AlgorithmList
   WriteAbaqusHexahedron
   WriteAvizoRectilinearCoordinate
   WriteAvizoUniformCoordinate
+  WriteLAMMPSFile
   WriteLosAlamosFFT
   WriteNodesAndElementsFiles
   WriteSPParksSites
