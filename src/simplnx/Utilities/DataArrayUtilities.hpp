@@ -170,8 +170,17 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
   const usize last = path.getLength() - 1;
 
   std::string name = path[last];
+  NeighborList<T>* neighborList = nullptr;
+  if(mode == IDataAction::Mode::Preflight)
+  {
+    auto listStore = std::make_shared<EmptyListStore<T>>(tupleShape);
+    neighborList = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);
+  }
+  if(mode == IDataAction::Mode::Execute)
+  {
+    neighborList = NeighborList<T>::Create(dataStructure, name, tupleShape, dataObjectId);
+  }
 
-  auto neighborList = NeighborList<T>::Create(dataStructure, name, tupleShape, dataObjectId);
   if(neighborList == nullptr)
   {
     return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", prefix, path.toString()));
