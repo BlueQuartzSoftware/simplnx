@@ -53,6 +53,11 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   std::stringstream errorMessages;
   for(const auto& targetPath : m_Paths)
   {
+    if(dataStructure.getDataAs<DataObject>(targetPath) != nullptr)
+    {
+      return MakeErrorResult(-6203, fmt::format("{}Unable to import DataObject at '{}' because an object already exists there. Consider a rename of existing object.", prefix, targetPath.toString()));
+    }
+
     auto result = DREAM3D::FinishImportingObject(importStructure, dataStructure, targetPath, fileReader, preflighting);
     if(result.invalid())
     {
