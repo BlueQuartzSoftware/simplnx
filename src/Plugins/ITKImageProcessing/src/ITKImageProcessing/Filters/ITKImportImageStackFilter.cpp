@@ -146,8 +146,8 @@ template <class T>
 Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const std::string& imageArrayName, const std::vector<std::string>& files,
                         ChoicesParameter::ValueType transformType, bool convertToGrayscale, const VectorFloat32Parameter::ValueType& luminosityValues, ChoicesParameter::ValueType resample,
                         float32 scalingFactor, const VectorUInt64Parameter::ValueType& exactDims, bool changeDataType, ChoicesParameter::ValueType destType,
-                        CropGeometryParameter::ValueType& croppingOptions, const VectorFloat64Parameter::ValueType& origin, const VectorFloat64Parameter::ValueType& spacing,
-                        const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+                        CropGeometryParameter::ValueType& croppingOptions, bool shouldChangeOrigin, const VectorFloat64Parameter::ValueType& origin, bool shouldChangeSpacing,
+                        const VectorFloat64Parameter::ValueType& spacing, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   DataPath destImageGeomPath = imageGeomPath;
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(destImageGeomPath);
@@ -203,60 +203,17 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       args.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, std::make_any<fs::path>(filePath));
       args.insertOrAssign(ITKImageReaderFilter::k_ChangeDataType_Key, std::make_any<bool>(changeDataType));
       args.insertOrAssign(ITKImageReaderFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(destType));
-      args.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key, std::make_any<BoolParameter::ValueType>(true));
+      args.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key, std::make_any<BoolParameter::ValueType>(shouldChangeOrigin));
       args.insertOrAssign(ITKImageReaderFilter::k_Origin_Key, std::make_any<VectorFloat64Parameter::ValueType>(origin));
-      args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, std::make_any<BoolParameter::ValueType>(true));
+      args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, std::make_any<BoolParameter::ValueType>(shouldChangeSpacing));
       args.insertOrAssign(ITKImageReaderFilter::k_Spacing_Key, std::make_any<VectorFloat64Parameter::ValueType>(spacing));
+      args.insertOrAssign(ITKImageReaderFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(croppingOptions));
 
       IFilter::ExecuteResult executeResult = imageReader.execute(importedDataStructure, args);
       if(executeResult.result.invalid())
       {
         return executeResult.result;
       }
-    }
-
-    // ======================= Crop Image Geometry Section ===================
-    // We've already cropped out Z by only running the loop on specific Z slices,
-    // so only run this section if we are cropping X or Y dimensions.
-    if(croppingOptions.type != CropGeometryParameter::ValueType::TypeEnum::NoCropping)
-    {
-      if(croppingOptions.cropX || croppingOptions.cropY)
-      {
-        std::unique_ptr<IFilter> cropImageGeomFilter = filterListPtr->createFilter(k_CropImageGeomFilterHandle);
-        Arguments cropImageGeomArgs;
-        cropImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(imageGeomPath));
-        cropImageGeomArgs.insertOrAssign("use_physical_bounds", std::make_any<bool>(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume));
-        cropImageGeomArgs.insertOrAssign("crop_x_dim", std::make_any<bool>(croppingOptions.cropX));
-        cropImageGeomArgs.insertOrAssign("crop_y_dim", std::make_any<bool>(croppingOptions.cropY));
-        cropImageGeomArgs.insertOrAssign("crop_z_dim", std::make_any<bool>(false)); // Do this because we're only cropping one image at a time
-        if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
-        {
-          cropImageGeomArgs.insertOrAssign("min_voxel",
-                                           std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(croppingOptions.xBoundVoxels[0]), static_cast<uint64>(croppingOptions.yBoundVoxels[0]),
-                                                                                            static_cast<uint64>(croppingOptions.zBoundVoxels[0])}));
-          cropImageGeomArgs.insertOrAssign("max_voxel",
-                                           std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(croppingOptions.xBoundVoxels[1]), static_cast<uint64>(croppingOptions.yBoundVoxels[1]),
-                                                                                            static_cast<uint64>(croppingOptions.zBoundVoxels[1])}));
-        }
-        else
-        {
-          cropImageGeomArgs.insertOrAssign(
-              "min_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(croppingOptions.xBoundPhysical[0]), static_cast<float64>(croppingOptions.yBoundPhysical[0]),
-                                                                             static_cast<float64>(croppingOptions.zBoundPhysical[0])}));
-          cropImageGeomArgs.insertOrAssign(
-              "max_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(croppingOptions.xBoundPhysical[1]), static_cast<float64>(croppingOptions.yBoundPhysical[1]),
-                                                                             static_cast<float64>(croppingOptions.zBoundPhysical[1])}));
-        }
-        cropImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(true));
-
-        // Run crop image geometry filter and process results and messages
-        Result<> result = cropImageGeomFilter->execute(importedDataStructure, cropImageGeomArgs).result;
-        if(result.invalid())
-        {
-          return result;
-        }
-      }
-      destImageGeomPath = DataPath({imageGeomPath.getTargetName() + "_cropped"});
     }
 
     // ======================= Resample Image Geometry Section ===================
@@ -444,7 +401,9 @@ Parameters ITKImportImageStackFilter::parameters() const
   params.insert(
       std::make_unique<GeneratedFileListParameter>(k_InputFileListInfo_Key, "Input File List", "The list of 2D image files to be read in to a 3D volume", GeneratedFileListParameter::ValueType{}));
 
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", false));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Origin_Key, "Origin", "The origin of the 3D volume", std::vector<float64>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "y", "Z"}));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", false));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing", "The spacing of the 3D volume", std::vector<float64>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "y", "Z"}));
 
   params.insertSeparator(Parameters::Separator{"Cropping Options"});
@@ -487,6 +446,8 @@ Parameters ITKImportImageStackFilter::parameters() const
   params.linkParameters(k_ResampleImagesChoice_Key, k_Scaling_Key, ::k_ScalingModeIndex);
   params.linkParameters(k_ResampleImagesChoice_Key, k_ExactXYDimensions_Key, ::k_ExactDimensionsModeIndex);
   params.linkParameters(k_ChangeDataType_Key, k_ImageDataType_Key, true);
+  params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, true);
+  params.linkParameters(k_ChangeSpacing_Key, k_Spacing_Key, true);
 
   return params;
 }
@@ -517,6 +478,8 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
+  auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
+  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -564,10 +527,11 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_FileName_Key, std::make_any<fs::path>(files.at(0)));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeDataType_Key, std::make_any<bool>(pChangeDataType));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(numericType));
-  imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key, std::make_any<BoolParameter::ValueType>(true));
+  imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key, std::make_any<BoolParameter::ValueType>(shouldChangeOrigin));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_Origin_Key, std::make_any<VectorFloat64Parameter::ValueType>(origin));
-  imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, std::make_any<BoolParameter::ValueType>(true));
+  imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, std::make_any<BoolParameter::ValueType>(shouldChangeSpacing));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_Spacing_Key, std::make_any<VectorFloat64Parameter::ValueType>(spacing));
+  imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(croppingOptions));
 
   const ITKImageReaderFilter imageReader;
   PreflightResult imageReaderResult = imageReader.preflight(tmpDs, imageReaderArgs, messageHandler, shouldCancel);
@@ -583,7 +547,51 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   if(createImageGeomActionPtr != nullptr)
   {
     outputDims = createImageGeomActionPtr->dims();
-    outputDims.back() = files.size();
+
+    // Compute Z dimension, taking into account possible Z cropping
+    usize totalSlices = files.size();
+    usize zDim = totalSlices;
+
+    if(croppingOptions.cropZ)
+    {
+      if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
+      {
+        // Voxel-based Z cropping: zBoundVoxels are inclusive indices
+        const auto zMin = static_cast<usize>(croppingOptions.zBoundVoxels[0]);
+        const auto zMax = static_cast<usize>(croppingOptions.zBoundVoxels[1]);
+        if(zMax >= zMin)
+        {
+          zDim = zMax - zMin + 1;
+        }
+      }
+      else if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume)
+      {
+        const float64 zMinPhys = croppingOptions.zBoundPhysical[0];
+        const float64 zMaxPhys = croppingOptions.zBoundPhysical[1];
+
+        const float64 originZ = origin[2];
+        const float64 spacingZ = spacing[2];
+
+        const float64 startIndex = (zMinPhys - originZ) / spacingZ;
+        const float64 endIndex = (zMaxPhys - originZ) / spacingZ;
+
+        const auto zMinIndex = static_cast<usize>(std::floor(startIndex));
+        const auto zMaxIndex = static_cast<usize>(std::floor(endIndex));
+
+        if(zMaxIndex >= zMinIndex)
+        {
+          zDim = zMaxIndex - zMinIndex + 1;
+        }
+      }
+
+      // Clamp Z dimension to the total number of available slices
+      if(zDim > totalSlices)
+      {
+        zDim = totalSlices;
+      }
+    }
+
+    outputDims.back() = zDim;
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
                                                                                          createImageGeomActionPtr->spacing(), createImageGeomActionPtr->cellAttributeMatrixName(),
@@ -609,69 +617,6 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   std::vector<DataPath> pathsToDelete;
 
   FilterList* filterListPtr = Application::Instance()->getFilterList();
-  if(croppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
-  {
-    if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
-    {
-      PreflightResult errorResult = MakePreflightErrorResult(-18542, "The plugin SimplnxCore was not instantiated in this instance, so image cropping is not available.");
-      return errorResult;
-    }
-
-    std::unique_ptr<IFilter> cropImageGeomFilter = filterListPtr->createFilter(k_CropImageGeomFilterHandle);
-    if(nullptr == cropImageGeomFilter.get())
-    {
-      PreflightResult errorResult = MakePreflightErrorResult(-18543, "Unable to create an instance of the crop image geometry filter, so image cropping is not available.");
-      return errorResult;
-    }
-
-    Arguments cropImageGeomArgs;
-    cropImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(currentImageGeomPath));
-    cropImageGeomArgs.insertOrAssign("use_physical_bounds", std::make_any<bool>(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume));
-    cropImageGeomArgs.insertOrAssign("crop_x_dim", std::make_any<bool>(croppingOptions.cropX));
-    cropImageGeomArgs.insertOrAssign("crop_y_dim", std::make_any<bool>(croppingOptions.cropY));
-    cropImageGeomArgs.insertOrAssign("crop_z_dim", std::make_any<bool>(croppingOptions.cropZ));
-    if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
-    {
-      cropImageGeomArgs.insertOrAssign("min_voxel",
-                                       std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(croppingOptions.xBoundVoxels[0]), static_cast<uint64>(croppingOptions.yBoundVoxels[0]),
-                                                                                        static_cast<uint64>(croppingOptions.zBoundVoxels[0])}));
-      cropImageGeomArgs.insertOrAssign("max_voxel",
-                                       std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(croppingOptions.xBoundVoxels[1]), static_cast<uint64>(croppingOptions.yBoundVoxels[1]),
-                                                                                        static_cast<uint64>(croppingOptions.zBoundVoxels[1])}));
-    }
-    else
-    {
-      cropImageGeomArgs.insertOrAssign(
-          "min_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(croppingOptions.xBoundPhysical[0]), static_cast<float64>(croppingOptions.yBoundPhysical[0]),
-                                                                         static_cast<float64>(croppingOptions.zBoundPhysical[0])}));
-      cropImageGeomArgs.insertOrAssign(
-          "max_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(croppingOptions.xBoundPhysical[1]), static_cast<float64>(croppingOptions.yBoundPhysical[1]),
-                                                                         static_cast<float64>(croppingOptions.zBoundPhysical[1])}));
-    }
-    cropImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(false));
-    cropImageGeomArgs.insertOrAssign("output_image_geometry_path", std::make_any<DataPath>(DataPath({imageGeomPath.getTargetName() + "_cropped"})));
-
-    PreflightResult cropImageResult = cropImageGeomFilter->preflight(tmpDs, cropImageGeomArgs, messageHandler, shouldCancel);
-    if(cropImageResult.outputActions.invalid())
-    {
-      return cropImageResult;
-    }
-
-    Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
-    if(actionsResult.invalid())
-    {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
-    }
-
-    auto croppedGeom = tmpDs.getDataRefAs<ImageGeom>(DataPath({imageGeomPath.getTargetName() + "_cropped"}));
-    outputDims = croppedGeom.getDimensions().toContainer<std::vector<usize>>();
-
-    resultOutputActions = MergeOutputActionResults(resultOutputActions, cropImageResult.outputActions);
-
-    pathsToDelete.push_back(currentImageGeomPath);
-    currentImageGeomPath = DataPath({imageGeomPath.getTargetName() + "_cropped"});
-  }
-
   if(pResampleImagesChoiceValue != k_NoResampleModeIndex)
   {
     if(!filterListPtr->containsPlugin(k_SimplnxCorePluginId))
@@ -816,6 +761,8 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto inputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
+  auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
+  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -857,21 +804,21 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
     switch(ITK::detail::ConvertChoiceToDataType(destType))
     {
     case DataType::uint8: {
-      readResult =
-          cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                             resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing, messageHandler, shouldCancel);
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, shouldChangeOrigin, origin,
+                                                                      shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case DataType::uint16: {
       readResult = cxITKImportImageStackFilter::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
-                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing,
-                                                                       messageHandler, shouldCancel);
+                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions,
+                                                                       shouldChangeOrigin, origin, shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case DataType::uint32: {
       readResult = cxITKImportImageStackFilter::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
-                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing,
-                                                                       messageHandler, shouldCancel);
+                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions,
+                                                                       shouldChangeOrigin, origin, shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     default: {
@@ -884,63 +831,63 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
     switch(*numericType)
     {
     case NumericType::uint8: {
-      readResult =
-          cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                             resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing, messageHandler, shouldCancel);
+      readResult = cxITKImportImageStackFilter::ReadImageStack<uint8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, shouldChangeOrigin, origin,
+                                                                      shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::int8: {
-      readResult =
-          cxITKImportImageStackFilter::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                            resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing, messageHandler, shouldCancel);
+      readResult = cxITKImportImageStackFilter::ReadImageStack<int8>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                     resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, shouldChangeOrigin, origin,
+                                                                     shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::uint16: {
       readResult = cxITKImportImageStackFilter::ReadImageStack<uint16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
-                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing,
-                                                                       messageHandler, shouldCancel);
+                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions,
+                                                                       shouldChangeOrigin, origin, shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::int16: {
-      readResult =
-          cxITKImportImageStackFilter::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                             resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing, messageHandler, shouldCancel);
+      readResult = cxITKImportImageStackFilter::ReadImageStack<int16>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, shouldChangeOrigin, origin,
+                                                                      shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::uint32: {
       readResult = cxITKImportImageStackFilter::ReadImageStack<uint32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
-                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing,
-                                                                       messageHandler, shouldCancel);
+                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions,
+                                                                       shouldChangeOrigin, origin, shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::int32: {
-      readResult =
-          cxITKImportImageStackFilter::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                             resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing, messageHandler, shouldCancel);
+      readResult = cxITKImportImageStackFilter::ReadImageStack<int32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, shouldChangeOrigin, origin,
+                                                                      shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::uint64: {
       readResult = cxITKImportImageStackFilter::ReadImageStack<uint64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
-                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing,
-                                                                       messageHandler, shouldCancel);
+                                                                       colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions,
+                                                                       shouldChangeOrigin, origin, shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::int64: {
-      readResult =
-          cxITKImportImageStackFilter::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
-                                                             resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing, messageHandler, shouldCancel);
+      readResult = cxITKImportImageStackFilter::ReadImageStack<int64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue, colorWeightsValue,
+                                                                      resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, shouldChangeOrigin, origin,
+                                                                      shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::float32: {
       readResult = cxITKImportImageStackFilter::ReadImageStack<float32>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
-                                                                        colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing,
-                                                                        messageHandler, shouldCancel);
+                                                                        colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions,
+                                                                        shouldChangeOrigin, origin, shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     case NumericType::float64: {
       readResult = cxITKImportImageStackFilter::ReadImageStack<float64>(dataStructure, imageGeomPath, cellDataName, imageDataName, files, imageTransformValue, convertToGrayScaleValue,
-                                                                        colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions, origin, spacing,
-                                                                        messageHandler, shouldCancel);
+                                                                        colorWeightsValue, resampleImageChoice, scalingFactor, exactXYDims, changeDataType, destType, croppingOptions,
+                                                                        shouldChangeOrigin, origin, shouldChangeSpacing, spacing, messageHandler, shouldCancel);
       break;
     }
     default: {

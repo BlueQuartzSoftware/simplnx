@@ -19,7 +19,7 @@ public:
       NoCropping = 0,
       VoxelSubvolume,
       PhysicalSubvolume
-    } type;
+    } type = TypeEnum::NoCropping;
     bool is2D = false;
     bool cropX = true;
     bool cropY = true;

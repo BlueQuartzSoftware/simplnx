@@ -25,7 +25,9 @@ public:
 
   // Parameter Keys
   static constexpr StringLiteral k_InputFileListInfo_Key = "input_file_list_object";
+  static constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
   static constexpr StringLiteral k_Origin_Key = "origin";
+  static constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
   static constexpr StringLiteral k_Spacing_Key = "spacing";
   static constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
   static constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";

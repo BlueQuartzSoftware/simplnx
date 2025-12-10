@@ -271,7 +271,9 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: CompareImage", "[ITKIm
   std::vector<float64> spacing = {0.3f, 0.2f, 0.9f};
 
   args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileListInfo));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ChangeOrigin_Key, true);
   args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, std::make_any<std::vector<float64>>(origin));
+  args.insertOrAssign(ITKImportImageStackFilter::k_ChangeSpacing_Key, true);
   args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::make_any<std::vector<float64>>(spacing));
   args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
 
@@ -468,6 +470,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: All Combinations", "[I
     args.insertOrAssign(ITKImportImageStackFilter::k_ResampleImagesChoice_Key, resampleIdx);
     args.insertOrAssign(ITKImportImageStackFilter::k_ImageTransformChoice_Key, imageTransformIdx);
     args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, convertToGrayScale);
+    args.insertOrAssign(ITKImportImageStackFilter::k_ChangeSpacing_Key, true);
     args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::vector<float64>{2.0f, 2.0f, 20.0f});
     args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, DataPath({computedGeomName}));
 
