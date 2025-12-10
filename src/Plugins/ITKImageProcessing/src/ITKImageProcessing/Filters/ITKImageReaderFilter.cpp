@@ -25,6 +25,13 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
+namespace
+{
+const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_CropImageGeomFilterId = *Uuid::FromString("e6476737-4aa7-48ba-a702-3dfab82c96e2");
+const FilterHandle k_CropImageGeomFilterHandle(k_CropImageGeomFilterId, k_SimplnxCorePluginId);
+} // namespace
+
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -92,10 +99,11 @@ Parameters ITKImageReaderFilter::parameters() const
   params.linkParameters(k_ChangeSpacing_Key, k_Spacing_Key, std::make_any<bool>(true));
 
   params.insertSeparator(Parameters::Separator{"Cropping Options"});
+  auto croppingOptions = CropGeometryParameter::ValueType{};
+  croppingOptions.is2D = true;
   params.insert(std::make_unique<CropGeometryParameter>(
       k_CroppingOptions_Key, "Cropping Options",
-      "The cropping options used to crop images.  These include picking the cropping type, the cropping dimensions, and the cropping ranges for each chosen dimension.",
-      CropGeometryParameter::ValueType{}));
+      "The cropping options used to crop images.  These include picking the cropping type, the cropping dimensions, and the cropping ranges for each chosen dimension.", croppingOptions));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
@@ -133,6 +141,7 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
   auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto pChoiceType = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
+  auto croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
 
   std::string fileNameString = fileName.string();
 
@@ -145,6 +154,7 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   imageReaderOptions.Spacing = FloatVec3(static_cast<float32>(spacing[0]), static_cast<float32>(spacing[1]), static_cast<float32>(spacing[2]));
   imageReaderOptions.ChangeDataType = pChangeDataType;
   imageReaderOptions.ImageDataType = ITK::detail::ConvertChoiceToDataType(pChoiceType);
+  imageReaderOptions.CroppingOptions = croppingOptions;
 
   Result<OutputActions> result = cxItkImageReaderFilter::ReadImagePreflight(fileNameString, imageGeomPath, cellDataName, imageDataArrayName, imageReaderOptions);
 
@@ -159,13 +169,14 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
-  //  auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
+  auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   //  auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
-  //  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
+  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
   auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto newDataType = ITK::detail::ConvertChoiceToDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
+  auto croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
 
   DataPath imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
 
@@ -177,17 +188,23 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
 
   std::string fileNameString = fileName.string();
 
+  std::optional<std::vector<float64>> spacingOpt =
+    shouldChangeSpacing ? std::make_optional(spacing) : std::nullopt;
+
+  std::optional<std::vector<float64>> originOpt =
+      shouldChangeOrigin ? std::make_optional(origin) : std::nullopt;
+
   Result<> result = {};
   if(pChangeDataType)
   {
-    result = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, fileNameString, imageDataArrayPath, newDataType);
+    return cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, fileNameString, imageDataArrayPath, newDataType, croppingOptions,
+                                                                                                       spacingOpt, originOpt);
   }
   else
   {
-    result = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString);
+    return cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString, croppingOptions, spacingOpt,
+                                                                                                       originOpt);
   }
-
-  return result;
 }
 
 namespace
