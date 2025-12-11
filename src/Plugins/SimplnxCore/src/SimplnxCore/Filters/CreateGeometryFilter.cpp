@@ -495,6 +495,7 @@ constexpr StringLiteral k_ZBoundsArrayPathKey = "ZBoundsArrayPath";
 constexpr StringLiteral k_DimensionsKey = "Dimensions";
 constexpr StringLiteral k_OriginKey = "Origin";
 constexpr StringLiteral k_SpacingKey = "Spacing";
+constexpr StringLiteral k_ResolutionKey = "Resolution";
 constexpr StringLiteral k_ImageCellAttributeMatrixNameKey = "ImageCellAttributeMatrixName";
 constexpr StringLiteral k_RectGridCellAttributeMatrixNameKey = "RectGridCellAttributeMatrixName";
 constexpr StringLiteral k_VertexAttributeMatrixName0Key = "VertexAttributeMatrixName0";
@@ -602,7 +603,16 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ArrayHandlingKey, k_ArrayHandling_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<uint64>>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::Vec3FilterParameterConverter<float32>>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key);
+  if(spacingResult.invalid())
+  {
+    // 6.5 key for spacing was named resolution
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ResolutionKey, k_Spacing_Key));
+  }
+  else
+  {
+    results.push_back(std::move(spacingResult));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_XBoundsArrayPathKey, k_XBoundsPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_YBoundsArrayPathKey, k_YBoundsPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ZBoundsArrayPathKey, k_ZBoundsPath_Key));

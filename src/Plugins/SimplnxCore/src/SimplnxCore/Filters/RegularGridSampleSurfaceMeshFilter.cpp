@@ -280,11 +280,15 @@ namespace SIMPL
 constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
 constexpr StringLiteral k_DimensionsKey = "Dimensions";
 constexpr StringLiteral k_SpacingKey = "Spacing";
+constexpr StringLiteral k_ResolutionKey = "Resolution";
 constexpr StringLiteral k_OriginKey = "Origin";
 constexpr StringLiteral k_LengthUnitKey = "LengthUnit";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
 constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
+constexpr StringLiteral k_XPointsKey = "XPoints";
+constexpr StringLiteral k_YPointsKey = "YPoints";
+constexpr StringLiteral k_ZPointsKey = "ZPoints";
 } // namespace SIMPL
 } // namespace
 
@@ -298,10 +302,29 @@ Result<Arguments> RegularGridSampleSurfaceMeshFilter::FromSIMPLJson(const nlohma
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeometryPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64Vec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+  Result<> dimsResult = SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64Vec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key);
+  if(dimsResult.invalid())
+  {
+    // 6.5 stores dims as 3 parameter
+    results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XPointsKey, SIMPL::k_YPointsKey, SIMPL::k_ZPointsKey, k_Dimensions_Key));
+  }
+  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key);
+  if(spacingResult.invalid())
+  {
+    // 6.5 key for spacing was named resolution
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ResolutionKey, k_Spacing_Key));
+  }
+  else
+  {
+    results.push_back(std::move(spacingResult));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_LengthUnitKey, k_LengthUnit_Key));
+  Result<> lengthResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_LengthUnitKey, k_LengthUnit_Key);
+  if(lengthResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(lengthResult));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeomPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));

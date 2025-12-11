@@ -710,7 +710,9 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     // CopyDataObjectFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("ac8d51d8-9167-5628-a060-95a8863a76b1").value(), std::vector<std::string>{"use_new_parent", "new_data_path"}},
     // CreateImageGeometryFilter
-    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("6dc586cc-59fb-4ee8-90ff-2d3587da12f5").value(), std::vector<std::string>{"delete_original_array"}}};
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("6dc586cc-59fb-4ee8-90ff-2d3587da12f5").value(), std::vector<std::string>{"delete_original_array"}},
+    // ExtractVertexGeometryFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("621a71ca-124b-4471-ad1a-02f05ffba099").value(), std::vector<std::string>{"output_shared_vertex_list_name", "output_vertex_attr_matrix_name"}}};
 } // namespace
 
 /**
@@ -758,7 +760,7 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
  *  The `importedValue` is the imported object and `parameterCheck.first` contains the vector of acceptable values
  */
 
-TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
+TEST_CASE("nx::core: 6.6 Mega Pipeline Conversion", "[simplnx][Filter]")
 {
   InitializeMap();
 
@@ -769,7 +771,7 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "backwards_compatibility_test.tar.gz",
                                                               "backwards_compatibility_test");
 
-  std::string pipelinePath = fmt::format("{}/backwards_compatibility_test/mega-pipeline.d3dpipeline", unit_test::k_TestFilesDir);
+  std::string pipelinePath = fmt::format("{}/backwards_compatibility_test/6_6/mega-pipeline.d3dpipeline", unit_test::k_TestFilesDir);
 
   std::ifstream file(pipelinePath);
 
@@ -894,6 +896,139 @@ TEST_CASE("nx::core::Test Filter Parameter Conversion", "[simplnx][Filter]")
     }
 
     pipelineFilter->setArguments(argumentsResult.value());
+  }
+
+  CAPTURE(errorStrings);
+  REQUIRE(errorStrings.empty());
+}
+
+TEST_CASE("nx::core: 6.5 prebuilt pipeline read in check")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "backwards_compatibility_test.tar.gz",
+                                                              "backwards_compatibility_test");
+
+  fs::path pipelineDirectoryPath = fs::path(fmt::format("{}/backwards_compatibility_test/6_5", unit_test::k_TestFilesDir));
+
+  std::vector<std::string> errorStrings = {};
+  for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(pipelineDirectoryPath))
+  {
+    if(!dirEntry.is_regular_file() || dirEntry.path().extension() != ".json")
+    {
+      continue;
+    }
+
+    CAPTURE(dirEntry.path().string());
+
+    std::ifstream file(dirEntry.path());
+
+    REQUIRE(file.is_open());
+
+    nlohmann::json pipelineJson;
+
+    try
+    {
+      pipelineJson = nlohmann::json::parse(file);
+    } catch(const nlohmann::json::parse_error& exception)
+    {
+      REQUIRE(false);
+    }
+
+    REQUIRE(pipelineJson.contains(k_SIMPLPipelineBuilderKey));
+
+    const auto& pipelineBuilderObject = pipelineJson[k_SIMPLPipelineBuilderKey];
+
+    REQUIRE(pipelineBuilderObject.contains(k_SIMPLPipelineNameKey));
+
+    auto name = pipelineBuilderObject[k_SIMPLPipelineNameKey].get<std::string>();
+
+    REQUIRE(pipelineBuilderObject.contains(k_SIMPLNumFilterseKey));
+
+    auto numFilters = pipelineBuilderObject[k_SIMPLNumFilterseKey].get<int32>();
+
+    Pipeline pipeline(name, filterList);
+    for(int32 i = 0; i < numFilters; i++)
+    {
+      std::string filterKey = GenerateSIMPLPipelineStringIndex(i, numFilters - 1);
+
+      REQUIRE(pipelineJson.contains(filterKey));
+
+      const auto& filterJson = pipelineJson[filterKey];
+      REQUIRE(filterJson.contains(k_SIMPLFilterUuidKey));
+
+      auto uuidString = filterJson[k_SIMPLFilterUuidKey].get<std::string>();
+      std::optional<Uuid> filterUuid = Uuid::FromString(uuidString);
+
+      REQUIRE(filterUuid.has_value());
+
+      std::optional<AbstractPlugin::SIMPLData> simplData = FindComplexConversionFromSIMPL(*filterUuid, *filterList);
+
+      if(!simplData.has_value())
+      {
+        continue; // No NX equivalent (check UUID Maps at plugin level if UB encountered)
+      }
+
+      IFilter::UniquePointer filter = filterList->createFilter(simplData->simplnxUuid);
+      if(filter == nullptr)
+      {
+        continue; // No NX equivalent (check UUID Maps at plugin level if UB encountered)
+      }
+      Result<Arguments> argumentsResult = simplData->convertJson(filterJson);
+
+      std::vector<std::string> ignoredParameterKeys = {};
+      if(k_KeyIgnoreMap.contains(filter->uuid()))
+      {
+        ignoredParameterKeys = k_KeyIgnoreMap.at(filter->uuid());
+      }
+
+      const auto filterName = filter->name();
+      const auto defaultArguments = filter->getDefaultArguments();
+      auto pipelineFilter = std::make_unique<PipelineFilter>(std::move(filter));
+      if(argumentsResult.invalid())
+      {
+        std::string prefix = fmt::format("Pipeline: {}\nFilter: '{}'\nError: ", dirEntry.path().string(), filterName);
+        for(const auto& error : argumentsResult.errors())
+        {
+          errorStrings.emplace_back(prefix + error.message);
+          errorStrings.emplace_back(k_Separator);
+        }
+        pipelineFilter->setArguments(defaultArguments);
+        continue;
+      }
+
+      // This section validates that the mapping from SIMPL Parameter to the SIMPLNX Parameter
+      for(const auto& [parameterName, parameter] : pipelineFilter->getFilter()->parameters())
+      {
+        bool shouldIgnore = false;
+        for(const auto& ignoredKey : ignoredParameterKeys)
+        {
+          if(ignoredKey == parameterName)
+          {
+            shouldIgnore = true;
+            break;
+          }
+        }
+        if(shouldIgnore)
+        {
+          continue;
+        }
+
+        std::string prefix = fmt::format("SIMPL Json conversion error.\n  Filter: '{}'\n  Parameter Key: '{}'\n", filterName, parameterName);
+        IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
+        auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
+        if(iter == acceptedTypes.cend())
+        {
+          errorStrings.emplace_back(prefix + "The mapping from SIMPL Parameter type to SIMPLNX Parameter type is incorrect. This "
+                                             "usually indicates an incorrect conversion in the filter's 'FromSIMPLJson()' method.");
+          errorStrings.emplace_back(k_Separator);
+        }
+      }
+
+      pipelineFilter->setArguments(argumentsResult.value());
+    }
   }
 
   CAPTURE(errorStrings);

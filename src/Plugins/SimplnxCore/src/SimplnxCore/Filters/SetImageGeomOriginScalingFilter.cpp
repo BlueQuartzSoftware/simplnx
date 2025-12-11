@@ -144,6 +144,7 @@ constexpr StringLiteral k_ChangeOriginKey = "ChangeOrigin";
 constexpr StringLiteral k_OriginKey = "Origin";
 constexpr StringLiteral k_ChangeResolutionKey = "ChangeResolution";
 constexpr StringLiteral k_SpacingKey = "Spacing";
+constexpr StringLiteral k_ResolutionKey = "Resolution";
 } // namespace SIMPL
 } // namespace
 
@@ -157,7 +158,16 @@ Result<Arguments> SetImageGeomOriginScalingFilter::FromSIMPLJson(const nlohmann:
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeOriginKey, k_ChangeOrigin_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ChangeResolutionKey, k_ChangeSpacing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key);
+  if(spacingResult.invalid())
+  {
+    // 6.5 key for spacing was named resolution
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ResolutionKey, k_Spacing_Key));
+  }
+  else
+  {
+    results.push_back(std::move(spacingResult));
+  }
 
   Result<> conversionResult = MergeResults(std::move(results));
 

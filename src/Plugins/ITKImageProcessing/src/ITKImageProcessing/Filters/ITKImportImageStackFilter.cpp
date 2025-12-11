@@ -959,6 +959,7 @@ namespace SIMPL
 constexpr StringLiteral k_InputFileListInfoKey = "InputFileListInfo";
 constexpr StringLiteral k_OriginKey = "Origin";
 constexpr StringLiteral k_SpacingKey = "Spacing";
+constexpr StringLiteral k_ResolutionKey = "Resolution";
 constexpr StringLiteral k_ImageTransformChoiceKey = "ImageTransformChoice";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
@@ -974,8 +975,22 @@ Result<Arguments> ITKImportImageStackFilter::FromSIMPLJson(const nlohmann::json&
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FileListInfoFilterParameterConverter>(args, json, SIMPL::k_InputFileListInfoKey, k_InputFileListInfo_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ImageTransformChoiceKey, k_ImageTransformChoice_Key));
+  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key);
+  if(spacingResult.invalid())
+  {
+    // 6.5 key for spacing was named resolution
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleVec3FilterParameterConverter>(args, json, SIMPL::k_ResolutionKey, k_Spacing_Key));
+  }
+  else
+  {
+    results.push_back(std::move(spacingResult));
+  }
+  Result<> transformResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ImageTransformChoiceKey, k_ImageTransformChoice_Key);
+  if(transformResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(transformResult));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellDataName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ImageDataArrayNameKey, k_ImageDataArrayPath_Key));

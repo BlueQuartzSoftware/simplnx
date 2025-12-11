@@ -128,6 +128,12 @@ namespace SIMPLConversion
 {
 Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType> DataArraySelectionToGeometrySelectionFilterParameterConverter::convert(const nlohmann::json& json)
 {
+  // 6.5 compatibility
+  if(json.is_string())
+  {
+    return {DataPath({json.get<std::string>()})};
+  }
+
   auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
   if(dataContainerNameResult.invalid())
   {

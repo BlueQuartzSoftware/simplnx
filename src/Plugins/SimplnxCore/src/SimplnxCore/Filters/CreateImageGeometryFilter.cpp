@@ -146,6 +146,7 @@ constexpr StringLiteral k_SelectedDataContainerKey = "SelectedDataContainer";
 constexpr StringLiteral k_DimensionsKey = "Dimensions";
 constexpr StringLiteral k_OriginKey = "Origin";
 constexpr StringLiteral k_SpacingKey = "Spacing";
+constexpr StringLiteral k_ResolutionKey = "Resolution";
 } // namespace SIMPL
 } // namespace
 
@@ -158,7 +159,16 @@ Result<Arguments> CreateImageGeometryFilter::FromSIMPLJson(const nlohmann::json&
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataContainerKey, k_GeometryDataPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64Vec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+  Result<> resolutionResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ResolutionKey, k_Spacing_Key);
+  if(resolutionResult.invalid())
+  {
+    // Key renamed in 6.6
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+  }
+  else
+  {
+    results.push_back(std::move(resolutionResult));
+  }
 
   Result<> conversionResult = MergeResults(std::move(results));
 

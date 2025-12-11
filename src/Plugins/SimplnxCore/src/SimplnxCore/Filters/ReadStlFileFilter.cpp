@@ -234,11 +234,26 @@ Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ScaleOutputKey, k_ScaleOutput));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_ScaleFactorKey, k_ScaleFactor));
+  Result<> scaleResult =SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ScaleOutputKey, k_ScaleOutput);
+  if(scaleResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(scaleResult));
+  }
+  Result<> factorResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_ScaleFactorKey, k_ScaleFactor);
+  if(factorResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(factorResult));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_StlFilePathKey, k_StlFilePath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key));
+  Result<> vertAMResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key);
+  if(vertAMResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(vertAMResult));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceNormalsArrayNameKey, k_FaceNormalsName_Key));
 

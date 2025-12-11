@@ -140,6 +140,7 @@ namespace SIMPL
 {
 constexpr StringLiteral k_CADDataContainerPathKey = "CADDataContainerPath";
 constexpr StringLiteral k_RegionIdArrayNameKey = "RegionIdArrayName";
+constexpr StringLiteral k_RegionIdArrayPathKey = "RegionIdArrayPath";
 constexpr StringLiteral k_TriangleAttributeMatrixNameKey = "TriangleAttributeMatrixName";
 constexpr StringLiteral k_NumTrianglesArrayNameKey = "NumTrianglesArrayName";
 } // namespace SIMPL
@@ -153,7 +154,7 @@ Result<Arguments> LabelTriangleGeometryFilter::FromSIMPLJson(const nlohmann::jso
 
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CADDataContainerPathKey, k_TriangleGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_RegionIdArrayNameKey, k_CreatedRegionIdsPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_RegionIdArrayPathKey, k_CreatedRegionIdsPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_TriangleAttributeMatrixNameKey, k_TriangleAttributeMatrixName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NumTrianglesArrayNameKey, k_NumTrianglesName_Key));

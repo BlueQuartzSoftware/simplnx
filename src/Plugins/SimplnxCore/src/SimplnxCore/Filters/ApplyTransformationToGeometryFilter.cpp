@@ -524,7 +524,6 @@ constexpr StringLiteral k_ScaleKey = "Scale";
 constexpr StringLiteral k_ComputedTransformationMatrixKey = "ComputedTransformationMatrix";
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 constexpr StringLiteral k_DataArraySelectionKey = "DataArraySelection";
-constexpr StringLiteral k_GeometryToTransformnKey = "GeometryToTransform";
 } // namespace SIMPL
 } // namespace
 
@@ -543,7 +542,7 @@ Result<Arguments> ApplyTransformationToGeometryFilter::FromSIMPLJson(const nlohm
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ScaleKey, k_Scale_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ComputedTransformationMatrixKey, k_ComputedTransformationMatrix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_GeometryToTransformnKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_CellAttributeMatrixPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_DataArraySelectionKey, "@SIMPLNX_PARAMETER_KEY@"));

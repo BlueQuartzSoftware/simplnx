@@ -77,6 +77,9 @@ namespace
 {
 namespace SIMPL
 {
+// 6.5
+constexpr StringLiteral k_CreatedDataContainerKey = "CreatedDataContainer";
+// 6.6
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 } // namespace SIMPL
 } // namespace
@@ -87,7 +90,16 @@ Result<Arguments> CreateDataGroupFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataObjectPath));
+  Result<> dcResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataObjectPath);
+  if(dcResult.invalid())
+  {
+    // Key renamed at some point (some 6.5 pipelines have this key, others have new one)
+    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_CreatedDataContainerKey, k_DataObjectPath));
+  }
+  else
+  {
+    results.push_back(std::move(dcResult));
+  }
 
   Result<> conversionResult = MergeResults(std::move(results));
 

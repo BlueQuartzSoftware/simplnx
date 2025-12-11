@@ -52,5 +52,5 @@ if(SIMPLNX_ENABLE_OrientationAnalysis)
 
   catch_discover_tests(conversion_test)
 
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME backwards_compatibility_test.tar.gz SHA512 5684c4fc1833366e380b1a54da90a6edec0097f7b39a1dde0f2ce3cf7613ab9b64a94508745eb0345b0fde9dc8c5464f0785b5e38117fb9020b72ad9409b0249 )
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME backwards_compatibility_test.tar.gz SHA512 ea2e5fef21db40a5f07dd5147c49ef96959f20504879b517742d5a38018e702683051f3f927deb82a164f633a6586bfd06a5ab1f1c47c0f68960d9d296aa032b)
 endif()

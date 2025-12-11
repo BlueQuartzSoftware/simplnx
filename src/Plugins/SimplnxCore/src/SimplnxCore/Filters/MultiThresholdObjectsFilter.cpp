@@ -506,7 +506,12 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
   {
     results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_CreatedMaskType_Key));
+  Result<> scalarResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_CreatedMaskType_Key);
+  if(scalarResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(scalarResult));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DestinationArrayNameKey, k_CreatedDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

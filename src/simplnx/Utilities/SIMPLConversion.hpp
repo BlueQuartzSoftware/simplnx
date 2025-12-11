@@ -29,7 +29,7 @@ Result<> ConvertParameter(Arguments& args, const nlohmann::json& json, std::stri
     return ConvertResult(std::move(result));
   }
 
-  return {};
+  return MakeErrorResult(-571, fmt::format("Key `{}` not found in json `{}`", simplKey, json.dump(2, ' ')));
 }
 
 //------------------------------------------------------------------------------
@@ -47,7 +47,7 @@ Result<> Convert2Parameters(Arguments& args, const nlohmann::json& json, std::st
     return ConvertResult(std::move(result));
   }
 
-  return {};
+  return MakeErrorResult(-572, fmt::format("One or more of the supplied keys [`{}`, `{}`] was not in the json `{}`", simplKey1, simplKey2, json.dump(2, ' ')));
 }
 
 //------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ Result<> Convert3Parameters(Arguments& args, const nlohmann::json& json, std::st
 {
   if(!json.contains(simplKey1) || !json.contains(simplKey2) || !json.contains(simplKey3))
   {
-    return MakeErrorResult(-570, fmt::format("One or more of the supplied keys [`{}`, `{}`, `{}`] was not in the json `{}`", simplKey1, simplKey2, simplKey3, json.dump()));
+    return MakeErrorResult(-570, fmt::format("One or more of the supplied keys [`{}`, `{}`, `{}`] was not in the json `{}`", simplKey1, simplKey2, simplKey3, json.dump(2, ' ')));
   }
 
   auto result = ConverterT::convert(json[simplKey1], json[simplKey2], json[simplKey3]);
@@ -72,17 +72,13 @@ Result<> Convert3Parameters(Arguments& args, const nlohmann::json& json, std::st
 template <class ConverterT>
 Result<> ConvertTopParameters(Arguments& args, const nlohmann::json& json, const std::string& complexKey)
 {
+  auto result = ConverterT::convert(json);
+  if(result.valid())
   {
-    auto result = ConverterT::convert(json);
-    if(result.valid())
-    {
-      args.insertOrAssign(complexKey, std::make_any<typename ConverterT::ValueType>(std::move(result.value())));
-    }
-
-    return ConvertResult(std::move(result));
+    args.insertOrAssign(complexKey, std::make_any<typename ConverterT::ValueType>(std::move(result.value())));
   }
 
-  return {};
+  return ConvertResult(std::move(result));
 }
 
 //------------------------------------------------------------------------------
