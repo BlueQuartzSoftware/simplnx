@@ -1,5 +1,8 @@
 #include "ITKImageWriterFilter.hpp"
 
+#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
+#include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
+
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -11,10 +14,7 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
-#include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
-
-#include "ITKImageProcessing/ITKImageProcessingPlugin.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 
 #include <itkImageFileWriter.h>
 #include <itkImageSeriesWriter.h>
@@ -231,7 +231,8 @@ void CopyTuple(usize index, usize axisA, usize dB, usize axisB, usize nComp, con
   }
 }
 
-Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom, usize slice, usize maxSlice, uint64 indexOffset)
+Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const ITK::ImageGeomData& imageGeom, usize slice, usize maxSlice, uint64 indexOffset, int32 totalDigits,
+                       const std::string& fillChar)
 {
   std::stringstream ss;
   ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
@@ -245,11 +246,9 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const IT
     }
   }
 
-  int32 totalDigits = static_cast<int32>(std::log10(maxSlice) + 1);
-
   if(maxSlice != 1)
   {
-    ss << "_" << std::setw(totalDigits) << std::setfill('0') << slice;
+    ss << "_" << std::setw(totalDigits) << std::setfill(fillChar[0]) << slice;
   }
   ss << filePath.extension().string();
 
@@ -301,7 +300,9 @@ Parameters ITKImageWriterFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "Selection for plane normal for writing the images (XY, XZ, or YZ)", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
   params.insert(
       std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "Path to the output file to write.", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
-  params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing mulitple images", 0));
+  params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing multiple images", 0));
+  params.insert(std::make_unique<Int32Parameter>(k_TotalIndexDigits_Key, "Total Number of Index Digits", "This is the total number of digits to use when generating the index", 3));
+  params.insert(std::make_unique<StringParameter>(k_LeadingDigitCharacter_Key, "Fill Character", "The character to use for the leading digits if needed", "0"));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
@@ -315,7 +316,9 @@ Parameters ITKImageWriterFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ITKImageWriterFilter::parametersVersion() const
 {
-  return 1;
+  // (1) Original Version of the filter
+  // (2) Added Output indexing parameters
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -334,6 +337,9 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
   auto imageArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
 
+  auto totalDigits = filterArgs.value<int32>(k_TotalIndexDigits_Key);
+  auto fillChar = filterArgs.value<StringParameter::ValueType>(k_LeadingDigitCharacter_Key);
+
   // Stored fastest to slowest i.e. X Y Z
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   // Stored slowest to fastest i.e. Z Y X
@@ -343,10 +349,40 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
 
   if(!ITK::DoDimensionsMatch(imageArrayStore, imageGeom))
   {
-    return {MakeErrorResult<OutputActions>(-1, "Image Array dimensions must match ImageGeometry")};
+    return {MakeErrorResult<OutputActions>(-25600, "Image Array dimensions must match ImageGeometry")};
   }
 
-  return {};
+  if(fillChar.size() > 1)
+  {
+    return {MakeErrorResult<OutputActions>(-25601, "The fill character should only be a single value.")};
+  }
+
+  Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
+
+  auto imageGeomDims = imageGeom.getDimensions();
+  usize maxSlice = 1;
+  switch(plane)
+  {
+  case k_XYPlane:
+    maxSlice = imageGeomDims[2];
+    break;
+  case k_XZPlane:
+    maxSlice = imageGeomDims[1];
+    break;
+  case k_YZPlane:
+    maxSlice = imageGeomDims[0];
+    break;
+  default:
+    break;
+  }
+
+  std::stringstream ss;
+  ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
+  ss << "_" << std::setw(totalDigits) << std::setfill(fillChar[0]) << maxSlice;
+  ss << filePath.extension().string();
+  preflightUpdatedValues.push_back({"Example Output File", ss.str()});
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -359,6 +395,9 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
   auto imageArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
 
+  auto totalDigits = filterArgs.value<int32>(k_TotalIndexDigits_Key);
+  auto fillChar = filterArgs.value<StringParameter::ValueType>(k_LeadingDigitCharacter_Key);
+
   const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(imageArrayPath);
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
@@ -368,11 +407,6 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
   const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(imageArrayPath);
   usize nComp = imageArray.getNumberOfComponents();
   const IDataStore& currentData = imageArray.getIDataStoreRef();
-
-  // if(currentData.getStoreType() != IDataStore::StoreType::InMemory)
-  //{
-  //   return {MakeErrorResult(-1, "DataArray must be in memory")};
-  // }
 
   std::unique_ptr<IDataStore> sliceData = currentData.createNewInstance();
 
@@ -396,7 +430,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getZ(), indexOffset);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getZ(), indexOffset, totalDigits, fillChar);
       if(result.invalid())
       {
         return result;
@@ -420,7 +454,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getY(), indexOffset);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getY(), indexOffset, totalDigits, fillChar);
       if(result.invalid())
       {
         return result;
@@ -444,7 +478,7 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
           cxITKImageWriterFilter::CopyTuple(index, axisA, dB, axisB, nComp, currentData, *sliceData);
         }
       }
-      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getX(), indexOffset);
+      Result<> result = cxITKImageWriterFilter::SaveImageData(filePath, *sliceData, newImageGeom, slice + indexOffset, dims.getX(), indexOffset, totalDigits, fillChar);
       if(result.invalid())
       {
         return result;
