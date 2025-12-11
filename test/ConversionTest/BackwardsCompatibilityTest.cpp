@@ -712,7 +712,8 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     // CreateImageGeometryFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("6dc586cc-59fb-4ee8-90ff-2d3587da12f5").value(), std::vector<std::string>{"delete_original_array"}},
     // ExtractVertexGeometryFilter
-    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("621a71ca-124b-4471-ad1a-02f05ffba099").value(), std::vector<std::string>{"output_shared_vertex_list_name", "output_vertex_attr_matrix_name"}}};
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("621a71ca-124b-4471-ad1a-02f05ffba099").value(),
+                                              std::vector<std::string>{"output_shared_vertex_list_name", "output_vertex_attr_matrix_name"}}};
 } // namespace
 
 /**
@@ -914,7 +915,7 @@ TEST_CASE("nx::core: 6.5 prebuilt pipeline read in check")
   fs::path pipelineDirectoryPath = fs::path(fmt::format("{}/backwards_compatibility_test/6_5", unit_test::k_TestFilesDir));
 
   std::vector<std::string> errorStrings = {};
-  for (const auto& dirEntry : std::filesystem::recursive_directory_iterator(pipelineDirectoryPath))
+  for(const auto& dirEntry : std::filesystem::recursive_directory_iterator(pipelineDirectoryPath))
   {
     if(!dirEntry.is_regular_file() || dirEntry.path().extension() != ".json")
     {

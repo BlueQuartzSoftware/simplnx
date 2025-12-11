@@ -234,7 +234,7 @@ Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  Result<> scaleResult =SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ScaleOutputKey, k_ScaleOutput);
+  Result<> scaleResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ScaleOutputKey, k_ScaleOutput);
   if(scaleResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
@@ -248,7 +248,8 @@ Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
   }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_StlFilePathKey, k_StlFilePath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
-  Result<> vertAMResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key);
+  Result<> vertAMResult =
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key);
   if(vertAMResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid

@@ -306,7 +306,8 @@ Result<Arguments> RegularGridSampleSurfaceMeshFilter::FromSIMPLJson(const nlohma
   if(dimsResult.invalid())
   {
     // 6.5 stores dims as 3 parameter
-    results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XPointsKey, SIMPL::k_YPointsKey, SIMPL::k_ZPointsKey, k_Dimensions_Key));
+    results.push_back(
+        SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XPointsKey, SIMPL::k_YPointsKey, SIMPL::k_ZPointsKey, k_Dimensions_Key));
   }
   Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key);
   if(spacingResult.invalid())
