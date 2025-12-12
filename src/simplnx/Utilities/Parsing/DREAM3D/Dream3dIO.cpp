@@ -1437,7 +1437,7 @@ Result<> readLegacyStatsDataArray(DataStructure& dataStructure, const nx::core::
   std::vector<std::string> childNames = statsReader.getChildNames();
   for(const auto& name : childNames)
   {
-    Result<> result = readLegacyStatsDataArrayChild(dataStructure, statsReader, name, dataGroup->getId(), false);
+    Result<> result = readLegacyStatsDataArrayChild(dataStructure, statsReader, name, dataGroup->getId(), preflight);
     if(result.invalid())
     {
       return result;
