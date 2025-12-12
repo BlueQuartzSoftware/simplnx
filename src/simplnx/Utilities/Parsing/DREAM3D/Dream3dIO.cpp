@@ -1695,7 +1695,7 @@ Result<> readLegacyStatsDataArray(DataStructure& dataStructure, const nx::core::
   Result<> combinedResult;
   for(const auto& name : childNames)
   {
-    Result<> result = readLegacyStatsDataArrayChild(dataStructure, statsReader, name, dataGroup->getId(), false);
+    Result<> result = readLegacyStatsDataArrayChild(dataStructure, statsReader, name, dataGroup->getId(), preflight);
     if(result.invalid())
     {
       PrependWarnings(result, combinedResult.warnings());
