@@ -587,6 +587,9 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     std::pair<Uuid, std::vector<std::string>>{
         Uuid::FromString("d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2").value(),
         std::vector<std::string>{"origin", "spacing", "length_unit_index", "image_data_type_index", "cropping_options", "change_spacing", "change_origin", "change_image_data_type", "center_origin"}},
+    // ITKImageWriterFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("a181ee3e-1678-4133-b9c5-a9dd7bfec62f").value(), std::vector<std::string>{"leading_digit_character", "total_index_digits"}},
+
     // ITKBinaryProjectionImageFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("04ea495e-2cf0-4dba-8d29-cf33a38c094d").value(), std::vector<std::string>{"output_image_geometry_name"}},
     // ScalarSegmentFeaturesFilter
