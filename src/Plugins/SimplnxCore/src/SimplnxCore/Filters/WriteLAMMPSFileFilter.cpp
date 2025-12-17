@@ -91,8 +91,8 @@ IFilter::PreflightResult WriteLAMMPSFileFilter::preflightImpl(const DataStructur
   if(vertsCount != atomLabelsCount)
   {
     return MakePreflightErrorResult(-77460, fmt::format("Tuple Dimensions don't match: Number of Vertices - {} || Number of Atom Labels - {}",
-                                                        std::accumulate(vertsCount.begin(), vertsCount.end(), 1, std::multiplies<>()),
-                                                        std::accumulate(atomLabelsCount.begin(), atomLabelsCount.end(), 1, std::multiplies<>())));
+                                                        std::accumulate(vertsCount.begin(), vertsCount.end(), 1ULL, std::multiplies<>()),
+                                                        std::accumulate(atomLabelsCount.begin(), atomLabelsCount.end(), 1ULL, std::multiplies<>())));
   }
 
   return {};

@@ -51,12 +51,12 @@ void CreateEdgeGeometry(DataStructure& ds)
   auto vertexAttrMatrix = AttributeMatrix::Create(ds, "Vertex Data", {2}, geom->getId());
   geom->setVertexAttributeMatrix(*vertexAttrMatrix);
   Float32Array* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices Store", {2}, {3}, geom->getId());
-  std::vector<float32> verticesVec = {1, 1.5, 1.75, 2, 3, 4};
+  std::vector<float32> verticesVec = {1.0f, 1.5f, 1.75f, 2.0f, 3.0f, 4.0f};
   std::copy(verticesVec.begin(), verticesVec.end(), vertices->begin());
   geom->setVertices(*vertices);
   DataArray<IGeometry::MeshIndexType>* cells = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, "Cells Store", {1}, {2}, geom->getId());
-  std::vector<float32> cellsVec = {0, 1};
-  std::copy(cellsVec.begin(), cellsVec.end(), cells->begin());
+  cells->setValue(0, 0ULL);
+  cells->setValue(1, 1ULL);
   geom->setEdgeList(*cells);
 }
 

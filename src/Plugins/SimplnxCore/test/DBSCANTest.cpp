@@ -269,7 +269,7 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
 
     // Create default Parameters for the filter.
     args.insertOrAssign(DBSCANFilter::k_ParseOrderIndex_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::LowDensityFirst)));
-    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.0099999998));
+    args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(0.0099999998f));
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(5));
     args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
     args.insertOrAssign(DBSCANFilter::k_SelectedArrayPath_Key, std::make_any<DataPath>(targetPath));

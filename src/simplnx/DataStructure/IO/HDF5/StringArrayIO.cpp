@@ -52,7 +52,7 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   {
     tupleShape = std::move(tupleShapeResult.value());
   }
-  usize numValues = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), 1, std::multiplies<>());
+  usize numValues = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), 1ULL, std::multiplies<>());
 
   std::vector<std::string> strings = useEmptyDataStore ? std::vector<std::string>(numValues) : datasetReader.readAsVectorOfStrings();
   const auto* data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);

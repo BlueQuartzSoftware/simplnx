@@ -44,9 +44,12 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
   }
   else
   {
-    auto inputArrayF64 = m_DataStructure.getDataAs<Float64Array>(m_InputValues->InputOrientationArrayPath);
+    auto* inputArrayF64 = m_DataStructure.getDataAs<Float64Array>(m_InputValues->InputOrientationArrayPath);
     auto tmpArray = Float32Array::CreateWithStore<Float32DataStore>(tmpDs, inputArrayF64->getName(), inputArrayF64->getTupleShape(), inputArrayF64->getComponentShape());
-    std::copy(inputArrayF64->begin(), inputArrayF64->begin() + inputArrayF64->getSize(), tmpArray->begin());
+    for(usize i = 0; i < inputArrayF64->size(); i++)
+    {
+      tmpArray->setValue(i, static_cast<float32>(inputArrayF64->getValue(i)));
+    }
   }
 
   DataPath quatsArrayPath;

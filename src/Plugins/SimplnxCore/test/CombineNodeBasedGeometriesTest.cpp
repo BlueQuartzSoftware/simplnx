@@ -113,7 +113,7 @@ void AddNeighborList(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
   for(usize i = 0; i < attrMatrix.getNumTuples(); i++)
   {
     typename NeighborList<T>::SharedVectorType inputList(new std::vector<T>(k_NeighborListListSize));
-    std::iota(inputList->begin(), inputList->end(), 0);
+    std::iota(inputList->begin(), inputList->end(), static_cast<T>(0));
     nl->setList(i, inputList);
   }
 }
@@ -175,7 +175,7 @@ template <typename TGeom, typename TNode, typename TGetNumPerElement, typename T
 void CreateNodeArray(TGeom& geom, DataStructure& dataStructure, const std::string& sharedListName, usize numElements, TGetNumPerElement getNumPerElement, TSetNodeArray setNodeArray)
 {
   auto arr = CreateNodeArray<TNode>(geom, dataStructure, sharedListName, numElements, getNumPerElement(geom));
-  std::iota(arr->begin(), arr->end(), 0);
+  std::iota(arr->begin(), arr->end(), static_cast<TNode>(0));
   setNodeArray(geom, *arr);
 }
 
