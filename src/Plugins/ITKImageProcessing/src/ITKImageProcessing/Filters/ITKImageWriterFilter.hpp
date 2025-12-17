@@ -29,7 +29,8 @@ public:
   static constexpr StringLiteral k_IndexOffset_Key = "index_offset";
   static constexpr StringLiteral k_ImageArrayPath_Key = "image_array_path";
   static constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
-
+  static constexpr StringLiteral k_TotalIndexDigits_Key = "total_index_digits";
+  static constexpr StringLiteral k_LeadingDigitCharacter_Key = "leading_digit_character";
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json

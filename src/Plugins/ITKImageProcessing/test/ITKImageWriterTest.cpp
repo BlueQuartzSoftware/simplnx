@@ -6,6 +6,8 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -124,6 +126,8 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImagePro
     args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
     args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
     args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<uint64>(ITKImageWriterFilter::k_XYPlane));
+    args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -153,6 +157,8 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImagePro
     args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
     args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
     args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<uint64>(ITKImageWriterFilter::k_XZPlane));
+    args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -182,6 +188,8 @@ TEST_CASE("ITKImageProcessing::ITKImageWriterFilter: Write Stack", "[ITKImagePro
     args.insertOrAssign(ITKImageWriterFilter::k_FileName_Key, std::make_any<fs::path>(outputPath));
     args.insertOrAssign(ITKImageWriterFilter::k_IndexOffset_Key, std::make_any<uint64>(offset));
     args.insertOrAssign(ITKImageWriterFilter::k_Plane_Key, std::make_any<uint64>(ITKImageWriterFilter::k_YZPlane));
+    args.insertOrAssign(ITKImageWriterFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(ITKImageWriterFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
