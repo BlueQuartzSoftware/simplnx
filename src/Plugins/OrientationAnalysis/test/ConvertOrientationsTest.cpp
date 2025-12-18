@@ -161,7 +161,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
   std::vector<std::string> names = {"Euler", "OrientationMatrix", "Quaternion", "AxisAngle", "Rodrigues", "Homochoric", "Cubochoric"};
 
   std::vector<size_t> strides = {3, 9, 4, 4, 4, 3, 3};
-  // clang-format off
+  /* clang-format off */
   const std::vector<std::vector<float>> k_InitValues = { {4.76687F, 1.39683F, 2.46356F}, // Euler
                                                 {0.0660025F, 0.783565F, 0.617794F, -0.168761F, 0.618991F, -0.767053F, -0.983445F, -0.0536321F, 0.17309F}, // OM
                                                 {0.261688F, 0.587345F, -0.34932F, 0.681558F}, // QU
@@ -170,7 +170,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
                                                 {0.280631F, 0.629864F, -0.374607F}, // HO
                                                 {0.359479F, 0.632495F, -0.458758F} // CU;
     };
-  // clang-format on
+  /* clang-format on */
 
   for(size_t i = 0; i < 7; i++)
   {

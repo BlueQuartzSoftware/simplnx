@@ -23,10 +23,10 @@ const std::map<std::string, size_t> k_NameToCompDimMap = {{GM3DConst::k_Complete
 
 int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId)
 {
-  // clang-format off
+  /* clang-format off */
   std::array<size_t, 32> spaceGroup =   {1, 2, 3, 6, 10, 16, 25, 47, 75, 81, 83, 89, 99, 111, 123, 143, 147, 149, 156, 162, 168, 174, 175, 177, 183, 187, 191, 195, 200, 207, 215, 221};
   std::array<size_t, 32> pointGroupLaue = {1, 1, 2, 2, 2,  22, 22, 22, 4,  4,  4,  42, 42, 42,  42,  3,   3,   32,  32,  32,  6,   6,   6,   62,  62,  62,  62,  23,  23,  43,  43,  43};
-  // clang-format on
+  /* clang-format on */
   size_t pgIndex = spaceGroup.size() - 1;
   for(size_t i = 0; i < spaceGroup.size(); i++)
   {

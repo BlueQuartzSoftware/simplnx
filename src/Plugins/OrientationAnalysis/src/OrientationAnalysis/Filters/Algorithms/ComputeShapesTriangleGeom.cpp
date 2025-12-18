@@ -263,7 +263,7 @@ public:
     // define the canonical cMatrix matrix
     constexpr float64 aVal = 1.0 / 60.0;
     constexpr float64 bVal = aVal / 2.0;
-    // clang-format off
+    /* clang-format off */
     Matrix3x3 cMatrix;
     cMatrix << aVal, bVal, bVal, bVal, aVal, bVal, bVal, bVal, aVal;
 
@@ -276,7 +276,7 @@ public:
     cPrime << -0.50000000, 0.50000000, 0.50000000,
           0.50000000, -0.50000000, 0.50000000,
           0.50000000, 0.50000000, -0.50000000;
-    // clang-format on
+    /* clang-format on */
 
     // Loop over each "Feature" which is the number of tuples in the "Centroids" array
     // We could parallelize over the features?

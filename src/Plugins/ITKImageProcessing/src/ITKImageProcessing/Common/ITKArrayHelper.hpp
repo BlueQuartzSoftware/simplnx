@@ -430,10 +430,10 @@ void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, AbstractDataS
   }
 }
 
-// clang-format off
+/* clang-format off */
 template <typename T>
 concept NotBoolT = !std::is_same_v<T, bool>;
-// clang-format on
+/* clang-format on */
 
 template <NotBoolT NewStoreT, class PixelT, uint32 Dimension>
 Result<> ConvertImageToDataStore(DataStore<NewStoreT>& dataStore, itk::Image<PixelT, Dimension>& image)

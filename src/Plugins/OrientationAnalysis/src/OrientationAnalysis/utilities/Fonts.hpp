@@ -19,14 +19,14 @@ inline void Base64Decode(char const* input, std::vector<unsigned char>& output)
     {
       break;
     }
-    // clang-format off
+    /* clang-format off */
     const int value = ('A' <= symbol && symbol <= 'Z' ? symbol - 'A' :
                        'a' <= symbol && symbol <= 'z' ? symbol - 'a' + 26 :
                        '0' <= symbol && symbol <= '9' ? symbol - '0' + 52 :
                        symbol == '+'                  ? 62 :
                        symbol == '/'                  ? 63 :
                                                         0);
-    // clang-format on
+    /* clang-format on */
     data = data << 6 | value;
     held += 6;
     if(held >= 8)

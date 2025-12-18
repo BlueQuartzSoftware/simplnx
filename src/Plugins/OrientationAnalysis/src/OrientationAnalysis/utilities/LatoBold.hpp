@@ -2,7 +2,7 @@
 #include <vector>
 namespace fonts
 {
-// clang-format off
+/* clang-format off */
   char const k_LatoBoldBase64 [] = 
     "AAEAAAASAQAABAAgRFNJRwAAAAEAAdu0AAAACEdQT1OqrP3nAAGImAAAUgpHU1VCVi5UBQAB"
     "2qQAAAEOT1MvMtrnrZAAAAGoAAAAYGNtYXBS1J/XAAAGXAAABOZjdnQgB8gZoAAAEngAAAAu"
@@ -2261,5 +2261,5 @@ namespace fonts
     "AEwBBwACAE8AAgAsAAMAewB0AHUAAQALAEMAagBxAHYA2wDcAN4A3wDgAOIA4wABAAEASQAC"
     "AAEAFAAWAAAAAAAAAAEAAAAA";
 
-// clang-format on
+/* clang-format on */
 } // namespace fonts

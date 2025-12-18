@@ -530,7 +530,7 @@ void drawInformationBlock(canvas_ity::canvas& context, const ebsdlib::PoleFigure
   const std::array<canvas_ity::baseline_style, 6> baselines = {canvas_ity::alphabetic, canvas_ity::top, canvas_ity::middle, canvas_ity::bottom, canvas_ity::hanging, canvas_ity::ideographic};
 
   // Draw the information about the pole figure
-  // clang-format off
+  /* clang-format off */
   const std::vector<std::string> labels = {
         fmt::format("Phase Num: {}", phaseNum),
         fmt::format("Material Name: {}", materialName),
@@ -540,7 +540,7 @@ void drawInformationBlock(canvas_ity::canvas& context, const ebsdlib::PoleFigure
         fmt::format("Lambert Sq. Dim: {}", config.lambertDim)
   };
 
-  // clang-format on
+  /* clang-format on */
   float heightInc = 1.0f;
   for(const auto& label : labels)
   {

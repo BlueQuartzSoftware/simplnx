@@ -7,7 +7,7 @@
 #include <map>
 #include <string>
 
-// clang-format off
+/* clang-format off */
 #include "SimplnxCore/Filters/AddBadDataFilter.hpp"
 #include "SimplnxCore/Filters/AlignGeometriesFilter.hpp"
 #include "SimplnxCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
@@ -269,4 +269,4 @@ namespace nx::core
   };
 
 } // namespace nx::core
-// clang-format on
+/* clang-format on */
