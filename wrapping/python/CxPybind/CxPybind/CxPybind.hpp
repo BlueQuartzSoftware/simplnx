@@ -1,18 +1,5 @@
 #pragma once
 
-#include <pybind11/pybind11.h>
-
-#include <pybind11/functional.h>
-#include <pybind11/numpy.h>
-#include <pybind11/stl.h>
-#include <pybind11/stl/filesystem.h>
-
-#include <boost/mp11/algorithm.hpp>
-#include <boost/mp11/integral.hpp>
-#include <boost/mp11/list.hpp>
-
-#include <fmt/ranges.h>
-
 #include <simplnx/Common/ScopeGuard.hpp>
 #include <simplnx/Core/Application.hpp>
 #include <simplnx/Filter/Arguments.hpp>
@@ -23,6 +10,22 @@
 #include <simplnx/Filter/Parameters.hpp>
 #include <simplnx/Plugin/AbstractPlugin.hpp>
 #include <simplnx/Plugin/PluginLoader.hpp>
+
+#include <pybind11/functional.h>
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/stl/filesystem.h>
+
+#if PYBIND11_HAS_NATIVE_ENUM
+#include <pybind11/native_enum.h>
+#endif
+
+#include <boost/mp11/algorithm.hpp>
+#include <boost/mp11/integral.hpp>
+#include <boost/mp11/list.hpp>
+
+#include <fmt/ranges.h>
 
 #include <any>
 #include <memory>
@@ -111,11 +114,25 @@ std::string GetFixedPythonTypeCasterName()
 template <class T>
 std::string GetFullPythonName()
 {
+  using CasterT = py::detail::make_caster<T>;
   // Use py::type::of for registered C++ types otherwise use py::detail::type_caster::name
-  if constexpr(std::is_base_of_v<py::detail::type_caster_generic, py::detail::make_caster<T>>)
+  if constexpr(std::is_base_of_v<py::detail::type_caster_generic, CasterT>)
   {
     return GetRegisteredPythonTypeName<T>();
   }
+#if PYBIND11_HAS_NATIVE_ENUM
+  else if constexpr(std::is_base_of_v<py::detail::type_caster_enum_type<T>, CasterT>) // Is registered enum
+  {
+    const std::type_info& typeInfo = typeid(T);
+    py::handle nativeEnumHandle = py::detail::global_internals_native_enum_type_map_get_item(typeInfo);
+    if(nativeEnumHandle)
+    {
+      return GetFullPythonNameFromType(nativeEnumHandle);
+    }
+    py::handle handle = py::detail::get_type_handle(typeInfo, true);
+    return GetFullPythonNameFromType(handle);
+  }
+#endif
   else
   {
     return GetFixedPythonTypeCasterName<T>();
