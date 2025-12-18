@@ -3,8 +3,7 @@
 #include "simplnx/simplnx_export.hpp"
 
 #include <fmt/chrono.h>
-#include <fmt/core.h>
-#include <fmt/ranges.h>
+#include <fmt/format.h>
 
 #include <chrono>
 #include <string>
@@ -14,8 +13,17 @@ namespace nx::core
 
 inline std::string timestamp()
 {
-  std::time_t t = std::time(nullptr);
-  return fmt::format("[{:%Y:%m:%d %H:%M:%S}]", fmt::localtime(t));
+  // Waiting on (apple)clang support for P0355R7
+  // Migrate to std::chrono::current_zone and zoned_time then
+  const auto utc_now = std::chrono::system_clock::now();
+  const auto utc_time_t = std::chrono::system_clock::to_time_t(utc_now);
+  std::tm tm_local = {};
+#ifdef _MSC_VER
+  localtime_s(&tm_local, &utc_time_t);
+#else
+  localtime_r(&utc_time_t, &tm_local);
+#endif
+  return fmt::format("[{:%Y:%m:%d %H:%M:%S}]", tm_local);
 }
 
 /**
