@@ -48,7 +48,7 @@ Result<> EBSDSegmentFeatures::operator()()
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
-    return {MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures))};
+    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures));
   }
 
   // Resize the Feature Attribute Matrix

@@ -272,7 +272,7 @@ Result<> ReadH5Ebsd::operator()()
   int err = volumeInfoReader->readVolumeInfo();
   if(err < 0)
   {
-    return {MakeErrorResult(-50000, fmt::format("Could not read H5EbsdVolumeInfo from file '{}", m_InputValues->inputFilePath))};
+    return MakeErrorResult(-50000, fmt::format("Could not read H5EbsdVolumeInfo from file '{}", m_InputValues->inputFilePath));
   }
   std::array<int64_t, 3> dims = {0, 0, 0};
   std::array<float, 3> res = {0.0f, 0.0f, 0.0f};
@@ -326,8 +326,8 @@ Result<> ReadH5Ebsd::operator()()
   }
   else
   {
-    return {MakeErrorResult(-50001, fmt::format("Could not determine or match a supported manufacturer from the data file. Supported manufacturer codes are: '{}' and '{}'", ebsdlib::Ctf::Manufacturer,
-                                                ebsdlib::Ang::Manufacturer))};
+    return MakeErrorResult(-50001, fmt::format("Could not determine or match a supported manufacturer from the data file. Supported manufacturer codes are: '{}' and '{}'", ebsdlib::Ctf::Manufacturer,
+                                               ebsdlib::Ang::Manufacturer));
   }
   // Sanity Check the Error Condition or the state of the EBSD Reader Object.
   if(m_InputValues->useRecommendedTransform)
@@ -359,7 +359,7 @@ Result<> ReadH5Ebsd::operator()()
       auto executeResult = rotEuler.execute(m_DataStructure, args, nullptr, m_MessageHandler, m_ShouldCancel);
       if(executeResult.result.invalid())
       {
-        return {MakeErrorResult(-50011, fmt::format("Error executing {}", rotEuler.humanName()))};
+        return MakeErrorResult(-50011, fmt::format("Error executing {}", rotEuler.humanName()));
       }
     }
 
@@ -377,7 +377,7 @@ Result<> ReadH5Ebsd::operator()()
       auto filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
       if(nullptr == filter)
       {
-        return {MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter"))};
+        return MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter"));
       }
       Arguments args;
 

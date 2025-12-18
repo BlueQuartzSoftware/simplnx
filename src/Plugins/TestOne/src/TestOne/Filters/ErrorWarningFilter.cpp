@@ -132,7 +132,7 @@ nx::core::Result<> ErrorWarningFilter::executeImpl(DataStructure& dataStructure,
   }
   if(executeError)
   {
-    return {MakeErrorResult(-666001, "Intentional execute error generated")};
+    return MakeErrorResult(-666001, "Intentional execute error generated");
   }
   if(executeException)
   {

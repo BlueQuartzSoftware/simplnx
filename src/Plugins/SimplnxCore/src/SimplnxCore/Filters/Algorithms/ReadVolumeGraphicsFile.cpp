@@ -43,7 +43,7 @@ Result<> ReadVolumeGraphicsFile::operator()()
 
   if(filesize < allocatedBytes)
   {
-    return {MakeErrorResult(k_VolBinaryAllocateMismatch, fmt::format("Binary file size ({}) is smaller than the number of allocated bytes ({}).", filesize, allocatedBytes))};
+    return MakeErrorResult(k_VolBinaryAllocateMismatch, fmt::format("Binary file size ({}) is smaller than the number of allocated bytes ({}).", filesize, allocatedBytes));
   }
 
   m_MessageHandler(IFilter::Message::Type::Info, "Reading Data from .vol File.....");

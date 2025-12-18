@@ -524,22 +524,22 @@ Result<> PartitionGeometryFilter::DataCheckDimensionality(const INodeGeometry0D&
   Result<bool> yzPlaneResult = geometry.isYZPlane();
   if(yzPlaneResult.valid() && yzPlaneResult.value())
   {
-    return {MakeErrorResult(-3040, "Unable to create a partitioning scheme with a X dimension size of 0.  Vertices are in an YZ plane.  Use the Advanced or Bounding Box "
-                                   "partitioning modes to manually create a partitioning scheme.")};
+    return MakeErrorResult(-3040, "Unable to create a partitioning scheme with a X dimension size of 0.  Vertices are in an YZ plane.  Use the Advanced or Bounding Box "
+                                  "partitioning modes to manually create a partitioning scheme.");
   }
 
   Result<bool> xzPlaneResult = geometry.isXZPlane();
   if(xzPlaneResult.valid() && xzPlaneResult.value())
   {
-    return {MakeErrorResult(-3041, "Unable to create a partitioning scheme with a Y dimension size of 0.  Vertices are in an XZ plane.  Use the Advanced or Bounding Box "
-                                   "partitioning modes to manually create a partitioning scheme.")};
+    return MakeErrorResult(-3041, "Unable to create a partitioning scheme with a Y dimension size of 0.  Vertices are in an XZ plane.  Use the Advanced or Bounding Box "
+                                  "partitioning modes to manually create a partitioning scheme.");
   }
 
   Result<bool> xyPlaneResult = geometry.isXYPlane();
   if(xyPlaneResult.valid() && xyPlaneResult.value())
   {
-    return {MakeErrorResult(-3042, "Unable to create a partitioning scheme with a Z dimension size of 0.  Vertices are in an XY plane.  Use the Advanced or Bounding Box "
-                                   "partitioning modes to manually create a partitioning scheme.")};
+    return MakeErrorResult(-3042, "Unable to create a partitioning scheme with a Z dimension size of 0.  Vertices are in an XY plane.  Use the Advanced or Bounding Box "
+                                  "partitioning modes to manually create a partitioning scheme.");
   }
 
   return {};
@@ -609,15 +609,15 @@ Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPar
 
   if(lengthPerPartition.getX() < 0)
   {
-    return {MakeErrorResult(-3003, fmt::format("{}: Length Per Partition - The X value cannot be negative.", humanName()))};
+    return MakeErrorResult(-3003, fmt::format("{}: Length Per Partition - The X value cannot be negative.", humanName()));
   }
   if(lengthPerPartition.getY() < 0)
   {
-    return {MakeErrorResult(-3004, fmt::format("{}: Length Per Partition - The Y value cannot be negative.", humanName()))};
+    return MakeErrorResult(-3004, fmt::format("{}: Length Per Partition - The Y value cannot be negative.", humanName()));
   }
   if(lengthPerPartition.getZ() < 0)
   {
-    return {MakeErrorResult(-3005, fmt::format("{}: Length Per Partition - The Z value cannot be negative.", humanName()))};
+    return MakeErrorResult(-3005, fmt::format("{}: Length Per Partition - The Z value cannot be negative.", humanName()));
   }
 
   result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix);
@@ -642,17 +642,17 @@ Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const SizeVec3& numOf
 
   if(llCoord.getX() > urCoord.getX())
   {
-    return {MakeErrorResult(-3006, fmt::format("{}: Lower Left Coordinate - X value is larger than the upper right coordinate X value.", humanName()))};
+    return MakeErrorResult(-3006, fmt::format("{}: Lower Left Coordinate - X value is larger than the upper right coordinate X value.", humanName()));
   }
 
   if(llCoord.getY() > urCoord.getY())
   {
-    return {MakeErrorResult(-3007, fmt::format("{}: Lower Left Coordinate - Y value is larger than the upper right coordinate Y value.", humanName()))};
+    return MakeErrorResult(-3007, fmt::format("{}: Lower Left Coordinate - Y value is larger than the upper right coordinate Y value.", humanName()));
   }
 
   if(llCoord.getZ() > urCoord.getZ())
   {
-    return {MakeErrorResult(-3008, fmt::format("{}: Lower Left Coordinate - Z value is larger than the upper right coordinate Z value.", humanName()))};
+    return MakeErrorResult(-3008, fmt::format("{}: Lower Left Coordinate - Z value is larger than the upper right coordinate Z value.", humanName()));
   }
 
   result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix);
@@ -679,8 +679,8 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& ge
   {
     if(attrMatrix.getNumTuples() != geometryToPartition.getNumberOfCells())
     {
-      return {MakeErrorResult(-3009, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s cell count ({}).", humanName(), attrMatrix.getName(),
-                                                 attrMatrix.getNumTuples(), geometryToPartition.getName(), geometryToPartition.getNumberOfCells()))};
+      return MakeErrorResult(-3009, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s cell count ({}).", humanName(), attrMatrix.getName(),
+                                                attrMatrix.getNumTuples(), geometryToPartition.getName(), geometryToPartition.getNumberOfCells()));
     }
   }
   else
@@ -688,8 +688,8 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& ge
     const IGeometry::SharedVertexList& vertexList = geometryToPartition.getVertices();
     if(attrMatrix.getNumTuples() != vertexList.getNumberOfTuples())
     {
-      return {MakeErrorResult(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).", humanName(), attrMatrix.getName(),
-                                                 attrMatrix.getNumTuples(), geometryToPartition.getName(), vertexList.getNumberOfTuples()))};
+      return MakeErrorResult(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).", humanName(), attrMatrix.getName(),
+                                                attrMatrix.getNumTuples(), geometryToPartition.getName(), vertexList.getNumberOfTuples()));
     }
   }
 
@@ -701,17 +701,17 @@ Result<> PartitionGeometryFilter::DataCheckNumberOfPartitions(const SizeVec3& nu
 {
   if(numberOfPartitionsPerAxis.getX() <= 0)
   {
-    return {MakeErrorResult(-3012, "Number of Partitions Per Axis: The X dimension must be greater than 0.")};
+    return MakeErrorResult(-3012, "Number of Partitions Per Axis: The X dimension must be greater than 0.");
   }
 
   if(numberOfPartitionsPerAxis.getY() <= 0)
   {
-    return {MakeErrorResult(-3013, "Number of Partitions Per Axis: The Y dimension must be greater than 0.")};
+    return MakeErrorResult(-3013, "Number of Partitions Per Axis: The Y dimension must be greater than 0.");
   }
 
   if(numberOfPartitionsPerAxis.getZ() <= 0)
   {
-    return {MakeErrorResult(-3014, "Number of Partitions Per Axis: The Z dimension must be greater than 0.")};
+    return MakeErrorResult(-3014, "Number of Partitions Per Axis: The Z dimension must be greater than 0.");
   }
 
   return {};
