@@ -158,6 +158,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
   ReadZeissTxmFileTest.cpp
+  ReadNotesFileTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

@@ -158,6 +158,7 @@ set(FilterList
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
   WriteVtkStructuredPointsFilter
+  ReadNotesFileFilter
 )
 
 set(ActionList
@@ -316,6 +317,7 @@ set(AlgorithmList
   WriteStlFile
   WriteVtkRectilinearGrid
   WriteVtkStructuredPoints
+  ReadNotesFile
 )
 
 create_simplnx_plugin(NAME ${PLUGIN_NAME}
