@@ -16,7 +16,7 @@
 #include "ITKImageProcessing/Filters/ITKMedianImageFilter.hpp"
 #include "ITKImageProcessing/Filters/ITKRescaleIntensityImageFilter.hpp"
 
-// clang-format off
+/* clang-format off */
 #ifndef ITKIMAGEPROCESSING_LEAN_AND_MEAN
 #ifndef SIMPLNX_CONDA_BUILD
 #include "ITKImageProcessing/Filters/ITKBinaryContourImageFilter.hpp"
@@ -151,4 +151,4 @@ namespace nx::core
 #endif
   };
 } // namespace nx::core
-  // clang-format on
+/* clang-format on */

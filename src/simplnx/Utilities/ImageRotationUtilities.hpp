@@ -203,7 +203,7 @@ SIMPLNX_EXPORT size_t FindOctant(const RotateArgs& params, const Point3Df& cente
 
 using OctantOffsetArrayType = std::array<Vector3i64, 8>;
 
-//clang-format off
+/* clang-format off */
 
 static const OctantOffsetArrayType k_IndexOffset0 = {Vector3i64{-1, -1, -1}, Vector3i64{0, -1, -1}, Vector3i64{0, 0, -1}, Vector3i64{-1, 0, -1},
                                                      Vector3i64{-1, -1, 0},  Vector3i64{0, -1, 0},  Vector3i64{0, 0, 0},  Vector3i64{-1, 0, 0}};
@@ -223,7 +223,7 @@ static const OctantOffsetArrayType k_IndexOffset7 = {Vector3i64{-1, 0, 0}, Vecto
                                                      Vector3i64{-1, 0, 1}, Vector3i64{0, 0, 1}, Vector3i64{0, 1, 1}, Vector3i64{-1, -1, 1}};
 static const std::array<OctantOffsetArrayType, 8> k_AllOctantOffsets{k_IndexOffset0, k_IndexOffset1, k_IndexOffset2, k_IndexOffset3, k_IndexOffset4, k_IndexOffset5, k_IndexOffset6, k_IndexOffset7};
 
-//clang-format on
+/* clang-format on */
 
 template <class T>
 using AccumulationValueType = std::conditional_t<std::is_floating_point_v<T>, float64, int64>;
@@ -388,7 +388,7 @@ public:
     constexpr size_t P7 = 6;
     constexpr size_t P8 = 7;
 
-    // clang-format on
+    /* clang-format on */
     const AccumulationValueType<T> c000 = pValues[P1 * numComps + compIndex];
     const AccumulationValueType<T> c100 = pValues[P2 * numComps + compIndex];
     const AccumulationValueType<T> c110 = pValues[P3 * numComps + compIndex];

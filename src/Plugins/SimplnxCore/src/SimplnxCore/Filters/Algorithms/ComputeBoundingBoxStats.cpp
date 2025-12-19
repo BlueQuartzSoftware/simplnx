@@ -19,8 +19,10 @@ constexpr usize k_MaxXIndex = 3;
 constexpr usize k_MaxYIndex = 4;
 constexpr usize k_MaxZIndex = 5;
 
+/* clang-format off */
 template <class T>
 concept ArithmeticNotBool = std::is_arithmetic_v<T> && !std::is_same_v<T, bool>;
+/* clang-format on */
 
 std::array<usize, 6> GetVoxelIndices(const Float32AbstractDataStore& unifiedBounds, usize targetBoundsIndex, const ImageGeom& image)
 {

@@ -4,7 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
-// clang-format off
+/* clang-format off */
 // #include "OrientationAnalysis/Filters/ConvertHexGridToSquareGrid.hpp"
 // #include "OrientationAnalysis/Filters/CreateLambertSphere.hpp"
 // #include "OrientationAnalysis/Filters/EbsdToH5Ebsd.hpp"
@@ -151,4 +151,4 @@ namespace nx::core
   };
 
 } // namespace nx::core
-// clang-format on
+/* clang-format on */

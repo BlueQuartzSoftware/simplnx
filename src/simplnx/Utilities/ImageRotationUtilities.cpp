@@ -11,7 +11,7 @@ FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, cons
 {
   auto min = imageGeomBoundingBox.getMinPoint();
   auto max = imageGeomBoundingBox.getMaxPoint();
-  // clang-format off
+  /* clang-format off */
   std::vector<FloatVec3> imageGeomCornerCoords = {{min[0], min[1], min[2]},
                                                   {min[0], min[1], max[2]},
                                                   {min[0], max[1], min[2]},
@@ -21,7 +21,7 @@ FloatVec6 DetermineMinMaxCoords(const BoundingBox3Df& imageGeomBoundingBox, cons
                                                   {max[0], max[1], min[2]},
                                                   {max[0], max[1], max[2]}};
 
-  // clang-format on
+  /* clang-format on */
   FloatVec6 minMaxValues = {std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
                             -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max()};
 
@@ -258,7 +258,7 @@ size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const E
   const float zResHalf = params.zRes * 0.5F;
 
   // Form the 8 corner coords for the voxel
-  // clang-format off
+  /* clang-format off */
   std::array<FloatVec3, 8> unitSquareCoords = {
   /* P1 */ FloatVec3(centerPoint[0]-xResHalf, centerPoint[1]-yResHalf, centerPoint[2]-zResHalf),
   /* P2 */ FloatVec3(centerPoint[0]+xResHalf, centerPoint[1]-yResHalf, centerPoint[2]-zResHalf),
@@ -269,7 +269,7 @@ size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const E
   /* P7 */ FloatVec3(centerPoint[0]+xResHalf, centerPoint[1]+yResHalf, centerPoint[2]+zResHalf),
   /* P8 */ FloatVec3(centerPoint[0]-xResHalf, centerPoint[1]+yResHalf, centerPoint[2]+zResHalf),
   };
-  // clang-format on
+  /* clang-format on */
 
   //  Now figure out which corner the inverse transformed point is closest to
   //  this will give us which octant the point lies.

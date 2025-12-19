@@ -293,12 +293,12 @@ void ComputeShapes::findMoments()
 
     // Now store the 3x3 Matrix for the Eigen Value/Vectors
     Eigen::Matrix3f moment;
-    // clang-format off
+    /* clang-format off */
     moment <<
       m_FeatureMoments[featureId * 6 + 0], m_FeatureMoments[featureId * 6 + 3], m_FeatureMoments[featureId * 6 + 5],
       m_FeatureMoments[featureId * 6 + 3], m_FeatureMoments[featureId * 6 + 1], m_FeatureMoments[featureId * 6 + 4],
       m_FeatureMoments[featureId * 6 + 5], m_FeatureMoments[featureId * 6 + 4], m_FeatureMoments[featureId * 6 + 2];
-    // clang-format on
+    /* clang-format on */
     Eigen::EigenSolver<Eigen::Matrix3f> es(moment);
     Eigen::EigenSolver<Eigen::Matrix3f>::EigenvalueType eigenValues = es.eigenvalues();
     Eigen::EigenSolver<Eigen::Matrix3f>::EigenvectorsType eigenVectors = es.eigenvectors();
@@ -570,12 +570,12 @@ void ComputeShapes::findAxisEulers()
   {
     // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
     // (Note that the 3 directions are actually the long axis and the 1 direction is actually the short axis)
-    // clang-format off
+    /* clang-format off */
     size_t idx = featureId*9;
     ebsdlib::OrientationMatrixDType g = {m_EFVec[idx + 0], m_EFVec[idx + 3], m_EFVec[idx + 6],
                      m_EFVec[idx + 1], m_EFVec[idx + 4], m_EFVec[idx + 7],
                      m_EFVec[idx + 2], m_EFVec[idx + 5], m_EFVec[idx + 8]};
-    // clang-format on
+    /* clang-format on */
 
     // check for right-handedness
     ebsdlib::ResultType result = g.isValid();

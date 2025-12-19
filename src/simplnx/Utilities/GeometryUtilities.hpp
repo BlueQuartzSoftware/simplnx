@@ -87,7 +87,7 @@ T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const
   //      | v1x     v2x    v3x  |
   //  M = | v1y     v2y    v3y  |
   //      | v1z     v2z    v3z  |
-  // clang-format off
+  /* clang-format off */
     std::array<T, 9> volumeMatrix = {b[0] - a[0], c[0] - a[0], d[0] - a[0],
                                      b[1] - a[1], c[1] - a[1], d[1] - a[1],
                                      b[2] - a[2], c[2] - a[2], d[2] - a[2]};
@@ -96,7 +96,7 @@ T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const
     T determinant = (volumeMatrix[0] * (volumeMatrix[4] * volumeMatrix[8] - volumeMatrix[5] * volumeMatrix[7])) -
                     (volumeMatrix[3] * (volumeMatrix[1] * volumeMatrix[8] - volumeMatrix[2] * volumeMatrix[7])) +
                     (volumeMatrix[6] * (volumeMatrix[1] * volumeMatrix[5] - volumeMatrix[2] * volumeMatrix[4]));
-  // clang-format on
+  /* clang-format on */
 
   return std::abs((determinant / 6.0f)); // The final volume of the tetrahedron
 }
