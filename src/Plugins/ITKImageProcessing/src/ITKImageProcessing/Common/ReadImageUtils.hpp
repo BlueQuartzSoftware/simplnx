@@ -15,6 +15,12 @@ using namespace nx::core;
 
 namespace cxItkImageReaderFilter
 {
+enum class OriginSpacingProcessingTiming : uint64_t
+{
+  Preprocessed = 0,
+  Postprocessed = 1
+};
+
 // This functor is a dummy that will return a valid Result<> if the ImageIOBase is a supported type, dimension, etc.
 struct PreflightFunctor
 {
@@ -106,15 +112,18 @@ struct ReadImageIntoArrayFunctor
         {
         case 0:
           minPt[d] = cropFlags[d] ? static_cast<PointValueType>(croppingOptions.xBoundPhysical[0]) : static_cast<PointValueType>(imageOrigin[d]);
-          maxPt[d] = cropFlags[d] ? static_cast<PointValueType>(croppingOptions.xBoundPhysical[1]) : static_cast<PointValueType>(imageSpacing[d] * static_cast<float64>(size[d]) + imageOrigin[d]);
+          maxPt[d] =
+              cropFlags[d] ? static_cast<PointValueType>(croppingOptions.xBoundPhysical[1]) : static_cast<PointValueType>(imageSpacing[d] * (static_cast<float64>(size[d]) - 1) + imageOrigin[d]);
           break;
         case 1:
           minPt[d] = cropFlags[d] ? static_cast<PointValueType>(croppingOptions.yBoundPhysical[0]) : static_cast<PointValueType>(imageOrigin[d]);
-          maxPt[d] = cropFlags[d] ? static_cast<PointValueType>(croppingOptions.yBoundPhysical[1]) : static_cast<PointValueType>(imageSpacing[d] * static_cast<float64>(size[d]) + imageOrigin[d]);
+          maxPt[d] =
+              cropFlags[d] ? static_cast<PointValueType>(croppingOptions.yBoundPhysical[1]) : static_cast<PointValueType>(imageSpacing[d] * (static_cast<float64>(size[d]) - 1) + imageOrigin[d]);
           break;
         case 2:
           minPt[d] = cropFlags[d] ? static_cast<PointValueType>(croppingOptions.zBoundPhysical[0]) : static_cast<PointValueType>(imageOrigin[d]);
-          maxPt[d] = cropFlags[d] ? static_cast<PointValueType>(croppingOptions.zBoundPhysical[1]) : static_cast<PointValueType>(imageSpacing[d] * static_cast<float64>(size[d]) + imageOrigin[d]);
+          maxPt[d] =
+              cropFlags[d] ? static_cast<PointValueType>(croppingOptions.zBoundPhysical[1]) : static_cast<PointValueType>(imageSpacing[d] * (static_cast<float64>(size[d]) - 1) + imageOrigin[d]);
           break;
         default:
           break;
@@ -140,6 +149,35 @@ struct ReadImageIntoArrayFunctor
     using RegionType = typename ImageType::RegionType;
 
     constexpr unsigned int Dimension = ImageType::ImageDimension;
+
+    const auto& largestRegion = inputImage->GetLargestPossibleRegion();
+    const auto& largestIndex = largestRegion.GetIndex();
+    const auto& largestSize = largestRegion.GetSize();
+
+    // Validate that [minIndex, maxIndex] lies fully within the image's largest region (maxIndex is inclusive)
+    for(unsigned int d = 0; d < Dimension; ++d)
+    {
+      const auto start = largestIndex[d];
+      const auto extent = static_cast<long long>(largestSize[d]);
+      const auto end = static_cast<long long>(start) + extent - 1;
+
+      const auto minI = static_cast<long long>(minIndex[d]);
+      const auto maxI = static_cast<long long>(maxIndex[d]);
+
+      if(extent <= 0)
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(-3002, fmt::format("CropImageByVoxelBounds: image region has zero size in dimension {}", d));
+      }
+
+      if(minI < static_cast<long long>(start) || minI > end)
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(-3003, fmt::format("CropImageByVoxelBounds: minIndex[{}]={} is outside image extent [{}, {}]", d, minIndex[d], start, end));
+      }
+      if(maxI < static_cast<long long>(start) || maxI > end)
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(-3004, fmt::format("CropImageByVoxelBounds: maxIndex[{}]={} is outside image extent [{}, {}]", d, maxIndex[d], start, end));
+      }
+    }
 
     // Compute size = max - min + 1 in each dimension
     SizeType size;
@@ -167,25 +205,12 @@ struct ReadImageIntoArrayFunctor
 
   //------------------------------------------------------------------------------
   template <class ImageType>
-  Result<typename ImageType::Pointer> CropImageByPhysicalBounds(typename ImageType::Pointer inputImage, const typename ImageType::PointType& minPoint,
-                                                                const typename ImageType::PointType& maxPoint, const typename ImageType::SpacingType& spacing, const typename ImageType::PointType& origin) const
+  Result<typename ImageType::Pointer> CropImageByPhysicalBounds(typename ImageType::Pointer inputImage, const typename ImageType::PointType& minPoint, const typename ImageType::PointType& maxPoint,
+                                                                const typename ImageType::SpacingType& spacing, const typename ImageType::PointType& origin) const
   {
     using IndexType = typename ImageType::IndexType;
 
     constexpr unsigned int Dimension = ImageType::ImageDimension;
-
-    //    IndexType minIndex;
-    //    IndexType maxIndex;
-
-    //    bool insideMin = inputImage->TransformPhysicalPointToIndex(minPoint, minIndex);
-    //    bool insideMax = inputImage->TransformPhysicalPointToIndex(maxPoint, maxIndex);
-    //
-    //    if(!insideMin || !insideMax)
-    //    {
-    //      return MakeErrorResult<typename ImageType::Pointer>(-3002, "CropImageByPhysicalBounds: physical bounds are outside image extent");
-    //    }
-
-    using IndexType = typename ImageType::IndexType;
 
     const auto& region = inputImage->GetLargestPossibleRegion();
     const auto& size = region.GetSize();
@@ -195,34 +220,61 @@ struct ReadImageIntoArrayFunctor
 
     for(usize d = 0; d < Dimension; ++d)
     {
-      const float64 minPhys = minPoint[d];
-      const float64 maxPhys = maxPoint[d];
+      const auto minPhys = static_cast<float64>(minPoint[d]);
+      const auto maxPhys = static_cast<float64>(maxPoint[d]);
 
-      const float64 minIdxCont = (minPhys - origin[d]) / spacing[d];
-      const float64 maxIdxCont = (maxPhys - origin[d]) / spacing[d];
+      const auto imgMin = static_cast<float64>(origin[d]);
+      const float64 imgMax = imgMin + (static_cast<float64>(size[d]) * static_cast<float64>(spacing[d]));
 
-      auto minI = static_cast<long>(std::floor(minIdxCont));
-      auto maxI = static_cast<long>(std::ceil(maxIdxCont));
-
-      minI = std::max<long>(0, minI);
-      maxI = std::min<long>(static_cast<long>(size[d]) - 1, maxI);
-
-      if(maxI < minI)
+      if(size[d] == 0)
       {
-        return MakeErrorResult<typename ImageType::Pointer>(-4001, "CropImageByPhysicalBounds: physical bounds are outside image extent");
+        return MakeErrorResult<typename ImageType::Pointer>(-3100, fmt::format("CropImageByPhysicalBounds: image has zero size in dimension {}", d));
       }
 
-      minIndex[d] = minI;
-      maxIndex[d] = maxI;
-    }
-
-    // Ensure minIndex <= maxIndex in each dimension
-    for(unsigned int d = 0; d < Dimension; ++d)
-    {
-      if(minIndex[d] > maxIndex[d])
+      if(spacing[d] <= 0)
       {
-        std::swap(minIndex[d], maxIndex[d]);
+        return MakeErrorResult<typename ImageType::Pointer>(-3101, fmt::format("CropImageByPhysicalBounds: spacing[{}]={} must be > 0", d, spacing[d]));
       }
+
+      if(minPhys < imgMin || minPhys >= imgMax)
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(-3102, fmt::format("CropImageByPhysicalBounds: minPoint[{}]={} is outside image physical bounds [{}, {})", d, minPhys, imgMin, imgMax));
+      }
+
+      if(maxPhys < imgMin || maxPhys >= imgMax)
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(-3103, fmt::format("CropImageByPhysicalBounds: maxPoint[{}]={} is outside image physical bounds [{}, {})", d, maxPhys, imgMin, imgMax));
+      }
+
+      if(maxPhys < minPhys)
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(-3104, fmt::format("CropImageByPhysicalBounds: maxPoint[{}]={} is less than minPoint[{}]={}", d, maxPhys, d, minPhys));
+      }
+
+      const float64 minVoxelF = (minPhys - imgMin) / static_cast<float64>(spacing[d]);
+      const float64 maxVoxelF = (maxPhys - imgMin) / static_cast<float64>(spacing[d]);
+
+      const auto min = static_cast<usize>(std::floor(minVoxelF));
+      const auto max = static_cast<usize>(std::floor(maxVoxelF));
+
+      if(min >= size[d])
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(-3105, fmt::format("CropImageByPhysicalBounds: computed minIndex[{}]={} is outside image index range [0, {}]", d, min, (size[d] - 1)));
+      }
+
+      if(max >= size[d])
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(-3106, fmt::format("CropImageByPhysicalBounds: computed maxIndex[{}]={} is outside image index range [0, {}]", d, max, (size[d] - 1)));
+      }
+
+      if(min >= max)
+      {
+        return MakeErrorResult<typename ImageType::Pointer>(
+            -3107, fmt::format("CropImageByPhysicalBounds: computed minIndex[{}]={} is not less than maxIndex[{}]={} (check physical bounds / spacing)", d, min, d, max));
+      }
+
+      minIndex[d] = static_cast<typename IndexType::IndexValueType>(min);
+      maxIndex[d] = static_cast<typename IndexType::IndexValueType>(max);
     }
 
     return CropImageByVoxelBounds<ImageType>(inputImage, minIndex, maxIndex);
@@ -411,6 +463,7 @@ struct ImageReaderOptions
   bool OverrideSpacing = false;
   FloatVec3 Origin;
   FloatVec3 Spacing;
+  OriginSpacingProcessingTiming OriginSpacingProcessingTiming;
   bool ChangeDataType = false;
   DataType ImageDataType = DataType::uint8;
   CropGeometryParameter::ValueType CroppingOptions;
