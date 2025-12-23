@@ -13,6 +13,30 @@ namespace
 const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const Uuid k_CropImageGeomFilterId = *Uuid::FromString("e6476737-4aa7-48ba-a702-3dfab82c96e2");
 const FilterHandle k_CropImageGeomFilterHandle(k_CropImageGeomFilterId, k_SimplnxCorePluginId);
+
+void ApplyImageOriginAndSpacingOverrides(const cxItkImageReaderFilter::ImageReaderOptions& imageReaderOptions, FloatVec3& origin, FloatVec3& spacing, const std::vector<usize>& dims)
+{
+  if(imageReaderOptions.OverrideSpacing)
+  {
+    spacing = imageReaderOptions.Spacing;
+  }
+
+  if(imageReaderOptions.OverrideOrigin)
+  {
+    origin = imageReaderOptions.Origin;
+    if(imageReaderOptions.OriginAtCenterOfGeometry)
+    {
+      DataStructure junk;
+      ImageGeom* imageGeomPtr = ImageGeom::Create(junk, "Junk");
+      imageGeomPtr->setDimensions(dims);
+      imageGeomPtr->setOrigin(origin);
+      imageGeomPtr->setSpacing(spacing);
+      BoundingBox3Df bounds = imageGeomPtr->getBoundingBoxf();
+      FloatVec3 centerPoint(bounds.center());
+      origin = origin - (centerPoint - origin);
+    }
+  }
+}
 } // namespace
 
 namespace cxItkImageReaderFilter
@@ -56,9 +80,9 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
       spacing[i] = static_cast<float32>(imageIO->GetSpacing(i));
     }
 
-    if(imageReaderOptions.OverrideSpacing)
+    if(imageReaderOptions.OriginSpacingProcessingTiming == OriginSpacingProcessingTiming::Preprocessed)
     {
-      spacing = imageReaderOptions.Spacing;
+      ApplyImageOriginAndSpacingOverrides(imageReaderOptions, origin, spacing, dims);
     }
 
     bool cropImage = imageReaderOptions.CroppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping;
@@ -132,23 +156,9 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
       origin = croppedGeom.getOrigin().toContainer<std::vector<float32>>();
     }
 
-    if(imageReaderOptions.OverrideOrigin)
+    if(imageReaderOptions.OriginSpacingProcessingTiming == OriginSpacingProcessingTiming::Postprocessed)
     {
-      DataStructure junk;
-      ImageGeom* imageGeomPtr = ImageGeom::Create(junk, "Junk");
-
-      origin = imageReaderOptions.Origin;
-
-      imageGeomPtr->setDimensions(dims);
-      imageGeomPtr->setOrigin(origin);
-      imageGeomPtr->setSpacing(spacing);
-
-      if(imageReaderOptions.OriginAtCenterOfGeometry)
-      {
-        BoundingBox3Df bounds = imageGeomPtr->getBoundingBoxf();
-        FloatVec3 centerPoint(bounds.center());
-        origin = origin - (centerPoint - origin);
-      }
+      ApplyImageOriginAndSpacingOverrides(imageReaderOptions, origin, spacing, dims);
     }
 
     uint32 nComponents = imageIO->GetNumberOfComponents();
