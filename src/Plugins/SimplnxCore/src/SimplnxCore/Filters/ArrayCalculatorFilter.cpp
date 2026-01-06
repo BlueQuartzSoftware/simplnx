@@ -237,7 +237,12 @@ Result<Arguments> ArrayCalculatorFilter::FromSIMPLJson(const nlohmann::json& jso
   // results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedAttributeMatrixKey,
   // "@SIMPLNX_PARAMETER_KEY@"));
   results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversion::CalculatorFilterParameterConverter>(args, json, k_CalculatorParameter_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
+  Result<> result = SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key);
+  if(result.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(result));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CalculatedArrayKey, k_CalculatedArray_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

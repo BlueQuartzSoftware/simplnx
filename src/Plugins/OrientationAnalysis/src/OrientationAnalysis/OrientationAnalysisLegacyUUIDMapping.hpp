@@ -133,7 +133,7 @@ namespace nx::core
     // {nx::core::Uuid::FromString("8abdea7d-f715-5a24-8165-7f946bbc2fe9").value(), {nx::core::FilterTraits<ImportH5EspritData>::uuid, {}}}, // ImportH5EspritData
     // {nx::core::Uuid::FromString("94f986fc-1295-5e32-9808-752855fa658a").value(), {nx::core::FilterTraits<FindDistsToCharactGBs>::uuid, {}}}, // FindDistsToCharactGBs
     {nx::core::Uuid::FromString("97523038-5fb2-5e82-9177-ed3e8b24b4bd").value(), {nx::core::FilterTraits<ComputeSlipTransmissionMetricsFilter>::uuid, &ComputeSlipTransmissionMetricsFilter::FromSIMPLJson}}, // ComputeSlipTransmissionMetrics
-    {nx::core::Uuid::FromString("a10124f3-05d0-5f49-93a0-e93926f5b48b").value(), {nx::core::FilterTraits<ComputeTwinBoundariesFilter>::uuid, {}}}, // FindTwinBoundaries
+    {nx::core::Uuid::FromString("a10124f3-05d0-5f49-93a0-e93926f5b48b").value(), {nx::core::FilterTraits<ComputeTwinBoundariesFilter>::uuid, &ComputeTwinBoundariesFilter::FromSIMPLJson}}, // FindTwinBoundaries
     // {nx::core::Uuid::FromString("a10bb78e-fcff-553d-97d6-830a43c85385").value(), {nx::core::FilterTraits<WritePoleFigure>::uuid, {}}}, // WritePoleFigure
     // {nx::core::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), {nx::core::FilterTraits<WriteStatsGenOdfAngleFile>::uuid, &WriteStatsGenOdfAngleFileFilter::FromSIMPLJson}}, // WriteStatsGenOdfAngleFile
     // {nx::core::Uuid::FromString("b0e30e6d-912d-5a7e-aeed-750134aba86b").value(), {nx::core::FilterTraits<FindTwinBoundarySchmidFactors>::uuid, {}}}, // FindTwinBoundarySchmidFactors

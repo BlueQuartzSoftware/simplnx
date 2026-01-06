@@ -150,7 +150,8 @@ Result<Arguments> ComputeVolumeFractionsFilter::FromSIMPLJson(const nlohmann::js
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_CellEnsembleAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_VolFractionsArrayName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_VolFractionsArrayPathKey, k_VolFractionsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

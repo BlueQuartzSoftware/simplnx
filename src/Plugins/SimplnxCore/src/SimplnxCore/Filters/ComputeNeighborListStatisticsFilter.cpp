@@ -3,7 +3,6 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeNeighborListStatistics.hpp"
 
 #include "simplnx/DataStructure/INeighborList.hpp"
-#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"

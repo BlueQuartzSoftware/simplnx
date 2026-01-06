@@ -291,7 +291,6 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
 Result<> PadImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-
   PadImageGeometryInputValues inputValues;
 
   inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
@@ -315,7 +314,12 @@ namespace
 {
 namespace SIMPL
 {
-
+constexpr StringLiteral k_AttributeMatrixPathKey = "AttributeMatrixPath";
+constexpr StringLiteral k_DefaultFillValueKey = "DefaultFillValue";
+constexpr StringLiteral k_UpdateOriginKey = "UpdateOrigin";
+constexpr StringLiteral k_XMinMaxKey = "XMinMax";
+constexpr StringLiteral k_YMinMaxKey = "YMinMax";
+constexpr StringLiteral k_ZMinMaxKey = "ZMinMax";
 } // namespace SIMPL
 } // namespace
 
@@ -325,6 +329,15 @@ Result<Arguments> PadImageGeometryFilter::FromSIMPLJson(const nlohmann::json& js
   Arguments args = PadImageGeometryFilter().getDefaultArguments();
 
   std::vector<Result<>> results;
+
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixPathKey, k_AttributeMatrixPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_DefaultFillValueKey, k_DefaultFillValue_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UpdateOriginKey, k_UpdateOrigin_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_XMinMaxKey, k_XMinMax_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_YMinMaxKey, k_YMinMax_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_ZMinMaxKey, k_ZMinMax_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

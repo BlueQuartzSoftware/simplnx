@@ -60,8 +60,7 @@ Parameters ComputeFeaturePhasesFilter::parameters() const
                                                                     "The AttributeMatrix that stores the feature data for the input **Feature Ids**.", DataPath({"Cell Feature Data"})));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_FeaturePhasesArrayName_Key, "Feature Phases", "The name of the feature attribute matrix in which to store the found feature phases array", "Phases"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeaturePhasesArrayName_Key, "Feature Phases", "The name of the found feature phases array", "Phases"));
 
   return params;
 }
@@ -191,7 +190,8 @@ Result<Arguments> ComputeFeaturePhasesFilter::FromSIMPLJson(const nlohmann::json
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_CellFeaturesAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

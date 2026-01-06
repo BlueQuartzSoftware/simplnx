@@ -28,6 +28,13 @@ Compare the data sets. The values should be exactly the same.
 
 #include <catch2/catch.hpp>
 
+#include <EbsdLib/LaueOps/OrthoRhombicOps.h>
+#include <EbsdLib/Orientation/Euler.hpp>
+#include <EbsdLib/Orientation/Homochoric.hpp>
+#include <EbsdLib/Orientation/Rodrigues.hpp>
+
+using namespace ebsdlib;
+
 #include <cstdio>
 #include <filesystem>
 
@@ -44,6 +51,19 @@ constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][ComputeIPFColors]")
 {
+
+  {
+    HomochoricDType ho(0.021797740480252403, 0.027063934475102136, 0.035554288118377242);
+    std::cout << ho << std::endl;
+    RodriguesDType rod = ho.toRodrigues();
+    std::cout << rod << std::endl;
+    OrthoRhombicOps ops;
+    rod = ops.getODFFZRod(rod);
+    std::cout << rod << "\n";
+    EulerDType eu = rod.toEuler();
+    std::cout << eu << std::endl;
+  }
+
   UnitTest::LoadPlugins();
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",

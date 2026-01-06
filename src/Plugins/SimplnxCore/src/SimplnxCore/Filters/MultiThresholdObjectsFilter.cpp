@@ -496,8 +496,11 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  bool isAdvanced = json[k_FilterUuidKey].get<std::string>() != v1Uuid;
-
+  bool isAdvanced = false;
+  if(json.contains(k_FilterUuidKey))
+  {
+    isAdvanced = json[k_FilterUuidKey].get<std::string>() != v1Uuid;
+  }
   if(isAdvanced)
   {
     results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionAdvancedFilterParameterConverter>(args, json, SIMPL::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
@@ -506,7 +509,12 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
   {
     results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ComparisonSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_CreatedMaskType_Key));
+  Result<> scalarResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_CreatedMaskType_Key);
+  if(scalarResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(scalarResult));
+  }
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_DestinationArrayNameKey, k_CreatedDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

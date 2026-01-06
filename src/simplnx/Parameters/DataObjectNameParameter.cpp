@@ -114,6 +114,12 @@ Result<DataArrayCreationToDataObjectNameFilterParameterConverter::ValueType> Dat
 
 Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFilterParameterConverter::convert(const nlohmann::json& json)
 {
+  // 6.5 compatibility
+  if(json.is_string())
+  {
+    return {json.get<std::string>()};
+  }
+
   auto dataContainerNameResult = ReadDataContainerName(json, "DataContainerNameFilterParameterConverter");
   if(dataContainerNameResult.invalid())
   {

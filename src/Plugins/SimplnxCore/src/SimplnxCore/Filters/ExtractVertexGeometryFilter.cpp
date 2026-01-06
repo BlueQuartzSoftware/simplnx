@@ -1,4 +1,5 @@
 #include "ExtractVertexGeometryFilter.hpp"
+#include <simplnx/Utilities/SIMPLConversion.hpp>
 
 #include "SimplnxCore/Filters/Algorithms/ExtractVertexGeometry.hpp"
 
@@ -206,5 +207,44 @@ Result<> ExtractVertexGeometryFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.SharedVertexListName = filterArgs.value<std::string>(k_SharedVertexListName_Key);
 
   return ExtractVertexGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
+}
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_IncludedDataArrayPathsKey = "IncludedDataArrayPaths";
+constexpr StringLiteral k_SelectedDataContainerNameKey = "SelectedDataContainerName";
+constexpr StringLiteral k_VertexDataContainerNameKey = "VertexDataContainerName";
+constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
+constexpr StringLiteral k_UseMaskKey = "UseMask";
+} // namespace SIMPL
+} // namespace
+
+Result<Arguments> ExtractVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
+{
+  Arguments args = ExtractVertexGeometryFilter().getDefaultArguments();
+
+  std::vector<Result<>> results;
+
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_IncludedDataArrayPathsKey, k_IncludedDataArrayPaths_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_SelectedDataContainerNameKey, k_InputGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_VertexDataContainerNameKey, k_VertexGeometryPath_Key));
+  Result<> useMaskResult = SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UseMaskKey, k_UseMask_Key);
+  if(useMaskResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(useMaskResult));
+  }
+  Result<> maskResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_MaskArrayPath_Key);
+  if(maskResult.valid())
+  {
+    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
+    results.push_back(std::move(maskResult));
+  }
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace nx::core

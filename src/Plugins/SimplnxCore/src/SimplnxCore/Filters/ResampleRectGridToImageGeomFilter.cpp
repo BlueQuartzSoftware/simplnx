@@ -236,7 +236,7 @@ Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohman
   // Rect Grid Geometry description parameter is not applicable in NX
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
   // Created Geometry description is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerCreationFilterParameterConverter>(args, json, SIMPL::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_ImageGeometryPathKey, k_ImageGeometryPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ImageGeomCellAttributeMatrixKey, k_ImageGeomCellAttributeMatrixName_Key));
 

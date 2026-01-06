@@ -104,20 +104,57 @@ namespace SIMPLConversion
 template <typename T>
 Result<typename IntFilterParameterConverter<T>::ValueType> IntFilterParameterConverter<T>::convert(const nlohmann::json& json)
 {
-  if(!json.is_number_integer())
-  {
-    return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter json '{}' is not an integer", json.dump()));
-  }
+  T value;
 
-  if constexpr(std::is_unsigned_v<T>)
+  if(json.is_number_integer())
   {
-    if(!json.is_number_unsigned())
+    if constexpr(std::is_unsigned_v<T>)
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter json '{}' is not unsigned", json.dump()));
+      if(!json.is_number_unsigned())
+      {
+        auto tmp = json.get<int64>();
+        if(tmp < 0)
+        {
+          return {static_cast<T>(0)};
+        }
+        else if(tmp > std::numeric_limits<T>::max())
+        {
+          return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter: value will overflow when converting to expected type. json '{}'", json.dump()));
+        }
+        return {static_cast<T>(tmp)};
+      }
     }
-  }
 
-  auto value = json.get<T>();
+    value = json.get<T>();
+  }
+  else
+  {
+    auto tmp = json.get<float64>();
+    if constexpr(std::is_unsigned_v<T>)
+    {
+      if(tmp < 0)
+      {
+        return {static_cast<T>(0)};
+      }
+      if(tmp > std::numeric_limits<T>::max())
+      {
+        return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter: value will overflow when converting to expected type. json '{}'", json.dump()));
+      }
+    }
+    else
+    {
+      if(tmp < std::numeric_limits<T>::lowest())
+      {
+        return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter: value will underflow when converting to expected type. json '{}'", json.dump()));
+      }
+      if(tmp > std::numeric_limits<T>::max())
+      {
+        return MakeErrorResult<ValueType>(-1, fmt::format("IntFilterParameter: value will overflow when converting to expected type. json '{}'", json.dump()));
+      }
+    }
+
+    value = static_cast<T>(tmp);
+  }
 
   return {value};
 }

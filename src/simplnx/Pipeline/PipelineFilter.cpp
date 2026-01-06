@@ -2,6 +2,7 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Filter/FilterList.hpp"
+#include "simplnx/Pipeline/LegacySimplFilterUuid.hpp"
 #include "simplnx/Pipeline/Messaging/FilterPreflightMessage.hpp"
 #include "simplnx/Pipeline/Messaging/OutputRenamedMessage.hpp"
 
@@ -652,16 +653,32 @@ std::string PipelineFilter::CreateErrorComments(const nx::core::ErrorCollection&
 
 Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nlohmann::json& json, const FilterList& filterList)
 {
+  std::string uuidString;
+  // First check if the json contains the legacy's filter UUID
   if(!json.contains(k_SIMPLFilterUuidKey))
   {
+    // NO UUID Present. Let's try looking up by filter name from the legacy list
+    // This can happen for DREAM3D 6.4.x pipelines.
     auto filterClassName = json.value(k_SIMPLFilterClassNameKey.view(), "NO NAME");
-    return MakeErrorResult<std::unique_ptr<PipelineFilter>>(
-        -1, fmt::format("The pipeline file contained an entry for a SIMPL filter with name '{}', but the json that describes that filter did not include "
-                        "an entry with a key of '{}'.\nPlease open the pipeline file in DREAM3D-NX version 6.5 or 6.6 and re-save the pipeline and then try to reimport the pipeline file.",
-                        filterClassName, k_SIMPLFilterUuidKey.view()));
+    // Check the value for the filterClassName that was returned.
+    if(nx::core::k_LegacySimplFilterUuidMap.contains(filterClassName))
+    {
+      uuidString = nx::core::k_LegacySimplFilterUuidMap.at(filterClassName);
+    }
+    else
+    {
+      // Everything has failed at this point. Return an error result.
+      return MakeErrorResult<std::unique_ptr<PipelineFilter>>(
+          -1, fmt::format("The pipeline file contained an entry for a SIMPL filter with name '{}', but the json that describes that filter did not include "
+                          "an entry with a key of '{}'.\nPlease open the pipeline file in DREAM3D-NX version 6.5 or 6.6 and re-save the pipeline and then try to reimport the pipeline file.",
+                          filterClassName, k_SIMPLFilterUuidKey.view()));
+    }
+  }
+  else
+  {
+    uuidString = json[k_SIMPLFilterUuidKey].get<std::string>();
   }
 
-  auto uuidString = json[k_SIMPLFilterUuidKey].get<std::string>();
   std::optional<Uuid> filterUuid = Uuid::FromString(uuidString);
 
   if(!filterUuid.has_value())

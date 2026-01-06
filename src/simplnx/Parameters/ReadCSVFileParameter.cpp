@@ -155,7 +155,15 @@ Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDa
   ValueType value;
   value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
   value.customHeaders = json[k_DataHeadersKey].get<std::vector<std::string>>();
-  value.startImportRow = json[k_BeginIndexKey].get<int32>();
+  auto beginIndex = json[k_BeginIndexKey].get<int32>();
+  if(beginIndex < 0)
+  {
+    value.startImportRow = 0;
+  }
+  else
+  {
+    value.startImportRow = json[k_BeginIndexKey].get<int32>();
+  }
   value.dataTypes = ConvertCSVTypeStrings(dataTypeStrings);
   value.delimiters = ConvertToChars(json[k_DelimitersKey].get<std::string>());
   int64 headersLineNum = json[k_HeaderLineKey].get<int64>();

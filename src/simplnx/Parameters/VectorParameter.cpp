@@ -164,8 +164,220 @@ namespace SIMPLConversion
 {
 namespace
 {
-constexpr StringLiteral k_MaxKey = "Max";
-constexpr StringLiteral k_MinKey = "Min";
+enum ConversionState
+{
+  Underflow,
+  Overflow,
+  ZeroBound,
+  Clear
+};
+
+template <typename ExpectedT, typename TempT>
+ConversionState ConversionChecks(TempT temp)
+{
+  if constexpr(std::is_same_v<ExpectedT, TempT>)
+  {
+    return Clear;
+  }
+
+  constexpr ExpectedT lowerBound = std::numeric_limits<ExpectedT>::lowest();
+  constexpr ExpectedT upperBound = std::numeric_limits<ExpectedT>::max();
+
+  // uint8/16/32/64 <- float32/64, int8/16/32/64
+  if constexpr(!std::is_floating_point_v<ExpectedT> && std::is_unsigned_v<ExpectedT> && std::is_signed_v<TempT>)
+  {
+    if(temp < static_cast<TempT>(0))
+    {
+      return ZeroBound;
+    }
+  }
+  // int8/16/32/64, float32/64 <- int8/16/32/64, float32/64
+  else if constexpr(!std::is_unsigned_v<TempT>)
+  {
+    if(temp < lowerBound)
+    {
+      return Underflow;
+    }
+  }
+  // int8/16/32/64 <- uint8/16/32/64
+  // Can't underflow by definition
+
+  if(temp > upperBound)
+  {
+    return Overflow;
+  }
+
+  return Clear;
+}
+
+template <class OutputT>
+Result<OutputT> FormatErrorMessage(std::string&& prefix, ConversionState convState)
+{
+  if(convState == ConversionState::Underflow)
+  {
+    return MakeErrorResult<OutputT>(-6, prefix + " underflow");
+  }
+  if(convState == ConversionState::Overflow)
+  {
+    return MakeErrorResult<OutputT>(-7, prefix + " overflow");
+  }
+
+  return {};
+}
+
+template <typename T>
+Result<std::vector<T>> KeyValueConversion(const nlohmann::json& json, const std::string& key, usize pos, std::vector<T>& outputVec)
+{
+  using OutputT = std::vector<T>;
+
+  if(!json.contains(key))
+  {
+    return MakeErrorResult<OutputT>(-2, fmt::format("Vec{}FilterParameter json '{}' does not contain a value for key '{}'", outputVec.size(), json.dump(), key));
+  }
+
+  if(!json[key].is_number())
+  {
+    return MakeErrorResult<OutputT>(-3, fmt::format("Vec{}FilterParameter json '{}' value for key '{}' is not a number", outputVec.size(), json.dump(), key));
+  }
+
+  ConversionState convState;
+
+  if(json[key].is_number_integer())
+  {
+    if(json[key].is_number_unsigned())
+    {
+      convState = ConversionChecks<T, uint64>(json[key].get<uint64>());
+    }
+    else
+    {
+      convState = ConversionChecks<T, int64>(json[key].get<int64>());
+    }
+  }
+  else
+  {
+    convState = ConversionChecks<T, float64>(json[key].get<float64>());
+  }
+
+  switch(convState)
+  {
+  case ZeroBound: {
+    outputVec[pos] = static_cast<T>(0);
+    break;
+  }
+  case Clear: {
+    outputVec[pos] = json[key].get<T>();
+    break;
+  }
+  case Underflow: {
+    [[fallthrough]];
+  }
+  case Overflow: {
+    return FormatErrorMessage<OutputT>(fmt::format("Vec{}FilterParameter json '{}' cannot convert value at key `{}` to appropriate type without", outputVec.size(), json.dump(), key), convState);
+  }
+  }
+
+  return {};
+}
+
+template <typename T>
+Result<std::vector<T>> JsonValueConversion(const nlohmann::json& json, usize pos, std::vector<T>& outputVec)
+{
+  using OutputT = std::vector<T>;
+
+  if(!json.is_number())
+  {
+    return MakeErrorResult<OutputT>(-3, fmt::format("Vec{}FilterParameter json '{}' value is not a number", outputVec.size(), json.dump()));
+  }
+
+  ConversionState convState;
+
+  if(json.is_number_integer())
+  {
+    if(json.is_number_unsigned())
+    {
+      convState = ConversionChecks<T, uint64>(json.get<uint64>());
+    }
+    else
+    {
+      convState = ConversionChecks<T, int64>(json.get<int64>());
+    }
+  }
+  else
+  {
+    convState = ConversionChecks<T, float64>(json.get<float64>());
+  }
+
+  switch(convState)
+  {
+  case ZeroBound: {
+    outputVec[pos] = static_cast<T>(0);
+    break;
+  }
+  case Clear: {
+    outputVec[pos] = json.get<T>();
+    break;
+  }
+  case Underflow: {
+    [[fallthrough]];
+  }
+  case Overflow: {
+    return FormatErrorMessage<OutputT>(fmt::format("Vec{}FilterParameter json '{}' cannot convert value to appropriate type without", outputVec.size(), json.dump()), convState);
+  }
+  }
+
+  return {};
+}
+
+template <uint8 VecSizeV, typename T>
+Result<std::vector<T>> SpacialVectorConvert(const nlohmann::json& json)
+{
+  using OutputT = std::vector<T>;
+
+  static const std::string x = "x";
+  static const std::string y = "y";
+  static const std::string z = "z";
+  static const std::string w = "w";
+
+  if(!json.is_object())
+  {
+    return MakeErrorResult<OutputT>(-1, fmt::format("Vec3FilterParameter json '{}' is not an object", json.dump()));
+  }
+
+  OutputT value(VecSizeV);
+
+  Result<OutputT> xConv = KeyValueConversion(json, x, 0, value);
+  if(xConv.invalid())
+  {
+    return xConv;
+  }
+
+  if constexpr(VecSizeV > 1)
+  {
+    Result<OutputT> yConv = KeyValueConversion(json, y, 1, value);
+    if(yConv.invalid())
+    {
+      return yConv;
+    }
+  }
+  if constexpr(VecSizeV > 2)
+  {
+    Result<OutputT> zConv = KeyValueConversion(json, z, 2, value);
+    if(zConv.invalid())
+    {
+      return zConv;
+    }
+  }
+  if constexpr(VecSizeV > 3)
+  {
+    Result<OutputT> wConv = KeyValueConversion(json, w, 3, value);
+    if(wConv.invalid())
+    {
+      return wConv;
+    }
+  }
+
+  return {std::move(value)};
+}
 } // namespace
 
 /*
@@ -175,37 +387,21 @@ constexpr StringLiteral k_MinKey = "Min";
 
 Result<RangeFilterParameterConverter::ValueType> RangeFilterParameterConverter::convert(const nlohmann::json& json)
 {
-  if(!json.contains(k_MaxKey))
+  constexpr StringLiteral k_MaxKey = "Max";
+  constexpr StringLiteral k_MinKey = "Min";
+
+  std::vector<float64> value(2);
+  Result<std::vector<float64>> minConv = KeyValueConversion(json, k_MinKey, 0, value);
+  if(minConv.invalid())
   {
-    return MakeErrorResult<ValueType>(-1, fmt::format("RangeFilterParameter json '{}' does not contain '{}'", json.dump(), k_MaxKey));
+    return minConv;
   }
 
-  const auto& maxJson = json[k_MaxKey];
-
-  if(!maxJson.is_number())
+  Result<std::vector<float64>> maxConv = KeyValueConversion(json, k_MaxKey, 1, value);
+  if(maxConv.invalid())
   {
-    return MakeErrorResult<ValueType>(-2, fmt::format("RangeFilterParameter '{}' value '{}' is not a number", k_MaxKey, maxJson.dump()));
+    return maxConv;
   }
-
-  auto maxValue = maxJson.get<float64>();
-
-  if(!json.contains(k_MinKey))
-  {
-    return MakeErrorResult<ValueType>(-3, fmt::format("RangeFilterParameter json '{}' does not contain '{}'", json.dump(), k_MinKey));
-  }
-
-  const auto& minJson = json[k_MinKey];
-
-  if(!minJson.is_number())
-  {
-    return MakeErrorResult<ValueType>(-4, fmt::format("RangeFilterParameter '{}' value '{}' is not a number", k_MinKey, minJson.dump()));
-  }
-
-  auto minValue = minJson.get<float64>();
-
-  std::vector<float64> value;
-  value.push_back(minValue);
-  value.push_back(maxValue);
 
   return {std::move(value)};
 }
@@ -214,27 +410,30 @@ template <typename T>
 Result<typename MultiToVec3FilterParameterConverter<T>::ValueType> MultiToVec3FilterParameterConverter<T>::convert(const nlohmann::json& json1, const nlohmann::json& json2,
                                                                                                                    const nlohmann::json& json3)
 {
+  using OutputT = std::vector<T>;
+
   static const std::string x = "x";
   static const std::string y = "y";
   static const std::string z = "z";
 
-  if(!json1.is_number())
+  std::vector<T> value(3);
+  Result<OutputT> xConv = JsonValueConversion(json1, 0, value);
+  if(xConv.invalid())
   {
-    return MakeErrorResult<ValueType>(-1, fmt::format("IntVec3FilterParameter json '{}' is not a number", json1.dump()));
-  }
-  if(!json2.is_number())
-  {
-    return MakeErrorResult<ValueType>(-1, fmt::format("IntVec3FilterParameter json '{}' is not a number", json2.dump()));
-  }
-  if(!json3.is_number())
-  {
-    return MakeErrorResult<ValueType>(-1, fmt::format("IntVec3FilterParameter json '{}' is not a number", json3.dump()));
+    return xConv;
   }
 
-  std::vector<T> value(3);
-  value[0] = json1.get<T>();
-  value[1] = json2.get<T>();
-  value[2] = json3.get<T>();
+  Result<OutputT> yConv = JsonValueConversion(json2, 1, value);
+  if(yConv.invalid())
+  {
+    return yConv;
+  }
+
+  Result<OutputT> zConv = JsonValueConversion(json3, 2, value);
+  if(zConv.invalid())
+  {
+    return zConv;
+  }
 
   return {std::move(value)};
 }
@@ -255,36 +454,30 @@ template struct SIMPLNX_TEMPLATE_EXPORT MultiToVec3FilterParameterConverter<floa
 template struct SIMPLNX_TEMPLATE_EXPORT MultiToVec3FilterParameterConverter<float64>;
 
 template <typename T>
+Result<typename Vec2FilterParameterConverter<T>::ValueType> Vec2FilterParameterConverter<T>::convert(const nlohmann::json& json)
+{
+  return SpacialVectorConvert<2, T>(json);
+}
+
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<int8>;
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<uint8>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<int16>;
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<uint16>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<int32>;
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<uint32>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<int64>;
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<uint64>;
+
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<float32>;
+template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<float64>;
+
+template <typename T>
 Result<typename Vec3FilterParameterConverter<T>::ValueType> Vec3FilterParameterConverter<T>::convert(const nlohmann::json& json)
 {
-  static const std::string x = "x";
-  static const std::string y = "y";
-  static const std::string z = "z";
-
-  if(!json.is_object())
-  {
-    return MakeErrorResult<ValueType>(-1, fmt::format("IntVec3FilterParameter json '{}' is not an object", json.dump()));
-  }
-
-  if(!json.contains(x))
-  {
-    return MakeErrorResult<ValueType>(-2, fmt::format("IntVec3FilterParameter json '{}' does not contain an X value", json.dump()));
-  }
-  if(!json.contains(y))
-  {
-    return MakeErrorResult<ValueType>(-3, fmt::format("IntVec3FilterParameter json '{}' does not contain a Y value", json.dump()));
-  }
-  if(!json.contains(z))
-  {
-    return MakeErrorResult<ValueType>(-4, fmt::format("IntVec3FilterParameter json '{}' does not contain an Z value", json.dump()));
-  }
-
-  std::vector<T> value(3);
-  value[0] = json[x].get<T>();
-  value[1] = json[y].get<T>();
-  value[2] = json[z].get<T>();
-
-  return {std::move(value)};
+  return SpacialVectorConvert<3, T>(json);
 }
 
 template struct SIMPLNX_TEMPLATE_EXPORT Vec3FilterParameterConverter<int8>;
@@ -305,40 +498,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT Vec3FilterParameterConverter<float64>;
 template <typename T>
 Result<typename Vec4FilterParameterConverter<T>::ValueType> Vec4FilterParameterConverter<T>::convert(const nlohmann::json& json)
 {
-  static const std::string x = "x";
-  static const std::string y = "y";
-  static const std::string z = "z";
-  static const std::string w = "w";
-
-  if(!json.is_object())
-  {
-    return MakeErrorResult<ValueType>(-1, fmt::format("Vec4FilterParameter json '{}' is not an object", json.dump()));
-  }
-
-  if(!json.contains(x))
-  {
-    return MakeErrorResult<ValueType>(-2, fmt::format("Vec4FilterParameter json '{}' does not contain an X value", json.dump()));
-  }
-  if(!json.contains(y))
-  {
-    return MakeErrorResult<ValueType>(-3, fmt::format("Vec4FilterParameter json '{}' does not contain a Y value", json.dump()));
-  }
-  if(!json.contains(z))
-  {
-    return MakeErrorResult<ValueType>(-4, fmt::format("Vec4FilterParameter json '{}' does not contain an Z value", json.dump()));
-  }
-  if(!json.contains(w))
-  {
-    return MakeErrorResult<ValueType>(-4, fmt::format("Vec4FilterParameter json '{}' does not contain an W value", json.dump()));
-  }
-
-  std::vector<T> value(4);
-  value[0] = json[x].get<T>();
-  value[1] = json[y].get<T>();
-  value[2] = json[z].get<T>();
-  value[3] = json[w].get<T>();
-
-  return {std::move(value)};
+  return SpacialVectorConvert<4, T>(json);
 }
 
 template struct SIMPLNX_TEMPLATE_EXPORT Vec4FilterParameterConverter<int8>;
@@ -359,6 +519,8 @@ template struct SIMPLNX_TEMPLATE_EXPORT Vec4FilterParameterConverter<float64>;
 template <typename T>
 Result<typename AxisAngleFilterParameterConverter<T>::ValueType> AxisAngleFilterParameterConverter<T>::convert(const nlohmann::json& json)
 {
+  using OutputT = std::vector<T>;
+
   static const std::string angle = "angle";
   static const std::string h = "h";
   static const std::string k = "k";
@@ -369,28 +531,31 @@ Result<typename AxisAngleFilterParameterConverter<T>::ValueType> AxisAngleFilter
     return MakeErrorResult<ValueType>(-1, fmt::format("AxisAngleFilterParameterConverter json '{}' is not an object", json.dump()));
   }
 
-  if(!json.contains(angle))
+  std::vector<T> value(4);
+
+  Result<OutputT> angleConv = KeyValueConversion(json, angle, 0, value);
+  if(angleConv.invalid())
   {
-    return MakeErrorResult<ValueType>(-2, fmt::format("AxisAngleFilterParameterConverter json '{}' does not contain an X value", json.dump()));
-  }
-  if(!json.contains(h))
-  {
-    return MakeErrorResult<ValueType>(-3, fmt::format("AxisAngleFilterParameterConverter json '{}' does not contain a Y value", json.dump()));
-  }
-  if(!json.contains(k))
-  {
-    return MakeErrorResult<ValueType>(-4, fmt::format("AxisAngleFilterParameterConverter json '{}' does not contain an Z value", json.dump()));
-  }
-  if(!json.contains(l))
-  {
-    return MakeErrorResult<ValueType>(-4, fmt::format("AxisAngleFilterParameterConverter json '{}' does not contain an W value", json.dump()));
+    return angleConv;
   }
 
-  std::vector<T> value(4);
-  value[0] = json[angle].get<T>();
-  value[1] = json[h].get<T>();
-  value[2] = json[k].get<T>();
-  value[3] = json[l].get<T>();
+  Result<OutputT> hConv = KeyValueConversion(json, h, 1, value);
+  if(hConv.invalid())
+  {
+    return hConv;
+  }
+
+  Result<OutputT> kConv = KeyValueConversion(json, k, 2, value);
+  if(kConv.invalid())
+  {
+    return kConv;
+  }
+
+  Result<OutputT> lConv = KeyValueConversion(json, l, 3, value);
+  if(lConv.invalid())
+  {
+    return lConv;
+  }
 
   return {std::move(value)};
 }
@@ -413,40 +578,21 @@ template struct SIMPLNX_TEMPLATE_EXPORT AxisAngleFilterParameterConverter<float6
 template <typename T>
 Result<typename Vec3p1FilterParameterConverter<T>::ValueType> Vec3p1FilterParameterConverter<T>::convert(const nlohmann::json& json1, const nlohmann::json& json2)
 {
-  static const std::string x = "x";
-  static const std::string y = "y";
-  static const std::string z = "z";
-
-  if(!json1.is_object())
+  Result<Vec3p1FilterParameterConverter<T>::ValueType> result = SpacialVectorConvert<3, T>(json1);
+  if(result.invalid())
   {
-    return MakeErrorResult<ValueType>(-1, fmt::format("Vec3+1FilterParameter json '{}' is not an object", json1.dump()));
+    return result;
   }
 
-  if(!json1.contains(x))
+  std::vector<T> outputVec = result.value();
+  outputVec.resize(4);
+  Result<std::vector<T>> xConv = JsonValueConversion(json2, 3, outputVec);
+  if(xConv.invalid())
   {
-    return MakeErrorResult<ValueType>(-2, fmt::format("Vec3+1FilterParameter json '{}' does not contain an X value", json1.dump()));
-  }
-  if(!json1.contains(y))
-  {
-    return MakeErrorResult<ValueType>(-3, fmt::format("Vec3+1FilterParameter json '{}' does not contain a Y value", json1.dump()));
-  }
-  if(!json1.contains(z))
-  {
-    return MakeErrorResult<ValueType>(-4, fmt::format("Vec3+1FilterParameter json '{}' does not contain an Z value", json1.dump()));
+    return xConv;
   }
 
-  if(!json2.is_number())
-  {
-    return MakeErrorResult<ValueType>(-1, fmt::format("Vec3+1FilterParameter json '{}' is not a number", json2.dump()));
-  }
-
-  std::vector<T> value(4);
-  value[0] = json1[x].get<T>();
-  value[1] = json1[y].get<T>();
-  value[2] = json1[z].get<T>();
-  value[3] = json2.get<T>();
-
-  return {std::move(value)};
+  return {outputVec};
 }
 
 template struct SIMPLNX_TEMPLATE_EXPORT Vec3p1FilterParameterConverter<int8>;

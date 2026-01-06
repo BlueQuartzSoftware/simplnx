@@ -36,6 +36,13 @@ public:
   static constexpr StringLiteral k_SharedVertexListName_Key = "output_shared_vertex_list_name";
 
   /**
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
    * @brief Returns the name of the filter.
    * @return
    */

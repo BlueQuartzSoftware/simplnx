@@ -516,7 +516,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Pipeline.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/PipelineFilter.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/PlaceholderFilter.hpp
-
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/LegacySimplFilterUuid.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/AbstractPipelineMessage.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/FilterPreflightMessage.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/NodeAddedMessage.hpp

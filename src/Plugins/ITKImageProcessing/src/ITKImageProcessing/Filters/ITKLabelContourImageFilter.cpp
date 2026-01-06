@@ -146,6 +146,7 @@ namespace
 {
 namespace SIMPL
 {
+constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
 constexpr StringLiteral k_FullyConnectedKey = "FullyConnected";
 constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
 constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
@@ -158,6 +159,7 @@ Result<Arguments> ITKLabelContourImageFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float64>>(args, json, SIMPL::k_BackgroundValueKey, k_BackgroundValue_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_FullyConnectedKey, k_FullyConnected_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));

@@ -183,7 +183,8 @@ Result<Arguments> RobustAutomaticThresholdFilter::FromSIMPLJson(const nlohmann::
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputArrayPathKey, k_InputArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GradientMagnitudeArrayPathKey, k_GradientMagnitudePath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayNameFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ArrayCreationName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ArrayCreationName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

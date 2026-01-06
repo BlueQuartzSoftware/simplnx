@@ -251,11 +251,8 @@ Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::conv
       {
         return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
       }
-      if(IsFlagged(dcJson))
-      {
-        DataPath dcPath({std::move(dataContainerNameResult.value())});
-        value.push_back(std::move(dcPath));
-      }
+
+      bool exportedAsAM = false;
 
       // Attribute Matrix
       if(dcJson.contains(k_AttributeMatricesKey))
@@ -279,11 +276,7 @@ Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::conv
             return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
           }
 
-          if(IsFlagged(amIter))
-          {
-            DataPath amPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
-            value.push_back(std::move(amPath));
-          }
+          bool exportedAsDA = false;
 
           // Data Arrays
           if(amIter.contains(k_DataArraysKey))
@@ -309,12 +302,27 @@ Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::conv
 
               if(IsFlagged(daIter))
               {
+                exportedAsDA = true;
                 DataPath dataPath({dataContainerNameResult.value(), attributeMatrixNameResult.value(), dataArrayNameResult.value()});
                 value.push_back(std::move(dataPath));
               }
             }
           }
+          if(IsFlagged(amIter))
+          {
+            exportedAsAM = true;
+            if(!exportedAsDA)
+            {
+              DataPath amPath({dataContainerNameResult.value(), attributeMatrixNameResult.value()});
+              value.push_back(std::move(amPath));
+            }
+          }
         }
+      }
+      if(!exportedAsAM && IsFlagged(dcJson))
+      {
+        DataPath dcPath({dataContainerNameResult.value()});
+        value.push_back(std::move(dcPath));
       }
     }
   }

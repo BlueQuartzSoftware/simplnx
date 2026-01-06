@@ -129,6 +129,12 @@ namespace SIMPLConversion
 {
 Result<DataContainerSelectionFilterParameterConverter::ValueType> DataContainerSelectionFilterParameterConverter::convert(const nlohmann::json& json)
 {
+  // 6.5 stored as a string
+  if(json.is_string())
+  {
+    return {DataPath({json.get<std::string>()})};
+  }
+
   auto dataContainerNameResult = ReadDataContainerName(json, "DataContainerSelectionFilterParameter");
   if(dataContainerNameResult.invalid())
   {

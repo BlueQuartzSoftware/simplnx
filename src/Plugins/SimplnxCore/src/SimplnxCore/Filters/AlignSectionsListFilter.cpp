@@ -156,28 +156,6 @@ namespace SIMPL
 {
 constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
 } // namespace SIMPL
-
-namespace SIMPLConversionCustom
-{
-struct AttributeMatrixSelectionFilterParameterConverter
-{
-  using ParameterType = AttributeMatrixSelectionParameter;
-  using ValueType = ParameterType::ValueType;
-
-  static Result<ValueType> convert(const nlohmann::json& json)
-  {
-    auto dataContainerNameResult = SIMPLConversion::ReadDataContainerName(json, "AttributeMatrixSelectionFilterParameter");
-    if(dataContainerNameResult.invalid())
-    {
-      return ConvertInvalidResult<ValueType>(std::move(dataContainerNameResult));
-    }
-
-    DataPath dataPath({std::move(dataContainerNameResult.value())});
-
-    return {std::move(dataPath)};
-  }
-};
-} // namespace SIMPLConversionCustom
 } // namespace
 
 Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -186,8 +164,8 @@ Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversionCustom::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey,
+                                                                                                                                      k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

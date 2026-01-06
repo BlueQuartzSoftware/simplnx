@@ -91,7 +91,6 @@ IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataSt
   auto pNumTrianglesNameValue = filterArgs.value<std::string>(k_NumTrianglesName_Key);
 
   Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
   {
     const auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
@@ -118,7 +117,7 @@ IFilter::PreflightResult LabelTriangleGeometryFilter::preflightImpl(const DataSt
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -141,6 +140,7 @@ namespace SIMPL
 {
 constexpr StringLiteral k_CADDataContainerPathKey = "CADDataContainerPath";
 constexpr StringLiteral k_RegionIdArrayNameKey = "RegionIdArrayName";
+constexpr StringLiteral k_RegionIdArrayPathKey = "RegionIdArrayPath";
 constexpr StringLiteral k_TriangleAttributeMatrixNameKey = "TriangleAttributeMatrixName";
 constexpr StringLiteral k_NumTrianglesArrayNameKey = "NumTrianglesArrayName";
 } // namespace SIMPL
@@ -152,10 +152,12 @@ Result<Arguments> LabelTriangleGeometryFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_CADDataContainerPathKey, k_TriangleGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_RegionIdArrayNameKey, k_CreatedRegionIdsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_TriangleAttributeMatrixNameKey, k_TriangleAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumTrianglesArrayNameKey, k_NumTrianglesName_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CADDataContainerPathKey, k_TriangleGeomPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_RegionIdArrayPathKey, k_CreatedRegionIdsPath_Key));
+  results.push_back(
+      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_TriangleAttributeMatrixNameKey, k_TriangleAttributeMatrixName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NumTrianglesArrayNameKey, k_NumTrianglesName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 
