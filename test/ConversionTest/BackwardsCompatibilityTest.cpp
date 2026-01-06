@@ -871,7 +871,8 @@ TEST_CASE("nx::core: 6.6 Mega Pipeline Conversion", "[simplnx][Filter]")
         continue;
       }
 
-      std::string prefix = fmt::format("SIMPL Json conversion error.\n  Filter: '{}'\n  Parameter Key: '{}'\n", filterName, parameterName);
+      std::string prefix = fmt::format("SIMPL Json conversion error. Review the comment above this test case for common error fixes and debugging tips.\n  Filter: '{}'\n  Parameter Key: '{}'\n",
+                                       filterName, parameterName);
       IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
       auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
       if(iter == acceptedTypes.cend())
@@ -905,6 +906,51 @@ TEST_CASE("nx::core: 6.6 Mega Pipeline Conversion", "[simplnx][Filter]")
   CAPTURE(errorStrings);
   REQUIRE(errorStrings.empty());
 }
+
+/**
+ * How To Update Test For Filter Changes/Ports
+ *
+ * Case 1: Add any keys NEW to NX (ie new parameters)
+ * To do this you must update the k_KeyIgnoreMap
+ * It has the following structure, be sure to add a comma to the line proceeding
+ * `// FilterNameHere
+ *  std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("nx_filter_uuid_here").value(), std::vector<std::string>{"parameter_key_1", "parameter_key_2"}}`
+ *
+ * Case 2: Porting Filter from SIMPL
+ * Refer to Case 1 for any new parameter key, and ensure the UUIDMapping in the respective plugin is up to date
+ *
+ * Case 3: Porting a New Parameter from SIMPL
+ * Review the `InitializeMap()` function, at the bottom of this method are known parameters that have yet to be ported.
+ * In order to register a new parameter input it with the following structure
+ * `// NXParameterName <- SIMPLFilterParameterName
+ *  CreateMapInput(Uuid::FromString("nx_parameter_uuid_here").value(), parameter_ValueType_object);`
+ * If you are receiving bad any cast after this a potential fix is explicit casting `parameter_ValueType_object` to ValueType
+ * If the ValueType for the parameter does not implement a `==` operator, an overload of `CreateMapInput()` must be defined the structure follows:
+ * `void CreateMapInput(Uuid&& uuid, NXParameter::ValueType&& value)
+ *  {
+ *    if(k_ParamMap.contains(uuid))
+ *    {
+ *      k_ParamMap[uuid].first.emplace_back(std::make_any<NXParameter::ValueType>(value));
+ *    }
+ *    else
+ *    {
+ *      k_ParamMap.emplace(uuid, std::make_pair(std::vector<std::any>{std::make_any<NXParameter::ValueType>(value)}, [](const std::any& imported, const std::any& exemplar) -> bool {
+ *                           auto importedRef = GetAnyRef<NXParameter::ValueType>(imported);
+ *                           auto exemplarRef = GetAnyRef<NXParameter::ValueType>(exemplar);
+ *                           return importedRef.member_1 == exemplarRef.member_1 && importedRef.member_2 == exemplarRef.member_2;
+ *                         }));
+ *    }
+ *  }`
+ *
+ * Case 4: Debugging Tips
+ * If you want to see the read in value and the expected value at the same time add the following if:
+ * `if(parameterName == "parameter_key_here")
+ *  {
+ *    std::cout << "hit";
+ *  }`
+ *  directly after the following line `const std::any& importedValue = argumentsResult.value().at(parameterName);`
+ *  The `importedValue` is the imported object and `parameterCheck.first` contains the vector of acceptable values
+ */
 
 TEST_CASE("nx::core: 6.5 prebuilt pipeline read in check")
 {
@@ -1020,7 +1066,8 @@ TEST_CASE("nx::core: 6.5 prebuilt pipeline read in check")
           continue;
         }
 
-        std::string prefix = fmt::format("SIMPL Json conversion error.\n  Filter: '{}'\n  Parameter Key: '{}'\n", filterName, parameterName);
+        std::string prefix = fmt::format("SIMPL Json conversion error. Review the comment above this test case for common error fixes and debugging tips.\n  Filter: '{}'\n  Parameter Key: '{}'\n",
+                                         filterName, parameterName);
         IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
         auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
         if(iter == acceptedTypes.cend())
