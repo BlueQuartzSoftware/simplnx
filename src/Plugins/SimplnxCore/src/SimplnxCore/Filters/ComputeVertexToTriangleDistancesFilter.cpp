@@ -67,7 +67,7 @@ Parameters ComputeVertexToTriangleDistancesFilter::parameters() const
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "The triangle geometry's normals array", DataPath{}, std::set<DataType>{DataType::float64}));
 
-  params.insertSeparator(Parameters::Separator{"Output Output Arrays"});
+  params.insertSeparator(Parameters::Separator{"Output Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_DistancesArrayName_Key, "Distances Array", "The array to store distance between vertex and triangle", ""));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ClosestTriangleIdArrayName_Key, "Closest Triangle Ids Array", "The array to store the ID of the closest triangle", ""));
 
