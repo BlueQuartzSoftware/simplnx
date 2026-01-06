@@ -1618,3 +1618,55 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     REQUIRE(status == 1);
   }
 }
+
+TEST_CASE("CompareDataStructures")
+{
+  SECTION("SmallIN100_Final")
+  {
+    auto ds1AFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_Final.dream3d");
+    auto ds1BFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_Final_OOC.dream3d");
+    DataStructure dataStructure1a = UnitTest::LoadDataStructure(ds1AFilePath);
+    DataStructure dataStructure1b = UnitTest::LoadDataStructure(ds1BFilePath);
+    UnitTest::CompareDataStructures(dataStructure1a, dataStructure1b);
+  }
+  SECTION("SmallIN100_Morph")
+  {
+    auto ds2AFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_Morph.dream3d");
+    auto ds2BFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_Morph_OOC.dream3d");
+    DataStructure dataStructure2a = UnitTest::LoadDataStructure(ds2AFilePath);
+    DataStructure dataStructure2b = UnitTest::LoadDataStructure(ds2BFilePath);
+    UnitTest::CompareDataStructures(dataStructure2a, dataStructure2b);
+  }
+  SECTION("SmallIN100_CrystalStats")
+  {
+    auto ds3AFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_CrystalStats.dream3d");
+    auto ds3BFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_CrystalStats_OOC.dream3d");
+    DataStructure dataStructure3a = UnitTest::LoadDataStructure(ds3AFilePath);
+    DataStructure dataStructure3b = UnitTest::LoadDataStructure(ds3BFilePath);
+    UnitTest::CompareDataStructures(dataStructure3a, dataStructure3b);
+  }
+  SECTION("SmallIN100_Mesh")
+  {
+    auto ds4AFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_Mesh.dream3d");
+    auto ds4BFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_Mesh_OOC.dream3d");
+    DataStructure dataStructure4a = UnitTest::LoadDataStructure(ds4AFilePath);
+    DataStructure dataStructure4b = UnitTest::LoadDataStructure(ds4BFilePath);
+    UnitTest::CompareDataStructures(dataStructure4a, dataStructure4b);
+  }
+  SECTION("SmallIN100_Smoothed")
+  {
+    auto ds5AFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_Smoothed.dream3d");
+    auto ds5BFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_Smoothed_OOC.dream3d");
+    DataStructure dataStructure5a = UnitTest::LoadDataStructure(ds5AFilePath);
+    DataStructure dataStructure5b = UnitTest::LoadDataStructure(ds5BFilePath);
+    UnitTest::CompareDataStructures(dataStructure5a, dataStructure5b);
+  }
+  SECTION("SmallIN100_MeshStats")
+  {
+    auto ds6AFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_MeshStats.dream3d");
+    auto ds6BFilePath = fs::path("C:/Users/jmarquis/TestData/OutOfCore/SmallIN100_MeshStats_OOC.dream3d");
+    DataStructure dataStructure6a = UnitTest::LoadDataStructure(ds6AFilePath);
+    DataStructure dataStructure6b = UnitTest::LoadDataStructure(ds6BFilePath);
+    UnitTest::CompareDataStructures(dataStructure6a, dataStructure6b);
+  }
+}

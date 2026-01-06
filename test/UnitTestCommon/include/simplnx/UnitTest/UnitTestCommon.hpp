@@ -845,6 +845,189 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
   }
 }
 
+inline void CompareDataStructures(const DataStructure& dataStructureA, const DataStructure& dataStructureB, const DataPath& parentGroup = DataPath{})
+{
+  try
+  {
+    std::vector<std::string> childrenNamesA;
+    std::vector<std::string> childrenNamesB;
+    if(parentGroup.empty())
+    {
+      // std::cout << "DEBUG TEST: dsA size = " << dataStructureA.getSize() << "\tdsB size = " << dataStructureB.getSize();
+      INFO(fmt::format("DEBUG TEST: dsA size = {}\tdsB size = {}", dataStructureA.getSize(), dataStructureB.getSize()));
+      REQUIRE(dataStructureA.getSize() == dataStructureB.getSize());
+      childrenNamesA = dataStructureA.getDataMap().getNames();
+      childrenNamesB = dataStructureB.getDataMap().getNames();
+    }
+    else
+    {
+      const auto* parentA = dataStructureA.getDataAs<BaseGroup>(parentGroup);
+      const auto* parentB = dataStructureB.getDataAs<BaseGroup>(parentGroup);
+      if(parentA == nullptr || parentB == nullptr)
+      {
+        // std::cout << "DEBUG TEST: parentA or parentB is null!";
+        INFO("DEBUG TEST: parentA or parentB is null!");
+        REQUIRE(false);
+      }
+      // std::cout << "DEBUG TEST: ds parentA size = " << parentA->getSize() << "\tds parentB size = " << parentB->getSize();
+      INFO(fmt::format("DEBUG TEST: ds parentA size = {}\tds parentB size = {}", parentA->getSize(), parentB->getSize()));
+      REQUIRE(parentA->getSize() == parentB->getSize());
+      childrenNamesA = parentA->getDataMap().getNames();
+      childrenNamesB = parentB->getDataMap().getNames();
+    }
+
+    for(int i = 0; i < childrenNamesA.size(); ++i)
+    {
+      // std::cout << "DEBUG TEST: child A name = " << childrenNamesA[i] << "\tchild B name = " << childrenNamesB[i];
+      INFO(fmt::format("DEBUG TEST: child A name = {}\tchild B name = {}", childrenNamesA[i], childrenNamesB[i]));
+      REQUIRE(childrenNamesA[i] == childrenNamesB[i]);
+
+      DataPath childPath = parentGroup.createChildPath(childrenNamesA[i]);
+      if(dataStructureA.getDataAs<BaseGroup>(childPath))
+      {
+        CompareDataStructures(dataStructureA, dataStructureB, childPath);
+      }
+      else
+      {
+        auto* dataArrayA = dataStructureA.getDataAs<IDataArray>(childPath);
+        auto* dataArrayB = dataStructureB.getDataAs<IDataArray>(childPath);
+        auto* neighborlistA = dataStructureA.getDataAs<INeighborList>(childPath);
+        auto* neighborlistB = dataStructureB.getDataAs<INeighborList>(childPath);
+        if(dataArrayA != nullptr && dataArrayB != nullptr)
+        {
+          // std::cout << "DEBUG TEST: data array A DataType = " << DataTypeToString(dataArrayA->getDataType()) << "\tdata array B DataType = " << DataTypeToString(dataArrayB->getDataType());
+          INFO(fmt::format("DEBUG TEST: data array A DataType = {}\tdata array B DataType = {}", DataTypeToString(dataArrayA->getDataType()), DataTypeToString(dataArrayB->getDataType())));
+          REQUIRE(dataArrayA->getDataType() == dataArrayB->getDataType());
+          switch(dataArrayA->getDataType())
+          {
+          case DataType::boolean: {
+            CompareDataArrays<bool>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::int8: {
+            CompareDataArrays<int8>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::int16: {
+            CompareDataArrays<int16>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::int32: {
+            CompareDataArrays<int32>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::int64: {
+            CompareDataArrays<int64>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::uint8: {
+            CompareDataArrays<uint8>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::uint16: {
+            CompareDataArrays<uint16>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::uint32: {
+            CompareDataArrays<uint32>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::uint64: {
+            CompareDataArrays<uint64>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::float32: {
+            CompareDataArrays<float32>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          case DataType::float64: {
+            CompareDataArrays<float64>(dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
+            break;
+          }
+          default: {
+            // std::cout << "DEBUG TEST: Child path (" << childPath.toString() << ") has invalid DataType ( " <<  DataTypeToString(dataArrayA->getDataType()) << ")!";
+            INFO(fmt::format("DEBUG TEST: Child path ({}) has invalid DataType ({})!", childPath.toString(), DataTypeToString(dataArrayA->getDataType())));
+            REQUIRE(false);
+          }
+          }
+        }
+        else if(neighborlistA != nullptr && neighborlistB != nullptr)
+        {
+          // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
+          // DataTypeToString(neighborlistB->getDataType());
+          INFO(fmt::format("DEBUG TEST: neighborlist A DataType = {}\tneighborlist B DataType = {}", DataTypeToString(neighborlistA->getDataType()), DataTypeToString(neighborlistB->getDataType())));
+          REQUIRE(neighborlistA->getDataType() == neighborlistB->getDataType());
+          switch(neighborlistA->getDataType())
+          {
+          case DataType::boolean: {
+            CompareNeighborLists<bool>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::int8: {
+            CompareNeighborLists<int8>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::int16: {
+            CompareNeighborLists<int16>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::int32: {
+            CompareNeighborLists<int32>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::int64: {
+            CompareNeighborLists<int64>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::uint8: {
+            CompareNeighborLists<uint8>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::uint16: {
+            CompareNeighborLists<uint16>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::uint32: {
+            CompareNeighborLists<uint32>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::uint64: {
+            CompareNeighborLists<uint64>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::float32: {
+            CompareNeighborLists<float32>(neighborlistA, neighborlistB);
+            break;
+          }
+          case DataType::float64: {
+            CompareNeighborLists<float64>(neighborlistA, neighborlistB);
+            break;
+          }
+          default: {
+            // std::cout << "DEBUG TEST: Child path (" << childPath.toString() << ") has invalid DataType ( " <<  DataTypeToString(neighborlistA->getDataType()) << ")!";
+            INFO(fmt::format("DEBUG TEST: Child path ({}) has invalid DataType ({})!", childPath.toString(), DataTypeToString(neighborlistA->getDataType())));
+            REQUIRE(false);
+          }
+          }
+        }
+        else if(dataStructureA.getDataAs<StringArray>(childPath) != nullptr && dataStructureB.getDataAs<StringArray>(childPath) != nullptr)
+        {
+          CompareStringArrays(dataStructureA.getDataRefAs<StringArray>(childPath), dataStructureB.getDataRefAs<StringArray>(childPath));
+        }
+        else
+        {
+          // std::cout << "DEBUG TEST: Child path (" << childPath.toString() << ") has different array types in data structure A and B!";
+          INFO(fmt::format("DEBUG TEST: Child path ({}) cannot be found or has different array types in data structures A and B!", childPath.toString()));
+          REQUIRE(false);
+        }
+      }
+    }
+  } catch(std::exception& e)
+  {
+    REQUIRE(false);
+  }
+}
+
 /**
  * @brief Creates a DataArray backed by a DataStore (in memory).
  * @tparam T The primitive type to use, i.e. int8, float, double
