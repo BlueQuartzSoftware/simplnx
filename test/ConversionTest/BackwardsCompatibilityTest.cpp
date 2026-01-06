@@ -720,6 +720,10 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
 } // namespace
 
 /**
+ * Most of the errors are from issues in the filter's `FromSIMPLJson()` function.
+ * The error messages should guide you towards a solution.
+ * The following cases are exceptions that can be hard to diagnose without apriori knowledge.
+ *
  * How To Update Test For Filter Changes/Ports
  *
  * Case 1: Add any keys NEW to NX (ie new parameters)
@@ -908,6 +912,10 @@ TEST_CASE("nx::core: 6.6 Mega Pipeline Conversion", "[simplnx][Filter]")
 }
 
 /**
+ * Most of the errors are from issues in the filter's `FromSIMPLJson()` function.
+ * The error messages should guide you towards a solution.
+ * The following cases are exceptions that can be hard to diagnose without apriori knowledge.
+ *
  * How To Update Test For Filter Changes/Ports
  *
  * Case 1: Add any keys NEW to NX (ie new parameters)
