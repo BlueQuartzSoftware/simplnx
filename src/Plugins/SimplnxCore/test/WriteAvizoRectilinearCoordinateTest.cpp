@@ -15,7 +15,7 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Valid Filter Execution", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter][.][UNIMPLEMENTED][!mayfail]")
+TEST_CASE("SimplnxCore::WriteAvizoRectilinearCoordinateFilter: Valid Filter Execution", "[SimplnxCore][WriteAvizoRectilinearCoordinateFilter]")
 {
   const std::string kDataInputArchive = "6_6_avizo_writers.tar.gz";
   const std::string kExpectedOutputTopLevel = "6_6_avizo_writers";
