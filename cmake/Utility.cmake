@@ -493,7 +493,7 @@ function(AddPythonTest)
       PROPERTY
         ENVIRONMENT
           "PYTHON_TEST_FILE=${ARGS_FILE}"
-          "PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}"
+          # "PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}"
           "Python3_EXECUTABLE=${Python3_EXECUTABLE}"
     )
   else()

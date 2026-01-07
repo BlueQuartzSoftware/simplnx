@@ -49,7 +49,7 @@ if(NOT GENERATOR_IS_MULTI_CONFIG)
   set_property(GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS ${SIMPLNX_EXTRA_LIBRARY_DIRS} ${ITK_LIB_DIR})
 endif()
 
-message(STATUS "* ITK (${ITK_VERSION}) ${ITK_DIR}")
+message(STATUS "ITK (${ITK_VERSION}) ${ITK_DIR}")
 
 include("${simplnx_SOURCE_DIR}/cmake/Plugin.cmake")
 

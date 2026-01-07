@@ -1,4 +1,4 @@
-#include <CxPybind/CxPybind.hpp>
+#include <NxPybind/NxPybind.hpp>
 
 #include <pybind11/pybind11.h>
 
@@ -92,7 +92,7 @@
 #include <filesystem>
 
 using namespace nx::core;
-using namespace nx::core::CxPybind;
+using namespace nx::core::NxPybind;
 
 namespace py = pybind11;
 namespace fs = std::filesystem;

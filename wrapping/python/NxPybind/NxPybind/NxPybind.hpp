@@ -37,7 +37,7 @@
 #define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
 #define SIMPLNX_PY_BIND_PARAMETER(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, nx::core::IParameter)
 
-namespace nx::core::CxPybind
+namespace nx::core::NxPybind
 {
 namespace py = pybind11;
 
@@ -768,4 +768,4 @@ void BindParameterConstructor(py::class_<T, Options...>& object)
 
   object.def(py::init<const std::string&, const std::string&, const std::string&, const typename T::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
 }
-} // namespace nx::core::CxPybind
+} // namespace nx::core::NxPybind

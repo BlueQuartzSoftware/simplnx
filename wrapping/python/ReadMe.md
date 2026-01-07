@@ -7,7 +7,7 @@ are developing new python bindings for `simplnx`.
 
 - cmake
     This directory holds various files used by CMake during the configuration of the python bindings
-- CxPybind
+- NxPybind
     This directory holds C++ implementation details for the python bindings
 - docs
     This directory holds the entirety of the python binding documentation

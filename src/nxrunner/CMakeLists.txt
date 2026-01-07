@@ -31,8 +31,6 @@ target_link_libraries(nxrunner PRIVATE simplnx::simplnx)
 source_group("nxrunner" FILES ${CLI_HDRS} ${CLI_SRCS})
 
 if(SIMPLNX_EMBED_PYTHON)
-  find_package(pybind11 2.10.0 CONFIG REQUIRED)
-
   target_link_libraries(nxrunner
     PRIVATE
       NxPythonEmbed

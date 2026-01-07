@@ -5,9 +5,9 @@ cmake_policy(SET CMP0077 NEW) # ``option()`` honors normal variables.
 cmake_policy(SET CMP0080 NEW) # ``BundleUtilities`` cannot be included at configure time.
 
 # The ``FindPythonInterp`` and ``FindPythonLibs`` modules are removed.
-# if(CMAKE_VERSION VERSION_GREATER "3.27.0")
-#   cmake_policy(SET CMP0148 NEW)
-# endif()
+if(CMAKE_VERSION VERSION_GREATER "3.27.0")
+  cmake_policy(SET CMP0148 NEW)
+endif()
 
 # resolves symlinks before collapsing ../ components.
 if(CMAKE_VERSION VERSION_GREATER "3.28.0")
@@ -18,9 +18,9 @@ endif()
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/Utility.cmake)
 
 # ------------------------------------------------------------------------------
-# Is this a commercial or Free build
+# Are we embedding Python
 # ------------------------------------------------------------------------------
-option(SIMPLNX_BUILD_PYTHON "Enable building Python building" OFF)
+option(SIMPLNX_BUILD_PYTHON "Enable building Python bindings" OFF)
 include(CMakeDependentOption)
 cmake_dependent_option(SIMPLNX_EMBED_PYTHON "Embeds python interpreter in nxrunner" ON "SIMPLNX_BUILD_PYTHON" OFF)
 enable_vcpkg_manifest_feature(TEST_VAR SIMPLNX_BUILD_PYTHON FEATURE "python")
@@ -177,6 +177,20 @@ if(SIMPLNX_CONDA_BUILD)
 else()
   set(SIMPLNX_PIPELINE_INSTALL_DIR "pipelines")
 endif()
+
+# ------------------------------------------------------------------------------
+# Find Python if needed
+# ------------------------------------------------------------------------------
+if(SIMPLNX_BUILD_PYTHON)
+  message(STATUS "/*****************  Finding Python 3 Interpreter  ${CMAKE_CURRENT_LIST_FILE}/")
+  find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+  message(STATUS "/**************************************************************/")
+
+  message(STATUS "/*****************  Finding PyBind11  ${CMAKE_CURRENT_LIST_FILE}/")
+  find_package(pybind11 2.10.0 CONFIG REQUIRED)
+  message(STATUS "/**************************************************************/")
+endif()
+
 
 # -----------------------------------------------------------------------
 # Find dependent libraries
@@ -816,7 +830,7 @@ list(APPEND SIMPLNX_GENERATED_HEADERS
 # Generate Python-Bindings Supporting Files
 set(SIMPLNX_GENERATED_PYTHON_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/SimplnxPython.hpp)
 set(SIMPLNX_PYTHON_MODULE "simplnx")
-configure_file(${simplnx_SOURCE_DIR}/wrapping/python/CxPybind/SimplnxPython.hpp.in ${SIMPLNX_GENERATED_PYTHON_HEADER})
+configure_file(${simplnx_SOURCE_DIR}/wrapping/python/NxPybind/SimplnxPython.hpp.in ${SIMPLNX_GENERATED_PYTHON_HEADER})
 
 list(APPEND SIMPLNX_GENERATED_HEADERS
   ${SIMPLNX_GENERATED_PYTHON_HEADER}

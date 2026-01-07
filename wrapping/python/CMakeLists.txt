@@ -1,10 +1,8 @@
-find_package(pybind11 2.10.0 CONFIG REQUIRED)
+add_library(NxPybind INTERFACE)
 
-add_library(CxPybind INTERFACE)
+target_include_directories(NxPybind INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/NxPybind)
 
-target_include_directories(CxPybind INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/CxPybind)
-
-target_link_libraries(CxPybind
+target_link_libraries(NxPybind
   INTERFACE
     simplnx
     pybind11::headers
@@ -56,7 +54,7 @@ endif()
 target_link_libraries(simplnxpy
   PUBLIC
     SimplnxCore
-    CxPybind
+    NxPybind
 )
 
 target_compile_options(simplnxpy
@@ -236,7 +234,7 @@ function(simplnx_add_python_plugin)
   target_link_libraries(${PYTHON_MODULE_NAME}
     PUBLIC
       ${ARGS_PLUGIN_NAME}
-      CxPybind
+      NxPybind
   )
 
   target_compile_definitions(${PYTHON_MODULE_NAME} PUBLIC PYBIND11_DETAILED_ERROR_MESSAGES)
