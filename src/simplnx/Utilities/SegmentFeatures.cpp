@@ -200,13 +200,14 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
               voxelsList[j] = -1;
             }
           }
+          totalVoxelsSegmented++;
         }
       }
-      totalVoxelsSegmented += size;
     }
 
     // Send a progress message
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{:.2f}% - Features Found: {}", 100.0f * static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels), gnum); });
+    float percentComplete = static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels) * 100.0f;
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{:.2f}% - Current Feature Count: {}", percentComplete, gnum); });
     // Increment or set values for the next iteration
     voxelsList.assign(size + 1, -1);
     gnum++;
