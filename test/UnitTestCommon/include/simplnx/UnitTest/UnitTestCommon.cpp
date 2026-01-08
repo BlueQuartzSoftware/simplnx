@@ -1,5 +1,8 @@
 #include "UnitTestCommon.hpp"
 
+#include <reproc++/reproc.hpp>
+#include <reproc++/run.hpp>
+
 using namespace nx::core::UnitTest;
 
 TestFileSentinel::TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles, bool removeTemp)
