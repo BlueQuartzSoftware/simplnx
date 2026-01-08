@@ -31,7 +31,7 @@ Special operations occur for certain statistics if the supplied array is of type
 
 ## Destination Attribute Matrix 
 
-The user must create a destination **Attribute Matrix** in which the computed statistics will be stored. DREAM3D-NX enforces a rule where any Attribute Matrix cannot containe another AttributeMatrix. With this in mind the user should select a destination that is not itself an Attribute Matrix such as the top level of a Geometry or the top level of the Data Structure itself. The user could have also created a group (using a previous filter) and use that group as the destination.
+The user must create a destination **Attribute Matrix** in which the computed statistics will be stored. DREAM3D-NX enforces a rule where any Attribute Matrix cannot contain another Attribute Matrix. With this in mind, the user should select a destination that is not itself an Attribute Matrix, such as the top level of a Geometry or the top level of the Data Structure itself. The user could have also created a group (using a previous filter) and use that group as the destination.
 
 ![Images/Compute_Array_Statistics_1.png](Images/Compute_Array_Statistics_1.png)
 The user is creating the destination Attribute Matrix inside the `DataContainer` geometry.
