@@ -204,7 +204,7 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
                                                           DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
-  params.insertSeparator(Parameters::Separator{"Algorithm Options"});
+  params.insertSeparator(Parameters::Separator{"Feature/Ensemble Algorithm Options"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_ComputeByIndex_Key, "Compute Statistics Per Feature/Ensemble", "Whether the statistics should be computed on a Feature/Ensemble basis", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
@@ -221,7 +221,7 @@ Parameters ComputeArrayStatisticsFilter::parameters() const
                                                           "The name of the indexing array for the output mapping in the reduced `Destination Attribute Matrix`, not applicable if `None` selected",
                                                           "Reduced Feature Ids Indices"));
 
-  params.insertSeparator(Parameters::Separator{"Output Output Arrays"});
+  params.insertSeparator(Parameters::Separator{"Output Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureHasDataArrayName_Key, "Feature-Has-Data Array Name",
                                                           "The name of the boolean array that indicates whether or not each feature contains any data.  This array is especially useful to help "
                                                           "determine whether or not the outputted statistics are actually valid or not for a given feature.",
