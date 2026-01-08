@@ -38,7 +38,7 @@ public:
   static constexpr StringLiteral k_UseSeed_Key = "use_seed";
   static constexpr StringLiteral k_SeedValue_Key = "seed_value";
   static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-
+  static constexpr StringLiteral k_RandomizeParentIds_Key = "randomize_parent_ids";
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json

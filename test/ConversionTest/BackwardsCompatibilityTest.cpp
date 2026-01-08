@@ -595,7 +595,8 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     // ScalarSegmentFeaturesFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("e067cd97-9bbf-4c92-89a6-3cb4fdb76c93").value(), std::vector<std::string>{"neighbor_scheme_index", "is_periodic"}},
     // MergeTwinsFilter
-    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("f173786a-50cd-4c3c-9518-48ef6fc2bac9").value(), std::vector<std::string>{"use_seed", "seed_value", "seed_array_name"}},
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("f173786a-50cd-4c3c-9518-48ef6fc2bac9").value(),
+                                              std::vector<std::string>{"use_seed", "seed_value", "seed_array_name", "randomize_parent_ids"}},
     // MergeColoniesFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("7e3dbc15-51a3-482c-97c2-f82f7af685bf").value(), std::vector<std::string>{"use_seed", "seed_value"}},
     // EBSDSegmentFeaturesFilter

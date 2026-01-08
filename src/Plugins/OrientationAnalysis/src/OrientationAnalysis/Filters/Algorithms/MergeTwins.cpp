@@ -2,12 +2,10 @@
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
-#include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
 #include <random>
@@ -28,7 +26,7 @@ MergeTwins::MergeTwins(DataStructure& dataStructure, const IFilter::MessageHandl
 MergeTwins::~MergeTwins() noexcept = default;
 
 // -----------------------------------------------------------------------------
-int MergeTwins::getSeed(int32 newFid) const
+int MergeTwins::getSeed(int32 newFid)
 {
   auto& phases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
   auto& featureParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
@@ -42,9 +40,9 @@ int MergeTwins::getSeed(int32 newFid) const
   int32 totalFMinus1 = numFeatures - 1;
 
   usize counter = 0;
-  std::mt19937_64 generator(m_InputValues->Seed); // Standard mersenne_twister_engine seeded
-  std::uniform_real_distribution<float32> distribution(0, 1);
-  auto randFeature = static_cast<int32>(distribution(generator) * static_cast<float32>(totalFMinus1));
+
+  auto randFeature = static_cast<int32>(m_Distribution(m_Generator) * static_cast<float32>(totalFMinus1));
+
   while(seed == -1 && counter < numFeatures)
   {
     if(randFeature > totalFMinus1)
@@ -61,7 +59,7 @@ int MergeTwins::getSeed(int32 newFid) const
   if(seed >= 0)
   {
     featureParentIds[seed] = newFid;
-    ShapeType tDims(1, newFid + 1);
+    ShapeType tDims = {newFid + 1ULL};
     cellFeaturesAttMatrix.resizeTuples(tDims); // this will resize the active array as well
   }
   return seed;
@@ -108,9 +106,74 @@ bool MergeTwins::determineGrouping(int32 referenceFeature, int32 neighborFeature
 }
 
 // -----------------------------------------------------------------------------
+void MergeTwins::groupFeaturesExecute()
+{ // This code used to be in GroupFeatures Superclass
+  auto& conNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->ContiguousNeighborListArrayPath);
+  std::vector<int32_t> groupList;
+
+  int32_t parentCount = 0;
+  int32_t featureSeed = 0;
+  int32_t list1size = 0, list2size = 0, listsize = 0;
+  int32_t neigh = 0;
+
+  while(featureSeed >= 0)
+  {
+    bool m_PatchGrouping = false;
+    parentCount++;
+    featureSeed = getSeed(parentCount);
+    if(featureSeed >= 0)
+    {
+      groupList.push_back(featureSeed);
+      for(std::vector<int32_t>::size_type j = 0; j < groupList.size(); j++)
+      {
+        int32_t firstFeature = groupList[j];
+        list1size = int32_t(conNeighborList[firstFeature].size());
+
+        for(int32_t k = 0; k < 2; k++)
+        {
+          if(k == 0)
+          {
+            listsize = list1size;
+          }
+          else if(k == 1)
+          {
+            listsize = list2size;
+          }
+          for(int32_t l = 0; l < listsize; l++)
+          {
+            if(k == 0)
+            {
+              neigh = conNeighborList[firstFeature][l];
+            }
+            else if(k == 1)
+            {
+            }
+            if(neigh != firstFeature)
+            {
+              if(determineGrouping(firstFeature, neigh, parentCount))
+              {
+                if(!m_PatchGrouping)
+                {
+                  groupList.push_back(neigh);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    groupList.clear();
+  }
+}
+
+// -----------------------------------------------------------------------------
 Result<> MergeTwins::operator()()
 {
   Result result = {};
+
+  m_Generator = std::mt19937_64(std::mt19937::default_seed);
+  m_Distribution = std::uniform_real_distribution<float32>(0.0f, 1.0f);
+
   /* Sanity check that each phase is Cubic High (m3m) Laue class. If not then warn the user.
    * There is code later on to ensure that only m3m Laue class is used.
    */
@@ -120,8 +183,6 @@ Result<> MergeTwins::operator()()
   cellParentIds.fill(-1);
   auto& featureParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
   featureParentIds.fill(-1);
-  auto& active = m_DataStructure.getDataAs<BoolArray>(m_InputValues->ActiveArrayPath)->getDataStoreRef();
-  active.fill(true);
 
   for(usize i = 1; i < laueClasses.getSize(); i++)
   {
@@ -134,37 +195,16 @@ Result<> MergeTwins::operator()()
 
   featureParentIds[0] = 0; // set feature 0 to be parent 0
 
-  { // This code used to be in GroupFeatures Superclass
-    auto& contNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->ContiguousNeighborListArrayPath);
+  // This kicks off the main clustering algorithm. This was taken from SIMPL::GroupFeatures
+  // with sections of the function removed that would _never_ get hit.
+  groupFeaturesExecute();
 
-    int32 parentCount = 1;
-    int32 seed = getSeed(parentCount);
-    int32 neigh;
-    while(seed >= 0)
-    {
-      std::vector<int32> groupList = {seed};
-      for(std::vector<int32>::size_type j = 0; j < groupList.size(); j++)
-      {
-        int32 firstFeature = groupList[j];
-        auto list1size = static_cast<int32>(contNeighborList[firstFeature].size());
-        for(int32 l = 0; l < list1size; l++)
-        {
-          neigh = contNeighborList[firstFeature][l];
-          if(neigh != firstFeature)
-          {
-            if(determineGrouping(firstFeature, neigh, parentCount))
-            {
-              groupList.push_back(neigh);
-            }
-          }
-        }
-      }
+  // Now that the newly created Feature Attribute Matrix is sized correctly, fill
+  // the `Active` array with True values
+  auto& active = m_DataStructure.getDataAs<BoolArray>(m_InputValues->ActiveArrayPath)->getDataStoreRef();
+  active.fill(true);
 
-      parentCount++;
-      seed = getSeed(parentCount);
-    }
-  }
-
+  // Check the number of Parents that were created....
   usize totalFeatures = active.getNumberOfTuples();
   if(totalFeatures < 2)
   {
@@ -172,6 +212,7 @@ Result<> MergeTwins::operator()()
         result, ConvertResult(MakeErrorResult<OutputActions>(-23501, "The number of grouped Features was 0 or 1 which means no grouped Features were detected. A grouping value may be set too high")));
   }
 
+  // Update data arrays.
   int32 numParents = 0;
   usize totalPoints = featureIds.getNumberOfTuples();
   for(usize k = 0; k < totalPoints; k++)
@@ -188,6 +229,7 @@ Result<> MergeTwins::operator()()
   // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
   // allows users visualizing the data to better discern each grain otherwise the coloring
   // would look like a smooth gradient. This is a user input parameter
+  if(m_InputValues->RandomizeParentIds)
   { // Randomize Parent IDs
     m_MessageHandler({IFilter::Message::Type::Info, "Randomizing Parent Ids...."});
     ClusterUtilities::RandomizeFeatureIds(featureParentIds, numParents);

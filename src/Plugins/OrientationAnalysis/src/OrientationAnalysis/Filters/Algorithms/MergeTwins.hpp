@@ -8,6 +8,8 @@
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
+#include <random>
+
 namespace nx::core
 {
 struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
@@ -24,6 +26,7 @@ struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
   DataPath FeatureParentIdsArrayPath;
   DataPath ActiveArrayPath;
   uint64 Seed;
+  bool RandomizeParentIds = false;
 };
 
 /**
@@ -44,9 +47,6 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  int getSeed(int32 newFid) const;
-  bool determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid);
-
 private:
   DataStructure& m_DataStructure;
   const MergeTwinsInputValues* m_InputValues = nullptr;
@@ -54,6 +54,13 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
+
+  std::mt19937_64 m_Generator = {};
+  std::uniform_real_distribution<float32> m_Distribution = {};
+
+  void groupFeaturesExecute();
+  int getSeed(int32 newFid);
+  bool determineGrouping(int32 referenceFeature, int32 neighborFeature, int32 newFid);
 };
 
 } // namespace nx::core

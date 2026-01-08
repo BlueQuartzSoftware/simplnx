@@ -89,6 +89,7 @@ Parameters MergeTwinsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Element Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellParentIdsArrayName_Key, "Parent Ids", "The name of the array specifying to which parent each cell belongs", "ParentIds"));
+  params.insert(std::make_unique<BoolParameter>(k_RandomizeParentIds_Key, "Randomize Parent Ids", "Specifies if parent IDs should be randomized during calculations", false));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(
@@ -232,6 +233,7 @@ Result<> MergeTwinsFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.FeatureParentIdsArrayPath = cellFeatureDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureParentIdsArrayName_Key));
   inputValues.ActiveArrayPath = inputValues.NewCellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.Seed = seed;
+  inputValues.RandomizeParentIds = filterArgs.value<bool>(k_RandomizeParentIds_Key);
 
   return MergeTwins(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
