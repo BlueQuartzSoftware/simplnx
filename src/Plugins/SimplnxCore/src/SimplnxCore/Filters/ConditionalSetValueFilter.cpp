@@ -1,12 +1,12 @@
 #include "ConditionalSetValueFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ConditionalSetValue.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
@@ -18,29 +18,7 @@ constexpr int32 k_EmptyParameterValue = -123;
 constexpr int32 k_IncorrectInputArrayType = -124;
 constexpr int32 k_ConvertReplaceValueTypeError = -125;
 constexpr int32 k_ConvertRemoveValueTypeError = -126;
-
-struct ReplaceValueInArrayFunctor
-{
-  template <typename ScalarType>
-  void operator()(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue)
-  {
-    auto& dataStore = workingArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
-
-    ScalarType removeVal = StringInterpretationUtilities::Convert<ScalarType>(removeValue).value();
-    ScalarType replaceVal = StringInterpretationUtilities::Convert<ScalarType>(replaceValue).value();
-
-    const auto size = dataStore.getNumberOfTuples() * dataStore.getNumberOfComponents();
-
-    for(usize index = 0; index < size; index++)
-    {
-      if(dataStore[index] == removeVal)
-      {
-        dataStore[index] = replaceVal;
-      }
-    }
-  }
-};
-} // namespace
+}; // namespace
 
 namespace nx::core
 {
@@ -160,29 +138,15 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
 Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto useConditionalValue = filterArgs.value<bool>(k_UseConditional_Key);
-  auto replaceValueString = filterArgs.value<std::string>(k_ReplaceValue_Key);
-  auto conditionalArrayPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
-  auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
-  auto invertMask = filterArgs.value<bool>(k_InvertMask_Key);
+  ConditionalSetValueInputValues inputValues;
+  inputValues.ConditionalArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ConditionalArrayPath_Key);
+  inputValues.InvertMask = filterArgs.value<BoolParameter::ValueType>(k_InvertMask_Key);
+  inputValues.RemoveValue = filterArgs.value<StringParameter::ValueType>(k_RemoveValue_Key);
+  inputValues.ReplaceValue = filterArgs.value<StringParameter::ValueType>(k_ReplaceValue_Key);
+  inputValues.SelectedArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SelectedArrayPath_Key);
+  inputValues.UseConditional = filterArgs.value<BoolParameter::ValueType>(k_UseConditional_Key);
 
-  if(useConditionalValue)
-  {
-    DataObject& inputDataObject = dataStructure.getDataRef(selectedArrayPath);
-
-    const IDataArray& conditionalArray = dataStructure.getDataRefAs<IDataArray>(conditionalArrayPath);
-
-    Result<> result = ConditionalReplaceValueInArray(replaceValueString, inputDataObject, conditionalArray, invertMask);
-
-    return result;
-  }
-  else
-  {
-    auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(selectedArrayPath);
-    ExecuteDataFunction(ReplaceValueInArrayFunctor{}, inputDataArray.getDataType(), inputDataArray, filterArgs.value<std::string>(k_RemoveValue_Key), replaceValueString);
-  }
-
-  return {};
+  return ConditionalSetValue(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

@@ -24,12 +24,6 @@ public:
   RotateSampleRefFrameFilter& operator=(const RotateSampleRefFrameFilter&) = delete;
   RotateSampleRefFrameFilter& operator=(RotateSampleRefFrameFilter&&) noexcept = delete;
 
-  enum class RotationRepresentation : uint64
-  {
-    AxisAngle = 0,
-    RotationMatrix = 1
-  };
-
   // Parameter Keys
   static constexpr StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
   static constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";

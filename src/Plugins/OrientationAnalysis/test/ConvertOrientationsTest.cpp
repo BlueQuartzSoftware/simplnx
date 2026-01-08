@@ -271,5 +271,5 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Equal Representations")
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == ::k_MatchingTypesError);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == convert_orientations_constants::k_MatchingTypesError);
 }

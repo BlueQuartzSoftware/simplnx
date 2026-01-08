@@ -1,7 +1,7 @@
 #include "RotateSampleRefFrameFilter.hpp"
 
-#include "simplnx/Common/Range.hpp"
-#include "simplnx/Common/TypeTraits.hpp"
+#include "SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.hpp"
+
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
@@ -18,7 +18,6 @@
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
@@ -33,15 +32,15 @@
 
 #include <algorithm>
 
+#include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
+
 using namespace nx::core;
-using namespace nx::core::ImageRotationUtilities;
 
 namespace
 {
 const std::string k_TempGeometryName = ".rotated_image_geometry";
-
-using RotationRepresentationType = RotateSampleRefFrameFilter::RotationRepresentation;
-
+using RotationRepresentationType = RotateSampleRefFrame::RotationRepresentation;
 } // namespace
 
 namespace nx::core
@@ -85,7 +84,7 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RotateSliceBySlice_Key, "Perform Slice By Slice Transform", "This option is specific to EBSD Data and is not generally used.", false));
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentation_Key, "Rotation Representation", "Which form used to represent rotation (axis angle or rotation matrix)",
-                                                                    to_underlying(RotationRepresentation::AxisAngle), ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
+                                                                    to_underlying(RotationRepresentationType::AxisAngle), ChoicesParameter::Choices{"Axis Angle", "Rotation Matrix"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_RotationAxisAngle_Key, "Rotation Axis-Angle [<ijk>w]", "Axis-Angle in sample reference frame to rotate about.",
                                                          VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place Rotation", "Performs the rotation in-place for the given Image Geometry", true));
@@ -98,8 +97,8 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   const DynamicTableInfo::TableDataType defaultTable{{{1.0F, 0.0F, 0.0F, 0.0F}, {0.0F, 1.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F, 0.0F}, {0.0F, 0.0F, 0.0F, 1.0F}}};
   params.insert(std::make_unique<DynamicTableParameter>(k_RotationMatrix_Key, "Transformation Matrix", "The 4x4 Transformation Matrix", defaultTable, tableInfo));
 
-  params.linkParameters(k_RotationRepresentation_Key, k_RotationAxisAngle_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::AxisAngle)));
-  params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentation::RotationMatrix)));
+  params.linkParameters(k_RotationRepresentation_Key, k_RotationAxisAngle_Key, std::make_any<uint64>(to_underlying(RotationRepresentationType::AxisAngle)));
+  params.linkParameters(k_RotationRepresentation_Key, k_RotationMatrix_Key, std::make_any<uint64>(to_underlying(RotationRepresentationType::RotationMatrix)));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the rotation", DataPath{},
@@ -265,79 +264,30 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 Result<> RotateSampleRefFrameFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  auto sliceBySlice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
-  auto removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  auto keepInputGeometryOrigin = filterArgs.value<bool>(k_KeepInputGeometryOrigin_Key);
+  RotateSampleRefFrameInputValues inputValues;
 
-  auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+  inputValues.SourceGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.DestGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+
+  auto removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+  inputValues.KeepInputGeometryOrigin = filterArgs.value<bool>(k_KeepInputGeometryOrigin_Key);
+
+  auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.SourceGeometryPath);
   auto sourceImageGeomorigin = srcImageGeom.getOrigin();
   if(removeOriginalGeometry)
   {
-    auto tempPathVector = srcImagePath.getPathVector();
+    auto tempPathVector = inputValues.SourceGeometryPath.getPathVector();
     std::string tempName = k_TempGeometryName;
     tempPathVector.back() = tempName;
-    destImagePath = DataPath({tempPathVector});
+    inputValues.DestGeometryPath = DataPath({tempPathVector});
   }
 
-  auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(destImagePath);
+  inputValues.SliceBySlice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
+  inputValues.RotationRepresentationIndex = filterArgs.value<ChoicesParameter::ValueType>(k_RotationRepresentation_Key);
+  inputValues.RotationAxisAngle = filterArgs.value<VectorFloat32Parameter::ValueType>(k_RotationAxisAngle_Key);
+  inputValues.RotationMatrixTable = filterArgs.value<DynamicTableParameter::ValueType>(k_RotationMatrix_Key);
 
-  ImageRotationUtilities::Matrix4fR rotationMatrix;
-
-  auto rotationRepresentationIndex = filterArgs.value<uint64>(RotateSampleRefFrameFilter::k_RotationRepresentation_Key);
-  switch(rotationRepresentationIndex)
-  {
-  case static_cast<uint64>(RotationRepresentationType::AxisAngle): {
-    auto pRotationValue = filterArgs.value<std::vector<float32>>(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key);
-    rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
-    break;
-  }
-  case static_cast<uint64>(RotationRepresentationType::RotationMatrix): {
-    auto rotationMatrixTable = filterArgs.value<DynamicTableParameter::ValueType>(RotateSampleRefFrameFilter::k_RotationMatrix_Key);
-    rotationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(rotationMatrixTable);
-    break;
-  }
-  }
-
-  ImageRotationUtilities::RotateArgs rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, rotationMatrix);
-
-  auto selectedCellDataChildren = GetAllChildArrayDataPaths(dataStructure, srcImageGeom.getCellDataPath());
-  auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
-
-  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(messageHandler, shouldCancel);
-
-  // The actual rotating of the dataStructure arrays is done in parallel where parallel here
-  // refers to the cropping of each DataArray being done on a separate thread.
-  ParallelTaskAlgorithm taskRunner;
-  taskRunner.setParallelizationEnabled(true);
-  const DataPath srcCelLDataAMPath = srcImageGeom.getCellDataPath();
-  const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
-
-  const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
-
-  for(const auto& [dataId, srcDataObject] : srcCellDataAM)
-  {
-    if(shouldCancel)
-    {
-      return {};
-    }
-
-    const auto* srcDataArray = dataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
-    auto* destDataArray = dataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
-    messageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
-
-    ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, rotationMatrix,
-                                                                                            sliceBySlice, &filterProgressCallback);
-  }
-
-  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-
-  if(keepInputGeometryOrigin)
-  {
-    destImageGeom.setOrigin(srcImageGeom.getOrigin());
-  }
-  return {};
+  return RotateSampleRefFrame(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

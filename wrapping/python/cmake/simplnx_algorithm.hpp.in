@@ -1,0 +1,47 @@
+#pragma once
+
+#include "@PLUGIN_NAME@/@PLUGIN_NAME@_export.hpp"
+
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+@PARAMETER_INCLUDES@
+
+/**
+* This is example code to put in the Execute Method of the filter.
+@EXECUTE_EXAMPLE_CODE@
+*/
+
+namespace nx::core
+{
+
+struct @PLUGIN_NAME_UPPER@_EXPORT @ALGO_NAME@InputValues
+{
+@INPUT_VALUE_STRUCT_DEF@};
+
+/**
+ * @class @ALGO_NAME@
+ * @brief This algorithm implements support code for the @ALGO_NAME@Filter
+ */
+
+class @PLUGIN_NAME_UPPER@_EXPORT @ALGO_NAME@
+{
+public:
+  @ALGO_NAME@(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, @ALGO_NAME@InputValues* inputValues);
+  ~@ALGO_NAME@() noexcept;
+
+  @ALGO_NAME@(const @ALGO_NAME@&) = delete;
+  @ALGO_NAME@(@ALGO_NAME@&&) noexcept = delete;
+  @ALGO_NAME@& operator=(const @ALGO_NAME@&) = delete;
+  @ALGO_NAME@& operator=(@ALGO_NAME@&&) noexcept = delete;
+
+  Result<> operator()();
+
+private:
+  DataStructure& m_DataStructure;
+  const @ALGO_NAME@InputValues* m_InputValues = nullptr;
+  const std::atomic_bool& m_ShouldCancel;
+  const IFilter::MessageHandler& m_MessageHandler;
+};
+
+} // namespace complex

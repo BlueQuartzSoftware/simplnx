@@ -1,20 +1,20 @@
 #include "ComputeDifferencesMapFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ComputeDifferencesMap.hpp"
+
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
-
-#include <optional>
-
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <optional>
 #include <vector>
 
 namespace nx::core
 {
+
 namespace
 {
 constexpr int32 k_MissingInputArray = -567;
@@ -76,32 +76,6 @@ WarningCollection warnOnUnsignedTypes(const DataStructure& dataStructure, const 
   return results;
 }
 
-struct ExecuteFindDifferenceMapFunctor
-{
-  template <typename DataType>
-  void operator()(IDataArray* firstArrayPtr, IDataArray* secondArrayPtr, IDataArray* differenceMapPtr)
-  {
-    using store_type = AbstractDataStore<DataType>;
-
-    auto& firstArray = firstArrayPtr->template getIDataStoreRefAs<store_type>();
-    auto& secondArray = secondArrayPtr->template getIDataStoreRefAs<store_type>();
-    auto& differenceMap = differenceMapPtr->template getIDataStoreRefAs<store_type>();
-
-    usize numTuples = firstArray.getNumberOfTuples();
-    int32 numComps = firstArray.getNumberOfComponents();
-
-    for(usize i = 0; i < numTuples; i++)
-    {
-      for(int32 j = 0; j < numComps; j++)
-      {
-        auto firstVal = firstArray[numComps * i + j];
-        auto secondVal = secondArray[numComps * i + j];
-        auto diffVal = firstVal > secondVal ? firstVal - secondVal : secondVal - firstVal;
-        differenceMap[numComps * i + j] = diffVal;
-      }
-    }
-  }
-};
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -233,11 +207,12 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto* firstInputArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(k_FirstInputArrayPath_Key));
-  auto* secondInputArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(k_SecondInputArrayPath_Key));
-  auto* differenceMapArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(k_DifferenceMapArrayPath_Key));
+  ComputeDifferencesMapInputValues inputValues;
 
-  ExecuteDataFunction(ExecuteFindDifferenceMapFunctor{}, firstInputArray->getDataType(), firstInputArray, secondInputArray, differenceMapArray);
+  inputValues.DifferenceMapArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_DifferenceMapArrayPath_Key);
+  inputValues.FirstInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FirstInputArrayPath_Key);
+  inputValues.SecondInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SecondInputArrayPath_Key);
+  return ComputeDifferencesMap(dataStructure, messageHandler, shouldCancel, &inputValues)();
 
   return {};
 }

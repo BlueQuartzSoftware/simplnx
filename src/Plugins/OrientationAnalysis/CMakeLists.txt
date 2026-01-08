@@ -176,21 +176,22 @@ set(filter_algorithms
   ComputeFaceIPFColoring
   ComputeFeatureFaceMisorientation
   ComputeFeatureNeighborCAxisMisalignments
+  ComputeFeatureNeighborMisorientations
   ComputeFeatureReferenceCAxisMisorientations
   ComputeFeatureReferenceMisorientations
+  ComputeFZQuaternions
   ComputeGBCD
   ComputeGBCDMetricBased
   ComputeGBCDPoleFigure
   ComputeGBPDMetricBased
   ComputeIPFColors
   ComputeKernelAvgMisorientations
-  ComputeFeatureNeighborMisorientations
   ComputeMisorientations
   ComputeQuaternionConjugate
   ComputeSchmids
   ComputeShapes
-  ComputeSlipTransmissionMetrics
   ComputeShapesTriangleGeom
+  ComputeSlipTransmissionMetrics
   ComputeTwinBoundaries
   ConvertHexGridToSquareGrid
   ConvertOrientations
