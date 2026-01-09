@@ -28,10 +28,10 @@ Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, c
     }
     if(result.invalid())
     {
-      return {MakeErrorResult(-21002,
-                              fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components):\n\n{}",
-                                          dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
-                                          dataArray.getNumberOfComponents(), result.errors()[0].message))};
+      return MakeErrorResult(-21002,
+                             fmt::format("Error reading dataset '{}' with '{}' total elements into data store for data array '{}' with '{}' total elements ('{}' tuples and '{}' components):\n\n{}",
+                                         dataArrayPath.getTargetName(), datasetReader.getNumElements(), dataArrayPath.toString(), dataArray.getSize(), dataArray.getNumberOfTuples(),
+                                         dataArray.getNumberOfComponents(), result.errors()[0].message));
     }
   } catch(const std::exception& e)
   {

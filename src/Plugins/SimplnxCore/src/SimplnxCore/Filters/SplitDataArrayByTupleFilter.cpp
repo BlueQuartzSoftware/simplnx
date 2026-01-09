@@ -144,9 +144,9 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
 {
   if(splitDimension >= inputArrayTupleShape.size())
   {
-    return {MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange),
-                            fmt::format("The chosen split dimension ({}) is out of range of the input array's tuple shape rank (0-{}).  Please choose a dimension within this range.", splitDimension,
-                                        inputArrayTupleShape.size() - 1))};
+    return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange),
+                           fmt::format("The chosen split dimension ({}) is out of range of the input array's tuple shape rank (0-{}).  Please choose a dimension within this range.", splitDimension,
+                                       inputArrayTupleShape.size() - 1));
   }
 
   splitArrayTupleShapes = std::vector<std::vector<usize>>(splitDimensionCounts.size(), inputArrayTupleShape);
@@ -160,16 +160,16 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
     const auto& row = splitDimensionCounts[i];
     if(row.size() > 1)
     {
-      return {MakeErrorResult(
+      return MakeErrorResult(
           to_underlying(SplitDataArrayByTuple::ErrorCodes::MultiDimensionalSplitCount),
-          fmt::format("Split Array {} contains a multi-dimensional split dimension count ({}).  The split dimension count should be a single dimension.", i, valuesToString(row, "x")))};
+          fmt::format("Split Array {} contains a multi-dimensional split dimension count ({}).  The split dimension count should be a single dimension.", i, valuesToString(row, "x")));
     }
 
     const auto& splitDimensionCount = splitDimensionCounts[i][0];
     if(splitDimensionCount <= 0)
     {
-      return {MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountLessThanZero),
-                              fmt::format("Split Array {} contains \"{}\" at Tuple Dim {}.  All tuple shape values must be >= 1.", i, splitDimensionCount, splitDimension))};
+      return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountLessThanZero),
+                             fmt::format("Split Array {} contains \"{}\" at Tuple Dim {}.  All tuple shape values must be >= 1.", i, splitDimensionCount, splitDimension));
     }
     auto splitCount = static_cast<usize>(splitDimensionCount);
     splitArrayTupleShapes[i][splitDimension] = splitCount;
@@ -179,9 +179,9 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
 
   if(splitCountsTotal != inputArrayTupleShape[splitDimension])
   {
-    return {MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountSumNotEqual),
-                            fmt::format("The sum of your Split Dimension Counts ({} = {}) does not equal the input array's tuple count for dimension {} ({}).",
-                                        valuesToString(splitDimensionCountsUSize, "+"), splitCountsTotal, splitDimension, inputArrayTupleShape[splitDimension]))};
+    return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountSumNotEqual),
+                           fmt::format("The sum of your Split Dimension Counts ({} = {}) does not equal the input array's tuple count for dimension {} ({}).",
+                                       valuesToString(splitDimensionCountsUSize, "+"), splitCountsTotal, splitDimension, inputArrayTupleShape[splitDimension]));
   }
 
   arrayPaths.reserve(splitArrayTupleShapes.size());
@@ -225,8 +225,8 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
     {
       if(newAttrMatrixTupleShape[j] <= 0)
       {
-        return {MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative),
-                                fmt::format("Attribute matrix tuple shape contains \"{}\" at Tuple Dim {}.  All tuple shape values must be >= 1.", newAttrMatrixTupleShape[j], j))};
+        return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNegative),
+                               fmt::format("Attribute matrix tuple shape contains \"{}\" at Tuple Dim {}.  All tuple shape values must be >= 1.", newAttrMatrixTupleShape[j], j));
       }
     }
     tupleShape.resize(newAttrMatrixTupleShape.size());
@@ -244,11 +244,11 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
   auto result = commonMultiplier(inputArrayTupleShape, tupleShape, static_cast<usize>(splitDimension));
   if(result.invalid())
   {
-    return {MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier),
-                            fmt::format("The selected tuple shape ({0}) cannot cleanly split the input array '{1}' tuple shape ({2}) along dimension {3}.\n\n"
-                                        "No integer multiplier applied to dimension {3} of the selected tuple shape ({4}) will produce the corresponding value in the input array's tuple shape ({5}).",
-                                        valuesToString(tupleShape), inputArrayPath.toString(), valuesToString(inputArrayTupleShape), splitDimension, tupleShape[splitDimension],
-                                        inputArrayTupleShape[splitDimension]))};
+    return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier),
+                           fmt::format("The selected tuple shape ({0}) cannot cleanly split the input array '{1}' tuple shape ({2}) along dimension {3}.\n\n"
+                                       "No integer multiplier applied to dimension {3} of the selected tuple shape ({4}) will produce the corresponding value in the input array's tuple shape ({5}).",
+                                       valuesToString(tupleShape), inputArrayPath.toString(), valuesToString(inputArrayTupleShape), splitDimension, tupleShape[splitDimension],
+                                       inputArrayTupleShape[splitDimension]));
   }
   usize numOfAttrMatrixSplitArrays = result.value();
 

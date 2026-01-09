@@ -113,7 +113,7 @@ Result<> ConvertQuaternion::operator()()
   }
   else
   {
-    return {MakeErrorResult(-74836, fmt::format("The input and output arrays must be either Float32 or Float64 type"))};
+    return MakeErrorResult(-74836, fmt::format("The input and output arrays must be either Float32 or Float64 type"));
   }
   return {};
 }

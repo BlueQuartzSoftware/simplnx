@@ -12,6 +12,8 @@
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
+#include <cmath>
+
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
 
@@ -72,7 +74,7 @@ Result<> CAxisSegmentFeatures::operator()()
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
-    return {MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures))};
+    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures));
   }
 
   // Resize the Feature Attribute Matrix
@@ -138,19 +140,18 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighborpoint, int32 gnum) const
 {
   bool group = false;
-  float32 w = std::numeric_limits<float32>::max();
 
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
-  Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
-  Eigen::Vector3f c2{0.0f, 0.0f, 0.0f};
   Float32Array& currentQuat = *m_QuatsArray;
   Int32Array& featureIds = *m_FeatureIdsArray;
   Int32Array& cellPhases = *m_CellPhases;
+
   bool neighborPointIsGood = false;
   if(m_GoodVoxelsArray != nullptr)
   {
     neighborPointIsGood = m_GoodVoxelsArray->isTrue(neighborpoint);
   }
+
   if(featureIds[neighborpoint] == 0 && (!m_InputValues->UseMask || neighborPointIsGood))
   {
     if(cellPhases[referencepoint] == cellPhases[neighborpoint])
@@ -162,8 +163,8 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
       const ebsdlib::OrientationMatrixFType oMatrix2 = q2.toOrientationMatrix();
 
       // Convert the quaternion matrices to transposed g matrices so when caxis is multiplied by it, it will give the sample direction that the caxis is along
-      c1 = oMatrix1.transpose() * cAxis;
-      c2 = oMatrix2.transpose() * cAxis;
+      Eigen::Vector3f c1 = oMatrix1.transpose() * cAxis;
+      Eigen::Vector3f c2 = oMatrix2.transpose() * cAxis;
 
       // normalize so that the dot product can be taken below without
       // dividing by the magnitudes (they would be 1)
@@ -171,8 +172,8 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
       c2.normalize();
 
       // Validate value of w falls between [-1, 1] to ensure that acos returns a valid value
-      w = std::clamp(((c1[0] * c2[0]) + (c1[1] * c2[1]) + (c1[2] * c2[2])), -1.0F, 1.0F);
-      w = acosf(w);
+      float32 w = std::clamp(((c1[0] * c2[0]) + (c1[1] * c2[1]) + (c1[2] * c2[2])), -1.0F, 1.0F);
+      w = std::acos(w);
       if(w <= m_InputValues->MisorientationTolerance || (Constants::k_PiD - w) <= m_InputValues->MisorientationTolerance)
       {
         group = true;

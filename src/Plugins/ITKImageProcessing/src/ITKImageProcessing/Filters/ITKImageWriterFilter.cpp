@@ -242,7 +242,7 @@ Result<> SaveImageData(const fs::path& filePath, IDataStore& sliceData, const IT
   {
     if(!fs::create_directories(fs::absolute(filePath).parent_path()))
     {
-      return {MakeErrorResult(-19000, fmt::format("Error Creating output path for image '{}'", fs::absolute(filePath).string()))};
+      return MakeErrorResult(-19000, fmt::format("Error Creating output path for image '{}'", fs::absolute(filePath).string()));
     }
   }
 

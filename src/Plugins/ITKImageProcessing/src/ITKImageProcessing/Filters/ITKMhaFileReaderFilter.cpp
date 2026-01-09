@@ -479,7 +479,7 @@ Result<> ITKMhaFileReaderFilter::executeImpl(DataStructure& dataStructure, const
       auto applyTransformationToGeometryFilter = filterListPtr->createFilter(k_ApplyTransformationToGeometryFilterHandle);
       if(applyTransformationToGeometryFilter == nullptr)
       {
-        return {MakeErrorResult(-5001, fmt::format("Error applying transformation to geometry - Unable to instantiate filter 'Apply Transformation To Geometry'."))};
+        return MakeErrorResult(-5001, fmt::format("Error applying transformation to geometry - Unable to instantiate filter 'Apply Transformation To Geometry'."));
       }
 
       Arguments args;
