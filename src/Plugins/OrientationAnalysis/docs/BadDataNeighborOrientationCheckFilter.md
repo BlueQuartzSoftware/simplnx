@@ -6,9 +6,13 @@ Orientation Analysis (Cleanup)
 
 ## Description
 
-This filter will calculate the misorientation between a cell and its 6 face neighbor cells if the *Mask* value is true of the target cell. If the misorientation falls below the user defined threshold for the user defined minimum number of neighbors, then the target cell will have its *Mask* value changed from false to true.
+This filter will calculate the misorientation between a cell and each of its 6 face neighbor cells if the *Mask* value of
+the target cell is **FALSE**. If the misorientation falls below the user defined threshold for the user defined minimum number of 
+neighbors, then the target cell will have its *Mask* value changed from false to true.
 
-The filter will iteratively reduce the required number of neighbors from 6 until it reaches the user defined number. So, if the user selects a required number of neighbors of 4, then the filter will run with a required number of neighbors of 6, then 5, then 4 before finishing.
+The filter will iteratively reduce the required number of neighbors from 6 until it reaches the user defined number. 
+So, if the user selects a required number of neighbors of 4, then the filter will run with a required number of neighbors 
+of 6, then 5, then 4 before finishing.
 
 ### Warning - Data Modification
 
