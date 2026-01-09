@@ -89,6 +89,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       column = i % dims[0];
       row = (i / dims[0]) % dims[1];
       plane = i / (dims[0] * dims[1]);
+      ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
       for(int32 j = 0; j < 6; j++)
       {
         neighbor = i + neighpoints[j];
@@ -105,12 +106,10 @@ Result<> BadDataNeighborOrientationCheck::operator()()
         // clang-format on
         else if(maskCompare->isTrue(neighbor))
         {
-          ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-          ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
-
           if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
           {
             uint32 laueClass1 = crystalStructures[cellPhases[i]];
+            ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
             // Quaternion Math is not commutative so do not reorder
             ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
             w = axisAngle[3];
@@ -149,6 +148,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
           column = i % dims[0];
           row = (i / dims[0]) % dims[1];
           plane = i / (dims[0] * dims[1]);
+          ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
           for(int64 j = 0; j < 6; j++)
           {
             neighbor = i + neighpoints[j];
@@ -165,12 +165,10 @@ Result<> BadDataNeighborOrientationCheck::operator()()
             // clang-format on
             else if(!maskCompare->isTrue(neighbor))
             {
-              ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-              ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
-
               if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
               {
                 uint32 laueClass1 = crystalStructures[cellPhases[i]];
+                ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
                 // Quaternion Math is not commutative so do not reorder
                 ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                 w = axisAngle[3];
