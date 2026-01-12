@@ -1,8 +1,8 @@
 #include "ComputeBoundaryStrengths.hpp"
 
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
@@ -48,8 +48,9 @@ Result<> ComputeBoundaryStrengths::operator()()
   float32 mPrime_1, mPrime_2, F1_1, F1_2, F1spt_1, F1spt_2, F7_1, F7_2;
   int32 gName1, gName2;
 
-  float64 LD[3] = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
-  MatrixMath::Normalize3x1(LD);
+  nx::core::Vec3<float64> LD = {m_InputValues->Loading[0], m_InputValues->Loading[1], m_InputValues->Loading[2]};
+  LD = LD.normalize();
+
   bool emitLaueClassWarning = false;
 
   for(usize i = 0; i < numTriangles; i++)
@@ -70,14 +71,14 @@ Result<> ComputeBoundaryStrengths::operator()()
       if(crystalStructures[laueClassG1] == crystalStructures[laueClassG2] && featurePhases[gName1] > 0)
       {
         ebsdlib::LaueOps::Pointer laueClass = orientationOps[crystalStructures[featurePhases[gName1]]];
-        mPrime_1 = static_cast<float32>(laueClass->getmPrime(q1, q2, LD));
-        mPrime_2 = static_cast<float32>(laueClass->getmPrime(q2, q1, LD));
-        F1_1 = static_cast<float32>(laueClass->getF1(q1, q2, LD, true));
-        F1_2 = static_cast<float32>(laueClass->getF1(q2, q1, LD, true));
-        F1spt_1 = static_cast<float32>(laueClass->getF1spt(q1, q2, LD, true));
-        F1spt_2 = static_cast<float32>(laueClass->getF1spt(q2, q1, LD, true));
-        F7_1 = static_cast<float32>(laueClass->getF7(q1, q2, LD, true));
-        F7_2 = static_cast<float32>(laueClass->getF7(q2, q1, LD, true));
+        mPrime_1 = static_cast<float32>(laueClass->getmPrime(q1, q2, LD.data()));
+        mPrime_2 = static_cast<float32>(laueClass->getmPrime(q2, q1, LD.data()));
+        F1_1 = static_cast<float32>(laueClass->getF1(q1, q2, LD.data(), true));
+        F1_2 = static_cast<float32>(laueClass->getF1(q2, q1, LD.data(), true));
+        F1spt_1 = static_cast<float32>(laueClass->getF1spt(q1, q2, LD.data(), true));
+        F1spt_2 = static_cast<float32>(laueClass->getF1spt(q2, q1, LD.data(), true));
+        F7_1 = static_cast<float32>(laueClass->getF7(q1, q2, LD.data(), true));
+        F7_2 = static_cast<float32>(laueClass->getF7(q2, q1, LD.data(), true));
       }
       else
       {

@@ -6,7 +6,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>

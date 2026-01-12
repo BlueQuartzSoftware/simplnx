@@ -27,7 +27,6 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"

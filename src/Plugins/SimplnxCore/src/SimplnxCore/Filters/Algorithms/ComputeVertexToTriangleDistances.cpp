@@ -1,5 +1,6 @@
 #include "ComputeVertexToTriangleDistances.hpp"
 
+#include "simplnx/Common/Matrix3X1.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -16,203 +17,17 @@ using RTreeType = RTree<size_t, float, 3, float>;
 using SharedTriListT = AbstractDataStore<IGeometry::SharedTriList::value_type>;
 using SharedVertexListT = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 
-/**
- * @brief 3x1 Matrix as a row.
- * @tparam
- */
-template <typename T>
-class Matrix3X1
+// using Matrix3X1F = Matrix3X1<float>;
 
-{
-public:
-  using SelfType = Matrix3X1<T>;
-
-  /**
-   * @brief Default constructor will create [0,0,0] matrix.
-   */
-  Matrix3X1() = default;
-
-  /**
-   * @brief Copies the values into the matrix
-   * @param v0
-   * @param v1
-   * @param v2
-   */
-  Matrix3X1(T v0, T v1, T v2)
-  : m_Data(std::array<T, 3>{v0, v1, v2})
-  {
-  }
-
-  Matrix3X1(const Matrix3X1&) = default;                // Copy Constructor Default Implemented
-  Matrix3X1(Matrix3X1&&) noexcept = default;            // Move Constructor Default Implemented
-  Matrix3X1& operator=(const Matrix3X1&) = default;     // Copy Assignment Default Implemented
-  Matrix3X1& operator=(Matrix3X1&&) noexcept = default; // Move Assignment Default Implemented
-
-  ~Matrix3X1() = default;
-
-  /**
-   * @brief Returns a reference to the value at index
-   * @param index
-   * @return
-   */
-  T& operator[](size_t index)
-  {
-    return m_Data[index]; // No bounds checking.
-  }
-
-  /**
-   * @brief Returns a reference to the value at index
-   * @param index
-   * @return
-   */
-  const T& operator[](size_t index) const
-  {
-    return m_Data[index];
-  }
-
-  /**
-   * @brief Returns the pointer to the underlying array
-   * @return
-   */
-  T* data()
-  {
-    return m_Data.data();
-  }
-
-  /**
-   * @brief Performs the Matrix Addition.
-   * @param rhs
-   * @return result
-   */
-  SelfType operator+(const SelfType& rhs) const
-  {
-    return {m_Data[0] + rhs[0], m_Data[1] + rhs[1], m_Data[2] + rhs[2]};
-  }
-
-  /**
-   * @brief Performs the Matrix Subtraction
-   * @param rhs
-   * @return outMat result
-   */
-  SelfType operator-(const SelfType& rhs) const
-  {
-    return {m_Data[0] - rhs[0], m_Data[1] - rhs[1], m_Data[2] - rhs[2]};
-  }
-
-  /**
-   * @brief Multiplies each element of a 3x1 matrix by the value scalar.
-   * @param scalar Value to multiply each element by.
-   */
-  SelfType operator*(T scalar) const
-  {
-    return {m_Data[0] * scalar, m_Data[1] * scalar, m_Data[2] * scalar};
-  }
-
-  /**
-   * @brief Performs an "in place" normalization of the 3x1 vector.
-   * @param g
-   */
-  SelfType normalize()
-  {
-    SelfType outMat = this;
-
-    T denominator = outMat[0] * outMat[0] + outMat[1] * outMat[1] + outMat[2] * outMat[2];
-    denominator = sqrt(denominator);
-    outMat[0] = outMat[0] / denominator;
-    if(outMat[0] > 1.0)
-    {
-      outMat[0] = 1.0;
-    }
-    outMat[1] = outMat[1] / denominator;
-    if(outMat[1] > 1.0)
-    {
-      outMat[1] = 1.0;
-    }
-    outMat[2] = outMat[2] / denominator;
-    if(outMat[2] > 1.0)
-    {
-      outMat[2] = 1.0;
-    }
-    return outMat;
-  }
-
-  /**
-   * @brief Performs an "in place" normalization of the 3x1 vector
-   * @param i
-   * @param j
-   * @param k
-   */
-  static bool normalize(T& i, T& j, T& k)
-  {
-    T denominator;
-    denominator = std::sqrt(((i * i) + (j * j) + (k * k)));
-    if(denominator == 0)
-    {
-      return false;
-    }
-    i = i / denominator;
-    j = j / denominator;
-    k = k / denominator;
-  }
-
-  /**
-   * @brief The dot product of 2 vectors a & b
-   * @param a 1x3 Vector
-   * @param b 1x3 Vector
-   * @return
-   */
-  T dot(const SelfType& b) const
-  {
-    return (m_Data[0] * b[0] + m_Data[1] * b[1] + m_Data[2] * b[2]);
-  }
-
-  /**
-   * @brief Performs a Cross Product of "this into b" and returns ths result.
-   * A X B = C
-   * @param b
-   * @return
-   */
-
-  SelfType cross(const SelfType& b)
-  {
-    SelfType c;
-    c[0] = m_Data[1] * b[2] - m_Data[2] * b[1];
-    c[1] = m_Data[2] * b[0] - m_Data[0] * b[2];
-    c[2] = m_Data[0] * b[1] - m_Data[1] * b[0];
-    return c;
-  }
-
-  /**
-   * @brief Finds the cosine of the angle Theta between this vector and another vector
-   * @param vectorB
-   * @return
-   */
-  float32 cosThetaBetweenVectors(const SelfType& vectorB) const
-  {
-    float32 norm1 = sqrtf(m_Data[0] * m_Data[0] + m_Data[1] * m_Data[1] + m_Data[2] * m_Data[2]);
-    float32 norm2 = sqrtf(vectorB[0] * vectorB[0] + vectorB[1] * vectorB[1] + vectorB[2] * vectorB[2]);
-    if(norm1 == 0 || norm2 == 0)
-    {
-      return 1.0;
-    }
-    return (m_Data[0] * vectorB[0] + m_Data[1] * vectorB[1] + m_Data[2] * vectorB[2]) / (norm1 * norm2);
-  }
-
-private:
-  std::array<T, 3> m_Data = {0.0, 0.0, 0.0};
-};
-
-using Vec3fa = Matrix3X1<float>;
-
-Vec3fa operator*(const float scalar, const Vec3fa& rhs)
-{
-  return {rhs[0] * scalar, rhs[1] * scalar, rhs[2] * scalar};
-}
-
-Vec3fa operator*(const Vec3fa& rhs, const float scalar)
-{
-  return {rhs[0] * scalar, rhs[1] * scalar, rhs[2] * scalar};
-}
+// Matrix3X1F operator*(const float scalar, const Matrix3X1F& rhs)
+// {
+//   return {rhs[0] * scalar, rhs[1] * scalar, rhs[2] * scalar};
+// }
+//
+// Matrix3X1F operator*(const Matrix3X1F& rhs, const float scalar)
+// {
+//   return {rhs[0] * scalar, rhs[1] * scalar, rhs[2] * scalar};
+// }
 
 /**
  * @brief Take from https://github.com/embree/embree/blob/master/tutorials/common/math/closest_point.h
@@ -223,11 +38,11 @@ Vec3fa operator*(const Vec3fa& rhs, const float scalar)
  * @param c
  * @return
  */
-Vec3fa closestPointTriangle(const Vec3fa& p, const Vec3fa& a, const Vec3fa& b, const Vec3fa& c)
+Matrix3X1F closestPointTriangle(const Matrix3X1F& p, const Matrix3X1F& a, const Matrix3X1F& b, const Matrix3X1F& c)
 {
-  const Vec3fa ab = b - a;
-  const Vec3fa ac = c - a;
-  const Vec3fa ap = p - a;
+  const Matrix3X1F ab = b - a;
+  const Matrix3X1F ac = c - a;
+  const Matrix3X1F ap = p - a;
 
   const float d1 = ab.dot(ap); // dot(ab, ap);
   const float d2 = ac.dot(ap); // dot(ac, ap);
@@ -236,7 +51,7 @@ Vec3fa closestPointTriangle(const Vec3fa& p, const Vec3fa& a, const Vec3fa& b, c
     return a;
   }
 
-  const Vec3fa bp = p - b;
+  const Matrix3X1F bp = p - b;
   const float d3 = ab.dot(bp); // dot(ab, bp);
   const float d4 = ac.dot(bp); // dot(ac, bp);
   if(d3 >= 0.f && d4 <= d3)
@@ -244,7 +59,7 @@ Vec3fa closestPointTriangle(const Vec3fa& p, const Vec3fa& a, const Vec3fa& b, c
     return b;
   }
 
-  const Vec3fa cp = p - c;
+  const Matrix3X1F cp = p - c;
   const float d5 = ab.dot(cp); // dot(ab, cp);
   const float d6 = ac.dot(cp); // dot(ac, cp);
   if(d6 >= 0.f && d5 <= d6)
@@ -276,23 +91,23 @@ Vec3fa closestPointTriangle(const Vec3fa& p, const Vec3fa& a, const Vec3fa& b, c
   const float denominator = 1.f / (va + vb + vc);
   const float v = vb * denominator;
   const float w = vc * denominator;
-  const Vec3fa pointInTriangle = a + v * ab + w * ac;
+  const Matrix3X1F pointInTriangle = a + v * ab + w * ac;
 
   return pointInTriangle;
 }
 
-float32 PointTriangleDistance(const Vec3fa& point, const Vec3fa& vert0, const Vec3fa& vert1, const Vec3fa& vert2, const int64 triangle, const Float64AbstractDataStore& normals)
+float32 PointTriangleDistance(const Matrix3X1F& point, const Matrix3X1F& vert0, const Matrix3X1F& vert1, const Matrix3X1F& vert2, const int64 triangle, const Float64AbstractDataStore& normals)
 {
 
-  Vec3fa closestPointInTriangle = closestPointTriangle(point, vert0, vert1, vert2);
+  Matrix3X1F closestPointInTriangle = closestPointTriangle(point, vert0, vert1, vert2);
 
   auto diffPoint = point - closestPointInTriangle; // Gives a vector pointing from the closest point in triangle to point
   // Only do the dot-product of the vector with itself, so we don't incur the penalty of a square root that we might not need
   float dist = diffPoint.dot(diffPoint);
 
-  Vec3fa normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
+  Matrix3X1F normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
 
-  float32 cosTheta = normal.cosThetaBetweenVectors(diffPoint);
+  float32 cosTheta = normal.cosTheta(diffPoint);
 
   if(cosTheta < 0.0f)
   {
@@ -336,7 +151,7 @@ public:
     size_t numTuples = m_SharedTriangleList.getNumberOfTuples(); // allocate vector of all possible indexes
     for(usize v = start; v < end; v++)
     {
-      Vec3fa sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
+      Matrix3X1F sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
 
       std::vector<size_t> hitTriangleIds;
       std::function<bool(size_t)> func = [&](size_t triangleIndex) {
@@ -357,10 +172,10 @@ public:
           auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
           auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
           auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
-          const Vec3fa point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
-          const Vec3fa v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
-          const Vec3fa v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
-          const Vec3fa v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
+          const Matrix3X1F point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
+          const Matrix3X1F v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
+          const Matrix3X1F v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
+          const Matrix3X1F v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
 
           float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
 
@@ -383,10 +198,10 @@ public:
           auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
           auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
           auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
-          const Vec3fa point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
-          const Vec3fa v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
-          const Vec3fa v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
-          const Vec3fa v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
+          const Matrix3X1F point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
+          const Matrix3X1F v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
+          const Matrix3X1F v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
+          const Matrix3X1F v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
 
           float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
 

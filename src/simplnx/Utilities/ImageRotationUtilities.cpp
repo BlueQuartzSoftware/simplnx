@@ -1,7 +1,5 @@
 #include "ImageRotationUtilities.hpp"
 
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
-
 #include <algorithm>
 
 namespace nx::core::ImageRotationUtilities
@@ -183,8 +181,8 @@ Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::Val
   // Convert Degrees to Radians for the last element
   const float rotAngle = pRotationValue[3] * nx::core::Constants::k_PiOver180F;
   // Ensure the axis part is normalized
-  FloatVec3 normalizedAxis(pRotationValue[0], pRotationValue[1], pRotationValue[2]);
-  MatrixMath::Normalize3x1<float32>(normalizedAxis.data());
+  FloatVec3 normalizedAxis = FloatVec3(pRotationValue[0], pRotationValue[1], pRotationValue[2]).normalize();
+  normalizedAxis = normalizedAxis.normalize();
 
   const float cosTheta = cos(rotAngle);
   const float oneMinusCosTheta = 1 - cosTheta;

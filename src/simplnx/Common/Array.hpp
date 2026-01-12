@@ -791,6 +791,12 @@ public:
     return std::sqrt(dot(*this));
   }
 
+  Vec3 normalize() const
+  {
+    T mag = magnitude();
+    return Vec3((*this)[0] / mag, (*this)[1] / mag, (*this)[2] / mag);
+  }
+
   /**
    * @brief Multiples this Vec3 with another Vec3 using element wise multiplication and returns a new instance
    * @param Vec3
@@ -1432,6 +1438,7 @@ public:
 };
 
 using FloatVec3 = Vec3<float32>;
+using Float64Vec3 = Vec3<float64>;
 using IntVec3 = Vec3<int32>;
 using UIntVec3 = Vec3<uint32>;
 using SizeVec3 = Vec3<usize>;

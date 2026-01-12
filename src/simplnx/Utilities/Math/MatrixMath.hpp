@@ -34,6 +34,8 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #pragma once
 
+#error DEPRECATED
+
 #include "simplnx/simplnx_export.hpp"
 
 #include <cmath>

@@ -1,9 +1,8 @@
 #include "ComputeGBCDPoleFigure.hpp"
 
-#include "simplnx/Common/Bit.hpp"
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelData2DAlgorithm.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
@@ -63,8 +62,8 @@ public:
     // Matrix3X1<float> misEuler1 = {0.0f, 0.0f, 0.0f};
 
     float32 misAngle = m_MisorientationRotation[0] * nx::core::Constants::k_PiOver180F;
-    float32 normAxis[3] = {m_MisorientationRotation[1], m_MisorientationRotation[2], m_MisorientationRotation[3]};
-    MatrixMath::Normalize3x1(normAxis);
+    nx::core::FloatVec3 normAxis = {m_MisorientationRotation[1], m_MisorientationRotation[2], m_MisorientationRotation[3]};
+    normAxis = normAxis.normalize();
     // convert axis angle to matrix representation of misorientation
     ebsdlib::Matrix3X3<float> dg = ebsdlib::AxisAngleFType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix().toGMatrix();
     // take inverse of misorientation variable to use for switching symmetry

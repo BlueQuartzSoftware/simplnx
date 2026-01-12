@@ -359,6 +359,8 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Types.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/TypesUtility.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Uuid.hpp
+    ${SIMPLNX_SOURCE_DIR}/Common/Matrix3X3.hpp
+    ${SIMPLNX_SOURCE_DIR}/Common/Matrix3X1.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Core/Application.hpp
   ${SIMPLNX_SOURCE_DIR}/Core/Preferences.hpp
@@ -572,7 +574,7 @@ set(SIMPLNX_HDRS
     ${SIMPLNX_SOURCE_DIR}/Utilities/NeighborUtilities.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
+ # ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/StatisticsCalculations.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/VertexUtilities.hpp
@@ -766,7 +768,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
+  #${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.cpp
