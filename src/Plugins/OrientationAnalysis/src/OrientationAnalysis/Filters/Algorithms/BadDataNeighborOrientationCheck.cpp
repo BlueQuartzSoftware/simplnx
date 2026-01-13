@@ -7,7 +7,6 @@
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
-#include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
@@ -43,7 +42,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   usize totalPoints = quats.getNumberOfTuples();
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
@@ -85,6 +84,11 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     // If the mask was set to false, then we check this voxel
     if(!maskCompare->isTrue(voxelIdx))
     {
+      // We precalculate the positive voxel quaternion and laue class here to prevent reading and recalculating it for each face below
+      ebsdlib::QuatD quat1(quats[voxelIdx * 4], quats[voxelIdx * 4 + 1], quats[voxelIdx * 4 + 2], quats[voxelIdx * 4 + 3]);
+      quat1.positiveOrientation();
+      uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
+
       column = voxelIdx % dims[0];
       row = (voxelIdx / dims[0]) % dims[1];
       plane = voxelIdx / (dims[0] * dims[1]);
@@ -113,16 +117,12 @@ Result<> BadDataNeighborOrientationCheck::operator()()
           // Both Cell Phases MUST be the same and be a valid Phase
           if(cellPhases[voxelIdx] == cellPhases[neighborIdx] && cellPhases[voxelIdx] > 0)
           {
-            // Generate Quaternions that are both "Positive" rotations
-            ebsdlib::QuatD quat1(quats[voxelIdx * 4], quats[voxelIdx * 4 + 1], quats[voxelIdx * 4 + 2], quats[voxelIdx * 4 + 3]);
-            quat1.positiveOrientation();
             ebsdlib::QuatD quat2(quats[neighborIdx * 4], quats[neighborIdx * 4 + 1], quats[neighborIdx * 4 + 2], quats[neighborIdx * 4 + 3]);
             quat2.positiveOrientation();
-            uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
             // Compute the Axis_Angle misorientation between those 2 quaternions
             ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
             // if the angle is less than our tolerance, then we increment the neighbor count
-            // for this vocel
+            // for this voxel
             if(axisAngle[3] < misorientationTolerance)
             {
               neighborCount[voxelIdx]++;
@@ -162,6 +162,11 @@ Result<> BadDataNeighborOrientationCheck::operator()()
           maskCompare->setValue(voxelIdx, true); // current voxel's mask value is set to TRUE.
           counter++;                             // Increment the `counter` to force the loop to iterate again
 
+          // We precalculate the positive voxel quaternion and laue class here to prevent reading and recalculating it for each face below
+          ebsdlib::QuatD quat1(quats[voxelIdx * 4], quats[voxelIdx * 4 + 1], quats[voxelIdx * 4 + 2], quats[voxelIdx * 4 + 3]);
+          quat1.positiveOrientation();
+          uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
+
           // This whole section below is to now look at the neighbor voxels of the
           // current voxel that just got flipped to true. This is needed because
           // if any of those neighbors mask was `false` then its neighbor count
@@ -194,11 +199,8 @@ Result<> BadDataNeighborOrientationCheck::operator()()
               // Make sure both cell's phase are identical and valid
               if(cellPhases[voxelIdx] == cellPhases[neighborIdx] && cellPhases[voxelIdx] > 0)
               {
-                ebsdlib::QuatD quat1(quats[voxelIdx * 4], quats[voxelIdx * 4 + 1], quats[voxelIdx * 4 + 2], quats[voxelIdx * 4 + 3]);
-                quat1.positiveOrientation();
                 ebsdlib::QuatD quat2(quats[neighborIdx * 4], quats[neighborIdx * 4 + 1], quats[neighborIdx * 4 + 2], quats[neighborIdx * 4 + 3]);
                 quat2.positiveOrientation();
-                uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
                 // Quaternion Math is not commutative so do not reorder
                 ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                 if(axisAngle[3] < misorientationTolerance)
