@@ -16,12 +16,10 @@ Only the *Mask* value defining the cell as *good* or *bad* is changed. No other 
 
 ## Example Data
 
-|    Example Input/Output Images |
-|--------------------------------|
-| ![](Images/BadDataNeighborOrientationCheckFilter_1.png) |
-| The Small IN100 data just after initial alignment filters have completed. |
-| ![](Images/BadDataNeighborOrientationCheckFilter_2.png) |
-| The Small IN100 data just after running this filter with a *Misorientation Tolerance* of 5 degrees and a *Required Number of Neighbors* of 4. |
+| Example Input Image | Example Output Image |
+|---------------------|----------------------|
+| ![](Images/BadDataNeighborOrientationCheckFilter_1.png) | ![](Images/BadDataNeighborOrientationCheckFilter_2.png) |
+| The Small IN100 data just after initial alignment filters have completed. | The Small IN100 data just after running this filter with a *Misorientation Tolerance* of 5 degrees and a *Required Number of Neighbors* of 4. |
 
 From the above before and after images you can see that this filter can help modify a mask that was generated through a simple threshold filter. This filter essentially uses neighbors to determine if a cell point should have had a mask value of false. The majority of cells that were changed from *false* or the black voxels, into valid IPF colored voxels, had a confidence index that fell just below the initial threshold applied (Confidence Index > 0.1 and Image Quality > 120). This filter determines that enough of that cell's neighbors had a mask value of true, the misorientation was < 5 degrees and the cell had enough valid neighbors that the cell's *mask* value was changed from **false** to **true**.
 
