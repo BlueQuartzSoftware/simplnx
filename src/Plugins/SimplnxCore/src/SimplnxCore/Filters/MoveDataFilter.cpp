@@ -86,9 +86,10 @@ IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data
         {
           if(possibleAM->getShape() != possibleIArray->getTupleShape())
           {
-            resultOutputActions.warnings().push_back(Warning{-69250, fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a "
-                                                                                 "runtime error if the sizing remains the same at time of this filters execution. Proceed with caution.",
-                                                                                 possibleIArray->getName(), possibleIArray->getNumberOfTuples(), possibleAM->getName(), possibleAM->getNumTuples())});
+            resultOutputActions.warnings().push_back(
+                Warning{-69250, fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a "
+                                            "runtime error if the sizing remains the same at time of this filters execution. Proceed with caution.",
+                                            possibleIArray->getName(), possibleIArray->getNumberOfTuples(), possibleAM->getName(), possibleAM->getNumberOfTuples())});
           }
         }
       }

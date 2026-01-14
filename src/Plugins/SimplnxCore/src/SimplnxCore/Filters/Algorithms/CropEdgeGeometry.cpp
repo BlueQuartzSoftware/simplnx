@@ -38,7 +38,7 @@ public:
   void operator()() const
   {
     usize newIndex = 0;
-    for(usize i = 0; i < m_SrcAttrMatrix.getNumTuples(); ++i)
+    for(usize i = 0; i < m_SrcAttrMatrix.getNumberOfTuples(); ++i)
     {
       if(m_ShouldCancel)
       {

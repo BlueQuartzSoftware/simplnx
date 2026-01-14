@@ -39,7 +39,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
   // Create a neighbor list and string array for testing selected arrays with all IArray types
   {
     const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(k_RectGridCellDataPath);
-    const usize numTuples = cellDataAM.getNumTuples();
+    const usize numTuples = cellDataAM.getNumberOfTuples();
 
     std::vector<std::string> stringArrayValues(numTuples);
     auto* neighborList = NeighborList<float32>::Create(dataStructure, k_NeighborListArrayName, cellDataAM.getShape(), cellDataAM.getId());

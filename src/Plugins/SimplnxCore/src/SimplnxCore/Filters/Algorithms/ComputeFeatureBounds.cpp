@@ -210,10 +210,10 @@ Result<> ComputeFeatureBounds::operator()()
   const auto& featureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAMPath);
 
   const int32 numFeatures = (*std::max_element(featureIds.cbegin(), featureIds.cend())) + 1;
-  if(numFeatures > featureAM.getNumTuples())
+  if(numFeatures > featureAM.getNumberOfTuples())
   {
     return MakeErrorResult(-89471, fmt::format("{} Attribute Matrix size ({}) doesn't align with number of features ({}) in {} array", m_InputValues->FeatureAMPath.getTargetName(),
-                                               featureAM.getNumTuples(), numFeatures, m_InputValues->FeatureIdsArrayPath.getTargetName()));
+                                               featureAM.getNumberOfTuples(), numFeatures, m_InputValues->FeatureIdsArrayPath.getTargetName()));
   }
 
   const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);

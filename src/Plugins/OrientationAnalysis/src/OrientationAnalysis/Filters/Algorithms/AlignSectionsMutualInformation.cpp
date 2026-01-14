@@ -45,7 +45,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
 {
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const AttributeMatrix* cellData = imageGeom.getCellData();
-  auto totalPoints = static_cast<int64>(cellData->getNumTuples());
+  auto totalPoints = static_cast<int64>(cellData->getNumberOfTuples());
 
   if(m_InputValues->UseMask)
   {

@@ -97,10 +97,10 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
   usize totalFeatures = (*std::max_element(featureIdsStore.begin(), featureIdsStore.end())) + 1;
 
   const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
-  if(totalFeatures > featureAM->getNumTuples())
+  if(totalFeatures > featureAM->getNumberOfTuples())
   {
-    return MakeErrorResult(
-        -82640, fmt::format("The number of tuples in the supplied Attribute Matrix ({}) is less than the max feature in the Feature Ids Array ({})", featureAM->getNumTuples(), totalFeatures - 1));
+    return MakeErrorResult(-82640, fmt::format("The number of tuples in the supplied Attribute Matrix ({}) is less than the max feature in the Feature Ids Array ({})", featureAM->getNumberOfTuples(),
+                                               totalFeatures - 1));
   }
 
   std::optional<std::vector<DataPath>> amChildPaths = GetAllChildArrayDataPaths(dataStructure, featureAMPath);

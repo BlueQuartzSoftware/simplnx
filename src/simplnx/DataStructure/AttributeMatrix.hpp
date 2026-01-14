@@ -116,7 +116,7 @@ public:
    * @brief Returns the total number of tuples.
    * @return
    */
-  usize getNumTuples() const;
+  usize getNumberOfTuples() const;
 
   /**
    * @brief Sets the tuple Shape and resizes all child arrays.

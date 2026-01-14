@@ -1021,7 +1021,7 @@ TEST_CASE("SimplnxCore::ComputeBoundingBoxStatsFilter: Attribute Matrix Handling
   const DataPath newAMPath = k_GeomPath.createChildPath(k_NewAMName);
   auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(newAMPath);
   REQUIRE(amPtr != nullptr);
-  REQUIRE(amPtr->getNumTuples() == 2);
+  REQUIRE(amPtr->getNumberOfTuples() == 2);
 
   auto* lengthArray = dataStructure.getDataAs<UInt64Array>(newAMPath.createChildPath(k_Length));
   REQUIRE(lengthArray != nullptr);

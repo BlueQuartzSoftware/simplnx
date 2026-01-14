@@ -87,7 +87,7 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsV
   const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
   int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
 
-  REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumTuples());
+  REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
 
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
 
@@ -154,7 +154,7 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
   std::vector<usize> generatedBins = ::BinPoints(generatedIds);
   REQUIRE_FALSE(generatedBins.empty());
 
-  REQUIRE(generatedBins.size() == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumTuples());
+  REQUIRE(generatedBins.size() == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
 
   const auto& exemplarIds = dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds);
   std::vector<usize> exemplarBins = ::BinPoints(exemplarIds);
@@ -293,7 +293,7 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
   const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath);
   int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
 
-  REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumTuples());
+  REQUIRE(maxVal == dataStructure.getDataAs<AttributeMatrix>(k_GeneratedAMPath)->getNumberOfTuples());
 
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
 
