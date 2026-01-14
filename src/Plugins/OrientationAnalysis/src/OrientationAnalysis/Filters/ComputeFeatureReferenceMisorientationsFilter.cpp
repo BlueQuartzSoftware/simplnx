@@ -55,7 +55,7 @@ Parameters ComputeFeatureReferenceMisorientationsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ReferenceOrientation_Key, "Reference Orientation", "Specifies the reference orientation to use when comparing to each Cell", 0,
-                                                                    ChoicesParameter::Choices{"Average Orientation", "Orientation at Feature Centroid"}));
+                                                                    ChoicesParameter::Choices{"Average Feature Orientation", "Orientation Farthest from Feature Boundary"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
@@ -67,7 +67,7 @@ Parameters ComputeFeatureReferenceMisorientationsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_GBEuclideanDistancesArrayPath_Key, "Boundary Euclidean Distances",
-      "Distance the Cells are from the boundary of the Feature they belong to. Only required if the reference orientation is selected to be the orientation at the Feature centroid",
+      "Distance the Cells are from the boundary of the Feature they belong to. Only required if the reference orientation is selected to be the 'Orientation Farthest from Feature Boundary'",
       DataPath({"Cell Data", "GBEuclideanDistances"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
@@ -77,6 +77,7 @@ Parameters ComputeFeatureReferenceMisorientationsFilter::parameters() const
       DataPath({"Cell Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAttributeMatrixPath_Key, "Feature Attribute Matrix", "The path to the cell feature attribute matrix",
                                                                     DataPath({"Cell Feature Data"})));
+
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
@@ -84,17 +85,22 @@ Parameters ComputeFeatureReferenceMisorientationsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(
-      k_FeatureReferenceMisorientationsArrayName_Key, "Feature Reference Misorientations",
+      k_CellMisorientationsArrayName_Key, "Cell Reference Misorientations",
       "The name of the array containing the misorientation angle (in degrees) between Cell's orientation and the reference orientation of the Feature that owns that Cell",
-      "FeatureReferenceMisorientations"));
+      "Feature Reference Misorientations"));
+
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureAvgMisorientationsArrayName_Key, "Average Misorientations",
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureAvgMisorientationsArrayName_Key, "Feature Average Misorientations",
                                                           "The name of the array containing the average of the Feature reference misorientation values for all of the Cells that belong to the Feature",
-                                                          "FeatureAvgMisorientations"));
+                                                          "Average Reference Misorientations"));
+
+  params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureEuclideanCenterArrayName_Key, "Feature Euclidean Centers",
+                                                          "The coordinate of the voxel that is used for the Euclidean based calculation", "Euclidean Centers"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_ReferenceOrientation_Key, k_GBEuclideanDistancesArrayPath_Key, static_cast<ChoicesParameter::ValueType>(1));
   params.linkParameters(k_ReferenceOrientation_Key, k_CellFeatureAttributeMatrixPath_Key, static_cast<ChoicesParameter::ValueType>(1));
+  params.linkParameters(k_ReferenceOrientation_Key, k_FeatureEuclideanCenterArrayName_Key, static_cast<ChoicesParameter::ValueType>(1));
   params.linkParameters(k_ReferenceOrientation_Key, k_AvgQuatsArrayPath_Key, static_cast<ChoicesParameter::ValueType>(0));
 
   return params;
@@ -103,7 +109,10 @@ Parameters ComputeFeatureReferenceMisorientationsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeFeatureReferenceMisorientationsFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  /* Version 2 Changes
+   * Added parameter to save the Euclidean Cell Centers
+   */
 }
 
 //------------------------------------------------------------------------------
@@ -124,8 +133,10 @@ IFilter::PreflightResult ComputeFeatureReferenceMisorientationsFilter::preflight
   auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pCellFeatAttributeMatrixArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-  auto pFeatureReferenceMisorientationsArrayPathValue = pFeatureIdsArrayPathValue.replaceName(filterArgs.value<std::string>(k_FeatureReferenceMisorientationsArrayName_Key));
+  auto pFeatureReferenceMisorientationsArrayPathValue = pFeatureIdsArrayPathValue.replaceName(filterArgs.value<std::string>(k_CellMisorientationsArrayName_Key));
   auto pFeatureAvgMisorientationsArrayNameValue = filterArgs.value<std::string>(k_FeatureAvgMisorientationsArrayName_Key);
+
+  auto pFeatureEuclideanArrayNameValue = filterArgs.value<std::string>(k_FeatureEuclideanCenterArrayName_Key);
 
   PreflightResult preflightResult;
 
@@ -167,12 +178,16 @@ IFilter::PreflightResult ComputeFeatureReferenceMisorientationsFilter::preflight
       }
       featAvgMisorientationsPath = pCellFeatAttributeMatrixArrayPathValue.createChildPath(pFeatureAvgMisorientationsArrayNameValue);
       tupleShape = cellFeatAM->getShape();
+
+      auto createArrayAction =
+          std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, ShapeType{3}, pCellFeatAttributeMatrixArrayPathValue.createChildPath(pFeatureEuclideanArrayNameValue));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-
-    auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, std::vector<usize>{1}, featAvgMisorientationsPath);
-    resultOutputActions.value().appendAction(std::move(createArrayAction));
+    {
+      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, ShapeType{1}, featAvgMisorientationsPath);
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
+    }
   }
-
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using
   // the appropriate methods.
   // None found based on the filter parameters
@@ -186,7 +201,7 @@ Result<> ComputeFeatureReferenceMisorientationsFilter::executeImpl(DataStructure
                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeFeatureReferenceMisorientationsInputValues inputValues;
-
+  inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   inputValues.ReferenceOrientation = filterArgs.value<ChoicesParameter::ValueType>(k_ReferenceOrientation_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -194,11 +209,12 @@ Result<> ComputeFeatureReferenceMisorientationsFilter::executeImpl(DataStructure
   inputValues.GBEuclideanDistancesArrayPath = filterArgs.value<DataPath>(k_GBEuclideanDistancesArrayPath_Key);
   inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.FeatureReferenceMisorientationsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureReferenceMisorientationsArrayName_Key));
+  inputValues.FeatureReferenceMisorientationsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_CellMisorientationsArrayName_Key));
   auto pCellFeatAttributeMatrixArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   auto featAvgMisorientationName = filterArgs.value<std::string>(k_FeatureAvgMisorientationsArrayName_Key);
   inputValues.FeatureAvgMisorientationsArrayName =
       inputValues.ReferenceOrientation == 0 ? inputValues.AvgQuatsArrayPath.replaceName(featAvgMisorientationName) : pCellFeatAttributeMatrixArrayPathValue.createChildPath(featAvgMisorientationName);
+  inputValues.FeatureEuclideanCentersPath = pCellFeatAttributeMatrixArrayPathValue.createChildPath(filterArgs.value<std::string>(k_FeatureEuclideanCenterArrayName_Key));
 
   return ComputeFeatureReferenceMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -237,7 +253,7 @@ Result<Arguments> ComputeFeatureReferenceMisorientationsFilter::FromSIMPLJson(co
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureReferenceMisorientationsArrayNameKey,
-                                                                                                                   k_FeatureReferenceMisorientationsArrayName_Key));
+                                                                                                                   k_CellMisorientationsArrayName_Key));
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureAvgMisorientationsArrayNameKey,
                                                                                                                    k_FeatureAvgMisorientationsArrayName_Key));

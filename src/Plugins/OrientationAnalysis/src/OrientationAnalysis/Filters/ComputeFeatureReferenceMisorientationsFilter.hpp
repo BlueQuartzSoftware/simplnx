@@ -31,9 +31,10 @@ public:
   static constexpr StringLiteral k_GBEuclideanDistancesArrayPath_Key = "gb_euclidean_distances_array_path";
   static constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
   static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_FeatureReferenceMisorientationsArrayName_Key = "feature_reference_misorientations_array_name";
-  static constexpr StringLiteral k_FeatureAvgMisorientationsArrayName_Key = "feature_avg_misorientations_array_name";
+  static constexpr StringLiteral k_CellMisorientationsArrayName_Key = "feature_reference_misorientations_array_name";
   static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteral k_FeatureAvgMisorientationsArrayName_Key = "feature_avg_misorientations_array_name";
+  static constexpr StringLiteral k_FeatureEuclideanCenterArrayName_Key = "feature_euclidean_center_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

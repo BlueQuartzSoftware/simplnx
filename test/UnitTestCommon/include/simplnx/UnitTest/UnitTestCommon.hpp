@@ -482,7 +482,7 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
   // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
-  INFO(fmt::format("Exemplary Data Array:'{}'  Computed DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
+  INFO(fmt::format("Exemplary Data Array:'{}'\n  Computed DataArray: '{}'\n   bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
 
   const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
   const auto& computedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
