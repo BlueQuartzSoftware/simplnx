@@ -169,7 +169,7 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
   auto* targetAttributeMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(sourceDataPath);
   if(nullptr != targetAttributeMatrixPtr)
   {
-    numFeatures = targetAttributeMatrixPtr->getNumTuples();
+    numFeatures = targetAttributeMatrixPtr->getNumberOfTuples();
   }
   // Check if a feature array was passed in
   auto* targetFeatureArrayPtr = dataStructure.getDataAs<IArray>(sourceDataPath);

@@ -142,7 +142,7 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
     return {MakeErrorResult<OutputActions>(-76530, fmt::format("Could not find find selected grid geometry at path '{}'", pGridGeomDataPath.toString()))};
   }
 
-  const usize elementTupleCount = gridGeom->getCellData()->getNumTuples();
+  const usize elementTupleCount = gridGeom->getCellData()->getNumberOfTuples();
   constexpr usize numElements = 0;
 
   // Use FeatureIds DataStore format for created DataArrays

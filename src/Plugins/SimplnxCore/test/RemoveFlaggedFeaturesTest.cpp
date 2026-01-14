@@ -100,11 +100,11 @@ void ValidateResults(const Int32Array& featureIdsResult, const AttributeMatrix& 
 
   if constexpr(RemoveV)
   {
-    REQUIRE(cellFeatureAMResult.getNumTuples() == 3);
+    REQUIRE(cellFeatureAMResult.getNumberOfTuples() == 3);
   }
   if constexpr(!RemoveV)
   {
-    REQUIRE(cellFeatureAMResult.getNumTuples() == 4);
+    REQUIRE(cellFeatureAMResult.getNumberOfTuples() == 4);
   }
 
   REQUIRE(testArrayResult[0] == 0);

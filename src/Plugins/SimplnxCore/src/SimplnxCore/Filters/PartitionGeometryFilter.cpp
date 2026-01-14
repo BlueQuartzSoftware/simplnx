@@ -373,10 +373,10 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   }
   case IGeometry::Type::RectGrid: {
     const auto& geometry = dataStructure.getDataRefAs<RectGridGeom>({pInputGeometryToPartitionValue});
-    if(attrMatrix.getNumTuples() != geometry.getNumberOfCells())
+    if(attrMatrix.getNumberOfTuples() != geometry.getNumberOfCells())
     {
       return {MakeErrorResult<OutputActions>(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s cell count ({}).", humanName(),
-                                                                attrMatrix.getName(), attrMatrix.getNumTuples(), geometry.getName(), geometry.getNumberOfCells()))};
+                                                                attrMatrix.getName(), attrMatrix.getNumberOfTuples(), geometry.getName(), geometry.getNumberOfCells()))};
     }
     psInfo = GeneratePartitioningSchemeInfo(geometry, dataStructure, filterArgs);
     inputGeometryInformation = "Rectilinear grid geometry space unknown during preflight.";
@@ -505,10 +505,10 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBased
   const auto& geometry = dataStructure.getDataRefAs<INodeGeometry0D>({geometryToPartitionPath});
   const IGeometry::SharedVertexList& vertexList = geometry.getVerticesRef();
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(attrMatrixPath);
-  if(attrMatrix.getNumTuples() != vertexList.getNumberOfTuples())
+  if(attrMatrix.getNumberOfTuples() != vertexList.getNumberOfTuples())
   {
     return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3014, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).",
-                                                                              humanName(), attrMatrix.getName(), attrMatrix.getNumTuples(), geometry.getName(), geometry.getNumberOfVertices()))};
+                                                                              humanName(), attrMatrix.getName(), attrMatrix.getNumberOfTuples(), geometry.getName(), geometry.getNumberOfVertices()))};
   }
   Result<> dimensionalityResult = DataCheckDimensionality(geometry);
   if(dimensionalityResult.invalid())
@@ -677,19 +677,19 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& ge
 {
   if constexpr(std::is_same_v<GeomType, ImageGeom> || std::is_same_v<GeomType, RectGridGeom>)
   {
-    if(attrMatrix.getNumTuples() != geometryToPartition.getNumberOfCells())
+    if(attrMatrix.getNumberOfTuples() != geometryToPartition.getNumberOfCells())
     {
       return MakeErrorResult(-3009, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s cell count ({}).", humanName(), attrMatrix.getName(),
-                                                attrMatrix.getNumTuples(), geometryToPartition.getName(), geometryToPartition.getNumberOfCells()));
+                                                attrMatrix.getNumberOfTuples(), geometryToPartition.getName(), geometryToPartition.getNumberOfCells()));
     }
   }
   else
   {
     const IGeometry::SharedVertexList& vertexList = geometryToPartition.getVertices();
-    if(attrMatrix.getNumTuples() != vertexList.getNumberOfTuples())
+    if(attrMatrix.getNumberOfTuples() != vertexList.getNumberOfTuples())
     {
       return MakeErrorResult(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).", humanName(), attrMatrix.getName(),
-                                                attrMatrix.getNumTuples(), geometryToPartition.getName(), vertexList.getNumberOfTuples()));
+                                                attrMatrix.getNumberOfTuples(), geometryToPartition.getName(), vertexList.getNumberOfTuples()));
     }
   }
 

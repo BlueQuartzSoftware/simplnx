@@ -45,12 +45,12 @@ Result<> ComputeTriangleGeomCentroids::operator()()
   auto [minFeatureId, maxFeatureId] = std::minmax_element(faceLabels.begin(), faceLabels.end());
 
   auto& featAttrMat = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->FeatureAttributeMatrixPath);
-  if(featAttrMat.getNumTuples() < *maxFeatureId + 1)
+  if(featAttrMat.getNumberOfTuples() < *maxFeatureId + 1)
   {
     m_MessageHandler(IFilter::Message::Type::Info, "Increasing Number of tuples in target feature attribute matrix...");
     featAttrMat.resizeTuples(ShapeType{static_cast<usize>(*maxFeatureId + 1)});
   }
-  MeshIndexType numFeatures = featAttrMat.getNumTuples();
+  MeshIndexType numFeatures = featAttrMat.getNumberOfTuples();
   auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
   std::vector<std::set<MeshIndexType>> vertexSets(numFeatures);
 

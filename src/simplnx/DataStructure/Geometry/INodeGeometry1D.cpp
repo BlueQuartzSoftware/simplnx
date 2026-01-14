@@ -286,7 +286,7 @@ Result<> INodeGeometry1D::validate() const
   {
     return result;
   }
-  usize amNumTuples = amPtr->getNumTuples();
+  usize amNumTuples = amPtr->getNumberOfTuples();
 
   if(numTuples != amNumTuples)
   {

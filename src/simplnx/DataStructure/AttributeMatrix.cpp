@@ -106,7 +106,7 @@ const ShapeType& AttributeMatrix::getShape() const
   return m_TupleShape;
 }
 
-usize AttributeMatrix::getNumTuples() const
+usize AttributeMatrix::getNumberOfTuples() const
 {
   return std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
 }
@@ -125,7 +125,7 @@ Result<> AttributeMatrix::validate() const
 {
   Result<> result;
   auto childArrays = findAllChildrenOfType<IArray>();
-  usize numTuples = getNumTuples();
+  usize numTuples = getNumberOfTuples();
   for(const auto& array : childArrays)
   {
     if(array->getNumberOfTuples() != numTuples)

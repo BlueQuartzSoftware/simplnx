@@ -96,7 +96,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
 {
   // Create a neighbor list and string array for the original input geometry and manually divide them up to the two cropped halves since CropImageGeometryFilter only supports IDataArrays
   const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(k_SmallerDataContainerPath.createChildPath(k_CellData));
-  const usize numTuples = cellDataAM.getNumTuples();
+  const usize numTuples = cellDataAM.getNumberOfTuples();
 
   std::vector<std::string> stringArrayValues(numTuples);
   auto* neighborList = NeighborList<float32>::Create(dataStructure, "NeighborList", cellDataAM.getShape(), cellDataAM.getId());
@@ -113,9 +113,9 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
   const auto& croppedTopAM = dataStructure.getDataRefAs<AttributeMatrix>(topPath.createChildPath(k_CellData));
   const auto& croppedMiddleAM = dataStructure.getDataRefAs<AttributeMatrix>(middlePath.createChildPath(k_CellData));
   const auto& croppedBottomAM = dataStructure.getDataRefAs<AttributeMatrix>(bottomPath.createChildPath(k_CellData));
-  const auto numTuplesTop = croppedTopAM.getNumTuples();
-  const auto numTuplesMiddle = croppedMiddleAM.getNumTuples();
-  const auto numTuplesBottom = croppedBottomAM.getNumTuples();
+  const auto numTuplesTop = croppedTopAM.getNumberOfTuples();
+  const auto numTuplesMiddle = croppedMiddleAM.getNumberOfTuples();
+  const auto numTuplesBottom = croppedBottomAM.getNumberOfTuples();
   REQUIRE(numTuplesTop + numTuplesMiddle + numTuplesBottom == numTuples);
 
   usize xCount = maxTopVoxel[0] - minBottomVoxel[0] + 1;

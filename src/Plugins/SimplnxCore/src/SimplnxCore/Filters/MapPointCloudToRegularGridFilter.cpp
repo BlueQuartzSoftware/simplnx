@@ -339,7 +339,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   {
     auto maskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
     const auto numMaskTuples = dataStructure.getDataRefAs<IDataArray>(maskArrayPath).getNumberOfTuples();
-    const auto numVoxelTuples = vertexData->getNumTuples();
+    const auto numVoxelTuples = vertexData->getNumberOfTuples();
     if(numMaskTuples != numVoxelTuples)
     {
       return MakePreflightErrorResult(k_IncompatibleMaskVoxelArrays,

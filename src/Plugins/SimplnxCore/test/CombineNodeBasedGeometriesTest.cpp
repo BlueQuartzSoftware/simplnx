@@ -68,7 +68,7 @@ std::ostream& operator<<(std::ostream& os, const GeometryInitOptions& opts)
 template <typename T>
 DataArray<T>* CreateDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName, const std::vector<usize>& cDims)
 {
-  return DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, arrayName, {attrMatrix.getNumTuples()}, cDims, attrMatrix.getId());
+  return DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, arrayName, {attrMatrix.getNumberOfTuples()}, cDims, attrMatrix.getId());
 }
 
 template <typename T, usize CompCount>
@@ -88,7 +88,7 @@ void AddDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 
 StringArray* CreateStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName)
 {
-  return StringArray::CreateWithValues(dataStructure, arrayName, attrMatrix.getShape(), std::vector<std::string>(attrMatrix.getNumTuples()), attrMatrix.getId());
+  return StringArray::CreateWithValues(dataStructure, arrayName, attrMatrix.getShape(), std::vector<std::string>(attrMatrix.getNumberOfTuples()), attrMatrix.getId());
 }
 
 void AddStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
@@ -110,7 +110,7 @@ void AddNeighborList(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
   DataType dataType = GetDataType<T>();
   std::string dataTypeStr = DataTypeToString(dataType);
   auto nl = CreateNeighborList<T>(attrMatrix, dataStructure, fmt::format("{}_NeighborList", dataTypeStr));
-  for(usize i = 0; i < attrMatrix.getNumTuples(); i++)
+  for(usize i = 0; i < attrMatrix.getNumberOfTuples(); i++)
   {
     typename NeighborList<T>::SharedVectorType inputList(new std::vector<T>(k_NeighborListListSize));
     std::iota(inputList->begin(), inputList->end(), static_cast<T>(0));
@@ -392,7 +392,7 @@ void ValidateAttributeMatrixArrays(const DataStructure& dataStructure, const Att
 
   bool allMatricesExist = (attrMatrix1 != nullptr && attrMatrix2 != nullptr && combinedAttrMatrix != nullptr);
   REQUIRE(allMatricesExist);
-  REQUIRE(combinedAttrMatrix->getNumTuples() == attrMatrix1->getNumTuples() + attrMatrix2->getNumTuples());
+  REQUIRE(combinedAttrMatrix->getNumberOfTuples() == attrMatrix1->getNumberOfTuples() + attrMatrix2->getNumberOfTuples());
 
   for(const auto& [combinedId, combinedObj] : *combinedAttrMatrix)
   {

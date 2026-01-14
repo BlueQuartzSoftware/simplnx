@@ -273,10 +273,10 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   {
     outputAMPath = filterArgs.value<DataPath>(k_OutputAMPath_Key);
     const auto* amPtr = dataStructure.getDataAs<AttributeMatrix>(outputAMPath);
-    if(unifiedBoundsPtr->getNumberOfTuples() != amPtr->getNumTuples())
+    if(unifiedBoundsPtr->getNumberOfTuples() != amPtr->getNumberOfTuples())
     {
       return MakePreflightErrorResult(-59201, fmt::format("The number of tuples in the Unified Bounds Array ({}) does not match supplied Attribute Matrix tuple count ({})",
-                                                          unifiedBoundsPtr->getNumberOfTuples(), amPtr->getNumTuples()));
+                                                          unifiedBoundsPtr->getNumberOfTuples(), amPtr->getNumberOfTuples()));
     }
   }
 
