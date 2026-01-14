@@ -18,6 +18,7 @@
 #include "simplnx/Parameters/ArrayThresholdsParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
+#include "simplnx/Parameters/DataTypeParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
@@ -1481,10 +1482,22 @@ const std::vector<DataPath> k_TupleCheckIgnoredPaths{{{"MirroredXDataContainer",
                                                      {{"ZInconsistentArrays", "CellData", "StringArray"}}};
 
 //------------------------------------------------------------------------------
-inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList)
+/**
+ * @brief Runs the Multithreshold objects filter. For backwards compatibility the `useBoolOutputType` parameter is available and defaulted to `true`.
+ *
+ * If a newer exemplar data set needs to have the filter generate `uint8` values, then set the argument to false. The filter
+ * will by default create uint8 values.
+ *
+ * @param dataStructure
+ * @param filterList
+ * @param useBoolOutputType This is set to true for legacy support where exemplar data sets created boolean arrays.
+ */
+inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList, bool useBoolOutputType = true)
 {
   constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds_object";
   constexpr StringLiteral k_CreatedDataPath_Key = "output_data_array_name";
+  constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
+
   INFO(fmt::format("Error creating Filter '{}'  ", k_MultiThresholdObjectsFilterHandle.getFilterName()));
 
   auto filter = filterList.createFilter(k_MultiThresholdObjectsFilterHandle);
@@ -1511,6 +1524,10 @@ inline void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const Fil
 
   args.insertOrAssign(k_ArrayThresholds_Key, std::make_any<ArrayThresholdsParameter::ValueType>(arrayThresholdset));
   args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<std::string>(nx::core::Constants::k_Mask));
+  if(useBoolOutputType)
+  {
+    args.insertOrAssign(k_CreatedMaskType_Key, std::make_any<DataTypeParameter::ValueType>(DataType::boolean));
+  }
 
   // Preflight the filter and check result
   auto preflightResult = filter->preflight(dataStructure, args);

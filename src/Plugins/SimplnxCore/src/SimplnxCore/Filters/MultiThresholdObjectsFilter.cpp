@@ -322,7 +322,7 @@ Parameters MultiThresholdObjectsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ArrayThresholdsParameter>(k_ArrayThresholdsObject_Key, "Data Thresholds", "DataArray thresholds to mask", ArrayThresholdSet{},
                                                            ArrayThresholdsParameter::AllowedComponentShapes{}));
-  params.insert(std::make_unique<DataTypeParameter>(k_CreatedMaskType_Key, "Mask Type", "DataType used for the created Mask Array", DataType::boolean));
+  params.insert(std::make_unique<DataTypeParameter>(k_CreatedMaskType_Key, "Mask Type", "DataType used for the created Mask Array", DataType::uint8));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseCustomTrueValue, "Use Custom TRUE Value", "Specifies whether to output a custom TRUE value (the default value is 1)", false));
   params.insert(std::make_unique<NumberParameter<float64>>(k_CustomTrueValue, "Custom TRUE Value", "This is the custom TRUE value that will be output to the mask array", 1.0));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseCustomFalseValue, "Use Custom FALSE Value", "Specifies whether to output a custom FALSE value (the default value is 0)", false));
