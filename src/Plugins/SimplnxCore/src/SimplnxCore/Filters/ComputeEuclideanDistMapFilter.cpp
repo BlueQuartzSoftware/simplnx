@@ -110,6 +110,9 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
 {
   auto pCalcManhattanDistValue = filterArgs.value<bool>(k_CalcManhattanDist_Key);
   auto pSaveNearestNeighborsValue = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
+  auto pCalculateDistToBoundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
+  auto pCalculateDistToTripleLines = filterArgs.value<bool>(k_DoTripleLines_Key);
+  auto pCalculateDistToQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
 
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   DataPath parentGroup = pFeatureIdsArrayPathValue.getParent();
@@ -139,19 +142,30 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
     outputDataType = DataType::float32;
   }
 
+  if(!pSaveNearestNeighborsValue && !pCalculateDistToBoundaries && !pCalculateDistToTripleLines && !pCalculateDistToQuadPoints)
+  {
+    return {MakeErrorResult<OutputActions>(
+        -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, Calculate "
+                            "Distance to Quadruple Points, or Store the Nearest Boundary Cells.",
+                            pFeatureIdsArrayPathValue.toString()))};
+  }
+
   // Create the GBDistancesArray
+  if(pCalculateDistToBoundaries)
   {
     auto arrayPath = parentGroup.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1ULL}, arrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the TJDistancesArray
+  if(pCalculateDistToTripleLines)
   {
     auto arrayPath = parentGroup.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1ULL}, arrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
   // Create the QPDistancesArray
+  if(pCalculateDistToQuadPoints)
   {
     auto arrayPath = parentGroup.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
     auto action = std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1ULL}, arrayPath);

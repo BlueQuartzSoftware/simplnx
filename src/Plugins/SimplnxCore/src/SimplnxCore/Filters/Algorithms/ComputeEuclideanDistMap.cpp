@@ -33,6 +33,7 @@ public:
   void operator()() const
   {
     using DataArrayType = DataArray<T>;
+    using DataStoreType = AbstractDataStore<T>;
 
     const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues.InputImageGeometry);
 
@@ -65,9 +66,21 @@ public:
 
     const auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues.FeatureIdsArrayPath)->getDataStoreRef();
 
-    auto* gbManhattanDistancesStore = m_DataStructure.template getDataAs<DataArrayType>(m_InputValues.GBDistancesArrayName)->getDataStore();
-    auto* tjManhattanDistancesStore = m_DataStructure.template getDataAs<DataArrayType>(m_InputValues.TJDistancesArrayName)->getDataStore();
-    auto* qpManhattanDistancesStore = m_DataStructure.template getDataAs<DataArrayType>(m_InputValues.QPDistancesArrayName)->getDataStore();
+    DataStoreType* gbManhattanDistancesStore = nullptr;
+    if(m_InputValues.DoBoundaries)
+    {
+      gbManhattanDistancesStore = m_DataStructure.template getDataAs<DataArrayType>(m_InputValues.GBDistancesArrayName)->getDataStore();
+    }
+    DataStoreType* tjManhattanDistancesStore = nullptr;
+    if(m_InputValues.DoTripleLines)
+    {
+      tjManhattanDistancesStore = m_DataStructure.template getDataAs<DataArrayType>(m_InputValues.TJDistancesArrayName)->getDataStore();
+    }
+    DataStoreType* qpManhattanDistancesStore = nullptr;
+    if(m_InputValues.DoQuadPoints)
+    {
+      qpManhattanDistancesStore = m_DataStructure.template getDataAs<DataArrayType>(m_InputValues.QPDistancesArrayName)->getDataStore();
+    }
 
     auto* nearestNeighborsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues.NearestNeighborsArrayName)->getDataStore();
 
@@ -82,15 +95,15 @@ public:
       {
         voxel_NearestNeighbor[a] = -1;
       }
-      if(m_MapType == ComputeEuclideanDistMap::MapType::FeatureBoundary)
+      if(m_InputValues.DoBoundaries && m_MapType == ComputeEuclideanDistMap::MapType::FeatureBoundary)
       {
         voxel_Distance[a] = static_cast<double>((*gbManhattanDistancesStore)[a]);
       }
-      else if(m_MapType == ComputeEuclideanDistMap::MapType::TripleJunction)
+      else if(m_InputValues.DoTripleLines && m_MapType == ComputeEuclideanDistMap::MapType::TripleJunction)
       {
         voxel_Distance[a] = static_cast<double>((*tjManhattanDistancesStore)[a]);
       }
-      else if(m_MapType == ComputeEuclideanDistMap::MapType::QuadPoint)
+      else if(m_InputValues.DoQuadPoints && m_MapType == ComputeEuclideanDistMap::MapType::QuadPoint)
       {
         voxel_Distance[a] = static_cast<double>((*qpManhattanDistancesStore)[a]);
       }
@@ -212,15 +225,15 @@ public:
     for(size_t a = 0; a < totalPoints; ++a)
     {
       (*nearestNeighborsStore)[a * 3 + static_cast<uint32_t>(m_MapType)] = voxel_NearestNeighbor[a];
-      if(m_MapType == ComputeEuclideanDistMap::MapType::FeatureBoundary)
+      if(m_InputValues.DoBoundaries && m_MapType == ComputeEuclideanDistMap::MapType::FeatureBoundary)
       {
         (*gbManhattanDistancesStore)[a] = static_cast<T>(voxel_Distance[a]);
       }
-      else if(m_MapType == ComputeEuclideanDistMap::MapType::TripleJunction)
+      else if(m_InputValues.DoTripleLines && m_MapType == ComputeEuclideanDistMap::MapType::TripleJunction)
       {
         (*tjManhattanDistancesStore)[a] = static_cast<T>(voxel_Distance[a]);
       }
-      else if(m_MapType == ComputeEuclideanDistMap::MapType::QuadPoint)
+      else if(m_InputValues.DoQuadPoints && m_MapType == ComputeEuclideanDistMap::MapType::QuadPoint)
       {
         (*qpManhattanDistancesStore)[a] = static_cast<T>(voxel_Distance[a]);
       }
@@ -247,25 +260,29 @@ template <typename T>
 void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues* inputValues)
 {
   using DataArrayType = DataArray<T>;
+  using DataStoreType = AbstractDataStore<T>;
 
   const auto& featureIdsStore = dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getDataStoreRef();
   size_t totalPoints = featureIdsStore.getNumberOfTuples();
 
-  auto* gbManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->GBDistancesArrayName)->getDataStore();
-  if(gbManhattanDistancesStore != nullptr)
+  DataStoreType* gbManhattanDistancesStore = nullptr;
+  if(inputValues->DoBoundaries)
   {
+    gbManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->GBDistancesArrayName)->getDataStore();
     gbManhattanDistancesStore->fill(static_cast<T>(-1));
   }
 
-  auto* tjManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->TJDistancesArrayName)->getDataStore();
-  if(tjManhattanDistancesStore != nullptr)
+  DataStoreType* tjManhattanDistancesStore = nullptr;
+  if(inputValues->DoTripleLines)
   {
+    tjManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->TJDistancesArrayName)->getDataStore();
     tjManhattanDistancesStore->fill(static_cast<T>(-1));
   }
 
-  auto* qpManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->QPDistancesArrayName)->getDataStore();
-  if(qpManhattanDistancesStore != nullptr)
+  DataStoreType* qpManhattanDistancesStore = nullptr;
+  if(inputValues->DoQuadPoints)
   {
+    qpManhattanDistancesStore = dataStructure.template getDataAs<DataArrayType>(inputValues->QPDistancesArrayName)->getDataStore();
     qpManhattanDistancesStore->fill(static_cast<T>(-1));
   }
 
