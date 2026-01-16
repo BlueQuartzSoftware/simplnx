@@ -2,7 +2,6 @@
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
@@ -33,14 +32,14 @@ const std::atomic_bool& BadDataNeighborOrientationCheck::getCancel()
 // -----------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheck::operator()()
 {
-  float misorientationTolerance = m_InputValues->MisorientationTolerance * numbers::pi_v<float> / 180.0f;
+  const float misorientationTolerance = m_InputValues->MisorientationTolerance * numbers::pi_v<float> / 180.0f;
 
-  auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeomPath);
+  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeomPath);
   SizeVec3 udims = imageGeomPtr->getDimensions();
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  usize totalPoints = quats.getNumberOfTuples();
+  const usize totalPoints = quats.getNumberOfTuples();
 
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   try
@@ -50,8 +49,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
-    return MakeErrorResult(-54900, message);
+    return MakeErrorResult(-54900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
   }
 
   int64 dims[3] = {
@@ -63,12 +61,12 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   int64 column = 0, row = 0, plane = 0;
 
   int64 neighpoints[6] = {0, 0, 0, 0, 0, 0};
-  neighpoints[0] = static_cast<int64>(-dims[0] * dims[1]);
-  neighpoints[1] = static_cast<int64>(-dims[0]);
+  neighpoints[0] = -dims[0] * dims[1];
+  neighpoints[1] = -dims[0];
   neighpoints[2] = static_cast<int64>(-1);
   neighpoints[3] = static_cast<int64>(1);
-  neighpoints[4] = static_cast<int64>(dims[0]);
-  neighpoints[5] = static_cast<int64>(dims[0] * dims[1]);
+  neighpoints[4] = dims[0];
+  neighpoints[5] = dims[0] * dims[1];
 
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
@@ -80,14 +78,14 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   // user defined angle tolerance.
   for(usize voxelIdx = 0; voxelIdx < totalPoints; voxelIdx++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
     // If the mask was set to false, then we check this voxel
     if(!maskCompare->isTrue(voxelIdx))
     {
       // We precalculate the positive voxel quaternion and laue class here to prevent reading and recalculating it for each face below
       ebsdlib::QuatD quat1(quats[voxelIdx * 4], quats[voxelIdx * 4 + 1], quats[voxelIdx * 4 + 2], quats[voxelIdx * 4 + 3]);
       quat1.positiveOrientation();
-      uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
+      const uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
 
       column = voxelIdx % dims[0];
       row = (voxelIdx / dims[0]) % dims[1];
@@ -139,7 +137,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 
   // Now we loop over all the points again, but this time we do it as many times
   // as the user has requested to iteratively flip voxels
-  while(currentLevel > m_InputValues->NumberOfNeighbors)
+  while(currentLevel >= m_InputValues->NumberOfNeighbors)
   {
     counter = 1;
     int32 loopNumber = 0;
@@ -148,7 +146,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       counter = 0; // Set this while control variable to zero
       for(usize voxelIdx = 0; voxelIdx < totalPoints; voxelIdx++)
       {
-        throttledMessenger.sendThrottledMessage([&]() {
+        throttledMessenger.sendThrottledMessage([&] {
           return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
                              CalculatePercentComplete(voxelIdx, totalPoints));
         });
@@ -165,7 +163,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
           // We precalculate the positive voxel quaternion and laue class here to prevent reading and recalculating it for each face below
           ebsdlib::QuatD quat1(quats[voxelIdx * 4], quats[voxelIdx * 4 + 1], quats[voxelIdx * 4 + 2], quats[voxelIdx * 4 + 3]);
           quat1.positiveOrientation();
-          uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
+          const uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
 
           // This whole section below is to now look at the neighbor voxels of the
           // current voxel that just got flipped to true. This is needed because
