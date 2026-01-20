@@ -39,7 +39,7 @@ public:
 
     SizeVec3 udims = selectedImageGeom.getDimensions();
 
-    size_t totalPoints = selectedImageGeom.getNumberOfCells();
+    size_t totalVoxels = selectedImageGeom.getNumberOfCells();
     double Distance = 0.0;
     size_t count = 1;
     size_t changed = 1;
@@ -58,12 +58,10 @@ public:
     neighbors[4] = xpoints;
     neighbors[5] = xpoints * ypoints;
 
-    // Use a std::vector to get an auto cleaned up array thus not needing the 'delete' keyword later on.
-    std::vector<int32_t> voxNN(totalPoints, 0);
-    int32_t* voxel_NearestNeighbor = &(voxNN.front());
-    std::vector<double> voxEDist(totalPoints, 0.0);
-    double* voxel_Distance = &(voxEDist.front());
+    std::vector<int32_t> voxel_NearestNeighbor(totalVoxels, 0);
+    std::vector<double> voxel_Distance(totalVoxels, 0.0);
 
+    // Input Arrays
     const auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues.FeatureIdsArrayPath)->getDataStoreRef();
 
     DataStoreType* gbManhattanDistancesStore = nullptr;
@@ -85,27 +83,33 @@ public:
     auto* nearestNeighborsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues.NearestNeighborsArrayName)->getDataStore();
 
     Distance = 0;
-    for(size_t a = 0; a < totalPoints; ++a)
+    // This loop initializes the `voxel_NearestNeighbor` and `voxel_Distance` temp arrays with values
+    for(size_t voxelTupleIdx = 0; voxelTupleIdx < totalVoxels; ++voxelTupleIdx)
     {
-      if((*nearestNeighborsStore)[a * 3 + static_cast<uint32_t>(m_MapType)] >= 0)
+
+      // For the given `mapType`, get the value that was stored for the nearestNeighbor,
+      // essentially, as long as the value is **NOT** -1.
+      if(nearestNeighborsStore->getComponentValue(voxelTupleIdx, static_cast<uint64_t>(m_MapType)) >= 0)
       {
-        voxel_NearestNeighbor[a] = static_cast<int32_t>(a);
-      } // if voxel is boundary voxel, then want to use itself as nearest boundary voxel
+        // if voxel is boundary voxel, then want to use itself as nearest boundary voxel
+        voxel_NearestNeighbor[voxelTupleIdx] = static_cast<int32_t>(voxelTupleIdx);
+      }
       else
       {
-        voxel_NearestNeighbor[a] = -1;
+        // If a default value was stored into the NearestNeighbor then set that into the voxel_NearestNeighbor vector at the current voxel index
+        voxel_NearestNeighbor[voxelTupleIdx] = -1;
       }
       if(m_InputValues.DoBoundaries && m_MapType == ComputeEuclideanDistMap::MapType::FeatureBoundary)
       {
-        voxel_Distance[a] = static_cast<double>((*gbManhattanDistancesStore)[a]);
+        voxel_Distance[voxelTupleIdx] = static_cast<double>((*gbManhattanDistancesStore)[voxelTupleIdx]);
       }
       else if(m_InputValues.DoTripleLines && m_MapType == ComputeEuclideanDistMap::MapType::TripleJunction)
       {
-        voxel_Distance[a] = static_cast<double>((*tjManhattanDistancesStore)[a]);
+        voxel_Distance[voxelTupleIdx] = static_cast<double>((*tjManhattanDistancesStore)[voxelTupleIdx]);
       }
       else if(m_InputValues.DoQuadPoints && m_MapType == ComputeEuclideanDistMap::MapType::QuadPoint)
       {
-        voxel_Distance[a] = static_cast<double>((*qpManhattanDistancesStore)[a]);
+        voxel_Distance[voxelTupleIdx] = static_cast<double>((*qpManhattanDistancesStore)[voxelTupleIdx]);
       }
     }
 
@@ -161,14 +165,23 @@ public:
             }
 
             i = zStride + yStride + x;
+            // If the nearestNeighbor value == -1 (invalid value?) and the featureId
+            // of the current voxel is valid. Does this mean we are on a border
+            // voxel like the border between the overscan and sample of an EBSD data set?
             if(voxel_NearestNeighbor[i] == -1 && featureIdsStore[i] > 0)
             {
-              count++;
+              count++; // increment the count?
+              // Loop over all neighbors (6 face neighbors)
               for(int32_t j = 0; j < 6; j++)
               {
                 neighpoint = i + neighbors[j];
                 if(mask[j] == 1)
                 {
+                  // if the mask for this voxel is true and the voxel_distance != -1, i.e.,
+                  // meaning that we are on a boundary voxel of some type, then set
+                  // the voxel_nearestNeighbor of the current voxel to that of
+                  // its neighbor? This value could get overwritten by the next
+                  // neighbor value? I wonder if this has any ramifications.?
                   if(voxel_Distance[neighpoint] != -1.0)
                   {
                     voxel_NearestNeighbor[i] = voxel_NearestNeighbor[neighpoint];
@@ -179,12 +192,14 @@ public:
           }
         }
       }
-      for(size_t j = 0; j < totalPoints; ++j)
+
+      // Now run back over all voxels to increment "changed" and voxel_Distance.
+      for(size_t voxelIdx = 0; voxelIdx < totalVoxels; ++voxelIdx)
       {
-        if(voxel_NearestNeighbor[j] != -1 && voxel_Distance[j] == -1.0 && featureIdsStore[j] > 0)
+        if(voxel_NearestNeighbor[voxelIdx] != -1 && voxel_Distance[voxelIdx] == -1.0 && featureIdsStore[voxelIdx] > 0)
         {
           changed++;
-          voxel_Distance[j] = Distance;
+          voxel_Distance[voxelIdx] = Distance;
         }
       }
     }
@@ -222,7 +237,8 @@ public:
         }
       }
     }
-    for(size_t a = 0; a < totalPoints; ++a)
+
+    for(size_t a = 0; a < totalVoxels; ++a)
     {
       (*nearestNeighborsStore)[a * 3 + static_cast<uint32_t>(m_MapType)] = voxel_NearestNeighbor[a];
       if(m_InputValues.DoBoundaries && m_MapType == ComputeEuclideanDistMap::MapType::FeatureBoundary)
@@ -263,7 +279,7 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
   using DataStoreType = AbstractDataStore<T>;
 
   const auto& featureIdsStore = dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getDataStoreRef();
-  size_t totalPoints = featureIdsStore.getNumberOfTuples();
+  size_t totalVoxels = featureIdsStore.getNumberOfTuples();
 
   DataStoreType* gbManhattanDistancesStore = nullptr;
   if(inputValues->DoBoundaries)
@@ -319,15 +335,17 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
   size_t yPoints = udims[1];
   size_t zPoints = udims[2];
 
-  for(size_t a = 0; a < totalPoints; ++a)
+  // This entire loop finds all 3 kinds of grain boundaries,
+  // Feature Boundaries, Triple Junctions, QuadPoints
+  for(size_t a = 0; a < totalVoxels; ++a)
   {
     feature = featureIdsStore[a];
-    if(feature > 0)
+    if(feature > 0) // Ignore FeatureId = 0
     {
       column = static_cast<int64_t>(a % xPoints);
       row = static_cast<int64_t>((a / xPoints) % yPoints);
       plane = static_cast<int64_t>(a / (xPoints * yPoints));
-      for(int32_t k = 0; k < 6; k++)
+      for(int32_t k = 0; k < 6; k++) // Loop over the 6 face neighbors
       {
         good = true;
         neighbor = static_cast<int64_t>(a + neighbors[k]);
@@ -355,11 +373,17 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
         {
           good = false;
         }
+        // If we are a proper neighbor voxel, i.e., have not steppd out of the virtual volume,
+        // and the featureId of the neighbor is NOT the currentFeatureId AND the
+        // neighborFeatureId is valid ( greater than 0), then drop into this conditional
         if(good && featureIdsStore[neighbor] != feature && featureIdsStore[neighbor] >= 0)
         {
-          add = true;
+          add = true; // Default to always adding this neighbor to the coordination vector
+          // Loop over current vector of coordination values
           for(const auto& coordination_value : coordination)
           {
+            // If the featureId of the neighbor voxel == the current coordination_value
+            // then we set the boolean to ignore this neighbor by setting `add = false`
             if(featureIdsStore[neighbor] == coordination_value)
             {
               add = false;
@@ -368,31 +392,47 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
           }
           if(add)
           {
-            coordination.push_back(featureIdsStore[neighbor]);
+            coordination.push_back(featureIdsStore[neighbor]); // Push back the first neighbor found
           }
         }
       }
+
+      // now that the neighbors are found and the coordination size is found
+      // If no values were pushed into the coordination vector then just initialize
+      // all 3 components of the nearestNeighbors to -1
       if(coordination.empty())
       {
         (*nearestNeighbors)[a * 3 + 0] = -1;
         (*nearestNeighbors)[a * 3 + 1] = -1;
         (*nearestNeighbors)[a * 3 + 2] = -1;
       }
-      if(!coordination.empty() && inputValues->DoBoundaries)
+      // If ANY values were pushed back into the coordination vector then this voxel
+      // is a grain boundary. Initialize the first component of the nearestNeighbor to the
+      // first value of the coordination vector.
+      // Initialize the GB output array to 0
+      if(!coordination.empty() && inputValues->DoBoundaries && nullptr != gbManhattanDistancesStore)
       {
         (*gbManhattanDistancesStore)[a] = 0;
         (*nearestNeighbors)[a * 3 + 0] = coordination[0];
         (*nearestNeighbors)[a * 3 + 1] = -1;
         (*nearestNeighbors)[a * 3 + 2] = -1;
       }
-      if(coordination.size() >= 2 && inputValues->DoTripleLines)
+
+      // Triple lines are defined as a line that separates 3, and only 3, grains.
+      // Initialize the nearestNeighbor components 0 and 1 to the first value in the coordination vector
+      // Initializes the TJ output array to 0;
+      if(coordination.size() >= 2 && inputValues->DoTripleLines && nullptr != tjManhattanDistancesStore)
       {
         (*tjManhattanDistancesStore)[a] = 0;
         (*nearestNeighbors)[a * 3 + 0] = coordination[0];
         (*nearestNeighbors)[a * 3 + 1] = coordination[0];
         (*nearestNeighbors)[a * 3 + 2] = -1;
       }
-      if(coordination.size() > 2 && inputValues->DoQuadPoints)
+
+      // All other boundaries between 4 or more grains are Quadruple Points. Initialize
+      // Initialize the nearestNeighbor components 0, 1, 2 to the first value in the coordination vector
+      // Initializes the QP output array to 0.
+      if(coordination.size() > 2 && inputValues->DoQuadPoints && nullptr != qpManhattanDistancesStore)
       {
         (*qpManhattanDistancesStore)[a] = 0;
         (*nearestNeighbors)[a * 3 + 0] = coordination[0];
@@ -403,6 +443,8 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
     }
   }
 
+  // Now that we have all the necessary values, use TBB to initiate a task to compute
+  // the output for each kind of selected output.
   ParallelTaskAlgorithm taskRunner;
   if(inputValues->DoBoundaries)
   {
