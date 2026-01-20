@@ -506,3 +506,20 @@ TEST_CASE("SimplnxCore::ConvertData: Valid Execution", "[SimplnxCore][ConvertDat
   TestInvalidDataArray();
   TestOverwriteArray();
 }
+
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::ConvertData: In Place Execution", "[SimplnxCore][ConvertDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  ConvertDataFilter filter;
+  DataStructure dataStructure;
+  createDataStructure<int8>(dataStructure);
+
+  REQUIRE(dataStructure.getDataAs<IDataArray>(DataArrayPath)->getDataType() == DataType::int8);
+  Arguments args = getArgs(DataArrayPath, DataType::int32, "DataArray");
+  args.insertOrAssign(ConvertDataFilter::k_DeleteOriginal_Key, true);
+  auto executeResults = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResults.result);
+  REQUIRE(dataStructure.getDataAs<IDataArray>(DataArrayPath)->getDataType() == DataType::int32);
+}

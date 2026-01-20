@@ -7,15 +7,19 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
+#include "simplnx/Filter/Actions/RenameDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-
+#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
-
 using namespace nx::core;
+
+namespace
+{
+const std::string k_TempName = "!!!__INTERNAL_USE_ONLY_temp_INTERNAL_USE_ONLY__!!!";
+}
 
 namespace nx::core
 {
@@ -57,10 +61,14 @@ Parameters ConvertDataFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_ScalarType_Key, "Scalar Type", "Convert to this data type", 0, GetAllDataTypesAsStrings()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ArrayToConvertPath_Key, "Data Array to Convert", "The complete path to the Data Array to Convert", DataPath{}, GetAllDataTypes()));
-  params.insert(std::make_unique<BoolParameter>(k_DeleteOriginal_Key, "Remove Original Array", "Whether or not to remove the original array after conversion", false));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_DeleteOriginal_Key, "Perform in Place",
+      "If true the original array will be overwritten with the newly typed array, if false the original array will be preserved and the user will be prompted for a name for the new array", false));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_ConvertedArrayName_Key, "Converted Data Array", "The name of the converted Data Array", "Converted_"));
+
+  params.linkParameters(k_DeleteOriginal_Key, k_ConvertedArrayName_Key, false);
 
   return params;
 }
@@ -86,12 +94,15 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
   auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArrayName_Key);
   auto pRemoveOriginal = filterArgs.value<bool>(k_DeleteOriginal_Key);
 
-  DataPath const convertedArrayPath = pInputArrayPath.replaceName(pConvertedArrayName);
+  DataPath convertedArrayPath = pInputArrayPath.replaceName(pConvertedArrayName);
+  if(pRemoveOriginal)
+  {
+    convertedArrayPath = pInputArrayPath.replaceName(k_TempName);
+  }
 
   DataType const pScalarType = StringToDataType(GetAllDataTypesAsStrings()[pScalarTypeIndex]);
 
-  PreflightResult preflightResult;
-  nx::core::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
 
   auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
   if(inputArrayPtr == nullptr)
@@ -102,15 +113,14 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
   resultOutputActions.value().appendAction(
       std::make_unique<CreateArrayAction>(pScalarType, inputArrayPtr->getIDataStoreRef().getTupleShape(), inputArrayPtr->getIDataStoreRef().getComponentShape(), convertedArrayPath));
 
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   if(pRemoveOriginal)
   {
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pInputArrayPath, DeleteDataAction::DeleteType::JustObject));
+    resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(convertedArrayPath, pInputArrayPath.getTargetName()));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
@@ -122,7 +132,14 @@ Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.ScalarType = StringToDataType(GetAllDataTypesAsStrings()[scalarTypeIndex]);
   inputValues.SelectedArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
   auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArrayName_Key);
-  inputValues.OutputArrayName = inputValues.SelectedArrayPath.replaceName(pConvertedArrayName);
+  if(filterArgs.value<bool>(k_DeleteOriginal_Key))
+  {
+    inputValues.OutputArrayName = inputValues.SelectedArrayPath.replaceName(k_TempName);
+  }
+  else
+  {
+    inputValues.OutputArrayName = inputValues.SelectedArrayPath.replaceName(pConvertedArrayName);
+  }
 
   return ConvertData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
