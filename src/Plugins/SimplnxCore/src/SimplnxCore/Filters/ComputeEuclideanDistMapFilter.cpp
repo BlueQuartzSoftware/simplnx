@@ -121,8 +121,8 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   DataPath parentGroup = pFeatureIdsArrayPathValue.getParent();
 
   // Interesting thing about this parameter: The Default VALUE must be at the root level of the Data Structure. This is because the
-  // user may not actually want to keep that created array in which case we then try to delete the array. The DeleteDataAction
-  // will fail in preflight because the Array was never actually created at its default location and so if fails. If the user
+  // user may not want to keep that created array, in which case we then try to delete the array. The DeleteDataAction
+  // will fail in preflight because the Array was never actually created at its default location, and so it fails. If the user
   // does in fact want to keep this array, then the user would have actually set the DataPaths to something that will actually get created.
   auto pNearestNeighborsArrayNameValue = filterArgs.value<std::string>(k_NearestNeighborsArrayName_Key);
   DataPath pNearestNeighborsArrayPath = pSaveNearestNeighborsValue ? parentGroup.createChildPath(pNearestNeighborsArrayNameValue) : DataPath::FromString(pNearestNeighborsArrayNameValue).value();
@@ -180,8 +180,8 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  // If we are NOT saving the nearest neighbors then we need to delete this array that gets created.
-  if(!pSaveNearestNeighborsValue)
+  // If we are NOT saving the nearest neighbors, then we need to delete this array that gets created.
+  // if(!pSaveNearestNeighborsValue)
   {
     auto action = std::make_unique<DeleteDataAction>(pNearestNeighborsArrayPath, DeleteDataAction::DeleteType::JustObject);
     resultOutputActions.value().appendDeferredAction(std::move(action));
@@ -206,11 +206,11 @@ Result<> ComputeEuclideanDistMapFilter::executeImpl(DataStructure& dataStructure
   inputValues.SaveNearestNeighbors = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   DataPath parentGroupPath = inputValues.FeatureIdsArrayPath.getParent();
-  inputValues.GBDistancesArrayName = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
-  inputValues.TJDistancesArrayName = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
-  inputValues.QPDistancesArrayName = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
+  inputValues.GBDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
+  inputValues.TJDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
+  inputValues.QPDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
   auto nearestNeighborName = filterArgs.value<std::string>(k_NearestNeighborsArrayName_Key);
-  inputValues.NearestNeighborsArrayName = inputValues.SaveNearestNeighbors ? parentGroupPath.createChildPath(nearestNeighborName) : DataPath::FromString(nearestNeighborName).value();
+  inputValues.NearestNeighborsArrayPath = inputValues.SaveNearestNeighbors ? parentGroupPath.createChildPath(nearestNeighborName) : DataPath::FromString(nearestNeighborName).value();
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ComputeEuclideanDistMap(dataStructure, messageHandler, shouldCancel, &inputValues)();

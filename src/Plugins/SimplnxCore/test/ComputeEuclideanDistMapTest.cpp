@@ -55,7 +55,7 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
     args.insert(ComputeEuclideanDistMapFilter::k_DoBoundaries_Key, std::make_any<bool>(doBoundaries));
     args.insert(ComputeEuclideanDistMapFilter::k_DoTripleLines_Key, std::make_any<bool>(doTripleLines));
     args.insert(ComputeEuclideanDistMapFilter::k_DoQuadPoints_Key, std::make_any<bool>(doQuadPoints));
-    args.insert(ComputeEuclideanDistMapFilter::k_SaveNearestNeighbors_Key, std::make_any<bool>(true));
+    args.insert(ComputeEuclideanDistMapFilter::k_SaveNearestNeighbors_Key, std::make_any<bool>(false));
 
     // Input Arrays
     args.insert(ComputeEuclideanDistMapFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
