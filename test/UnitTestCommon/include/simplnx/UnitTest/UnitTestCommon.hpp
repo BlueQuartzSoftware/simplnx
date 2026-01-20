@@ -485,6 +485,54 @@ struct CompareArraysFunctor
 };
 
 /**
+ * @brief Compares IDataArrays by a specific component
+ * @tparam T
+ * @param left
+ * @param right
+ * @param startTuple
+ * @param component
+ */
+template <typename T>
+void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& right, const usize startTuple = 0, const usize component = 0)
+{
+  const auto& oldDataStore = left.template getIDataStoreRefAs<AbstractDataStore<T>>();
+  const auto& newDataStore = right.template getIDataStoreRefAs<AbstractDataStore<T>>();
+  usize tupleCount = oldDataStore.getNumberOfTuples();
+  usize componentCount = oldDataStore.getNumberOfComponents();
+  INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
+  REQUIRE(startTuple < tupleCount);
+  REQUIRE(component < componentCount);
+  T oldVal;
+  T newVal;
+  bool failed = false;
+  for(usize t = startTuple; t < tupleCount; t++)
+  {
+    oldVal = oldDataStore[t * componentCount + component];
+    newVal = newDataStore[t * componentCount + component];
+    if(oldVal != newVal)
+    {
+      UNSCOPED_INFO(fmt::format("tuple=: {}  component=: {}  oldValue != newValue. {} != {}", t, component, oldVal, newVal));
+
+      if constexpr(std::is_floating_point_v<T>)
+      {
+        float diff = std::fabs(static_cast<float>(oldVal - newVal));
+        if(diff > EPSILON)
+        {
+          failed = true;
+          break;
+        }
+      }
+      else
+      {
+        failed = true;
+      }
+      break;
+    }
+  }
+  REQUIRE(!failed);
+}
+
+/**
  * @brief Compares 2 DataArrays using an EPSILON value. Useful for floating point comparisons
  * @tparam T
  * @param dataStructure

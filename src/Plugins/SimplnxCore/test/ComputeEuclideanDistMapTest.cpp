@@ -11,6 +11,21 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
+namespace
+{
+const std::string k_CalculatedPrefix = "Calculated_";
+const std::string k_GBDistancesArrayName = "GBManhattanDistances";
+const std::string k_TJDistancesArrayName = "TJManhattanDistances";
+const std::string k_QPDistancesArrayName = "QPManhattanDistances";
+const std::string k_NearestNeighborsArrayName = "NearestNeighbors";
+
+bool ArrayExists(const DataStructure& dataStructure, const std::string& name)
+{
+  const DataPath calculatedPath({k_DataContainer, k_CellData, std::string(k_CalculatedPrefix) + name});
+  return dataStructure.getDataAs<IDataArray>(calculatedPath) != nullptr;
+};
+} // namespace
+
 TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclideanDistMap]")
 {
   UnitTest::LoadPlugins();
@@ -19,29 +34,33 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath k_CellFeatureDataAM = k_DataContainerPath.createChildPath("CellFeatureData");
 
-  const std::string k_CalculatedPrefix("Calculated_");
-  const std::string k_GBDistancesArrayName("GBManhattanDistances");
-  const std::string k_TJDistancesArrayName("TJManhattanDistances");
-  const std::string k_QPDistancesArrayName("QPManhattanDistances");
-  const std::string k_NearestNeighborsArrayName("NearestNeighbors");
-  // Instantiate the filter, a DataStructure object and an Arguments Object
+  // Run a matrix of scenarios. In each scenario exactly one calculated output is expected to exist and match its exemplar.
+  auto [scenarioName, doBoundaries, doTripleLines, doQuadPoints, nnCompNum, expectedArrayName] =
+      GENERATE(std::make_tuple("Boundaries only (GB distances)", true, false, false, 0, k_GBDistancesArrayName),
+               std::make_tuple("Triple lines only (TJ distances)", false, true, false, 1, k_TJDistancesArrayName),
+               std::make_tuple("Quad points only (QP distances)", false, false, true, 2, k_QPDistancesArrayName));
+
+  INFO("Scenario: " << scenarioName);
+
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
   {
     ComputeEuclideanDistMapFilter filter;
     Arguments args;
 
-    // Create default Parameters for the filter.
+    // Parameters
     args.insert(ComputeEuclideanDistMapFilter::k_CalcManhattanDist_Key, std::make_any<bool>(true));
-    args.insert(ComputeEuclideanDistMapFilter::k_DoBoundaries_Key, std::make_any<bool>(true));
-    args.insert(ComputeEuclideanDistMapFilter::k_DoTripleLines_Key, std::make_any<bool>(true));
-    args.insert(ComputeEuclideanDistMapFilter::k_DoQuadPoints_Key, std::make_any<bool>(true));
+    args.insert(ComputeEuclideanDistMapFilter::k_DoBoundaries_Key, std::make_any<bool>(doBoundaries));
+    args.insert(ComputeEuclideanDistMapFilter::k_DoTripleLines_Key, std::make_any<bool>(doTripleLines));
+    args.insert(ComputeEuclideanDistMapFilter::k_DoQuadPoints_Key, std::make_any<bool>(doQuadPoints));
     args.insert(ComputeEuclideanDistMapFilter::k_SaveNearestNeighbors_Key, std::make_any<bool>(true));
+
     // Input Arrays
     args.insert(ComputeEuclideanDistMapFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-
     args.insert(ComputeEuclideanDistMapFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellAttributeMatrix.createChildPath(k_FeatureIds)));
+
     // Output Arrays
     args.insert(ComputeEuclideanDistMapFilter::k_GBDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_GBDistancesArrayName));
     args.insert(ComputeEuclideanDistMapFilter::k_TJDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_TJDistancesArrayName));
@@ -57,23 +76,40 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  // Compare the output arrays with those precalculated from the file
+  // Check that the appropriate array exists and the others don't exist
+  for(const auto& outputName : {k_GBDistancesArrayName, k_TJDistancesArrayName, k_QPDistancesArrayName})
   {
-    std::vector<std::string> comparisonNames = {k_GBDistancesArrayName, k_TJDistancesArrayName, k_QPDistancesArrayName, k_NearestNeighborsArrayName};
-    for(const auto& comparisonName : comparisonNames)
+    const bool shouldExist = (outputName == expectedArrayName);
+    INFO("  Output: " << outputName << " (expected " << (shouldExist ? "present" : "absent") << ")");
+
+    if(shouldExist)
     {
-      const DataPath exemplarPath({k_DataContainer, k_CellData, comparisonName});
-      const DataPath calculatedPath({k_DataContainer, k_CellData, k_CalculatedPrefix + comparisonName});
-      const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-      const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
-      UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
+      REQUIRE(ArrayExists(dataStructure, outputName));
+    }
+    else
+    {
+      REQUIRE_FALSE(ArrayExists(dataStructure, outputName));
     }
   }
 
-// Write the DataStructure out to the file system
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_euclidean_dist_map.dream3d", unit_test::k_BinaryTestOutputDir)));
-#endif
+  // Check that the currently enabled array matches its exemplar
+  const DataPath exemplarPath({k_DataContainer, k_CellData, expectedArrayName});
+  const DataPath calculatedPath({k_DataContainer, k_CellData, k_CalculatedPrefix + expectedArrayName});
+  const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
+  const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+  UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
+
+  // Check that the nearest neighbors array matches its exemplar
+  // The nearest neighbors array has 3 components that are filled out based on which of the three distance arrays are enabled.
+  // Component 0 is filled out if boundaries are enabled, component 1 is filled out if triple lines are enabled,
+  // component 2 is filled out if quad points are enabled.  These component values are set to -1 otherwise.
+  // So, we are going to compare the proper component values based on the currently enabled array
+  REQUIRE(ArrayExists(dataStructure, k_NearestNeighborsArrayName));
+  const DataPath exemplarNNPath({k_DataContainer, k_CellData, k_NearestNeighborsArrayName});
+  const DataPath calculatedNNPath({k_DataContainer, k_CellData, k_CalculatedPrefix + k_NearestNeighborsArrayName});
+  const auto& exemplarNNData = dataStructure.getDataRefAs<IDataArray>(exemplarNNPath);
+  const auto& calculatedNNData = dataStructure.getDataRefAs<IDataArray>(calculatedNNPath);
+  UnitTest::CompareDataArraysByComponent<int32>(exemplarNNData, calculatedNNData, 0, nnCompNum);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
