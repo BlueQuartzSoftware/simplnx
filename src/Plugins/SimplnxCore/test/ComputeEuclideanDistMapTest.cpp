@@ -17,7 +17,6 @@ const std::string k_CalculatedPrefix = "Calculated_";
 const std::string k_GBDistancesArrayName = "GBManhattanDistances";
 const std::string k_TJDistancesArrayName = "TJManhattanDistances";
 const std::string k_QPDistancesArrayName = "QPManhattanDistances";
-const std::string k_NearestNeighborsArrayName = "NearestNeighbors";
 
 bool ArrayExists(const DataStructure& dataStructure, const std::string& name)
 {
@@ -37,10 +36,9 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
   const DataPath k_CellFeatureDataAM = k_DataContainerPath.createChildPath("CellFeatureData");
 
   // Run a matrix of scenarios. In each scenario exactly one calculated output is expected to exist and match its exemplar.
-  auto [scenarioName, doBoundaries, doTripleLines, doQuadPoints, nnCompNum, expectedArrayName] =
-      GENERATE(std::make_tuple("Boundaries only (GB distances)", true, false, false, 0, k_GBDistancesArrayName),
-               std::make_tuple("Triple lines only (TJ distances)", false, true, false, 1, k_TJDistancesArrayName),
-               std::make_tuple("Quad points only (QP distances)", false, false, true, 2, k_QPDistancesArrayName));
+  auto [scenarioName, doBoundaries, doTripleLines, doQuadPoints, expectedArrayName] = GENERATE(std::make_tuple("Boundaries only (GB distances)", true, false, false, k_GBDistancesArrayName),
+                                                                                               std::make_tuple("Triple lines only (TJ distances)", false, true, false, k_TJDistancesArrayName),
+                                                                                               std::make_tuple("Quad points only (QP distances)", false, false, true, k_QPDistancesArrayName));
 
   INFO("Scenario: " << scenarioName);
 
@@ -55,7 +53,6 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
     args.insert(ComputeEuclideanDistMapFilter::k_DoBoundaries_Key, std::make_any<bool>(doBoundaries));
     args.insert(ComputeEuclideanDistMapFilter::k_DoTripleLines_Key, std::make_any<bool>(doTripleLines));
     args.insert(ComputeEuclideanDistMapFilter::k_DoQuadPoints_Key, std::make_any<bool>(doQuadPoints));
-    args.insert(ComputeEuclideanDistMapFilter::k_SaveNearestNeighbors_Key, std::make_any<bool>(false));
 
     // Input Arrays
     args.insert(ComputeEuclideanDistMapFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
@@ -65,7 +62,6 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
     args.insert(ComputeEuclideanDistMapFilter::k_GBDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_GBDistancesArrayName));
     args.insert(ComputeEuclideanDistMapFilter::k_TJDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_TJDistancesArrayName));
     args.insert(ComputeEuclideanDistMapFilter::k_QPDistancesArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_QPDistancesArrayName));
-    args.insert(ComputeEuclideanDistMapFilter::k_NearestNeighborsArrayName_Key, std::make_any<std::string>(k_CalculatedPrefix + k_NearestNeighborsArrayName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -98,18 +94,6 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
   const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
   const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
   UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
-
-  // Check that the nearest neighbors array matches its exemplar
-  // The nearest neighbors array has 3 components that are filled out based on which of the three distance arrays are enabled.
-  // Component 0 is filled out if boundaries are enabled, component 1 is filled out if triple lines are enabled,
-  // component 2 is filled out if quad points are enabled.  These component values are set to -1 otherwise.
-  // So, we are going to compare the proper component values based on the currently enabled array
-  REQUIRE(ArrayExists(dataStructure, k_NearestNeighborsArrayName));
-  const DataPath exemplarNNPath({k_DataContainer, k_CellData, k_NearestNeighborsArrayName});
-  const DataPath calculatedNNPath({k_DataContainer, k_CellData, k_CalculatedPrefix + k_NearestNeighborsArrayName});
-  const auto& exemplarNNData = dataStructure.getDataRefAs<IDataArray>(exemplarNNPath);
-  const auto& calculatedNNData = dataStructure.getDataRefAs<IDataArray>(calculatedNNPath);
-  UnitTest::CompareDataArraysByComponent<int32>(exemplarNNData, calculatedNNData, 0, nnCompNum);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -28,12 +28,10 @@ public:
   static constexpr StringLiteral k_DoBoundaries_Key = "do_boundaries";
   static constexpr StringLiteral k_DoTripleLines_Key = "do_triple_lines";
   static constexpr StringLiteral k_DoQuadPoints_Key = "do_quad_points";
-  static constexpr StringLiteral k_SaveNearestNeighbors_Key = "save_nearest_neighbors";
   static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static constexpr StringLiteral k_GBDistancesArrayName_Key = "g_bdistances_array_name";
   static constexpr StringLiteral k_TJDistancesArrayName_Key = "t_jdistances_array_name";
   static constexpr StringLiteral k_QPDistancesArrayName_Key = "q_pdistances_array_name";
-  static constexpr StringLiteral k_NearestNeighborsArrayName_Key = "nearest_neighbors_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

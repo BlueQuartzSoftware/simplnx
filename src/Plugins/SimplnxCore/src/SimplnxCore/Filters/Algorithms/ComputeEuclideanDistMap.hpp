@@ -15,12 +15,10 @@ struct SIMPLNXCORE_EXPORT ComputeEuclideanDistMapInputValues
   bool DoBoundaries;
   bool DoTripleLines;
   bool DoQuadPoints;
-  bool SaveNearestNeighbors;
   DataPath FeatureIdsArrayPath;
   DataPath GBDistancesArrayPath;
   DataPath TJDistancesArrayPath;
   DataPath QPDistancesArrayPath;
-  DataPath NearestNeighborsArrayPath;
   DataPath InputImageGeometry;
 };
 

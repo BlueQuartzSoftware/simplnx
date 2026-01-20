@@ -58,6 +58,12 @@ Parameters ComputeEuclideanDistMapFilter::parameters() const
 
   params.insert(std::make_unique<BoolParameter>(k_CalcManhattanDist_Key, "Output arrays are Manhattan distance (int32)",
                                                 "If Manhattan distance is used then results are stored as int32 otherwise results are stored as float32", true));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_DoBoundaries_Key, "Calculate Distance to Boundaries", "Whether the distance of each Cell to a Feature boundary is calculated", true));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_DoTripleLines_Key, "Calculate Distance to Triple Lines", "Whether the distance of each Cell to a triple line between Features is calculated", true));
+  params.insertLinkableParameter(
+      std::make_unique<BoolParameter>(k_DoQuadPoints_Key, "Calculate Distance to Quadruple Points", "Whether the distance of each Cell to a quadruple point between Features is calculated", true));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
@@ -66,31 +72,17 @@ Parameters ComputeEuclideanDistMapFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_DoBoundaries_Key, "Calculate Distance to Boundaries", "Whether the distance of each Cell to a Feature boundary is calculated", true));
   params.insert(std::make_unique<DataObjectNameParameter>(k_GBDistancesArrayName_Key, "Boundary Distances",
                                                           "The name of the array with the distance the cells are from the boundary of the Feature they belong to.", "GBManhattanDistances"));
-
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_DoTripleLines_Key, "Calculate Distance to Triple Lines", "Whether the distance of each Cell to a triple line between Features is calculated", true));
   params.insert(std::make_unique<DataObjectNameParameter>(k_TJDistancesArrayName_Key, "Triple Line Distances",
                                                           "The name of the array with the distance the cells are from a triple junction of Features.", "TJManhattanDistances"));
-
-  params.insertLinkableParameter(
-      std::make_unique<BoolParameter>(k_DoQuadPoints_Key, "Calculate Distance to Quadruple Points", "Whether the distance of each Cell to a quadruple point between Features is calculated", true));
   params.insert(std::make_unique<DataObjectNameParameter>(k_QPDistancesArrayName_Key, "Quadruple Point Distances",
                                                           "The name of the array with the distance the cells are from a quadruple point of Features.", "QPManhattanDistances"));
-
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_SaveNearestNeighbors_Key, "Store the Nearest Boundary Cells", "Whether to store the nearest neighbors of Cell", false));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NearestNeighborsArrayName_Key, "Nearest Boundary Cells",
-                                                          "The name of the array with the indices of the closest cell that touches a boundary, triple and quadruple point for each cell.",
-                                                          "NearestNeighbors"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_DoBoundaries_Key, k_GBDistancesArrayName_Key, std::make_any<bool>(true));
   params.linkParameters(k_DoTripleLines_Key, k_TJDistancesArrayName_Key, std::make_any<bool>(true));
   params.linkParameters(k_DoQuadPoints_Key, k_QPDistancesArrayName_Key, std::make_any<bool>(true));
-  params.linkParameters(k_SaveNearestNeighbors_Key, k_NearestNeighborsArrayName_Key, std::make_any<bool>(true));
 
   return params;
 }
@@ -112,20 +104,12 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pCalcManhattanDistValue = filterArgs.value<bool>(k_CalcManhattanDist_Key);
-  auto pSaveNearestNeighborsValue = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
   auto pCalculateDistToBoundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
   auto pCalculateDistToTripleLines = filterArgs.value<bool>(k_DoTripleLines_Key);
   auto pCalculateDistToQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
 
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   DataPath parentGroup = pFeatureIdsArrayPathValue.getParent();
-
-  // Interesting thing about this parameter: The Default VALUE must be at the root level of the Data Structure. This is because the
-  // user may not want to keep that created array, in which case we then try to delete the array. The DeleteDataAction
-  // will fail in preflight because the Array was never actually created at its default location, and so it fails. If the user
-  // does in fact want to keep this array, then the user would have actually set the DataPaths to something that will actually get created.
-  auto pNearestNeighborsArrayNameValue = filterArgs.value<std::string>(k_NearestNeighborsArrayName_Key);
-  DataPath pNearestNeighborsArrayPath = pSaveNearestNeighborsValue ? parentGroup.createChildPath(pNearestNeighborsArrayNameValue) : DataPath::FromString(pNearestNeighborsArrayNameValue).value();
 
   PreflightResult preflightResult;
 
@@ -145,11 +129,11 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
     outputDataType = DataType::float32;
   }
 
-  if(!pSaveNearestNeighborsValue && !pCalculateDistToBoundaries && !pCalculateDistToTripleLines && !pCalculateDistToQuadPoints)
+  if(!pCalculateDistToBoundaries && !pCalculateDistToTripleLines && !pCalculateDistToQuadPoints)
   {
     return {MakeErrorResult<OutputActions>(
-        -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, Calculate "
-                            "Distance to Quadruple Points, or Store the Nearest Boundary Cells.",
+        -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, or Calculate "
+                            "Distance to Quadruple Points.",
                             pFeatureIdsArrayPathValue.toString()))};
   }
 
@@ -174,18 +158,6 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
     auto action = std::make_unique<CreateArrayAction>(outputDataType, tupleShape, std::vector<usize>{1ULL}, arrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
-  // Create the NearestNeighborsArray
-  {
-    auto action = std::make_unique<CreateArrayAction>(DataType::int32, tupleShape, std::vector<usize>{3ULL}, pNearestNeighborsArrayPath);
-    resultOutputActions.value().appendAction(std::move(action));
-  }
-
-  // If we are NOT saving the nearest neighbors, then we need to delete this array that gets created.
-  // if(!pSaveNearestNeighborsValue)
-  {
-    auto action = std::make_unique<DeleteDataAction>(pNearestNeighborsArrayPath, DeleteDataAction::DeleteType::JustObject);
-    resultOutputActions.value().appendDeferredAction(std::move(action));
-  }
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -203,14 +175,11 @@ Result<> ComputeEuclideanDistMapFilter::executeImpl(DataStructure& dataStructure
   inputValues.DoBoundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
   inputValues.DoTripleLines = filterArgs.value<bool>(k_DoTripleLines_Key);
   inputValues.DoQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
-  inputValues.SaveNearestNeighbors = filterArgs.value<bool>(k_SaveNearestNeighbors_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   DataPath parentGroupPath = inputValues.FeatureIdsArrayPath.getParent();
   inputValues.GBDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
   inputValues.TJDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
   inputValues.QPDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
-  auto nearestNeighborName = filterArgs.value<std::string>(k_NearestNeighborsArrayName_Key);
-  inputValues.NearestNeighborsArrayPath = inputValues.SaveNearestNeighbors ? parentGroupPath.createChildPath(nearestNeighborName) : DataPath::FromString(nearestNeighborName).value();
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ComputeEuclideanDistMap(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -224,12 +193,10 @@ constexpr StringLiteral k_CalcManhattanDistKey = "CalcManhattanDist";
 constexpr StringLiteral k_DoBoundariesKey = "DoBoundaries";
 constexpr StringLiteral k_DoTripleLinesKey = "DoTripleLines";
 constexpr StringLiteral k_DoQuadPointsKey = "DoQuadPoints";
-constexpr StringLiteral k_SaveNearestNeighborsKey = "SaveNearestNeighbors";
 constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
 constexpr StringLiteral k_GBDistancesArrayNameKey = "GBDistancesArrayName";
 constexpr StringLiteral k_TJDistancesArrayNameKey = "TJDistancesArrayName";
 constexpr StringLiteral k_QPDistancesArrayNameKey = "QPDistancesArrayName";
-constexpr StringLiteral k_NearestNeighborsArrayNameKey = "NearestNeighborsArrayName";
 } // namespace SIMPL
 } // namespace
 
@@ -243,14 +210,12 @@ Result<Arguments> ComputeEuclideanDistMapFilter::FromSIMPLJson(const nlohmann::j
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DoBoundariesKey, k_DoBoundaries_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DoTripleLinesKey, k_DoTripleLines_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DoQuadPointsKey, k_DoQuadPoints_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_SaveNearestNeighborsKey, k_SaveNearestNeighbors_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_GBDistancesArrayNameKey, k_GBDistancesArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_TJDistancesArrayNameKey, k_TJDistancesArrayName_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_QPDistancesArrayNameKey, k_QPDistancesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NearestNeighborsArrayNameKey, k_NearestNeighborsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 
