@@ -136,10 +136,7 @@ result = nx_filter.execute(
     do_triple_lines=True,
     feature_ids_path=nx.DataPath("DataContainer/Cell Data/FeatureIds"),
     g_bdistances_array_name=("GBManhattanDistances"),
-    # Nearest neighbors array name is not currently part of the code
-    # nearest_neighbors_array_name: str = ...,
     q_pdistances_array_name=("QPManhattanDistances"),
-    save_nearest_neighbors=False,
     input_image_geometry_path=nx.DataPath("DataContainer"),
     t_jdistances_array_name=("TJManhattanDistances")
 )
