@@ -1706,7 +1706,7 @@ struct AxisBoundsChoices
 };
 
 //------------------------------------------------------------------------------
-inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBoundsChoices& C)
+inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBoundsChoices& C, bool is2D = false)
 {
   std::vector<CropGeometryParameter::ValueType> out;
 
@@ -1717,17 +1717,27 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
     cv.cropX = false;
     cv.cropY = false;
     cv.cropZ = false;
+    cv.is2D = is2D;
     out.push_back(cv);
   }
 
-  const std::array<std::tuple<bool, bool, bool>, 7> kFlagOrder = {std::tuple{false, false, true}, std::tuple{false, true, false}, std::tuple{false, true, true}, std::tuple{true, false, false},
-                                                                  std::tuple{true, false, true},  std::tuple{true, true, false},  std::tuple{true, true, true}};
+  // Flag combinations
+  // 2D: only X/Y combinations, Z always false
+  // 3D: original full set
+  const std::vector<std::tuple<bool, bool, bool>> flagOrder = is2D ? std::vector<std::tuple<bool, bool, bool>>{{false, true, false}, {true, false, false}, {true, true, false}} :
+                                                                     std::vector<std::tuple<bool, bool, bool>>{{false, false, true}, {false, true, false}, {false, true, true}, {true, false, false},
+                                                                                                               {true, false, true},  {true, true, false},  {true, true, true}};
 
-  for(const auto& [cx, cy, cz] : kFlagOrder)
+  // --------------------
+  // Voxel subvolumes
+  // --------------------
+  for(const auto& [cx, cy, cz] : flagOrder)
   {
     std::vector<std::optional<IntVec2Type>> xOpts = cx ? std::vector<std::optional<IntVec2Type>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+
     std::vector<std::optional<IntVec2Type>> yOpts = cy ? std::vector<std::optional<IntVec2Type>>(C.voxelY.begin(), C.voxelY.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
-    std::vector<std::optional<IntVec2Type>> zOpts = cz ? std::vector<std::optional<IntVec2Type>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+
+    std::vector<std::optional<IntVec2Type>> zOpts = (!is2D && cz) ? std::vector<std::optional<IntVec2Type>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
 
     for(const auto& xb : xOpts)
     {
@@ -1739,7 +1749,9 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
           cv.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
           cv.cropX = cx;
           cv.cropY = cy;
-          cv.cropZ = cz;
+          cv.cropZ = false;
+          cv.is2D = is2D;
+
           if(xb)
           {
             cv.xBoundVoxels = *xb;
@@ -1748,20 +1760,31 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
           {
             cv.yBoundVoxels = *yb;
           }
-          if(zb)
+
+          // Z never set in 2D
+          if(!is2D && zb)
           {
             cv.zBoundVoxels = *zb;
+            cv.cropZ = cz;
           }
+
           out.push_back(cv);
         }
       }
     }
   }
-  for(const auto& [cx, cy, cz] : kFlagOrder)
+
+  // --------------------
+  // Physical subvolumes
+  // --------------------
+  for(const auto& [cx, cy, cz] : flagOrder)
   {
     std::vector<std::optional<FloatVec2Type>> xOpts = cx ? std::vector<std::optional<FloatVec2Type>>(C.physX.begin(), C.physX.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+
     std::vector<std::optional<FloatVec2Type>> yOpts = cy ? std::vector<std::optional<FloatVec2Type>>(C.physY.begin(), C.physY.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
-    std::vector<std::optional<FloatVec2Type>> zOpts = cz ? std::vector<std::optional<FloatVec2Type>>(C.physZ.begin(), C.physZ.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+
+    std::vector<std::optional<FloatVec2Type>> zOpts =
+        (!is2D && cz) ? std::vector<std::optional<FloatVec2Type>>(C.physZ.begin(), C.physZ.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
 
     for(const auto& xb : xOpts)
     {
@@ -1773,7 +1796,9 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
           cv.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
           cv.cropX = cx;
           cv.cropY = cy;
-          cv.cropZ = cz;
+          cv.cropZ = false;
+          cv.is2D = is2D;
+
           if(xb)
           {
             cv.xBoundPhysical = *xb;
@@ -1782,10 +1807,14 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
           {
             cv.yBoundPhysical = *yb;
           }
-          if(zb)
+
+          // Z never set in 2D
+          if(!is2D && zb)
           {
             cv.zBoundPhysical = *zb;
+            cv.cropZ = cz;
           }
+
           out.push_back(cv);
         }
       }

@@ -157,13 +157,15 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
   }
   else if(croppingOptions.cropZ && croppingOptions.type == CropGeometryParameter::ValueType::TypeEnum::PhysicalSubvolume)
   {
-    Vec3<usize> destDims = imageGeom.getDimensions();
-    std::optional<usize> result = imageGeom.getIndex(croppingOptions.xBoundPhysical[0], croppingOptions.yBoundPhysical[0], croppingOptions.zBoundPhysical[0]);
+    SizeVec3 destDims = imageGeom.getDimensions();
+    FloatVec3 destOrigin = imageGeom.getOrigin();
+
+    std::optional<usize> result = imageGeom.getIndex(destOrigin[0], destOrigin[1], croppingOptions.zBoundPhysical[0]);
     if(result.has_value())
     {
       startSlice = result.value() / (destDims[0] * destDims[1]);
     }
-    result = imageGeom.getIndex(croppingOptions.xBoundPhysical[1], croppingOptions.yBoundPhysical[1], croppingOptions.zBoundPhysical[1]);
+    result = imageGeom.getIndex(destOrigin[0], destOrigin[1], croppingOptions.zBoundPhysical[1]);
     if(result.has_value())
     {
       endSlice = result.value() / (destDims[0] * destDims[1]);
@@ -575,22 +577,44 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
         const float64 originZ = (shouldChangeOrigin && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed) ? origin[2] : 0;
         const float64 spacingZ = (shouldChangeSpacing && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed) ? spacing[2] : 1;
 
-        const float64 startIndex = (zMinPhys - originZ) / spacingZ;
-        const float64 endIndex = (zMaxPhys - originZ) / spacingZ;
-
-        const auto zMinIndex = static_cast<usize>(std::floor(startIndex));
-        const auto zMaxIndex = static_cast<usize>(std::floor(endIndex));
-
-        if(zMaxIndex >= zMinIndex)
+        if(zMaxPhys < zMinPhys)
         {
-          zDim = zMaxIndex - zMinIndex + 1;
+          return MakePreflightErrorResult(
+              -23520, fmt::format("Invalid Z cropping range: the maximum physical Z value is smaller than the minimum. Please ensure the start Z is less than or equal to the end Z."));
         }
-      }
 
-      // Clamp Z dimension to the total number of available slices
-      if(zDim > totalSlices)
-      {
-        zDim = totalSlices;
+        if(spacingZ <= 0)
+        {
+          return MakePreflightErrorResult(-23521, fmt::format("Invalid Z spacing. The Z spacing must be greater than zero to apply physical cropping."));
+        }
+
+        if(zMinPhys < originZ || zMinPhys > (static_cast<float32>(zDim) * spacingZ + originZ))
+        {
+          return MakePreflightErrorResult(-23522, fmt::format("The minimum Z cropping value ({}) is outside the image bounds. Valid Z range is [{} to {}] in physical units.", zMinPhys, originZ,
+                                                              (static_cast<float32>(zDim) * spacingZ + originZ)));
+        }
+
+        if(zMaxPhys < originZ || zMaxPhys > (static_cast<float32>(zDim) * spacingZ + originZ))
+        {
+          return MakePreflightErrorResult(-23523, fmt::format("The maximum Z cropping value ({}) is outside the image bounds. Valid Z range is [{} to {}] in physical units.", zMaxPhys, originZ,
+                                                              (static_cast<float32>(zDim) * spacingZ + originZ)));
+        }
+
+        const auto zMinIndex = static_cast<usize>(std::floor((zMinPhys - originZ) / spacingZ));
+        if(zMinIndex >= zDim)
+        {
+          return MakePreflightErrorResult(-23524, fmt::format("The minimum Z cropping value ({}) converts to slice index {} which is outside the valid slice index range [0 to {}].", zMinPhys,
+                                                              zMinIndex, (zDim > 0 ? zDim - 1 : 0)));
+        }
+
+        const auto zMaxIndex = static_cast<usize>(std::floor((zMaxPhys - originZ) / spacingZ));
+        if(zMaxIndex >= zDim)
+        {
+          return MakePreflightErrorResult(-23525, fmt::format("The maximum Z cropping value ({}) converts to slice index {} which is outside the valid slice index range [0 to {}].", zMaxPhys,
+                                                              zMaxIndex, (zDim > 0 ? zDim - 1 : 0)));
+        }
+
+        zDim = zMaxIndex - zMinIndex + 1;
       }
     }
 

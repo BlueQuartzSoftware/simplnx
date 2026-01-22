@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 #include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 #include "ITKImageProcessing/Filters/ITKImportImageStackFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
@@ -10,7 +11,6 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -164,6 +164,209 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
   UnitTest::CompareDataArrays<uint8>(xGeneratedImageData, xFlippedImageData);
   UnitTest::CompareDataArrays<uint8>(yGeneratedImageData, yFlippedImageData);
 }
+
+// ============================================================================
+// NEW REFACTORED TEST INFRASTRUCTURE
+// ============================================================================
+
+// Test data paths
+const std::string k_TestDataDirName = "import_image_stack_test";
+const fs::path k_TestDataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_TestDataDirName;
+const fs::path k_InputImagesDir = k_TestDataDir / "input_images";
+const fs::path k_ExemplarFile = k_TestDataDir / "import_image_stack_test.dream3d";
+
+// Standard test parameters
+const std::string k_FilePrefix = "200x200_";
+const std::string k_FileExtension = ".tif";
+
+// Cropping boundaries (crop to the colored square: 50:150 in X/Y, all Z)
+const IntVec2Type k_VoxelCropX = {50, 150};
+const IntVec2Type k_VoxelCropY = {50, 150};
+const IntVec2Type k_VoxelCropZ = {0, 1};
+
+const FloatVec2Type k_PhysicalCropX = {50.0f, 150.0f};
+const FloatVec2Type k_PhysicalCropY = {50.0f, 150.0f};
+const FloatVec2Type k_PhysicalCropZ = {0.0f, 1.0f};
+
+// Resampling/flip/timing constants
+const ChoicesParameter::ValueType k_NoResample = 0;
+const ChoicesParameter::ValueType k_ScalingFactor = 1;
+const ChoicesParameter::ValueType k_ExactDimensions = 2;
+const ChoicesParameter::ValueType k_NoFlip = 0;
+const ChoicesParameter::ValueType k_FlipX = 1;
+const ChoicesParameter::ValueType k_FlipY = 2;
+const ChoicesParameter::ValueType k_Preprocessed = 0;
+const ChoicesParameter::ValueType k_Postprocessed = 1;
+
+/**
+ * @brief Helper to create standard file list for test images
+ */
+GeneratedFileListParameter::ValueType CreateStandardFileList()
+{
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = k_InputImagesDir.string();
+  fileList.filePrefix = k_FilePrefix;
+  fileList.fileSuffix = "";
+  fileList.fileExtension = k_FileExtension;
+  fileList.startIndex = 0;
+  fileList.endIndex = 2;
+  fileList.incrementIndex = 1;
+  fileList.paddingDigits = 1;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  return fileList;
+}
+
+/**
+ * @brief Helper to create cropping options
+ */
+CropGeometryParameter::ValueType CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum type, bool cropX, bool cropY, bool cropZ)
+{
+  CropGeometryParameter::ValueType crop;
+  crop.type = type;
+  crop.cropX = cropX;
+  crop.cropY = cropY;
+  crop.cropZ = cropZ;
+
+  if(type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
+  {
+    crop.xBoundVoxels = k_VoxelCropX;
+    crop.yBoundVoxels = k_VoxelCropY;
+    crop.zBoundVoxels = k_VoxelCropZ;
+  }
+  else if(type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume)
+  {
+    crop.xBoundPhysical = k_PhysicalCropX;
+    crop.yBoundPhysical = k_PhysicalCropY;
+    crop.zBoundPhysical = k_PhysicalCropZ;
+  }
+
+  return crop;
+}
+
+/**
+ * @brief Execute filter with standard parameters + custom overrides
+ */
+Result<> ExecuteImportImageStack(DataStructure& dataStructure, const DataPath& outputGeomPath, const CropGeometryParameter::ValueType& cropOptions = {},
+                                 ChoicesParameter::ValueType resampleMode = k_NoResample, float32 scalingFactor = 100.0f, const VectorUInt64Parameter::ValueType& exactDims = {200, 200},
+                                 ChoicesParameter::ValueType flipMode = k_NoFlip, bool convertToGrayscale = false, bool changeOrigin = false, const std::vector<float64>& origin = {0.0, 0.0, 0.0},
+                                 bool changeSpacing = false, const std::vector<float64>& spacing = {1.0, 1.0, 1.0}, ChoicesParameter::ValueType originSpacingTiming = k_Postprocessed)
+{
+  ITKImportImageStackFilter filter;
+  Arguments args;
+
+  auto fileList = CreateStandardFileList();
+
+  args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, fileList);
+  args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, outputGeomPath);
+  args.insertOrAssign(ITKImportImageStackFilter::k_CroppingOptions_Key, cropOptions);
+  args.insertOrAssign(ITKImportImageStackFilter::k_ResampleImagesChoice_Key, resampleMode);
+  args.insertOrAssign(ITKImportImageStackFilter::k_ImageTransformChoice_Key, flipMode);
+  args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, convertToGrayscale);
+  args.insertOrAssign(ITKImportImageStackFilter::k_ChangeOrigin_Key, changeOrigin);
+  args.insertOrAssign(ITKImportImageStackFilter::k_Origin_Key, origin);
+  args.insertOrAssign(ITKImportImageStackFilter::k_ChangeSpacing_Key, changeSpacing);
+  args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, spacing);
+  args.insertOrAssign(ITKImportImageStackFilter::k_OriginSpacingProcessing_Key, originSpacingTiming);
+
+  if(resampleMode == k_ScalingFactor)
+  {
+    args.insertOrAssign(ITKImportImageStackFilter::k_Scaling_Key, scalingFactor);
+  }
+  else if(resampleMode == k_ExactDimensions)
+  {
+    args.insertOrAssign(ITKImportImageStackFilter::k_ExactXYDimensions_Key, exactDims);
+  }
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  if(preflightResult.outputActions.invalid())
+  {
+    return ConvertResult(std::move(preflightResult.outputActions));
+  }
+
+  auto executeResult = filter.execute(dataStructure, args);
+  return executeResult.result;
+}
+
+/**
+ * @brief Verify expected geometry dimensions
+ */
+void VerifyGeometryDimensions(const DataStructure& ds, const DataPath& geomPath, usize expectedX, usize expectedY, usize expectedZ)
+{
+  const auto* geom = ds.getDataAs<ImageGeom>(geomPath);
+  REQUIRE(geom != nullptr);
+
+  SizeVec3 dims = geom->getDimensions();
+  REQUIRE(dims[0] == expectedX);
+  REQUIRE(dims[1] == expectedY);
+  REQUIRE(dims[2] == expectedZ);
+}
+
+/**
+ * @brief Verify origin and spacing
+ */
+void VerifyOriginSpacing(const DataStructure& ds, const DataPath& geomPath, const FloatVec3& expectedOrigin, const FloatVec3& expectedSpacing)
+{
+  const auto* geom = ds.getDataAs<ImageGeom>(geomPath);
+  REQUIRE(geom != nullptr);
+
+  FloatVec3 origin = geom->getOrigin();
+  FloatVec3 spacing = geom->getSpacing();
+
+  REQUIRE(origin[0] == Approx(expectedOrigin[0]));
+  REQUIRE(origin[1] == Approx(expectedOrigin[1]));
+  REQUIRE(origin[2] == Approx(expectedOrigin[2]));
+
+  REQUIRE(spacing[0] == Approx(expectedSpacing[0]));
+  REQUIRE(spacing[1] == Approx(expectedSpacing[1]));
+  REQUIRE(spacing[2] == Approx(expectedSpacing[2]));
+}
+
+/**
+ * @brief Load exemplar dataset and compare generated geometry against it
+ */
+void CompareAgainstExemplar(const DataStructure& generatedDS, const DataPath& generatedGeomPath, const fs::path& exemplarFilePath, const std::string& exemplarGeomName)
+{
+  // Load exemplar data
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(exemplarFilePath);
+
+  // Compare geometries
+  const auto* generatedGeom = generatedDS.getDataAs<ImageGeom>(generatedGeomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({exemplarGeomName}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  // Compare image data arrays
+  DataPath generatedDataPath = generatedGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({exemplarGeomName, Constants::k_Cell_Data, k_ImageDataName});
+
+  REQUIRE_NOTHROW(generatedDS.getDataRefAs<IDataArray>(generatedDataPath));
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
+  const auto& generatedArray = generatedDS.getDataRefAs<IDataArray>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+
+  // Compare based on data type
+  switch(generatedArray.getDataType())
+  {
+  case DataType::uint8:
+    UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+    break;
+  case DataType::int8:
+    UnitTest::CompareDataArrays<int8>(exemplarArray, generatedArray);
+    break;
+  case DataType::uint16:
+    UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
+    break;
+  case DataType::int16:
+    UnitTest::CompareDataArrays<int16>(exemplarArray, generatedArray);
+    break;
+  case DataType::float32:
+    UnitTest::CompareDataArrays<float32>(exemplarArray, generatedArray);
+    break;
+  default:
+    REQUIRE(false); // Unsupported data type
+    break;
+  }
+}
+
 } // namespace
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoInput", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -321,15 +524,15 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Eve
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
-  const std::string k_FilePrefix = "image_flip_even_even_";
+  const std::string filePrefix = "image_flip_even_even_";
 
   DataStructure dataStructure;
 
   // Generate XY Image Geometries with ITKImportImageStackFilter
-  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
+  ::ExecuteImportImageStackXY(dataStructure, filePrefix);
 
   // Read in exemplars
-  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+  ::ReadInFlippedXYExemplars(dataStructure, filePrefix);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/even_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -345,15 +548,15 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Even-Odd
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
-  const std::string k_FilePrefix = "image_flip_even_odd_";
+  const std::string filePrefix = "image_flip_even_odd_";
 
   DataStructure dataStructure;
 
   // Generate XY Image Geometries with ITKImportImageStackFilter
-  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
+  ::ExecuteImportImageStackXY(dataStructure, filePrefix);
 
   // Read in exemplars
-  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+  ::ReadInFlippedXYExemplars(dataStructure, filePrefix);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/even_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -369,15 +572,15 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Even
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
-  const std::string k_FilePrefix = "image_flip_odd_even_";
+  const std::string filePrefix = "image_flip_odd_even_";
 
   DataStructure dataStructure;
 
   // Generate XY Image Geometries with ITKImportImageStackFilter
-  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
+  ::ExecuteImportImageStackXY(dataStructure, filePrefix);
 
   // Read in exemplars
-  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+  ::ReadInFlippedXYExemplars(dataStructure, filePrefix);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -393,15 +596,15 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd 
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_flip_test_images.tar.gz", k_FlippedImageStackDirName);
 
-  const std::string k_FilePrefix = "image_flip_odd_odd_";
+  const std::string filePrefix = "image_flip_odd_odd_";
 
   DataStructure dataStructure;
 
   // Generate XY Image Geometries with ITKImportImageStackFilter
-  ::ExecuteImportImageStackXY(dataStructure, k_FilePrefix);
+  ::ExecuteImportImageStackXY(dataStructure, filePrefix);
 
   // Read in exemplars
-  ::ReadInFlippedXYExemplars(dataStructure, k_FilePrefix);
+  ::ReadInFlippedXYExemplars(dataStructure, filePrefix);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -413,98 +616,504 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: All Combinations", "[ITKImageProcessing][ITKImportImageStackFilter]")
+TEST_CASE("ITKImportImageStack::Baseline_NoProcessing", "[ITKImageProcessing][ITKImportImageStackFilter][.][Baseline]")
 {
-  // Only load the plugins once for this entire test
-  static std::once_flag once;
-  std::call_once(once, [] { UnitTest::LoadPlugins(); });
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test.tar.gz", "import_image_stack_test");
-  const fs::path exemplaryFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "import_image_stack_test/import_image_stack_test.dream3d";
-  const fs::path inputImagesFilePath = fs::path(unit_test::k_TestFilesDir.view()) / "import_image_stack_test/input_images";
+  UnitTest::LoadPlugins();
+  DataStructure ds;
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplaryFilePath);
+  const DataPath geomPath({"Baseline_Geometry"});
+  auto result = ExecuteImportImageStack(ds, geomPath);
 
-  GeneratedFileListParameter::ValueType fileList;
-  fileList.filePrefix = "input_image_";
-  fileList.fileSuffix = "";
-  fileList.fileExtension = ".tif";
-  fileList.inputPath = inputImagesFilePath.string();
-  fileList.incrementIndex = 1;
-  fileList.startIndex = 0;
-  fileList.endIndex = 2;
-  fileList.paddingDigits = 1;
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  UnitTest::Cropping::AxisBoundsChoices bounds;
-  bounds.voxelX = {IntVec2Type{50, 150}};
-  bounds.voxelY = {IntVec2Type{50, 150}};
-  bounds.voxelZ = {IntVec2Type{0, 1}};
-  bounds.physX = {FloatVec2Type{100.0f, 300.0f}};
-  bounds.physY = {FloatVec2Type{100.0f, 300.0f}};
-  bounds.physZ = {FloatVec2Type{10.0f, 30.0f}};
-  auto allCropVals = UnitTest::Cropping::GenerateAllCropValues(bounds);
+  VerifyGeometryDimensions(ds, geomPath, 200, 200, 3);
+  VerifyOriginSpacing(ds, geomPath, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
 
-  bool convertToGrayScale = GENERATE(false, true);
-  ChoicesParameter::ValueType resampleIdx = GENERATE(0, 1, 2);
-  ChoicesParameter::ValueType imageTransformIdx = GENERATE(0, 1, 2);
-  auto croppingOptions = GENERATE_COPY(from_range(allCropVals));
-  float32 scalingChoice = GENERATE(10.0);
-  VectorUInt64Parameter::ValueType exactXYDimensionsChoice = GENERATE(VectorUInt64Parameter::ValueType{64, 64});
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Baseline_Geometry");
+}
 
-  static std::atomic<int> geomCounter{1};
-  const int myId = geomCounter.fetch_add(1);
+// =============================================================================
+// CROPPING TESTS
+// =============================================================================
 
-  const std::string exemplaryGeomName =
-      fmt::format("ImageGeometry {:0>3} (CroppingOptions=[{}, {}, {}, {}] Resample={} ImageFlip={} Grayscale={})", myId, UnitTest::Cropping::CropTypeToString(croppingOptions.type),
-                  UnitTest::Cropping::BoolToString(croppingOptions.cropX), UnitTest::Cropping::BoolToString(croppingOptions.cropY), UnitTest::Cropping::BoolToString(croppingOptions.cropZ),
-                  resampleIdx, imageTransformIdx, UnitTest::Cropping::BoolToString(convertToGrayScale));
-  const std::string computedGeomName = "ImageGeometry";
+TEST_CASE("ITKImportImageStack::Crop_Voxel_XOnly", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
-  DYNAMIC_SECTION(exemplaryGeomName)
-  {
-    ITKImportImageStackFilter filter;
-    Arguments args;
+  UnitTest::LoadPlugins();
+  DataStructure ds;
 
-    args.insertOrAssign(ITKImportImageStackFilter::k_InputFileListInfo_Key, fileList);
-    args.insertOrAssign(ITKImportImageStackFilter::k_CroppingOptions_Key, croppingOptions);
-    args.insertOrAssign(ITKImportImageStackFilter::k_ResampleImagesChoice_Key, resampleIdx);
-    args.insertOrAssign(ITKImportImageStackFilter::k_ImageTransformChoice_Key, imageTransformIdx);
-    args.insertOrAssign(ITKImportImageStackFilter::k_ConvertToGrayScale_Key, convertToGrayScale);
-    args.insertOrAssign(ITKImportImageStackFilter::k_ChangeSpacing_Key, true);
-    args.insertOrAssign(ITKImportImageStackFilter::k_Spacing_Key, std::vector<float64>{2.0f, 2.0f, 20.0f});
-    args.insertOrAssign(ITKImportImageStackFilter::k_ImageGeometryPath_Key, DataPath({computedGeomName}));
+  const DataPath geomPath({"Crop_Voxel_X"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, false, false);
 
-    if(resampleIdx == 1)
-    {
-      args.insertOrAssign(ITKImportImageStackFilter::k_Scaling_Key, scalingChoice);
-    }
-    else if(resampleIdx == 2)
-    {
-      args.insertOrAssign(ITKImportImageStackFilter::k_ExactXYDimensions_Key, exactXYDimensionsChoice);
-    }
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  // Cropped X: 50-150 = 101 voxels, Y and Z unchanged
+  VerifyGeometryDimensions(ds, geomPath, 101, 200, 3);
 
-    auto executeResult = filter.execute(dataStructure, args);
-    if(executeResult.result.invalid())
-    {
-      INFO([&] {
-        std::ostringstream oss;
-        oss << "Errors for combo '" << exemplaryGeomName << "':\n";
-        for(const auto& e : executeResult.result.errors())
-          oss << "  - " << e.code << " : " << e.message << "\n";
-        return oss.str();
-      }());
-    }
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_X");
+}
 
-    UnitTest::CompareImageGeometry(dataStructure, DataPath({exemplaryGeomName}), DataPath({computedGeomName}));
+TEST_CASE("ITKImportImageStack::Crop_Voxel_YOnly", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
-    auto exemplaryAttrMatrixPath = DataPath({exemplaryGeomName}).createChildPath(Constants::k_Cell_Data);
-    auto computedAttrMatrixPath = DataPath({computedGeomName}).createChildPath(Constants::k_Cell_Data);
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplaryAttrMatrixPath, dataStructure, computedAttrMatrixPath, true);
-  }
+  UnitTest::LoadPlugins();
+  DataStructure ds;
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  const DataPath geomPath({"Crop_Voxel_Y"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, false, true, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // Cropped Y: 50-150 = 101 voxels, X and Z unchanged
+  VerifyGeometryDimensions(ds, geomPath, 200, 101, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_Y");
+}
+
+TEST_CASE("ITKImportImageStack::Crop_Voxel_ZOnly", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Crop_Voxel_Z"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, false, false, true);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // Cropped Z: 0-1 inclusive = 2 slices
+  VerifyGeometryDimensions(ds, geomPath, 200, 200, 2);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_Z");
+}
+
+TEST_CASE("ITKImportImageStack::Crop_Voxel_XY", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Crop_Voxel_XY"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, true, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // Cropped to colored square: 101x101x3
+  VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_XY");
+}
+
+TEST_CASE("ITKImportImageStack::Crop_Voxel_XYZ", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Crop_Voxel_XYZ"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, true, true);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // Full crop: 101x101x2 (X: 50-150, Y: 50-150, Z: 0-1)
+  VerifyGeometryDimensions(ds, geomPath, 101, 101, 2);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_XYZ");
+}
+
+TEST_CASE("ITKImportImageStack::Crop_Physical_XY", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Crop_Physical_XY"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, true, true, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // Physical crop with default origin/spacing should match voxel crop
+  VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Physical_XY");
+}
+
+TEST_CASE("ITKImportImageStack::Crop_Physical_Z", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Crop_Physical_Z"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume, false, false, true);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // Physical Z crop: 0.0-1.0 with default spacing 1.0 = 2 slices
+  VerifyGeometryDimensions(ds, geomPath, 200, 200, 2);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Physical_Z");
+}
+
+// =============================================================================
+// RESAMPLING TESTS
+// =============================================================================
+
+TEST_CASE("ITKImportImageStack::Resample_ScalingFactor", "[ITKImageProcessing][ITKImportImageStackFilter][.][Resampling]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Resample_Scaling50"});
+  auto noCrop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::NoCropping, false, false, false);
+
+  // 50% scaling -> 200x200 becomes 100x100
+  auto result = ExecuteImportImageStack(ds, geomPath, noCrop, k_ScalingFactor, 50.0f);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 100, 100, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Resample_Scaling_50");
+}
+
+TEST_CASE("ITKImportImageStack::Resample_ExactDimensions", "[ITKImageProcessing][ITKImportImageStackFilter][.][Resampling]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Resample_Exact128x128"});
+  auto noCrop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::NoCropping, false, false, false);
+
+  // Exact dimensions: 128x128
+  auto result = ExecuteImportImageStack(ds, geomPath, noCrop, k_ExactDimensions, 100.0f, {128, 128});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 128, 128, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Resample_Exact_128x128");
+}
+
+// =============================================================================
+// GRAYSCALE TESTS
+// =============================================================================
+
+TEST_CASE("ITKImportImageStack::Grayscale_Conversion", "[ITKImageProcessing][ITKImportImageStackFilter][.][Grayscale]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Grayscale"});
+  auto noCrop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::NoCropping, false, false, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, noCrop, k_NoResample, 100.0f, {200, 200}, k_NoFlip, true); // convertToGrayscale=true
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // Verify geometry created
+  VerifyGeometryDimensions(ds, geomPath, 200, 200, 3);
+
+  // Verify grayscale array was created
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Grayscale_Conversion");
+}
+
+// =============================================================================
+// FLIP TESTS
+// =============================================================================
+
+TEST_CASE("ITKImportImageStack::FlipY", "[ITKImageProcessing][ITKImportImageStackFilter][.][Flip]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"FlipY_Test"});
+  auto noCrop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::NoCropping, false, false, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, noCrop, k_NoResample, 100.0f, {200, 200}, k_FlipY);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 200, 200, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "FlipY_Test");
+}
+
+// =============================================================================
+// ORIGIN/SPACING TESTS
+// =============================================================================
+
+TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"OriginSpacing_Preprocessed"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, true, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions, k_NoResample, 100.0f, {200, 200}, k_NoFlip, false, true, {10.0, 20.0, 30.0}, true, {2.0, 2.0, 2.0}, k_Preprocessed);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
+  // Preprocessed: origin/spacing applied before crop, so final origin = [10 + 50*2, 20 + 50*2, 30] = [110, 120, 30]
+  VerifyOriginSpacing(ds, geomPath, {110.0f, 120.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "OriginSpacing_Preprocessed");
+}
+
+TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"OriginSpacing_Postprocessed"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, true, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions, k_NoResample, 100.0f, {200, 200}, k_NoFlip, false, true, {10.0, 20.0, 30.0}, true, {2.0, 2.0, 2.0}, k_Postprocessed);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
+  VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "OriginSpacing_Postprocessed");
+}
+
+TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed_WithZCrop", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"OriginSpacing_Preprocessed_WithZCrop"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, false, false, true);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions, k_NoResample, 100.0f, {200, 200}, k_NoFlip, false, true, {10.0, 20.0, 30.0}, true, {2.0, 2.0, 2.0}, k_Preprocessed);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 200, 200, 2);
+  VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "OriginSpacing_Preprocessed_WithZCrop");
+}
+
+TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed_WithZCrop", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"OriginSpacing_Postprocessed_WithZCrop"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, false, false, true);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions, k_NoResample, 100.0f, {200, 200}, k_NoFlip, false, true, {10.0, 20.0, 30.0}, true, {2.0, 2.0, 2.0}, k_Postprocessed);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 200, 200, 2);
+  VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "OriginSpacing_Postprocessed_WithZCrop");
+}
+
+// =============================================================================
+// INTERACTION TESTS
+// =============================================================================
+
+TEST_CASE("ITKImportImageStack::Interaction_Crop_Resample", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Crop_Then_Resample"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, true, false);
+
+  // Crop to 101x101, then resample to 64x64
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions, k_ExactDimensions, 100, {64, 64});
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 64, 64, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_And_Resample");
+}
+
+TEST_CASE("ITKImportImageStack::Interaction_Crop_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Crop_Then_FlipX"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, true, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions, k_NoResample, 100.0f, {200, 200}, k_FlipX);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // Crop to 101x101x3 then flip along the X axis
+  VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_And_FlipX");
+}
+
+TEST_CASE("ITKImportImageStack::Interaction_Resample_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Resample_Then_FlipX"});
+  auto noCrop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::NoCropping, false, false, false);
+
+  // Resample to 128x128x3 then flip along the X axis
+  auto result = ExecuteImportImageStack(ds, geomPath, noCrop, k_ExactDimensions, 100.0f, {128, 128}, k_FlipX);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 128, 128, 3);
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Resample_And_FlipX");
+}
+
+TEST_CASE("ITKImportImageStack::Interaction_Crop_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Crop_Then_Grayscale"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, true, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions, k_NoResample, 100.0f, {200, 200}, k_NoFlip, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
+
+  // Verify grayscale array exists
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_And_Grayscale");
+}
+
+TEST_CASE("ITKImportImageStack::Interaction_Resample_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Resample_Then_Grayscale"});
+  auto noCrop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::NoCropping, false, false, false);
+
+  // Resample to 128x128 then convert to grayscale
+  auto result = ExecuteImportImageStack(ds, geomPath, noCrop, k_ExactDimensions, 100.0f, {128, 128}, k_NoFlip, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 128, 128, 3);
+
+  // Verify grayscale array exists
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Resample_And_Grayscale");
+}
+
+TEST_CASE("ITKImportImageStack::Interaction_Grayscale_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Grayscale_Then_FlipX"});
+  auto noCrop = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::NoCropping, false, false, false);
+
+  auto result = ExecuteImportImageStack(ds, geomPath, noCrop, k_NoResample, 100.0f, {200, 200}, k_FlipX, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  VerifyGeometryDimensions(ds, geomPath, 200, 200, 3);
+
+  // Verify grayscale array exists
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Grayscale_And_FlipX");
+}
+
+TEST_CASE("ITKImportImageStack::Interaction_FullPipeline", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+{
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
+
+  UnitTest::LoadPlugins();
+  DataStructure ds;
+
+  const DataPath geomPath({"Full_Pipeline_Calculated"});
+  auto cropOptions = CreateCropOptions(CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume, true, true, false);
+
+  // Crop XY [50,150] -> Resample to 100x100 -> Scale 50% -> Grayscale -> Flip X
+  auto result = ExecuteImportImageStack(ds, geomPath, cropOptions, k_ScalingFactor, 50.0f, {100, 100}, k_FlipX, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
+
+  // 100 * 0.5 = 50
+  VerifyGeometryDimensions(ds, geomPath, 50, 50, 3);
+
+  // Verify grayscale array exists
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+
+  // Compare against exemplar
+  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Full_Pipeline");
 }
