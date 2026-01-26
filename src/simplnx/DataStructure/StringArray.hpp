@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/AbstractStringStore.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
 
@@ -50,6 +51,25 @@ public:
   const_reference operator[](usize index) const;
   const_reference at(usize index) const;
   void setValue(usize index, const std::string& value);
+
+  /**
+   * @brief Returns the value at the tuple and component index as a std::string.
+   *        NOTE: This function is slow and should be used sparingly and avoided inside of a tight loop!
+   * @param tupleIndex
+   * @param compIndex The component index is ignored here
+   * @param format The fmt formatting string is ignored here
+   * @return std::string
+   */
+  std::string toString(const usize tupleIndex, const usize compIndex, const std::string& format = "{}") const override;
+
+  /**
+   * @brief Sets the value at the tuple and component index to the passed in string value
+   * @param tupleIndex
+   * @param compIndex The component index is ignored here
+   * @param value
+   * @return bool
+   */
+  bool setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value) override;
 
   iterator begin();
   iterator end();

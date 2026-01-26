@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractListStore.hpp"
@@ -196,6 +197,26 @@ public:
    * @param neighborLists
    */
   void setLists(const std::vector<std::vector<T>>& neighborLists);
+
+  /**
+   * @brief Returns the value at the tuple and component index (i.e. list number and element number within that list) as a std::string.
+   *        NOTE: This function is slow and should be used sparingly and avoided inside of a tight loop!
+   * @param tupleIndex This is the index to indicate which list
+   * @param compIndex This is the index to indicate which element in the list
+   * @param format Optional fmt formatting, this will be ignored for integer types and a simple {} will always be used
+   * @return std::string
+   */
+  std::string toString(const usize tupleIndex, const usize compIndex, const std::string& format = "{}") const override;
+
+  /**
+   * @brief Sets the value at the tuple and component index (i.e. list number and element number within that list) to the value parsed
+   *        as the appropriate type. If the value cannot be properly parsed as the appropriate type, nothing is changed.
+   * @param tupleIndex
+   * @param compIndex
+   * @param value
+   * @return bool
+   */
+  bool setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value) override;
 
   /**
    * @brief getValue
@@ -445,6 +466,66 @@ DataType SIMPLNX_EXPORT NeighborList<float32>::getDataType() const;
 
 template <>
 DataType SIMPLNX_EXPORT NeighborList<float64>::getDataType() const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<int8>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<int16>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<int32>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<int64>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<uint8>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<uint16>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<uint32>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<uint64>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<float32>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+std::string SIMPLNX_EXPORT NeighborList<float64>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const;
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<int8>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<uint8>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<int16>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<uint16>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<int32>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<uint32>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<int64>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<uint64>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<float32>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
+
+template <>
+bool SIMPLNX_EXPORT NeighborList<float64>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value);
 
 /**
  * Boolean NeighborLists are uncompilable
