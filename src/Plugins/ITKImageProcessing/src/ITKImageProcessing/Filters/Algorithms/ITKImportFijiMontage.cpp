@@ -219,12 +219,13 @@ private:
       if(m_InputValues->changeDataType)
       {
         imageReaderResult = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, bound.Filepath.string(),
-                                                                                                                        imageDataPath, m_InputValues->destType, croppingOptions, std::optional<std::vector<float64>>{}, std::optional<std::vector<float64>>{});
+                                                                                                                        imageDataPath, m_InputValues->destType, croppingOptions,
+                                                                                                                        std::optional<std::vector<float64>>{}, std::optional<std::vector<float64>>{});
       }
       else
       {
-        imageReaderResult = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, imageDataPath,
-                                                                                                                        bound.Filepath.string(), croppingOptions, std::optional<std::vector<float64>>{}, std::optional<std::vector<float64>>{});
+        imageReaderResult = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(
+            bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string(), croppingOptions, std::optional<std::vector<float64>>{}, std::optional<std::vector<float64>>{});
       }
       if(imageReaderResult.invalid())
       {
