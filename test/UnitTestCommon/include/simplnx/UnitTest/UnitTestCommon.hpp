@@ -883,12 +883,8 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
     {
       const auto* parentA = dataStructureA.getDataAs<BaseGroup>(parentGroup);
       const auto* parentB = dataStructureB.getDataAs<BaseGroup>(parentGroup);
-      if(parentA == nullptr || parentB == nullptr)
-      {
-        // std::cout << "DEBUG TEST: parentA or parentB is null!";
-        INFO("DEBUG TEST: parentA or parentB is null!");
-        REQUIRE(false);
-      }
+      REQUIRE(parentA != nullptr);
+      REQUIRE(parentB != nullptr);
       // std::cout << "DEBUG TEST: ds parentA size = " << parentA->getSize() << "\tds parentB size = " << parentB->getSize();
       INFO(fmt::format("DEBUG TEST: ds parentA size = {}\tds parentB size = {}", parentA->getSize(), parentB->getSize()));
       REQUIRE(parentA->getSize() == parentB->getSize());
@@ -896,26 +892,28 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
       childrenNamesB = parentB->getDataMap().getNames();
     }
 
-    for(int i = 0; i < childrenNamesA.size(); ++i)
+    for(usize i = 0; i < childrenNamesA.size(); ++i)
     {
       // std::cout << "DEBUG TEST: child A name = " << childrenNamesA[i] << "\tchild B name = " << childrenNamesB[i];
       INFO(fmt::format("DEBUG TEST: child A name = '{}'\tchild B name = '{}'", childrenNamesA[i], childrenNamesB[i]));
       REQUIRE(childrenNamesA[i] == childrenNamesB[i]);
 
       DataPath childPath = parentGroup.createChildPath(childrenNamesA[i]);
-      if(dataStructureA.getDataAs<BaseGroup>(childPath))
+      if(dataStructureA.getDataAs<BaseGroup>(childPath) != nullptr)
       {
         CompareDataStructures(dataStructureA, dataStructureB, childPath);
       }
       else
       {
-        auto objectA = dataStructureA.getData(childPath);
-        auto objectB = dataStructureB.getData(childPath);
-        // Make sure both are the same object type
-        // If this fails the test will throw and return at this point
-        REQUIRE(objectA->getDataObjectType() == objectB->getDataObjectType());
+        const DataObject* objectA = dataStructureA.getData(childPath);
+        const DataObject* objectB = dataStructureB.getData(childPath);
+        REQUIRE(objectA != nullptr);
+        REQUIRE(objectB != nullptr);
 
-        switch(objectA->getDataObjectType())
+        const DataObject::Type objectADataObjectType = objectA->getDataObjectType();
+        REQUIRE(objectADataObjectType == objectB->getDataObjectType());
+
+        switch(objectADataObjectType)
         {
         case nx::core::DataObject::Type::DynamicListArray: {
           break;
@@ -940,24 +938,24 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
           break;
         }
         case nx::core::DataObject::Type::DataArray: {
-          auto* dataArrayA = dataStructureA.getDataAs<IDataArray>(childPath);
-          auto* dataArrayB = dataStructureB.getDataAs<IDataArray>(childPath);
+          const auto* dataArrayA = dynamic_cast<const IDataArray*>(objectA);
+          const auto* dataArrayB = dynamic_cast<const IDataArray*>(objectB);
+          REQUIRE(dataArrayA != nullptr);
+          REQUIRE(dataArrayB != nullptr);
+          REQUIRE(dataArrayA->getDataType() == dataArrayB->getDataType());
+          // std::cout << "DEBUG TEST: data array A DataType = " << DataTypeToString(dataArrayA->getDataType()) << "\tdata array B DataType = " << DataTypeToString(dataArrayB->getDataType());
+          INFO(fmt::format("DEBUG TEST: data array A DataType = {}\tdata array B DataType = {}", DataTypeToString(dataArrayA->getDataType()), DataTypeToString(dataArrayB->getDataType())));
 
-          if(dataArrayA != nullptr && dataArrayB != nullptr)
-          {
-            // std::cout << "DEBUG TEST: data array A DataType = " << DataTypeToString(dataArrayA->getDataType()) << "\tdata array B DataType = " << DataTypeToString(dataArrayB->getDataType());
-            INFO(fmt::format("DEBUG TEST: data array A DataType = {}\tdata array B DataType = {}", DataTypeToString(dataArrayA->getDataType()), DataTypeToString(dataArrayB->getDataType())));
+          ExecuteDataFunction(CompareArraysFunctor{}, dataArrayA->getDataType(), *dataArrayA, *dataArrayB);
 
-            ExecuteDataFunction(CompareArraysFunctor{}, dataArrayA->getDataType(), dataStructureA.getDataRefAs<IDataArray>(childPath), dataStructureB.getDataRefAs<IDataArray>(childPath));
-          }
           break;
         }
         case nx::core::DataObject::Type::StringArray: {
-          const auto* dataArrayA = dataStructureA.getDataAs<StringArray>(childPath);
-          const auto* dataArrayB = dataStructureB.getDataAs<StringArray>(childPath);
-          REQUIRE(dataArrayA != nullptr);
-          REQUIRE(dataArrayB != nullptr);
-          CompareStringArrays(*dataArrayA, *dataArrayB);
+          const auto* stringArrayA = dynamic_cast<const StringArray*>(objectA);
+          const auto* stringArrayB = dynamic_cast<const StringArray*>(objectB);
+          REQUIRE(stringArrayA != nullptr);
+          REQUIRE(stringArrayB != nullptr);
+          CompareStringArrays(*stringArrayA, *stringArrayB);
           break;
         }
         case nx::core::DataObject::Type::VertexGeom: {
@@ -994,29 +992,32 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
           break;
         }
         case nx::core::DataObject::Type::NeighborList: {
-          auto* neighborlistA = dataStructureA.getDataAs<INeighborList>(childPath);
-          auto* neighborlistB = dataStructureB.getDataAs<INeighborList>(childPath);
-          if(neighborlistA != nullptr && neighborlistB != nullptr)
-          {
-            // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
-            // DataTypeToString(neighborlistB->getDataType());
-            INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistA->getDataType()), DataTypeToString(neighborlistB->getDataType())));
-            REQUIRE(neighborlistA->getDataType() == neighborlistB->getDataType());
+          const auto* neighborlistA = dynamic_cast<const INeighborList*>(objectA);
+          const auto* neighborlistB = dynamic_cast<const INeighborList*>(objectB);
+          REQUIRE(neighborlistA != nullptr);
+          REQUIRE(neighborlistB != nullptr);
+          // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
+          // DataTypeToString(neighborlistB->getDataType());
+          INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistA->getDataType()), DataTypeToString(neighborlistB->getDataType())));
+          REQUIRE(neighborlistA->getDataType() == neighborlistB->getDataType());
 
-            ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistA->getDataType(), neighborlistA, neighborlistB);
-          }
+          ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistA->getDataType(), neighborlistA, neighborlistB);
+
           break;
         }
-        default:
-          std::cout << "Missing DataType: " << static_cast<uint32>(objectA->getDataObjectType()) << std::endl;
-          INFO(fmt::format("DEBUG TEST: Child path ({}) cannot be found or has different array types in data structures A and B!", childPath.toString()));
+        default: {
+          auto underlyingDataType = to_underlying(objectADataObjectType);
+          std::cout << "Missing DataType: " << underlyingDataType << std::endl;
+          INFO(fmt::format("Object at path ({}) has unhandled type ({})", childPath.toString(), underlyingDataType));
           REQUIRE(false);
           break;
+        }
         }
       }
     }
   } catch(std::exception& e)
   {
+    INFO(fmt::format("Caught exception: {}", e.what()));
     REQUIRE(false);
   }
 }
