@@ -1,20 +1,14 @@
 #include <catch2/catch.hpp>
 
-#include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 #include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 #include "ITKImageProcessing/Filters/ITKImportImageStackFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-
-#include <filesystem>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
@@ -321,52 +315,6 @@ void VerifyOriginSpacing(const DataStructure& ds, const DataPath& geomPath, cons
   REQUIRE(spacing[2] == Approx(expectedSpacing[2]));
 }
 
-/**
- * @brief Load exemplar dataset and compare generated geometry against it
- */
-void CompareAgainstExemplar(const DataStructure& generatedDS, const DataPath& generatedGeomPath, const fs::path& exemplarFilePath, const std::string& exemplarGeomName)
-{
-  // Load exemplar data
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(exemplarFilePath);
-
-  // Compare geometries
-  const auto* generatedGeom = generatedDS.getDataAs<ImageGeom>(generatedGeomPath);
-  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({exemplarGeomName}));
-  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
-
-  // Compare image data arrays
-  DataPath generatedDataPath = generatedGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({exemplarGeomName, Constants::k_Cell_Data, k_ImageDataName});
-
-  REQUIRE_NOTHROW(generatedDS.getDataRefAs<IDataArray>(generatedDataPath));
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& generatedArray = generatedDS.getDataRefAs<IDataArray>(generatedDataPath);
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-
-  // Compare based on data type
-  switch(generatedArray.getDataType())
-  {
-  case DataType::uint8:
-    UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
-    break;
-  case DataType::int8:
-    UnitTest::CompareDataArrays<int8>(exemplarArray, generatedArray);
-    break;
-  case DataType::uint16:
-    UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
-    break;
-  case DataType::int16:
-    UnitTest::CompareDataArrays<int16>(exemplarArray, generatedArray);
-    break;
-  case DataType::float32:
-    UnitTest::CompareDataArrays<float32>(exemplarArray, generatedArray);
-    break;
-  default:
-    REQUIRE(false); // Unsupported data type
-    break;
-  }
-}
-
 } // namespace
 
 TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: NoInput", "[ITKImageProcessing][ITKImportImageStackFilter]")
@@ -632,7 +580,16 @@ TEST_CASE("ITKImportImageStack::Baseline_NoProcessing", "[ITKImageProcessing][IT
   VerifyOriginSpacing(ds, geomPath, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f});
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Baseline_Geometry");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Baseline_Geometry"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Baseline_Geometry", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -656,7 +613,16 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_XOnly", "[ITKImageProcessing][ITKImpo
   VerifyGeometryDimensions(ds, geomPath, 101, 200, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_X");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_X"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_X", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Crop_Voxel_YOnly", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
@@ -676,7 +642,16 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_YOnly", "[ITKImageProcessing][ITKImpo
   VerifyGeometryDimensions(ds, geomPath, 200, 101, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_Y");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Y"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Y", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Crop_Voxel_ZOnly", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
@@ -696,7 +671,16 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_ZOnly", "[ITKImageProcessing][ITKImpo
   VerifyGeometryDimensions(ds, geomPath, 200, 200, 2);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_Z");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Z"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Z", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Crop_Voxel_XY", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
@@ -716,7 +700,16 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_XY", "[ITKImageProcessing][ITKImportI
   VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_XY");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XY"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XY", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Crop_Voxel_XYZ", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
@@ -736,7 +729,16 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_XYZ", "[ITKImageProcessing][ITKImport
   VerifyGeometryDimensions(ds, geomPath, 101, 101, 2);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Voxel_XYZ");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XYZ"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XYZ", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Crop_Physical_XY", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
@@ -756,7 +758,16 @@ TEST_CASE("ITKImportImageStack::Crop_Physical_XY", "[ITKImageProcessing][ITKImpo
   VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Physical_XY");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_XY"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Physical_XY", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Crop_Physical_Z", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
@@ -776,7 +787,16 @@ TEST_CASE("ITKImportImageStack::Crop_Physical_Z", "[ITKImageProcessing][ITKImpor
   VerifyGeometryDimensions(ds, geomPath, 200, 200, 2);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_Physical_Z");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_Z"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Physical_Z", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -800,7 +820,16 @@ TEST_CASE("ITKImportImageStack::Resample_ScalingFactor", "[ITKImageProcessing][I
   VerifyGeometryDimensions(ds, geomPath, 100, 100, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Resample_Scaling_50");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Scaling_50"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_Scaling_50", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Resample_ExactDimensions", "[ITKImageProcessing][ITKImportImageStackFilter][.][Resampling]")
@@ -820,7 +849,16 @@ TEST_CASE("ITKImportImageStack::Resample_ExactDimensions", "[ITKImageProcessing]
   VerifyGeometryDimensions(ds, geomPath, 128, 128, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Resample_Exact_128x128");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Exact_128x128"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_Exact_128x128", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -848,7 +886,16 @@ TEST_CASE("ITKImportImageStack::Grayscale_Conversion", "[ITKImageProcessing][ITK
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Grayscale_Conversion");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_Conversion"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Grayscale_Conversion", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -871,7 +918,16 @@ TEST_CASE("ITKImportImageStack::FlipY", "[ITKImageProcessing][ITKImportImageStac
   VerifyGeometryDimensions(ds, geomPath, 200, 200, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "FlipY_Test");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"FlipY_Test"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"FlipY_Test", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -896,7 +952,16 @@ TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed", "[ITKImageProcessin
   VerifyOriginSpacing(ds, geomPath, {110.0f, 120.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "OriginSpacing_Preprocessed");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
@@ -916,7 +981,16 @@ TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed", "[ITKImageProcessi
   VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "OriginSpacing_Postprocessed");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed_WithZCrop", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
@@ -936,7 +1010,16 @@ TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed_WithZCrop", "[ITKImag
   VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "OriginSpacing_Preprocessed_WithZCrop");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed_WithZCrop"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed_WithZCrop", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed_WithZCrop", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
@@ -956,7 +1039,16 @@ TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed_WithZCrop", "[ITKIma
   VerifyOriginSpacing(ds, geomPath, {10.0f, 20.0f, 30.0f}, {2.0f, 2.0f, 2.0f});
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "OriginSpacing_Postprocessed_WithZCrop");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed_WithZCrop"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed_WithZCrop", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 // =============================================================================
@@ -980,7 +1072,16 @@ TEST_CASE("ITKImportImageStack::Interaction_Crop_Resample", "[ITKImageProcessing
   VerifyGeometryDimensions(ds, geomPath, 64, 64, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_And_Resample");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Resample"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_Resample", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Interaction_Crop_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
@@ -1000,7 +1101,16 @@ TEST_CASE("ITKImportImageStack::Interaction_Crop_Flip", "[ITKImageProcessing][IT
   VerifyGeometryDimensions(ds, geomPath, 101, 101, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_And_FlipX");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_FlipX"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Interaction_Resample_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
@@ -1020,7 +1130,16 @@ TEST_CASE("ITKImportImageStack::Interaction_Resample_Flip", "[ITKImageProcessing
   VerifyGeometryDimensions(ds, geomPath, 128, 128, 3);
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Resample_And_FlipX");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_FlipX"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Interaction_Crop_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
@@ -1043,7 +1162,16 @@ TEST_CASE("ITKImportImageStack::Interaction_Crop_Grayscale", "[ITKImageProcessin
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Crop_And_Grayscale");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Grayscale"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_Grayscale", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Interaction_Resample_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
@@ -1067,7 +1195,16 @@ TEST_CASE("ITKImportImageStack::Interaction_Resample_Grayscale", "[ITKImageProce
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Resample_And_Grayscale");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_Grayscale"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_And_Grayscale", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Interaction_Grayscale_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
@@ -1090,7 +1227,16 @@ TEST_CASE("ITKImportImageStack::Interaction_Grayscale_Flip", "[ITKImageProcessin
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Grayscale_And_FlipX");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_And_FlipX"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Grayscale_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
 TEST_CASE("ITKImportImageStack::Interaction_FullPipeline", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
@@ -1115,5 +1261,14 @@ TEST_CASE("ITKImportImageStack::Interaction_FullPipeline", "[ITKImageProcessing]
   REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
 
   // Compare against exemplar
-  CompareAgainstExemplar(ds, geomPath, k_ExemplarFile, "Full_Pipeline");
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const auto* generatedGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* exemplarGeom = exemplarDS.getDataAs<ImageGeom>(DataPath({"Full_Pipeline"}));
+  UnitTest::CompareImageGeometry(exemplarGeom, generatedGeom);
+
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Full_Pipeline", Constants::k_Cell_Data, k_ImageDataName});
+  const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
+  const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
+  UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }

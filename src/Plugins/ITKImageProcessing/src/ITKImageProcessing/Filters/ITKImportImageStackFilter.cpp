@@ -672,7 +672,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     resampleImageGeomArgs.insertOrAssign("new_data_container_path", std::make_any<DataPath>(DataPath({imageGeomPath.getTargetName() + "_resampled"})));
     resampleImageGeomArgs.insertOrAssign("resampling_mode_index", std::make_any<ChoicesParameter::ValueType>(pResampleImagesChoiceValue));
     resampleImageGeomArgs.insertOrAssign("scaling", std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{pScalingValue, pScalingValue, 100.0f}));
-    resampleImageGeomArgs.insertOrAssign("exact_dimensions", std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{pExactXYDimsValue[0], pExactXYDimsValue[1], 1}));
+    resampleImageGeomArgs.insertOrAssign("exact_dimensions", std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{pExactXYDimsValue[0], pExactXYDimsValue[1], outputDims[2]}));
 
     // Run resample image geometry filter and process results and messages
     PreflightResult resampleImageResult = resampleImageGeomFilter->preflight(tmpDs, resampleImageGeomArgs, messageHandler, shouldCancel);
