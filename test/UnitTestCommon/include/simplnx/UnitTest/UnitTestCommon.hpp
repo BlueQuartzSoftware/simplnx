@@ -1456,23 +1456,23 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   auto* arrayL = CreateTestDataArray<uint32>(dataStructure, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupG->getId());
   auto* arrayM = CreateTestDataArray<int64>(dataStructure, Constants::k_ArrayMName, {1ULL}, {1ULL}, groupG->getId());
 
-  // groupACDPath.createChildPath(arrayI->getName());
-  // groupBCDPath.createChildPath(arrayI->getName());
-  //
-  // groupBCDPath.createChildPath(arrayJ->getName());
-  // groupACEPath.createChildPath(arrayJ->getName());
-  // groupBCEPath.createChildPath(arrayJ->getName());
-  // groupBEPath.createChildPath(arrayJ->getName());
-  // groupBFEPath.createChildPath(arrayJ->getName());
-  //
-  // groupACEPath.createChildPath(arrayK->getName());
-  // groupBCEPath.createChildPath(arrayK->getName());
-  // groupBEPath.createChildPath(arrayK->getName());
-  // groupBFEPath.createChildPath(arrayK->getName());
-  //
-  // groupBFGPath.createChildPath(arrayL->getName());
-  //
-  // groupBFGPath.createChildPath(arrayM->getName());
+  groupACDPath.createChildPath(arrayI->getName());
+  groupBCDPath.createChildPath(arrayI->getName());
+
+  groupBCDPath.createChildPath(arrayJ->getName());
+  groupACEPath.createChildPath(arrayJ->getName());
+  groupBCEPath.createChildPath(arrayJ->getName());
+  groupBEPath.createChildPath(arrayJ->getName());
+  groupBFEPath.createChildPath(arrayJ->getName());
+
+  groupACEPath.createChildPath(arrayK->getName());
+  groupBCEPath.createChildPath(arrayK->getName());
+  groupBEPath.createChildPath(arrayK->getName());
+  groupBFEPath.createChildPath(arrayK->getName());
+
+  groupBFGPath.createChildPath(arrayL->getName());
+
+  groupBFGPath.createChildPath(arrayM->getName());
 
   return dataStructure;
 }
