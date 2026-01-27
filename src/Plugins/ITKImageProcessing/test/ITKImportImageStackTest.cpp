@@ -159,10 +159,6 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
   UnitTest::CompareDataArrays<uint8>(yGeneratedImageData, yFlippedImageData);
 }
 
-// ============================================================================
-// NEW REFACTORED TEST INFRASTRUCTURE
-// ============================================================================
-
 // Test data paths
 const std::string k_TestDataDirName = "import_image_stack_test";
 const fs::path k_TestDataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_TestDataDirName;
@@ -564,7 +560,7 @@ TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: Flipped Image Odd-Odd 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("ITKImportImageStack::Baseline_NoProcessing", "[ITKImageProcessing][ITKImportImageStackFilter][.][Baseline]")
+TEST_CASE("ITKImportImageStack::Baseline_NoProcessing", "[ITKImageProcessing][ITKImportImageStackFilter][Baseline]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -596,7 +592,7 @@ TEST_CASE("ITKImportImageStack::Baseline_NoProcessing", "[ITKImageProcessing][IT
 // CROPPING TESTS
 // =============================================================================
 
-TEST_CASE("ITKImportImageStack::Crop_Voxel_XOnly", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+TEST_CASE("ITKImportImageStack::Crop_Voxel_XOnly", "[ITKImageProcessing][ITKImportImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -625,7 +621,7 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_XOnly", "[ITKImageProcessing][ITKImpo
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Crop_Voxel_YOnly", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+TEST_CASE("ITKImportImageStack::Crop_Voxel_YOnly", "[ITKImageProcessing][ITKImportImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -654,7 +650,7 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_YOnly", "[ITKImageProcessing][ITKImpo
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Crop_Voxel_ZOnly", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+TEST_CASE("ITKImportImageStack::Crop_Voxel_ZOnly", "[ITKImageProcessing][ITKImportImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -683,7 +679,7 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_ZOnly", "[ITKImageProcessing][ITKImpo
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Crop_Voxel_XY", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+TEST_CASE("ITKImportImageStack::Crop_Voxel_XY", "[ITKImageProcessing][ITKImportImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -712,7 +708,7 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_XY", "[ITKImageProcessing][ITKImportI
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Crop_Voxel_XYZ", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+TEST_CASE("ITKImportImageStack::Crop_Voxel_XYZ", "[ITKImageProcessing][ITKImportImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -741,7 +737,7 @@ TEST_CASE("ITKImportImageStack::Crop_Voxel_XYZ", "[ITKImageProcessing][ITKImport
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Crop_Physical_XY", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+TEST_CASE("ITKImportImageStack::Crop_Physical_XY", "[ITKImageProcessing][ITKImportImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -770,7 +766,7 @@ TEST_CASE("ITKImportImageStack::Crop_Physical_XY", "[ITKImageProcessing][ITKImpo
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Crop_Physical_Z", "[ITKImageProcessing][ITKImportImageStackFilter][.][Cropping]")
+TEST_CASE("ITKImportImageStack::Crop_Physical_Z", "[ITKImageProcessing][ITKImportImageStackFilter][Cropping]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -803,7 +799,7 @@ TEST_CASE("ITKImportImageStack::Crop_Physical_Z", "[ITKImageProcessing][ITKImpor
 // RESAMPLING TESTS
 // =============================================================================
 
-TEST_CASE("ITKImportImageStack::Resample_ScalingFactor", "[ITKImageProcessing][ITKImportImageStackFilter][.][Resampling]")
+TEST_CASE("ITKImportImageStack::Resample_ScalingFactor", "[ITKImageProcessing][ITKImportImageStackFilter][Resampling]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -832,7 +828,7 @@ TEST_CASE("ITKImportImageStack::Resample_ScalingFactor", "[ITKImageProcessing][I
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Resample_ExactDimensions", "[ITKImageProcessing][ITKImportImageStackFilter][.][Resampling]")
+TEST_CASE("ITKImportImageStack::Resample_ExactDimensions", "[ITKImageProcessing][ITKImportImageStackFilter][Resampling]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -865,7 +861,7 @@ TEST_CASE("ITKImportImageStack::Resample_ExactDimensions", "[ITKImageProcessing]
 // GRAYSCALE TESTS
 // =============================================================================
 
-TEST_CASE("ITKImportImageStack::Grayscale_Conversion", "[ITKImageProcessing][ITKImportImageStackFilter][.][Grayscale]")
+TEST_CASE("ITKImportImageStack::Grayscale_Conversion", "[ITKImageProcessing][ITKImportImageStackFilter][Grayscale]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -902,7 +898,7 @@ TEST_CASE("ITKImportImageStack::Grayscale_Conversion", "[ITKImageProcessing][ITK
 // FLIP TESTS
 // =============================================================================
 
-TEST_CASE("ITKImportImageStack::FlipY", "[ITKImageProcessing][ITKImportImageStackFilter][.][Flip]")
+TEST_CASE("ITKImportImageStack::FlipY", "[ITKImageProcessing][ITKImportImageStackFilter][Flip]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -934,7 +930,7 @@ TEST_CASE("ITKImportImageStack::FlipY", "[ITKImageProcessing][ITKImportImageStac
 // ORIGIN/SPACING TESTS
 // =============================================================================
 
-TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
+TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed", "[ITKImageProcessing][ITKImportImageStackFilter][OriginSpacing]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -964,7 +960,7 @@ TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed", "[ITKImageProcessin
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
+TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed", "[ITKImageProcessing][ITKImportImageStackFilter][OriginSpacing]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -993,7 +989,7 @@ TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed", "[ITKImageProcessi
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed_WithZCrop", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
+TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed_WithZCrop", "[ITKImageProcessing][ITKImportImageStackFilter][OriginSpacing]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -1022,7 +1018,7 @@ TEST_CASE("ITKImportImageStack::OriginSpacing_Preprocessed_WithZCrop", "[ITKImag
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed_WithZCrop", "[ITKImageProcessing][ITKImportImageStackFilter][.][OriginSpacing]")
+TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed_WithZCrop", "[ITKImageProcessing][ITKImportImageStackFilter][OriginSpacing]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -1055,7 +1051,7 @@ TEST_CASE("ITKImportImageStack::OriginSpacing_Postprocessed_WithZCrop", "[ITKIma
 // INTERACTION TESTS
 // =============================================================================
 
-TEST_CASE("ITKImportImageStack::Interaction_Crop_Resample", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+TEST_CASE("ITKImportImageStack::Interaction_Crop_Resample", "[ITKImageProcessing][ITKImportImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -1084,7 +1080,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Crop_Resample", "[ITKImageProcessing
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Interaction_Crop_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+TEST_CASE("ITKImportImageStack::Interaction_Crop_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -1113,7 +1109,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Crop_Flip", "[ITKImageProcessing][IT
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Interaction_Resample_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+TEST_CASE("ITKImportImageStack::Interaction_Resample_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -1142,7 +1138,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Resample_Flip", "[ITKImageProcessing
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Interaction_Crop_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+TEST_CASE("ITKImportImageStack::Interaction_Crop_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -1174,7 +1170,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Crop_Grayscale", "[ITKImageProcessin
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Interaction_Resample_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+TEST_CASE("ITKImportImageStack::Interaction_Resample_Grayscale", "[ITKImageProcessing][ITKImportImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -1207,7 +1203,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Resample_Grayscale", "[ITKImageProce
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Interaction_Grayscale_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+TEST_CASE("ITKImportImageStack::Interaction_Grayscale_Flip", "[ITKImageProcessing][ITKImportImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
@@ -1239,7 +1235,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Grayscale_Flip", "[ITKImageProcessin
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 }
 
-TEST_CASE("ITKImportImageStack::Interaction_FullPipeline", "[ITKImageProcessing][ITKImportImageStackFilter][.][Interaction]")
+TEST_CASE("ITKImportImageStack::Interaction_FullPipeline", "[ITKImageProcessing][ITKImportImageStackFilter][Interaction]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "import_image_stack_test_v2.tar.gz", k_TestDataDirName);
 
