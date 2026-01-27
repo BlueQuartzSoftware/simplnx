@@ -158,7 +158,7 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   imageReaderOptions.OriginAtCenterOfGeometry = shouldCenterOrigin;
   imageReaderOptions.Origin = FloatVec3(static_cast<float32>(origin[0]), static_cast<float32>(origin[1]), static_cast<float32>(origin[2]));
   imageReaderOptions.Spacing = FloatVec3(static_cast<float32>(spacing[0]), static_cast<float32>(spacing[1]), static_cast<float32>(spacing[2]));
-  imageReaderOptions.OriginSpacingProcessingTiming = originSpacingProcessing;
+  imageReaderOptions.ProcessingTiming = originSpacingProcessing;
   imageReaderOptions.ChangeDataType = pChangeDataType;
   imageReaderOptions.ImageDataType = ITK::detail::ConvertChoiceToDataType(pChoiceType);
   imageReaderOptions.CroppingOptions = croppingOptions;

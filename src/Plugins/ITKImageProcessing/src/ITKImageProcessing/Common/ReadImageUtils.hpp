@@ -463,7 +463,7 @@ struct ImageReaderOptions
   bool OverrideSpacing = false;
   FloatVec3 Origin;
   FloatVec3 Spacing;
-  OriginSpacingProcessingTiming OriginSpacingProcessingTiming;
+  OriginSpacingProcessingTiming ProcessingTiming;
   bool ChangeDataType = false;
   DataType ImageDataType = DataType::uint8;
   CropGeometryParameter::ValueType CroppingOptions;
