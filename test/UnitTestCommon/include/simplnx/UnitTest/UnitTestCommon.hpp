@@ -7,7 +7,13 @@
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/Montage/AbstractMontage.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
@@ -885,26 +891,146 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
       const auto* parentB = dataStructureB.getDataAs<BaseGroup>(parentGroup);
       REQUIRE(parentA != nullptr);
       REQUIRE(parentB != nullptr);
+      const BaseGroup::GroupType parentAGroupType = parentA->getGroupType();
+      const BaseGroup::GroupType parentBGroupType = parentB->getGroupType();
+      REQUIRE(parentAGroupType == parentBGroupType);
       // std::cout << "DEBUG TEST: ds parentA size = " << parentA->getSize() << "\tds parentB size = " << parentB->getSize();
       INFO(fmt::format("DEBUG TEST: ds parentA size = {}\tds parentB size = {}", parentA->getSize(), parentB->getSize()));
       REQUIRE(parentA->getSize() == parentB->getSize());
       childrenNamesA = parentA->getDataMap().getNames();
       childrenNamesB = parentB->getDataMap().getNames();
-    }
 
-    for(usize i = 0; i < childrenNamesA.size(); ++i)
-    {
-      // std::cout << "DEBUG TEST: child A name = " << childrenNamesA[i] << "\tchild B name = " << childrenNamesB[i];
-      INFO(fmt::format("DEBUG TEST: child A name = '{}'\tchild B name = '{}'", childrenNamesA[i], childrenNamesB[i]));
-      REQUIRE(childrenNamesA[i] == childrenNamesB[i]);
-
-      DataPath childPath = parentGroup.createChildPath(childrenNamesA[i]);
-      if(dataStructureA.getDataAs<BaseGroup>(childPath) != nullptr)
+      switch(parentAGroupType)
       {
-        CompareDataStructures(dataStructureA, dataStructureB, childPath);
+      case nx::core::BaseGroup::GroupType::AttributeMatrix: {
+        const auto* attributeMatrixA = dynamic_cast<const AttributeMatrix*>(parentA);
+        const auto* attributeMatrixB = dynamic_cast<const AttributeMatrix*>(parentB);
+        REQUIRE(attributeMatrixA != nullptr);
+        REQUIRE(attributeMatrixB != nullptr);
+        REQUIRE(attributeMatrixA->getShape() == attributeMatrixB->getShape());
+        break;
       }
-      else
+      case nx::core::BaseGroup::GroupType::ImageGeom: {
+        const auto* geomA = dynamic_cast<const ImageGeom*>(parentA);
+        const auto* geomB = dynamic_cast<const ImageGeom*>(parentB);
+        CompareImageGeometry(geomA, geomB, UnitTest::EPSILON);
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::RectGridGeom: {
+        const auto* geomA = dynamic_cast<const RectGridGeom*>(parentA);
+        const auto* geomB = dynamic_cast<const RectGridGeom*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getDimensions() == geomB->getDimensions());
+        const auto originA = geomA->getOrigin();
+        const auto originB = geomB->getOrigin();
+        REQUIRE(originA.valid());
+        REQUIRE(originB.valid());
+        const auto originAVec = originA.value();
+        const auto originBVec = originB.value();
+        REQUIRE(std::fabs(originAVec[0] - originBVec[0]) <= UnitTest::EPSILON);
+        REQUIRE(std::fabs(originAVec[1] - originBVec[1]) <= UnitTest::EPSILON);
+        REQUIRE(std::fabs(originAVec[2] - originBVec[2]) <= UnitTest::EPSILON);
+        CompareDataArrays<float32>(geomA->getXBoundsRef(), geomB->getXBoundsRef());
+        CompareDataArrays<float32>(geomA->getYBoundsRef(), geomB->getYBoundsRef());
+        CompareDataArrays<float32>(geomA->getZBoundsRef(), geomB->getZBoundsRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::HexahedralGeom:
+      case nx::core::BaseGroup::GroupType::TetrahedralGeom: {
+        const auto* geomA = dynamic_cast<const INodeGeometry3D*>(parentA);
+        const auto* geomB = dynamic_cast<const INodeGeometry3D*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getVertices() != nullptr);
+        REQUIRE(geomB->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
+        REQUIRE(geomA->getEdges() != nullptr);
+        REQUIRE(geomB->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
+        REQUIRE(geomA->getFaces() != nullptr);
+        REQUIRE(geomB->getFaces() != nullptr);
+        CompareDataArrays<uint64>(geomA->getFacesRef(), geomB->getFacesRef());
+        REQUIRE(geomA->getPolyhedra() != nullptr);
+        REQUIRE(geomB->getPolyhedra() != nullptr);
+        CompareDataArrays<uint64>(geomA->getPolyhedraRef(), geomB->getPolyhedraRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::QuadGeom:
+      case nx::core::BaseGroup::GroupType::TriangleGeom: {
+        const auto* geomA = dynamic_cast<const INodeGeometry2D*>(parentA);
+        const auto* geomB = dynamic_cast<const INodeGeometry2D*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getVertices() != nullptr);
+        REQUIRE(geomB->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
+        REQUIRE(geomA->getEdges() != nullptr);
+        REQUIRE(geomB->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
+        REQUIRE(geomA->getFaces() != nullptr);
+        REQUIRE(geomB->getFaces() != nullptr);
+        CompareDataArrays<uint64>(geomA->getFacesRef(), geomB->getFacesRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::EdgeGeom: {
+        const auto* geomA = dynamic_cast<const EdgeGeom*>(parentA);
+        const auto* geomB = dynamic_cast<const EdgeGeom*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getVertices() != nullptr);
+        REQUIRE(geomB->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
+        REQUIRE(geomA->getEdges() != nullptr);
+        REQUIRE(geomB->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::VertexGeom: {
+        const auto* geomA = dynamic_cast<const VertexGeom*>(parentA);
+        const auto* geomB = dynamic_cast<const VertexGeom*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getVertices() != nullptr);
+        REQUIRE(geomB->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::DataGroup: {
+        break;
+      }
+      default: {
+        INFO(fmt::format("Object at path ({}) has unhandled type ({})", parentGroup.toString(), parentA->getTypeName()));
+        REQUIRE(false);
+        break;
+      }
+      }
+
+      for(usize i = 0; i < childrenNamesA.size(); ++i)
       {
+        // std::cout << "DEBUG TEST: child A name = " << childrenNamesA[i] << "\tchild B name = " << childrenNamesB[i];
+        INFO(fmt::format("DEBUG TEST: child A name = '{}'\tchild B name = '{}'", childrenNamesA[i], childrenNamesB[i]));
+        REQUIRE(childrenNamesA[i] == childrenNamesB[i]);
+
+        DataPath childPath = parentGroup.createChildPath(childrenNamesA[i]);
         const DataObject* objectA = dataStructureA.getData(childPath);
         const DataObject* objectB = dataStructureB.getData(childPath);
         REQUIRE(objectA != nullptr);
@@ -916,27 +1042,19 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
         switch(objectADataObjectType)
         {
         case nx::core::DataObject::Type::DynamicListArray: {
+          // TODO: ??
           break;
         }
         case nx::core::DataObject::Type::ScalarData: {
+          // TODO: ??
           std::cout << objectA->getTypeName() << ": " << objectA->getName() << std::endl;
           break;
         }
-        case nx::core::DataObject::Type::BaseGroup: {
-          break;
-        }
-        case nx::core::DataObject::Type::AttributeMatrix: {
-          break;
-        }
         case nx::core::DataObject::Type::AbstractMontage: {
+          // TODO: ??
           break;
         }
-        case nx::core::DataObject::Type::DataGroup: {
-          break;
-        }
-        case nx::core::DataObject::Type::IDataArray: {
-          break;
-        }
+        case nx::core::DataObject::Type::IDataArray:
         case nx::core::DataObject::Type::DataArray: {
           const auto* dataArrayA = dynamic_cast<const IDataArray*>(objectA);
           const auto* dataArrayB = dynamic_cast<const IDataArray*>(objectB);
@@ -958,39 +1076,7 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
           CompareStringArrays(*stringArrayA, *stringArrayB);
           break;
         }
-        case nx::core::DataObject::Type::VertexGeom: {
-          break;
-        }
-        case nx::core::DataObject::Type::EdgeGeom: {
-          break;
-        }
-        case nx::core::DataObject::Type::RectGridGeom: {
-          break;
-        }
-        case nx::core::DataObject::Type::ImageGeom: {
-          break;
-        }
-        case nx::core::DataObject::Type::INodeGeometry2D: {
-          break;
-        }
-        case nx::core::DataObject::Type::QuadGeom: {
-          break;
-        }
-        case nx::core::DataObject::Type::TriangleGeom: {
-          break;
-        }
-        case nx::core::DataObject::Type::INodeGeometry3D: {
-          break;
-        }
-        case nx::core::DataObject::Type::HexahedralGeom: {
-          break;
-        }
-        case nx::core::DataObject::Type::TetrahedralGeom: {
-          break;
-        }
-        case nx::core::DataObject::Type::INeighborList: {
-          break;
-        }
+        case nx::core::DataObject::Type::INeighborList:
         case nx::core::DataObject::Type::NeighborList: {
           const auto* neighborlistA = dynamic_cast<const INeighborList*>(objectA);
           const auto* neighborlistB = dynamic_cast<const INeighborList*>(objectB);
@@ -1003,6 +1089,22 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
 
           ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistA->getDataType(), neighborlistA, neighborlistB);
 
+          break;
+        }
+        case nx::core::DataObject::Type::VertexGeom:
+        case nx::core::DataObject::Type::EdgeGeom:
+        case nx::core::DataObject::Type::RectGridGeom:
+        case nx::core::DataObject::Type::ImageGeom:
+        case nx::core::DataObject::Type::INodeGeometry2D:
+        case nx::core::DataObject::Type::QuadGeom:
+        case nx::core::DataObject::Type::TriangleGeom:
+        case nx::core::DataObject::Type::INodeGeometry3D:
+        case nx::core::DataObject::Type::HexahedralGeom:
+        case nx::core::DataObject::Type::TetrahedralGeom:
+        case nx::core::DataObject::Type::AttributeMatrix:
+        case nx::core::DataObject::Type::DataGroup:
+        case nx::core::DataObject::Type::BaseGroup: {
+          CompareDataStructures(dataStructureA, dataStructureB, childPath);
           break;
         }
         default: {
@@ -1020,7 +1122,7 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
     INFO(fmt::format("Caught exception: {}", e.what()));
     REQUIRE(false);
   }
-}
+} // namespace UnitTest
 
 /**
  * @brief Creates a DataArray backed by a DataStore (in memory).
