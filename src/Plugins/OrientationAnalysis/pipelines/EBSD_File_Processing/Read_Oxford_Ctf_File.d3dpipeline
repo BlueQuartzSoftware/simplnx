@@ -1,7 +1,6 @@
 {
   "isDisabled": false,
-  "name": "REadAng.d3dpipeine",
-  "pinnedParams": [],
+  "name": "Read_Oxford_Ctf_File.d3dpipeline",
   "pipeline": [
     {
       "args": {
@@ -13,8 +12,16 @@
           "value": "Cell Ensemble Data",
           "version": 1
         },
+        "degrees_to_radians": {
+          "value": true,
+          "version": 1
+        },
+        "edax_hexagonal_alignment": {
+          "value": false,
+          "version": 1
+        },
         "input_file": {
-          "value": "Data/Small_IN100/Slice_1.ang",
+          "value": "Data/T12-MAI-2010/fw-ar-IF1-aptr12-corr.ctf",
           "version": 1
         },
         "output_image_geometry_path": {
@@ -25,32 +32,8 @@
       },
       "comments": "",
       "filter": {
-        "name": "nx::core::ReadAngDataFilter",
-        "uuid": "5b062816-79ac-47ce-93cb-e7966896bcbd"
-      },
-      "isDisabled": false
-    },
-    {
-      "args": {
-        "euler_angles_array_path": {
-          "value": "DataContainer/Cell Data/EulerAngles",
-          "version": 1
-        },
-        "parameters_version": 1,
-        "rotation_axis_angle": {
-          "value": [
-            0.0,
-            0.0,
-            1.0,
-            90.0
-          ],
-          "version": 1
-        }
-      },
-      "comments": "",
-      "filter": {
-        "name": "nx::core::RotateEulerRefFrameFilter",
-        "uuid": "0458edcd-3655-4465-adc8-b036d76138b5"
+        "name": "nx::core::ReadCtfDataFilter",
+        "uuid": "7751923c-afb9-4032-8372-8078325c69a4"
       },
       "isDisabled": false
     },
@@ -65,7 +48,7 @@
           "version": 1
         },
         "output_image_geometry_path": {
-          "value": "DataContainer",
+          "value": "",
           "version": 1
         },
         "parameters_version": 1,
@@ -89,19 +72,28 @@
         "rotation_matrix": {
           "value": [
             [
+              1.0,
               0.0,
               0.0,
               0.0
             ],
             [
               0.0,
+              1.0,
               0.0,
               0.0
             ],
             [
               0.0,
               0.0,
+              1.0,
               0.0
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
             ]
           ],
           "version": 1
@@ -125,13 +117,13 @@
             "inverted": false,
             "thresholds": [
               {
-                "array_path": "DataContainer/Cell Data/Confidence Index",
-                "comparison": 1,
+                "array_path": "DataContainer/Cell Data/Error",
+                "comparison": 2,
                 "component_index": 0,
                 "inverted": false,
                 "type": "array",
                 "union": 0,
-                "value": 0.1
+                "value": 0.0
               }
             ],
             "type": "collection",
@@ -191,7 +183,7 @@
           "version": 1
         },
         "mask_array_path": {
-          "value": "",
+          "value": "DataContainer/Cell Data/Mask",
           "version": 1
         },
         "parameters_version": 1,
@@ -204,7 +196,7 @@
           "version": 1
         },
         "use_mask": {
-          "value": false,
+          "value": true,
           "version": 1
         }
       },
