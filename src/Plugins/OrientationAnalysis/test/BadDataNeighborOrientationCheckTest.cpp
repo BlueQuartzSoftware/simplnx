@@ -4,9 +4,6 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
-#include "simplnx/Core/Application.hpp"
-#include "simplnx/Parameters/Dream3dImportParameter.hpp"
-#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -1132,7 +1129,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Case 2.1: X+ Dim Case (Sequential) | Valid | 1 phase | Valid Tolerance | 5 Min Neighbors
+// Case 2.1: X+ Dim Case (Sequential) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
   //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
@@ -1189,7 +1186,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1"
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Case 2.2: Y+ Dim Case (Sequential) | Valid | 1 phase | Valid Tolerance | 5 Min Neighbors
+// Case 2.2: Y+ Dim Case (Sequential) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
   //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
@@ -1246,7 +1243,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.2"
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Case 2.3: Z+ Dim Case (Sequential) | Valid | 1 phase | Valid Tolerance | 5 Min Neighbors
+// Case 2.3: Z+ Dim Case (Sequential) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.3", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
   //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
@@ -1303,7 +1300,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.3"
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Case 2.4: X- Dim Case (Recursive) | Valid | 1 phase | Valid Tolerance | 5 Min Neighbors
+// Case 2.4: X- Dim Case (Recursive) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.4", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
   //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
@@ -1360,7 +1357,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.4"
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Case 2.5: Y- Dim Case (Recursive) | Valid | 1 phase | Valid Tolerance | 5 Min Neighbors
+// Case 2.5: Y- Dim Case (Recursive) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.5", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
   //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
@@ -1417,7 +1414,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.5"
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Case 2.6: Z- Dim Case (Recursive) | Valid | 1 phase | Valid Tolerance | 5 Min Neighbors
+// Case 2.6: Z- Dim Case (Recursive) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.6", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
   //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
@@ -1469,6 +1466,216 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.6"
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check/case_2_6.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Case 3.1: Long Sequential | Valid | 1 phase | Tolerance 5 | 1 Min Neighbors
+TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
+{
+  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
+  //                                                              "BadDataNeighborOrientationCheck");
+
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(
+      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_3/case_3_1/case_3_1_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
+  // Bad Data Neighbor Orientation Check Filter
+  {
+    BadDataNeighborOrientationCheckFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  /**
+   * Expected Output:
+   * Mask Array
+   * All `1`
+   */
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  for(usize i = 0; i < maskStore.getSize(); ++i)
+  {
+    if(maskStore.getValue(i) != 1)
+    {
+      const std::string errorMsg = fmt::format("Values diverged at index {}. Expected: {} | Actual: {}", i, 1, maskStore.getValue(i));
+      CAPTURE(errorMsg);
+      REQUIRE(false);
+    }
+  }
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check/case_3_1.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Case 3.2: Long Recursive | Valid | 1 phase | Tolerance 5 | 1 Min Neighbors
+TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
+{
+  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
+  //                                                              "BadDataNeighborOrientationCheck");
+
+  // Read the Small IN100 Data set
+  auto baseDataFilePath = fs::path(
+      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_3/case_3_2/case_3_2_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
+  // Bad Data Neighbor Orientation Check Filter
+  {
+    BadDataNeighborOrientationCheckFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(1));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  /**
+   * Expected Output:
+   * Mask Array
+   * All `1`
+   */
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  for(usize i = 0; i < maskStore.getSize(); ++i)
+  {
+    if(maskStore.getValue(i) != 1)
+    {
+      const std::string errorMsg = fmt::format("Values diverged at index {}. Expected: {} | Actual: {}", i, 1, maskStore.getValue(i));
+      CAPTURE(errorMsg);
+      REQUIRE(false);
+    }
+  }
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check/case_3_2.dream3d", unit_test::k_BinaryTestOutputDir));
+#endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Case 4: Semi-Complex Synthetic Structure | Valid | 3 phase | Tolerance 5 | 4 Min Neighbors
+TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 4", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
+{
+  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
+  //                                                              "BadDataNeighborOrientationCheck");
+
+  // Read the Small IN100 Data set
+  auto baseDataFilePath =
+      fs::path(fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_4/case_4_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
+  // Bad Data Neighbor Orientation Check Filter
+  {
+    BadDataNeighborOrientationCheckFilter filter;
+    Arguments args;
+
+    // Create default Parameters for the filter.
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_NumberOfNeighbors_Key, std::make_any<int32>(4));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(VerificationConstants::k_ImagePath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_QuatsArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_MaskArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_PhasesArrayPath));
+    args.insertOrAssign(BadDataNeighborOrientationCheckFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(VerificationConstants::k_CStuctsArrayPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // clang-format off
+  /**
+   * Expected Output:
+   * Mask Array
+   *
+   * 0 0 0 0 0 | 1 1 1 1 1 | 0 0 0 0 1 | 0 0 0 1 1 | 0 1 0 1 1 |
+   * 1 1 1 0 0 | 1 1 1 1 1 | 1 0 1 0 0 | 0 0 1 1 1 | 1 1 1 1 1 |
+   * 0 1 0 0 0 | 1 1 1 1 1 | 0 0 1 1 1 | 0 1 1 1 1 | 0 1 1 1 0 |
+   * 0 0 1 1 0 | 1 1 1 1 1 | 0 0 1 1 0 | 0 0 1 0 1 | 1 1 1 0 1 |
+   * 0 0 0 0 0 | 1 1 1 1 1 | 0 0 1 0 0 | 0 0 0 0 0 | 0 1 0 1 0 |
+   */
+  const std::array<uint8, 125> expectedMask = {
+    0, 0, 0, 0, 0,
+    1, 1, 1, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 1, 0,
+    0, 0, 0, 0, 0,
+
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1,
+
+    0, 0, 0, 0, 1,
+    1, 0, 1, 0, 0,
+    0, 0, 1, 1, 1,
+    0, 0, 1, 1, 0,
+    0, 0, 1, 0, 0,
+
+    0, 0, 0, 1, 1,
+    0, 0, 1, 1, 1,
+    0, 1, 1, 1, 1,
+    0, 0, 1, 0, 1,
+    0, 0, 0, 0, 0,
+
+    0, 1, 0, 1, 1,
+    1, 1, 1, 1, 1,
+    0, 1, 1, 1, 0,
+    1, 1, 1, 0, 1,
+    0, 1, 0, 1, 0
+  };
+  // clang-format on
+
+  const UInt8AbstractDataStore& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
+  for(usize i = 0; i < maskStore.getSize(); ++i)
+  {
+    if(maskStore.getValue(i) != expectedMask[i])
+    {
+      const std::string errorMsg = fmt::format("Values diverged at index {}. Expected: {} | Actual: {}", i, expectedMask[i], maskStore.getValue(i));
+      CAPTURE(errorMsg);
+      REQUIRE(false);
+    }
+  }
+
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check/case_4.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
