@@ -279,6 +279,37 @@ private:
 };
 
 /**
+ * @brief This class provides RAII-style management of Preferences for unit tests.
+ * It preserves the current preference values on construction, sets new test-specific values,
+ * and restores the original values on destruction (even if the test fails).
+ */
+class PreferencesSentinel
+{
+public:
+  /**
+   * @brief Construct a Preferences Sentinel that saves current preferences, sets new values,
+   * and restores original values on destruction.
+   *
+   * @param largeDataFormat The large data format to use (e.g., "Zarr", "FileStore")
+   * @param largeDataSize The large data size threshold in bytes
+   * @param forceOocData Whether to force out-of-core data storage
+   */
+  PreferencesSentinel(std::string largeDataFormat, int64 largeDataSize, bool forceOocData);
+
+  ~PreferencesSentinel();
+
+  PreferencesSentinel(const PreferencesSentinel&) = delete;            // Copy Constructor Not Implemented
+  PreferencesSentinel(PreferencesSentinel&&) = delete;                 // Move Constructor Not Implemented
+  PreferencesSentinel& operator=(const PreferencesSentinel&) = delete; // Copy Assignment Not Implemented
+  PreferencesSentinel& operator=(PreferencesSentinel&&) = delete;      // Move Assignment Not Implemented
+
+private:
+  std::string m_OriginalFormat;
+  int64 m_OriginalSize;
+  bool m_OriginalForceOoc;
+};
+
+/**
  * @brief closeEnough
  * @param a
  * @param b

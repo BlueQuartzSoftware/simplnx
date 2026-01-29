@@ -42,18 +42,19 @@ DataStructure LoadDataStructure(const fs::path& filepath)
 
 } // namespace fill_bad_data_test
 
-TEST_CASE("SimplnxCore::FillBadData", "[Core][FillBadData]")
+TEST_CASE("SimplnxCore::FillBadData_SmallIN100", "[Core][FillBadData]")
 {
   // Load the Simplnx Application instance and load the plugins
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_fill_bad_data.tar.gz", "6_6_fill_bad_data", true, true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_fill_bad_data/6_6_exemplar.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/6_5_exemplar.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = fill_bad_data_test::LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_fill_bad_data/6_6_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/6_5_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(baseDataFilePath);
 
   {
@@ -81,10 +82,10 @@ TEST_CASE("SimplnxCore::FillBadData", "[Core][FillBadData]")
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_DataContainer);
 
-// Write the DataStructure out to the file system
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  // Write the DataStructure out to the file system
+  // #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_fill_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
-#endif
+  // #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -93,14 +94,15 @@ TEST_CASE("SimplnxCore::FillBadData::Test01_SingleSmallDefect", "[Core][FillBadD
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
   // Read input data
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_01_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_01_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
   // Read expected output
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_01_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_01_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   // Run filter
@@ -129,14 +131,15 @@ TEST_CASE("SimplnxCore::FillBadData::Test02_SingleLargeDefect", "[Core][FillBadD
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
   // Read input data
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_02_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_02_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
   // Read expected output
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_02_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_02_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   // Run filter
@@ -165,14 +168,15 @@ TEST_CASE("SimplnxCore::FillBadData::Test11_NeighborTieBreaking", "[Core][FillBa
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
   // Read input data
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_11_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_11_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
   // Read expected output
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_11_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_11_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   // Run filter
@@ -201,14 +205,15 @@ TEST_CASE("SimplnxCore::FillBadData::Test13_StoreAsNewPhase", "[Core][FillBadDat
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
   // Read input data
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_13_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_13_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
   // Read expected output
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_13_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_13_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   // Run filter
@@ -237,12 +242,13 @@ TEST_CASE("SimplnxCore::FillBadData::Test03_ThresholdBoundary", "[Core][FillBadD
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_03_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_03_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_03_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_03_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -268,12 +274,13 @@ TEST_CASE("SimplnxCore::FillBadData::Test04_MultipleSmallDefects", "[Core][FillB
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_04_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_04_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_04_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_04_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -299,12 +306,13 @@ TEST_CASE("SimplnxCore::FillBadData::Test05_MixedSmallAndLarge", "[Core][FillBad
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_05_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_05_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_05_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_05_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -330,12 +338,13 @@ TEST_CASE("SimplnxCore::FillBadData::Test06_SingleVoxelDefects", "[Core][FillBad
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_06_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_06_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_06_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_06_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -361,12 +370,13 @@ TEST_CASE("SimplnxCore::FillBadData::Test07_DefectsAtBoundaries", "[Core][FillBa
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_07_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_07_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_07_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_07_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -397,22 +407,16 @@ TEST_CASE("SimplnxCore::FillBadData::Test01_OOC_SingleSmallDefect", "[Core][Fill
 {
   UnitTest::LoadPlugins();
 
-  // Configure out-of-core settings
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  // Configure out-of-core settings (automatically restored on scope exit)
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 100, true); // 100 bytes - force very small arrays to OOC
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100)); // 100 bytes - force very small arrays to OOC
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_01_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_01_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_01_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_01_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -432,32 +436,21 @@ TEST_CASE("SimplnxCore::FillBadData::Test01_OOC_SingleSmallDefect", "[Core][Fill
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  // Restore original settings
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test02_OOC_SingleLargeDefect", "[Core][FillBadData][OOC]")
 {
   UnitTest::LoadPlugins();
 
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 100, true);
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_02_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_02_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_02_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_02_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -477,31 +470,21 @@ TEST_CASE("SimplnxCore::FillBadData::Test02_OOC_SingleLargeDefect", "[Core][Fill
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test03_OOC_ThresholdBoundary", "[Core][FillBadData][OOC]")
 {
   UnitTest::LoadPlugins();
 
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 100, true);
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_03_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_03_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_03_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_03_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -521,31 +504,21 @@ TEST_CASE("SimplnxCore::FillBadData::Test03_OOC_ThresholdBoundary", "[Core][Fill
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test04_OOC_MultipleSmallDefects", "[Core][FillBadData][OOC]")
 {
   UnitTest::LoadPlugins();
 
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 500, true); // Slightly larger for 10x10x10
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(500)); // Slightly larger for 10x10x10
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_04_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_04_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_04_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_04_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -565,31 +538,21 @@ TEST_CASE("SimplnxCore::FillBadData::Test04_OOC_MultipleSmallDefects", "[Core][F
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test05_OOC_MixedSmallAndLarge", "[Core][FillBadData][OOC]")
 {
   UnitTest::LoadPlugins();
 
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 500, true);
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(500));
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_05_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_05_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_05_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_05_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -609,31 +572,21 @@ TEST_CASE("SimplnxCore::FillBadData::Test05_OOC_MixedSmallAndLarge", "[Core][Fil
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test06_OOC_SingleVoxelDefects", "[Core][FillBadData][OOC]")
 {
   UnitTest::LoadPlugins();
 
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 100, true);
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_06_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_06_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_06_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_06_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -653,31 +606,21 @@ TEST_CASE("SimplnxCore::FillBadData::Test06_OOC_SingleVoxelDefects", "[Core][Fil
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test07_OOC_DefectsAtBoundaries", "[Core][FillBadData][OOC]")
 {
   UnitTest::LoadPlugins();
 
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 100, true);
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_07_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_07_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_07_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_07_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -697,31 +640,21 @@ TEST_CASE("SimplnxCore::FillBadData::Test07_OOC_DefectsAtBoundaries", "[Core][Fi
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test11_OOC_NeighborTieBreaking", "[Core][FillBadData][OOC]")
 {
   UnitTest::LoadPlugins();
 
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 50, true); // Very small for 3x3x3
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(50)); // Very small for 3x3x3
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_11_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_11_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_11_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_11_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -741,31 +674,21 @@ TEST_CASE("SimplnxCore::FillBadData::Test11_OOC_NeighborTieBreaking", "[Core][Fi
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test13_OOC_StoreAsNewPhase", "[Core][FillBadData][OOC]")
 {
   UnitTest::LoadPlugins();
 
-  auto* prefs = Application::Instance()->getPreferences();
-  auto originalFormat = prefs->largeDataFormat();
-  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
-  auto originalForceOoc = prefs->forceOocData();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 100, true);
 
-  prefs->setLargeDataFormat("Zarr");
-  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
-  prefs->setForceOocData(true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data", false,
+                                                              false);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
-
-  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_13_input.dream3d", unit_test::k_TestFilesDir));
+  auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_13_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
 
-  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_13_expected.dream3d", unit_test::k_TestFilesDir));
+  auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_13_expected.dream3d", unit_test::k_TestFilesDir));
   DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
@@ -785,8 +708,4 @@ TEST_CASE("SimplnxCore::FillBadData::Test13_OOC_StoreAsNewPhase", "[Core][FillBa
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-
-  prefs->setLargeDataFormat(originalFormat);
-  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
-  prefs->setForceOocData(originalForceOoc);
 }
