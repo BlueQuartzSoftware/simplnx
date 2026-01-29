@@ -1,6 +1,5 @@
 #pragma once
 
-#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/AbstractStringStore.hpp"
 #include "simplnx/DataStructure/IArray.hpp"
 

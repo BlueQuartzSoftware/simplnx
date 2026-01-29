@@ -1,6 +1,5 @@
 #pragma once
 
-#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractListStore.hpp"
