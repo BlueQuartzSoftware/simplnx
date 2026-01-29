@@ -88,3 +88,705 @@ TEST_CASE("SimplnxCore::FillBadData", "[Core][FillBadData]")
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::FillBadData::Test01_SingleSmallDefect", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  // Read input data
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_01_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  // Read expected output
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_01_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  // Run filter
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(20));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  // Compare results
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test02_SingleLargeDefect", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  // Read input data
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_02_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  // Read expected output
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_02_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  // Run filter
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(20));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  // Compare results
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test11_NeighborTieBreaking", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  // Read input data
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_11_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  // Read expected output
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_11_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  // Run filter
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(10));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  // Compare results
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test13_StoreAsNewPhase", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  // Read input data
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_13_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  // Read expected output
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_13_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  // Run filter
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(20));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  // Compare results
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test03_ThresholdBoundary", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_03_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_03_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(25));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test04_MultipleSmallDefects", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_04_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_04_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(50));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test05_MixedSmallAndLarge", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_05_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_05_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(50));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test06_SingleVoxelDefects", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_06_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_06_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(10));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test07_DefectsAtBoundaries", "[Core][FillBadData]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_07_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_07_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(20));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// =============================================================================
+// OUT-OF-CORE TEST VARIANTS
+// These tests force out-of-core storage to thoroughly test chunk-aware algorithm
+// =============================================================================
+
+TEST_CASE("SimplnxCore::FillBadData::Test01_OOC_SingleSmallDefect", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  // Configure out-of-core settings
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100)); // 100 bytes - force very small arrays to OOC
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_01_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_01_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(20));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  // Restore original settings
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test02_OOC_SingleLargeDefect", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_02_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_02_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(20));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test03_OOC_ThresholdBoundary", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_03_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_03_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(25));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test04_OOC_MultipleSmallDefects", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(500)); // Slightly larger for 10x10x10
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_04_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_04_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(50));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test05_OOC_MixedSmallAndLarge", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(500));
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_05_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_05_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(50));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test06_OOC_SingleVoxelDefects", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_06_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_06_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(10));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test07_OOC_DefectsAtBoundaries", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_07_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_07_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(20));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test11_OOC_NeighborTieBreaking", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(50)); // Very small for 3x3x3
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_11_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_11_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(10));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
+
+TEST_CASE("SimplnxCore::FillBadData::Test13_OOC_StoreAsNewPhase", "[Core][FillBadData][OOC]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* prefs = Application::Instance()->getPreferences();
+  auto originalFormat = prefs->largeDataFormat();
+  auto originalSize = prefs->valueAs<int64>(Preferences::k_LargeDataSize_Key);
+  auto originalForceOoc = prefs->forceOocData();
+
+  prefs->setLargeDataFormat("Zarr");
+  prefs->setValue(Preferences::k_LargeDataSize_Key, static_cast<int64>(100));
+  prefs->setForceOocData(true);
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "fill_bad_data.tar.gz", "fill_bad_data", false, false);
+
+  auto inputFilePath = fs::path(fmt::format("{}/fill_bad_data/test_13_input.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = fill_bad_data_test::LoadDataStructure(inputFilePath);
+
+  auto expectedFilePath = fs::path(fmt::format("{}/fill_bad_data/test_13_expected.dream3d", unit_test::k_TestFilesDir));
+  DataStructure expectedDataStructure = fill_bad_data_test::LoadDataStructure(expectedFilePath);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(20));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(true));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  prefs->setLargeDataFormat(originalFormat);
+  prefs->setValue(Preferences::k_LargeDataSize_Key, originalSize);
+  prefs->setForceOocData(originalForceOoc);
+}
