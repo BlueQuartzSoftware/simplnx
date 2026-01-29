@@ -93,7 +93,8 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test",
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
-  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+  UnitTest::LoadPlugins();
+
   auto* filterList = Application::Instance()->getFilterList();
 
   // Read the Small IN100 Data set

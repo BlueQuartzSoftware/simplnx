@@ -309,22 +309,15 @@ bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = EPSILON)
  * @param filepath
  * @return DataStructure
  */
-inline DataStructure LoadDataStructure(const fs::path& filepath)
-{
-  DataStructure exemplarDataStructure;
-  INFO(fmt::format("Error loading file: '{}'  ", filepath.string()));
-  REQUIRE(fs::exists(filepath));
-  auto result = DREAM3D::ImportDataStructureFromFile(filepath, false);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
-  return result.value();
-}
+DataStructure LoadDataStructure(const fs::path& filepath);
 
 /**
  * @brief Loads all simplnx plugins
  */
 inline void LoadPlugins()
 {
-  Application::GetOrCreateInstance()->loadPlugins(SIMPLNX_BUILD_DIR, true);
+  const Result<> result = Application::GetOrCreateInstance()->loadPlugins(SIMPLNX_BUILD_DIR, true);
+  SIMPLNX_RESULT_REQUIRE_VALID(result);
 }
 
 /**

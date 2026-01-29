@@ -14,7 +14,23 @@ void createApp()
 {
   auto app = new Application();
   std::cout << "  Application Created" << std::endl;
-  app->loadPlugins(PluginDir::Path.string());
+  auto result = app->loadPlugins(PluginDir::Path.string());
+  if(result.invalid())
+  {
+    std::cerr << "  Error loading plugins:\n";
+    for(const auto& error : result.errors())
+    {
+      std::cerr << "    " << error.code << ": " << error.message << "\n";
+    }
+  }
+  if(!result.warnings().empty())
+  {
+    std::cout << "  Warnings loading plugins:\n";
+    for(const auto& warning : result.warnings())
+    {
+      std::cout << "    " << warning.code << ": " << warning.message << "\n";
+    }
+  }
   std::cout << "  Plugins Loaded\n" << std::endl;
 }
 

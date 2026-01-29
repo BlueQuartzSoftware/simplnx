@@ -34,42 +34,42 @@ using namespace nx::core;
 
 namespace
 {
-std::filesystem::path findCurrentPath()
+Result<std::filesystem::path> findCurrentPath()
 {
 #if defined(__linux__)
   std::vector<char> buffer(PATH_MAX + 1);
   ssize_t bytesWritten = readlink("/proc/self/exe", buffer.data(), buffer.size());
   if(bytesWritten < 0)
   {
-    throw std::runtime_error("Failed to get executable path");
+    return MakeErrorResult<std::filesystem::path>(-10, fmt::format("Failed to get executable path: {}", strerror(errno)));
   }
-  if(bytesWritten >= buffer.size())
+  if(bytesWritten >= static_cast<ssize_t>(buffer.size()))
   {
-    throw std::runtime_error("Failed to get executable path. Path too long for buffer.");
+    return MakeErrorResult<std::filesystem::path>(-11, "Failed to get executable path. Path too long for buffer.");
   }
   buffer[bytesWritten] = '\0';
-  return std::filesystem::path(buffer.data());
+  return {std::filesystem::path(buffer.data())};
 #elif defined(_WIN32)
   std::vector<WCHAR> buffer(MAX_PATH + 1);
   DWORD bytesWritten = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
   if(bytesWritten == 0)
   {
-    throw std::runtime_error("Failed to get executable path");
+    return MakeErrorResult<std::filesystem::path>(-12, fmt::format("Failed to get executable path: {}", GetLastError()));
   }
   if(bytesWritten >= static_cast<DWORD>(buffer.size()))
   {
-    throw std::runtime_error("Failed to get executable path. Path too long for buffer.");
+    return MakeErrorResult<std::filesystem::path>(-13, "Failed to get executable path. Path too long for buffer.");
   }
-  return std::filesystem::path(buffer.data());
+  return {std::filesystem::path(buffer.data())};
 #elif defined(__APPLE__)
   std::vector<char> buffer(1024 + 1);
   uint32 size = static_cast<uint32>(buffer.size());
   int result = _NSGetExecutablePath(buffer.data(), &size);
   if(result != 0)
   {
-    throw std::runtime_error("Failed to get executable path. Path too long buffer.");
+    return MakeErrorResult<std::filesystem::path>(-14, "Failed to get executable path. Path too long for buffer.");
   }
-  return std::filesystem::path(buffer.data());
+  return {std::filesystem::path(buffer.data())};
 #else
   static_assert(false, "Unsupported platform for findCurrentPath()");
 #endif
@@ -87,20 +87,40 @@ Application::Application()
 : m_FilterList(std::make_unique<FilterList>())
 , m_DataIOCollection(std::make_shared<DataIOCollection>())
 {
-  initialize();
+  auto result = initialize();
+  if(result.invalid())
+  {
+    // Can't propagate error from constructor, so log it
+    fmt::print(stderr, "Error initializing application: {}\n", result.errors()[0].message);
+  }
 }
 
 Application::Application(int argc, char** argv)
 : Application()
 {
-  initialize();
+  // Initialization already happened in delegated constructor
 }
 
-void Application::initialize()
+Result<> Application::initialize()
 {
-  loadPreferences();
-  m_CurrentPath = findCurrentPath();
+  Result<> combinedResult;
+
+  auto prefsResult = loadPreferences();
+  if(prefsResult.invalid())
+  {
+    // Non-fatal: can continue with default preferences
+    combinedResult = MergeResults(std::move(combinedResult), std::move(prefsResult));
+  }
+
+  auto pathResult = findCurrentPath();
+  if(pathResult.invalid())
+  {
+    return MakeErrorResult(-5, fmt::format("Failed to determine executable path: {}", pathResult.errors()[0].message));
+  }
+  m_CurrentPath = pathResult.value();
+
   initDefaultDataTypes();
+  return combinedResult;
 }
 
 void Application::initDefaultDataTypes()
@@ -124,7 +144,12 @@ void Application::initDefaultDataTypes()
 
 Application::~Application()
 {
-  savePreferences();
+  auto result = savePreferences();
+  if(result.invalid())
+  {
+    // Can't propagate error from destructor, so log it
+    fmt::print(stderr, "Error saving preferences in destructor: {}\n", result.errors().empty() ? "unknown error" : result.errors()[0].message);
+  }
   s_Instance = nullptr;
 }
 
@@ -146,7 +171,12 @@ void Application::DeleteInstance()
 {
   if(s_Instance != nullptr)
   {
-    s_Instance->savePreferences();
+    auto result = s_Instance->savePreferences();
+    if(result.invalid())
+    {
+      // Can't propagate error from static function, so log it
+      fmt::print(stderr, "Error saving preferences on shutdown: {}\n", result.errors().empty() ? "unknown error" : result.errors()[0].message);
+    }
   }
   s_Instance = nullptr;
 }
@@ -161,7 +191,7 @@ std::filesystem::path Application::getCurrentDir() const
   return m_CurrentPath.parent_path();
 }
 
-void Application::loadPreferences()
+Result<> Application::loadPreferences()
 {
   if(m_Preferences == nullptr)
   {
@@ -169,17 +199,29 @@ void Application::loadPreferences()
   }
   std::string applicationName = getApplicationName(this);
   const auto filepath = Preferences::DefaultFilePath(applicationName);
-  m_Preferences->loadFromFile(filepath);
+
+  auto result = m_Preferences->loadFromFile(filepath);
+  if(result.invalid())
+  {
+    return MakeErrorResult(-1, fmt::format("Could not load preferences from '{}': {}", filepath.string(), result.errors().empty() ? "unknown error" : result.errors()[0].message));
+  }
+  return result;
 }
-void Application::savePreferences()
+Result<> Application::savePreferences()
 {
   if(m_Preferences == nullptr)
   {
-    return;
+    return MakeErrorResult(-2, "No preferences to save");
   }
   std::string applicationName = getApplicationName(this);
   const auto filepath = Preferences::DefaultFilePath(applicationName);
-  m_Preferences->saveToFile(filepath);
+
+  auto result = m_Preferences->saveToFile(filepath);
+  if(result.invalid())
+  {
+    return MakeErrorResult(-3, fmt::format("Failed to save preferences to '{}': {}", filepath.string(), result.errors().empty() ? "unknown error" : result.errors()[0].message));
+  }
+  return result;
 }
 
 std::optional<Uuid> Application::getSimplnxUuid(const Uuid& simplUuid)
@@ -213,29 +255,54 @@ std::vector<Uuid> Application::getSimplUuid(const Uuid& simplnxUuid)
   return uuidList;
 }
 
-void Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbose)
+Result<> Application::loadPlugins(const std::filesystem::path& pluginDir, bool verbose)
 {
-  if(!std::filesystem::exists(pluginDir) && verbose)
+  if(!std::filesystem::exists(pluginDir))
   {
-    fmt::print("Plugin Directory {} does not exist. Skipping", pluginDir.string());
-    return;
+    if(verbose)
+    {
+      fmt::print("Plugin Directory {} does not exist. Skipping\n", pluginDir.string());
+    }
+    return MakeErrorResult(-20, fmt::format("Plugin directory '{}' does not exist", pluginDir.string()));
   }
+
+  if(!std::filesystem::is_directory(pluginDir))
+  {
+    return MakeErrorResult(-21, fmt::format("Path '{}' is not a directory", pluginDir.string()));
+  }
+
   if(verbose)
   {
     fmt::print("Loading Plugins from {}\n", pluginDir.string());
   }
-  for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
+
+  Result<> combinedResult;
+
+  try
   {
-    std::filesystem::path path = entry.path();
-#ifdef NDEBUG // Release mode
-    if(!StringUtilities::ends_with(path.string(), "_d.simplnx") && StringUtilities::ends_with(path.string(), ".simplnx"))
-#else
-    if(StringUtilities::ends_with(path.string(), "_d.simplnx"))
-#endif
+    for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
     {
-      loadPlugin(path, verbose);
+      std::filesystem::path path = entry.path();
+#ifdef NDEBUG // Release mode
+      if(!StringUtilities::ends_with(path.string(), "_d.simplnx") && StringUtilities::ends_with(path.string(), ".simplnx"))
+#else
+      if(StringUtilities::ends_with(path.string(), "_d.simplnx"))
+#endif
+      {
+        auto result = loadPlugin(path, verbose);
+        if(result.invalid())
+        {
+          // Accumulate errors but continue loading other plugins
+          combinedResult = MergeResults(std::move(combinedResult), std::move(result));
+        }
+      }
     }
+  } catch(const std::filesystem::filesystem_error& ex)
+  {
+    return MakeErrorResult(-22, fmt::format("Filesystem error loading plugins from '{}': {}", pluginDir.string(), ex.what()));
   }
+
+  return combinedResult;
 }
 
 FilterList* Application::getFilterList() const
@@ -281,24 +348,27 @@ std::shared_ptr<IDataIOManager> Application::getIOManager(const std::string& for
   return m_DataIOCollection->getManager(formatName);
 }
 
-void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
+Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose)
 {
   if(verbose)
   {
     fmt::print("Loading Plugin: {}\n", path.string());
   }
+
   auto pluginLoader = std::make_shared<PluginLoader>(path);
-  if(getFilterList()->addPlugin(pluginLoader).invalid())
+  auto addResult = getFilterList()->addPlugin(pluginLoader);
+  if(addResult.invalid())
   {
-    return;
+    return MakeErrorResult(-30, fmt::format("Failed to add plugin from '{}': {}", path.string(), addResult.errors().empty() ? "unknown error" : addResult.errors()[0].message));
   }
 
   auto plugin = pluginLoader->getPlugin();
   if(plugin == nullptr)
   {
-    return;
+    return MakeErrorResult(-31, fmt::format("Plugin loaded from '{}' but returned null", path.string()));
   }
 
+  // Check for duplicate UUIDs
   AbstractPlugin::SIMPLMapType simplToSimplnxUuids = plugin->getSimplToSimplnxMap();
   for(auto const& [simplUuid, simplData] : simplToSimplnxUuids)
   {
@@ -306,7 +376,7 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
     {
       if(uuid == simplUuid)
       {
-        throw std::runtime_error(fmt::format("Duplicate UUIDs found in the SIMPL UUID maps! UUID: {} Plugin: {}", simplUuid.str(), plugin->getName()));
+        return MakeErrorResult(-32, fmt::format("Duplicate UUIDs found in SIMPL UUID maps! UUID: {} Plugin: {}", simplUuid.str(), plugin->getName()));
       }
     }
     m_Simpl_Uuids.push_back(simplUuid);
@@ -315,13 +385,15 @@ void Application::loadPlugin(const std::filesystem::path& path, bool verbose)
 
   if(m_Simpl_Uuids.size() != m_Simplnx_Uuids.size())
   {
-    throw std::runtime_error(fmt::format("UUID maps are not of the same size! SIMPL UUID Vector size: {} Simplnx UUID Vector size: {}", m_Simpl_Uuids.size(), m_Simplnx_Uuids.size()));
+    return MakeErrorResult(-33, fmt::format("UUID maps are not of the same size! SIMPL: {} Simplnx: {}", m_Simpl_Uuids.size(), m_Simplnx_Uuids.size()));
   }
 
   for(const auto& pluginIO : plugin->getDataIOManagers())
   {
     m_DataIOCollection->addIOManager(pluginIO);
   }
+
+  return {};
 }
 
 void Application::addDataType(DataObject::Type type, const std::string& name)
