@@ -535,7 +535,7 @@ DataType SIMPLNX_EXPORT NeighborList<float64>::getDataType() const
 }
 
 template <class T>
-std::string NeighborList<T>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const
+std::string NeighborList<T>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
 {
   bool hasValueAtCell = false;
   const T value = getValue(tupleIndex, compIndex, hasValueAtCell);
@@ -554,7 +554,7 @@ std::string NeighborList<T>::toString(const usize tupleIndex, const usize compIn
 }
 
 template <class T>
-bool NeighborList<T>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value)
+bool NeighborList<T>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
 {
   Result<T> result = nx::core::StringInterpretationUtilities::Convert<T>(value);
   if(result.invalid())
