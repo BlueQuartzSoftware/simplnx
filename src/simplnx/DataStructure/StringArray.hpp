@@ -60,7 +60,7 @@ public:
    * @param format The fmt formatting string is ignored here
    * @return std::string
    */
-  std::string toString(const usize tupleIndex, const usize compIndex, const std::string& format = "{}") const override;
+  std::string toString(usize tupleIndex, usize compIndex, const std::string& format = "{}") const override;
 
   /**
    * @brief Sets the value at the tuple and component index to the passed in string value
@@ -69,7 +69,7 @@ public:
    * @param value
    * @return bool
    */
-  bool setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value) override;
+  bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) override;
 
   iterator begin();
   iterator end();

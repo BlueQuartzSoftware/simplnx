@@ -111,7 +111,7 @@ public:
    * @param format Optional fmt formatting, this will be ignored for integer types and a simple {} will always be used
    * @return std::string
    */
-  virtual std::string toString(const usize tupleIndex, const usize compIndex, const std::string& format = "{}") const = 0;
+  virtual std::string toString(usize tupleIndex, usize compIndex, const std::string& format = "{}") const = 0;
 
   /**
    * @brief Sets the value at the tuple and component index to the value parsed as the appropriate type.
@@ -121,7 +121,7 @@ public:
    * @param value
    * @return bool
    */
-  virtual bool setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value) = 0;
+  virtual bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) = 0;
 
   static std::set<std::string> StringListFromArrayType(const std::set<ArrayType>& arrayTypes)
   {
