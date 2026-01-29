@@ -779,71 +779,29 @@ private:
   std::shared_ptr<store_type> m_DataStore = nullptr;
 };
 
-template <>
-std::string SIMPLNX_EXPORT DataArray<int8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<int8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<int16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<int32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<int64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<uint8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<uint16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<uint32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<uint64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<float32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<float64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<bool>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
 
-template <>
-std::string SIMPLNX_EXPORT DataArray<int16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<int32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<int64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<uint8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<uint16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<uint32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<uint64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<float32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<float64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-std::string SIMPLNX_EXPORT DataArray<bool>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
-
-template <>
-bool SIMPLNX_EXPORT DataArray<int8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<uint8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<int16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<uint16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<int32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<uint32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<int64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<uint64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<float32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<float64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
-
-template <>
-bool SIMPLNX_EXPORT DataArray<bool>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<int8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<uint8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<int16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<uint16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<int32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<uint32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<int64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<uint64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<float32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<float64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<bool>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
 
 // Declare aliases
 using UInt8Array = DataArray<uint8>;

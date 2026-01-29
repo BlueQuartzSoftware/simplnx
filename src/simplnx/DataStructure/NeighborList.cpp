@@ -534,238 +534,29 @@ DataType SIMPLNX_EXPORT NeighborList<float64>::getDataType() const
   return DataType::float64;
 }
 
-template <>
-std::string SIMPLNX_EXPORT NeighborList<int8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
+template <class T>
+std::string NeighborList<T>::toString(const usize tupleIndex, const usize compIndex, const std::string& format) const
 {
-  bool hasValueAtCell;
-  const int8 value = getValue(tupleIndex, compIndex, hasValueAtCell);
+  bool hasValueAtCell = false;
+  const T value = getValue(tupleIndex, compIndex, hasValueAtCell);
   if(!hasValueAtCell)
   {
     return "";
   }
-  return fmt::format("{}", value);
-}
-
-template <>
-std::string SIMPLNX_EXPORT NeighborList<int16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
-{
-  bool hasValueAtCell;
-  const int16 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
+  if constexpr(std::is_floating_point_v<T>)
   {
-    return "";
+    return fmt::format(fmt::runtime(format), value);
   }
-  return fmt::format("{}", value);
-}
-
-template <>
-std::string SIMPLNX_EXPORT NeighborList<int32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
-{
-  bool hasValueAtCell;
-  const int32 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
+  else
   {
-    return "";
+    return fmt::format("{}", value);
   }
-  return fmt::format("{}", value);
 }
 
-template <>
-std::string SIMPLNX_EXPORT NeighborList<int64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
+template <class T>
+bool NeighborList<T>::setValueFromString(const usize tupleIndex, const usize compIndex, const std::string& value)
 {
-  bool hasValueAtCell;
-  const int64 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
-  {
-    return "";
-  }
-  return fmt::format("{}", value);
-}
-
-template <>
-std::string SIMPLNX_EXPORT NeighborList<uint8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
-{
-  bool hasValueAtCell;
-  const uint8 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
-  {
-    return "";
-  }
-  return fmt::format("{}", value);
-}
-
-template <>
-std::string SIMPLNX_EXPORT NeighborList<uint16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
-{
-  bool hasValueAtCell;
-  const uint16 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
-  {
-    return "";
-  }
-  return fmt::format("{}", value);
-}
-
-template <>
-std::string SIMPLNX_EXPORT NeighborList<uint32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
-{
-  bool hasValueAtCell;
-  const uint32 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
-  {
-    return "";
-  }
-  return fmt::format("{}", value);
-}
-
-template <>
-std::string SIMPLNX_EXPORT NeighborList<uint64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
-{
-  bool hasValueAtCell;
-  const uint64 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
-  {
-    return "";
-  }
-  return fmt::format("{}", value);
-}
-
-template <>
-std::string SIMPLNX_EXPORT NeighborList<float32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
-{
-  bool hasValueAtCell;
-  const float32 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
-  {
-    return "";
-  }
-  return fmt::vformat(format, fmt::make_format_args(value));
-}
-
-template <>
-std::string SIMPLNX_EXPORT NeighborList<float64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
-{
-  bool hasValueAtCell;
-  const float64 value = getValue(tupleIndex, compIndex, hasValueAtCell);
-  if(!hasValueAtCell)
-  {
-    return "";
-  }
-  return fmt::vformat(format, fmt::make_format_args(value));
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<int8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<int8> result = nx::core::StringInterpretationUtilities::Convert<int8>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<uint8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<uint8> result = nx::core::StringInterpretationUtilities::Convert<uint8>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<int16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<int16> result = nx::core::StringInterpretationUtilities::Convert<int16>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<uint16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<uint16> result = nx::core::StringInterpretationUtilities::Convert<uint16>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<int32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<int32> result = nx::core::StringInterpretationUtilities::Convert<int32>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<uint32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<uint32> result = nx::core::StringInterpretationUtilities::Convert<uint32>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<int64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<int64> result = nx::core::StringInterpretationUtilities::Convert<int64>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<uint64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<uint64> result = nx::core::StringInterpretationUtilities::Convert<uint64>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<float32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<float32> result = nx::core::StringInterpretationUtilities::Convert<float32>(value);
-  if(result.invalid())
-  {
-    return false;
-  }
-  updateListEntry(tupleIndex, compIndex, result.value());
-  return true;
-}
-
-template <>
-bool SIMPLNX_EXPORT NeighborList<float64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
-{
-  Result<float64> result = nx::core::StringInterpretationUtilities::Convert<float64>(value);
+  Result<T> result = nx::core::StringInterpretationUtilities::Convert<T>(value);
   if(result.invalid())
   {
     return false;
