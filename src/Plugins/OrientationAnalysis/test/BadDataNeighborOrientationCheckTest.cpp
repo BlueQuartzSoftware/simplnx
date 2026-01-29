@@ -34,12 +34,9 @@ const DataPath k_CStuctsArrayPath = k_CellEnsembleDataPath.createChildPath(k_CSt
 // Case 1.1.1: Base Case | 2 phase | Tolerance 5 | 1 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_1/case_1_1_1/case_1_1_1_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_1/case_1_1_1/case_1_1_1_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -95,12 +92,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 // Case 1.1.2: Invalid Base Case | 3 phase | Tolerance 5 | 1 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_1/case_1_1_2/case_1_1_2_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_1/case_1_1_2/case_1_1_2_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -156,12 +150,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 // Case 1.1.3: Invalid Base Case | 2 phase | Tolerance 5 | 1 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.3", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_1/case_1_1_3/case_1_1_3_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_1/case_1_1_3/case_1_1_3_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -217,12 +208,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
 // Case 1.2.1: Base Case | 2 phase | Tolerance 5 | 2 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_2/case_1_2_1/case_1_2_1_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_2/case_1_2_1/case_1_2_1_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -278,12 +266,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 // Case 1.2.2: Invalid Base Case | 2 phase | Tolerance 5 | 2 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_2/case_1_2_2/case_1_2_2_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_2/case_1_2_2/case_1_2_2_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -339,12 +324,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 // Case 1.2.3: Invalid Base Case | 2 phase | Tolerance 5 | 2 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.3", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_2/case_1_2_3/case_1_2_3_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_2/case_1_2_3/case_1_2_3_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -400,12 +382,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
 // Case 1.3.1: Base Case | 1 phase | Tolerance 5 | 3 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_3/case_1_3_1/case_1_3_1_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_3/case_1_3_1/case_1_3_1_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -461,12 +440,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 // Case 1.3.2: Invalid Base Case | 2 phase | Tolerance 5 | 3 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_3/case_1_3_2/case_1_3_2_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_3/case_1_3_2/case_1_3_2_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -522,12 +498,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 // Case 1.3.3: Invalid Base Case | 1 phase | Tolerance 5 | 3 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.3", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_3/case_1_3_3/case_1_3_3_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_3/case_1_3_3/case_1_3_3_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -583,12 +556,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
 // Case 1.4.1: Base Case | 1 phase | Tolerance 5 | 4 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_4/case_1_4_1/case_1_4_1_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_4/case_1_4_1/case_1_4_1_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -644,12 +614,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 // Case 1.4.2: Invalid Base Case | 2 phase | Tolerance 5 | 4 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_4/case_1_4_2/case_1_4_2_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_4/case_1_4_2/case_1_4_2_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -705,12 +672,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 // Case 1.4.3: Invalid Base Case | 1 phase | Tolerance 5 | 4 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.3", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_4/case_1_4_3/case_1_4_3_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_4/case_1_4_3/case_1_4_3_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -766,12 +730,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
 // Case 1.5.1: Base Case | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_5/case_1_5_1/case_1_5_1_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_5/case_1_5_1/case_1_5_1_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -827,12 +788,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 // Case 1.5.2: Invalid Base Case | 2 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_5/case_1_5_2/case_1_5_2_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_5/case_1_5_2/case_1_5_2_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -888,12 +846,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 // Case 1.5.3: Invalid Base Case | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.3", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_5/case_1_5_3/case_1_5_3_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_5/case_1_5_3/case_1_5_3_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -949,12 +904,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
 // Case 1.6.1: Base Case | 1 phase | Tolerance 5 | 6 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_6/case_1_6_1/case_1_6_1_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_6/case_1_6_1/case_1_6_1_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1010,12 +962,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 // Case 1.6.2: Invalid Base Case | 2 phase | Tolerance 5 | 6 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_6/case_1_6_2/case_1_6_2_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_6/case_1_6_2/case_1_6_2_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1071,12 +1020,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 // Case 1.6.3: Invalid Base Case | 1 phase | Tolerance 5 | 6 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.3", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format(
-      "/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_1/case_1_6/case_1_6_3/case_1_6_3_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_1/case_1_6/case_1_6_3/case_1_6_3_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1132,12 +1078,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
 // Case 2.1: X+ Dim Case (Sequential) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(
-      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_2/case_2_1/case_2_1_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_2/case_2_1/case_2_1_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1189,12 +1132,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1"
 // Case 2.2: Y+ Dim Case (Sequential) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(
-      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_2/case_2_2/case_2_2_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_2/case_2_2/case_2_2_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1246,12 +1186,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.2"
 // Case 2.3: Z+ Dim Case (Sequential) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.3", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(
-      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_2/case_2_3/case_2_3_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_2/case_2_3/case_2_3_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1303,12 +1240,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.3"
 // Case 2.4: X- Dim Case (Recursive) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.4", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(
-      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_2/case_2_4/case_2_4_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_2/case_2_4/case_2_4_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1360,12 +1294,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.4"
 // Case 2.5: Y- Dim Case (Recursive) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.5", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(
-      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_2/case_2_5/case_2_5_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_2/case_2_5/case_2_5_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1417,12 +1348,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.5"
 // Case 2.6: Z- Dim Case (Recursive) | Valid | 1 phase | Tolerance 5 | 5 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.6", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(
-      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_2/case_2_6/case_2_6_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_2/case_2_6/case_2_6_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1474,12 +1402,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.6"
 // Case 3.1: Long Sequential | Valid | 1 phase | Tolerance 5 | 1 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.1", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(
-      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_3/case_3_1/case_3_1_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_3/case_3_1/case_3_1_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1531,12 +1456,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.1"
 // Case 3.2: Long Recursive | Valid | 1 phase | Tolerance 5 | 1 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.2", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(
-      fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_3/case_3_2/case_3_2_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_3/case_3_2/case_3_2_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter
@@ -1588,12 +1510,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.2"
 // Case 4: Semi-Complex Synthetic Structure | Valid | 3 phase | Tolerance 5 | 4 Min Neighbors
 TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 4", "[OrientationAnalysis][BadDataNeighborOrientationCheckFilter]")
 {
-  //  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "BadDataNeighborOrientationCheck.tar.gz",
-  //                                                              "BadDataNeighborOrientationCheck");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "7_bad_data_neighbor_orientation_check.tar.gz", "bad_data_neighbor_orientation_check");
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath =
-      fs::path(fmt::format("/home/nyoung/Desktop/MTR_comparison/BadDataNeighborOrientationCheck/bad_data_neighbor_orientation_check/case_4/case_4_input.dream3d", unit_test::k_TestFilesDir));
+  auto baseDataFilePath = fs::path(fmt::format("{}/bad_data_neighbor_orientation_check/case_4/case_4_input.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   // Bad Data Neighbor Orientation Check Filter

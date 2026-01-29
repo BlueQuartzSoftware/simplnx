@@ -47,7 +47,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
-    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+    // This really should NOT be happening as the path was verified during preflight, BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
     return MakeErrorResult(-54900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
   }
@@ -87,9 +87,9 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       quat1.positiveOrientation();
       const uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
 
-      column = voxelIdx % dims[0];
-      row = (voxelIdx / dims[0]) % dims[1];
-      plane = voxelIdx / (dims[0] * dims[1]);
+      column = static_cast<int64>(voxelIdx) % dims[0];
+      row = (static_cast<int64>(voxelIdx) / dims[0]) % dims[1];
+      plane = static_cast<int64>(voxelIdx) / (dims[0] * dims[1]);
 
       // Check the 6 Faces of the voxel
       for(int32 faceIdx = 0; faceIdx < 6; faceIdx++)
@@ -151,13 +151,13 @@ Result<> BadDataNeighborOrientationCheck::operator()()
                              CalculatePercentComplete(voxelIdx, totalPoints));
         });
 
-        // We not compare the number-of-neighbors of the current voxel and if it
+        // We are comparing the number-of-neighbors of the current voxel, and if it
         // is > the current level and the mask is FALSE, then we drop into this
         // conditional. The first thing that happens in the conditional is that
         // the current voxel's mask value is set to TRUE.
         if(neighborCount[voxelIdx] >= currentLevel && !maskCompare->isTrue(voxelIdx))
         {
-          maskCompare->setValue(voxelIdx, true); // current voxel's mask value is set to TRUE.
+          maskCompare->setValue(voxelIdx, true); // the current voxel's mask value is set to TRUE.
           counter++;                             // Increment the `counter` to force the loop to iterate again
 
           // We precalculate the positive voxel quaternion and laue class here to prevent reading and recalculating it for each face below
@@ -167,13 +167,13 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 
           // This whole section below is to now look at the neighbor voxels of the
           // current voxel that just got flipped to true. This is needed because
-          // if any of those neighbors mask was `false` then its neighbor count
+          // if any of those neighbor's mask was `false`, then its neighbor count
           // is now not correct and will be off-by-one. So we run _almost_ the same
           // loop code as above but checking the specific neighbors of the current
           // voxel. This part should be termed the "Update Neighbor's Neighbor Count"
-          column = voxelIdx % dims[0]; // Calculate the column, row, plane
-          row = (voxelIdx / dims[0]) % dims[1];
-          plane = voxelIdx / (dims[0] * dims[1]);
+          column = static_cast<int64>(voxelIdx) % dims[0]; // Calculate the column, row, plane
+          row = (static_cast<int64>(voxelIdx) / dims[0]) % dims[1];
+          plane = static_cast<int64>(voxelIdx) / (dims[0] * dims[1]);
 
           for(int64 j = 0; j < 6; j++) // Loop over each of the 6 neighbor faces
           {
@@ -191,10 +191,10 @@ Result<> BadDataNeighborOrientationCheck::operator()()
             }
             // clang-format on
 
-            // If the neighbor voxel's mask is false then ....
+            // If the neighbor voxel's mask is false, then ....
             if(!maskCompare->isTrue(neighborIdx))
             {
-              // Make sure both cell's phase are identical and valid
+              // Make sure both cells phase values are identical and valid
               if(cellPhases[voxelIdx] == cellPhases[neighborIdx] && cellPhases[voxelIdx] > 0)
               {
                 ebsdlib::QuatD quat2(quats[neighborIdx * 4], quats[neighborIdx * 4 + 1], quats[neighborIdx * 4 + 2], quats[neighborIdx * 4 + 3]);
