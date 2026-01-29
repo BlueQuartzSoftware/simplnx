@@ -158,7 +158,7 @@ StringArray::const_reference StringArray::at(usize index) const
 
 std::string StringArray::toString(usize tupleIndex, usize compIndex, const std::string& format) const
 {
-  const nx::core::usize valueIndex = tupleIndex * getNumberOfComponents() + compIndex;
+  const usize valueIndex = tupleIndex * getNumberOfComponents() + compIndex;
   return at(valueIndex);
 }
 
