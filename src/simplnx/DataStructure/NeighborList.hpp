@@ -206,7 +206,7 @@ public:
    * @param format Optional fmt formatting, this will be ignored for integer types and a simple {} will always be used
    * @return std::string
    */
-  std::string toString( usize tupleIndex,  usize compIndex, const std::string& format = "{}") const override;
+  std::string toString(usize tupleIndex, usize compIndex, const std::string& format = "{}") const override;
 
   /**
    * @brief Sets the value at the tuple and component index (i.e. list number and element number within that list) to the value parsed
@@ -216,7 +216,7 @@ public:
    * @param value
    * @return bool
    */
-  bool setValueFromString( usize tupleIndex,  usize compIndex, const std::string& value) override;
+  bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) override;
 
   /**
    * @brief getValue
