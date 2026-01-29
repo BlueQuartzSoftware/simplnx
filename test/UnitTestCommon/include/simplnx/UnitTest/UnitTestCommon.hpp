@@ -7,10 +7,14 @@
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
+#include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
-#include "simplnx/DataStructure/IDataStore.hpp"
-#include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/DataStructure/Montage/AbstractMontage.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -30,8 +34,6 @@
 
 #include <fmt/format.h>
 
-#include <reproc++/run.hpp>
-
 #include <algorithm>
 #include <filesystem>
 
@@ -39,13 +41,13 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 
 #define SIMPLNX_RESULT_CATCH_PRINT(result)                                                                                                                                                             \
-  for(const auto& warning : result.warnings())                                                                                                                                                         \
+  for(const auto& warning : (result).warnings())                                                                                                                                                       \
   {                                                                                                                                                                                                    \
     WARN(fmt::format("{} : {}", warning.code, warning.message));                                                                                                                                       \
   }                                                                                                                                                                                                    \
-  if(result.invalid())                                                                                                                                                                                 \
+  if((result).invalid())                                                                                                                                                                               \
   {                                                                                                                                                                                                    \
-    for(const auto& error : result.errors())                                                                                                                                                           \
+    for(const auto& error : (result).errors())                                                                                                                                                         \
     {                                                                                                                                                                                                  \
       UNSCOPED_INFO(fmt::format("{} : {}", error.code, error.message));                                                                                                                                \
     }                                                                                                                                                                                                  \
@@ -53,11 +55,11 @@ using namespace nx::core;
 
 #define SIMPLNX_RESULT_REQUIRE_VALID(result)                                                                                                                                                           \
   SIMPLNX_RESULT_CATCH_PRINT(result);                                                                                                                                                                  \
-  REQUIRE(result.valid());
+  REQUIRE((result).valid());
 
 #define SIMPLNX_RESULT_REQUIRE_INVALID(result)                                                                                                                                                         \
   SIMPLNX_RESULT_CATCH_PRINT(result);                                                                                                                                                                  \
-  REQUIRE(result.invalid());
+  REQUIRE((result).invalid());
 
 namespace nx::core
 {
@@ -339,9 +341,9 @@ inline void WriteTestDataStructure(const DataStructure& dataStructure, const fs:
 
 /**
  * @brief Compares two Image Geometries
- * @param dataStructure
- * @param exemplaryDataPath
- * @param computedPath
+ * @param exemplarGeom
+ * @param computedGeom
+ * @param threshold
  */
 inline void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom* computedGeom, float32 threshold = 0.0f)
 {
@@ -409,15 +411,15 @@ inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontag
   const AbstractMontage::CollectionType generatedGeometries = generated.getGeometries();
   for(const auto* exGeom : exemplarGeometries)
   {
-    std::vector<usize> usedIndicies(exemplarGeometries.size());
+    std::vector<usize> usedIndices(exemplarGeometries.size());
     bool exists = false;
     for(usize i = 0; i < generatedGeometries.size(); i++)
     {
       if(CompareIGeometry(exGeom, generatedGeometries[i]))
       {
-        if(std::find(usedIndicies.begin(), usedIndicies.end(), i) == usedIndicies.end())
+        if(std::find(usedIndices.begin(), usedIndices.end(), i) == usedIndices.end())
         {
-          usedIndicies.push_back(i);
+          usedIndices.push_back(i);
           exists = true;
           break;
         }
@@ -469,6 +471,18 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
   }
   REQUIRE(!failed);
 }
+
+/**
+ * @brief Wrapper for CompareDataArrays to use with the ExecuteDataFunction
+ */
+struct CompareArraysFunctor
+{
+  template <typename T>
+  void operator()(const IDataArray& left, const IDataArray& right) const
+  {
+    CompareDataArrays<T>(left, right);
+  }
+};
 
 /**
  * @brief Compares 2 DataArrays using an EPSILON value. Useful for floating point comparisons
@@ -606,8 +620,8 @@ void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, 
 /**
  * @brief
  * @tparam T
- * @param exemplaryNeighborList
- * @param computedNeighborList
+ * @param exemplaryData
+ * @param computedData
  */
 template <typename T>
 void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborList* computedData)
@@ -701,6 +715,18 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
 }
 
 /**
+ * @brief Wrapper for CompareNeighborLists to use with the ExecuteDataFunction
+ */
+struct CompareNeighborListsFunctor
+{
+  template <typename T>
+  void operator()(const INeighborList* left, const INeighborList* right) const
+  {
+    CompareNeighborLists<T>(left, right);
+  }
+};
+
+/**
  * @brief Compares the referenced StringArray objects in the dataStructure for any differences
  * @param dataStructure
  * @param exemplaryDataPath
@@ -721,8 +747,8 @@ inline void CompareStringArrays(const DataStructure& dataStructure, const DataPa
   usize end = exemplaryDataArray.getSize();
   for(usize i = start; i < end; i++)
   {
-    auto oldVal = exemplaryDataArray[i];
-    auto newVal = generatedDataArray[i];
+    const auto& oldVal = exemplaryDataArray[i];
+    const auto& newVal = generatedDataArray[i];
     REQUIRE(oldVal == newVal);
   }
 }
@@ -845,6 +871,259 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
   }
 }
 
+inline void CompareDataStructures(const DataStructure& dataStructureA, const DataStructure& dataStructureB, const DataPath& parentGroup = DataPath{})
+{
+  try
+  {
+    std::vector<std::string> childrenNamesA;
+    std::vector<std::string> childrenNamesB;
+    if(parentGroup.empty())
+    {
+      // std::cout << "DEBUG TEST: dsA size = " << dataStructureA.getSize() << "\tdsB size = " << dataStructureB.getSize();
+      INFO(fmt::format("DEBUG TEST: dsA size = {}\tdsB size = {}", dataStructureA.getSize(), dataStructureB.getSize()));
+      REQUIRE(dataStructureA.getSize() == dataStructureB.getSize());
+      childrenNamesA = dataStructureA.getDataMap().getNames();
+      childrenNamesB = dataStructureB.getDataMap().getNames();
+    }
+    else
+    {
+      const auto* parentA = dataStructureA.getDataAs<BaseGroup>(parentGroup);
+      const auto* parentB = dataStructureB.getDataAs<BaseGroup>(parentGroup);
+      REQUIRE(parentA != nullptr);
+      REQUIRE(parentB != nullptr);
+      const BaseGroup::GroupType parentAGroupType = parentA->getGroupType();
+      const BaseGroup::GroupType parentBGroupType = parentB->getGroupType();
+      REQUIRE(parentAGroupType == parentBGroupType);
+      // std::cout << "DEBUG TEST: ds parentA size = " << parentA->getSize() << "\tds parentB size = " << parentB->getSize();
+      INFO(fmt::format("DEBUG TEST: ds parentA size = {}\tds parentB size = {}", parentA->getSize(), parentB->getSize()));
+      REQUIRE(parentA->getSize() == parentB->getSize());
+      childrenNamesA = parentA->getDataMap().getNames();
+      childrenNamesB = parentB->getDataMap().getNames();
+
+      switch(parentAGroupType)
+      {
+      case nx::core::BaseGroup::GroupType::AttributeMatrix: {
+        const auto* attributeMatrixA = dynamic_cast<const AttributeMatrix*>(parentA);
+        const auto* attributeMatrixB = dynamic_cast<const AttributeMatrix*>(parentB);
+        REQUIRE(attributeMatrixA != nullptr);
+        REQUIRE(attributeMatrixB != nullptr);
+        REQUIRE(attributeMatrixA->getShape() == attributeMatrixB->getShape());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::ImageGeom: {
+        const auto* geomA = dynamic_cast<const ImageGeom*>(parentA);
+        const auto* geomB = dynamic_cast<const ImageGeom*>(parentB);
+        CompareImageGeometry(geomA, geomB, UnitTest::EPSILON);
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::RectGridGeom: {
+        const auto* geomA = dynamic_cast<const RectGridGeom*>(parentA);
+        const auto* geomB = dynamic_cast<const RectGridGeom*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getDimensions() == geomB->getDimensions());
+        const auto originA = geomA->getOrigin();
+        const auto originB = geomB->getOrigin();
+        REQUIRE(originA.valid());
+        REQUIRE(originB.valid());
+        const auto originAVec = originA.value();
+        const auto originBVec = originB.value();
+        REQUIRE(std::fabs(originAVec[0] - originBVec[0]) <= UnitTest::EPSILON);
+        REQUIRE(std::fabs(originAVec[1] - originBVec[1]) <= UnitTest::EPSILON);
+        REQUIRE(std::fabs(originAVec[2] - originBVec[2]) <= UnitTest::EPSILON);
+        CompareDataArrays<float32>(geomA->getXBoundsRef(), geomB->getXBoundsRef());
+        CompareDataArrays<float32>(geomA->getYBoundsRef(), geomB->getYBoundsRef());
+        CompareDataArrays<float32>(geomA->getZBoundsRef(), geomB->getZBoundsRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::HexahedralGeom:
+      case nx::core::BaseGroup::GroupType::TetrahedralGeom: {
+        const auto* geomA = dynamic_cast<const INodeGeometry3D*>(parentA);
+        const auto* geomB = dynamic_cast<const INodeGeometry3D*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getVertices() != nullptr);
+        REQUIRE(geomB->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
+        REQUIRE(geomA->getEdges() != nullptr);
+        REQUIRE(geomB->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
+        REQUIRE(geomA->getFaces() != nullptr);
+        REQUIRE(geomB->getFaces() != nullptr);
+        CompareDataArrays<uint64>(geomA->getFacesRef(), geomB->getFacesRef());
+        REQUIRE(geomA->getPolyhedra() != nullptr);
+        REQUIRE(geomB->getPolyhedra() != nullptr);
+        CompareDataArrays<uint64>(geomA->getPolyhedraRef(), geomB->getPolyhedraRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::QuadGeom:
+      case nx::core::BaseGroup::GroupType::TriangleGeom: {
+        const auto* geomA = dynamic_cast<const INodeGeometry2D*>(parentA);
+        const auto* geomB = dynamic_cast<const INodeGeometry2D*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getVertices() != nullptr);
+        REQUIRE(geomB->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
+        REQUIRE(geomA->getEdges() != nullptr);
+        REQUIRE(geomB->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
+        REQUIRE(geomA->getFaces() != nullptr);
+        REQUIRE(geomB->getFaces() != nullptr);
+        CompareDataArrays<uint64>(geomA->getFacesRef(), geomB->getFacesRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::EdgeGeom: {
+        const auto* geomA = dynamic_cast<const EdgeGeom*>(parentA);
+        const auto* geomB = dynamic_cast<const EdgeGeom*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getVertices() != nullptr);
+        REQUIRE(geomB->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
+        REQUIRE(geomA->getEdges() != nullptr);
+        REQUIRE(geomB->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::VertexGeom: {
+        const auto* geomA = dynamic_cast<const VertexGeom*>(parentA);
+        const auto* geomB = dynamic_cast<const VertexGeom*>(parentB);
+        REQUIRE(geomA != nullptr);
+        REQUIRE(geomB != nullptr);
+        REQUIRE(geomA->getVertices() != nullptr);
+        REQUIRE(geomB->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
+        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
+        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
+        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        break;
+      }
+      case nx::core::BaseGroup::GroupType::DataGroup: {
+        break;
+      }
+      default: {
+        INFO(fmt::format("Object at path ({}) has unhandled type ({})", parentGroup.toString(), parentA->getTypeName()));
+        REQUIRE(false);
+        break;
+      }
+      }
+
+      for(usize i = 0; i < childrenNamesA.size(); ++i)
+      {
+        // std::cout << "DEBUG TEST: child A name = " << childrenNamesA[i] << "\tchild B name = " << childrenNamesB[i];
+        INFO(fmt::format("DEBUG TEST: child A name = '{}'\tchild B name = '{}'", childrenNamesA[i], childrenNamesB[i]));
+        REQUIRE(childrenNamesA[i] == childrenNamesB[i]);
+
+        DataPath childPath = parentGroup.createChildPath(childrenNamesA[i]);
+        const DataObject* objectA = dataStructureA.getData(childPath);
+        const DataObject* objectB = dataStructureB.getData(childPath);
+        REQUIRE(objectA != nullptr);
+        REQUIRE(objectB != nullptr);
+
+        const DataObject::Type objectADataObjectType = objectA->getDataObjectType();
+        REQUIRE(objectADataObjectType == objectB->getDataObjectType());
+
+        switch(objectADataObjectType)
+        {
+        case nx::core::DataObject::Type::DynamicListArray: {
+          // TODO: ??
+          break;
+        }
+        case nx::core::DataObject::Type::ScalarData: {
+          // TODO: ??
+          std::cout << objectA->getTypeName() << ": " << objectA->getName() << std::endl;
+          break;
+        }
+        case nx::core::DataObject::Type::AbstractMontage: {
+          // TODO: ??
+          break;
+        }
+        case nx::core::DataObject::Type::IDataArray:
+        case nx::core::DataObject::Type::DataArray: {
+          const auto* dataArrayA = dynamic_cast<const IDataArray*>(objectA);
+          const auto* dataArrayB = dynamic_cast<const IDataArray*>(objectB);
+          REQUIRE(dataArrayA != nullptr);
+          REQUIRE(dataArrayB != nullptr);
+          REQUIRE(dataArrayA->getDataType() == dataArrayB->getDataType());
+          // std::cout << "DEBUG TEST: data array A DataType = " << DataTypeToString(dataArrayA->getDataType()) << "\tdata array B DataType = " << DataTypeToString(dataArrayB->getDataType());
+          INFO(fmt::format("DEBUG TEST: data array A DataType = {}\tdata array B DataType = {}", DataTypeToString(dataArrayA->getDataType()), DataTypeToString(dataArrayB->getDataType())));
+
+          ExecuteDataFunction(CompareArraysFunctor{}, dataArrayA->getDataType(), *dataArrayA, *dataArrayB);
+
+          break;
+        }
+        case nx::core::DataObject::Type::StringArray: {
+          const auto* stringArrayA = dynamic_cast<const StringArray*>(objectA);
+          const auto* stringArrayB = dynamic_cast<const StringArray*>(objectB);
+          REQUIRE(stringArrayA != nullptr);
+          REQUIRE(stringArrayB != nullptr);
+          CompareStringArrays(*stringArrayA, *stringArrayB);
+          break;
+        }
+        case nx::core::DataObject::Type::INeighborList:
+        case nx::core::DataObject::Type::NeighborList: {
+          const auto* neighborlistA = dynamic_cast<const INeighborList*>(objectA);
+          const auto* neighborlistB = dynamic_cast<const INeighborList*>(objectB);
+          REQUIRE(neighborlistA != nullptr);
+          REQUIRE(neighborlistB != nullptr);
+          // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
+          // DataTypeToString(neighborlistB->getDataType());
+          INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistA->getDataType()), DataTypeToString(neighborlistB->getDataType())));
+          REQUIRE(neighborlistA->getDataType() == neighborlistB->getDataType());
+
+          ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistA->getDataType(), neighborlistA, neighborlistB);
+
+          break;
+        }
+        case nx::core::DataObject::Type::VertexGeom:
+        case nx::core::DataObject::Type::EdgeGeom:
+        case nx::core::DataObject::Type::RectGridGeom:
+        case nx::core::DataObject::Type::ImageGeom:
+        case nx::core::DataObject::Type::INodeGeometry2D:
+        case nx::core::DataObject::Type::QuadGeom:
+        case nx::core::DataObject::Type::TriangleGeom:
+        case nx::core::DataObject::Type::INodeGeometry3D:
+        case nx::core::DataObject::Type::HexahedralGeom:
+        case nx::core::DataObject::Type::TetrahedralGeom:
+        case nx::core::DataObject::Type::AttributeMatrix:
+        case nx::core::DataObject::Type::DataGroup:
+        case nx::core::DataObject::Type::BaseGroup: {
+          CompareDataStructures(dataStructureA, dataStructureB, childPath);
+          break;
+        }
+        default: {
+          auto underlyingDataType = to_underlying(objectADataObjectType);
+          std::cout << "Missing DataType: " << underlyingDataType << std::endl;
+          INFO(fmt::format("Object at path ({}) has unhandled type ({})", childPath.toString(), underlyingDataType));
+          REQUIRE(false);
+          break;
+        }
+        }
+      }
+    }
+  } catch(std::exception& e)
+  {
+    INFO(fmt::format("Caught exception: {}", e.what()));
+    REQUIRE(false);
+  }
+} // namespace UnitTest
+
 /**
  * @brief Creates a DataArray backed by a DataStore (in memory).
  * @tparam T The primitive type to use, i.e. int8, float, double
@@ -857,7 +1136,7 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
  * @return
  */
 template <typename T>
-DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, ShapeType tupleShape, ShapeType componentShape, DataObject::IdType parentId = {})
+DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, DataObject::IdType parentId = {})
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
@@ -1099,7 +1378,8 @@ inline void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exempl
   }
 }
 
-inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath attributeMatrix, const std::string& exemplarDataContainerName)
+inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath& attributeMatrix,
+                                           const std::string& exemplarDataContainerName)
 {
   auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
   std::vector<DataPath> selectedCellArrays;
@@ -1257,7 +1537,7 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   auto* groupG = DataGroup::Create(dataStructure, Constants::k_GroupGName, groupF->getId());
   auto* arrayN = CreateTestDataArray<int8>(dataStructure, Constants::k_ArrayNName, {1ULL}, {1ULL}, groupH->getId());
 
-  groupAHPath.createChildPath(arrayN->getName());
+  // groupAHPath.createChildPath(arrayN->getName());
 
   auto groupACDPath = groupACPath.createChildPath(groupD->getName());
   auto groupBCDPath = groupBCPath.createChildPath(groupD->getName());
@@ -1299,7 +1579,7 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
   return dataStructure;
 }
 
-inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, std::vector<DataPath> ignoredPaths = {})
+inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, const std::vector<DataPath>& ignoredPaths = {})
 {
   std::optional<std::vector<DataPath>> amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, DataObject::Type::AttributeMatrix);
   REQUIRE(amPathsOpt.has_value());
@@ -1442,12 +1722,12 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
 } // namespace UnitTest
 
 // Make sure we can load the needed filters from the plugins
-const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+constexpr Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 // Make sure we can instantiate the MultiThreshold Objects Filter
-const Uuid k_MultiThresholdObjectsId = *Uuid::FromString("4246245e-1011-4add-8436-0af6bed19228");
+constexpr Uuid k_MultiThresholdObjectsId = *Uuid::FromString("4246245e-1011-4add-8436-0af6bed19228");
 const FilterHandle k_MultiThresholdObjectsFilterHandle(k_MultiThresholdObjectsId, k_SimplnxCorePluginId);
 // Make sure we can instantiate the IdentifySampleFilter
-const Uuid k_IdentifySampleFilterId = *Uuid::FromString("94d47495-5a89-4c7f-a0ee-5ff20e6bd273");
+constexpr Uuid k_IdentifySampleFilterId = *Uuid::FromString("94d47495-5a89-4c7f-a0ee-5ff20e6bd273");
 const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId, k_SimplnxCorePluginId);
 
 } // namespace nx::core

@@ -21,10 +21,12 @@
 
 #include <catch2/catch.hpp>
 
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <vector>
 
+namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
@@ -1617,4 +1619,25 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     status = geom->findUnsharedFaces(true);
     REQUIRE(status == 1);
   }
+}
+
+TEST_CASE("CompareDataStructures")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure0 = createTestDataStructure();
+  DataStructure dataStructure1 = createTestDataStructure();
+
+  UnitTest::CompareDataStructures(dataStructure0, dataStructure1);
+}
+
+TEST_CASE("CompareDataStructures-fail", "[SimplnxReview][!mayfail]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure0 = createTestDataStructure();
+  DataStructure dataStructure1 = createTestDataStructure();
+  dataStructure1.removeData(DataPath({Constants::k_ImageGeometry}));
+
+  UnitTest::CompareDataStructures(dataStructure0, dataStructure1);
 }
