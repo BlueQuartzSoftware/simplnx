@@ -45,6 +45,32 @@ simplnx - A C++ project with a plugin-based architecture.
 - Type aliases: `CamelCase` + `Type` suffix (e.g., `ValueType`)
 - Macros: `UPPER_CASE`
 
+### Descriptive Variable Naming
+Use suffixes to make variable types and purposes immediately clear:
+
+**Geometry variables use `Geom` suffix:**
+- Correct: `const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(path);`
+- Incorrect: `const auto& image = dataStructure.getDataRefAs<ImageGeom>(path);`
+
+**DataStore references use `Ref` suffix:**
+- Correct: `const auto& verticesRef = vertexGeom.getVertices()->getDataStoreRef();`
+- Incorrect: `const auto& vertices = vertexGeom.getVertices()->getDataStoreRef();`
+
+Examples:
+```cpp
+// Geometry variables
+auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imagePath);
+const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(rectPath);
+const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(edgePath);
+
+// DataStore references
+const auto& xBoundsRef = rectGridGeom.getXBounds()->getDataStoreRef();
+const auto& yBoundsRef = rectGridGeom.getYBounds()->getDataStoreRef();
+const auto& verticesRef = edgeGeom.getVertices()->getDataStoreRef();
+```
+
+These conventions improve code clarity and distinguish between geometry objects and their underlying data references.
+
 ### File Organization
 - When creating a C++ based simplnx filter inside a plugin, the complete filter will have a "NameFilter.hpp" and "NameFilter.cpp" file, an "Algorithm/Name.hpp" and "Algorithm/Name.cpp".
 - Filter documentation files are created in Markdown and are in the "docs" subfolder inside the Plugins directory
