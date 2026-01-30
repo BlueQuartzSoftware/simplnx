@@ -30,7 +30,7 @@ public:
   static constexpr StringLiteral k_Origin_Key = "origin";
   static constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
   static constexpr StringLiteral k_Spacing_Key = "spacing";
-  static constexpr StringLiteral k_OriginSpacingProcessing_Key = "origin_spacing_processing";
+  static constexpr StringLiteral k_OriginSpacingProcessing_Key = "origin_spacing_processing_index";
   static constexpr StringLiteral k_ImageGeometryPath_Key = "output_image_geometry_path";
   static constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
   static constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";

@@ -37,7 +37,7 @@ public:
 
   static constexpr StringLiteral k_ChangeSpacing_Key = "change_spacing";
   static constexpr StringLiteral k_Spacing_Key = "spacing";
-  static constexpr StringLiteral k_OriginSpacingProcessing_Key = "origin_spacing_processing";
+  static constexpr StringLiteral k_OriginSpacingProcessing_Key = "origin_spacing_processing_index";
 
   static constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
   static constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
