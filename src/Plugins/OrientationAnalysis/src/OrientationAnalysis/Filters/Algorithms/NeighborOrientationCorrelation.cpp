@@ -124,16 +124,17 @@ Result<> NeighborOrientationCorrelation::operator()()
 
   for(int32_t currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
-    if(m_ShouldCancel)
-    {
-      break;
-    }
 
     for(size_t i = 0; i < totalPoints; i++)
     {
       throttledMessenger.sendThrottledMessage([&]() {
         return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level, CalculatePercentComplete(i, totalPoints));
       });
+
+      if(m_ShouldCancel)
+      {
+        break;
+      }
 
       if(confidenceIndex[i] < m_InputValues->MinConfidence)
       {
