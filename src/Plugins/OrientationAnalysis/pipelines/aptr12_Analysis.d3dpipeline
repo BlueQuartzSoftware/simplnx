@@ -823,17 +823,9 @@
           "value": "fw-ar-IF1-aptr12-corr",
           "version": 1
         },
-        "nearest_neighbors_array_name": {
-          "value": "NearestNeighbors",
-          "version": 1
-        },
         "parameters_version": 1,
         "q_pdistances_array_name": {
           "value": "QPManhattanDistances",
-          "version": 1
-        },
-        "save_nearest_neighbors": {
-          "value": false,
           "version": 1
         },
         "t_jdistances_array_name": {

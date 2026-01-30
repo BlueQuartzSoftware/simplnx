@@ -299,9 +299,8 @@ result = nx_filter.execute(
     do_triple_lines=False,
     feature_ids_path=nx.DataPath("fw-ar-IF1-avtr12-corr/Cell Data/FeatureIds"),
     g_bdistances_array_name="GBManhattanDistances",
-    save_nearest_neighbors=False,
     input_image_geometry_path=nx.DataPath("fw-ar-IF1-avtr12-corr")
-    # Parameters for nearest_neighbors_array_name, q_pdistances_array_name, and t_jdistances_array_name are not used
+    # Parameters for q_pdistances_array_name and t_jdistances_array_name are not used
 )
 nxtest.check_filter_result(nx_filter, result)
 
