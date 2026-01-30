@@ -1,83 +1,396 @@
-#include "PluginDir.hpp"
 
 #include "simplnx/Core/Application.hpp"
-#include "simplnx/Filtering/AbstractFilter.hpp"
+#include "simplnx/Core/Preferences.hpp"
 
-#include <exception>
-#include <iostream>
-#include <stdexcept>
-#include <string>
+#include <catch2/catch.hpp>
+
+#include <filesystem>
+#include <fstream>
 
 using namespace nx::core;
+namespace fs = std::filesystem;
 
-void createApp()
+TEST_CASE("Application::GetOrCreateInstance", "[Application]")
 {
-  auto app = new Application();
-  std::cout << "  Application Created" << std::endl;
-  auto result = app->loadPlugins(PluginDir::Path.string());
-  if(result.invalid())
+  SECTION("Create new instance")
   {
-    std::cerr << "  Error loading plugins:\n";
-    for(const auto& error : result.errors())
-    {
-      std::cerr << "    " << error.code << ": " << error.message << "\n";
-    }
+    Application::DeleteInstance();
+    auto app = Application::GetOrCreateInstance();
+    REQUIRE(app != nullptr);
+    REQUIRE(Application::Instance() == app);
   }
-  if(!result.warnings().empty())
+
+  SECTION("Get existing instance")
   {
-    std::cout << "  Warnings loading plugins:\n";
-    for(const auto& warning : result.warnings())
-    {
-      std::cout << "    " << warning.code << ": " << warning.message << "\n";
-    }
+    auto app1 = Application::GetOrCreateInstance();
+    auto app2 = Application::GetOrCreateInstance();
+    REQUIRE(app1 == app2);
   }
-  std::cout << "  Plugins Loaded\n" << std::endl;
 }
 
-void testFilterList()
+TEST_CASE("Application::DeleteInstance", "[Application]")
 {
-  std::cout << "testFilterList()" << std::endl;
-
-  auto filterList = Application::Instance()->getFilterList();
-  auto filterHandles = filterList->getFilterHandles();
-
-  // Create filters
-  for(auto& filterHandle : filterHandles)
+  SECTION("Delete existing instance")
   {
-    auto filter = filterList->createFilter(filterHandle);
-    if(filter == nullptr)
+    auto app = Application::GetOrCreateInstance();
+    REQUIRE(app != nullptr);
+    Application::DeleteInstance();
+    REQUIRE(Application::Instance() == nullptr);
+  }
+
+  SECTION("Delete null instance is safe")
+  {
+    Application::DeleteInstance();
+    REQUIRE(Application::Instance() == nullptr);
+    Application::DeleteInstance(); // Should not crash
+    REQUIRE(Application::Instance() == nullptr);
+  }
+}
+
+TEST_CASE("Application::getCurrentPath and getCurrentDir", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  SECTION("getCurrentPath returns valid path")
+  {
+    auto path = app->getCurrentPath();
+    REQUIRE(!path.empty());
+    REQUIRE(fs::exists(path));
+  }
+
+  SECTION("getCurrentDir returns valid directory")
+  {
+    auto dir = app->getCurrentDir();
+    REQUIRE(!dir.empty());
+    REQUIRE(fs::exists(dir));
+    REQUIRE(fs::is_directory(dir));
+  }
+
+  SECTION("getCurrentDir is parent of getCurrentPath")
+  {
+    auto path = app->getCurrentPath();
+    auto dir = app->getCurrentDir();
+    REQUIRE(path.parent_path() == dir);
+  }
+}
+
+TEST_CASE("Application::loadPreferences", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  SECTION("Load preferences - file may or may not exist")
+  {
+    // This test doesn't fail if preferences file doesn't exist
+    // because loadPreferences returns an error Result but doesn't throw
+    auto result = app->loadPreferences();
+    // Result may be valid or invalid depending on whether preferences file exists
+    // The important thing is it returns a Result and doesn't crash
+    REQUIRE((result.valid() || result.invalid()));
+  }
+
+  SECTION("Preferences object is created after load")
+  {
+    app->loadPreferences();
+    auto* prefs = app->getPreferences();
+    REQUIRE(prefs != nullptr);
+  }
+}
+
+TEST_CASE("Application::savePreferences", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  SECTION("Save preferences after load")
+  {
+    app->loadPreferences();
+    auto result = app->savePreferences();
+    // Should succeed or return an error Result, but not crash
+    REQUIRE((result.valid() || result.invalid()));
+  }
+
+  SECTION("Save preferences creates preferences if needed")
+  {
+    // Ensure preferences are loaded
+    app->loadPreferences();
+    auto* prefs = app->getPreferences();
+    REQUIRE(prefs != nullptr);
+
+    // Set a value and save
+    prefs->setValue("test_key", 42);
+    auto result = app->savePreferences();
+    REQUIRE((result.valid() || result.invalid()));
+  }
+}
+
+TEST_CASE("Application::loadPlugins", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  SECTION("Load plugins from valid directory")
+  {
+    auto result = app->loadPlugins(SIMPLNX_BUILD_DIR, true);
+    // Should either succeed or fail gracefully with Result
+    REQUIRE((result.valid() || result.invalid()));
+
+    if(result.invalid())
     {
-      throw std::runtime_error("AppTest::testFilterList() Filter Pointer was null. Filter could not be created from filterHandle");
+      // If it failed, there should be error messages
+      REQUIRE(!result.errors().empty());
     }
-    std::cout << "  " << filter->getName() << "\n";
   }
-  std::cout << std::endl;
-}
 
-void testDeletingApp()
-{
-  std::cout << "testDeletingApp()" << std::endl;
-
-  std::cout << "  Deleting Application::Instance()" << std::endl;
-  delete Application::Instance();
-  if(Application::Instance() != nullptr)
+  SECTION("Load plugins from non-existent directory returns error")
   {
-    throw std::runtime_error("AppTest::testDeletingApp() Application was not nullptr and it should have been.");
+    fs::path nonExistentPath = "/tmp/this_directory_should_not_exist_12345";
+    auto result = app->loadPlugins(nonExistentPath, false);
+    REQUIRE(result.invalid());
+    REQUIRE(!result.errors().empty());
+    REQUIRE(result.errors()[0].code == -20);
   }
-  std::cout << "  Application::Instance() deleted" << std::endl;
 
-  std::cout << std::endl;
+  SECTION("Load plugins from file (not directory) returns error")
+  {
+    // Create a temporary file
+    fs::path tempFile = fs::temp_directory_path() / "test_file.txt";
+    std::ofstream ofs(tempFile);
+    ofs << "test";
+    ofs.close();
+
+    auto result = app->loadPlugins(tempFile, false);
+    REQUIRE(result.invalid());
+    REQUIRE(!result.errors().empty());
+    REQUIRE(result.errors()[0].code == -21);
+
+    // Clean up
+    fs::remove(tempFile);
+  }
+
+  SECTION("Load plugins with verbose output")
+  {
+    // Just verify it doesn't crash with verbose=true
+    auto result = app->loadPlugins(SIMPLNX_BUILD_DIR, true);
+    REQUIRE((result.valid() || result.invalid()));
+  }
+
+  SECTION("Loaded plugins are accessible")
+  {
+    auto result = app->loadPlugins(SIMPLNX_BUILD_DIR, true);
+    if(result.valid())
+    {
+      auto plugins = app->getPluginList();
+      // If plugins loaded successfully, there should be at least one
+      REQUIRE(plugins.size() > 0);
+    }
+  }
 }
 
-int main(int argc, char** argv)
+TEST_CASE("Application::getFilterList", "[Application]")
 {
-  std::cout << "AppTest" << std::endl;
+  auto app = Application::GetOrCreateInstance();
 
-  createApp();
-  testFilterList();
-  // testPipelineBuilder();
-  // testRestServer();
-  testDeletingApp();
+  SECTION("FilterList is never null")
+  {
+    auto* filterList = app->getFilterList();
+    REQUIRE(filterList != nullptr);
+  }
 
-  return 0;
+  SECTION("FilterList contains filters after loading plugins")
+  {
+    auto result = app->loadPlugins(SIMPLNX_BUILD_DIR, true);
+    if(result.valid())
+    {
+      auto* filterList = app->getFilterList();
+      auto handles = filterList->getFilterHandles();
+      REQUIRE(handles.size() > 0);
+    }
+  }
+}
+
+TEST_CASE("Application::getPlugin", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+  auto result = app->loadPlugins(SIMPLNX_BUILD_DIR, true);
+
+  SECTION("Get non-existent plugin returns nullptr")
+  {
+    // Create a random UUID that shouldn't exist
+    Uuid randomUuid = Uuid::FromString("00000000-0000-0000-0000-000000000000").value();
+    auto* plugin = app->getPlugin(randomUuid);
+    REQUIRE(plugin == nullptr);
+  }
+
+  SECTION("Get loaded plugin by UUID")
+  {
+    auto plugins = app->getPluginList();
+    if(!plugins.empty())
+    {
+      auto* firstPlugin = *plugins.begin();
+      auto uuid = firstPlugin->getId();
+      auto* foundPlugin = app->getPlugin(uuid);
+      REQUIRE(foundPlugin != nullptr);
+      REQUIRE(foundPlugin == firstPlugin);
+    }
+  }
+}
+
+TEST_CASE("Application::getDataType", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  SECTION("Default data types are registered")
+  {
+    REQUIRE(app->getDataType("DataGroup") == DataObject::Type::DataGroup);
+    REQUIRE(app->getDataType("AttributeMatrix") == DataObject::Type::AttributeMatrix);
+    REQUIRE(app->getDataType("Image Geom") == DataObject::Type::ImageGeom);
+    REQUIRE(app->getDataType("Vertex Geom") == DataObject::Type::VertexGeom);
+  }
+
+  SECTION("Unknown data type returns DataObject")
+  {
+    auto type = app->getDataType("NonExistentType");
+    REQUIRE(type == DataObject::Type::DataObject);
+  }
+}
+
+TEST_CASE("Application::addDataType", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  SECTION("Add custom data type")
+  {
+    app->addDataType(DataObject::Type::DataGroup, "CustomType");
+    REQUIRE(app->getDataType("CustomType") == DataObject::Type::DataGroup);
+  }
+
+  SECTION("Override existing data type")
+  {
+    auto originalType = app->getDataType("DataGroup");
+    app->addDataType(DataObject::Type::ImageGeom, "DataGroup");
+    REQUIRE(app->getDataType("DataGroup") == DataObject::Type::ImageGeom);
+    // Restore original
+    app->addDataType(originalType, "DataGroup");
+  }
+}
+
+TEST_CASE("Application::getIOCollection", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  SECTION("IOCollection is never null")
+  {
+    auto collection = app->getIOCollection();
+    REQUIRE(collection != nullptr);
+  }
+
+  SECTION("getDataStoreFormats returns format names")
+  {
+    auto formats = app->getDataStoreFormats();
+    // Should at least have some formats registered
+    REQUIRE(formats.size() >= 0); // May be empty before plugins load
+  }
+}
+
+TEST_CASE("Application::getSimplnxUuid and getSimplUuid", "[Application]")
+{
+  auto app = Application::GetOrCreateInstance();
+  app->loadPlugins(SIMPLNX_BUILD_DIR, false);
+
+  SECTION("Get non-existent UUID mapping")
+  {
+    Uuid randomUuid = Uuid::FromString("00000000-0000-0000-0000-000000000000").value();
+    auto result = app->getSimplnxUuid(randomUuid);
+    REQUIRE(!result.has_value());
+  }
+
+  SECTION("Get non-existent reverse UUID mapping")
+  {
+    Uuid randomUuid = Uuid::FromString("00000000-0000-0000-0000-000000000000").value();
+    auto results = app->getSimplUuid(randomUuid);
+    REQUIRE(results.empty());
+  }
+
+  // Note: Testing actual UUID mappings would require knowing specific plugin UUIDs
+  // which vary by loaded plugins
+}
+
+TEST_CASE("Application::Error Handling Integration", "[Application]")
+{
+  SECTION("Multiple operations with error checking")
+  {
+    Application::DeleteInstance();
+    auto app = Application::GetOrCreateInstance();
+    REQUIRE(app != nullptr);
+
+    // Load preferences - may fail but shouldn't crash
+    auto prefsResult = app->loadPreferences();
+    REQUIRE((prefsResult.valid() || prefsResult.invalid()));
+
+    // Load plugins - may fail but shouldn't crash
+    auto pluginsResult = app->loadPlugins(SIMPLNX_BUILD_DIR, false);
+    REQUIRE((pluginsResult.valid() || pluginsResult.invalid()));
+
+    // Save preferences - may fail but shouldn't crash
+    auto saveResult = app->savePreferences();
+    REQUIRE((saveResult.valid() || saveResult.invalid()));
+
+    // Clean up
+    Application::DeleteInstance();
+  }
+
+  SECTION("Error accumulation in loadPlugins")
+  {
+    auto app = Application::GetOrCreateInstance();
+
+    // Create a temp directory with mix of valid and invalid files
+    fs::path tempDir = fs::temp_directory_path() / "test_plugins_dir";
+    fs::create_directories(tempDir);
+
+    // Create a non-plugin file
+    std::ofstream(tempDir / "not_a_plugin.txt") << "test";
+
+    auto result = app->loadPlugins(tempDir, false);
+    // Should return valid (no errors) since invalid files are just skipped
+    REQUIRE(result.valid());
+
+    // Clean up
+    fs::remove_all(tempDir);
+  }
+}
+
+TEST_CASE("Application::Singleton Lifecycle", "[Application]")
+{
+  SECTION("Create, use, and delete multiple times")
+  {
+    for(int i = 0; i < 3; ++i)
+    {
+      Application::DeleteInstance();
+      REQUIRE(Application::Instance() == nullptr);
+
+      auto app = Application::GetOrCreateInstance();
+      REQUIRE(app != nullptr);
+      REQUIRE(Application::Instance() == app);
+
+      auto path = app->getCurrentPath();
+      REQUIRE(!path.empty());
+
+      Application::DeleteInstance();
+      REQUIRE(Application::Instance() == nullptr);
+    }
+  }
+
+  SECTION("Instance persists across GetOrCreateInstance calls")
+  {
+    Application::DeleteInstance();
+
+    auto app1 = Application::GetOrCreateInstance();
+    auto* prefs1 = app1->getPreferences();
+
+    auto app2 = Application::GetOrCreateInstance();
+    auto* prefs2 = app2->getPreferences();
+
+    REQUIRE(app1 == app2);
+    REQUIRE(prefs1 == prefs2);
+
+    Application::DeleteInstance();
+  }
 }

@@ -312,12 +312,18 @@ bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = EPSILON)
 DataStructure LoadDataStructure(const fs::path& filepath);
 
 /**
- * @brief Loads all simplnx plugins
+ * @brief Loads all simplnx plugins using singleton pattern.
+ * Plugins are loaded only once per test execution, subsequent calls return immediately.
+ * Thread-safe initialization guaranteed by C++11 static local variable initialization.
  */
 inline void LoadPlugins()
 {
-  const Result<> result = Application::GetOrCreateInstance()->loadPlugins(SIMPLNX_BUILD_DIR, true);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
+  static bool pluginsLoaded = []() {
+    const Result<> result = Application::GetOrCreateInstance()->loadPlugins(SIMPLNX_BUILD_DIR, true);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    return true;
+  }();
+  (void)pluginsLoaded; // Suppress unused variable warning
 }
 
 /**

@@ -9,6 +9,9 @@ namespace nx::core::UnitTest
 {
 DataStructure LoadDataStructure(const fs::path& filepath)
 {
+  // Ensure the plugins a loaded.
+  LoadPlugins();
+
   INFO(fmt::format("Error loading file: '{}'  ", filepath.string()));
   REQUIRE(fs::exists(filepath));
 
