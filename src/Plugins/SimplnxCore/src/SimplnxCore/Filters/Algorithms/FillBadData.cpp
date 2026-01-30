@@ -28,7 +28,7 @@ void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractD
       continue;
     }
 
-    if(featureName < 0 && neighbor != -1 && featureIds[static_cast<size_t>(neighbor)] > 0)
+    if(featureName < 0 && neighbor != -1 && featureIds[static_cast<usize>(neighbor)] > 0)
     {
       for(usize i = 0; i < numComponents; i++)
       {
@@ -54,39 +54,32 @@ struct FillBadDataUpdateTuplesFunctor
 // ChunkAwareUnionFind Implementation
 // -----------------------------------------------------------------------------
 
-int64_t ChunkAwareUnionFind::find(int64_t x)
+int64 ChunkAwareUnionFind::find(int64 x)
 {
-  // Create parent entry if it doesn't exist
-  if(m_Parent.find(x) == m_Parent.end())
+  // Create a parent entry if it doesn't exist
+  if(!m_Parent.contains(x))
   {
     m_Parent[x] = x;
     m_Rank[x] = 0;
     m_Size[x] = 0;
   }
 
-  // Find root iteratively
-  int64_t root = x;
+  // Find root iteratively without path-compression
+  // Path compression is deferred to flatten() to avoid wasting cycles
+  // during frequent merges where paths would be updated repeatedly
+  int64 root = x;
   while(m_Parent[root] != root)
   {
     root = m_Parent[root];
   }
 
-  // Path compression - make all nodes on path point directly to root
-  int64_t current = x;
-  while(current != root)
-  {
-    int64_t next = m_Parent[current];
-    m_Parent[current] = root;
-    current = next;
-  }
-
   return root;
 }
 
-void ChunkAwareUnionFind::unite(int64_t a, int64_t b)
+void ChunkAwareUnionFind::unite(int64 a, int64 b)
 {
-  int64_t rootA = find(a);
-  int64_t rootB = find(b);
+  int64 rootA = find(a);
+  int64 rootB = find(b);
 
   if(rootA == rootB)
   {
@@ -109,16 +102,16 @@ void ChunkAwareUnionFind::unite(int64_t a, int64_t b)
   }
 }
 
-void ChunkAwareUnionFind::addSize(int64_t label, uint64_t count)
+void ChunkAwareUnionFind::addSize(int64 label, uint64 count)
 {
   // Add size to the label itself, not the root
   // Sizes will be accumulated to roots during flatten()
   m_Size[label] += count;
 }
 
-uint64_t ChunkAwareUnionFind::getSize(int64_t label)
+uint64 ChunkAwareUnionFind::getSize(int64 label)
 {
-  int64_t root = find(label);
+  int64 root = find(label);
   auto it = m_Size.find(root);
   if(it == m_Size.end())
   {
@@ -129,16 +122,18 @@ uint64_t ChunkAwareUnionFind::getSize(int64_t label)
 
 void ChunkAwareUnionFind::flatten()
 {
-  // First pass: flatten all parents
-  std::unordered_map<int64_t, int64_t> finalRoots;
+  // First pass: flatten all parents with path compression
+  // This is done in a single pass after all merges to avoid wasting
+  // cycles updating paths repeatedly during construction
+  std::unordered_map<int64, int64> finalRoots;
   for(auto& [label, parent] : m_Parent)
   {
-    int64_t root = find(label);
+    int64 root = find(label);
     finalRoots[label] = root;
   }
 
   // Second pass: accumulate sizes to roots
-  std::unordered_map<int64_t, uint64_t> rootSizes;
+  std::unordered_map<int64, uint64> rootSizes;
   for(const auto& [label, root] : finalRoots)
   {
     rootSizes[root] += m_Size[label];
@@ -171,14 +166,14 @@ const std::atomic_bool& FillBadData::getCancel() const
 }
 
 // -----------------------------------------------------------------------------
-std::array<int64_t, 6> FillBadData::getNeighborOffsets(const std::array<int64_t, 3>& dims)
+std::array<int64, 6> FillBadData::getNeighborOffsets(const std::array<int64, 3>& dims)
 {
   // 6 face-connected neighbors: -Z, -Y, -X, +X, +Y, +Z
   return {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
 }
 
 // -----------------------------------------------------------------------------
-bool FillBadData::isValidNeighbor(int32_t neighborIdx, int64_t column, int64_t row, int64_t plane, const std::array<int64_t, 3>& dims)
+bool FillBadData::isValidNeighbor(int32 neighborIdx, int64 column, int64 row, int64 plane, const std::array<int64, 3>& dims)
 {
   switch(neighborIdx)
   {
@@ -200,10 +195,9 @@ bool FillBadData::isValidNeighbor(int32_t neighborIdx, int64_t column, int64_t r
 }
 
 // -----------------------------------------------------------------------------
-void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64_t>& provisionalLabels, const std::array<int64_t, 3>& dims)
+void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64, 3>& dims)
 {
-  // const auto neighborOffsets = getNeighborOffsets(dims);
-  int64_t nextLabel = -1; // Negative labels for bad data regions
+  int64 nextLabel = -1; // Negative labels for bad data regions
 
   const uint64 numChunks = featureIdsStore.getNumberOfChunks();
 
@@ -234,13 +228,13 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
           }
 
           // Check already-processed neighbors (scanline order: -Z, -Y, -X)
-          std::vector<int64_t> neighborLabels;
+          std::vector<int64> neighborLabels;
 
           // Check -X neighbor
           if(x > 0)
           {
             const usize neighborIdx = index - 1;
-            if(provisionalLabels.find(neighborIdx) != provisionalLabels.end() && featureIdsStore[neighborIdx] == 0)
+            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
             {
               neighborLabels.push_back(provisionalLabels[neighborIdx]);
             }
@@ -250,7 +244,7 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
           if(y > 0)
           {
             const usize neighborIdx = index - dims[0];
-            if(provisionalLabels.find(neighborIdx) != provisionalLabels.end() && featureIdsStore[neighborIdx] == 0)
+            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
             {
               neighborLabels.push_back(provisionalLabels[neighborIdx]);
             }
@@ -260,13 +254,13 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
           if(z > 0)
           {
             const usize neighborIdx = index - dims[0] * dims[1];
-            if(provisionalLabels.find(neighborIdx) != provisionalLabels.end() && featureIdsStore[neighborIdx] == 0)
+            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
             {
               neighborLabels.push_back(provisionalLabels[neighborIdx]);
             }
           }
 
-          int64_t assignedLabel;
+          int64 assignedLabel;
           if(neighborLabels.empty())
           {
             // No labeled neighbors, assign new label
@@ -279,7 +273,7 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
             assignedLabel = neighborLabels[0];
 
             // Track equivalences with other neighbors
-            for(size_t i = 1; i < neighborLabels.size(); i++)
+            for(usize i = 1; i < neighborLabels.size(); i++)
             {
               if(neighborLabels[i] != assignedLabel)
               {
@@ -300,37 +294,36 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
 }
 
 // -----------------------------------------------------------------------------
-void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::unordered_set<int64_t>& smallRegions)
+void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::unordered_set<int64>& smallRegions)
 {
   // Flatten the union-find structure to accumulate sizes
   unionFind.flatten();
 }
 
 // -----------------------------------------------------------------------------
-void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64_t>& provisionalLabels,
-                                       const std::unordered_set<int64_t>& smallRegions, ChunkAwareUnionFind& unionFind, size_t maxPhase) const
+void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
+                                       const std::unordered_set<int64>& smallRegions, ChunkAwareUnionFind& unionFind, usize maxPhase) const
 {
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
   const SizeVec3 udims = selectedImageGeom.getDimensions();
-  const size_t totalPoints = featureIdsStore.getNumberOfTuples();
   const uint64 numChunks = featureIdsStore.getNumberOfChunks();
 
   // Collect all unique root labels and their sizes
-  std::unordered_map<int64_t, uint64_t> rootSizes;
+  std::unordered_map<int64, uint64> rootSizes;
   for(const auto& [index, label] : provisionalLabels)
   {
-    int64_t root = unionFind.find(label);
-    if(rootSizes.find(root) == rootSizes.end())
+    int64 root = unionFind.find(label);
+    if(!rootSizes.contains(root))
     {
       rootSizes[root] = unionFind.getSize(root);
     }
   }
 
   // Classify regions as small or large
-  std::unordered_set<int64_t> localSmallRegions;
+  std::unordered_set<int64> localSmallRegions;
   for(const auto& [root, size] : rootSizes)
   {
-    if(static_cast<int32_t>(size) < m_InputValues->minAllowedDefectSizeValue)
+    if(static_cast<int32>(size) < m_InputValues->minAllowedDefectSizeValue)
     {
       localSmallRegions.insert(root);
     }
@@ -356,16 +349,16 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
           auto labelIter = provisionalLabels.find(index);
           if(labelIter != provisionalLabels.end())
           {
-            int64_t root = unionFind.find(labelIter->second);
+            int64 root = unionFind.find(labelIter->second);
 
-            if(localSmallRegions.find(root) != localSmallRegions.end())
+            if(localSmallRegions.contains(root))
             {
               // Small region - mark for filling
               featureIdsStore[index] = -1;
             }
             else
             {
-              // Large region - keep as 0 or assign new phase
+              // Large region - keep as 0 or assign a new phase
               featureIdsStore[index] = 0;
               if(m_InputValues->storeAsNewPhase && cellPhasesPtr != nullptr)
               {
@@ -382,16 +375,16 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
 }
 
 // -----------------------------------------------------------------------------
-void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64_t, 3>& dims, size_t numFeatures) const
+void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures) const
 {
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
-  const size_t totalPoints = featureIdsStore.getNumberOfTuples();
+  const usize totalPoints = featureIdsStore.getNumberOfTuples();
   const auto neighborOffsets = getNeighborOffsets(dims);
 
   std::vector<int32> neighbors(totalPoints, -1);
-  std::vector<int32_t> featureNumber(numFeatures + 1, 0);
+  std::vector<int32> featureNumber(numFeatures + 1, 0);
 
-  // Get list of cell arrays to update (once, before iterations)
+  // Get a list of cell arrays to update (once, before iterations)
   std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
   std::vector<DataPath> voxelArrayNames;
   if(allChildArrays.has_value())
@@ -399,21 +392,21 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
     voxelArrayNames = allChildArrays.value();
   }
 
-  // Create message helper for progress updates (500ms throttle for more frequent updates)
+  // Create a message helper for progress updates (500ms throttle for more frequent updates)
   MessageHelper messageHelper(m_MessageHandler, std::chrono::milliseconds(1000));
   auto throttledMessenger = messageHelper.createThrottledMessenger(std::chrono::milliseconds(1000));
 
-  size_t count = 1;
-  size_t iteration = 0;
+  usize count = 1;
+  usize iteration = 0;
 
-  // Iteratively fill until no -1 voxels remain
+  // Iteratively fill until no voxels with -1 value remain
   while(count != 0)
   {
     iteration++;
     count = 0;
 
     // Process all voxels
-    for(size_t i = 0; i < totalPoints; i++)
+    for(usize i = 0; i < totalPoints; i++)
     {
       int32 featureName = featureIdsStore[i];
       if(featureName < 0)
@@ -422,19 +415,19 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
         int32 most = 0;
 
         // Compute position
-        auto column = static_cast<int64_t>(i % dims[0]);
-        auto row = static_cast<int64_t>((i / dims[0]) % dims[1]);
-        auto plane = static_cast<int64_t>(i / (dims[0] * dims[1]));
+        auto column = static_cast<int64>(i % dims[0]);
+        auto row = static_cast<int64>((i / dims[0]) % dims[1]);
+        auto plane = static_cast<int64>(i / (dims[0] * dims[1]));
 
-        // Find most common positive neighbor
-        for(int32_t j = 0; j < 6; j++)
+        // Find the most common positive neighbor
+        for(int32 j = 0; j < 6; j++)
         {
           if(!isValidNeighbor(j, column, row, plane, dims))
           {
             continue;
           }
 
-          auto neighborPoint = static_cast<int64_t>(i) + neighborOffsets[j];
+          auto neighborPoint = static_cast<int64>(i) + neighborOffsets[j];
           int32 feature = featureIdsStore[neighborPoint];
 
           if(feature > 0)
@@ -450,7 +443,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
         }
 
         // Reset feature counts
-        for(int32_t j = 0; j < 6; j++)
+        for(int32 j = 0; j < 6; j++)
         {
           if(!isValidNeighbor(j, column, row, plane, dims))
           {
@@ -499,22 +492,22 @@ Result<> FillBadData::operator()() const
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
   const SizeVec3 udims = selectedImageGeom.getDimensions();
 
-  std::array<int64_t, 3> dims = {
-      static_cast<int64_t>(udims[0]),
-      static_cast<int64_t>(udims[1]),
-      static_cast<int64_t>(udims[2]),
+  std::array<int64, 3> dims = {
+      static_cast<int64>(udims[0]),
+      static_cast<int64>(udims[1]),
+      static_cast<int64>(udims[2]),
   };
 
-  const size_t totalPoints = featureIdsStore.getNumberOfTuples();
+  const usize totalPoints = featureIdsStore.getNumberOfTuples();
 
   // Get cell phases array if needed
   Int32Array* cellPhasesPtr = nullptr;
-  size_t maxPhase = 0;
+  usize maxPhase = 0;
 
   if(m_InputValues->storeAsNewPhase)
   {
     cellPhasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-    for(size_t i = 0; i < totalPoints; i++)
+    for(usize i = 0; i < totalPoints; i++)
     {
       if((*cellPhasesPtr)[i] > maxPhase)
       {
@@ -523,9 +516,9 @@ Result<> FillBadData::operator()() const
     }
   }
 
-  // Count number of features
-  size_t numFeatures = 0;
-  for(size_t i = 0; i < totalPoints; i++)
+  // Count the number of features
+  usize numFeatures = 0;
+  for(usize i = 0; i < totalPoints; i++)
   {
     int32 featureName = featureIdsStore[i];
     if(featureName > numFeatures)
@@ -536,8 +529,8 @@ Result<> FillBadData::operator()() const
 
   // Data structures for chunk-aware CCL
   ChunkAwareUnionFind unionFind;
-  std::unordered_map<usize, int64_t> provisionalLabels;
-  std::unordered_set<int64_t> smallRegions;
+  std::unordered_map<usize, int64> provisionalLabels;
+  std::unordered_set<int64> smallRegions;
 
   // Phase 1: Chunk-Sequential Connected Component Labeling
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 1/4: Labeling connected components..."});

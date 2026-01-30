@@ -38,28 +38,28 @@ public:
    * @param x Label to find
    * @return Root label
    */
-  int64_t find(int64_t x);
+  int64 find(int64 x);
 
   /**
    * @brief Unite two labels into the same equivalence class
    * @param a First label
    * @param b Second label
    */
-  void unite(int64_t a, int64_t b);
+  void unite(int64 a, int64 b);
 
   /**
    * @brief Add to the size count for a label
    * @param label Label to update
    * @param count Number of voxels to add
    */
-  void addSize(int64_t label, uint64_t count);
+  void addSize(int64 label, uint64 count);
 
   /**
    * @brief Get the total size of a label's equivalence class
    * @param label Label to query
    * @return Total number of voxels in the equivalence class
    */
-  uint64_t getSize(int64_t label);
+  uint64 getSize(int64 label);
 
   /**
    * @brief Flatten the union-find structure and sum sizes to roots
@@ -67,9 +67,9 @@ public:
   void flatten();
 
 private:
-  std::unordered_map<int64_t, int64_t> m_Parent;
-  std::unordered_map<int64_t, int32_t> m_Rank;
-  std::unordered_map<int64_t, uint64_t> m_Size;
+  std::unordered_map<int64, int64> m_Parent;
+  std::unordered_map<int64, int32> m_Rank;
+  std::unordered_map<int64, uint64> m_Size;
 };
 
 struct SIMPLNXCORE_EXPORT FillBadDataInputValues
@@ -109,26 +109,26 @@ private:
    * @param provisionalLabels Map from voxel index to provisional label
    * @param dims Image geometry dimensions
    */
-  static void phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64_t>& provisionalLabels, const std::array<int64_t, 3>& dims);
+  static void phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64_t, 3>& dims);
 
   /**
    * @brief Phase 2: Global resolution of equivalences and region classification
    * @param unionFind Union-find structure to flatten
    * @param smallRegions Output set of labels for small regions that need filling
    */
-  static void phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::unordered_set<int64_t>& smallRegions);
+  static void phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::unordered_set<int64>& smallRegions);
 
   /**
    * @brief Phase 3: Relabel voxels based on region classification
    * @param featureIdsStore Feature IDs data store
-   * @param cellPhasesPtr Cell phases array (may be null)
+   * @param cellPhasesPtr Cell phases array (could be null)
    * @param provisionalLabels Map from voxel index to provisional label
    * @param smallRegions Set of labels for small regions
    * @param unionFind Union-find for looking up equivalences
    * @param maxPhase Maximum phase value (for new phase assignment)
    */
-  void phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64_t>& provisionalLabels,
-                            const std::unordered_set<int64_t>& smallRegions, ChunkAwareUnionFind& unionFind, size_t maxPhase) const;
+  void phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
+                            const std::unordered_set<int64>& smallRegions, ChunkAwareUnionFind& unionFind, size_t maxPhase) const;
 
   /**
    * @brief Phase 4: Iterative morphological fill
@@ -154,7 +154,7 @@ private:
    * @param dims Image geometry dimensions
    * @return True if the neighbor is valid (not out of bounds)
    */
-  static bool isValidNeighbor(int32_t neighborIdx, int64_t column, int64_t row, int64_t plane, const std::array<int64_t, 3>& dims);
+  static bool isValidNeighbor(int32 neighborIdx, int64_t column, int64_t row, int64_t plane, const std::array<int64_t, 3>& dims);
 
   DataStructure& m_DataStructure;
   const FillBadDataInputValues* m_InputValues = nullptr;
