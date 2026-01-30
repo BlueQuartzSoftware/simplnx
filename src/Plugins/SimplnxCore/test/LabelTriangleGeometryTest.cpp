@@ -9,8 +9,8 @@ using namespace nx::core;
 
 namespace
 {
-fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test/label_triangle_geometry_test.dream3d", nx::core::unit_test::k_TestFilesDir));
-fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test/data_to_generate_test/combined_stls.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path k_ExemplarDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test_v2/label_triangle_geometry_test.dream3d", nx::core::unit_test::k_TestFilesDir));
+fs::path k_BaseDataFilePath = fs::path(fmt::format("{}/label_triangle_geometry_test_v2/data_to_generate_test/combined_stls.dream3d", nx::core::unit_test::k_TestFilesDir));
 
 static constexpr StringLiteral k_CreatedAMName = "Cell Feature AM";
 static constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
@@ -26,8 +26,8 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "label_triangle_geometry_test.tar.gz",
-                                                              "label_triangle_geometry_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "label_triangle_geometry_test_v2.tar.gz",
+                                                              "label_triangle_geometry_test_v2", true, true);
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
