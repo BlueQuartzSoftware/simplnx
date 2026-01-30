@@ -1198,8 +1198,7 @@ template <typename T>
 NeighborList<T>* CreateTestNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, DataObject::IdType parentId)
 {
   using NeighborListType = NeighborList<T>;
-  auto* neighborList = NeighborListType::Create(dataStructure, name, numTuples, parentId);
-  neighborList->resizeTotalElements(numTuples);
+  auto* neighborList = NeighborListType::Create(dataStructure, name, {numTuples}, parentId);
   return neighborList;
 }
 

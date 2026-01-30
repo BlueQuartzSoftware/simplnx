@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/ListStore.hpp"
+#include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 namespace nx::core
 {
@@ -531,6 +532,37 @@ template <>
 DataType SIMPLNX_EXPORT NeighborList<float64>::getDataType() const
 {
   return DataType::float64;
+}
+
+template <class T>
+std::string NeighborList<T>::toString(usize tupleIndex, usize compIndex, const std::string& format) const
+{
+  bool hasValueAtCell = false;
+  const T value = getValue(tupleIndex, compIndex, hasValueAtCell);
+  if(!hasValueAtCell)
+  {
+    return "";
+  }
+  if constexpr(std::is_floating_point_v<T>)
+  {
+    return fmt::format(fmt::runtime(format), value);
+  }
+  else
+  {
+    return fmt::format("{}", value);
+  }
+}
+
+template <class T>
+bool NeighborList<T>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
+{
+  Result<T> result = nx::core::StringInterpretationUtilities::Convert<T>(value);
+  if(result.invalid())
+  {
+    return false;
+  }
+  updateListEntry(tupleIndex, compIndex, result.value());
+  return true;
 }
 
 template class SIMPLNX_TEMPLATE_EXPORT NeighborList<int8>;

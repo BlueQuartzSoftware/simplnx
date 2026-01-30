@@ -409,6 +409,26 @@ public:
     return m_DataStore->at(index);
   }
 
+  /**
+   * @brief Returns the value at the tuple and component index as a std::string.
+   *        NOTE: This function is slow and should be used sparingly and avoided inside of a tight loop!
+   * @param tupleIndex
+   * @param compIndex
+   * @param format Optional fmt formatting, this will be ignored for integer types and a simple {} will always be used
+   * @return std::string
+   */
+  std::string toString(usize tupleIndex, usize compIndex, const std::string& format = "{}") const override;
+
+  /**
+   * @brief Sets the value at the tuple and component index to the value parsed as the appropriate type.
+   *        If the value cannot be properly parsed as the appropriate type, nothing is changed.
+   * @param tupleIndex
+   * @param compIndex
+   * @param value
+   * @return bool
+   */
+  bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) override;
+
   value_type getComponent(usize tupleIndex, usize componentIndex)
   {
     const usize index = tupleIndex * getNumberOfComponents() + componentIndex;
@@ -758,6 +778,30 @@ protected:
 private:
   std::shared_ptr<store_type> m_DataStore = nullptr;
 };
+
+extern template std::string DataArray<int8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<int16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<int32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<int64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<uint8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<uint16>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<uint32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<uint64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<float32>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<float64>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+extern template std::string DataArray<bool>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
+
+extern template bool DataArray<int8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<uint8>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<int16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<uint16>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<int32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<uint32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<int64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<uint64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<float32>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<float64>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
+extern template bool DataArray<bool>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value);
 
 // Declare aliases
 using UInt8Array = DataArray<uint8>;

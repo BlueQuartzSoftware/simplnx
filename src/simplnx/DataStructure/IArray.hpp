@@ -103,6 +103,26 @@ public:
    */
   virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
+  /**
+   * @brief Returns the value at the tuple and component index as a std::string.
+   *        NOTE: This function is slow and should be used sparingly and avoided inside of a tight loop!
+   * @param tupleIndex
+   * @param compIndex
+   * @param format Optional fmt formatting, this will be ignored for integer types and a simple {} will always be used
+   * @return std::string
+   */
+  virtual std::string toString(usize tupleIndex, usize compIndex, const std::string& format = "{}") const = 0;
+
+  /**
+   * @brief Sets the value at the tuple and component index to the value parsed as the appropriate type.
+   *        If the value cannot be properly parsed as the appropriate type, nothing is changed.
+   * @param tupleIndex
+   * @param compIndex
+   * @param value
+   * @return bool
+   */
+  virtual bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) = 0;
+
   static std::set<std::string> StringListFromArrayType(const std::set<ArrayType>& arrayTypes)
   {
     static const std::map<ArrayType, std::string> k_TypeToStringMap = {
