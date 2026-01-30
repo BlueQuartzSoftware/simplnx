@@ -19,67 +19,67 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   switch(geomType)
   {
   case IGeometry::Type::Image: {
-    auto& image = dynamic_cast<const ImageGeom&>(geometry);
-    return image.getOrigin();
+    auto& imageGeom = dynamic_cast<const ImageGeom&>(geometry);
+    return imageGeom.getOrigin();
   }
   case IGeometry::Type::RectGrid: {
-    auto& rectGrid = dynamic_cast<const RectGridGeom&>(geometry);
-    const auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
-    const auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
-    const auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
+    auto& rectGridGeom = dynamic_cast<const RectGridGeom&>(geometry);
+    const auto& xBoundsRef = rectGridGeom.getXBounds()->getDataStoreRef();
+    const auto& yBoundsRef = rectGridGeom.getYBounds()->getDataStoreRef();
+    const auto& zBoundsRef = rectGridGeom.getZBounds()->getDataStoreRef();
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-    for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
+    for(size_t i = 0; i < xBoundsRef.getNumberOfTuples(); i++)
     {
-      if(xBounds[i] < origin[0])
+      if(xBoundsRef[i] < origin[0])
       {
-        origin[0] = xBounds[i];
+        origin[0] = xBoundsRef[i];
       }
     }
-    for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
+    for(size_t i = 0; i < yBoundsRef.getNumberOfTuples(); i++)
     {
-      if(yBounds[i] < origin[1])
+      if(yBoundsRef[i] < origin[1])
       {
-        origin[1] = yBounds[i];
+        origin[1] = yBoundsRef[i];
       }
     }
-    for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
+    for(size_t i = 0; i < zBoundsRef.getNumberOfTuples(); i++)
     {
-      if(zBounds[i] < origin[2])
+      if(zBoundsRef[i] < origin[2])
       {
-        origin[2] = zBounds[i];
+        origin[2] = zBoundsRef[i];
       }
     }
     return origin;
   }
   case IGeometry::Type::Vertex: {
-    auto& vertex = dynamic_cast<const VertexGeom&>(geometry);
-    const auto& vertices = vertex.getVertices()->getDataStoreRef();
+    auto& vertexGeom = dynamic_cast<const VertexGeom&>(geometry);
+    const auto& verticesRef = vertexGeom.getVertices()->getDataStoreRef();
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-    for(size_t i = 0; i < vertex.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < vertexGeom.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
+        if(verticesRef[3 * i + j] < origin[j])
         {
-          origin[j] = vertices[3 * i + j];
+          origin[j] = verticesRef[3 * i + j];
         }
       }
     }
     return origin;
   }
   case IGeometry::Type::Edge: {
-    const auto& edge = dynamic_cast<const EdgeGeom&>(geometry);
-    const auto& vertices = edge.getVertices()->getDataStoreRef();
+    const auto& edgeGeom = dynamic_cast<const EdgeGeom&>(geometry);
+    const auto& verticesRef = edgeGeom.getVertices()->getDataStoreRef();
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-    for(size_t i = 0; i < edge.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < edgeGeom.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
+        if(verticesRef[3 * i + j] < origin[j])
         {
-          origin[j] = vertices[3 * i + j];
+          origin[j] = verticesRef[3 * i + j];
         }
       }
     }
@@ -89,17 +89,17 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Triangle:
     [[fallthrough]];
   case IGeometry::Type::Quad: {
-    const auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
-    const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
+    const auto& geometry2dGeom = dynamic_cast<const INodeGeometry2D&>(geometry);
+    const auto& verticesRef = geometry2dGeom.getVertices()->getDataStoreRef();
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-    for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < geometry2dGeom.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
+        if(verticesRef[3 * i + j] < origin[j])
         {
-          origin[j] = vertices[3 * i + j];
+          origin[j] = verticesRef[3 * i + j];
         }
       }
     }
@@ -109,17 +109,17 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Hexahedral:
     [[fallthrough]];
   case IGeometry::Type::Tetrahedral: {
-    const auto& geometry3d = dynamic_cast<const INodeGeometry3D&>(geometry);
-    const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
+    const auto& geometry3dGeom = dynamic_cast<const INodeGeometry3D&>(geometry);
+    const auto& verticesRef = geometry3dGeom.getVertices()->getDataStoreRef();
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
-    for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < geometry3dGeom.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
+        if(verticesRef[3 * i + j] < origin[j])
         {
-          origin[j] = vertices[3 * i + j];
+          origin[j] = verticesRef[3 * i + j];
         }
       }
     }
@@ -139,10 +139,10 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   switch(geometry.getGeomType())
   {
   case IGeometry::Type::Image: {
-    const auto& image = dynamic_cast<const ImageGeom&>(geometry);
-    SizeVec3 dims = image.getDimensions();
-    FloatVec3 origin = image.getOrigin();
-    FloatVec3 res = image.getSpacing();
+    const auto& imageGeom = dynamic_cast<const ImageGeom&>(geometry);
+    SizeVec3 dims = imageGeom.getDimensions();
+    FloatVec3 origin = imageGeom.getOrigin();
+    FloatVec3 res = imageGeom.getSpacing();
 
     centroid[0] = (static_cast<float>(dims[0]) * res[0] / 2.0f) + origin[0];
     centroid[1] = (static_cast<float>(dims[1]) * res[1] / 2.0f) + origin[1];
@@ -150,43 +150,43 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
     return centroid;
   }
   case IGeometry::Type::RectGrid: {
-    const auto& rectGrid = dynamic_cast<const RectGridGeom&>(geometry);
-    const auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
-    const auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
-    const auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
+    const auto& rectGridGeom = dynamic_cast<const RectGridGeom&>(geometry);
+    const auto& xBoundsRef = rectGridGeom.getXBounds()->getDataStoreRef();
+    const auto& yBoundsRef = rectGridGeom.getYBounds()->getDataStoreRef();
+    const auto& zBoundsRef = rectGridGeom.getZBounds()->getDataStoreRef();
     float min[3] = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
     float max[3] = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
-    for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
+    for(size_t i = 0; i < xBoundsRef.getNumberOfTuples(); i++)
     {
-      if(xBounds[i] < min[0])
+      if(xBoundsRef[i] < min[0])
       {
-        min[0] = xBounds[i];
+        min[0] = xBoundsRef[i];
       }
-      if(xBounds[i] > max[0])
+      if(xBoundsRef[i] > max[0])
       {
-        max[0] = xBounds[i];
+        max[0] = xBoundsRef[i];
       }
     }
-    for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
+    for(size_t i = 0; i < yBoundsRef.getNumberOfTuples(); i++)
     {
-      if(yBounds[i] < min[1])
+      if(yBoundsRef[i] < min[1])
       {
-        min[1] = yBounds[i];
+        min[1] = yBoundsRef[i];
       }
-      if(yBounds[i] > max[1])
+      if(yBoundsRef[i] > max[1])
       {
-        max[1] = yBounds[i];
+        max[1] = yBoundsRef[i];
       }
     }
-    for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
+    for(size_t i = 0; i < zBoundsRef.getNumberOfTuples(); i++)
     {
-      if(zBounds[i] < min[2])
+      if(zBoundsRef[i] < min[2])
       {
-        min[2] = zBounds[i];
+        min[2] = zBoundsRef[i];
       }
-      if(zBounds[i] > max[2])
+      if(zBoundsRef[i] > max[2])
       {
-        max[2] = zBounds[i];
+        max[2] = zBoundsRef[i];
       }
     }
     centroid[0] = (max[0] - min[0]) / 2.0f;
@@ -195,77 +195,77 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
     return centroid;
   }
   case IGeometry::Type::Vertex: {
-    const auto& vertex = dynamic_cast<const VertexGeom&>(geometry);
-    const auto& vertices = vertex.getVertices()->getDataStoreRef();
+    const auto& vertexGeom = dynamic_cast<const VertexGeom&>(geometry);
+    const auto& verticesRef = vertexGeom.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
     centroid[2] = 0.0f;
-    for(size_t i = 0; i < vertex.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < vertexGeom.getNumberOfVertices(); i++)
     {
-      centroid[0] += vertices[3 * i + 0];
-      centroid[1] += vertices[3 * i + 1];
-      centroid[2] += vertices[3 * i + 2];
+      centroid[0] += verticesRef[3 * i + 0];
+      centroid[1] += verticesRef[3 * i + 1];
+      centroid[2] += verticesRef[3 * i + 2];
     }
-    centroid[0] /= static_cast<float>(vertex.getNumberOfVertices());
-    centroid[1] /= static_cast<float>(vertex.getNumberOfVertices());
-    centroid[2] /= static_cast<float>(vertex.getNumberOfVertices());
+    centroid[0] /= static_cast<float>(vertexGeom.getNumberOfVertices());
+    centroid[1] /= static_cast<float>(vertexGeom.getNumberOfVertices());
+    centroid[2] /= static_cast<float>(vertexGeom.getNumberOfVertices());
     return centroid;
   }
   case IGeometry::Type::Edge: {
-    const auto& edge = dynamic_cast<const EdgeGeom&>(geometry);
-    const auto& vertices = edge.getVertices()->getDataStoreRef();
+    const auto& edgeGeom = dynamic_cast<const EdgeGeom&>(geometry);
+    const auto& verticesRef = edgeGeom.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
     centroid[2] = 0.0f;
-    for(size_t i = 0; i < edge.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < edgeGeom.getNumberOfVertices(); i++)
     {
-      centroid[0] += vertices[3 * i + 0];
-      centroid[1] += vertices[3 * i + 1];
-      centroid[2] += vertices[3 * i + 2];
+      centroid[0] += verticesRef[3 * i + 0];
+      centroid[1] += verticesRef[3 * i + 1];
+      centroid[2] += verticesRef[3 * i + 2];
     }
-    centroid[0] /= static_cast<float>(edge.getNumberOfVertices());
-    centroid[1] /= static_cast<float>(edge.getNumberOfVertices());
-    centroid[2] /= static_cast<float>(edge.getNumberOfVertices());
+    centroid[0] /= static_cast<float>(edgeGeom.getNumberOfVertices());
+    centroid[1] /= static_cast<float>(edgeGeom.getNumberOfVertices());
+    centroid[2] /= static_cast<float>(edgeGeom.getNumberOfVertices());
     return centroid;
   }
     // 2D Types
   case IGeometry::Type::Triangle:
     [[fallthrough]];
   case IGeometry::Type::Quad: {
-    auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
-    const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
+    auto& geometry2dGeom = dynamic_cast<const INodeGeometry2D&>(geometry);
+    const auto& verticesRef = geometry2dGeom.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
     centroid[2] = 0.0f;
-    for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < geometry2dGeom.getNumberOfVertices(); i++)
     {
-      centroid[0] += vertices[3 * i + 0];
-      centroid[1] += vertices[3 * i + 1];
-      centroid[2] += vertices[3 * i + 2];
+      centroid[0] += verticesRef[3 * i + 0];
+      centroid[1] += verticesRef[3 * i + 1];
+      centroid[2] += verticesRef[3 * i + 2];
     }
-    centroid[0] /= static_cast<float>(geometry2d.getNumberOfVertices());
-    centroid[1] /= static_cast<float>(geometry2d.getNumberOfVertices());
-    centroid[2] /= static_cast<float>(geometry2d.getNumberOfVertices());
+    centroid[0] /= static_cast<float>(geometry2dGeom.getNumberOfVertices());
+    centroid[1] /= static_cast<float>(geometry2dGeom.getNumberOfVertices());
+    centroid[2] /= static_cast<float>(geometry2dGeom.getNumberOfVertices());
     return centroid;
   }
     // 3D Types
   case IGeometry::Type::Hexahedral:
     [[fallthrough]];
   case IGeometry::Type::Tetrahedral: {
-    const auto& geometry3d = dynamic_cast<const INodeGeometry3D&>(geometry);
-    const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
+    const auto& geometry3dGeom = dynamic_cast<const INodeGeometry3D&>(geometry);
+    const auto& verticesRef = geometry3dGeom.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
     centroid[2] = 0.0f;
-    for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
+    for(size_t i = 0; i < geometry3dGeom.getNumberOfVertices(); i++)
     {
-      centroid[0] += vertices[3 * i + 0];
-      centroid[1] += vertices[3 * i + 1];
-      centroid[2] += vertices[3 * i + 2];
+      centroid[0] += verticesRef[3 * i + 0];
+      centroid[1] += verticesRef[3 * i + 1];
+      centroid[2] += verticesRef[3 * i + 2];
     }
-    centroid[0] /= static_cast<float>(geometry3d.getNumberOfVertices());
-    centroid[1] /= static_cast<float>(geometry3d.getNumberOfVertices());
-    centroid[2] /= static_cast<float>(geometry3d.getNumberOfVertices());
+    centroid[0] /= static_cast<float>(geometry3dGeom.getNumberOfVertices());
+    centroid[1] /= static_cast<float>(geometry3dGeom.getNumberOfVertices());
+    centroid[2] /= static_cast<float>(geometry3dGeom.getNumberOfVertices());
     return centroid;
   }
   }
@@ -278,52 +278,52 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
   switch(geometry.getGeomType())
   {
   case IGeometry::Type::Image: {
-    auto& image = dynamic_cast<ImageGeom&>(geometry);
-    FloatVec3 origin = image.getOrigin();
+    auto& imageGeom = dynamic_cast<ImageGeom&>(geometry);
+    FloatVec3 origin = imageGeom.getOrigin();
     origin[0] += translation[0];
     origin[1] += translation[1];
     origin[2] += translation[2];
-    image.setOrigin(origin);
+    imageGeom.setOrigin(origin);
     return;
   }
   case IGeometry::Type::RectGrid: {
-    auto& rectGrid = dynamic_cast<RectGridGeom&>(geometry);
-    auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
-    auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
-    auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
-    for(size_t i = 0; i < rectGrid.getNumXCells(); i++)
+    auto& rectGridGeom = dynamic_cast<RectGridGeom&>(geometry);
+    auto& xBoundsRef = rectGridGeom.getXBounds()->getDataStoreRef();
+    auto& yBoundsRef = rectGridGeom.getYBounds()->getDataStoreRef();
+    auto& zBoundsRef = rectGridGeom.getZBounds()->getDataStoreRef();
+    for(size_t i = 0; i < rectGridGeom.getNumXCells(); i++)
     {
-      xBounds[i] += translation[0];
+      xBoundsRef[i] += translation[0];
     }
-    for(size_t i = 0; i < rectGrid.getNumYCells(); i++)
+    for(size_t i = 0; i < rectGridGeom.getNumYCells(); i++)
     {
-      yBounds[i] += translation[1];
+      yBoundsRef[i] += translation[1];
     }
-    for(size_t i = 0; i < rectGrid.getNumZCells(); i++)
+    for(size_t i = 0; i < rectGridGeom.getNumZCells(); i++)
     {
-      zBounds[i] += translation[2];
+      zBoundsRef[i] += translation[2];
     }
     return;
   }
   case IGeometry::Type::Vertex: {
-    auto& vertex = dynamic_cast<VertexGeom&>(geometry);
-    auto& vertices = vertex.getVertices()->getDataStoreRef();
-    for(size_t i = 0; i < vertex.getNumberOfVertices(); i++)
+    auto& vertexGeom = dynamic_cast<VertexGeom&>(geometry);
+    auto& verticesRef = vertexGeom.getVertices()->getDataStoreRef();
+    for(size_t i = 0; i < vertexGeom.getNumberOfVertices(); i++)
     {
-      vertices[3 * i + 0] += translation[0];
-      vertices[3 * i + 1] += translation[1];
-      vertices[3 * i + 2] += translation[2];
+      verticesRef[3 * i + 0] += translation[0];
+      verticesRef[3 * i + 1] += translation[1];
+      verticesRef[3 * i + 2] += translation[2];
     }
     return;
   }
   case IGeometry::Type::Edge: {
-    auto& edge = dynamic_cast<EdgeGeom&>(geometry);
-    auto& vertices = edge.getVertices()->getDataStoreRef();
-    for(size_t i = 0; i < edge.getNumberOfVertices(); i++)
+    auto& edgeGeom = dynamic_cast<EdgeGeom&>(geometry);
+    auto& verticesRef = edgeGeom.getVertices()->getDataStoreRef();
+    for(size_t i = 0; i < edgeGeom.getNumberOfVertices(); i++)
     {
-      vertices[3 * i + 0] += translation[0];
-      vertices[3 * i + 1] += translation[1];
-      vertices[3 * i + 2] += translation[2];
+      verticesRef[3 * i + 0] += translation[0];
+      verticesRef[3 * i + 1] += translation[1];
+      verticesRef[3 * i + 2] += translation[2];
     }
     return;
   }
@@ -331,13 +331,13 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
   case IGeometry::Type::Quad:
     [[fallthrough]];
   case IGeometry::Type::Triangle: {
-    auto& geometry2d = dynamic_cast<INodeGeometry2D&>(geometry);
-    auto& vertices = geometry2d.getVertices()->getDataStoreRef();
-    for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
+    auto& geometry2dGeom = dynamic_cast<INodeGeometry2D&>(geometry);
+    auto& verticesRef = geometry2dGeom.getVertices()->getDataStoreRef();
+    for(size_t i = 0; i < geometry2dGeom.getNumberOfVertices(); i++)
     {
-      vertices[3 * i + 0] += translation[0];
-      vertices[3 * i + 1] += translation[1];
-      vertices[3 * i + 2] += translation[2];
+      verticesRef[3 * i + 0] += translation[0];
+      verticesRef[3 * i + 1] += translation[1];
+      verticesRef[3 * i + 2] += translation[2];
     }
     return;
   }
@@ -345,13 +345,13 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
   case IGeometry::Type::Hexahedral:
     [[fallthrough]];
   case IGeometry::Type::Tetrahedral: {
-    auto& geometry3d = dynamic_cast<INodeGeometry3D&>(geometry);
-    auto& vertices = geometry3d.getVertices()->getDataStoreRef();
-    for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
+    auto& geometry3dGeom = dynamic_cast<INodeGeometry3D&>(geometry);
+    auto& verticesRef = geometry3dGeom.getVertices()->getDataStoreRef();
+    for(size_t i = 0; i < geometry3dGeom.getNumberOfVertices(); i++)
     {
-      vertices[3 * i + 0] += translation[0];
-      vertices[3 * i + 1] += translation[1];
-      vertices[3 * i + 2] += translation[2];
+      verticesRef[3 * i + 0] += translation[0];
+      verticesRef[3 * i + 1] += translation[1];
+      verticesRef[3 * i + 2] += translation[2];
     }
     return;
   }
@@ -380,24 +380,24 @@ Result<> AlignGeometries::operator()()
   auto targetGeometryPath = m_InputValues->InputTargetGeometryPath;
   auto alignmentType = m_InputValues->AlignmentTypeIndex;
 
-  auto& moving = m_DataStructure.getDataRefAs<IGeometry>(movingGeometryPath);
-  auto& target = m_DataStructure.getDataRefAs<IGeometry>(targetGeometryPath);
+  auto& movingGeom = m_DataStructure.getDataRefAs<IGeometry>(movingGeometryPath);
+  auto& targetGeom = m_DataStructure.getDataRefAs<IGeometry>(targetGeometryPath);
 
   if(alignmentType == 0)
   {
-    FloatVec3 movingOrigin = extractOrigin(moving);
-    FloatVec3 targetOrigin = extractOrigin(target);
+    FloatVec3 movingOrigin = extractOrigin(movingGeom);
+    FloatVec3 targetOrigin = extractOrigin(targetGeom);
 
-    float translation[3] = {targetOrigin[0] - movingOrigin[0], targetOrigin[1] - movingOrigin[1], targetOrigin[2] - movingOrigin[2]};
-    translateGeometry(moving, translation);
+    FloatVec3 translation = {targetOrigin[0] - movingOrigin[0], targetOrigin[1] - movingOrigin[1], targetOrigin[2] - movingOrigin[2]};
+    translateGeometry(movingGeom, translation);
   }
   else if(alignmentType == 1)
   {
-    FloatVec3 movingCentroid = extractCentroid(moving);
-    FloatVec3 targetCentroid = extractCentroid(target);
+    FloatVec3 movingCentroid = extractCentroid(movingGeom);
+    FloatVec3 targetCentroid = extractCentroid(targetGeom);
 
-    float translation[3] = {targetCentroid[0] - movingCentroid[0], targetCentroid[0] - movingCentroid[0], targetCentroid[0] - movingCentroid[0]};
-    translateGeometry(moving, translation);
+    FloatVec3 translation = {targetCentroid[0] - movingCentroid[0], targetCentroid[1] - movingCentroid[1], targetCentroid[2] - movingCentroid[2]};
+    translateGeometry(movingGeom, translation);
   }
   else
   {

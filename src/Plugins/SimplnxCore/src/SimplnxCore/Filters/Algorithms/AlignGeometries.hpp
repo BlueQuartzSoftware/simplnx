@@ -8,16 +8,6 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  AlignGeometriesInputValues inputValues;
-  inputValues.AlignmentTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(alignment_type_index);
-  inputValues.InputMovingGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(input_moving_geometry_path);
-  inputValues.InputTargetGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(input_target_geometry_path);
-  return AlignGeometries(dataStructure, messageHandler, shouldCancel, &inputValues)();
-
-*/
-
 namespace nx::core
 {
 
