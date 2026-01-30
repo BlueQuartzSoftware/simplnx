@@ -581,8 +581,8 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("30f37bcd-701f-4e64-aa9d-1181469d3fb5").value(), std::vector<std::string>{"return_bin_midpoint"}},
     // ITKImportImageStackFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("dcf980b7-ecca-46d1-af31-ac65f6e3b6bb").value(),
-                                              std::vector<std::string>{"scaling", "resample_images_index", "image_data_type_index", "exact_xy_dimensions", "cropping_options", "convert_to_gray_scale",
-                                                                       "color_weights", "change_image_data_type"}},
+                                              std::vector<std::string>{"scaling", "resample_images_index", "image_data_type_index", "exact_xy_dimensions", "cropping_options", "change_spacing",
+                                                                       "change_origin", "convert_to_gray_scale", "color_weights", "change_image_data_type"}},
     // ITKImageReaderFilter
     std::pair<Uuid, std::vector<std::string>>{
         Uuid::FromString("d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2").value(),
