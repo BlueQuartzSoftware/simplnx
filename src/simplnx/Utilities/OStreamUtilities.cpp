@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <chrono>
 #include <iomanip>
@@ -17,7 +18,7 @@ const std::array<std::string, 5> k_DelimiterStrings = {" ", ";", ",", ":", "\t"}
 
 /**
  * @brief implicit writing of **NeighborList**'s elements to outputStrm
- * @tparam ScalarType The primitive type attacthed to **NeighborList**
+ * @tparam ScalarType The primitive type attached to **NeighborList**
  * @param outputStrm the ostream to write to
  * @param inputNeighborList The **NeighborList** that will have its values translated into strings
  * @param mesgHandler The message handler to dump progress updates to
@@ -150,21 +151,20 @@ struct PrintDataArray
       tuplesPerLine = 1;
     }
 
+    MessageHelper messageHelper(mesgHandler);
+    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+
     usize numComps = inputDataArray.getNumberOfComponents();
     int32 tuplesWritten = 0;
     for(size_t tuple = 0; tuple < numTuples; tuple++)
     {
-      auto now = std::chrono::steady_clock::now();
-      if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+      throttledMessenger.sendThrottledMessage(
+          [&]() { return fmt::format("Processing {}: {}% completed", inputDataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples))); });
+      if(shouldCancel)
       {
-        auto string = fmt::format("Processing {}: {}% completed", inputDataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
-        mesgHandler(IFilter::Message::Type::Info, string);
-        start = now;
-        if(shouldCancel)
-        {
-          return {};
-        }
+        return {};
       }
+
       // Write out all the components for this tuple
       for(size_t index = 0; index < numComps; index++)
       {
