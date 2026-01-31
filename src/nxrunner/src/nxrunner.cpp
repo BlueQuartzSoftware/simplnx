@@ -62,7 +62,11 @@ void LoadApp()
   // Try loading plugins from the directory that the executable is in.
   // This is the default for developer build trees and CI build trees
   fs::path appPath = app->getCurrentDir();
-  app->loadPlugins(appPath, true);
+  auto result = app->loadPlugins(appPath, true);
+  if(result.invalid())
+  {
+    fmt::print(stderr, "Error loading plugins from '{}'\n", appPath.string());
+  }
 
   // For non-windows platforms we need to look in the actual 'Plugins'
   // directory which is up one directory from the executable.
@@ -73,7 +77,11 @@ void LoadApp()
     if(fs::exists(appPath / "Plugins"))
     {
       appPath = appPath / "Plugins";
-      app->loadPlugins(appPath, true);
+      result = app->loadPlugins(appPath, true);
+      if(result.invalid())
+      {
+        fmt::print(stderr, "Error loading plugins from '{}'\n", appPath.string());
+      }
     }
   }
 #endif

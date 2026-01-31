@@ -21,6 +21,7 @@ add_subdirectory(ConversionTest)
 add_executable(simplnx_test
   ${SIMPLNX_TEST_DIRS_HEADER}
   simplnx_test_main.cpp
+  AppTest.cpp
   ArgumentsTest.cpp
   BitTest.cpp
   DataArrayTest.cpp

@@ -33,8 +33,8 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Valid Filter Execution", "[Simpln
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "k_files.tar.gz", "k_files");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "k_files_v2.tar.gz", "k_files_v2");
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/k_files_v2/7_0_medoids_exemplar.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object

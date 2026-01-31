@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/Filter/FilterList.hpp"
@@ -57,8 +58,9 @@ public:
    *
    * Plugins are found by using the file extension of "".
    * @param pluginDir
+   * @return Result<> indicating success or failure. Accumulates errors from individual plugin loads.
    */
-  void loadPlugins(const std::filesystem::path& pluginDir, bool verbose = false);
+  Result<> loadPlugins(const std::filesystem::path& pluginDir, bool verbose = false);
 
   /**
    * @brief Returns a pointer to the Application's FilterList.
@@ -93,13 +95,15 @@ public:
   /**
    * @brief Saves user preferences to the default filepath.
    * This method does not save default values.
+   * @return Result<> indicating success or failure
    */
-  void savePreferences();
+  Result<> savePreferences();
 
   /**
    * @brief Loads user preferences from the default filepath.
+   * @return Result<> indicating success or failure (warnings if file doesn't exist)
    */
-  void loadPreferences();
+  Result<> loadPreferences();
 
   /**
    * @brief Returns a pointer to the JsonPipelineBuilder. It is the caller's
@@ -164,7 +168,7 @@ protected:
    */
   Application(int argc, char** argv);
 
-  void initialize();
+  Result<> initialize();
 
 private:
   void initDefaultDataTypes();
@@ -173,8 +177,10 @@ private:
    * @brief Loads the plugin at the specified filepath and updates the
    * FilterList with the new IFilters.
    * @param path
+   * @param verbose
+   * @return Result<> indicating success or failure
    */
-  void loadPlugin(const std::filesystem::path& path, bool verbose = false);
+  Result<> loadPlugin(const std::filesystem::path& path, bool verbose = false);
 
   //////////////////
   // Static Variable
