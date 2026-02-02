@@ -1,26 +1,18 @@
 #include "BadDataNeighborOrientationCheckFilter.hpp"
 #include "OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheck.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumberParameter.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_MissingGeomError = -6800;
-constexpr int32 k_MissingInputArray = -6801;
-constexpr int32 k_IncorrectInputArray = -6802;
-constexpr int32 k_InvalidNumTuples = -6803;
 constexpr int32 k_InconsistentTupleCount = -6809;
 } // namespace
 
@@ -65,16 +57,20 @@ Parameters BadDataNeighborOrientationCheckFilter::parameters() const
   params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)", "Angular tolerance used to compare with neighboring Cells", 5.0f));
   params.insert(std::make_unique<Int32Parameter>(k_NumberOfNeighbors_Key, "Required Number of Neighbors",
                                                  "Minimum number of neighbor Cells that must have orientations within above tolerance to allow Cell to be changed", 6));
+
+  params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The target geometry", DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{4}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Used to define Cells as good or bad", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath({"Phases"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
+  params.insertSeparator(Parameters::Separator{"Input/Output Cell Data"});
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Used to define Cells as good or bad", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each phase",
@@ -100,106 +96,29 @@ IFilter::UniquePointer BadDataNeighborOrientationCheckFilter::clone() const
 IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pMisorientationToleranceValue = filterArgs.value<float32>(k_MisorientationTolerance_Key);
-  auto pNumberOfNeighborsValue = filterArgs.value<int32>(k_NumberOfNeighbors_Key);
-  auto pImageGeomPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
   auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  std::vector<PreflightValue> preflightUpdatedValues;
-
   std::vector<DataPath> dataArrayPaths;
-
-  auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeomPathValue);
-  if(imageGeomPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingGeomError, fmt::format("Could not find input image geometry at path '{}'", pImageGeomPathValue.toString()))};
-  }
-
-  // Validate the mask array
-  auto* goodVoxelsPtr = dataStructure.getDataAs<IDataArray>(pGoodVoxelsArrayPathValue);
-  if(nullptr == goodVoxelsPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find mask array at path '{}'", pGoodVoxelsArrayPathValue.toString()))};
-  }
-
-  auto* goodVoxelsBoolPtr = dataStructure.getDataAs<IDataArray>(pGoodVoxelsArrayPathValue);
-  if(goodVoxelsBoolPtr->getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Mask Input Array must be a 1 component array")};
-  }
   dataArrayPaths.push_back(pGoodVoxelsArrayPathValue);
-
-  // validate the cell phases array
-  auto* cellPhasesPtr = dataStructure.getDataAs<IDataArray>(pCellPhasesArrayPathValue);
-  if(nullptr == cellPhasesPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find cell phases array at path '{}'", pCellPhasesArrayPathValue.toString()))};
-  }
-  auto* cellPhasesInt32Ptr = dataStructure.getDataAs<Int32Array>(pCellPhasesArrayPathValue);
-  if(nullptr == cellPhasesInt32Ptr)
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_IncorrectInputArray, fmt::format("Cell phases array at path '{}' is not of the correct type. It must be Int32.", pCellPhasesArrayPathValue.toString())}})};
-  }
-  if(cellPhasesInt32Ptr->getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Cell phases Input Array must be a 1 component Int32 array")};
-  }
   dataArrayPaths.push_back(pCellPhasesArrayPathValue);
-
-  // validate the crystal structures array
-  auto* crystalStructuresPtr = dataStructure.getDataAs<IDataArray>(pCrystalStructuresArrayPathValue);
-  if(nullptr == crystalStructuresPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find crystal structures array at path '{}'", pCrystalStructuresArrayPathValue.toString()))};
-  }
-  auto* crystalStructuresUInt32Ptr = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);
-  if(nullptr == crystalStructuresUInt32Ptr)
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_IncorrectInputArray, fmt::format("Crystal structures array at path '{}' is not of the correct type. It must be UInt32.", pCellPhasesArrayPathValue.toString())}})};
-  }
-  if(crystalStructuresUInt32Ptr->getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Crystal structures Input Array must be a 1 component UInt32 array")};
-  }
-
-  // validate the quaternions array
-  auto* quatsPtr = dataStructure.getDataAs<IDataArray>(pQuatsArrayPathValue);
-  if(nullptr == quatsPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find quaternions array at path '{}'", pQuatsArrayPathValue.toString()))};
-  }
-  auto* quatsFloat32Ptr = dataStructure.getDataAs<Float32Array>(pQuatsArrayPathValue);
-  if(nullptr == quatsFloat32Ptr)
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_IncorrectInputArray, fmt::format("Quaternions array at path '{}' is not of the correct type. It must be Float32.", pCellPhasesArrayPathValue.toString())}})};
-  }
-  if(quatsFloat32Ptr->getNumberOfComponents() != 4)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array")};
-  }
   dataArrayPaths.push_back(pQuatsArrayPathValue);
 
   // validate the number of tuples
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(k_InconsistentTupleCount,
-                                           fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return MakePreflightErrorResult(k_InconsistentTupleCount, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()));
   }
 
   resultOutputActions.value().modifiedActions.emplace_back(
       DataObjectModification{pGoodVoxelsArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pGoodVoxelsArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
