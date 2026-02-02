@@ -47,7 +47,8 @@ public:
 
   /**
    * @brief Returns a pointer to the DataStore cast as type StoreT.
-   * @return const StoreT*
+   * @tparam StoreT The target IListStore-derived type to cast to
+   * @return const StoreT* Pointer to the ListStore cast to the specified type, or nullptr if the cast fails
    */
   template <class StoreT>
   const StoreT* getIListStoreAs() const
@@ -58,7 +59,8 @@ public:
 
   /**
    * @brief Returns a pointer to the DataStore cast as type StoreT.
-   * @return StoreT*
+   * @tparam StoreT The target IListStore-derived type to cast to
+   * @return StoreT* Pointer to the ListStore cast to the specified type, or nullptr if the cast fails
    */
   template <class StoreT>
   StoreT* getIListStoreAs()
@@ -69,7 +71,9 @@ public:
 
   /**
    * @brief Returns a reference to the DataStore cast as type StoreT.
-   * @return const StoreT&
+   * @tparam StoreT The target IListStore-derived type to cast to
+   * @return const StoreT& Reference to the ListStore cast to the specified type
+   * @throws std::bad_cast if the cast fails
    */
   template <class StoreT>
   const StoreT& getIListStoreRefAs() const
@@ -80,7 +84,9 @@ public:
 
   /**
    * @brief Returns a reference to the DataStore cast as type StoreT.
-   * @return StoreT&
+   * @tparam StoreT The target IListStore-derived type to cast to
+   * @return StoreT& Reference to the ListStore cast to the specified type
+   * @throws std::bad_cast if the cast fails
    */
   template <class StoreT>
   StoreT& getIListStoreRefAs()
@@ -96,8 +102,8 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief setNumNeighborsArrayName
-   * @param name
+   * @brief Sets the name of the NumNeighbors array for use in HDF5 I/O.
+   * @param name The name to assign to the NumNeighbors array
    */
   void setNumNeighborsArrayName(const std::string& name);
 
@@ -121,20 +127,20 @@ public:
 
   /**
    * @brief Returns the tuple shape.
-   * @return
+   * @return ShapeType The shape of the tuples in the neighbor list
    */
   ShapeType getTupleShape() const override;
 
   /**
    * @brief Returns the component shape.
-   * @return
+   * @return ShapeType The shape of the components in the neighbor list
    */
   ShapeType getComponentShape() const override;
 
   /**
-   * @brief copyTuple
-   * @param currentPos
-   * @param newPos
+   * @brief Copies values from one tuple to another.
+   * @param currentPos The index of the source tuple to copy from
+   * @param newPos The index of the destination tuple to copy to
    */
   virtual void copyTuple(usize currentPos, usize newPos) = 0;
 
@@ -146,12 +152,13 @@ public:
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return
+   * @return DataObject::Type The type enumeration for this neighbor list
    */
   DataObject::Type getDataObjectType() const override;
 
   /**
-   * @brief Resizes the internal array to accommodate
+   * @brief Resizes the internal array to accommodate the specified tuple shape.
+   * @param tupleShape The new shape for the tuples
    */
   void resizeTuples(const ShapeType& tupleShape) override;
 

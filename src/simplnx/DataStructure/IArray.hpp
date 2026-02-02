@@ -29,7 +29,7 @@ public:
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return
+   * @return ArrayType The array type enum value
    */
   virtual ArrayType getArrayType() const = 0;
 
@@ -47,19 +47,19 @@ public:
 
   /**
    * @brief Returns if there are any elements in the array object
-   * @return bool, true if the DataArray has a size() == 0
+   * @return bool True if the array has a size() == 0, false otherwise
    */
   virtual bool empty() const = 0;
 
   /**
    * @brief Returns the tuple shape.
-   * @return
+   * @return ShapeType The shape of the tuples
    */
   virtual ShapeType getTupleShape() const = 0;
 
   /**
    * @brief Returns the component shape.
-   * @return
+   * @return ShapeType The shape of the components
    */
   virtual ShapeType getComponentShape() const = 0;
 
@@ -106,23 +106,28 @@ public:
   /**
    * @brief Returns the value at the tuple and component index as a std::string.
    *        NOTE: This function is slow and should be used sparingly and avoided inside of a tight loop!
-   * @param tupleIndex
-   * @param compIndex
+   * @param tupleIndex The index of the tuple
+   * @param compIndex The index of the component
    * @param format Optional fmt formatting, this will be ignored for integer types and a simple {} will always be used
-   * @return std::string
+   * @return std::string String representation of the value at the specified indices
    */
   virtual std::string toString(usize tupleIndex, usize compIndex, const std::string& format = "{}") const = 0;
 
   /**
    * @brief Sets the value at the tuple and component index to the value parsed as the appropriate type.
    *        If the value cannot be properly parsed as the appropriate type, nothing is changed.
-   * @param tupleIndex
-   * @param compIndex
-   * @param value
-   * @return bool
+   * @param tupleIndex The index of the tuple
+   * @param compIndex The index of the component
+   * @param value The string value to parse and set
+   * @return bool True if the value was successfully parsed and set, false otherwise
    */
   virtual bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) = 0;
 
+  /**
+   * @brief Converts a set of ArrayType enums to a set of string representations.
+   * @param arrayTypes Set of ArrayType enums to convert
+   * @return std::set<std::string> Set of string representations of the array types
+   */
   static std::set<std::string> StringListFromArrayType(const std::set<ArrayType>& arrayTypes)
   {
     static const std::map<ArrayType, std::string> k_TypeToStringMap = {
@@ -137,11 +142,22 @@ public:
   }
 
 protected:
+  /**
+   * @brief Constructs an IArray with the given DataStructure and name.
+   * @param dataStructure The DataStructure that will contain this IArray
+   * @param name The name of the IArray
+   */
   IArray(DataStructure& dataStructure, std::string name)
   : DataObject(dataStructure, std::move(name))
   {
   }
 
+  /**
+   * @brief Constructs an IArray with the given DataStructure, name, and import ID.
+   * @param dataStructure The DataStructure that will contain this IArray
+   * @param name The name of the IArray
+   * @param importId The ID to use when importing this IArray
+   */
   IArray(DataStructure& dataStructure, std::string name, IdType importId)
   : DataObject(dataStructure, std::move(name), importId)
   {

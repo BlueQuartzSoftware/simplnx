@@ -30,7 +30,14 @@ private:
    */
   void addCoreFactories();
 
+  /**
+   * @brief Adds data store IO factory functions to the collection.
+   */
   void addDataStoreFnc();
+
+  /**
+   * @brief Adds list store IO factory functions to the collection.
+   */
   void addListStoreFnc();
 
   factory_collection m_FactoryCollection;

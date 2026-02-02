@@ -7,7 +7,7 @@ namespace nx::core
 {
 /**
  * @class EdgeGeom
- * @brief
+ * @brief Represents a 1D edge geometry consisting of vertices connected by edges.
  */
 class SIMPLNX_EXPORT EdgeGeom : public INodeGeometry1D
 {
@@ -23,33 +23,33 @@ public:
   static inline constexpr StringLiteral k_TypeName = "EdgeGeom";
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param parentId = {}
-   * @return EdgeGeom*
+   * @brief Creates a new EdgeGeom in the specified DataStructure.
+   * @param dataStructure The DataStructure to create the EdgeGeom in
+   * @param name The name for the new EdgeGeom
+   * @param parentId Optional parent object ID to insert the EdgeGeom under
+   * @return EdgeGeom* Pointer to the created EdgeGeom, or nullptr if creation failed
    */
   static EdgeGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param parentId = {}
-   * @return EdgeGeom*
+   * @brief Imports an EdgeGeom into the specified DataStructure with a given import ID.
+   * @param dataStructure The DataStructure to import the EdgeGeom into
+   * @param name The name for the imported EdgeGeom
+   * @param importId The ID to use for this imported object
+   * @param parentId Optional parent object ID to insert the EdgeGeom under
+   * @return EdgeGeom* Pointer to the imported EdgeGeom, or nullptr if import failed
    */
   static EdgeGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param other
+   * @brief Copy constructor.
+   * @param other The EdgeGeom to copy from
    */
   EdgeGeom(const EdgeGeom& other) = default;
 
   /**
-   * @brief
-   * @param other
+   * @brief Move constructor.
+   * @param other The EdgeGeom to move from
    */
   EdgeGeom(EdgeGeom&& other) = default;
 
@@ -83,20 +83,21 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a shallow copy of this EdgeGeom.
+   * @return DataObject* Pointer to the shallow copy
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a deep copy of this EdgeGeom at the specified path.
+   * @param copyPath The path where the deep copy should be created
+   * @return std::shared_ptr<DataObject> Shared pointer to the deep copy
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   *
-   * @return
+   * @brief Returns the number of vertices per edge (always 2 for EdgeGeom).
+   * @return usize The number of vertices per edge
    */
   usize getNumberOfVerticesPerEdge() const override;
 
@@ -136,31 +137,31 @@ public:
   Result<> findElementCentroids(bool recalculate) override;
 
   /**
-   * @brief
-   * @return Point3D<float64>
+   * @brief Returns the parametric center of an edge element (0.5 along the edge).
+   * @return Point3D<float64> The parametric center coordinates
    */
   Point3D<float64> getParametricCenter() const override;
 
   /**
-   * @brief
-   * @param pCoords
-   * @param shape
+   * @brief Calculates shape functions at the given parametric coordinates.
+   * @param pCoords The parametric coordinates
+   * @param shape Output array to store the calculated shape function values
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Constructs an EdgeGeom with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
    */
   EdgeGeom(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Constructs an EdgeGeom with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
    */
   EdgeGeom(DataStructure& dataStructure, std::string name, IdType importId);
 };

@@ -108,9 +108,9 @@ public:
   }
 
   /**
-   * @brief addEntry
-   * @param grainId
-   * @param value
+   * @brief Adds a new entry to the list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to add the entry to
+   * @param value The value to add to the list
    */
   void addEntry(int32 grainId, value_type value) override
   {
@@ -126,9 +126,9 @@ public:
   }
 
   /**
-   * @brief setList
-   * @param grainId
-   * @param neighborList
+   * @brief Sets the complete list for the specified grain/tuple index using a shared pointer to a vector.
+   * @param grainId The grain/tuple index to set the list for
+   * @param neighborList Shared pointer to the vector containing the list values
    */
   void setList(int32 grainId, const shared_vector_type& neighborList) override
   {
@@ -136,9 +136,9 @@ public:
   }
 
   /**
-   * @brief setList
-   * @param grainId
-   * @param neighborList
+   * @brief Sets the complete list for the specified grain/tuple index using a vector.
+   * @param grainId The grain/tuple index to set the list for
+   * @param neighborList Vector containing the list values
    */
   void setList(int32 grainId, const vector_type& neighborList) override
   {
@@ -146,24 +146,29 @@ public:
   }
 
   /**
-   * @brief getList
-   * @param grainId
-   * @return shared_vector_type
+   * @brief Returns a copy of the list for the specified grain/tuple.
+   * @param grainId The grain/tuple index to retrieve
+   * @return vector_type A copy of the list vector
    */
   vector_type getList(int32 grainId) const override
   {
     return copyOfList(grainId);
   }
 
+  /**
+   * @brief Returns the number of elements in the list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to query
+   * @return usize The number of elements in the specified list
+   */
   usize getListSize(usize grainId) const override
   {
     return m_Array[grainId].size();
   }
 
   /**
-   * @brief copyOfList
-   * @param grainId
-   * @return vector_type
+   * @brief Returns a deep copy of the list for the specified grain/tuple.
+   * @param grainId The grain/tuple index to copy
+   * @return vector_type A deep copy of the list vector
    */
   vector_type copyOfList(int32 grainId) const override
   {
@@ -171,11 +176,11 @@ public:
   }
 
   /**
-   * @brief getValue
-   * @param grainId
-   * @param index
-   * @param ok
-   * @return T
+   * @brief Retrieves a specific value from a grain's list with bounds checking.
+   * @param grainId The grain/tuple index to retrieve from
+   * @param index The element index within the grain's list
+   * @param ok Output parameter set to true if the value was successfully retrieved, false otherwise
+   * @return T The value at the specified position, or default value if out of bounds
    */
   T getValue(int32 grainId, int32 index, bool& ok) const override
   {
@@ -189,6 +194,12 @@ public:
     return {};
   }
 
+  /**
+   * @brief Sets the value at a specific position within a grain's list with bounds checking.
+   * @param grainId The grain/tuple index
+   * @param index The element index within the grain's list
+   * @param value The value to set
+   */
   void setValue(int32 grainId, usize index, T value) override
   {
     if(grainId < this->getNumberOfLists() && grainId >= 0 && index < m_Array[grainId].size())
@@ -197,15 +208,19 @@ public:
     }
   }
 
+  /**
+   * @brief Returns the total number of lists in the ListStore.
+   * @return uint64 The number of lists (equal to the number of tuples)
+   */
   uint64 getNumberOfLists() const override
   {
     return m_NumTuples;
   }
 
   /**
-   * @brief operator []
-   * @param grainId
-   * @return vector_type&
+   * @brief Array subscript operator to access the list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to access
+   * @return vector_type A copy of the list at the specified index
    */
   vector_type operator[](int32 grainId) const override
   {
@@ -213,9 +228,9 @@ public:
   }
 
   /**
-   * @brief operator []
-   * @param grainId
-   * @return vector_type&
+   * @brief Array subscript operator to access the list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to access
+   * @return vector_type A copy of the list at the specified index
    */
   vector_type operator[](usize grainId) const override
   {
@@ -242,11 +257,18 @@ public:
     return this->operator[](grainId);
   }
 
+  /**
+   * @brief Clears all lists from the list store.
+   */
   void clear() override
   {
     m_Array.clear();
   }
 
+  /**
+   * @brief Sets all lists from a vector of shared pointers to vectors.
+   * @param lists Vector of shared pointers to vectors containing the list data
+   */
   void setData(const std::vector<shared_vector_type>& lists) override
   {
     m_NumTuples = lists.size();
@@ -258,6 +280,10 @@ public:
     }
   }
 
+  /**
+   * @brief Sets all lists from a vector of vectors.
+   * @param lists Vector of vectors containing the list data
+   */
   void setData(const std::vector<vector_type>& lists) override
   {
     m_Array = lists;
@@ -265,11 +291,21 @@ public:
     m_TupleShape = ShapeType{m_NumTuples};
   }
 
+  /**
+   * @brief Throws an error because ListStore cannot read from HDF5.
+   * @param datasetReader The HDF5 DatasetIO (unused)
+   * @throw std::runtime_error Always throws because HDF5 read is not implemented
+   */
   void readHdf5(const HDF5::DatasetIO& datasetReader) override
   {
     throw std::runtime_error("ListStore cannot read from HDF5");
   }
 
+  /**
+   * @brief Throws an error because ListStore cannot write to HDF5.
+   * @param datasetReader The HDF5 DatasetIO (unused)
+   * @throw std::runtime_error Always throws because HDF5 write is not implemented
+   */
   void writeHdf5(HDF5::DatasetIO& datasetReader) override
   {
     throw std::runtime_error("ListStore cannot write to HDF5");

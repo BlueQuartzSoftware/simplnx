@@ -49,9 +49,9 @@ protected:
    * @brief Finalizes adding a DataObject to the DataStructure. This should
    * be called by the create* methods to prevent duplicating code. Returns
    * true if the data was successfully added. Returns false otherwise.
-   * @param obj
-   * @param parent = {}
-   * @return bool
+   * @param obj Shared pointer to the DataObject to add
+   * @param parent Optional ID of the parent DataObject
+   * @return bool True if the data was successfully added, false otherwise
    */
   bool finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent = {});
 
@@ -70,18 +70,18 @@ public:
 
   /**
    * @brief Copy constructor
-   * @param other
+   * @param other The DataStructure to copy from
    */
   DataStructure(const DataStructure& other);
 
   /**
    * @brief Move constructor
-   * @param other
+   * @param other The DataStructure to move from
    */
   DataStructure(DataStructure&& other) noexcept;
 
   /**
-   * @brief
+   * @brief Destroys the DataStructure and all contained DataObjects.
    */
   ~DataStructure();
 
@@ -102,16 +102,16 @@ public:
    * return type is optional<IdType> for cases where the DataPath does not point to a
    * DataObject. If no DataObject is found at the path, an empty optional object is
    * returned.
-   * @param path
-   * @return std::optional<IdType>
+   * @param path The DataPath to the DataObject
+   * @return std::optional<IdType> The ID of the DataObject, or empty optional if not found
    */
   std::optional<DataObject::IdType> getId(const DataPath& path) const;
 
   /**
    * @brief Returns true if the DataStructure contains a DataObject with the
    * given key. Returns false otherwise.
-   * @param identifier
-   * @return bool
+   * @param identifier The ID of the DataObject to search for
+   * @return bool True if the DataObject exists, false otherwise
    */
   bool containsData(DataObject::IdType identifier) const;
 
@@ -126,16 +126,16 @@ public:
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
-   * @param identifier
-   * @return DataObject*
+   * @param identifier The ID of the DataObject to retrieve
+   * @return DataObject* Pointer to the DataObject, or nullptr if not found
    */
   DataObject* getData(DataObject::IdType identifier);
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
-   * @param identifier
-   * @return T*
+   * @param identifier The ID of the DataObject to retrieve
+   * @return T* Pointer to the DataObject cast to type T, or nullptr if not found or cast fails
    */
   template <class T>
   inline T* getDataAs(DataObject::IdType identifier)
@@ -149,8 +149,8 @@ public:
    * If no such object exists, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
-   * @param identifier
-   * @return T*
+   * @param identifier The ID of the DataObject to retrieve
+   * @return T* Pointer to the DataObject statically cast to type T, or nullptr if not found
    */
   template <class T>
   T* getDataAsUnsafe(DataObject::IdType identifier)
@@ -162,16 +162,16 @@ public:
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
-   * @param identifier
-   * @return DataObject*
+   * @param identifier Optional ID of the DataObject to retrieve
+   * @return DataObject* Pointer to the DataObject, or nullptr if not found or ID not provided
    */
   DataObject* getData(const std::optional<DataObject::IdType>& identifier);
 
   /**
    * @brief Returns a pointer to the DataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
-   * @param identifier
-   * @return T*
+   * @param identifier Optional ID of the DataObject to retrieve
+   * @return T* Pointer to the DataObject cast to type T, or nullptr if not found, ID not provided, or cast fails
    */
   template <class T>
   inline T* getDataAs(const std::optional<DataObject::IdType>& identifier)
@@ -186,8 +186,8 @@ public:
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
-   * @param identifier
-   * @return T*
+   * @param identifier Optional ID of the DataObject to retrieve
+   * @return T* Pointer to the DataObject statically cast to type T, or nullptr if not found or ID not provided
    */
   template <class T>
   T* getDataAsUnsafe(const std::optional<DataObject::IdType>& identifier)
@@ -200,32 +200,32 @@ public:
   /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
    * DataObject is found, this method returns nullptr.
-   * @param path
-   * @return DataObject*
+   * @param path The DataPath to the DataObject
+   * @return DataObject* Pointer to the DataObject, or nullptr if not found
    */
   DataObject* getData(const DataPath& path);
 
   /**
    * @brief Returns a reference to the DataObject at the given DataPath. If no
    * DataObject is found, this method throws std::out_of_range.
-   * @param path
-   * @return DataObject&
+   * @param path The DataPath to the DataObject
+   * @return DataObject& Reference to the DataObject
    */
   DataObject& getDataRef(const DataPath& path);
 
   /**
    * @brief Returns a reference to the DataObject with the given identifier. If no
    * DataObject is found, this method throws std::out_of_range.
-   * @param identifier
-   * @return DataObject&
+   * @param identifier The ID of the DataObject to retrieve
+   * @return DataObject& Reference to the DataObject
    */
   DataObject& getDataRef(DataObject::IdType identifier);
 
   /**
    * @brief Returns a pointer to the DataObject at the given DataPath. If no
    * DataObject is found, this method returns nullptr.
-   * @param path
-   * @return T*
+   * @param path The DataPath to the DataObject
+   * @return T* Pointer to the DataObject cast to type T, or nullptr if not found or cast fails
    */
   template <class T>
   inline T* getDataAs(const DataPath& path)
@@ -239,8 +239,8 @@ public:
    * DataObject is found, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
-   * @param path
-   * @return T*
+   * @param path The DataPath to the DataObject
+   * @return T* Pointer to the DataObject statically cast to type T, or nullptr if not found
    */
   template <class T>
   T* getDataAsUnsafe(const DataPath& path)
@@ -252,8 +252,8 @@ public:
   /**
    * @brief Returns a reference to the DataObject at the given DataPath. If no
    * DataObject is found, this method throws std::out_of_range.
-   * @param path
-   * @return T&
+   * @param path The DataPath to the DataObject
+   * @return T& Reference to the DataObject cast to type T
    */
   template <class T>
   inline T& getDataRefAs(const DataPath& path)
@@ -267,8 +267,8 @@ public:
    * DataObject is found, this method throws std::out_of_range.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
-   * @param path
-   * @return T&
+   * @param path The DataPath to the DataObject
+   * @return T& Reference to the DataObject statically cast to type T
    */
   template <class T>
   T& getDataRefAsUnsafe(const DataPath& path)
@@ -280,8 +280,8 @@ public:
   /**
    * @brief Returns a reference to the DataObject with the given identifier. If no
    * DataObject is found, this method throws std::out_of_range.
-   * @param identifier
-   * @return T&
+   * @param identifier The ID of the DataObject to retrieve
+   * @return T& Reference to the DataObject cast to type T
    */
   template <class T>
   T& getDataRefAs(DataObject::IdType identifier)
@@ -295,8 +295,8 @@ public:
    * DataObject is found, this method throws std::out_of_range.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
-   * @param identifier
-   * @return T&
+   * @param identifier The ID of the DataObject to retrieve
+   * @return T& Reference to the DataObject statically cast to type T
    */
   template <class T>
   T& getDataRefAsUnsafe(DataObject::IdType identifier)
@@ -308,8 +308,8 @@ public:
   /**
    * @brief Returns a pointer to the DataObject found at the specified
    * LinkedPath. If no such DataObject is found, this method returns nullptr.
-   * @param path
-   * @return DataObject*
+   * @param path The LinkedPath to the DataObject
+   * @return DataObject* Pointer to the DataObject, or nullptr if not found
    */
   DataObject* getData(const LinkedPath& path);
 
@@ -681,8 +681,8 @@ public:
   /**
    * @brief Removes the DataObject using the specified IdType. Returns true
    * if an object was found. Otherwise, returns false.
-   * @param identifier
-   * @return bool
+   * @param identifier The ID of the DataObject to remove
+   * @return bool True if the object was found and removed, false otherwise
    */
   bool removeData(DataObject::IdType identifier);
 
@@ -690,40 +690,39 @@ public:
    * @brief Removes the DataObject using the specified IdType. Returns true
    * if an object was found. Otherwise, returns false. If no ID is provided,
    * this returns false.
-   * @param identifier
-   * @return bool
+   * @param identifier Optional ID of the DataObject to remove
+   * @return bool True if the object was found and removed, false otherwise or if ID not provided
    */
   bool removeData(const std::optional<DataObject::IdType>& identifier);
 
   /**
    * @brief Removes the DataObject using the specified DataPath. Returns true
-   * if an object
-   * was found. Otherwise, returns false.
-   * @param path
-   * @return bool
+   * if an object was found. Otherwise, returns false.
+   * @param path The DataPath to the DataObject to remove
+   * @return bool True if the object was found and removed, false otherwise
    */
   bool removeData(const DataPath& path);
 
   /**
    * @brief Returns a LinkedPath based on the specified DataPath.
-   * @param path
-   * @return LinkedPath
+   * @param path The DataPath to convert to a LinkedPath
+   * @return LinkedPath The corresponding LinkedPath
    */
   LinkedPath getLinkedPath(const DataPath& path) const;
 
   /**
    * @brief Creates the path in the data structure as a series of DataObjects. This method will
    * create all needed DataObjects until the path is completely created.
-   * @param path The path to create.
-   * @return Result<LinkedPath> object.
+   * @param path The DataPath to create
+   * @return Result<LinkedPath> Result containing the created LinkedPath, or error if creation failed
    */
   Result<LinkedPath> makePath(const DataPath& path);
 
   /**
    * @brief Returns a vector of DataPaths for the DataObject with the specified ID.
    * If no DataObject is found with the given ID, an empty vector is returned.
-   * @param identifier
-   * @return std::vector<DataPath>
+   * @param identifier The ID of the DataObject
+   * @return std::vector<DataPath> Vector of all DataPaths pointing to the DataObject
    */
   std::vector<DataPath> getDataPathsForId(DataObject::IdType identifier) const;
 
@@ -767,9 +766,9 @@ public:
    * Using it as such is undefined behavior within the DataStructure.
    *
    * Returns true if the process succeeds. Returns false otherwise. Returns false if dataObject is null.
-   * @param dataObject
-   * @param dataPath
-   * @return bool
+   * @param dataObject Shared pointer to the DataObject to insert
+   * @param dataPath The DataPath where the DataObject should be inserted
+   * @return bool True if insertion succeeded, false otherwise
    */
   bool insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath);
 
@@ -781,41 +780,41 @@ public:
 
   /**
    * @brief Adds an additional parent to the target DataObject.
-   * @param targetId
-   * @param newParent
-   * @return bool
+   * @param targetId The ID of the DataObject to modify
+   * @param newParent The ID of the new parent DataObject
+   * @return bool True if the parent was added successfully, false otherwise
    */
   bool setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParent);
 
   /**
    * @brief Removes a parent from the target DataObject.
-   * @param targetId
-   * @param parent
-   * @return bool
+   * @param targetId The ID of the DataObject to modify
+   * @param parent The ID of the parent DataObject to remove
+   * @return bool True if the parent was removed successfully, false otherwise
    */
   bool removeParent(DataObject::IdType targetId, DataObject::IdType parent);
 
   /**
    * @brief Returns an iterator for the the beginning of the top-level DataMap.
-   * @return iterator
+   * @return Iterator An iterator to the first element in the top-level DataMap
    */
   Iterator begin();
 
   /**
    * @brief Returns an iterator for the the end of the top-level DataMap.
-   * @return iterator
+   * @return Iterator An iterator to the element following the last element
    */
   Iterator end();
 
   /**
    * @brief Returns an iterator for the the beginning of the top-level DataMap.
-   * @return
+   * @return ConstIterator A const iterator to the first element in the top-level DataMap
    */
   ConstIterator begin() const;
 
   /**
    * @brief Returns an iterator for the the end of the top-level DataMap.
-   * @return
+   * @return ConstIterator A const iterator to the element following the last element
    */
   ConstIterator end() const;
 
@@ -828,43 +827,41 @@ public:
   /**
    * @brief Checks if all IDataArrays at the target paths have the same tuple count.
    * Returns false if any of the paths are not derived from IDataArray.
-   * @param dataPaths
-   * @return bool
+   * @param dataPaths Vector of DataPaths to validate
+   * @return nonstd::expected<void, std::string> Success if all have the same tuple count, or error message otherwise
    */
   nonstd::expected<void, std::string> validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
 
   /**
    * @brief Resets DataObject IDs starting at the provided value.
    * Because 0 is a reserved value, if the starting value is set to 0, this method will use 1 instead.
-   * @param startingId
+   * @param startingId The starting ID value for reassigning DataObject IDs
    */
   void resetIds(DataObject::IdType startingId);
 
   /**
    * @brief Outputs data graph in .dot file format
-   * @param outputStream the child class of ostream to output dot syntax to
-   * @return
+   * @param outputStream The output stream to write GraphViz dot syntax to
    */
   void exportHierarchyAsGraphViz(std::ostream& outputStream) const;
 
   /**
    * @brief Outputs data graph in console readable format
-   * @param outputStream the child class of ostream to output to
-   * @return
+   * @param outputStream The output stream to write the hierarchy text to
    */
   void exportHierarchyAsText(std::ostream& outputStream) const;
 
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
-   * @param rhs
-   * @return DataStructure&
+   * @param rhs The DataStructure to copy from
+   * @return DataStructure& Reference to this DataStructure
    */
   DataStructure& operator=(const DataStructure& rhs);
 
   /**
    * @brief Move assignment operator. The moved DataStructure's observers are retained.
-   * @param rhs
-   * @return DataStructure&
+   * @param rhs The DataStructure to move from
+   * @return DataStructure& Reference to this DataStructure
    */
   DataStructure& operator=(DataStructure&& rhs) noexcept;
 
@@ -873,7 +870,7 @@ public:
    * Because IDs are created to be unique, this should only be called when
    * importing data instead of on an existing DataStructure to avoid
    * overlapping values.
-   * @param nextDataId
+   * @param nextDataId The next ID value to use
    */
   void setNextId(DataObject::IdType nextDataId);
 
@@ -932,60 +929,60 @@ protected:
 
   /**
    * @brief Adds the DataObject to the list of known DataObjects if it is missing.
-   * @param dataObject
+   * @param dataObject Shared pointer to the DataObject to track
    */
   void trackDataObject(const std::shared_ptr<DataObject>& dataObject);
 
   /**
    * @brief Inserts the provided DataObject into the root DataMap.
-   * @param dataObject
-   * @return bool
+   * @param dataObject Shared pointer to the DataObject to insert
+   * @return bool True if insertion succeeded, false otherwise
    */
   bool insertIntoRoot(const std::shared_ptr<DataObject>& dataObject);
 
   /**
    * @brief Inserts the provided DataObject under the target parent group.
-   * @param dataObject
-   * @param parentGroup
-   * @return bool
+   * @param dataObject Shared pointer to the DataObject to insert
+   * @param parentGroup Pointer to the parent BaseGroup
+   * @return bool True if insertion succeeded, false otherwise
    */
   bool insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup);
 
   /**
    * @brief Applies a new pointer to the DataObject at a specified ID. Removes
    * the data from the DataMap if no DataObject was provided.
-   * @param identifier
-   * @param dataObject
+   * @param identifier The ID of the DataObject
+   * @param dataObject Shared pointer to the DataObject to set
    */
   void setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject);
 
 private:
   /**
    * @brief Inserts the target DataObject to the top of the DataStructure.
-   * @param obj
-   * @return
+   * @param obj Shared pointer to the DataObject to insert
+   * @return bool True if insertion succeeded, false otherwise
    */
   bool insertTopLevel(const std::shared_ptr<DataObject>& obj);
 
   /**
    * @brief Removes the specified DataObject from the top of the DataStructure.
-   * @param data
-   * @return
+   * @param data Pointer to the DataObject to remove
+   * @return bool True if removal succeeded, false otherwise
    */
   bool removeTopLevel(DataObject* data);
 
   /**
    * @brief Removes the specified DataObject from the entire DataStructure.
-   * @param data
-   * @return bool
+   * @param data Pointer to the DataObject to remove
+   * @return bool True if removal succeeded, false otherwise
    */
   bool removeData(DataObject* data);
 
   /**
    * @brief Called when a DataObject is deleted from the DataStructure. This
    * notifies observers to the change.
-   * @param identifier
-   * @param name
+   * @param identifier The ID of the deleted DataObject
+   * @param name The name of the deleted DataObject
    */
   void dataDeleted(DataObject::IdType identifier, const std::string& name);
 
@@ -998,26 +995,24 @@ private:
   /**
    * @brief The recursive function to parse graph and dump names to and output stream in
    * dot file syntax
-   * @param outputStream ostream to write to
-   * @param paths list of paths to parse
-   * @param parent name of the calling parent to output
-   * @return
+   * @param outputStream The output stream to write to
+   * @param paths Vector of DataPaths to parse recursively
+   * @param parent Name of the calling parent to output
    */
   void recurseHierarchyToGraphViz(std::ostream& outputStream, const std::vector<DataPath> paths, const std::string& parent) const;
 
   /**
    * @brief The recursive function to parse graph and dump names to and output stream in
    * readable syntax
-   * @param outputStream ostream to write to
-   * @param paths list of paths to parse
-   * @param indent the indent for the heirarchy
-   * @return
+   * @param outputStream The output stream to write to
+   * @param paths Vector of DataPaths to parse recursively
+   * @param indent The indentation string for the hierarchy
    */
   void recurseHierarchyToText(std::ostream& outputStream, const std::vector<DataPath> paths, std::string indent) const;
 
   /**
    * @brief Notifies observers to the provided message.
-   * @param msg
+   * @param msg Shared pointer to the message to send to observers
    */
   void notify(const std::shared_ptr<AbstractDataStructureMessage>& msg);
 

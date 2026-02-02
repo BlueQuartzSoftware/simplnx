@@ -17,6 +17,9 @@ class SIMPLNX_EXPORT EdgeGeomIO : public INodeGeom1dIO
 public:
   using data_type = EdgeGeom;
 
+  /**
+   * @brief Default constructor.
+   */
   EdgeGeomIO();
   ~EdgeGeomIO() noexcept override;
 
@@ -34,6 +37,13 @@ public:
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& geomName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
+  /**
+   * @brief Finishes importing EdgeGeom data after the geometry has been created.
+   * @param dataStructure The DataStructure containing the imported geometry
+   * @param dataPath The path to the imported EdgeGeom
+   * @param dataStructureGroup The HDF5 group containing the geometry data
+   * @return Result<> Result with any errors or warnings
+   */
   Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override;
 
   /**
@@ -50,12 +60,23 @@ public:
    * @brief Attempts to write the DataObject to HDF5.
    * Returns an error if the DataObject cannot be cast to EdgeGeom.
    * Otherwise, this method returns writeData(...)
-   * Return Result<>
+   * @param dataStructureWriter
+   * @param dataObject
+   * @param parentWriter
+   * @return Result<>
    */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
 
+  /**
+   * @brief Returns the DataObject::Type for this IO class.
+   * @return DataObject::Type The type identifier
+   */
   DataObject::Type getDataType() const override;
 
+  /**
+   * @brief Returns the DataObject type name as a string for this IO class.
+   * @return std::string The type name
+   */
   std::string getTypeName() const override;
 
   EdgeGeomIO(const EdgeGeomIO& other) = delete;

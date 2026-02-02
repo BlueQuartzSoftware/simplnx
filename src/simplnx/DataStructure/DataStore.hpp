@@ -523,11 +523,19 @@ public:
     return std::make_unique<DataStore<T>>(this->getTupleShape(), this->getComponentShape(), static_cast<T>(0));
   }
 
+  /**
+   * @brief Creates a span view over the data store's contents.
+   * @return nonstd::span<T> A span providing access to the data
+   */
   nonstd::span<T> createSpan()
   {
     return {data(), this->getSize()};
   }
 
+  /**
+   * @brief Creates a const span view over the data store's contents.
+   * @return nonstd::span<const T> A const span providing read-only access to the data
+   */
   nonstd::span<const T> createSpan() const
   {
     return {data(), this->getSize()};
@@ -589,6 +597,11 @@ public:
     return std::make_unique<DataStore<T>>(std::move(dataWrapper), this->getTupleShape(), this->getComponentShape());
   }
 
+  /**
+   * @brief Returns the number of chunks used to store the data.
+   * For in-memory DataStore, this is always 1.
+   * @return uint64 The number of chunks (always 1 for in-memory storage)
+   */
   uint64 getNumberOfChunks() const override
   {
     return 1;

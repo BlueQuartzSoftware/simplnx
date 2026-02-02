@@ -15,6 +15,9 @@ namespace HDF5
 class SIMPLNX_EXPORT BaseGroupIO : public IDataIO
 {
 public:
+  /**
+   * @brief Default constructor.
+   */
   BaseGroupIO();
   virtual ~BaseGroupIO() noexcept;
 

@@ -20,35 +20,39 @@ public:
 
   ~INodeGeometry3D() noexcept override = default;
 
+  /**
+   * @brief Sets the ID of the polyhedron list array.
+   * @param polyListId The optional ID of the polyhedron list array
+   */
   void setPolyhedronListId(const OptionalId& polyListId);
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a pointer to the polyhedron list array.
+   * @return SharedFaceList* Pointer to the polyhedron list, or nullptr if not available
    */
   SharedFaceList* getPolyhedra();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a const pointer to the polyhedron list array.
+   * @return const SharedFaceList* Const pointer to the polyhedron list, or nullptr if not available
    */
   const SharedFaceList* getPolyhedra() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a reference to the polyhedron list array.
+   * @return SharedFaceList& Reference to the polyhedron list
    */
   SharedFaceList& getPolyhedraRef();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns a const reference to the polyhedron list array.
+   * @return const SharedFaceList& Const reference to the polyhedron list
    */
   const SharedFaceList& getPolyhedraRef() const;
 
   /**
-   * @brief
-   * @param polyhedra
+   * @brief Sets the internal reference to the polyhedron list.
+   * @param polyhedra The polyhedron list array to use
    */
   void setPolyhedraList(const SharedFaceList& polyhedra);
 
@@ -58,6 +62,10 @@ public:
    */
   void resizePolyhedraList(usize size);
 
+  /**
+   * @brief Returns the optional ID of the polyhedra data AttributeMatrix.
+   * @return OptionalId The polyhedra data ID if it exists
+   */
   OptionalId getPolyhedraDataId() const;
 
   /**
@@ -81,14 +89,14 @@ public:
   void deleteFaces();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the optional ID of the unshared faces array.
+   * @return const std::optional<IdType>& The unshared faces ID if it exists
    */
   const std::optional<IdType>& getUnsharedFacesId() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Sets the ID of the unshared faces array.
+   * @param id The optional ID of the unshared faces array
    */
   void setUnsharedFacedId(const OptionalId& id);
 
@@ -114,27 +122,27 @@ public:
 
   /**
    * @brief Returns the number of vertices in the cell.
-   * @return
+   * @return usize The number of vertices per cell
    */
   virtual usize getNumberOfVerticesPerCell() const = 0;
 
   /**
-   * @brief
-   * @param tetId
+   * @brief Sets the vertex IDs making up the specified cell.
+   * @param tetId The index of the cell to modify
    * @param vertexIds The index into the shared vertex list of each vertex
    */
   void setCellPointIds(usize tetId, nonstd::span<usize> vertexIds);
 
   /**
-   * @brief
-   * @param tetId
+   * @brief Returns the vertices that make up the specified cell.
+   * @param tetId The index of the cell to query
    * @param vertexIds The index into the shared vertex list of each vertex
    */
   void getCellPointIds(usize tetId, nonstd::span<usize> vertexIds) const;
 
   /**
-   * @brief
-   * @param tetId
+   * @brief Returns the vertex coordinates for a specified cell.
+   * @param tetId The index of the cell to query
    * @param coords The coordinates of each vertex
    */
   void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const;
@@ -145,52 +153,56 @@ public:
    */
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the DataStructure unique ID of the polyhedron list array.
+   * @return const std::optional<IdType>& The polyhedron list array ID if it exists
    */
   const std::optional<IdType>& getPolyhedronListId() const;
 
+  /**
+   * @brief Sets the ID of the polyhedra data AttributeMatrix.
+   * @param polyDataId The optional ID of the polyhedra data AttributeMatrix
+   */
   void setPolyhedraDataId(const OptionalId& polyDataId);
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the DataStructure unique ID of the polyhedra AttributeMatrix.
+   * @return const std::optional<IdType>& The polyhedra AttributeMatrix ID if it exists
    */
   const std::optional<IdType>& getPolyhedraAttributeMatrixId() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each polyhedron.
+   * @return AttributeMatrix* Pointer to the polyhedra AttributeMatrix, or nullptr if not available
    */
   AttributeMatrix* getPolyhedraAttributeMatrix();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each polyhedron.
+   * @return const AttributeMatrix* Const pointer to the polyhedra AttributeMatrix, or nullptr if not available
    */
   const AttributeMatrix* getPolyhedraAttributeMatrix() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each polyhedron.
+   * @return AttributeMatrix& Reference to the polyhedra AttributeMatrix
    */
   AttributeMatrix& getPolyhedraAttributeMatrixRef();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each polyhedron.
+   * @return const AttributeMatrix& Const reference to the polyhedra AttributeMatrix
    */
   const AttributeMatrix& getPolyhedraAttributeMatrixRef() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the DataPath to the AttributeMatrix for the polyhedron data.
+   * @return DataPath The path to the polyhedra AttributeMatrix
    */
   DataPath getPolyhedronAttributeMatrixDataPath() const;
 
   /**
-   * @brief
-   * @param attributeMatrix
+   * @brief Sets the Attribute Matrix for the data assigned to the polyhedra.
+   * @param attributeMatrix The AttributeMatrix to use for polyhedra data
    */
   void setPolyhedraAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
@@ -201,12 +213,33 @@ public:
   Result<> validate() const override;
 
 protected:
+  /**
+   * @brief Constructs an INodeGeometry3D with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   */
   INodeGeometry3D(DataStructure& dataStructure, std::string name);
 
+  /**
+   * @brief Constructs an INodeGeometry3D with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
+   */
   INodeGeometry3D(DataStructure& dataStructure, std::string name, IdType importId);
 
+  /**
+   * @brief Creates a new shared quad list with the specified number of quads.
+   * @param numQuads The number of quads to allocate space for
+   * @return SharedQuadList* Pointer to the created shared quad list
+   */
   SharedQuadList* createSharedQuadList(usize numQuads);
 
+  /**
+   * @brief Creates a new shared triangle list with the specified number of triangles.
+   * @param numTris The number of triangles to allocate space for
+   * @return SharedTriList* Pointer to the created shared triangle list
+   */
   SharedTriList* createSharedTriList(usize numTris);
 
   /**

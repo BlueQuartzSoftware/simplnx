@@ -9,7 +9,7 @@ namespace nx::core
 {
 /**
  * @class TriangleGeom
- * @brief
+ * @brief Represents a 2D triangular geometry consisting of vertices connected by triangular faces.
  */
 class SIMPLNX_EXPORT TriangleGeom : public INodeGeometry2D
 {
@@ -26,33 +26,33 @@ public:
   static inline constexpr StringLiteral k_TypeName = "TriangleGeom";
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param parentId = {}
-   * @return TriangleGeom*
+   * @brief Creates a new TriangleGeom in the specified DataStructure.
+   * @param dataStructure The DataStructure to create the TriangleGeom in
+   * @param name The name for the new TriangleGeom
+   * @param parentId Optional parent object ID to insert the TriangleGeom under
+   * @return TriangleGeom* Pointer to the created TriangleGeom, or nullptr if creation failed
    */
   static TriangleGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param parentId = {}
-   * @return TriangleGeom*
+   * @brief Imports a TriangleGeom into the specified DataStructure with a given import ID.
+   * @param dataStructure The DataStructure to import the TriangleGeom into
+   * @param name The name for the imported TriangleGeom
+   * @param importId The ID to use for this imported object
+   * @param parentId Optional parent object ID to insert the TriangleGeom under
+   * @return TriangleGeom* Pointer to the imported TriangleGeom, or nullptr if import failed
    */
   static TriangleGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param other
+   * @brief Copy constructor.
+   * @param other The TriangleGeom to copy from
    */
   TriangleGeom(const TriangleGeom& other) = default;
 
   /**
-   * @brief
-   * @param other
+   * @brief Move constructor.
+   * @param other The TriangleGeom to move from
    */
   TriangleGeom(TriangleGeom&& other) = default;
 
@@ -86,32 +86,33 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a shallow copy of this TriangleGeom.
+   * @return DataObject* Pointer to the shallow copy
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a deep copy of this TriangleGeom at the specified path.
+   * @param copyPath The path where the deep copy should be created
+   * @return std::shared_ptr<DataObject> Shared pointer to the deep copy
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   *
-   * @return
+   * @brief Returns the number of vertices per edge (always 2 for TriangleGeom).
+   * @return usize The number of vertices per edge
    */
   usize getNumberOfVerticesPerEdge() const override;
 
   /**
-   * @brief
-   * @return usize
+   * @brief Returns the number of triangles in this geometry.
+   * @return usize The number of cells
    */
   usize getNumberOfCells() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the number of vertices per face (always 3 for TriangleGeom).
+   * @return usize The number of vertices per face
    */
   usize getNumberOfVerticesPerFace() const override;
 
@@ -151,16 +152,15 @@ public:
   Result<> findElementCentroids(bool recalculate) override;
 
   /**
-   * @brief
-   * @param pCoords
-   * @return Point3D<float64>
+   * @brief Returns the parametric center of a triangular element.
+   * @return Point3D<float64> The parametric center coordinates
    */
   Point3D<float64> getParametricCenter() const override;
 
   /**
-   * @brief
-   * @param pCoords
-   * @param shape
+   * @brief Calculates shape functions at the given parametric coordinates.
+   * @param pCoords The parametric coordinates
+   * @param shape Output array to store the calculated shape function values
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
@@ -184,17 +184,17 @@ public:
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Constructs a TriangleGeom with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
    */
   TriangleGeom(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Constructs a TriangleGeom with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
    */
   TriangleGeom(DataStructure& dataStructure, std::string name, IdType importId);
 };

@@ -307,19 +307,41 @@ public:
     return std::make_unique<EmptyDataStore<T>>(this->getTupleShape(), this->getComponentShape());
   }
 
+  /**
+   * @brief Returns an error because EmptyDataStore cannot write binary files.
+   * @param absoluteFilePath The file path (unused)
+   * @return std::pair<int32, std::string> Error code and message
+   */
   std::pair<int32, std::string> writeBinaryFile(const std::string& absoluteFilePath) const override
   {
     return {-10175, fmt::format("EmptyDataStore cannot read or write files", absoluteFilePath)};
   }
+
+  /**
+   * @brief Returns an error because EmptyDataStore cannot write binary files.
+   * @param outputStream The output stream (unused)
+   * @return std::pair<int32, std::string> Error code and message
+   */
   std::pair<int32, std::string> writeBinaryFile(std::ostream& outputStream) const override
   {
     return {-10175, fmt::format("EmptyDataStore cannot read or write files")};
   }
 
+  /**
+   * @brief Returns an error because EmptyDataStore cannot read HDF5 data.
+   * @param dataset The HDF5 dataset (unused)
+   * @return Result<> Error result
+   */
   Result<> readHdf5(const HDF5::DatasetIO& dataset) override
   {
     return MakeErrorResult(-42350, "Cannot read data into an EmptyDataStore");
   }
+
+  /**
+   * @brief Returns an error because EmptyDataStore cannot write HDF5 data.
+   * @param dataset The HDF5 dataset (unused)
+   * @return Result<> Error result
+   */
   Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
   {
     return MakeErrorResult(-42350, "Cannot write data from an EmptyDataStore");
@@ -335,14 +357,30 @@ public:
     return nullptr;
   }
 
+  /**
+   * @brief Returns empty bounds because EmptyDataStore has no chunks.
+   * @param flatChunkIndex The chunk index (unused)
+   * @return ShapeType Empty shape vector
+   */
   ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
   {
     return {};
   }
+
+  /**
+   * @brief Returns empty bounds because EmptyDataStore has no chunks.
+   * @param flatChunkIndex The chunk index (unused)
+   * @return ShapeType Empty shape vector
+   */
   ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
   {
     return {};
   }
+
+  /**
+   * @brief Returns the number of chunks in the EmptyDataStore.
+   * @return uint64 Always returns 0 because EmptyDataStore has no data
+   */
   uint64 getNumberOfChunks() const override
   {
     return 0;

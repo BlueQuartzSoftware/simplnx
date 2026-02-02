@@ -231,17 +231,17 @@ public:
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Constructs a GridMontage with the specified name.
+   * @param dataStructure The DataStructure this montage belongs to
+   * @param name The name for this montage
    */
   GridMontage(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Constructs a GridMontage with the specified name and import ID.
+   * @param dataStructure The DataStructure this montage belongs to
+   * @param name The name for this montage
+   * @param importId The ID to use for this imported object
    */
   GridMontage(DataStructure& dataStructure, std::string name, IdType importId);
 

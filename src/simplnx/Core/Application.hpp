@@ -45,12 +45,19 @@ public:
    * replaced when a new nx::core::Application is created, replacing the
    * previous value. If the current Application is destroyed, this method will
    * return nullptr until a new Application is created.
-   * @return std::shared_ptr<Application>
+   * @return Shared pointer to the current Application instance, or nullptr if none exists
    */
   static std::shared_ptr<Application> Instance();
 
+  /**
+   * @brief Gets the current Application instance, or creates a new one if none exists.
+   * @return Shared pointer to the Application instance
+   */
   static std::shared_ptr<Application> GetOrCreateInstance();
 
+  /**
+   * @brief Deletes the current Application instance and sets it to nullptr.
+   */
   static void DeleteInstance();
 
   /**
@@ -72,23 +79,23 @@ public:
   FilterList* getFilterList() const;
 
   /**
-   * @brief Convenience method to return the loaded plugins
-   * @return
+   * @brief Convenience method to return the loaded plugins.
+   * @return Unordered set of pointers to all loaded plugins
    */
   std::unordered_set<AbstractPlugin*> getPluginList() const;
 
   /**
    * @brief Returns the loaded plugin with the given uuid.
    * Returns nullptr if no match.
-   * @param pluginName
-   * @return
+   * @param uuid The unique identifier of the plugin to retrieve
+   * @return Pointer to the plugin if found, nullptr otherwise
    */
   const AbstractPlugin* getPlugin(const Uuid& uuid) const;
 
   /**
-   * @brief Returns a shared pointer to the application preferences.
+   * @brief Returns a pointer to the application preferences.
    * The application should be in charge of saving or loading values.
-   * @return Preferences
+   * @return Pointer to the Preferences object
    */
   Preferences* getPreferences();
 
@@ -112,10 +119,25 @@ public:
    */
   JsonPipelineBuilder* getPipelineBuilder() const;
 
+  /**
+   * @brief Returns the collection of data I/O managers.
+   * @return Shared pointer to the DataIOCollection
+   */
   std::shared_ptr<DataIOCollection> getIOCollection() const;
 
+  /**
+   * @brief Returns the I/O manager for the specified format.
+   * @param formatName The name of the data format
+   * @return Shared pointer to the IDataIOManager for the specified format
+   */
   std::shared_ptr<IDataIOManager> getIOManager(const std::string& formatName) const;
 
+  /**
+   * @brief Returns the I/O manager for the specified format, cast to the specified type.
+   * @tparam T The type to cast the I/O manager to
+   * @param formatName The name of the data format
+   * @return Shared pointer to the I/O manager cast to type T, or nullptr if cast fails
+   */
   template <typename T>
   std::shared_ptr<T> getIOManagerAs(const std::string& formatName) const
   {
@@ -135,21 +157,37 @@ public:
   std::filesystem::path getCurrentDir() const;
 
   /**
-   * @brief Returns the Simplnx filter UUID [v4] from the SIMPL filter UUID [v5]
-   * @return std::optional<Uuid>
+   * @brief Returns the Simplnx filter UUID [v4] from the SIMPL filter UUID [v5].
+   * @param simplUuid The SIMPL filter UUID to convert
+   * @return Optional Simplnx UUID if a mapping exists, std::nullopt otherwise
    */
   std::optional<Uuid> getSimplnxUuid(const Uuid& simplUuid);
 
   /**
-   * @brief Returns the SIMPL filter UUID(s) [v5] from the Simplnx filter UUID [v4]
-   * @return std::optional<std::vector<Uuid>>
+   * @brief Returns the SIMPL filter UUID(s) [v5] from the Simplnx filter UUID [v4].
+   * @param simplnxUuid The Simplnx filter UUID to convert
+   * @return Vector of SIMPL UUIDs that map to the given Simplnx UUID (may be empty)
    */
   std::vector<Uuid> getSimplUuid(const Uuid& simplnxUuid);
 
+  /**
+   * @brief Registers a data type with a name for lookup.
+   * @param type The DataObject type enumeration value
+   * @param name The string name to associate with the type
+   */
   void addDataType(DataObject::Type type, const std::string& name);
 
+  /**
+   * @brief Retrieves the DataObject type associated with a given name.
+   * @param name The string name of the data type
+   * @return The DataObject type enumeration value
+   */
   DataObject::Type getDataType(const std::string& name) const;
 
+  /**
+   * @brief Returns a list of all available data store format names.
+   * @return Vector of strings representing the available data store formats
+   */
   std::vector<std::string> getDataStoreFormats() const;
 
 protected:
@@ -163,22 +201,29 @@ protected:
    * @brief Constructs an Application accepting a set of command line arguments.
    *
    * The current Application instance is replaced with the constructed Application.
-   * @param argc
-   * @param argv
+   * @param argc Number of command line arguments
+   * @param argv Array of command line argument strings
    */
   Application(int argc, char** argv);
 
+  /**
+   * @brief Initializes the application components and sets up default configurations.
+   * @return Result indicating success or failure of initialization
+   */
   Result<> initialize();
 
 private:
+  /**
+   * @brief Initializes the default data type mappings.
+   */
   void initDefaultDataTypes();
 
   /**
    * @brief Loads the plugin at the specified filepath and updates the
    * FilterList with the new IFilters.
-   * @param path
-   * @param verbose
-   * @return Result<> indicating success or failure
+   * @param path Filesystem path to the plugin library
+   * @param verbose If true, outputs verbose loading information
+   * @return Result indicating success or failure of plugin loading
    */
   Result<> loadPlugin(const std::filesystem::path& path, bool verbose = false);
 

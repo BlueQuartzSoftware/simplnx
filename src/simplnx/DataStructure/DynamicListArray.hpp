@@ -38,10 +38,10 @@ public:
    *
    * Returns a pointer to the created DynamicListArray if the operation succeeded.
    * Returns nullptr otherwise.
-   * @param dataStructure
-   * @param name
-   * @param parentId = {}
-   * @return DynamicListArray*
+   * @param dataStructure The DataStructure to insert the new DynamicListArray into
+   * @param name The name of the new DynamicListArray
+   * @param parentId Optional ID of the parent DataObject
+   * @return DynamicListArray* Pointer to the created DynamicListArray, or nullptr if creation failed
    */
   static DynamicListArray* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
   {
@@ -61,11 +61,11 @@ public:
    *
    * Returns a pointer to the created DynamicListArray if the operation succeeded.
    * Returns nullptr otherwise.
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param parentId = {}
-   * @return DynamicListArray*
+   * @param dataStructure The DataStructure to insert the new DynamicListArray into
+   * @param name The name of the new DynamicListArray
+   * @param importId The ID to use for the imported DynamicListArray
+   * @param parentId Optional ID of the parent DataObject
+   * @return DynamicListArray* Pointer to the created DynamicListArray, or nullptr if import failed
    */
   static DynamicListArray* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId)
   {
@@ -81,7 +81,7 @@ public:
    * @brief Creates a copy of the specified DynamicListArray. This copy is not
    * added to the DataStructure. The caller is responsible for deleting the
    * DynamicListArray.
-   * @param other
+   * @param other The DynamicListArray to copy from
    */
   DynamicListArray(const DynamicListArray& other)
   : DataObject(other)
@@ -98,7 +98,7 @@ public:
   /**
    * @brief Creates a new DynamicListArray and moves values from the target
    * object. The caller is responsible for deleting the created DynamicListArray.
-   * @param other
+   * @param other The DynamicListArray to move from
    */
   DynamicListArray(DynamicListArray&& other)
   : DataObject(std::move(other))
@@ -107,9 +107,9 @@ public:
   {
   }
 
-  // -----------------------------------------------------------------------------
-  //
-  // -----------------------------------------------------------------------------
+  /**
+   * @brief Destroys the DynamicListArray and deallocates all memory for element lists.
+   */
   ~DynamicListArray() override
   {
     // This makes sure we deallocate any lists that have been created
@@ -127,6 +127,10 @@ public:
     }
   }
 
+  /**
+   * @brief Returns the DataObject type as an enum value.
+   * @return DataObject::Type The type enum value for DynamicListArray
+   */
   DataObject::Type getDataObjectType() const override
   {
     return Type::DynamicListArray;
@@ -153,7 +157,8 @@ public:
   /**
    * @brief Creates a copy of the object. The caller is responsible for
    * deleting the returned value.
-   * @return DataObject*
+   * @param copyPath The path where the deep copy should be placed
+   * @return std::shared_ptr<DataObject> Shared pointer to the deep copied DynamicListArray, or nullptr if copy failed
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
@@ -188,7 +193,7 @@ public:
 
   /**
    * @brief The DynamicListArray cannot be shallow copied.
-   * @return DataObject*
+   * @return DataObject* A new DynamicListArray that is a deep copy of this object
    */
   DataObject* shallowCopy() override
   {
@@ -196,10 +201,10 @@ public:
   }
 
   /**
-   * @brief insertCellReference
-   * @param pointId
-   * @param pos
-   * @param cellId
+   * @brief Inserts a cell reference at the specified position in the element list.
+   * @param pointId The point identifier
+   * @param pos The position in the element list
+   * @param cellId The cell identifier to insert
    */
   inline void insertCellReference(usize pointId, usize pos, usize cellId)
   {
@@ -217,11 +222,11 @@ public:
   }
 
   /**
-   * @brief setElementList
-   * @param pointId
-   * @param numCells
-   * @param data
-   * @return bool
+   * @brief Sets the element list for a given point, allocating memory and copying data.
+   * @param pointId The point identifier
+   * @param numCells The number of cells in the element list
+   * @param data Pointer to the cell data to copy
+   * @return bool True if the element list was set successfully, false otherwise
    */
   bool setElementList(usize pointId, T numCells, K* data)
   {
@@ -243,10 +248,10 @@ public:
   }
 
   /**
-   * @brief setElementList
-   * @param pointId
-   * @param list
-   * @return bool
+   * @brief Sets the element list for a given point from an ElementList structure.
+   * @param pointId The point identifier
+   * @param list Reference to the ElementList containing cell data
+   * @return bool True if the element list was set successfully, false otherwise
    */
   bool setElementList(usize pointId, ElementList& list)
   {
@@ -290,9 +295,9 @@ public:
   }
 
   /**
-   * @brief deserializeLinks
-   * @param buffer
-   * @param numElements
+   * @brief Deserializes element list links from a buffer.
+   * @param buffer Vector containing the serialized link data
+   * @param numElements The number of elements to deserialize
    */
   void deserializeLinks(std::vector<uint8>& buffer, usize numElements)
   {
@@ -315,8 +320,8 @@ public:
   }
 
   /**
-   * @brief
-   * @param linkCounts
+   * @brief Allocates element lists based on the provided link counts.
+   * @param linkCounts Container holding the number of cells for each element list
    */
   template <typename Container>
   void allocateLists(const Container& linkCounts)
@@ -334,9 +339,9 @@ public:
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Constructs a DynamicListArray with the given DataStructure and name.
+   * @param dataStructure The DataStructure that will contain this DynamicListArray
+   * @param name The name of the DynamicListArray
    */
   DynamicListArray(DataStructure& dataStructure, std::string name)
   : DataObject(dataStructure, std::move(name))
@@ -344,19 +349,21 @@ protected:
   }
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Constructs a DynamicListArray with the given DataStructure, name, and import ID.
+   * @param dataStructure The DataStructure that will contain this DynamicListArray
+   * @param name The name of the DynamicListArray
+   * @param importId The ID to use when importing this DynamicListArray
    */
   DynamicListArray(DataStructure& dataStructure, std::string name, IdType importId)
   : DataObject(dataStructure, std::move(name), importId)
   {
   }
 
-  //----------------------------------------------------------------------------
-  // This will allocate memory to hold all the NeighborList structures where each
-  // structure is initialized to Zero Entries and a nullptr Pointer
+  /**
+   * @brief Allocates memory to hold all the ElementList structures where each
+   * structure is initialized to zero entries and a nullptr pointer.
+   * @param size The number of ElementList structures to allocate
+   */
   void allocate(usize size)
   {
     static typename DynamicListArray<T, K>::ElementList linkInit = {0, nullptr};

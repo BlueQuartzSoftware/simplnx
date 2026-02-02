@@ -16,6 +16,9 @@ class SIMPLNX_EXPORT GridMontageIO : public BaseGroupIO
 public:
   using data_type = GridMontage;
 
+  /**
+   * @brief Default constructor.
+   */
   GridMontageIO();
   ~GridMontageIO() noexcept override;
 
@@ -40,6 +43,7 @@ public:
    * @param montage
    * @param parentGroup
    * @param importable
+   * @return Result<>
    */
   Result<> writeData(DataStructureWriter& dataStructureWriter, const GridMontage& montage, group_writer_type& parentGroup, bool importable) const;
 
@@ -47,12 +51,23 @@ public:
    * @brief Attempts to write the DataObject to HDF5.
    * Returns an error if the DataObject cannot be cast to a GridMontage.
    * Otherwise, this method returns writeData(...)
-   * Return Result<>
+   * @param dataStructureWriter
+   * @param dataObject
+   * @param parentWriter
+   * @return Result<>
    */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
 
+  /**
+   * @brief Returns the DataObject::Type for this IO class.
+   * @return DataObject::Type The type identifier
+   */
   DataObject::Type getDataType() const override;
 
+  /**
+   * @brief Returns the DataObject type name as a string for this IO class.
+   * @return std::string The type name
+   */
   std::string getTypeName() const override;
 
   GridMontageIO(const GridMontageIO& other) = delete;

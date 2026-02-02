@@ -7,7 +7,7 @@ namespace nx::core
 {
 /**
  * @class QuadGeom
- * @brief
+ * @brief Represents a 2D quadrilateral geometry consisting of vertices connected by quadrilateral faces.
  */
 class SIMPLNX_EXPORT QuadGeom : public INodeGeometry2D
 {
@@ -23,33 +23,33 @@ public:
   static inline constexpr StringLiteral k_EltCentroids = "Quad Centroids";
   static inline constexpr StringLiteral k_TypeName = "QuadGeom";
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param parentId = {}
-   * @return QuadGeom*
+   * @brief Creates a new QuadGeom in the specified DataStructure.
+   * @param dataStructure The DataStructure to create the QuadGeom in
+   * @param name The name for the new QuadGeom
+   * @param parentId Optional parent object ID to insert the QuadGeom under
+   * @return QuadGeom* Pointer to the created QuadGeom, or nullptr if creation failed
    */
   static QuadGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param parentId = {}
-   * @return QuadGeom*
+   * @brief Imports a QuadGeom into the specified DataStructure with a given import ID.
+   * @param dataStructure The DataStructure to import the QuadGeom into
+   * @param name The name for the imported QuadGeom
+   * @param importId The ID to use for this imported object
+   * @param parentId Optional parent object ID to insert the QuadGeom under
+   * @return QuadGeom* Pointer to the imported QuadGeom, or nullptr if import failed
    */
   static QuadGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param other
+   * @brief Copy constructor.
+   * @param other The QuadGeom to copy from
    */
   QuadGeom(const QuadGeom& other) = default;
 
   /**
-   * @brief
-   * @param other
+   * @brief Move constructor.
+   * @param other The QuadGeom to move from
    */
   QuadGeom(QuadGeom&& other) = default;
 
@@ -83,32 +83,33 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a shallow copy of this QuadGeom.
+   * @return DataObject* Pointer to the shallow copy
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a deep copy of this QuadGeom at the specified path.
+   * @param copyPath The path where the deep copy should be created
+   * @return std::shared_ptr<DataObject> Shared pointer to the deep copy
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   *
-   * @return
+   * @brief Returns the number of vertices per edge (always 2 for QuadGeom).
+   * @return usize The number of vertices per edge
    */
   usize getNumberOfVerticesPerEdge() const override;
 
   /**
-   * @brief
-   * @return usize
+   * @brief Returns the number of quadrilaterals in this geometry.
+   * @return usize The number of cells
    */
   usize getNumberOfCells() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the number of vertices per face (always 4 for QuadGeom).
+   * @return usize The number of vertices per face
    */
   usize getNumberOfVerticesPerFace() const override;
 
@@ -148,15 +149,15 @@ public:
   Result<> findElementCentroids(bool recalculate) override;
 
   /**
-   * @brief
-   * @return Point3D<float64>
+   * @brief Returns the parametric center of a quadrilateral element.
+   * @return Point3D<float64> The parametric center coordinates
    */
   Point3D<float64> getParametricCenter() const override;
 
   /**
-   * @brief
-   * @param pCoords
-   * @param shape
+   * @brief Calculates shape functions at the given parametric coordinates.
+   * @param pCoords The parametric coordinates
+   * @param shape Output array to store the calculated shape function values
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
@@ -180,17 +181,17 @@ public:
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Constructs a QuadGeom with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
    */
   QuadGeom(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Constructs a QuadGeom with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
    */
   QuadGeom(DataStructure& dataStructure, std::string name, IdType importId);
 };

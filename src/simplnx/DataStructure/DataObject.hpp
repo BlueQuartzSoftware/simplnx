@@ -82,13 +82,13 @@ public:
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return
+   * @return The DataObject type enumeration value
    */
   virtual Type getDataObjectType() const;
 
   /**
    * @brief Returns true if this object is derived from BaseGroup.
-   * @return bool
+   * @return True if the object is a group, false otherwise
    */
   virtual bool isGroup() const;
 
@@ -115,36 +115,41 @@ public:
 
   /**
    * @brief Returns true if the given string is a valid name for a DataObject.
-   * @param name
-   * @return
+   * @param name The string to validate as a DataObject name
+   * @return True if the name is valid, false otherwise
    */
   static bool IsValidName(std::string_view name);
 
+  /**
+   * @brief Converts a set of DataObject types to a set of their string representations.
+   * @param dataObjectTypes Set of DataObject type enumerations
+   * @return Set of strings representing the DataObject type names
+   */
   static std::set<std::string> StringListFromDataObjectType(const std::set<Type>& dataObjectTypes);
 
   /**
    * @brief Copy constructor.
-   * @param rhs
+   * @param rhs The DataObject to copy from
    */
   DataObject(const DataObject& rhs);
 
   /**
    * @brief Move constructor.
-   * @param rhs
+   * @param rhs The DataObject to move from
    */
   DataObject(DataObject&& rhs);
 
   /**
-   * @brief Copy assignment.
-   * @param rhs
-   * @return
+   * @brief Copy assignment operator.
+   * @param rhs The DataObject to copy from
+   * @return Reference to this DataObject after assignment
    */
   DataObject& operator=(const DataObject& rhs);
 
   /**
-   * @brief Move assignment.
-   * @param rhs
-   * @return
+   * @brief Move assignment operator.
+   * @param rhs The DataObject to move from
+   * @return Reference to this DataObject after assignment
    */
   DataObject& operator=(DataObject&& rhs) noexcept;
 
@@ -155,78 +160,79 @@ public:
 
   /**
    * @brief Returns a deep copy of the DataObject.
-   * @return DataObject*
+   * @param copyPath The DataPath where the deep copy will be placed
+   * @return Shared pointer to the deep copy of the DataObject
    */
   virtual std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) = 0;
 
   /**
    * @brief Returns a shallow copy of the DataObject.
-   * @return DataObject*
+   * @return Pointer to the shallow copy of the DataObject
    */
   virtual DataObject* shallowCopy() = 0;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
+   * @return String representation of the DataObject type name
    */
   virtual std::string getTypeName() const = 0;
 
   /**
    * @brief Returns the DataObject's ID value.
-   * @return IdType
+   * @return The unique identifier for this DataObject
    */
   IdType getId() const;
 
   /**
    * @brief Returns a pointer to the DataStructure this DataObject belongs to.
-   * @return DataStructure*
+   * @return Pointer to the owning DataStructure
    */
   DataStructure* getDataStructure();
 
   /**
    * @brief Returns a read-only pointer to the DataStructure this DataObject
    * belongs to.
-   * @return const DataStructure*
+   * @return Const pointer to the owning DataStructure
    */
   const DataStructure* getDataStructure() const;
 
   /**
-   * @brief Returns a pointer to the DataStructure this DataObject belongs to.
-   * @return DataStructure&
+   * @brief Returns a reference to the DataStructure this DataObject belongs to.
+   * @return Reference to the owning DataStructure
    */
   DataStructure& getDataStructureRef();
 
   /**
-   * @brief Returns a read-only pointer to the DataStructure this DataObject
+   * @brief Returns a read-only reference to the DataStructure this DataObject
    * belongs to.
-   * @return const DataStructure&
+   * @return Const reference to the owning DataStructure
    */
   const DataStructure& getDataStructureRef() const;
 
   /**
    * @brief Returns the DataObject's name.
-   * @return std::string
+   * @return String containing the name of this DataObject
    */
   std::string getName() const;
 
   /**
    * @brief Checks and returns if the DataObject can be renamed to the provided
    * value.
-   * @param name
-   * @return bool
+   * @param name The new name to check for validity
+   * @return True if the DataObject can be renamed to the provided value, false otherwise
    */
   bool canRename(const std::string& name) const;
 
   /**
    * @brief Attempts to rename the DataObject to the provided value.
-   * @param name
-   * @return bool
+   * @param name The new name for the DataObject
+   * @return True if the rename operation succeeded, false otherwise
    */
   bool rename(const std::string& name);
 
   /**
    * @brief Returns a collection of the parent containers that store the DataObject.
-   * @return ParentCollectionType
+   * @return List of parent IDs that contain this DataObject
    */
   ParentCollectionType getParentIds() const;
 
@@ -237,22 +243,27 @@ public:
 
   /**
    * @brief Returns a vector of DataPaths to the object.
-   * @return std::vector<DataPath>
+   * @return Vector containing all DataPaths that reference this object
    */
   std::vector<DataPath> getDataPaths() const;
 
   /**
    * @brief Returns a reference to the object's Metadata.
-   * @return Metadata&
+   * @return Reference to the Metadata object
    */
   Metadata& getMetadata();
 
   /**
-   * @brief Returns a reference to the object's Metadata.
-   * @return const Metadata&
+   * @brief Returns a const reference to the object's Metadata.
+   * @return Const reference to the Metadata object
    */
   const Metadata& getMetadata() const;
 
+  /**
+   * @brief Checks if the DataObject has a parent at the specified path.
+   * @param parentPath The DataPath to check for parent relationship
+   * @return True if the specified path is a parent of this object, false otherwise
+   */
   bool hasParent(const DataPath& parentPath) const;
 
   /**
@@ -261,30 +272,34 @@ public:
    */
   virtual void flush() const;
 
+  /**
+   * @brief Calculates and returns the memory usage of this DataObject in bytes.
+   * @return Memory usage in bytes
+   */
   virtual uint64 memoryUsage() const;
 
 protected:
   /**
-   * @brief DataObject constructor takes a reference to the DataStructure and
+   * @brief Protected constructor takes a reference to the DataStructure and
    * object name.
-   * @param dataStructure
-   * @param name
+   * @param dataStructure The DataStructure that will own this DataObject
+   * @param name The name for the DataObject
    */
   DataObject(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief DataObject constructor takes a reference to the DataStructure,
+   * @brief Protected constructor takes a reference to the DataStructure,
    * object name, and object ID.
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @param dataStructure The DataStructure that will own this DataObject
+   * @param name The name for the DataObject
+   * @param importId The ID to assign to this DataObject
    */
   DataObject(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
    * @brief Updates the data ID for lookup within the DataStructure.
    * This method should only be called from within the DataStructure.
-   * @param newId
+   * @param newId The new ID value to assign to this DataObject
    */
   void setId(IdType newId);
 
@@ -308,36 +323,36 @@ protected:
    * target parent will take ownership of the added DataObject.
    *
    * Returns true if the operation succeeds. Returns false otherwise.
-   * @param dataStructure
-   * @param data
-   * @param parentId
-   * @return bool
+   * @param ds The DataStructure to add the object to
+   * @param data Shared pointer to the DataObject to add
+   * @param parentId Optional parent ID; if provided, object is added as a child to that parent
+   * @return True if the object was added successfully, false otherwise
    */
   static bool AttemptToAddObject(DataStructure& ds, const std::shared_ptr<DataObject>& data, const OptionalId& parentId);
 
   /**
    * @brief Marks the specified BaseGroup as a parent.
    * If this object is already parented to the given group, this function does nothing.
-   * @param parent
+   * @param parent Pointer to the BaseGroup to add as a parent
    */
   void addParent(BaseGroup* parent);
 
   /**
    * @brief Removes the specified parent.
-   * @param parent
+   * @param parent Pointer to the BaseGroup to remove as a parent
    */
   void removeParent(BaseGroup* parent);
 
   /**
    * @brief Replaces the specified parent with another BaseGroup.
-   * @param oldParent
-   * @param newParent
+   * @param oldParent Pointer to the BaseGroup to replace
+   * @param newParent Pointer to the new BaseGroup parent
    */
   void replaceParent(BaseGroup* oldParent, BaseGroup* newParent);
 
   /**
    * @brief Sets a new DataStructure for the DataObject.
-   * @param dataStructure
+   * @param dataStructure Pointer to the new DataStructure owner
    */
   virtual void setDataStructure(DataStructure* dataStructure);
 

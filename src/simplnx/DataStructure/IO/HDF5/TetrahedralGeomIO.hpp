@@ -13,6 +13,9 @@ class SIMPLNX_EXPORT TetrahedralGeomIO : public INodeGeom3dIO
 public:
   using data_type = TetrahedralGeom;
 
+  /**
+   * @brief Default constructor.
+   */
   TetrahedralGeomIO();
   ~TetrahedralGeomIO() noexcept override;
 
@@ -30,10 +33,17 @@ public:
   Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& geomName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
+  /**
+   * @brief Finishes importing TetrahedralGeom data after the geometry has been created.
+   * @param dataStructure The DataStructure containing the imported geometry
+   * @param dataPath The path to the imported TetrahedralGeom
+   * @param dataStructureGroup The HDF5 group containing the geometry data
+   * @return Result<> Result with any errors or warnings
+   */
   Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override;
 
   /**
-   * @brief Attempts to write an TetrahedralGeom to HDF5.
+   * @brief Attempts to write a TetrahedralGeom to HDF5.
    * @param dataStructureWriter
    * @param geometry
    * @param parentGroup
@@ -46,12 +56,23 @@ public:
    * @brief Attempts to write the DataObject to HDF5.
    * Returns an error if the DataObject cannot be cast to a TetrahedralGeom.
    * Otherwise, this method returns writeData(...)
-   * Return Result<>
+   * @param dataStructureWriter
+   * @param dataObject
+   * @param parentWriter
+   * @return Result<>
    */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
 
+  /**
+   * @brief Returns the DataObject::Type for this IO class.
+   * @return DataObject::Type The type identifier
+   */
   DataObject::Type getDataType() const override;
 
+  /**
+   * @brief Returns the DataObject type name as a string for this IO class.
+   * @return std::string The type name
+   */
   std::string getTypeName() const override;
 
   TetrahedralGeomIO(const TetrahedralGeomIO& other) = delete;

@@ -537,65 +537,75 @@ public:
 
   ~AbstractListStore() override = default;
 
+  /**
+   * @brief Creates a deep copy of this AbstractListStore.
+   * @return std::unique_ptr<AbstractListStore> Unique pointer to the deep copy
+   */
   virtual std::unique_ptr<AbstractListStore> deepCopy() const = 0;
 
   /**
-   * @brief addEntry
-   * @param grainId
-   * @param value
+   * @brief Adds a new entry to the list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to add the entry to
+   * @param value The value to add to the list
    */
   virtual void addEntry(int32 grainId, value_type value) = 0;
 
   /**
-   * @brief setList
-   * @param grainId
-   * @param neighborList
+   * @brief Sets the complete list for the specified grain/tuple index using a shared pointer to a vector.
+   * @param grainId The grain/tuple index to set the list for
+   * @param neighborList Shared pointer to the vector containing the list values
    */
   virtual void setList(int32 grainId, const shared_vector_type& neighborList) = 0;
 
   /**
-   * @brief setList
-   * @param grainId
-   * @param neighborList
+   * @brief Sets the complete list for the specified grain/tuple index using a vector.
+   * @param grainId The grain/tuple index to set the list for
+   * @param neighborList Vector containing the list values
    */
   virtual void setList(int32 grainId, const vector_type& neighborList) = 0;
 
   /**
-   * @brief getList
-   * @param grainId
-   * @return shared_vector_type
+   * @brief Returns a copy of the list for the specified grain/tuple.
+   * @param grainId The grain/tuple index to retrieve
+   * @return vector_type A copy of the list vector
    */
   virtual vector_type getList(int32 grainId) const = 0;
 
   /**
-   * @brief copyOfList
-   * @param grainId
-   * @return vector_type
+   * @brief Returns a deep copy of the list for the specified grain/tuple.
+   * @param grainId The grain/tuple index to copy
+   * @return vector_type A deep copy of the list vector
    */
   virtual vector_type copyOfList(int32 grainId) const = 0;
 
   /**
-   * @brief getValue
-   * @param grainId
-   * @param index
-   * @param ok
-   * @return T
+   * @brief Retrieves a specific value from a grain's list.
+   * @param grainId The grain/tuple index to retrieve from
+   * @param index The element index within the grain's list
+   * @param ok Output parameter set to true if the value was successfully retrieved, false otherwise
+   * @return T The value at the specified position
    */
   virtual T getValue(int32 grainId, int32 index, bool& ok) const = 0;
 
+  /**
+   * @brief Sets the value at a specific position within a grain's list.
+   * @param grainId The grain/tuple index
+   * @param index The element index within the grain's list
+   * @param value The value to set
+   */
   virtual void setValue(int32 grainId, usize index, T value) = 0;
 
   /**
-   * @brief operator []
-   * @param grainId
-   * @return vector_type&
+   * @brief Array subscript operator to access the list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to access
+   * @return vector_type A copy of the list at the specified index
    */
   virtual vector_type operator[](int32 grainId) const = 0;
 
   /**
-   * @brief operator []
-   * @param grainId
-   * @return vector_type&
+   * @brief Array subscript operator to access the list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to access
+   * @return vector_type A copy of the list at the specified index
    */
   virtual vector_type operator[](usize grainId) const = 0;
 
@@ -613,44 +623,88 @@ public:
    */
   virtual vector_type at(usize grainId) const = 0;
 
+  /**
+   * @brief Returns an iterator to the beginning of the list store.
+   * @return iterator Iterator to the first list
+   */
   iterator begin()
   {
     return iterator(*this, 0);
   }
 
+  /**
+   * @brief Returns an iterator to the end of the list store.
+   * @return iterator Iterator past the last list
+   */
   iterator end()
   {
     return iterator(*this, size());
   }
 
+  /**
+   * @brief Returns a const iterator to the beginning of the list store.
+   * @return const_iterator Const iterator to the first list
+   */
   const_iterator begin() const
   {
     return const_iterator(*this, 0);
   }
 
+  /**
+   * @brief Returns a const iterator to the end of the list store.
+   * @return const_iterator Const iterator past the last list
+   */
   const_iterator end() const
   {
     return const_iterator(*this, size());
   }
 
+  /**
+   * @brief Returns a const iterator to the beginning of the list store.
+   * @return const_iterator Const iterator to the first list
+   */
   const_iterator cbegin() const
   {
     return const_iterator(*this, 0);
   }
 
+  /**
+   * @brief Returns a const iterator to the end of the list store.
+   * @return const_iterator Const iterator past the last list
+   */
   const_iterator cend() const
   {
     return const_iterator(*this, size());
   }
 
+  /**
+   * @brief Sets all lists from a vector of shared pointers to vectors.
+   * @param lists Vector of shared pointers to vectors containing the list data
+   */
   virtual void setData(const std::vector<shared_vector_type>& lists) = 0;
 
+  /**
+   * @brief Sets all lists from a vector of vectors.
+   * @param lists Vector of vectors containing the list data
+   */
   virtual void setData(const std::vector<vector_type>& lists) = 0;
 
 protected:
+  /**
+   * @brief Default constructor.
+   */
   AbstractListStore() = default;
 
+  /**
+   * @brief Copy constructor.
+   * @param rhs The AbstractListStore to copy from
+   */
   AbstractListStore(const AbstractListStore& rhs) = default;
+
+  /**
+   * @brief Move constructor.
+   * @param rhs The AbstractListStore to move from
+   */
   AbstractListStore(AbstractListStore&& rhs) = default;
 };
 

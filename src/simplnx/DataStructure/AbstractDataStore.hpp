@@ -587,6 +587,12 @@ public:
     std::fill(begin(), end(), value);
   }
 
+  /**
+   * @brief Copies data from another AbstractDataStore into this one.
+   * The two stores must have the same size for the copy to succeed.
+   * @param other The source AbstractDataStore to copy from
+   * @return bool True if the copy succeeded, false if sizes don't match
+   */
   virtual bool copy(const AbstractDataStore& other)
   {
     if(getSize() != other.getSize())
@@ -932,12 +938,27 @@ public:
   {
   }
 
+  /**
+   * @brief Returns the approximate memory usage in bytes for this data store.
+   * @return uint64 Memory usage in bytes
+   */
   virtual uint64 memoryUsage() const
   {
     return sizeof(T) * getSize();
   }
 
+  /**
+   * @brief Reads data from an HDF5 dataset into this data store.
+   * @param dataset The HDF5 DatasetIO to read from
+   * @return Result<> Result indicating success or error details
+   */
   virtual Result<> readHdf5(const HDF5::DatasetIO& dataset) = 0;
+
+  /**
+   * @brief Writes data from this data store to an HDF5 dataset.
+   * @param dataset The HDF5 DatasetIO to write to
+   * @return Result<> Result indicating success or error details
+   */
   virtual Result<> writeHdf5(HDF5::DatasetIO& dataset) const = 0;
 
 protected:
@@ -945,11 +966,20 @@ protected:
    * @brief Default constructor
    */
   AbstractDataStore() = default;
+
+  /**
+   * @brief Copy constructor.
+   * @param other The AbstractDataStore to copy from
+   */
   AbstractDataStore(const AbstractDataStore& other)
   : IDataStore(other)
   {
   }
 
+  /**
+   * @brief Move constructor.
+   * @param other The AbstractDataStore to move from
+   */
   AbstractDataStore(AbstractDataStore&& other)
   : IDataStore(std::move(other))
   {

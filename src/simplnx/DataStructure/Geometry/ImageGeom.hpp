@@ -14,7 +14,8 @@ namespace nx::core
 {
 /**
  * @class ImageGeom
- * @brief
+ * @brief Represents a regular 3D grid geometry with uniform spacing in each dimension.
+ * Stores origin, spacing, and dimensions to define a structured image-like grid of cells.
  */
 class SIMPLNX_EXPORT ImageGeom : public IGridGeometry
 {
@@ -36,33 +37,33 @@ public:
   };
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param parentId = {}
-   * @return ImageGeom*
+   * @brief Creates a new ImageGeom object and adds it to the provided DataStructure.
+   * @param dataStructure The DataStructure to which the ImageGeom will be added
+   * @param name The name of the ImageGeom object
+   * @param parentId Optional parent ID for hierarchical organization within the DataStructure
+   * @return Pointer to the newly created ImageGeom object, or nullptr if creation failed
    */
   static ImageGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param parentId = {}
-   * @return ImageGeom*
+   * @brief Imports an existing ImageGeom object into the provided DataStructure with a specified ID.
+   * @param dataStructure The DataStructure to which the ImageGeom will be imported
+   * @param name The name of the ImageGeom object
+   * @param importId The ID to assign to the imported ImageGeom
+   * @param parentId Optional parent ID for hierarchical organization within the DataStructure
+   * @return Pointer to the imported ImageGeom object, or nullptr if import failed
    */
   static ImageGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param other
+   * @brief Copy constructor creates a new ImageGeom as a copy of another.
+   * @param other The ImageGeom object to copy from
    */
   ImageGeom(const ImageGeom& other) = default;
 
   /**
-   * @brief
-   * @param other
+   * @brief Move constructor transfers ownership from another ImageGeom.
+   * @param other The ImageGeom object to move from
    */
   ImageGeom(ImageGeom&& other) = default;
 
@@ -70,95 +71,96 @@ public:
 
   /**
    * @brief Returns the type of geometry.
-   * @return
+   * @return The geometry type enumeration value for ImageGeom
    */
   IGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return
+   * @return The DataObject type enumeration value for this object
    */
   DataObject::Type getDataObjectType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
-   * @return
+   * @return The GroupType enumeration value for this geometry
    */
   GroupType getGroupType() const override;
 
   /**
    * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
+   * @return String representation of the DataObject type name
    */
   std::string getTypeName() const override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a shallow copy of this ImageGeom object.
+   * @return Pointer to the shallow copy DataObject
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a deep copy of this ImageGeom object at the specified path.
+   * @param copyPath The DataPath where the deep copy will be placed
+   * @return Shared pointer to the deep copy DataObject
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   * @brief
-   * @return FloatVec3
+   * @brief Gets the spacing (resolution) of the image geometry in X, Y, and Z dimensions.
+   * @return FloatVec3 containing the spacing values for each dimension
    */
   FloatVec3 getSpacing() const;
 
   /**
-   * @brief
-   * @param spacing
+   * @brief Sets the spacing (resolution) of the image geometry in X, Y, and Z dimensions.
+   * @param spacing Vector containing the spacing values for each dimension
    */
   void setSpacing(const FloatVec3& spacing);
 
   /**
-   * @brief
-   * @param x
-   * @param y
-   * @param z
+   * @brief Sets the spacing (resolution) of the image geometry using individual components.
+   * @param x Spacing in the X dimension
+   * @param y Spacing in the Y dimension
+   * @param z Spacing in the Z dimension
    */
   void setSpacing(float32 x, float32 y, float32 z);
 
   /**
-   * @brief
-   * @return FloatVec3
+   * @brief Gets the origin (lower-left corner) of the image geometry in 3D space.
+   * @return FloatVec3 containing the origin coordinates for each dimension
    */
   FloatVec3 getOrigin() const;
 
   /**
-   * @brief
-   * @param origin
+   * @brief Sets the origin (lower-left corner) of the image geometry in 3D space.
+   * @param origin Vector containing the origin coordinates for each dimension
    */
   void setOrigin(const FloatVec3& origin);
 
   /**
-   * @brief
-   * @param x
-   * @param y
-   * @param z
+   * @brief Sets the origin (lower-left corner) of the image geometry using individual components.
+   * @param x Origin coordinate in the X dimension
+   * @param y Origin coordinate in the Y dimension
+   * @param z Origin coordinate in the Z dimension
    */
   void setOrigin(float32 x, float32 y, float32 z);
 
   /**
-   * @brief
-   * @return BoundingBox<float32>
+   * @brief Calculates and returns the 3D bounding box of the image geometry using 32-bit floats.
+   * @return BoundingBox3D<float32> representing the spatial extent of the geometry
    */
   BoundingBox3D<float32> getBoundingBoxf() const;
 
   /**
-   * @brief
-   * @return BoundingBox<float64>
+   * @brief Calculates and returns the 3D bounding box of the image geometry using 64-bit floats.
+   * @return BoundingBox3D<float64> representing the spatial extent of the geometry
    */
   BoundingBox3D<float64> getBoundingBox() const;
 
   /**
-   * @brief
-   * @return usize
+   * @brief Calculates the total number of cells in the image geometry.
+   * @return Total number of cells (product of X, Y, and Z dimensions)
    */
   usize getNumberOfCells() const override;
 
@@ -175,190 +177,190 @@ public:
   Result<> findElementSizes(bool recalculate) override;
 
   /**
-   * @brief
-   * @return Point3D<float64>
+   * @brief Returns the parametric center of the image geometry.
+   * @return Point3D<float64> representing the parametric center coordinates
    */
   Point3D<float64> getParametricCenter() const override;
 
   /**
-   * @brief
-   * @param pCoords
-   * @param shape
+   * @brief Calculates shape functions at the given parametric coordinates.
+   * @param pCoords The parametric coordinates where shape functions are evaluated
+   * @param shape Output array to store the calculated shape function values
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
   /**
-   * @brief getDimensionality Determines the dimensionality of the geometry and returns either 1, 2, or 3
+   * @brief Determines the dimensionality of the geometry and returns either 1, 2, or 3.
    * Example 1: If this image geometry has dimensions 100 x 100 x 100, this method would return a dimensionality of 3.
    * Example 2: If this image geometry has dimensions 100 x 100 x 1, this method would return a dimensionality of 2.
    * Example 3: If this image geometry has dimensions 1 x 1 x 100, this method would return a dimensionality of 1.
    * Example 4: If this image geometry has dimensions 1 x 1 x 1, this method would return a dimensionality of 1.
-   * @return usize
+   * @return The effective dimensionality (1, 2, or 3) based on non-singular dimensions
    */
   usize getDimensionality() const;
 
   /**
-   * @brief Returns the dimensions of the image geometry in the order of X, Y, Z
-   * @return SizeVec3
+   * @brief Returns the dimensions of the image geometry in the order of X, Y, Z.
+   * @return SizeVec3 containing the number of cells in each dimension [X, Y, Z]
    */
   SizeVec3 getDimensions() const override;
 
   /**
    * @brief Sets the dimensions of the Image Geometry. Ordering is X (Fastest), then Y, then Z (Slowest). These values
    * become important when calculating things like an index based off of the Dimension values.
-   * @param dims
+   * @param dims Vector containing the number of cells in each dimension [X, Y, Z]
    */
   void setDimensions(const SizeVec3& dims) override;
 
   /**
-   * @brief
-   * @return usize
+   * @brief Returns the number of cells in the X dimension.
+   * @return Number of cells along the X axis
    */
   usize getNumXCells() const override;
 
   /**
-   * @brief
-   * @return usize
+   * @brief Returns the number of cells in the Y dimension.
+   * @return Number of cells along the Y axis
    */
   usize getNumYCells() const override;
 
   /**
-   * @brief
-   * @return usize
+   * @brief Returns the number of cells in the Z dimension.
+   * @return Number of cells along the Z axis
    */
   usize getNumZCells() const override;
 
   /**
-   * @brief
-   * @param idx
-   * @return Point3D<float32>
+   * @brief Gets the planar coordinates at the specified cell indices using 32-bit floats.
+   * @param idx Array of 3 indices [x, y, z] specifying the cell location
+   * @return Point3D<float32> representing the planar coordinates
    */
   Point3D<float32> getPlaneCoordsf(usize idx[3]) const override;
 
   /**
-   * @brief
-   * @param x
-   * @param y
-   * @param z
-   * @return Point3D<float32>
+   * @brief Gets the planar coordinates at the specified cell indices using 32-bit floats.
+   * @param x Cell index in the X dimension
+   * @param y Cell index in the Y dimension
+   * @param z Cell index in the Z dimension
+   * @return Point3D<float32> representing the planar coordinates
    */
   Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const override;
 
   /**
-   * @brief
-   * @param idx
-   * @return Point3D<float32>
+   * @brief Gets the planar coordinates for a flat cell index using 32-bit floats.
+   * @param idx Flat (linearized) cell index
+   * @return Point3D<float32> representing the planar coordinates
    */
   Point3D<float32> getPlaneCoordsf(usize idx) const override;
 
   /**
-   * @brief
-   * @param idx
-   * @return Point3D<float64>
+   * @brief Gets the planar coordinates at the specified cell indices using 64-bit floats.
+   * @param idx Array of 3 indices [x, y, z] specifying the cell location
+   * @return Point3D<float64> representing the planar coordinates
    */
   Point3D<float64> getPlaneCoords(usize idx[3]) const override;
 
   /**
-   * @brief
-   * @param x
-   * @param y
-   * @param z
-   * @return Point3D<float64>
+   * @brief Gets the planar coordinates at the specified cell indices using 64-bit floats.
+   * @param x Cell index in the X dimension
+   * @param y Cell index in the Y dimension
+   * @param z Cell index in the Z dimension
+   * @return Point3D<float64> representing the planar coordinates
    */
   Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const override;
 
   /**
-   * @brief
-   * @param idx
-   * @return Point3D<float64>
+   * @brief Gets the planar coordinates for a flat cell index using 64-bit floats.
+   * @param idx Flat (linearized) cell index
+   * @return Point3D<float64> representing the planar coordinates
    */
   Point3D<float64> getPlaneCoords(usize idx) const override;
 
   /**
-   * @brief
-   * @param idx
-   * @return Point3D<float32>
+   * @brief Gets the cell center coordinates at the specified cell indices using 32-bit floats.
+   * @param idx Array of 3 indices [x, y, z] specifying the cell location
+   * @return Point3D<float32> representing the cell center coordinates
    */
   Point3D<float32> getCoordsf(usize idx[3]) const override;
 
   /**
-   * @brief
-   * @param x
-   * @param y
-   * @param z
-   * @return Point3D<float32>
+   * @brief Gets the cell center coordinates at the specified cell indices using 32-bit floats.
+   * @param x Cell index in the X dimension
+   * @param y Cell index in the Y dimension
+   * @param z Cell index in the Z dimension
+   * @return Point3D<float32> representing the cell center coordinates
    */
   Point3D<float32> getCoordsf(usize x, usize y, usize z) const override;
 
   /**
-   * @brief
-   * @param idx
-   * @return Point3D<float32>
+   * @brief Gets the cell center coordinates for a flat cell index using 32-bit floats.
+   * @param idx Flat (linearized) cell index
+   * @return Point3D<float32> representing the cell center coordinates
    */
   Point3D<float32> getCoordsf(usize idx) const override;
 
   /**
-   * @brief
-   * @param idx
-   * @return Point3D<float64>
+   * @brief Gets the cell center coordinates at the specified cell indices using 64-bit floats.
+   * @param idx Array of 3 indices [x, y, z] specifying the cell location
+   * @return Point3D<float64> representing the cell center coordinates
    */
   Point3D<float64> getCoords(usize idx[3]) const override;
 
   /**
-   * @brief
-   * @param x
-   * @param y
-   * @param z
-   * @return Point3D<float64>
+   * @brief Gets the cell center coordinates at the specified cell indices using 64-bit floats.
+   * @param x Cell index in the X dimension
+   * @param y Cell index in the Y dimension
+   * @param z Cell index in the Z dimension
+   * @return Point3D<float64> representing the cell center coordinates
    */
   Point3D<float64> getCoords(usize x, usize y, usize z) const override;
 
   /**
-   * @brief
-   * @param idx
-   * @return Point3D<float64>
+   * @brief Gets the cell center coordinates for a flat cell index using 64-bit floats.
+   * @param idx Flat (linearized) cell index
+   * @return Point3D<float64> representing the cell center coordinates
    */
   Point3D<float64> getCoords(usize idx) const override;
 
   /**
-   * @brief
-   * @param xCoord
-   * @param yCoord
-   * @param zCoord
-   * @return std::optional<usize>
+   * @brief Computes the flat cell index from 3D coordinates using 32-bit floats.
+   * @param xCoord X coordinate in physical space
+   * @param yCoord Y coordinate in physical space
+   * @param zCoord Z coordinate in physical space
+   * @return Optional flat cell index if coordinates are within bounds, std::nullopt otherwise
    */
   std::optional<usize> getIndex(float32 xCoord, float32 yCoord, float32 zCoord) const override;
 
   /**
-   * @brief
-   * @param xCoord
-   * @param yCoord
-   * @param zCoord
-   * @return std::optional<usize>
+   * @brief Computes the flat cell index from 3D coordinates using 64-bit floats.
+   * @param xCoord X coordinate in physical space
+   * @param yCoord Y coordinate in physical space
+   * @param zCoord Z coordinate in physical space
+   * @return Optional flat cell index if coordinates are within bounds, std::nullopt otherwise
    */
   std::optional<usize> getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const override;
 
   /**
-   * @brief
-   * @param coords
-   * @param index
-   * @return ErrorType
+   * @brief Computes the 3D cell index from physical coordinates.
+   * @param coords Physical coordinates as a Point3D
+   * @param index Output parameter to store the computed 3D cell indices [x, y, z]
+   * @return ErrorType indicating success or the type of out-of-bounds error if any
    */
   ErrorType computeCellIndex(const Point3D<float32>& coords, SizeVec3& index) const;
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Protected constructor for creating an ImageGeom with a generated ID.
+   * @param dataStructure The DataStructure that will own this ImageGeom
+   * @param name The name of the ImageGeom object
    */
   ImageGeom(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Protected constructor for creating an ImageGeom with a specified import ID.
+   * @param dataStructure The DataStructure that will own this ImageGeom
+   * @param name The name of the ImageGeom object
+   * @param importId The ID to assign to this ImageGeom
    */
   ImageGeom(DataStructure& dataStructure, std::string name, IdType importId);
 
