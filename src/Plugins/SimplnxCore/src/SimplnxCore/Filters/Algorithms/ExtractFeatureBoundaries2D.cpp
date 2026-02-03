@@ -26,65 +26,24 @@ namespace
 // 2. Populate Pass: Create the actual vertices and edges (PopulateVerticalEdgesImpl,
 //    PopulateHorizontalEdgesImpl).
 // =============================================================================
+
 /**
- * @brief Counts vertical boundary edges (edges between horizontally adjacent cells)
- *
- * A vertical edge exists between cell (x, y) and cell (x+1, y) when they have
- * different feature IDs. The edge is placed at the right side of cell (x, y).
- *
- * Grid visualization (4x3 grid):
- *   +---+---+---+---+
- *   | 0 | 1 | 2 | 3 |  y=2
- *   +---+---+---+---+
- *   | 0 | 1 | 2 | 3 |  y=1
- *   +---+---+---+---+
- *   | 0 | 1 | 2 | 3 |  y=0
- *   +---+---+---+---+
- *     ^   ^   ^
- *     Vertical edges checked between adjacent cells in X direction
- */
-template <typename T>
-class CountVerticalEdgesImpl
-{
-public:
-  CountVerticalEdgesImpl(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, std::atomic<usize>& edgeCount, const std::atomic_bool& shouldCancel)
-  : m_FeatureIds(featureIds)
-  , m_DimX(dimX)
-  , m_DimY(dimY)
-  , m_EdgeCount(edgeCount)
-  , m_ShouldCancel(shouldCancel)
-  {
-  }
-
-  void operator()(const Range& range) const
-  {
-    usize localCount = 0;
-    for(usize y = range.min(); y < range.max(); y++)
-    {
-      if(m_ShouldCancel)
-      {
-        return;
-      }
-      for(usize x = 0; x < m_DimX - 1; x++)
-      {
-        usize idx1 = y * m_DimX + x;
-        usize idx2 = y * m_DimX + (x + 1);
-        if(m_FeatureIds[idx1] != m_FeatureIds[idx2])
-        {
-          localCount++;
-        }
-      }
-    }
-    m_EdgeCount.fetch_add(localCount, std::memory_order_relaxed);
-  }
-
-private:
-  const AbstractDataStore<T>& m_FeatureIds;
-  usize m_DimX = 0;
-  usize m_DimY = 0;
-  std::atomic<usize>& m_EdgeCount;
-  const std::atomic_bool& m_ShouldCancel;
-};
+* @brief Counts vertical boundary edges (edges between horizontally adjacent cells)
+*
+* A vertical edge exists between cell (x, y) and cell (x+1, y) when they have
+* different feature IDs. The edge is placed at the right side of cell (x, y).
+*
+* Grid visualization (4x3 grid):
+*   +---+---+---+---+
+*   | 0 | 1 | 2 | 3 |  y=2
+*   +---+---+---+---+
+*   | 0 | 1 | 2 | 3 |  y=1
+*   +---+---+---+---+
+*   | 0 | 1 | 2 | 3 |  y=0
+*   +---+---+---+---+
+*     ^   ^   ^
+*     Vertical edges checked between adjacent cells in X direction
+*/
 
 /**
  * @brief Counts horizontal boundary edges (edges between vertically adjacent cells)
@@ -101,11 +60,12 @@ private:
  *   | 0 | 1 | 2 | 3 |  y=0
  *   +---+---+---+---+
  */
-template <typename T>
-class CountHorizontalEdgesImpl
+
+template <typename T, usize XFactor = 0, usize YFactor = 0>
+class CountEdgesImpl
 {
 public:
-  CountHorizontalEdgesImpl(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, std::atomic<usize>& edgeCount, const std::atomic_bool& shouldCancel)
+  CountEdgesImpl(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, std::atomic<usize>& edgeCount, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_DimX(dimX)
   , m_DimY(dimY)
@@ -123,10 +83,10 @@ public:
       {
         return;
       }
-      for(usize x = 0; x < m_DimX; x++)
+      for(usize x = 0; x < m_DimX - XFactor; x++)
       {
         usize idx1 = y * m_DimX + x;
-        usize idx2 = (y + 1) * m_DimX + x;
+        usize idx2 = (y + YFactor) * m_DimX + (x + XFactor);
         if(m_FeatureIds[idx1] != m_FeatureIds[idx2])
         {
           localCount++;
@@ -347,10 +307,14 @@ constexpr uint64 k_UseCustomZValue = 2;
  */
 struct ExtractFeatureBoundariesFunctor
 {
+
   template <typename T>
   Result<> operator()(const DataStructure& dataStructure, const DataPath& featureIdsPath, const ImageGeom& imageGeom, EdgeGeom& edgeGeom, const std::atomic_bool& shouldCancel, uint64 zValueChoice,
                       float32 customZValue, bool extractVirtualSampleEdges)
   {
+    using CountVerticalEdgesImpl = CountEdgesImpl<T, 1, 0>;
+    using CountHorizontalEdgesImpl = CountEdgesImpl<T, 0, 1>;
+
     // =========================================================================
     // SETUP: Extract geometry parameters and feature IDs
     // =========================================================================
@@ -397,7 +361,7 @@ struct ExtractFeatureBoundariesFunctor
 
     // Count vertical edges (between horizontally adjacent cells)
     {
-      CountVerticalEdgesImpl<T>(featureIdsStore, dimX, dimY, verticalEdgeCount, shouldCancel).operator()({0, dimY});
+      CountVerticalEdgesImpl(featureIdsStore, dimX, dimY, verticalEdgeCount, shouldCancel).operator()({0, dimY});
     }
 
     if(shouldCancel)
@@ -409,7 +373,7 @@ struct ExtractFeatureBoundariesFunctor
     // Note: We only check dimY-1 rows since we're comparing row y with row y+1
     if(dimY > 1)
     {
-      CountHorizontalEdgesImpl<T>(featureIdsStore, dimX, dimY, horizontalEdgeCount, shouldCancel).operator()({0, dimY - 1});
+      CountHorizontalEdgesImpl(featureIdsStore, dimX, dimY, horizontalEdgeCount, shouldCancel).operator()({0, dimY - 1});
     }
 
     if(shouldCancel)
