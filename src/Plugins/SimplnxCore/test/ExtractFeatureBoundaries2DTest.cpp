@@ -18,9 +18,44 @@ const DataPath k_FeatureIdsPath({"ImageGeometry", "Cell Data", "FeatureIds"});
 const DataPath k_OutputEdgeGeometryPath({"Computed Feature Boundaries"});
 const DataPath k_ExemplarEdgeGeometryPath({"Feature Boundaries"});
 
+/**
+ * @brief Verifies the computed Edge Geometry against the exemplar Edge Geometry
+ * @param dataStructure
+ * @param exemplarDataPath
+ * @param computedDataPath
+ */
+void VerifyOutput(const DataStructure& dataStructure, const DataPath& exemplarDataPath, const DataPath& computedDataPath)
+{
+  // Verify the output edge geometry was created
+  const auto* computedEdgeGeom = dataStructure.getDataAs<EdgeGeom>(computedDataPath);
+  REQUIRE(computedEdgeGeom != nullptr);
+
+  // const DataPath exemplarDataPath({"Feature Boundaries Max Z"});
+  //  Compare Geometries
+  {
+    const auto* exemplarGeom = dataStructure.getDataAs<EdgeGeom>(exemplarDataPath);
+    REQUIRE(exemplarGeom != nullptr);
+    UnitTest::CompareIGeometry(exemplarGeom, computedEdgeGeom);
+  }
+
+  // Compare Shared Vertex List
+  {
+    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Vertex List");
+    const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Vertex List");
+    UnitTest::CompareFloatArraysWithNans<float>(dataStructure, computedPath, exemplarPath);
+  }
+
+  // Compare Edge List
+  {
+    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Edge List");
+    const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Edge List");
+    UnitTest::CompareArrays<uint64>(dataStructure, computedPath, exemplarPath);
+  }
+}
+
 } // namespace extract_features_boundaries_2d_test
 
-TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: 01_simple_adjacent", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
+TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
   UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz",
@@ -64,32 +99,8 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: 01_simple_adjacent", "
       UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_{}", unit_test::k_BinaryTestOutputDir, fileName)));
 #endif
 
-      // Verify the output edge geometry was created
-      const auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
-      REQUIRE(edgeGeom != nullptr);
-      REQUIRE(edgeGeom->getNumberOfEdges() > 0);
-      REQUIRE(edgeGeom->getNumberOfVertices() > 0);
-
-      // Compare Geometries
-      {
-        const auto* exemplarGeom = dataStructure.getDataAs<EdgeGeom>(extract_features_boundaries_2d_test::k_ExemplarEdgeGeometryPath);
-        REQUIRE(exemplarGeom != nullptr);
-        UnitTest::CompareIGeometry(exemplarGeom, edgeGeom);
-      }
-
-      // Compare Shared Vertex List
-      {
-        const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Vertex List");
-        const DataPath exemplarPath = extract_features_boundaries_2d_test::k_ExemplarEdgeGeometryPath.createChildPath("Shared Vertex List");
-        UnitTest::CompareFloatArraysWithNans<float>(dataStructure, computedPath, exemplarPath);
-      }
-
-      // Compare Edge List
-      {
-        const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Edge List");
-        const DataPath exemplarPath = extract_features_boundaries_2d_test::k_ExemplarEdgeGeometryPath.createChildPath("Shared Edge List");
-        UnitTest::CompareArrays<uint64>(dataStructure, computedPath, exemplarPath);
-      }
+      extract_features_boundaries_2d_test::VerifyOutput(dataStructure, extract_features_boundaries_2d_test::k_ExemplarEdgeGeometryPath, extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -123,32 +134,13 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore]
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  // Verify the output edge geometry was created
-  const auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
-  REQUIRE(edgeGeom != nullptr);
-  REQUIRE(edgeGeom->getNumberOfEdges() > 0);
-  REQUIRE(edgeGeom->getNumberOfVertices() > 0);
+  // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_z_max", unit_test::k_BinaryTestOutputDir)));
+#endif
 
-  const DataPath exemplarDataPath({"Feature Boundaries Max Z"});
-  // Compare Geometries
-  {
-    const auto* exemplarGeom = dataStructure.getDataAs<EdgeGeom>(exemplarDataPath);
-    UnitTest::CompareIGeometry(exemplarGeom, edgeGeom);
-  }
-
-  // Compare Shared Vertex List
-  {
-    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Vertex List");
-    const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Vertex List");
-    UnitTest::CompareFloatArraysWithNans<float>(dataStructure, computedPath, exemplarPath);
-  }
-
-  // Compare Edge List
-  {
-    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Edge List");
-    const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Edge List");
-    UnitTest::CompareArrays<uint64>(dataStructure, computedPath, exemplarPath);
-  }
+  extract_features_boundaries_2d_test::VerifyOutput(dataStructure, DataPath({"Feature Boundaries Max Z"}), extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
@@ -180,32 +172,12 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCo
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  // Verify the output edge geometry was created
-  const auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
-  REQUIRE(edgeGeom != nullptr);
-  REQUIRE(edgeGeom->getNumberOfEdges() > 0);
-  REQUIRE(edgeGeom->getNumberOfVertices() > 0);
+  // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_z_custom", unit_test::k_BinaryTestOutputDir)));
+#endif
 
-  const DataPath exemplarDataPath({"Feature Boundaries Custom Z"});
-  // Compare Geometries
-  {
-    const auto* exemplarGeom = dataStructure.getDataAs<EdgeGeom>(exemplarDataPath);
-    UnitTest::CompareIGeometry(exemplarGeom, edgeGeom);
-  }
-
-  // Compare Shared Vertex List
-  {
-    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Vertex List");
-    const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Vertex List");
-    UnitTest::CompareFloatArraysWithNans<float>(dataStructure, computedPath, exemplarPath);
-  }
-
-  // Compare Edge List
-  {
-    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Edge List");
-    const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Edge List");
-    UnitTest::CompareArrays<uint64>(dataStructure, computedPath, exemplarPath);
-  }
+  extract_features_boundaries_2d_test::VerifyOutput(dataStructure, DataPath({"Feature Boundaries Custom Z"}), extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -239,32 +211,11 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[Sim
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  // Verify the output edge geometry was created
-  const auto* edgeGeom = dataStructure.getDataAs<EdgeGeom>(extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
-  REQUIRE(edgeGeom != nullptr);
-  REQUIRE(edgeGeom->getNumberOfEdges() > 0);
-  REQUIRE(edgeGeom->getNumberOfVertices() > 0);
+  // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_no_edges", unit_test::k_BinaryTestOutputDir)));
+#endif
 
-  const DataPath exemplarDataPath({"Feature Boundaries Min Z No Edges"});
-  // Compare Geometries
-  {
-    const auto* exemplarGeom = dataStructure.getDataAs<EdgeGeom>(exemplarDataPath);
-    UnitTest::CompareIGeometry(exemplarGeom, edgeGeom);
-  }
-
-  // Compare Shared Vertex List
-  {
-    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Vertex List");
-    const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Vertex List");
-    UnitTest::CompareFloatArraysWithNans<float>(dataStructure, computedPath, exemplarPath);
-  }
-
-  // Compare Edge List
-  {
-    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Edge List");
-    const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Edge List");
-    UnitTest::CompareArrays<uint64>(dataStructure, computedPath, exemplarPath);
-  }
-
+  extract_features_boundaries_2d_test::VerifyOutput(dataStructure, DataPath({"Feature Boundaries Min Z No Edges"}), extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
