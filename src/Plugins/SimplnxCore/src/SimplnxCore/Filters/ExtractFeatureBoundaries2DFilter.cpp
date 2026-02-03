@@ -122,8 +122,8 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   // Outer boundary edges (if enabled): 2 * dimX + 2 * dimY
   usize dimX = dims.getX();
   usize dimY = dims.getY();
-  usize maxEdges = (dimX > 0 && dimY > 0) ? ((dimX - 1) * dimY + dimX * (dimY - 1)) : 0;
-  if(pExtractVirtualSampleEdges && dimX > 0 && dimY > 0)
+  usize maxEdges = (dimX - 1) * dimY + dimX * (dimY - 1);
+  if(pExtractVirtualSampleEdges)
   {
     maxEdges += 2 * dimX + 2 * dimY;
   }
