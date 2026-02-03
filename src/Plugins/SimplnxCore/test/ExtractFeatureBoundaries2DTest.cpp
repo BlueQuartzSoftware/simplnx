@@ -10,9 +10,9 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-
-namespace extract_features_boundaries_2d_test
+namespace
 {
+
 const DataPath k_ImageGeometryPath({"ImageGeometry"});
 const DataPath k_FeatureIdsPath({"ImageGeometry", "Cell Data", "FeatureIds"});
 const DataPath k_OutputEdgeGeometryPath({"Computed Feature Boundaries"});
@@ -40,20 +40,20 @@ void VerifyOutput(const DataStructure& dataStructure, const DataPath& exemplarDa
 
   // Compare Shared Vertex List
   {
-    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Vertex List");
+    const DataPath computedPath = k_OutputEdgeGeometryPath.createChildPath("Shared Vertex List");
     const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Vertex List");
     UnitTest::CompareFloatArraysWithNans<float>(dataStructure, computedPath, exemplarPath);
   }
 
   // Compare Edge List
   {
-    const DataPath computedPath = extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath.createChildPath("Shared Edge List");
+    const DataPath computedPath = k_OutputEdgeGeometryPath.createChildPath("Shared Edge List");
     const DataPath exemplarPath = exemplarDataPath.createChildPath("Shared Edge List");
     UnitTest::CompareArrays<uint64>(dataStructure, computedPath, exemplarPath);
   }
 }
 
-} // namespace extract_features_boundaries_2d_test
+} // namespace
 
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
@@ -79,9 +79,9 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[Simp
       Arguments args;
 
       // Set filter parameters
-      args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_ImageGeometryPath));
-      args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_FeatureIdsPath));
-      args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath));
+      args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeometryPath));
+      args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+      args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(k_OutputEdgeGeometryPath));
       args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ZValueChoice_Key, std::make_any<uint64>(0)); // Use min z value
       args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_CustomZValue_Key, std::make_any<float32>(0.0f));
       args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ExtractVirtualSampleEdges_Key, std::make_any<bool>(true));
@@ -99,7 +99,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[Simp
       UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_{}", unit_test::k_BinaryTestOutputDir, fileName)));
 #endif
 
-      extract_features_boundaries_2d_test::VerifyOutput(dataStructure, extract_features_boundaries_2d_test::k_ExemplarEdgeGeometryPath, extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
+      VerifyOutput(dataStructure, k_ExemplarEdgeGeometryPath, k_OutputEdgeGeometryPath);
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
@@ -119,9 +119,9 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore]
   Arguments args;
 
   // Set filter parameters
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_ImageGeometryPath));
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_FeatureIdsPath));
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeometryPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(k_OutputEdgeGeometryPath));
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ZValueChoice_Key, std::make_any<uint64>(1)); // Use max z value
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_CustomZValue_Key, std::make_any<float32>(0.0f));
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ExtractVirtualSampleEdges_Key, std::make_any<bool>(true));
@@ -139,7 +139,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore]
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_z_max", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  extract_features_boundaries_2d_test::VerifyOutput(dataStructure, DataPath({"Feature Boundaries Max Z"}), extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
+  VerifyOutput(dataStructure, DataPath({"Feature Boundaries Max Z"}), k_OutputEdgeGeometryPath);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -157,9 +157,9 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCo
   Arguments args;
 
   // Set filter parameters
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_ImageGeometryPath));
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_FeatureIdsPath));
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeometryPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(k_OutputEdgeGeometryPath));
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ZValueChoice_Key, std::make_any<uint64>(2)); // Use custom z value
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_CustomZValue_Key, std::make_any<float32>(2.5f));
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ExtractVirtualSampleEdges_Key, std::make_any<bool>(true));
@@ -177,7 +177,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCo
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_z_custom", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  extract_features_boundaries_2d_test::VerifyOutput(dataStructure, DataPath({"Feature Boundaries Custom Z"}), extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
+  VerifyOutput(dataStructure, DataPath({"Feature Boundaries Custom Z"}), k_OutputEdgeGeometryPath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -196,9 +196,9 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[Sim
   Arguments args;
 
   // Set filter parameters
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_ImageGeometryPath));
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_FeatureIdsPath));
-  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_InputImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeometryPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_OutputEdgeGeometryPath_Key, std::make_any<DataPath>(k_OutputEdgeGeometryPath));
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ZValueChoice_Key, std::make_any<uint64>(0)); // Use min z value
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_CustomZValue_Key, std::make_any<float32>(2.5f));
   args.insertOrAssign(ExtractFeatureBoundaries2DFilter::k_ExtractVirtualSampleEdges_Key, std::make_any<bool>(false)); // NO EDGES around virtual volume
@@ -216,6 +216,6 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[Sim
   UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_no_edges", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  extract_features_boundaries_2d_test::VerifyOutput(dataStructure, DataPath({"Feature Boundaries Min Z No Edges"}), extract_features_boundaries_2d_test::k_OutputEdgeGeometryPath);
+  VerifyOutput(dataStructure, DataPath({"Feature Boundaries Min Z No Edges"}), k_OutputEdgeGeometryPath);
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

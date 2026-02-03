@@ -31,7 +31,7 @@ namespace
  * @brief Counts vertical boundary edges (edges between horizontally adjacent cells)
  *
  * A vertical edge exists between cell (x, y) and cell (x+1, y) when they have
- * different feature IDs. The edge is placed at the right side of cell (x, y).
+ * different feature IDs. The edge is placed on the right side of the cell (x, y).
  *
  * Grid visualization (4x3 grid):
  *   +---+---+---+---+
@@ -49,7 +49,7 @@ namespace
  * @brief Counts horizontal boundary edges (edges between vertically adjacent cells)
  *
  * A horizontal edge exists between cell (x, y) and cell (x, y+1) when they have
- * different feature IDs. The edge is placed at the top side of cell (x, y).
+ * different feature IDs. The edge is placed at the top side of the cell (x, y).
  *
  * Grid visualization (4x3 grid):
  *   +---+---+---+---+
@@ -62,47 +62,27 @@ namespace
  */
 
 template <typename T, usize XFactor = 0, usize YFactor = 0>
-class CountEdgesImpl
+void CountEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, usize& edgeCount, const std::atomic_bool& shouldCancel, const Range& range)
 {
-public:
-  CountEdgesImpl(const AbstractDataStore<T>& featureIds, const usize dimX, const usize dimY, std::atomic<usize>& edgeCount, const std::atomic_bool& shouldCancel)
-  : m_FeatureIds(featureIds)
-  , m_DimX(dimX)
-  , m_DimY(dimY)
-  , m_EdgeCount(edgeCount)
-  , m_ShouldCancel(shouldCancel)
+  usize localCount = 0;
+  for(usize y = range.min(); y < range.max(); y++)
   {
-  }
-
-  void operator()(const Range& range) const
-  {
-    usize localCount = 0;
-    for(usize y = range.min(); y < range.max(); y++)
+    if(shouldCancel)
     {
-      if(m_ShouldCancel)
+      return;
+    }
+    for(usize x = 0; x < dimX - XFactor; x++)
+    {
+      usize idx1 = y * dimX + x;
+      usize idx2 = (y + YFactor) * dimX + (x + XFactor);
+      if(featureIds[idx1] != featureIds[idx2])
       {
-        return;
-      }
-      for(usize x = 0; x < m_DimX - XFactor; x++)
-      {
-        usize idx1 = y * m_DimX + x;
-        usize idx2 = (y + YFactor) * m_DimX + (x + XFactor);
-        if(m_FeatureIds[idx1] != m_FeatureIds[idx2])
-        {
-          localCount++;
-        }
+        localCount++;
       }
     }
-    m_EdgeCount.fetch_add(localCount, std::memory_order_relaxed);
   }
-
-private:
-  const AbstractDataStore<T>& m_FeatureIds;
-  usize m_DimX = 0;
-  usize m_DimY = 0;
-  std::atomic<usize>& m_EdgeCount;
-  const std::atomic_bool& m_ShouldCancel;
-};
+  edgeCount += localCount;
+}
 
 /**
  * @brief Creates vertices and edges for vertical boundaries
@@ -115,83 +95,49 @@ private:
  * Each edge gets 2 vertices stored consecutively (v0, v1) in the vertex array.
  */
 template <typename T>
-class PopulateVerticalEdgesImpl
+void PopulateVerticalEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
+                           INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, usize& currentEdge, const std::atomic_bool& shouldCancel, const Range& range)
 {
-public:
-  PopulateVerticalEdgesImpl(const AbstractDataStore<T>& featureIds, const usize dimX, const usize dimY, const float32 originX, const float32 originY, const float32 originZ, const float32 spacingX,
-                            const float32 spacingY, INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, std::atomic<usize>& currentEdge,
-                            const std::atomic_bool& shouldCancel)
-  : m_FeatureIds(featureIds)
-  , m_DimX(dimX)
-  , m_DimY(dimY)
-  , m_OriginX(originX)
-  , m_OriginY(originY)
-  , m_OriginZ(originZ)
-  , m_SpacingX(spacingX)
-  , m_SpacingY(spacingY)
-  , m_Vertices(vertices)
-  , m_Edges(edges)
-  , m_CurrentEdge(currentEdge)
-  , m_ShouldCancel(shouldCancel)
+  for(usize y = range.min(); y < range.max(); y++)
   {
-  }
-
-  void operator()(const Range& range) const
-  {
-    for(usize y = range.min(); y < range.max(); y++)
+    if(shouldCancel)
     {
-      if(m_ShouldCancel)
+      return;
+    }
+    for(usize x = 0; x < dimX - 1; x++)
+    {
+      usize idx1 = y * dimX + x;
+      usize idx2 = y * dimX + (x + 1);
+      if(featureIds[idx1] != featureIds[idx2])
       {
-        return;
-      }
-      for(usize x = 0; x < m_DimX - 1; x++)
-      {
-        usize idx1 = y * m_DimX + x;
-        usize idx2 = y * m_DimX + (x + 1);
-        if(m_FeatureIds[idx1] != m_FeatureIds[idx2])
-        {
-          const usize edgeIdx = m_CurrentEdge.fetch_add(1, std::memory_order_relaxed);
+        const usize edgeIdx = currentEdge;
+        currentEdge++;
 
-          // Vertical edge at grid position (x+1, y) to (x+1, y+1)
-          const float32 edgeX = m_OriginX + static_cast<float32>(x + 1) * m_SpacingX;
-          const float32 y0 = m_OriginY + static_cast<float32>(y) * m_SpacingY;
-          const float32 y1 = m_OriginY + static_cast<float32>(y + 1) * m_SpacingY;
+        // Vertical edge at grid position (x+1, y) to (x+1, y+1)
+        const float32 edgeX = originX + static_cast<float32>(x + 1) * spacingX;
+        const float32 y0 = originY + static_cast<float32>(y) * spacingY;
+        const float32 y1 = originY + static_cast<float32>(y + 1) * spacingY;
 
-          const usize v0 = edgeIdx * 2;
-          const usize v1 = edgeIdx * 2 + 1;
+        const usize v0 = edgeIdx * 2;
+        const usize v1 = edgeIdx * 2 + 1;
 
-          // Vertex 0: (edgeX, y0, originZ)
-          m_Vertices[v0 * 3] = edgeX;
-          m_Vertices[v0 * 3 + 1] = y0;
-          m_Vertices[v0 * 3 + 2] = m_OriginZ;
+        // Vertex 0: (edgeX, y0, originZ)
+        vertices[v0 * 3] = edgeX;
+        vertices[v0 * 3 + 1] = y0;
+        vertices[v0 * 3 + 2] = originZ;
 
-          // Vertex 1: (edgeX, y1, originZ)
-          m_Vertices[v1 * 3] = edgeX;
-          m_Vertices[v1 * 3 + 1] = y1;
-          m_Vertices[v1 * 3 + 2] = m_OriginZ;
+        // Vertex 1: (edgeX, y1, originZ)
+        vertices[v1 * 3] = edgeX;
+        vertices[v1 * 3 + 1] = y1;
+        vertices[v1 * 3 + 2] = originZ;
 
-          // Edge connectivity
-          m_Edges[edgeIdx * 2] = v0;
-          m_Edges[edgeIdx * 2 + 1] = v1;
-        }
+        // Edge connectivity
+        edges[edgeIdx * 2] = v0;
+        edges[edgeIdx * 2 + 1] = v1;
       }
     }
   }
-
-private:
-  const AbstractDataStore<T>& m_FeatureIds;
-  usize m_DimX;
-  usize m_DimY;
-  float32 m_OriginX;
-  float32 m_OriginY;
-  float32 m_OriginZ;
-  float32 m_SpacingX;
-  float32 m_SpacingY;
-  INodeGeometry0D::SharedVertexList& m_Vertices;
-  INodeGeometry1D::SharedEdgeList& m_Edges;
-  std::atomic<usize>& m_CurrentEdge;
-  const std::atomic_bool& m_ShouldCancel;
-};
+}
 
 /**
  * @brief Creates vertices and edges for horizontal boundaries
@@ -204,83 +150,49 @@ private:
  * Each edge gets 2 vertices stored consecutively (v0, v1) in the vertex array.
  */
 template <typename T>
-class PopulateHorizontalEdgesImpl
+void PopulateHorizontalEdgesImpl(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
+                                 INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, usize& currentEdge, const std::atomic_bool& shouldCancel, const Range& range)
 {
-public:
-  PopulateHorizontalEdgesImpl(const AbstractDataStore<T>& featureIds, const usize dimX, const usize dimY, const float32 originX, const float32 originY, const float32 originZ, const float32 spacingX,
-                              const float32 spacingY, INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, std::atomic<usize>& currentEdge,
-                              const std::atomic_bool& shouldCancel)
-  : m_FeatureIds(featureIds)
-  , m_DimX(dimX)
-  , m_DimY(dimY)
-  , m_OriginX(originX)
-  , m_OriginY(originY)
-  , m_OriginZ(originZ)
-  , m_SpacingX(spacingX)
-  , m_SpacingY(spacingY)
-  , m_Vertices(vertices)
-  , m_Edges(edges)
-  , m_CurrentEdge(currentEdge)
-  , m_ShouldCancel(shouldCancel)
+  for(usize y = range.min(); y < range.max(); y++)
   {
-  }
-
-  void operator()(const Range& range) const
-  {
-    for(usize y = range.min(); y < range.max(); y++)
+    if(shouldCancel)
     {
-      if(m_ShouldCancel)
+      return;
+    }
+    for(usize x = 0; x < dimX; x++)
+    {
+      usize idx1 = y * dimX + x;
+      usize idx2 = (y + 1) * dimX + x;
+      if(featureIds[idx1] != featureIds[idx2])
       {
-        return;
-      }
-      for(usize x = 0; x < m_DimX; x++)
-      {
-        usize idx1 = y * m_DimX + x;
-        usize idx2 = (y + 1) * m_DimX + x;
-        if(m_FeatureIds[idx1] != m_FeatureIds[idx2])
-        {
-          const usize edgeIdx = m_CurrentEdge.fetch_add(1, std::memory_order_relaxed);
+        const usize edgeIdx = currentEdge;
+        currentEdge++;
 
-          // Horizontal edge at grid position (x, y+1) to (x+1, y+1)
-          const float32 edgeY = m_OriginY + static_cast<float32>(y + 1) * m_SpacingY;
-          const float32 x0 = m_OriginX + static_cast<float32>(x) * m_SpacingX;
-          const float32 x1 = m_OriginX + static_cast<float32>(x + 1) * m_SpacingX;
+        // Horizontal edge at grid position (x, y+1) to (x+1, y+1)
+        const float32 edgeY = originY + static_cast<float32>(y + 1) * spacingY;
+        const float32 x0 = originX + static_cast<float32>(x) * spacingX;
+        const float32 x1 = originX + static_cast<float32>(x + 1) * spacingX;
 
-          const usize v0 = edgeIdx * 2;
-          const usize v1 = edgeIdx * 2 + 1;
+        const usize v0 = edgeIdx * 2;
+        const usize v1 = edgeIdx * 2 + 1;
 
-          // Vertex 0: (x0, edgeY, originZ)
-          m_Vertices[v0 * 3] = x0;
-          m_Vertices[v0 * 3 + 1] = edgeY;
-          m_Vertices[v0 * 3 + 2] = m_OriginZ;
+        // Vertex 0: (x0, edgeY, originZ)
+        vertices[v0 * 3] = x0;
+        vertices[v0 * 3 + 1] = edgeY;
+        vertices[v0 * 3 + 2] = originZ;
 
-          // Vertex 1: (x1, edgeY, originZ)
-          m_Vertices[v1 * 3] = x1;
-          m_Vertices[v1 * 3 + 1] = edgeY;
-          m_Vertices[v1 * 3 + 2] = m_OriginZ;
+        // Vertex 1: (x1, edgeY, originZ)
+        vertices[v1 * 3] = x1;
+        vertices[v1 * 3 + 1] = edgeY;
+        vertices[v1 * 3 + 2] = originZ;
 
-          // Edge connectivity
-          m_Edges[edgeIdx * 2] = v0;
-          m_Edges[edgeIdx * 2 + 1] = v1;
-        }
+        // Edge connectivity
+        edges[edgeIdx * 2] = v0;
+        edges[edgeIdx * 2 + 1] = v1;
       }
     }
   }
-
-private:
-  const AbstractDataStore<T>& m_FeatureIds;
-  usize m_DimX;
-  usize m_DimY;
-  float32 m_OriginX;
-  float32 m_OriginY;
-  float32 m_OriginZ;
-  float32 m_SpacingX;
-  float32 m_SpacingY;
-  INodeGeometry0D::SharedVertexList& m_Vertices;
-  INodeGeometry1D::SharedEdgeList& m_Edges;
-  std::atomic<usize>& m_CurrentEdge;
-  const std::atomic_bool& m_ShouldCancel;
-};
+}
 
 // =============================================================================
 // MAIN ALGORITHM FUNCTOR
@@ -288,7 +200,7 @@ private:
 /**
  * @brief Functor that implements the core boundary extraction algorithm
  *
- * This functor is called via ExecuteDataFunction which handles type dispatching
+ * This functor is called via ExecuteDataFunction, which handles type dispatching
  * based on the FeatureIds array data type. The algorithm:
  *
  * 1. Extracts geometry parameters (dimensions, origin, spacing)
@@ -304,10 +216,10 @@ struct ExtractFeatureBoundariesFunctor
 
   template <typename T>
   Result<> operator()(const DataStructure& dataStructure, const DataPath& featureIdsPath, const ImageGeom& imageGeom, EdgeGeom& edgeGeom, const std::atomic_bool& shouldCancel,
-                      const ExtractFeatureBoundaries2DInputValues::ZValueChoiceType zValueChoice, const float32 customZValue, const bool extractVirtualSampleEdges)
+                      ExtractFeatureBoundaries2DInputValues::ZValueChoiceType zValueChoice, float32 customZValue, bool extractVirtualSampleEdges)
   {
-    using CountVerticalEdgesImpl = CountEdgesImpl<T, 1, 0>;
-    using CountHorizontalEdgesImpl = CountEdgesImpl<T, 0, 1>;
+    // using CountVerticalEdgesImpl = CountEdgesImpl<T, 1, 0>;
+    // using CountHorizontalEdgesImpl = CountEdgesImpl<T, 0, 1>;
 
     // =========================================================================
     // SETUP: Extract geometry parameters and feature IDs
@@ -335,7 +247,6 @@ struct ExtractFeatureBoundariesFunctor
       zValue = origin.getZ();
       break;
     case ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMaxZValue:
-      // Max Z = origin + spacing * dims (for Z=1, this is origin.z + spacing.z)
       zValue = origin.getZ() + (spacing.getZ() * static_cast<float32>(dims.getZ()));
       break;
     case ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseCustomZValue:
@@ -348,11 +259,11 @@ struct ExtractFeatureBoundariesFunctor
     // =========================================================================
     // This two-pass approach (count then populate) allows us to allocate the
     // exact amount of memory needed upfront, avoiding dynamic resizing.
-    std::atomic<usize> verticalEdgeCount{0};
-    std::atomic<usize> horizontalEdgeCount{0};
+    usize verticalEdgeCount = 0;
+    usize horizontalEdgeCount = 0;
 
     // Count vertical edges (between horizontally adjacent cells)
-    CountVerticalEdgesImpl(featureIdsStoreRef, dimX, dimY, verticalEdgeCount, shouldCancel)({0, dimY});
+    CountEdges<T, 1, 0>(featureIdsStoreRef, dimX, dimY, verticalEdgeCount, shouldCancel, {0, dimY});
 
     if(shouldCancel)
     {
@@ -363,7 +274,7 @@ struct ExtractFeatureBoundariesFunctor
     // Note: We only check dimY-1 rows since we're comparing row y with row y+1
     if(dimY > 1)
     {
-      CountHorizontalEdgesImpl(featureIdsStoreRef, dimX, dimY, horizontalEdgeCount, shouldCancel)({0, dimY - 1});
+      CountEdges<T, 0, 1>(featureIdsStoreRef, dimX, dimY, horizontalEdgeCount, shouldCancel, {0, dimY - 1});
     }
 
     if(shouldCancel)
@@ -380,7 +291,7 @@ struct ExtractFeatureBoundariesFunctor
       outerEdgeCount = 2 * dimX + 2 * dimY;
     }
 
-    usize totalEdgeCount = verticalEdgeCount.load() + horizontalEdgeCount.load() + outerEdgeCount;
+    usize totalEdgeCount = verticalEdgeCount + horizontalEdgeCount + outerEdgeCount;
 
     // =========================================================================
     // EARLY EXIT: Handle case where no boundaries exist
@@ -408,10 +319,10 @@ struct ExtractFeatureBoundariesFunctor
     // =========================================================================
     // PASS 2 - POPULATE: Create vertices and edge connectivity
     // =========================================================================
-    std::atomic<usize> currentEdge{0};
+    usize currentEdge = 0;
 
     // Populate vertical edges
-    PopulateVerticalEdgesImpl<T>(featureIdsStoreRef, dimX, dimY, originX, originY, zValue, spacingX, spacingY, verticesRef, edgesRef, currentEdge, shouldCancel)({0, dimY});
+    PopulateVerticalEdges<T>(featureIdsStoreRef, dimX, dimY, originX, originY, zValue, spacingX, spacingY, verticesRef, edgesRef, currentEdge, shouldCancel, {0, dimY});
 
     if(shouldCancel)
     {
@@ -421,7 +332,7 @@ struct ExtractFeatureBoundariesFunctor
     // Populate horizontal edges
     if(dimY > 1)
     {
-      PopulateHorizontalEdgesImpl<T>(featureIdsStoreRef, dimX, dimY, originX, originY, zValue, spacingX, spacingY, verticesRef, edgesRef, currentEdge, shouldCancel)({0, dimY - 1});
+      PopulateHorizontalEdgesImpl<T>(featureIdsStoreRef, dimX, dimY, originX, originY, zValue, spacingX, spacingY, verticesRef, edgesRef, currentEdge, shouldCancel, {0, dimY - 1});
     }
 
     if(shouldCancel)
@@ -440,7 +351,8 @@ struct ExtractFeatureBoundariesFunctor
       // Left boundary (x = 0): vertical edges along the left side
       for(usize y = 0; y < dimY; y++)
       {
-        const usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
+        const usize edgeIdx = currentEdge;
+        currentEdge++;
         const float32 x = originX;
         const float32 y0 = originY + static_cast<float32>(y) * spacingY;
         const float32 y1 = originY + static_cast<float32>(y + 1) * spacingY;
@@ -463,7 +375,8 @@ struct ExtractFeatureBoundariesFunctor
       // Right boundary (x = dimX): vertical edges from (dimX, y) to (dimX, y+1) for y = 0 to dimY-1
       for(usize y = 0; y < dimY; y++)
       {
-        const usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
+        const usize edgeIdx = currentEdge;
+        currentEdge++;
         const float32 x = originX + static_cast<float32>(dimX) * spacingX;
         const float32 y0 = originY + static_cast<float32>(y) * spacingY;
         const float32 y1 = originY + static_cast<float32>(y + 1) * spacingY;
@@ -486,7 +399,8 @@ struct ExtractFeatureBoundariesFunctor
       // Bottom boundary (y = 0): horizontal edges from (x, 0) to (x+1, 0) for x = 0 to dimX-1
       for(usize x = 0; x < dimX; x++)
       {
-        const usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
+        const usize edgeIdx = currentEdge;
+        currentEdge++;
         const float32 y = originY;
         const float32 x0 = originX + static_cast<float32>(x) * spacingX;
         const float32 x1 = originX + static_cast<float32>(x + 1) * spacingX;
@@ -509,7 +423,8 @@ struct ExtractFeatureBoundariesFunctor
       // Top boundary (y = dimY): horizontal edges from (x, dimY) to (x+1, dimY) for x = 0 to dimX-1
       for(usize x = 0; x < dimX; x++)
       {
-        const usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
+        const usize edgeIdx = currentEdge;
+        currentEdge++;
         const float32 y = originY + static_cast<float32>(dimY) * spacingY;
         const float32 x0 = originX + static_cast<float32>(x) * spacingX;
         const float32 x1 = originX + static_cast<float32>(x + 1) * spacingX;
@@ -591,9 +506,8 @@ Result<> ExtractFeatureBoundaries2D::operator()()
 
   m_MessageHandler(IFilter::Message::Type::Info, "Extracting feature boundaries...");
 
-  // ExecuteDataFunction dispatches to the templated functor based on dataType.
-  // This allows the algorithm to work with any integer type for FeatureIds
-  // (int8, int16, int32, int64, uint8, uint16, uint32, uint64).
+  // Normally FeatureIds are int32 values, but this filter allows the use of any integer types.
+  // Due to this, we need to use the `ExecuteDataFunction` design.
   return ExecuteDataFunction(ExtractFeatureBoundariesFunctor{}, dataType, m_DataStructure, m_InputValues->FeatureIdsArrayPath, imageGeom, edgeGeom, m_ShouldCancel, m_InputValues->ZValueChoice,
                              m_InputValues->CustomZValue, m_InputValues->ExtractVirtualSampleEdges);
 }
