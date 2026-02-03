@@ -44,11 +44,9 @@ public:
   ExtractFeatureBoundaries2D& operator=(const ExtractFeatureBoundaries2D&) = delete;
   ExtractFeatureBoundaries2D& operator=(ExtractFeatureBoundaries2D&&) noexcept = delete;
 
-
-
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
+  const std::atomic_bool& getCancel() const;
 
 private:
   DataStructure& m_DataStructure;

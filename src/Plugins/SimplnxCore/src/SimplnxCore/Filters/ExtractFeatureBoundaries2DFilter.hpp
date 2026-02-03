@@ -31,7 +31,6 @@ public:
   static inline constexpr StringLiteral k_CustomZValue_Key = "custom_z_value";
   static inline constexpr StringLiteral k_ExtractVirtualSampleEdges_Key = "extract_virtual_sample_edges";
 
-
   /**
    * @brief Returns the name of the filter.
    * @return

@@ -28,22 +28,22 @@ namespace
 // =============================================================================
 
 /**
-* @brief Counts vertical boundary edges (edges between horizontally adjacent cells)
-*
-* A vertical edge exists between cell (x, y) and cell (x+1, y) when they have
-* different feature IDs. The edge is placed at the right side of cell (x, y).
-*
-* Grid visualization (4x3 grid):
-*   +---+---+---+---+
-*   | 0 | 1 | 2 | 3 |  y=2
-*   +---+---+---+---+
-*   | 0 | 1 | 2 | 3 |  y=1
-*   +---+---+---+---+
-*   | 0 | 1 | 2 | 3 |  y=0
-*   +---+---+---+---+
-*     ^   ^   ^
-*     Vertical edges checked between adjacent cells in X direction
-*/
+ * @brief Counts vertical boundary edges (edges between horizontally adjacent cells)
+ *
+ * A vertical edge exists between cell (x, y) and cell (x+1, y) when they have
+ * different feature IDs. The edge is placed at the right side of cell (x, y).
+ *
+ * Grid visualization (4x3 grid):
+ *   +---+---+---+---+
+ *   | 0 | 1 | 2 | 3 |  y=2
+ *   +---+---+---+---+
+ *   | 0 | 1 | 2 | 3 |  y=1
+ *   +---+---+---+---+
+ *   | 0 | 1 | 2 | 3 |  y=0
+ *   +---+---+---+---+
+ *     ^   ^   ^
+ *     Vertical edges checked between adjacent cells in X direction
+ */
 
 /**
  * @brief Counts horizontal boundary edges (edges between vertically adjacent cells)
@@ -65,7 +65,7 @@ template <typename T, usize XFactor = 0, usize YFactor = 0>
 class CountEdgesImpl
 {
 public:
-  CountEdgesImpl(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, std::atomic<usize>& edgeCount, const std::atomic_bool& shouldCancel)
+  CountEdgesImpl(const AbstractDataStore<T>& featureIds, const usize dimX, const usize dimY, std::atomic<usize>& edgeCount, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_DimX(dimX)
   , m_DimY(dimY)
@@ -118,8 +118,9 @@ template <typename T>
 class PopulateVerticalEdgesImpl
 {
 public:
-  PopulateVerticalEdgesImpl(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
-                            INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, std::atomic<usize>& currentEdge, const std::atomic_bool& shouldCancel)
+  PopulateVerticalEdgesImpl(const AbstractDataStore<T>& featureIds, const usize dimX, const usize dimY, const float32 originX, const float32 originY, const float32 originZ, const float32 spacingX,
+                            const float32 spacingY, INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, std::atomic<usize>& currentEdge,
+                            const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_DimX(dimX)
   , m_DimY(dimY)
@@ -149,15 +150,15 @@ public:
         usize idx2 = y * m_DimX + (x + 1);
         if(m_FeatureIds[idx1] != m_FeatureIds[idx2])
         {
-          usize edgeIdx = m_CurrentEdge.fetch_add(1, std::memory_order_relaxed);
+          const usize edgeIdx = m_CurrentEdge.fetch_add(1, std::memory_order_relaxed);
 
           // Vertical edge at grid position (x+1, y) to (x+1, y+1)
-          float32 edgeX = m_OriginX + static_cast<float32>(x + 1) * m_SpacingX;
-          float32 y0 = m_OriginY + static_cast<float32>(y) * m_SpacingY;
-          float32 y1 = m_OriginY + static_cast<float32>(y + 1) * m_SpacingY;
+          const float32 edgeX = m_OriginX + static_cast<float32>(x + 1) * m_SpacingX;
+          const float32 y0 = m_OriginY + static_cast<float32>(y) * m_SpacingY;
+          const float32 y1 = m_OriginY + static_cast<float32>(y + 1) * m_SpacingY;
 
-          usize v0 = edgeIdx * 2;
-          usize v1 = edgeIdx * 2 + 1;
+          const usize v0 = edgeIdx * 2;
+          const usize v1 = edgeIdx * 2 + 1;
 
           // Vertex 0: (edgeX, y0, originZ)
           m_Vertices[v0 * 3] = edgeX;
@@ -206,8 +207,9 @@ template <typename T>
 class PopulateHorizontalEdgesImpl
 {
 public:
-  PopulateHorizontalEdgesImpl(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
-                              INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, std::atomic<usize>& currentEdge, const std::atomic_bool& shouldCancel)
+  PopulateHorizontalEdgesImpl(const AbstractDataStore<T>& featureIds, const usize dimX, const usize dimY, const float32 originX, const float32 originY, const float32 originZ, const float32 spacingX,
+                              const float32 spacingY, INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, std::atomic<usize>& currentEdge,
+                              const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_DimX(dimX)
   , m_DimY(dimY)
@@ -237,15 +239,15 @@ public:
         usize idx2 = (y + 1) * m_DimX + x;
         if(m_FeatureIds[idx1] != m_FeatureIds[idx2])
         {
-          usize edgeIdx = m_CurrentEdge.fetch_add(1, std::memory_order_relaxed);
+          const usize edgeIdx = m_CurrentEdge.fetch_add(1, std::memory_order_relaxed);
 
           // Horizontal edge at grid position (x, y+1) to (x+1, y+1)
-          float32 edgeY = m_OriginY + static_cast<float32>(y + 1) * m_SpacingY;
-          float32 x0 = m_OriginX + static_cast<float32>(x) * m_SpacingX;
-          float32 x1 = m_OriginX + static_cast<float32>(x + 1) * m_SpacingX;
+          const float32 edgeY = m_OriginY + static_cast<float32>(y + 1) * m_SpacingY;
+          const float32 x0 = m_OriginX + static_cast<float32>(x) * m_SpacingX;
+          const float32 x1 = m_OriginX + static_cast<float32>(x + 1) * m_SpacingX;
 
-          usize v0 = edgeIdx * 2;
-          usize v1 = edgeIdx * 2 + 1;
+          const usize v0 = edgeIdx * 2;
+          const usize v1 = edgeIdx * 2 + 1;
 
           // Vertex 0: (x0, edgeY, originZ)
           m_Vertices[v0 * 3] = x0;
@@ -301,8 +303,8 @@ struct ExtractFeatureBoundariesFunctor
 {
 
   template <typename T>
-  Result<> operator()(const DataStructure& dataStructure, const DataPath& featureIdsPath, const ImageGeom& imageGeom, EdgeGeom& edgeGeom, const std::atomic_bool& shouldCancel, ExtractFeatureBoundaries2DInputValues::ZValueChoiceType zValueChoice,
-                      float32 customZValue, bool extractVirtualSampleEdges)
+  Result<> operator()(const DataStructure& dataStructure, const DataPath& featureIdsPath, const ImageGeom& imageGeom, EdgeGeom& edgeGeom, const std::atomic_bool& shouldCancel,
+                      const ExtractFeatureBoundaries2DInputValues::ZValueChoiceType zValueChoice, const float32 customZValue, const bool extractVirtualSampleEdges)
   {
     using CountVerticalEdgesImpl = CountEdgesImpl<T, 1, 0>;
     using CountHorizontalEdgesImpl = CountEdgesImpl<T, 0, 1>;
@@ -310,12 +312,11 @@ struct ExtractFeatureBoundariesFunctor
     // =========================================================================
     // SETUP: Extract geometry parameters and feature IDs
     // =========================================================================
-    const auto& featureIds = dataStructure.getDataRefAs<DataArray<T>>(featureIdsPath);
-    const auto& featureIdsStore = featureIds.getDataStoreRef();
+    const auto& featureIdsStoreRef = dataStructure.getDataRefAs<DataArray<T>>(featureIdsPath).getDataStoreRef();
 
-    SizeVec3 dims = imageGeom.getDimensions();
-    FloatVec3 origin = imageGeom.getOrigin();
-    FloatVec3 spacing = imageGeom.getSpacing();
+    const SizeVec3 dims = imageGeom.getDimensions();
+    const FloatVec3 origin = imageGeom.getOrigin();
+    const FloatVec3 spacing = imageGeom.getSpacing();
 
     usize dimX = dims.getX();
     usize dimY = dims.getY();
@@ -335,10 +336,9 @@ struct ExtractFeatureBoundariesFunctor
       break;
     case ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMaxZValue:
       // Max Z = origin + spacing * dims (for Z=1, this is origin.z + spacing.z)
-      zValue = origin.getZ() + spacing.getZ() * static_cast<float32>(dims.getZ());
+      zValue = origin.getZ() + (spacing.getZ() * static_cast<float32>(dims.getZ()));
       break;
     case ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseCustomZValue:
-    default:
       zValue = customZValue;
       break;
     }
@@ -352,9 +352,7 @@ struct ExtractFeatureBoundariesFunctor
     std::atomic<usize> horizontalEdgeCount{0};
 
     // Count vertical edges (between horizontally adjacent cells)
-    {
-      CountVerticalEdgesImpl(featureIdsStore, dimX, dimY, verticalEdgeCount, shouldCancel).operator()({0, dimY});
-    }
+    CountVerticalEdgesImpl(featureIdsStoreRef, dimX, dimY, verticalEdgeCount, shouldCancel)({0, dimY});
 
     if(shouldCancel)
     {
@@ -365,7 +363,7 @@ struct ExtractFeatureBoundariesFunctor
     // Note: We only check dimY-1 rows since we're comparing row y with row y+1
     if(dimY > 1)
     {
-      CountHorizontalEdgesImpl(featureIdsStore, dimX, dimY, horizontalEdgeCount, shouldCancel).operator()({0, dimY - 1});
+      CountHorizontalEdgesImpl(featureIdsStoreRef, dimX, dimY, horizontalEdgeCount, shouldCancel)({0, dimY - 1});
     }
 
     if(shouldCancel)
@@ -373,7 +371,7 @@ struct ExtractFeatureBoundariesFunctor
       return {};
     }
 
-    // Count outer boundary edges if user requested the virtual sample border
+    // Count outer boundary edges if the user requested the virtual sample border
     usize outerEdgeCount = 0;
     if(extractVirtualSampleEdges)
     {
@@ -404,8 +402,8 @@ struct ExtractFeatureBoundariesFunctor
     edgeGeom.resizeVertexList(numVertices);
     edgeGeom.resizeEdgeList(totalEdgeCount);
 
-    INodeGeometry0D::SharedVertexList& vertices = edgeGeom.getVerticesRef();
-    INodeGeometry1D::SharedEdgeList& edges = edgeGeom.getEdgesRef();
+    INodeGeometry0D::SharedVertexList& verticesRef = edgeGeom.getVerticesRef();
+    INodeGeometry1D::SharedEdgeList& edgesRef = edgeGeom.getEdgesRef();
 
     // =========================================================================
     // PASS 2 - POPULATE: Create vertices and edge connectivity
@@ -413,9 +411,7 @@ struct ExtractFeatureBoundariesFunctor
     std::atomic<usize> currentEdge{0};
 
     // Populate vertical edges
-    {
-      PopulateVerticalEdgesImpl<T>(featureIdsStore, dimX, dimY, originX, originY, zValue, spacingX, spacingY, vertices, edges, currentEdge, shouldCancel).operator()({0, dimY});
-    }
+    PopulateVerticalEdgesImpl<T>(featureIdsStoreRef, dimX, dimY, originX, originY, zValue, spacingX, spacingY, verticesRef, edgesRef, currentEdge, shouldCancel)({0, dimY});
 
     if(shouldCancel)
     {
@@ -425,7 +421,7 @@ struct ExtractFeatureBoundariesFunctor
     // Populate horizontal edges
     if(dimY > 1)
     {
-      PopulateHorizontalEdgesImpl<T>(featureIdsStore, dimX, dimY, originX, originY, zValue, spacingX, spacingY, vertices, edges, currentEdge, shouldCancel).operator()({0, dimY - 1});
+      PopulateHorizontalEdgesImpl<T>(featureIdsStoreRef, dimX, dimY, originX, originY, zValue, spacingX, spacingY, verticesRef, edgesRef, currentEdge, shouldCancel)({0, dimY - 1});
     }
 
     if(shouldCancel)
@@ -444,93 +440,93 @@ struct ExtractFeatureBoundariesFunctor
       // Left boundary (x = 0): vertical edges along the left side
       for(usize y = 0; y < dimY; y++)
       {
-        usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
-        float32 x = originX;
-        float32 y0 = originY + static_cast<float32>(y) * spacingY;
-        float32 y1 = originY + static_cast<float32>(y + 1) * spacingY;
+        const usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
+        const float32 x = originX;
+        const float32 y0 = originY + static_cast<float32>(y) * spacingY;
+        const float32 y1 = originY + static_cast<float32>(y + 1) * spacingY;
 
-        usize v0 = edgeIdx * 2;
-        usize v1 = edgeIdx * 2 + 1;
+        const usize v0 = edgeIdx * 2;
+        const usize v1 = edgeIdx * 2 + 1;
 
-        vertices[v0 * 3] = x;
-        vertices[v0 * 3 + 1] = y0;
-        vertices[v0 * 3 + 2] = zValue;
+        verticesRef[v0 * 3] = x;
+        verticesRef[v0 * 3 + 1] = y0;
+        verticesRef[v0 * 3 + 2] = zValue;
 
-        vertices[v1 * 3] = x;
-        vertices[v1 * 3 + 1] = y1;
-        vertices[v1 * 3 + 2] = zValue;
+        verticesRef[v1 * 3] = x;
+        verticesRef[v1 * 3 + 1] = y1;
+        verticesRef[v1 * 3 + 2] = zValue;
 
-        edges[edgeIdx * 2] = v0;
-        edges[edgeIdx * 2 + 1] = v1;
+        edgesRef[edgeIdx * 2] = v0;
+        edgesRef[edgeIdx * 2 + 1] = v1;
       }
 
       // Right boundary (x = dimX): vertical edges from (dimX, y) to (dimX, y+1) for y = 0 to dimY-1
       for(usize y = 0; y < dimY; y++)
       {
-        usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
-        float32 x = originX + static_cast<float32>(dimX) * spacingX;
-        float32 y0 = originY + static_cast<float32>(y) * spacingY;
-        float32 y1 = originY + static_cast<float32>(y + 1) * spacingY;
+        const usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
+        const float32 x = originX + static_cast<float32>(dimX) * spacingX;
+        const float32 y0 = originY + static_cast<float32>(y) * spacingY;
+        const float32 y1 = originY + static_cast<float32>(y + 1) * spacingY;
 
-        usize v0 = edgeIdx * 2;
-        usize v1 = edgeIdx * 2 + 1;
+        const usize v0 = edgeIdx * 2;
+        const usize v1 = edgeIdx * 2 + 1;
 
-        vertices[v0 * 3] = x;
-        vertices[v0 * 3 + 1] = y0;
-        vertices[v0 * 3 + 2] = zValue;
+        verticesRef[v0 * 3] = x;
+        verticesRef[v0 * 3 + 1] = y0;
+        verticesRef[v0 * 3 + 2] = zValue;
 
-        vertices[v1 * 3] = x;
-        vertices[v1 * 3 + 1] = y1;
-        vertices[v1 * 3 + 2] = zValue;
+        verticesRef[v1 * 3] = x;
+        verticesRef[v1 * 3 + 1] = y1;
+        verticesRef[v1 * 3 + 2] = zValue;
 
-        edges[edgeIdx * 2] = v0;
-        edges[edgeIdx * 2 + 1] = v1;
+        edgesRef[edgeIdx * 2] = v0;
+        edgesRef[edgeIdx * 2 + 1] = v1;
       }
 
       // Bottom boundary (y = 0): horizontal edges from (x, 0) to (x+1, 0) for x = 0 to dimX-1
       for(usize x = 0; x < dimX; x++)
       {
-        usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
-        float32 y = originY;
-        float32 x0 = originX + static_cast<float32>(x) * spacingX;
-        float32 x1 = originX + static_cast<float32>(x + 1) * spacingX;
+        const usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
+        const float32 y = originY;
+        const float32 x0 = originX + static_cast<float32>(x) * spacingX;
+        const float32 x1 = originX + static_cast<float32>(x + 1) * spacingX;
 
-        usize v0 = edgeIdx * 2;
-        usize v1 = edgeIdx * 2 + 1;
+        const usize v0 = edgeIdx * 2;
+        const usize v1 = edgeIdx * 2 + 1;
 
-        vertices[v0 * 3] = x0;
-        vertices[v0 * 3 + 1] = y;
-        vertices[v0 * 3 + 2] = zValue;
+        verticesRef[v0 * 3] = x0;
+        verticesRef[v0 * 3 + 1] = y;
+        verticesRef[v0 * 3 + 2] = zValue;
 
-        vertices[v1 * 3] = x1;
-        vertices[v1 * 3 + 1] = y;
-        vertices[v1 * 3 + 2] = zValue;
+        verticesRef[v1 * 3] = x1;
+        verticesRef[v1 * 3 + 1] = y;
+        verticesRef[v1 * 3 + 2] = zValue;
 
-        edges[edgeIdx * 2] = v0;
-        edges[edgeIdx * 2 + 1] = v1;
+        edgesRef[edgeIdx * 2] = v0;
+        edgesRef[edgeIdx * 2 + 1] = v1;
       }
 
       // Top boundary (y = dimY): horizontal edges from (x, dimY) to (x+1, dimY) for x = 0 to dimX-1
       for(usize x = 0; x < dimX; x++)
       {
-        usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
-        float32 y = originY + static_cast<float32>(dimY) * spacingY;
-        float32 x0 = originX + static_cast<float32>(x) * spacingX;
-        float32 x1 = originX + static_cast<float32>(x + 1) * spacingX;
+        const usize edgeIdx = currentEdge.fetch_add(1, std::memory_order_relaxed);
+        const float32 y = originY + static_cast<float32>(dimY) * spacingY;
+        const float32 x0 = originX + static_cast<float32>(x) * spacingX;
+        const float32 x1 = originX + static_cast<float32>(x + 1) * spacingX;
 
-        usize v0 = edgeIdx * 2;
-        usize v1 = edgeIdx * 2 + 1;
+        const usize v0 = edgeIdx * 2;
+        const usize v1 = edgeIdx * 2 + 1;
 
-        vertices[v0 * 3] = x0;
-        vertices[v0 * 3 + 1] = y;
-        vertices[v0 * 3 + 2] = zValue;
+        verticesRef[v0 * 3] = x0;
+        verticesRef[v0 * 3 + 1] = y;
+        verticesRef[v0 * 3 + 2] = zValue;
 
-        vertices[v1 * 3] = x1;
-        vertices[v1 * 3 + 1] = y;
-        vertices[v1 * 3 + 2] = zValue;
+        verticesRef[v1 * 3] = x1;
+        verticesRef[v1 * 3 + 1] = y;
+        verticesRef[v1 * 3 + 2] = zValue;
 
-        edges[edgeIdx * 2] = v0;
-        edges[edgeIdx * 2 + 1] = v1;
+        edgesRef[edgeIdx * 2] = v0;
+        edgesRef[edgeIdx * 2 + 1] = v1;
       }
     }
 
@@ -543,7 +539,7 @@ struct ExtractFeatureBoundariesFunctor
     // =========================================================================
     // Each edge creates its own pair of vertices, resulting in many duplicate
     // vertices at shared corners. For example, where 4 cells meet, all 4
-    // boundary edges would create a vertex at that corner. EliminateDuplicateNodes
+    // boundary edges would create a vertex at that intersection. EliminateDuplicateNodes
     // merges these duplicates and updates the edge connectivity to reference
     // the unique vertices, creating a clean connected edge network suitable
     // for visualization and analysis.
@@ -552,6 +548,7 @@ struct ExtractFeatureBoundariesFunctor
     return result;
   }
 };
+
 } // namespace
 
 // =============================================================================
@@ -576,7 +573,7 @@ ExtractFeatureBoundaries2D::ExtractFeatureBoundaries2D(DataStructure& dataStruct
 ExtractFeatureBoundaries2D::~ExtractFeatureBoundaries2D() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ExtractFeatureBoundaries2D::getCancel()
+const std::atomic_bool& ExtractFeatureBoundaries2D::getCancel() const
 {
   return m_ShouldCancel;
 }
@@ -590,7 +587,7 @@ Result<> ExtractFeatureBoundaries2D::operator()()
   const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
 
   // Get the data type to dispatch to the correct template instantiation
-  DataType dataType = featureIdsArray.getDataType();
+  const DataType dataType = featureIdsArray.getDataType();
 
   m_MessageHandler(IFilter::Message::Type::Info, "Extracting feature boundaries...");
 
