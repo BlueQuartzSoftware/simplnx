@@ -15,9 +15,9 @@ struct SIMPLNXCORE_EXPORT ExtractFeatureBoundaries2DInputValues
   DataPath InputImageGeometryPath;
   DataPath FeatureIdsArrayPath;
   DataPath OutputEdgeGeometryPath;
-  uint64 ZValueChoice;
-  float32 CustomZValue;
-  bool ExtractVirtualSampleEdges;
+  uint64 ZValueChoice = 0;
+  float32 CustomZValue = 0.0f;
+  bool ExtractVirtualSampleEdges = false;
 };
 
 /**
