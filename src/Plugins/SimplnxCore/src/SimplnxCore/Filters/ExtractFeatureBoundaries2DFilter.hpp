@@ -31,13 +31,6 @@ public:
   static inline constexpr StringLiteral k_CustomZValue_Key = "custom_z_value";
   static inline constexpr StringLiteral k_ExtractVirtualSampleEdges_Key = "extract_virtual_sample_edges";
 
-  // Z Value Choice indices
-  enum class ZValueChoiceType : uint64
-  {
-    UseMinZValue = 0,
-    UseMaxZValue = 1,
-    UseCustomZValue = 2
-  };
 
   /**
    * @brief Returns the name of the filter.

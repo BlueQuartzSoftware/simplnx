@@ -65,12 +65,12 @@ Parameters ExtractFeatureBoundaries2DFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Z Value Options"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ZValueChoice_Key, "Z Value Source", "Select the source for the Z coordinate of the generated vertices",
-                                                                    to_underlying(ZValueChoiceType::UseMinZValue),
+                                                                    to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMinZValue),
                                                                     ChoicesParameter::Choices{"Use min z value from Image geometry", "Use max z value from Image geometry", "Use Custom z Offset"}));
   params.insert(std::make_unique<Float32Parameter>(k_CustomZValue_Key, "Custom Z Value", "The custom Z offset value for the generated vertices", 0.0f));
 
   // Link the custom Z value parameter to only show when "Use Custom z Offset" is selected
-  params.linkParameters(k_ZValueChoice_Key, k_CustomZValue_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ZValueChoiceType::UseCustomZValue)));
+  params.linkParameters(k_ZValueChoice_Key, k_CustomZValue_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseCustomZValue)));
 
   params.insertSeparator(Parameters::Separator{"Edge Extraction Options"});
   params.insert(std::make_unique<BoolParameter>(k_ExtractVirtualSampleEdges_Key, "Extract Edges of Virtual Sample", "Whether to extract the outer edges of the image geometry", true));
@@ -146,7 +146,7 @@ Result<> ExtractFeatureBoundaries2DFilter::executeImpl(DataStructure& dataStruct
   inputValues.InputImageGeometryPath = filterArgs.value<DataPath>(k_InputImageGeometryPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.OutputEdgeGeometryPath = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
-  inputValues.ZValueChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ZValueChoice_Key);
+  inputValues.ZValueChoice = static_cast<ExtractFeatureBoundaries2DInputValues::ZValueChoiceType>(filterArgs.value<ChoicesParameter::ValueType>(k_ZValueChoice_Key));
   inputValues.CustomZValue = filterArgs.value<float32>(k_CustomZValue_Key);
   inputValues.ExtractVirtualSampleEdges = filterArgs.value<bool>(k_ExtractVirtualSampleEdges_Key);
 

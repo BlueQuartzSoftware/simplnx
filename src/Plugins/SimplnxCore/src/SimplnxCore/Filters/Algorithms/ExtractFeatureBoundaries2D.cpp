@@ -281,14 +281,6 @@ private:
 };
 
 // =============================================================================
-// Z VALUE CHOICE CONSTANTS
-// =============================================================================
-// These constants must match ExtractFeatureBoundaries2DFilter::ZValueChoiceType
-constexpr uint64 k_UseMinZValue = 0;
-constexpr uint64 k_UseMaxZValue = 1;
-constexpr uint64 k_UseCustomZValue = 2;
-
-// =============================================================================
 // MAIN ALGORITHM FUNCTOR
 // =============================================================================
 /**
@@ -309,7 +301,7 @@ struct ExtractFeatureBoundariesFunctor
 {
 
   template <typename T>
-  Result<> operator()(const DataStructure& dataStructure, const DataPath& featureIdsPath, const ImageGeom& imageGeom, EdgeGeom& edgeGeom, const std::atomic_bool& shouldCancel, uint64 zValueChoice,
+  Result<> operator()(const DataStructure& dataStructure, const DataPath& featureIdsPath, const ImageGeom& imageGeom, EdgeGeom& edgeGeom, const std::atomic_bool& shouldCancel, ExtractFeatureBoundaries2DInputValues::ZValueChoiceType zValueChoice,
                       float32 customZValue, bool extractVirtualSampleEdges)
   {
     using CountVerticalEdgesImpl = CountEdgesImpl<T, 1, 0>;
@@ -338,14 +330,14 @@ struct ExtractFeatureBoundariesFunctor
     float32 zValue = 0.0f;
     switch(zValueChoice)
     {
-    case k_UseMinZValue:
+    case ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMinZValue:
       zValue = origin.getZ();
       break;
-    case k_UseMaxZValue:
+    case ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMaxZValue:
       // Max Z = origin + spacing * dims (for Z=1, this is origin.z + spacing.z)
       zValue = origin.getZ() + spacing.getZ() * static_cast<float32>(dims.getZ());
       break;
-    case k_UseCustomZValue:
+    case ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseCustomZValue:
     default:
       zValue = customZValue;
       break;

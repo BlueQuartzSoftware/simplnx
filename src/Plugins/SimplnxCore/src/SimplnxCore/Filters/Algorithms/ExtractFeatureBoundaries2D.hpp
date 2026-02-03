@@ -12,10 +12,19 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ExtractFeatureBoundaries2DInputValues
 {
+
+  // Z Value Choice indices
+  enum class ZValueChoiceType : uint64
+  {
+    UseMinZValue = 0,
+    UseMaxZValue = 1,
+    UseCustomZValue = 2
+  };
+
   DataPath InputImageGeometryPath;
   DataPath FeatureIdsArrayPath;
   DataPath OutputEdgeGeometryPath;
-  uint64 ZValueChoice = 0;
+  ZValueChoiceType ZValueChoice = ZValueChoiceType::UseMinZValue;
   float32 CustomZValue = 0.0f;
   bool ExtractVirtualSampleEdges = false;
 };
@@ -34,6 +43,8 @@ public:
   ExtractFeatureBoundaries2D(ExtractFeatureBoundaries2D&&) noexcept = delete;
   ExtractFeatureBoundaries2D& operator=(const ExtractFeatureBoundaries2D&) = delete;
   ExtractFeatureBoundaries2D& operator=(ExtractFeatureBoundaries2D&&) noexcept = delete;
+
+
 
   Result<> operator()();
 
