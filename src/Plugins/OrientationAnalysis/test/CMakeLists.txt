@@ -317,61 +317,61 @@ endfunction()
 # ------------------------------------------------------------------------------
 set(test_index 0)
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(01) Small IN100 Archive.d3dpipeline"
-  TEST_INDEX "${test_index}")
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(01) Small IN100 Archive.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}")
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Reconstruction/(08) Small IN100 Full Reconstruction.d3dpipeline"
-  TEST_INDEX "${test_index}"
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(02) Small IN100 Full Reconstruction.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/Reconstruction/Small_IN100.h5ebsd"
   OUTPUT_FILE_LIST "Data/Output/Reconstruction/SmallIN100_Final.dream3d" "Data/Output/Reconstruction/SmallIN100_Final.xdmf"
 )
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(01) Small IN100 Morphological Statistics.d3dpipeline"
-  TEST_INDEX "${test_index}"
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(03) Small IN100 Morphological Statistics.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/Reconstruction/SmallIN100_Final.dream3d"
   OUTPUT_FILE_LIST "Data/Output/Statistics/SmallIN100_Morph.dream3d" "Data/Output/Statistics/SmallIN100_Morph.xdmf"
   DELETE_FILE_LIST "Data/Output/Reconstruction/SmallIN100_Final.dream3d" "Data/Output/Reconstruction/SmallIN100_Final.xdmf")
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD Statistics/(05) Small IN100 Crystallographic Statistics.d3dpipeline"
-  TEST_INDEX "${test_index}"
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(04) Small IN100 Crystallographic Statistics.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/Statistics/SmallIN100_Morph.dream3d"
   OUTPUT_FILE_LIST "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d" "Data/Output/Statistics/SmallIN100_CrystalStats.xdmf"
   DELETE_FILE_LIST "Data/Output/Statistics/SmallIN100_Morph.dream3d" "Data/Output/Statistics/SmallIN100_Morph.xdmf")
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(01) Small IN100 Quick Mesh.d3dpipeline"
-  TEST_INDEX "${test_index}"
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(05) Small IN100 Quick Mesh.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d"
   OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Mesh.xdmf"
   DELETE_FILE_LIST "Data/Output/Statistics/SmallIN100_CrystalStats.dream3d" "Data/Output/Statistics/SmallIN100_CrystalStats.xdmf")
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(02) Small IN100 Smooth Mesh.d3dpipeline"
-  TEST_INDEX "${test_index}"
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(06) Small IN100 Smooth Mesh.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d"
   OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Smoothed.xdmf"
   DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Mesh.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Mesh.xdmf")
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(03) Small IN100 Mesh Statistics.d3dpipeline"
-  TEST_INDEX "${test_index}"
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(07) Small IN100 Mesh Statistics.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d"
   OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d" "Data/Output/SurfaceMesh/SmallIN100_MeshStats.xdmf"
   DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_Smoothed.dream3d" "Data/Output/SurfaceMesh/SmallIN100_Smoothed.xdmf")
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(04) Small IN100 GBCD.d3dpipeline"
-  TEST_INDEX "${test_index}"
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(08) Small IN100 GBCD.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
   OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_GBCD.dream3d" "Data/Output/SurfaceMesh/SmallIN100_GBCD.xdmf"
   DELETE_FILE_LIST "Data/Output/SmallIN100GBCD/SmallIn100Triangles.ph"
@@ -380,8 +380,8 @@ add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
 
 math(EXPR test_index "${test_index} + 1")
 add_pipeline_test(PLUGIN_NAME ${PLUGIN_NAME}
-  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD SurfaceMeshing/(05) Small IN100 GBCD Metric.d3dpipeline"
-  TEST_INDEX "${test_index}"
+  PIPELINE_PATH "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Small_IN100_Processing/(09) Small IN100 GBCD Metric.d3dpipeline"
+  TEST_INDEX "Small_IN100_Processing-${test_index}"
   INPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
   OUTPUT_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_GBCD_Metric.dream3d" "Data/Output/SurfaceMesh/SmallIN100_GBCD_Metric.xdmf"
   DELETE_FILE_LIST "Data/Output/SurfaceMesh/SmallIN100_MeshStats.dream3d"
@@ -396,10 +396,10 @@ set(PREBUILT_PIPELINE_NAMES
 
   # Example or other test pipelines
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/AlignSectionsMutualInformation.d3dpipeline" # This example depends on the SmallIN100.h5ebsd file
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/CI_Histogram.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EnsembleInfoReader.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadAng.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReadCTF.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/CI_Histogram.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/EnsembleInfoReader.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/Read_EDAX_Ang_File.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/Read_Oxford_Ctf_File.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Convert_Orientations.d3dpipeline"
 )
 
@@ -409,12 +409,12 @@ set(PREBUILT_PIPELINE_NAMES
 if(TARGET ITKImageProcessing)
   set(PREBUILT_PIPELINE_NAMES
     ${PREBUILT_PIPELINE_NAMES}
-    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Edax_IPF_Colors.d3dpipeline"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/TxCopper_Exposed.d3dpipeline"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/TxCopper_Unexposed.d3dpipeline"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/aptr12_Analysis.d3dpipeline"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/avtr12_Analysis.d3dpipeline"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_Hexagonal_Data_Analysis.d3dpipeline"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/Edax_IPF_Colors.d3dpipeline"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/TxCopper_Exposed.d3dpipeline"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/TxCopper_Unexposed.d3dpipeline"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/aptr12_Analysis.d3dpipeline"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/avtr12_Analysis.d3dpipeline"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/EBSD_File_Processing/EBSD_Hexagonal_Data_Analysis.d3dpipeline"
   )
 endif()
 

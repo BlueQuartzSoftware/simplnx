@@ -292,11 +292,10 @@ set(PREBUILT_PIPELINE_NAMES
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ArrayCalculatorExample.d3dpipeline"
 
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ExecuteProcess.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_CSV_File.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_STL_Model.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Read_Data_Files/Import_CSV_File.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Read_Data_Files/Import_STL_Model.d3dpipeline"
   "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Triangle_Face_Data_Demo.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Remove_Triangles.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/remove_flagged_triangles_example.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Remove_Flagged_Triangles.d3dpipeline"
 
   # These are workflow files
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_ASCII_Data.d3dworkflow"
@@ -304,7 +303,7 @@ set(PREBUILT_PIPELINE_NAMES
   # These depend on files that are output from OrientationAnalysis Plugin
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ComputeBiasedFeatures.d3dpipeline"
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ComputeBoundaryCells.d3dpipeline"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Import_Text_Data.d3dpipeline"
+  "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/Read_Data_Files/Import_Text_Data.d3dpipeline"
 
   # "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines/ReplaceElementAttributesWithNeighbor.d3dpipeline"
 )

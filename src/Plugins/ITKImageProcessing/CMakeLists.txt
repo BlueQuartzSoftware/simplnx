@@ -337,7 +337,7 @@ else()
 endif()
 
 if(EXISTS "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines")
-  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipelines/${PLUGIN_NAME}")
+  set(PIPELINE_DEST_DIR "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CX_CONFIG_DIR}/pipelines/Image_Processing")
   add_custom_target(Copy_${PLUGIN_NAME}_Pipeline_Folder ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${${PLUGIN_NAME}_SOURCE_DIR}/pipelines"
     ${PIPELINE_DEST_DIR}
