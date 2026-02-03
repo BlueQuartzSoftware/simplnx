@@ -14,7 +14,7 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-namespace create_am_scan_paths_test
+namespace
 {
 const nx::core::DataPath k_ExemplarEdgeGeometryPath = DataPath({"Exemplar Slice Geometry"});
 const nx::core::DataPath k_ExemplarScanVectorsPath = DataPath({"Exemplar Scan Paths Geometry"});
@@ -26,7 +26,7 @@ const nx::core::DataPath k_ComputedScanVectorsPath = DataPath({"Output Scan Vect
 const DataObjectNameParameter::ValueType k_EdgeData("Edge Data");
 // const DataObjectNameParameter::ValueType k_VertexData("VertexData");
 const DataObjectNameParameter::ValueType k_RegionIdsName("RegionIds");
-} // namespace create_am_scan_paths_test
+} // namespace
 
 TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[SimplnxCore][CreateAMScanPathsFilter]")
 {
@@ -48,13 +48,13 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
   args.insertOrAssign(CreateAMScanPathsFilter::k_HatchSpacing_Key, std::make_any<float32>(0.14f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_StripeWidth_Key, std::make_any<float32>(7.0f));
   args.insertOrAssign(CreateAMScanPathsFilter::k_RotationAngle, std::make_any<float32>(67.0f));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, std::make_any<DataPath>(create_am_scan_paths_test::k_ExemplarEdgeGeometryPath));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, std::make_any<DataPath>(create_am_scan_paths_test::k_SliceIdsPath));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, std::make_any<DataPath>(create_am_scan_paths_test::k_RegionIdsPath));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, std::make_any<DataPath>(create_am_scan_paths_test::k_ComputedScanVectorsPath));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key, std::make_any<DataPath>(k_ExemplarEdgeGeometryPath));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key, std::make_any<DataPath>(k_SliceIdsPath));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key, std::make_any<DataPath>(k_RegionIdsPath));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key, std::make_any<DataPath>(k_ComputedScanVectorsPath));
   args.insertOrAssign(CreateAMScanPathsFilter::k_VertexAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_VertexData));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(create_am_scan_paths_test::k_EdgeData));
-  args.insertOrAssign(CreateAMScanPathsFilter::k_RegionIdsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(create_am_scan_paths_test::k_RegionIdsName));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_HatchAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_EdgeData));
+  args.insertOrAssign(CreateAMScanPathsFilter::k_RegionIdsArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_RegionIdsName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -71,22 +71,20 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
 
   // Compare the exemplar and the computed outputs
   {
-    auto exemplarGeom = dataStructure.getDataAs<IGeometry>(create_am_scan_paths_test::k_ExemplarScanVectorsPath);
-    auto computedGeom = dataStructure.getDataAs<IGeometry>(create_am_scan_paths_test::k_ComputedScanVectorsPath);
+    auto exemplarGeom = dataStructure.getDataAs<IGeometry>(k_ExemplarScanVectorsPath);
+    auto computedGeom = dataStructure.getDataAs<IGeometry>(k_ComputedScanVectorsPath);
     REQUIRE(UnitTest::CompareIGeometry(exemplarGeom, computedGeom));
   }
 
   {
-    DataPath exemplarDataArray = create_am_scan_paths_test::k_ExemplarScanVectorsPath.createChildPath("EdgeData").createChildPath(create_am_scan_paths_test::k_SliceIdsPath.getTargetName());
-    DataPath computedDataArray =
-        create_am_scan_paths_test::k_ComputedScanVectorsPath.createChildPath(create_am_scan_paths_test::k_EdgeData).createChildPath(create_am_scan_paths_test::k_SliceIdsPath.getTargetName());
+    DataPath exemplarDataArray = k_ExemplarScanVectorsPath.createChildPath("EdgeData").createChildPath(k_SliceIdsPath.getTargetName());
+    DataPath computedDataArray = k_ComputedScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_SliceIdsPath.getTargetName());
     UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
   }
 
   {
-    DataPath exemplarDataArray = create_am_scan_paths_test::k_ExemplarScanVectorsPath.createChildPath("EdgeData").createChildPath("RegionIds");
-    DataPath computedDataArray =
-        create_am_scan_paths_test::k_ComputedScanVectorsPath.createChildPath(create_am_scan_paths_test::k_EdgeData).createChildPath(create_am_scan_paths_test::k_RegionIdsName);
+    DataPath exemplarDataArray = k_ExemplarScanVectorsPath.createChildPath("EdgeData").createChildPath("RegionIds");
+    DataPath computedDataArray = k_ComputedScanVectorsPath.createChildPath(k_EdgeData).createChildPath(k_RegionIdsName);
     UnitTest::CompareArrays<int32>(dataStructure, exemplarDataArray, computedDataArray);
   }
 
