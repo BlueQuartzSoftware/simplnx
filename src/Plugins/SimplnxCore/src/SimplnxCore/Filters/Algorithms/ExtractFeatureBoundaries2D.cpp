@@ -138,8 +138,8 @@ public:
 
 private:
   const AbstractDataStore<T>& m_FeatureIds;
-  usize m_DimX;
-  usize m_DimY;
+  usize m_DimX = 0;
+  usize m_DimY = 0;
   std::atomic<usize>& m_EdgeCount;
   const std::atomic_bool& m_ShouldCancel;
 };
