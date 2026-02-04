@@ -3,26 +3,11 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  RequireMinimumSizeFeaturesInputValues inputValues;
-  inputValues.ApplySinglePhase = filterArgs.value<BoolParameter::ValueType>(apply_single_phase);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(feature_ids_path);
-  inputValues.FeaturePhasesPath = filterArgs.value<ArraySelectionParameter::ValueType>(feature_phases_path);
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(input_image_geometry_path);
-  inputValues.MinAllowedFeaturesSize = filterArgs.value<Int64Parameter::ValueType>(min_allowed_features_size);
-  inputValues.NumCellsPath = filterArgs.value<ArraySelectionParameter::ValueType>(num_cells_path);
-  inputValues.PhaseNumber = filterArgs.value<Int64Parameter::ValueType>(phase_number);
-  return RequireMinimumSizeFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
-
-*/
 
 namespace nx::core
 {
