@@ -19,8 +19,8 @@ struct SIMPLNXCORE_EXPORT RequireMinimumSizeFeaturesInputValues
   ArraySelectionParameter::ValueType FeaturePhasesPath;
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
   Int64Parameter::ValueType MinAllowedFeaturesSize;
-  ArraySelectionParameter::ValueType NumCellsPath;
-  Int64Parameter::ValueType PhaseNumber;
+  ArraySelectionParameter::ValueType FeatureNumCellsPath;
+  Int32Parameter::ValueType PhaseNumber;
 };
 
 /**
@@ -41,6 +41,27 @@ public:
 
   Result<> operator()();
 
+protected:
+  /**
+   *
+   * @param dimensions
+   * @param featureNumCellsStoreRef
+   */
+  void assignBadVoxels(SizeVec3 dimensions, const Int32AbstractDataStore& featureNumCellsStoreRef);
+
+    /**
+   *
+   * @param featureIdsStoreRef
+   * @param featureNumCellsStoreRef
+   * @param featurePhases
+   * @param phaseNumber
+   * @param applyToSinglePhase
+   * @param minAllowedFeatureSize
+   * @param errorReturn
+   * @return
+   */
+static std::vector<bool> removeSmallFeatures(Int32AbstractDataStore& featureIdsStoreRef, const Int32AbstractDataStore& featureNumCellsStoreRef, const Int32AbstractDataStore* featurePhases,
+                                         int32_t phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize, Error& errorReturn);
 private:
   DataStructure& m_DataStructure;
   const RequireMinimumSizeFeaturesInputValues* m_InputValues = nullptr;

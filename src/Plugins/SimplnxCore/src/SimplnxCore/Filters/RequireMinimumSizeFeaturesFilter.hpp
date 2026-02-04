@@ -25,12 +25,12 @@ public:
   RequireMinimumSizeFeaturesFilter& operator=(RequireMinimumSizeFeaturesFilter&&) noexcept = delete;
 
   static constexpr StringLiteral k_FeaturePhasesPath_Key = "feature_phases_path";
-  static constexpr StringLiteral k_NumCellsPath_Key = "num_cells_path";
+  static constexpr StringLiteral k_FeatureNumCellsPath_Key = "num_cells_path";
   static constexpr StringLiteral k_FeatureIdsPath_Key = "feature_ids_path";
   static constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_ApplySinglePhase_Key = "apply_single_phase";
   static constexpr StringLiteral k_MinAllowedFeaturesSize_Key = "min_allowed_features_size";
-  static constexpr StringLiteral k_PhaseNumber_Key = "phase_number";
+  static constexpr StringLiteral k_ApplySinglePhase_Key = "apply_single_phase";
+  static constexpr StringLiteral k_SinglePhaseNumber_Key = "phase_number";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
