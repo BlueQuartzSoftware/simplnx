@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
 
@@ -27,19 +28,22 @@ const std::atomic_bool& ComputeBoundaryCells::getCancel()
 Result<> ComputeBoundaryCells::operator()()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const SizeVec3 imageDimensions = imageGeometry.getDimensions();
-  const auto xPoints = static_cast<int64>(imageDimensions[0]);
-  const auto yPoints = static_cast<int64>(imageDimensions[1]);
-  const auto zPoints = static_cast<int64>(imageDimensions[2]);
+  const SizeVec3 udims = imageGeometry.getDimensions();
+  std::array<int64, 3> dims = {
+      static_cast<int64>(udims[0]),
+      static_cast<int64>(udims[1]),
+      static_cast<int64>(udims[2]),
+  };
 
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
   auto& boundaryCellsStore = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsArrayName)->getDataStoreRef();
 
-  const int64 neighPoints[6] = {(-1 * (xPoints * yPoints)), (-1 * (xPoints)), -1, 1, xPoints, (xPoints * yPoints)};
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   int32 feature = 0;
   int8 onSurf = 0;
-  int64 neighbor = 0;
+  int64 neighborPoint = 0;
 
   int ignoreFeatureZeroVal = 0;
   if(!m_InputValues->IgnoreFeatureZero)
@@ -47,30 +51,33 @@ Result<> ComputeBoundaryCells::operator()()
     ignoreFeatureZeroVal = -1;
   }
 
-  int64 zStride = 0, yStride = 0;
-  for(int64 i = 0; i < zPoints; i++)
+  int64 kStride = 0;
+  int64 jStride = 0;
+
+  for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
   {
-    zStride = i * xPoints * yPoints;
-    for(int64 j = 0; j < yPoints; j++)
+    kStride = dims[0] * dims[1] * zIdx;
+    for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
     {
-      yStride = j * xPoints;
-      for(int64 k = 0; k < xPoints; k++)
+      jStride = dims[0] * yIdx;
+      for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
       {
+        int64 voxelIndex = kStride + jStride + xIdx;
         onSurf = 0;
-        feature = featureIdsStore[zStride + yStride + k];
+        feature = featureIdsStore[voxelIndex];
         if(feature >= 0)
         {
           if(m_InputValues->IncludeVolumeBoundary)
           {
-            if(xPoints > 2 && (k == 0 || k == xPoints - 1))
+            if(dims[0] > 2 && (xIdx == 0 || xIdx == dims[0] - 1))
             {
               onSurf++;
             }
-            if(yPoints > 2 && (j == 0 || j == yPoints - 1))
+            if(dims[1] > 2 && (yIdx == 0 || yIdx == dims[1] - 1))
             {
               onSurf++;
             }
-            if(zPoints > 2 && (i == 0 || i == zPoints - 1))
+            if(dims[2] > 2 && (zIdx == 0 || zIdx == dims[2] - 1))
             {
               onSurf++;
             }
@@ -81,40 +88,23 @@ Result<> ComputeBoundaryCells::operator()()
             }
           }
 
-          for(int8 l = 0; l < 6; l++)
+          // Loop over the 6 face neighbors of the voxel
+          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          for(const auto& faceIndex : faceNeighborInternalIdx)
           {
-            neighbor = zStride + yStride + k + neighPoints[l];
-            if(l == 5 && i == (zPoints - 1))
+            if(!isValidFaceNeighbor[faceIndex])
             {
               continue;
             }
-            if(l == 1 && j == 0)
-            {
-              continue;
-            }
-            if(l == 4 && j == (yPoints - 1))
-            {
-              continue;
-            }
-            if(l == 2 && k == 0)
-            {
-              continue;
-            }
-            if(l == 3 && k == (xPoints - 1))
-            {
-              continue;
-            }
-            if(l == 0 && i == 0)
-            {
-              continue;
-            }
-            if(featureIdsStore[neighbor] != feature && featureIdsStore[neighbor] > ignoreFeatureZeroVal)
+            neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+
+            if(featureIdsStore[neighborPoint] != feature && featureIdsStore[neighborPoint] > ignoreFeatureZeroVal)
             {
               onSurf++;
             }
           }
         }
-        boundaryCellsStore[zStride + yStride + k] = onSurf;
+        boundaryCellsStore[voxelIndex] = onSurf;
       }
     }
   }

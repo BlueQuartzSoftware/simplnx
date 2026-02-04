@@ -1,9 +1,9 @@
 #include "ReplaceElementAttributesWithNeighborValues.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
 
@@ -113,9 +113,7 @@ struct ExecuteTemplate
     int64 row = 0;
     int64 plane = 0;
 
-    std::array<int64, 6> neighborPoints = {static_cast<int64_t>(-dims[0] * dims[1]), static_cast<int64_t>(-dims[0]), static_cast<int64_t>(-1), static_cast<int64_t>(1), static_cast<int64_t>(dims[0]),
-                                           static_cast<int64_t>(dims[0] * dims[1])};
-
+    std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
     std::vector<int64_t> bestNeighbor(totalPoints, -1);
 
     size_t count = 0;
@@ -141,50 +139,50 @@ struct ExecuteTemplate
       auto progIncrement = static_cast<int64_t>(totalPoints / 50);
       int64 prog = 1;
       int64 progressInt = 0;
-      for(size_t i = 0; i < totalPoints; i++)
+      for(size_t voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
       {
-        if(comparator->compare(inputStore[i], thresholdValue))
+        if(comparator->compare(inputStore[voxelIndex], thresholdValue))
         {
-          column = i % dims[0];
-          row = (i / dims[0]) % dims[1];
-          plane = i / (dims[0] * dims[1]);
+          column = voxelIndex % dims[0];
+          row = (voxelIndex / dims[0]) % dims[1];
+          plane = voxelIndex / (dims[0] * dims[1]);
           count++;
-          float32 best = inputStore[i];
+          float32 best = inputStore[voxelIndex];
 
-          neighbor = static_cast<int64>(i) + neighborPoints[0];
+          neighbor = static_cast<int64>(voxelIndex) + neighborVoxelIndexOffsets[0];
           if(plane != 0)
           {
-            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, voxelIndex);
           }
-          neighbor = static_cast<int64>(i) + neighborPoints[1];
+          neighbor = static_cast<int64>(voxelIndex) + neighborVoxelIndexOffsets[1];
           if(row != 0)
           {
-            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, voxelIndex);
           }
-          neighbor = static_cast<int64>(i) + neighborPoints[2];
+          neighbor = static_cast<int64>(voxelIndex) + neighborVoxelIndexOffsets[2];
           if(column != 0)
           {
-            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, voxelIndex);
           }
-          neighbor = static_cast<int64>(i) + neighborPoints[3];
+          neighbor = static_cast<int64>(voxelIndex) + neighborVoxelIndexOffsets[3];
           if(column != (dims[0] - 1))
           {
-            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, voxelIndex);
           }
-          neighbor = static_cast<int64>(i) + neighborPoints[4];
+          neighbor = static_cast<int64>(voxelIndex) + neighborVoxelIndexOffsets[4];
           if(row != (dims[1] - 1))
           {
-            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, voxelIndex);
           }
-          neighbor = static_cast<int64>(i) + neighborPoints[5];
+          neighbor = static_cast<int64>(voxelIndex) + neighborVoxelIndexOffsets[5];
           if(plane != (dims[2] - 1))
           {
-            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, i);
+            CompareValues<T>(comparator, inputStore, neighbor, thresholdValue, best, bestNeighbor, voxelIndex);
           }
         }
-        if(int64_t(i) > prog)
+        if(voxelIndex > prog)
         {
-          progressInt = static_cast<int64_t>(((float)i / totalPoints) * 100.0f);
+          progressInt = static_cast<int64_t>(((float)voxelIndex / totalPoints) * 100.0f);
           const std::string progressMessage = fmt::format("Processing Loop({}) Progress: {}% Complete", count, progressInt);
           messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
           prog += progIncrement;
@@ -199,23 +197,23 @@ struct ExecuteTemplate
       progIncrement = static_cast<int64_t>(totalPoints / 50);
       prog = 1;
       progressInt = 0;
-      for(size_t i = 0; i < totalPoints; i++)
+      for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
       {
-        if(int64_t(i) > prog)
+        if(voxelIndex > prog)
         {
-          progressInt = static_cast<int64_t>(((float)i / totalPoints) * 100.0f);
+          progressInt = static_cast<int64_t>(((float)voxelIndex / totalPoints) * 100.0f);
           const std::string progressMessage = fmt::format("Transferring Loop({}) Progress: {}% Complete", count, progressInt);
           messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
           prog = prog + progIncrement;
         }
 
-        neighbor = bestNeighbor[i];
+        neighbor = bestNeighbor[voxelIndex];
         if(neighbor != -1)
         {
           for(const auto& [dataId, dataObject] : *attrMatrix)
           {
             auto& dataArray = dynamic_cast<IDataArray&>(*dataObject);
-            dataArray.copyTuple(neighbor, i);
+            dataArray.copyTuple(neighbor, voxelIndex);
           }
         }
       }

@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
 
@@ -43,7 +44,8 @@ Result<> ErodeDilateMask::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  std::array<int64, 6> neighpoints = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   for(int32_t iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
@@ -53,45 +55,28 @@ Result<> ErodeDilateMask::operator()()
     {
       maskCopy[j] = mask[j];
     }
-    for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
+    for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      const int64 zStride = dims[0] * dims[1] * zIndex;
-      for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
+      const int64 zStride = dims[0] * dims[1] * zIdx;
+      for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        const int64 yStride = dims[0] * yIndex;
-        for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
+        const int64 yStride = dims[0] * yIdx;
+        for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          const int64 voxelIndex = zStride + yStride + xIndex;
+          const int64 voxelIndex = zStride + yStride + xIdx;
 
           if(!mask[voxelIndex])
           {
-            for(int32_t neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
+            // Loop over the 6 face neighbors of the voxel
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            for(const auto& faceIndex : faceNeighborInternalIdx)
             {
-              const int64 neighpoint = voxelIndex + neighpoints[neighPointIdx];
-              if(neighPointIdx == 0 && (zIndex == 0 || !m_InputValues->ZDirOn))
+              if(!isValidFaceNeighbor[faceIndex])
               {
                 continue;
               }
-              if(neighPointIdx == 5 && (zIndex == (dims[2] - 1) || !m_InputValues->ZDirOn))
-              {
-                continue;
-              }
-              if(neighPointIdx == 1 && (yIndex == 0 || !m_InputValues->YDirOn))
-              {
-                continue;
-              }
-              if(neighPointIdx == 4 && (yIndex == (dims[1] - 1) || !m_InputValues->YDirOn))
-              {
-                continue;
-              }
-              if(neighPointIdx == 2 && (xIndex == 0 || !m_InputValues->XDirOn))
-              {
-                continue;
-              }
-              if(neighPointIdx == 3 && (xIndex == (dims[0] - 1) || !m_InputValues->XDirOn))
-              {
-                continue;
-              }
+
+              const int64 neighpoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
               if(m_InputValues->Operation == detail::k_DilateIndex && mask[neighpoint])
               {

@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
@@ -87,7 +88,7 @@ public:
       // essentially, as long as the value is **NOT** -1.
       if(m_NearestNeighbors[voxelTupleIdx * 3 + static_cast<usize>(MapType)] >= 0)
       {
-        // if voxel is boundary voxel, then want to use itself as nearest boundary voxel
+        // if voxel is boundary voxel, then use itself as the nearest boundary voxel
         voxel_NearestNeighbor[voxelTupleIdx] = static_cast<int64>(voxelTupleIdx);
       }
       else
@@ -307,75 +308,48 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
       static_cast<int64_t>(udims[2]),
   };
 
-  int64_t column = 0, row = 0, plane = 0;
-  bool good = false;
   bool add = true;
   int32 feature = 0;
   std::vector<int32> coordination;
 
-  int64_t neighbor = 0;
-  int64_t neighbors[6] = {0, 0, 0, 0, 0, 0};
-  neighbors[0] = -dims[0] * dims[1];
-  neighbors[1] = -dims[0];
-  neighbors[2] = -1;
-  neighbors[3] = 1;
-  neighbors[4] = dims[0];
-  neighbors[5] = dims[0] * dims[1];
-
-  size_t xPoints = udims[0];
-  size_t yPoints = udims[1];
-  size_t zPoints = udims[2];
+  int64_t neighborPoint = 0;
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   // This entire loop finds all 3 kinds of grain boundaries,
   // Feature Boundaries, Triple Junctions, QuadPoints
-  for(size_t a = 0; a < totalVoxels; ++a)
+  for(int64 voxelIndex = 0; voxelIndex < totalVoxels; ++voxelIndex)
   {
-    feature = featureIdsStore[a];
+    feature = featureIdsStore[voxelIndex];
     if(feature > 0) // Ignore FeatureId = 0
     {
-      column = static_cast<int64_t>(a % xPoints);
-      row = static_cast<int64_t>((a / xPoints) % yPoints);
-      plane = static_cast<int64_t>(a / (xPoints * yPoints));
-      for(int32 k = 0; k < 6; k++) // Loop over the 6 face neighbors
+      int64 xIdx = voxelIndex % dims[0];
+      int64 yIdx = (voxelIndex / dims[0]) % dims[1];
+      int64 zIdx = voxelIndex / (dims[0] * dims[1]);
+
+      // Loop over the 6 face neighbors of the voxel
+      std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      for(const auto& faceIndex : faceNeighborInternalIdx)
       {
-        good = true;
-        neighbor = static_cast<int64_t>(a + neighbors[k]);
-        if(k == 0 && plane == 0)
+        if(!isValidFaceNeighbor[faceIndex])
         {
-          good = false;
+          continue;
         }
-        if(k == 5 && plane == static_cast<int64_t>(zPoints - 1))
-        {
-          good = false;
-        }
-        if(k == 1 && row == 0)
-        {
-          good = false;
-        }
-        if(k == 4 && row == static_cast<int64_t>(yPoints - 1))
-        {
-          good = false;
-        }
-        if(k == 2 && column == 0)
-        {
-          good = false;
-        }
-        if(k == 3 && column == static_cast<int64_t>(xPoints - 1))
-        {
-          good = false;
-        }
-        // If we are a proper neighbor voxel, i.e., have not steppd out of the virtual volume,
+
+        neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+
+        // If we are a proper neighbor voxel, i.e., have not stepped out of the virtual volume,
         // and the featureId of the neighbor is NOT the currentFeatureId AND the
-        // neighborFeatureId is valid ( greater than 0), then drop into this conditional
-        if(good && featureIdsStore[neighbor] != feature && featureIdsStore[neighbor] >= 0)
+        // neighborFeatureId is valid (greater than 0), then drop into this conditional
+        if(featureIdsStore[neighborPoint] != feature && featureIdsStore[neighborPoint] >= 0)
         {
           add = true; // Default to always adding this neighbor to the coordination vector
-          // Loop over current vector of coordination values
+          // Loop over the current vector of coordination values
           for(const auto& coordination_value : coordination)
           {
             // If the featureId of the neighbor voxel == the current coordination_value
             // then we set the boolean to ignore this neighbor by setting `add = false`
-            if(featureIdsStore[neighbor] == coordination_value)
+            if(featureIdsStore[neighborPoint] == coordination_value)
             {
               add = false;
               break;
@@ -383,30 +357,30 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
           }
           if(add)
           {
-            coordination.push_back(featureIdsStore[neighbor]); // Push back the first neighbor found
+            coordination.push_back(featureIdsStore[neighborPoint]); // Push back the first neighbor found
           }
         }
       }
 
       // now that the neighbors are found and the coordination size is found
-      // If no values were pushed into the coordination vector then just initialize
+      // If no values were pushed into the coordination vector, then just initialize
       // all 3 components of the nearestNeighbors to -1
       if(coordination.empty())
       {
-        nearestNeighbors[a * 3 + 0] = -1;
-        nearestNeighbors[a * 3 + 1] = -1;
-        nearestNeighbors[a * 3 + 2] = -1;
+        nearestNeighbors[voxelIndex * 3 + 0] = -1;
+        nearestNeighbors[voxelIndex * 3 + 1] = -1;
+        nearestNeighbors[voxelIndex * 3 + 2] = -1;
       }
-      // If ANY values were pushed back into the coordination vector then this voxel
+      // If ANY values were pushed back into the coordination vector, then this voxel
       // is a grain boundary. Initialize the first component of the nearestNeighbor to the
       // first value of the coordination vector.
       // Initialize the GB output array to 0
       if(!coordination.empty() && inputValues->DoBoundaries && nullptr != gbManhattanDistancesStore)
       {
-        (*gbManhattanDistancesStore)[a] = 0;
-        nearestNeighbors[a * 3 + 0] = coordination[0];
-        nearestNeighbors[a * 3 + 1] = -1;
-        nearestNeighbors[a * 3 + 2] = -1;
+        (*gbManhattanDistancesStore)[voxelIndex] = 0;
+        nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
+        nearestNeighbors[voxelIndex * 3 + 1] = -1;
+        nearestNeighbors[voxelIndex * 3 + 2] = -1;
       }
 
       // Triple lines are defined as a line that separates 3, and only 3, grains.
@@ -414,21 +388,21 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
       // Initializes the TJ output array to 0;
       if(coordination.size() >= 2 && inputValues->DoTripleLines && nullptr != tjManhattanDistancesStore)
       {
-        (*tjManhattanDistancesStore)[a] = 0;
-        nearestNeighbors[a * 3 + 0] = coordination[0];
-        nearestNeighbors[a * 3 + 1] = coordination[0];
-        nearestNeighbors[a * 3 + 2] = -1;
+        (*tjManhattanDistancesStore)[voxelIndex] = 0;
+        nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
+        nearestNeighbors[voxelIndex * 3 + 1] = coordination[0];
+        nearestNeighbors[voxelIndex * 3 + 2] = -1;
       }
 
-      // All other boundaries between 4 or more grains are Quadruple Points. Initialize
+      // All other boundaries between 4 or more grains are Quadruple Points.
       // Initialize the nearestNeighbor components 0, 1, 2 to the first value in the coordination vector
       // Initializes the QP output array to 0.
       if(coordination.size() > 2 && inputValues->DoQuadPoints && nullptr != qpManhattanDistancesStore)
       {
-        (*qpManhattanDistancesStore)[a] = 0;
-        nearestNeighbors[a * 3 + 0] = coordination[0];
-        nearestNeighbors[a * 3 + 1] = coordination[0];
-        nearestNeighbors[a * 3 + 2] = coordination[0];
+        (*qpManhattanDistancesStore)[voxelIndex] = 0;
+        nearestNeighbors[voxelIndex * 3 + 0] = coordination[0];
+        nearestNeighbors[voxelIndex * 3 + 1] = coordination[0];
+        nearestNeighbors[voxelIndex * 3 + 2] = coordination[0];
       }
       coordination.resize(0);
     }
