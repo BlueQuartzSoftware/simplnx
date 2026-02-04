@@ -100,6 +100,7 @@ set(FilterList
   NearestPointFuseRegularGridsFilter
   PadImageGeometryFilter
   PartitionGeometryFilter
+  ExtractFeatureBoundaries2DFilter
   PointSampleEdgeGeometryFilter
   PointSampleTriangleGeometryFilter
   QuickSurfaceMeshFilter
@@ -260,6 +261,7 @@ set(AlgorithmList
   PadImageGeometry
   PartitionGeometry
   PointSampleEdgeGeometry
+  ExtractFeatureBoundaries2D
   PointSampleTriangleGeometry
   QuickSurfaceMesh
   ReadBinaryCTNorthstar
