@@ -4,10 +4,10 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
-
 
 namespace
 {
@@ -18,8 +18,8 @@ public:
   RequireMinimumSizeFeaturesTransferDataImpl() = delete;
   RequireMinimumSizeFeaturesTransferDataImpl(const RequireMinimumSizeFeaturesTransferDataImpl&) = default;
 
-  RequireMinimumSizeFeaturesTransferDataImpl(RequireMinimumSizeFeatures* filterAlg, usize totalPoints, const Int32AbstractDataStore& featureIds,
-                                     const std::vector<int64>& neighborVoxelIndex, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
+  RequireMinimumSizeFeaturesTransferDataImpl(RequireMinimumSizeFeatures* filterAlg, usize totalPoints, const Int32AbstractDataStore& featureIds, const std::vector<int64>& neighborVoxelIndex,
+                                             const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_NeighborsVoxelIndex(neighborVoxelIndex)
@@ -66,8 +66,7 @@ private:
   MessageHelper& m_MessageHelper;
 };
 
-}
-
+} // namespace
 
 // -----------------------------------------------------------------------------
 RequireMinimumSizeFeatures::RequireMinimumSizeFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -98,7 +97,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
   {
     usize numFeatures = featurePhases->getNumberOfTuples();
     bool unavailablePhase = true;
-    for(size_t i = 0; i < numFeatures; i++)
+    for(usize i = 0; i < numFeatures; i++)
     {
       if(featurePhases->getValue(i) == m_InputValues->PhaseNumber)
       {
@@ -115,7 +114,8 @@ Result<> RequireMinimumSizeFeatures::operator()()
   }
 
   Error errorReturn = {0, ""};
-  std::vector<bool> activeObjects = removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhases, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase, m_InputValues->MinAllowedFeaturesSize, errorReturn);
+  std::vector<bool> activeObjects =
+      removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhases, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase, m_InputValues->MinAllowedFeaturesSize, errorReturn);
   if(errorReturn.code < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{errorReturn})};
@@ -125,7 +125,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
   assignBadVoxels(imageGeom.getDimensions(), featureNumCellsStoreRef);
 
   DataPath cellFeatureGroupPath = m_InputValues->FeatureNumCellsPath.getParent();
-  size_t currentFeatureCount = featureNumCellsStoreRef.getNumberOfTuples();
+  usize currentFeatureCount = featureNumCellsStoreRef.getNumberOfTuples();
 
   int32 count = 0;
   for(const auto& value : activeObjects)
@@ -143,28 +143,27 @@ Result<> RequireMinimumSizeFeatures::operator()()
   return {};
 }
 
-
-void RequireMinimumSizeFeatures::assignBadVoxels( SizeVec3 dimensions, const Int32AbstractDataStore& featureNumCellsStoreRef)
+void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int32AbstractDataStore& featureNumCellsStoreRef)
 {
   MessageHelper messageHelper(m_MessageHandler);
 
   Int32AbstractDataStore& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
   usize totalPoints = featureIds.getNumberOfTuples();
 
-  std::array<int64_t, 3> dims = {
+  std::array<int64, 3> dims = {
       static_cast<int64>(dimensions[0]),
       static_cast<int64>(dimensions[1]),
       static_cast<int64>(dimensions[2]),
   };
 
-  std::vector<int64_t> neighborsVoxelIndex(totalPoints * featureIds.getNumberOfComponents(), -1);
+  std::vector<int64> neighborsVoxelIndex(totalPoints * featureIds.getNumberOfComponents(), -1);
 
-  int32 good = 1;
+  // int32 good = 1;
   int64 neighborVoxelIdx = 0;
 
   // These are the offsets that are applied to a voxel index to get to a specific neighbor voxel
-  std::array<int64_t, 6> neighborVoxelIndexOffsets = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
-
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
   usize counter = 1;
   int64 count = 0;
   int64 kstride = 0;
@@ -179,61 +178,39 @@ void RequireMinimumSizeFeatures::assignBadVoxels( SizeVec3 dimensions, const Int
   while(counter != 0)
   {
     counter = 0;
-    for(int64 k = 0; k < dims[2]; k++)
+    for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      kstride = dims[0] * dims[1] * k;
-      for(int64 j = 0; j < dims[1]; j++)
+      kstride = dims[0] * dims[1] * zIdx;
+      for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        jstride = dims[0] * j;
-        for(int64 i = 0; i < dims[0]; i++)
+        jstride = dims[0] * yIdx;
+        for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          count = kstride + jstride + i;
+          count = kstride + jstride + xIdx;
           int32 currentFeatureId = featureIds.getValue(count);
           if(currentFeatureId < 0)
           {
             counter++;
             uint8 maxVoteCount = 0;
-            for(size_t l = 0; l < neighborVoxelIndexOffsets.size(); l++)
+            // Loop over the 6 face neighbors of the voxel
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            for(const auto& faceIndex : faceNeighborInternalIdx)
             {
-              good = 1;
-              neighborVoxelIdx = count + neighborVoxelIndexOffsets[l];
-              if(l == 0 && k == 0)
+              if(!isValidFaceNeighbor[faceIndex])
               {
-                good = 0;
-              }
-              if(l == 5 && k == (dims[2] - 1))
-              {
-                good = 0;
-              }
-              if(l == 1 && j == 0)
-              {
-                good = 0;
-              }
-              if(l == 4 && j == (dims[1] - 1))
-              {
-                good = 0;
-              }
-              if(l == 2 && i == 0)
-              {
-                good = 0;
-              }
-              if(l == 3 && i == (dims[0] - 1))
-              {
-                good = 0;
+                continue;
               }
 
-              if(good == 1)
+              neighborVoxelIdx = count + neighborVoxelIndexOffsets[faceIndex];
+              int32 neighborFeatureId = featureIds.getValue(neighborVoxelIdx);
+              if(neighborFeatureId >= 0)
               {
-                int32 neighborFeatureId = featureIds.getValue(neighborVoxelIdx);
-                if(neighborFeatureId >= 0)
+                voteCounter[neighborFeatureId]++;
+                uint8 currentVoteCount = voteCounter[neighborFeatureId];
+                if(currentVoteCount > maxVoteCount)
                 {
-                  voteCounter[neighborFeatureId]++;
-                  uint8 currentVoteCount = voteCounter[neighborFeatureId];
-                  if(currentVoteCount > maxVoteCount)
-                  {
-                    maxVoteCount = currentVoteCount;
-                    neighborsVoxelIndex[count] = neighborVoxelIdx;
-                  }
+                  maxVoteCount = currentVoteCount;
+                  neighborsVoxelIndex[count] = neighborVoxelIdx;
                 }
               }
             }
@@ -266,24 +243,24 @@ void RequireMinimumSizeFeatures::assignBadVoxels( SizeVec3 dimensions, const Int
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
     taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, featureIDataArray, messageHelper));
-
   }
 }
 
 // -----------------------------------------------------------------------------
-std::vector<bool> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractDataStore& featureIdsStoreRef, const Int32AbstractDataStore& featureNumCellsStoreRef, const Int32AbstractDataStore* featurePhases,
-                                       int32_t phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize, Error& errorReturn)
+std::vector<bool> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractDataStore& featureIdsStoreRef, const Int32AbstractDataStore& featureNumCellsStoreRef,
+                                                                  const Int32AbstractDataStore* featurePhases, int32 phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize,
+                                                                  Error& errorReturn)
 {
-  size_t totalPoints = featureIdsStoreRef.getNumberOfTuples();
+  usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 
   bool good = false;
   int32 gnum;
 
-  size_t totalFeatures = featureNumCellsStoreRef.getNumberOfTuples();
+  usize totalFeatures = featureNumCellsStoreRef.getNumberOfTuples();
 
   std::vector<bool> activeObjects(totalFeatures, true);
 
-  for(size_t i = 1; i < totalFeatures; i++)
+  for(usize i = 1; i < totalFeatures; i++)
   {
     if(!applyToSinglePhase)
     {
@@ -313,7 +290,7 @@ std::vector<bool> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractD
     errorReturn = Error{-1, "The minimum size is larger than the largest Feature.  All Features would be removed"};
     return activeObjects;
   }
-  for(size_t i = 0; i < totalPoints; i++)
+  for(usize i = 0; i < totalPoints; i++)
   {
     gnum = featureIdsStoreRef.getValue(i);
     if(!activeObjects[gnum])
