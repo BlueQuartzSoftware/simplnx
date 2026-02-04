@@ -22,6 +22,15 @@ public:
 
   CreateArrayAction() = delete;
 
+  /**
+   * @brief Constructs a CreateArrayAction.
+   * @param type The data type of the array
+   * @param tDims The tuple dimensions
+   * @param cDims The component dimensions
+   * @param path The path where the DataArray will be created
+   * @param dataFormat The data format (empty string for in-memory)
+   * @param fillValue The fill value for the array
+   */
   CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "");
 
   ~CreateArrayAction() noexcept override;
@@ -34,14 +43,15 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return Result<>
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override;
 

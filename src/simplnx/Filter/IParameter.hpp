@@ -72,43 +72,43 @@ public:
 
   /**
    * @brief Returns the parameter's uuid.
-   * @return
+   * @return Uuid The parameter's unique identifier
    */
   virtual Uuid uuid() const = 0;
 
   /**
    * @brief Returns the user defined name.
-   * @return
+   * @return std::string The parameter name
    */
   virtual std::string name() const = 0;
 
   /**
    * @brief Returns the user defined human readable name.
-   * @return
+   * @return std::string The human-readable parameter name
    */
   virtual std::string humanName() const = 0;
 
   /**
    * @brief Returns the user defined help text.
-   * @return
+   * @return std::string The help text describing this parameter
    */
   virtual std::string helpText() const = 0;
 
   /**
    * @brief Returns the user defined default value.
-   * @return
+   * @return std::any The default value for this parameter
    */
   virtual std::any defaultValue() const = 0;
 
   /**
    * @brief Returns whether the parameter is a ValueParameter or DataParameter.
-   * @return
+   * @return Type The parameter type enumeration
    */
   virtual Type type() const = 0;
 
   /**
-   * @brief Returns a list of accpeted input types.
-   * @return
+   * @brief Returns a list of accepted input types.
+   * @return AcceptedTypes Vector of accepted type indices
    */
   virtual AcceptedTypes acceptedTypes() const = 0;
 
@@ -116,27 +116,29 @@ public:
    * @brief Returns version integer.
    * The Initial version should always be 1.
    * Should be incremented everytime the json format changes.
-   * @return uint64
+   * @return VersionType The version number
    */
   virtual VersionType getVersion() const = 0;
 
   /**
    * @brief Converts the given value to JSON.
    * Throws if value is not an accepted type.
-   * @param value
+   * @param value The value to convert
+   * @return nlohmann::json The JSON representation
    */
   nlohmann::json toJson(const std::any& value) const;
 
   /**
    * @brief Converts the given JSON to a std::any containing the appropriate input type.
    * Returns any warnings/errors.
-   * @return
+   * @param json The JSON to convert
+   * @return Result<std::any> The converted value or errors
    */
   Result<std::any> fromJson(const nlohmann::json& json) const;
 
   /**
    * @brief Creates a copy of the parameter.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned parameter
    */
   virtual UniquePointer clone() const = 0;
 
@@ -144,26 +146,32 @@ public:
    * @brief Constructs an input value from the given arguments.
    * By default, accesses a singular value by key and returns that.
    * May be overriden by subclasses that depend on other parameters.
-   * @param args
-   * @param executionContext
-   * @return
+   * @param args The arguments to construct from
+   * @param executionContext The execution context
+   * @return std::any The constructed value
    */
   virtual std::any construct(const Arguments& args, const ExecutionContext& executionContext) const;
 
 protected:
+  /**
+   * @brief Protected default constructor.
+   */
   IParameter() = default;
 
   /**
    * @brief Converts the given value to JSON.
    * Throws if value is not an accepted type.
-   * @param value
+   * @param value The value to convert
+   * @return nlohmann::json The JSON representation
    */
   virtual nlohmann::json toJsonImpl(const std::any& value) const = 0;
 
   /**
    * @brief Converts the given JSON to a std::any containing the appropriate input type.
    * Returns any warnings/errors.
-   * @return
+   * @param json The JSON to convert
+   * @param version The parameter version to use for conversion
+   * @return Result<std::any> The converted value or errors
    */
   virtual Result<std::any> fromJsonImpl(const nlohmann::json& json, uint64 version) const = 0;
 };

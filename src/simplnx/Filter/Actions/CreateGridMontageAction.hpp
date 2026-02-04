@@ -18,13 +18,13 @@ public:
   using SpacingType = std::vector<float32>;
 
   CreateGridMontageAction() = delete;
+
   /**
-   * @brief
-   * @param path
-   * @param dims The dimensions of the newly created Image Geometry: ORDERED: X, Y, Z.
-   * @param origin
-   * @param spacing
-   * @param cellAttributeMatrixName
+   * @brief Constructs a CreateGridMontageAction.
+   * @param path The path where the GridMontage will be created
+   * @param dims The dimensions of the montage grid: ORDERED: X, Y, Z
+   * @param origin The origin of the montage
+   * @param spacing The spacing of the montage
    */
   CreateGridMontageAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing);
 
@@ -38,14 +38,15 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override;
 
@@ -56,20 +57,20 @@ public:
   DataPath path() const;
 
   /**
-   * @brief Returns the dimensions of the ImageGeometry to be created.
-   * @return
+   * @brief Returns the dimensions of the GridMontage to be created.
+   * @return const DimensionType& The montage dimensions
    */
   const DimensionType& dims() const;
 
   /**
-   * @brief Returns the origin of the ImageGeometry to be created.
-   * @return
+   * @brief Returns the origin of the GridMontage to be created.
+   * @return const OriginType& The montage origin
    */
   const OriginType& origin() const;
 
   /**
-   * @brief Returns the spacing of the ImageGeometry to be created.
-   * @return
+   * @brief Returns the spacing of the GridMontage to be created.
+   * @return const SpacingType& The montage spacing
    */
   const SpacingType& spacing() const;
 

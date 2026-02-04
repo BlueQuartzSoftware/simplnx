@@ -39,7 +39,7 @@ public:
 
   /**
    * @brief Returns the number of filters available.
-   * @return
+   * @return size_t The number of available filters
    */
   size_t size() const;
 
@@ -87,9 +87,10 @@ public:
   AbstractPlugin* getPlugin(const FilterHandle& handle) const;
 
   /**
-   * @brief
-   * @param uuid
-   * @return
+   * @brief Returns the AbstractPlugin pointer corresponding to the specified UUID.
+   * Returns nullptr if the plugin could not be found.
+   * @param uuid The plugin UUID
+   * @return const AbstractPlugin* Pointer to the plugin or nullptr
    */
   const AbstractPlugin* getPlugin(const Uuid& uuid) const
   {
@@ -102,9 +103,9 @@ public:
   }
 
   /**
-   * @brief
-   * @param uuid
-   * @return
+   * @brief Returns true if a plugin with the given UUID exists.
+   * @param uuid The plugin UUID
+   * @return bool True if the plugin exists
    */
   bool containsPlugin(const Uuid& uuid)
   {
@@ -112,9 +113,9 @@ public:
   }
 
   /**
-   * @brief
-   * @param plugin
-   * @return
+   * @brief Returns true if the given plugin exists in the filter list.
+   * @param plugin The plugin to check
+   * @return bool True if the plugin exists
    */
   bool containsPlugin(const AbstractPlugin& plugin)
   {

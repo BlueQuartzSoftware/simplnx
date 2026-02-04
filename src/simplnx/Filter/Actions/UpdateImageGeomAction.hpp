@@ -14,6 +14,13 @@ class SIMPLNX_EXPORT UpdateImageGeomAction : public IDataAction
 public:
   UpdateImageGeomAction() = delete;
 
+  /**
+   * @brief Constructs an UpdateImageGeomAction.
+   * @param origin The new origin (optional)
+   * @param spacing The new spacing (optional)
+   * @param path The path to the ImageGeometry to update
+   * @param centerOrigin Whether to center the origin
+   */
   UpdateImageGeomAction(const std::optional<FloatVec3>& origin, const std::optional<FloatVec3>& spacing, const DataPath& path, bool centerOrigin = false);
 
   ~UpdateImageGeomAction() noexcept override;
@@ -26,14 +33,15 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override;
 
@@ -62,8 +70,8 @@ public:
   const std::optional<FloatVec3>& spacing() const;
 
   /**
-   * @brief Returns the path of the DataArray to be created.
-   * @return
+   * @brief Returns the path of the ImageGeometry to be updated.
+   * @return const DataPath& The geometry path
    */
   const DataPath& path() const;
 

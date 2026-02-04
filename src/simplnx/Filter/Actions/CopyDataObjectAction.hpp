@@ -13,6 +13,12 @@ class SIMPLNX_EXPORT CopyDataObjectAction : public IDataCreationAction
 public:
   CopyDataObjectAction() = delete;
 
+  /**
+   * @brief Constructs a CopyDataObjectAction.
+   * @param path The path to the source BaseGroup to copy
+   * @param newPath The path where the copied BaseGroup will be created
+   * @param allCreatedPaths All DataPaths that will be created by this action
+   */
   CopyDataObjectAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths);
 
   ~CopyDataObjectAction() noexcept override;
@@ -25,14 +31,15 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return Result<>
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override;
 

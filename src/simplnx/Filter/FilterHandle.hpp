@@ -89,13 +89,13 @@ public:
 
   /**
    * @brief Returns the C++ classname for the filter
-   * @return
+   * @return std::string The filter's class name
    */
   std::string getClassName() const;
 
   /**
    * @brief Returns the Default Tags for the filter
-   * @return
+   * @return std::vector<std::string> The filter's default tags
    */
   std::vector<std::string> getDefaultTags() const;
 

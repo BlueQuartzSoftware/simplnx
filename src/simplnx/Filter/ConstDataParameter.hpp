@@ -20,16 +20,16 @@ public:
 
   /**
    * @brief Returns whether the parameter needs const or non-const access to the DataStructure.
-   * @return
+   * @return Mutability Returns Mutability::Const
    */
   Mutability mutability() const final;
 
   /**
-   * @brief Takes the value and a const DataStructure and attempts store the actual derived DataObject in the std::any.
+   * @brief Takes the value and a const DataStructure and attempts to store the actual derived DataObject in the std::any.
    * Returns any warnings/errors.
-   * @param dataStructure
-   * @param value
-   * @return
+   * @param dataStructure The DataStructure to resolve against
+   * @param value The value to resolve
+   * @return Result<std::any> Result containing the resolved DataObject or errors
    */
   virtual Result<std::any> resolve(const DataStructure& dataStructure, const std::any& value) const = 0;
 

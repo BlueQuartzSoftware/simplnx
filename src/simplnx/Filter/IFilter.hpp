@@ -31,8 +31,14 @@ public:
   using UniquePointer = std::unique_ptr<IFilter>;
   using VersionType = uint64;
 
+  /**
+   * @brief Represents a message from a filter during execution.
+   */
   struct Message
   {
+    /**
+     * @brief Message type enumeration.
+     */
     enum class Type : uint8
     {
       Info = 0,
@@ -46,15 +52,25 @@ public:
     std::string message;
   };
 
+  /**
+   * @brief Extends Message to include progress information.
+   */
   struct ProgressMessage : public Message
   {
     int32 progress = 0;
   };
 
+  /**
+   * @brief Handler for processing filter messages during execution.
+   */
   struct MessageHandler
   {
     using Callback = std::function<void(const Message&)>;
 
+    /**
+     * @brief Invokes the callback with a message.
+     * @param message The message to send
+     */
     void operator()(const Message& message) const
     {
       if(m_Callback)
@@ -62,14 +78,32 @@ public:
         m_Callback(message);
       }
     }
+
+    /**
+     * @brief Invokes the callback with an info message.
+     * @param message The message text
+     */
     void operator()(std::string message) const
     {
       operator()(Message{Message::Type::Info, std::move(message)});
     }
+
+    /**
+     * @brief Invokes the callback with a typed message.
+     * @param type The message type
+     * @param message The message text
+     */
     void operator()(Message::Type type, std::string message) const
     {
       operator()(Message{type, std::move(message)});
     }
+
+    /**
+     * @brief Invokes the callback with a progress message.
+     * @param type The message type
+     * @param message The message text
+     * @param progress The progress value
+     */
     void operator()(Message::Type type, std::string message, int32 progress) const
     {
       operator()(ProgressMessage{type, std::move(message), progress});
@@ -77,23 +111,38 @@ public:
     Callback m_Callback;
   };
 
+  /**
+   * @brief Represents an output value from preflight.
+   */
   struct PreflightValue
   {
     std::string name;
     std::string value;
   };
 
+  /**
+   * @brief Result of the preflight operation including output actions and values.
+   */
   struct PreflightResult
   {
     Result<OutputActions> outputActions;
     std::vector<PreflightValue> outputValues;
   };
 
+  /**
+   * @brief Creates a preflight error result with the given error code and message.
+   * @param errorCode The error code
+   * @param errorMessage The error message
+   * @return PreflightResult containing the error
+   */
   static PreflightResult MakePreflightErrorResult(int32 errorCode, const std::string& errorMessage)
   {
     return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, errorMessage}})};
   }
 
+  /**
+   * @brief Result of the execute operation including any errors and output values.
+   */
   struct ExecuteResult
   {
     Result<> result;
@@ -199,12 +248,15 @@ public:
   Result<Arguments> fromJson(const nlohmann::json& json) const;
 
   /**
-   * @brief Returns the set of default arguments for this filter.k
+   * @brief Returns the set of default arguments for this filter.
    * @return Arguments
    */
   Arguments getDefaultArguments() const;
 
 protected:
+  /**
+   * @brief Protected default constructor.
+   */
   IFilter() = default;
 
   /**

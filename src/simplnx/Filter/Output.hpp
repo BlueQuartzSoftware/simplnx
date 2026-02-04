@@ -38,18 +38,22 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   virtual Result<> apply(DataStructure& dataStructure, Mode mode) const = 0;
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   virtual UniquePointer clone() const = 0;
 
 protected:
+  /**
+   * @brief Protected default constructor.
+   */
   IDataAction() = default;
 };
 
@@ -93,6 +97,9 @@ public:
   virtual std::vector<DataPath> getAllCreatedPaths() const = 0;
 
 protected:
+  /**
+   * @brief Protected default constructor.
+   */
   IDataCreationAction() = default;
 
 private:
@@ -100,11 +107,13 @@ private:
 };
 
 /**
- * @brief
+ * @brief Represents a modification to a DataObject.
  */
 struct SIMPLNX_EXPORT DataObjectModification
 {
-
+  /**
+   * @brief Type of modification made to the DataObject.
+   */
   enum class ModifiedType : uint64
   {
     Modified = 0,
@@ -136,6 +145,11 @@ struct SIMPLNX_EXPORT OutputActions
   OutputActions& operator=(const OutputActions&) = default;
   OutputActions& operator=(OutputActions&&) noexcept = default;
 
+  /**
+   * @brief Appends an action to the regular actions list.
+   * @tparam T The action type (must derive from IDataAction)
+   * @param action The action to append
+   */
   template <class T>
   void appendAction(std::unique_ptr<T> action)
   {
@@ -143,6 +157,11 @@ struct SIMPLNX_EXPORT OutputActions
     actions.emplace_back(std::move(action));
   }
 
+  /**
+   * @brief Appends an action to the deferred actions list.
+   * @tparam T The action type (must derive from IDataAction)
+   * @param action The action to append
+   */
   template <class T>
   void appendDeferredAction(std::unique_ptr<T> action)
   {
@@ -150,17 +169,47 @@ struct SIMPLNX_EXPORT OutputActions
     deferredActions.emplace_back(std::move(action));
   }
 
+  /**
+   * @brief Appends a data object modification notification.
+   * @param dataPath The path to the modified data object
+   * @param modifiedType The type of modification
+   */
   void appendDataObjectModificationNotification(const DataPath& dataPath, DataObjectModification::ModifiedType modifiedType)
   {
     modifiedActions.push_back(DataObjectModification{dataPath, modifiedType});
   }
 
+  /**
+   * @brief Applies a span of actions to a DataStructure.
+   * @param actions The actions to apply
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> ApplyActions(nonstd::span<const AnyDataAction> actions, DataStructure& dataStructure, IDataAction::Mode mode);
 
+  /**
+   * @brief Applies regular actions to a DataStructure.
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
+   */
   Result<> applyRegular(DataStructure& dataStructure, IDataAction::Mode mode) const;
 
+  /**
+   * @brief Applies deferred actions to a DataStructure.
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
+   */
   Result<> applyDeferred(DataStructure& dataStructure, IDataAction::Mode mode) const;
 
+  /**
+   * @brief Applies all actions (regular and deferred) to a DataStructure.
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
+   */
   Result<> applyAll(DataStructure& dataStructure, IDataAction::Mode mode) const;
 };
 
