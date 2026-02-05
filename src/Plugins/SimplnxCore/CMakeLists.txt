@@ -284,6 +284,7 @@ set(AlgorithmList
  # RenameDataObject
   ReplaceElementAttributesWithNeighborValues
   RequireMinNumNeighbors
+  RequireMinimumSizeFeatures
   ResampleImageGeom
   ResampleRectGridToImageGeom
   ReshapeDataArray
