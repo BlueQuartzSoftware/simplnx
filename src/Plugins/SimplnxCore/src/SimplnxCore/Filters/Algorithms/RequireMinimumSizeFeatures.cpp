@@ -120,10 +120,17 @@ Result<> RequireMinimumSizeFeatures::operator()()
   {
     return {nonstd::make_unexpected(std::vector<Error>{errorReturn})};
   }
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
 
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
   assignBadVoxels(imageGeom.getDimensions(), featureNumCellsStoreRef);
-
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
   DataPath cellFeatureGroupPath = m_InputValues->FeatureNumCellsPath.getParent();
   usize currentFeatureCount = featureNumCellsStoreRef.getNumberOfTuples();
 
@@ -147,6 +154,7 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
 {
   MessageHelper messageHelper(m_MessageHandler);
 
+  messageHelper.sendMessage(fmt::format("RequireMinimumSizeFeatures::assignBadVoxels Starting"));
   Int32AbstractDataStore& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
   usize totalPoints = featureIds.getNumberOfTuples();
 
@@ -180,6 +188,10 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
     counter = 0;
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       kstride = dims[0] * dims[1] * zIdx;
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
@@ -262,6 +274,10 @@ std::vector<bool> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractD
 
   for(usize i = 1; i < totalFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     if(!applyToSinglePhase)
     {
       if(featureNumCellsStoreRef.getValue(i) >= minAllowedFeatureSize)
