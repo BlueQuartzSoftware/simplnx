@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
 namespace
@@ -69,7 +70,8 @@ Result<> ErodeDilateCoordinationNumber::operator()()
     }
   }
 
-  std::array<int64, 6> neighpoints = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   const std::string attrMatName = m_InputValues->FeatureIdsArrayPath.getTargetName();
   const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
@@ -87,45 +89,28 @@ Result<> ErodeDilateCoordinationNumber::operator()()
       keepGoing = false;
     }
 
-    for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
+    for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      const int64 zStride = dims[0] * dims[1] * zIndex;
-      for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
+      const int64 zStride = dims[0] * dims[1] * zIdx;
+      for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        const int64 yStride = dims[0] * yIndex;
-        for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
+        const int64 yStride = dims[0] * yIdx;
+        for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          const int64 voxelIndex = zStride + yStride + xIndex;
+          const int64 voxelIndex = zStride + yStride + xIdx;
           const int32 featureName = featureIds[voxelIndex];
           int32 coordination = 0;
           int32 most = 0;
-          for(int32 neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
+          // Loop over the 6 face neighbors of the voxel
+          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          for(const auto& faceIndex : faceNeighborInternalIdx)
           {
-            const int64 neighborPoint = voxelIndex + neighpoints[neighPointIdx];
-            if(neighPointIdx == 0 && zIndex == 0)
+            if(!isValidFaceNeighbor[faceIndex])
             {
               continue;
             }
-            if(neighPointIdx == 5 && zIndex == (dims[2] - 1))
-            {
-              continue;
-            }
-            if(neighPointIdx == 1 && yIndex == 0)
-            {
-              continue;
-            }
-            if(neighPointIdx == 4 && yIndex == (dims[1] - 1))
-            {
-              continue;
-            }
-            if(neighPointIdx == 2 && xIndex == 0)
-            {
-              continue;
-            }
-            if(neighPointIdx == 3 && xIndex == (dims[0] - 1))
-            {
-              continue;
-            }
+
+            const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
             const int32 feature = featureIds[neighborPoint];
             if((featureName > 0 && feature == 0) || (featureName == 0 && feature > 0))
@@ -144,6 +129,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           const int64 neighbor = neighbors[voxelIndex];
           if(coordinationNumber[voxelIndex] >= m_InputValues->CoordinationNumber && coordinationNumber[voxelIndex] > 0)
           {
+            // TODO: update to use IDataArray->copyTuple() function
             /******************************************************************
              * If this section is slow it is because we are having to use the
              * ExecuteDataFunction<T>() in order to call "copyTuple()" because
@@ -154,34 +140,16 @@ Result<> ErodeDilateCoordinationNumber::operator()()
               ExecuteDataFunction(DataArrayCopyTupleFunctor{}, voxelArray->getDataType(), *voxelArray, neighbor, voxelIndex);
             }
           }
-          for(int32 neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
+          // Loop over the 6 face neighbors of the voxel
+          isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          for(const auto& faceIndex : faceNeighborInternalIdx)
           {
-            const int64 neighborPoint = voxelIndex + neighpoints[neighPointIdx];
-            if(neighPointIdx == 0 && zIndex == 0)
-            {
-              continue;
-            }
-            if(neighPointIdx == 5 && zIndex == (dims[2] - 1))
-            {
-              continue;
-            }
-            if(neighPointIdx == 1 && yIndex == 0)
-            {
-              continue;
-            }
-            if(neighPointIdx == 4 && yIndex == (dims[1] - 1))
-            {
-              continue;
-            }
-            if(neighPointIdx == 2 && xIndex == 0)
-            {
-              continue;
-            }
-            if(neighPointIdx == 3 && xIndex == (dims[0] - 1))
+            if(!isValidFaceNeighbor[faceIndex])
             {
               continue;
             }
 
+            const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
             const int32 feature = featureIds[neighborPoint];
             if(feature > 0)
             {

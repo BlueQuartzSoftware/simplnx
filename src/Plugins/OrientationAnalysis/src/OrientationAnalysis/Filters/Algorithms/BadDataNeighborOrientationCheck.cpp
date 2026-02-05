@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -52,21 +53,14 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     return MakeErrorResult(-54900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
   }
 
-  int64 dims[3] = {
+  std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
       static_cast<int64>(udims[1]),
       static_cast<int64>(udims[2]),
   };
 
-  int64 column = 0, row = 0, plane = 0;
-
-  int64 neighpoints[6] = {0, 0, 0, 0, 0, 0};
-  neighpoints[0] = -dims[0] * dims[1];
-  neighpoints[1] = -dims[0];
-  neighpoints[2] = static_cast<int64>(-1);
-  neighpoints[3] = static_cast<int64>(1);
-  neighpoints[4] = dims[0];
-  neighpoints[5] = dims[0] * dims[1];
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
@@ -76,46 +70,40 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   // Loop over every point finding the number of neighbors that fall within the
   // user defined angle tolerance.
-  for(usize voxelIdx = 0; voxelIdx < totalPoints; voxelIdx++)
+  for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIndex, totalPoints)); });
     // If the mask was set to false, then we check this voxel
-    if(!maskCompare->isTrue(voxelIdx))
+    if(!maskCompare->isTrue(voxelIndex))
     {
       // We precalculate the positive voxel quaternion and laue class here to prevent reading and recalculating it for each face below
-      ebsdlib::QuatD quat1(quats[voxelIdx * 4], quats[voxelIdx * 4 + 1], quats[voxelIdx * 4 + 2], quats[voxelIdx * 4 + 3]);
+      ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);
       quat1.positiveOrientation();
-      const uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
+      const uint32 laueClass1 = crystalStructures[cellPhases[voxelIndex]];
 
-      column = static_cast<int64>(voxelIdx) % dims[0];
-      row = (static_cast<int64>(voxelIdx) / dims[0]) % dims[1];
-      plane = static_cast<int64>(voxelIdx) / (dims[0] * dims[1]);
+      int64 xIdx = voxelIndex % dims[0];
+      int64 yIdx = (voxelIndex / dims[0]) % dims[1];
+      int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
-      // Check the 6 Faces of the voxel
-      for(int32 faceIdx = 0; faceIdx < 6; faceIdx++)
+      // Loop over the 6 face neighbors of the voxel
+      std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      for(const auto& faceIndex : faceNeighborInternalIdx)
       {
-        int64 neighborIdx = static_cast<int64>(voxelIdx) + neighpoints[faceIdx];
-        // clang-format off
-        if((faceIdx == 0 && plane == 0) ||
-           (faceIdx == 1 && row == 0) ||
-           (faceIdx == 2 && column == 0) ||
-           (faceIdx == 3 && column == (dims[0] - 1)) ||
-           (faceIdx == 4 && row == (dims[1] - 1)) ||
-           (faceIdx == 5 && plane == (dims[2] - 1)))
+        if(!isValidFaceNeighbor[faceIndex])
         {
           continue;
         }
-        // clang-format on
+        const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
         // Now compare the mask of the neighbor. If the mask is TRUE, i.e., that voxel
         // did not fail the threshold filter that most likely produced the mask array,
         // then we can look at that voxel.
-        if(maskCompare->isTrue(neighborIdx))
+        if(maskCompare->isTrue(neighborPoint))
         {
           // Both Cell Phases MUST be the same and be a valid Phase
-          if(cellPhases[voxelIdx] == cellPhases[neighborIdx] && cellPhases[voxelIdx] > 0)
+          if(cellPhases[voxelIndex] == cellPhases[neighborPoint] && cellPhases[voxelIndex] > 0)
           {
-            ebsdlib::QuatD quat2(quats[neighborIdx * 4], quats[neighborIdx * 4 + 1], quats[neighborIdx * 4 + 2], quats[neighborIdx * 4 + 3]);
+            ebsdlib::QuatD quat2(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
             quat2.positiveOrientation();
             // Compute the Axis_Angle misorientation between those 2 quaternions
             ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
@@ -123,7 +111,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
             // for this voxel
             if(axisAngle[3] < misorientationTolerance)
             {
-              neighborCount[voxelIdx]++;
+              neighborCount[voxelIndex]++;
             }
           }
         }
@@ -144,26 +132,26 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     while(counter > 0)
     {
       counter = 0; // Set this while control variable to zero
-      for(usize voxelIdx = 0; voxelIdx < totalPoints; voxelIdx++)
+      for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
       {
         throttledMessenger.sendThrottledMessage([&] {
           return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
-                             CalculatePercentComplete(voxelIdx, totalPoints));
+                             CalculatePercentComplete(voxelIndex, totalPoints));
         });
 
         // We are comparing the number-of-neighbors of the current voxel, and if it
         // is > the current level and the mask is FALSE, then we drop into this
         // conditional. The first thing that happens in the conditional is that
         // the current voxel's mask value is set to TRUE.
-        if(neighborCount[voxelIdx] >= currentLevel && !maskCompare->isTrue(voxelIdx))
+        if(neighborCount[voxelIndex] >= currentLevel && !maskCompare->isTrue(voxelIndex))
         {
-          maskCompare->setValue(voxelIdx, true); // the current voxel's mask value is set to TRUE.
-          counter++;                             // Increment the `counter` to force the loop to iterate again
+          maskCompare->setValue(voxelIndex, true); // the current voxel's mask value is set to TRUE.
+          counter++;                               // Increment the `counter` to force the loop to iterate again
 
           // We precalculate the positive voxel quaternion and laue class here to prevent reading and recalculating it for each face below
-          ebsdlib::QuatD quat1(quats[voxelIdx * 4], quats[voxelIdx * 4 + 1], quats[voxelIdx * 4 + 2], quats[voxelIdx * 4 + 3]);
+          ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);
           quat1.positiveOrientation();
-          const uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
+          const uint32 laueClass1 = crystalStructures[cellPhases[voxelIndex]];
 
           // This whole section below is to now look at the neighbor voxels of the
           // current voxel that just got flipped to true. This is needed because
@@ -171,39 +159,34 @@ Result<> BadDataNeighborOrientationCheck::operator()()
           // is now not correct and will be off-by-one. So we run _almost_ the same
           // loop code as above but checking the specific neighbors of the current
           // voxel. This part should be termed the "Update Neighbor's Neighbor Count"
-          column = static_cast<int64>(voxelIdx) % dims[0]; // Calculate the column, row, plane
-          row = (static_cast<int64>(voxelIdx) / dims[0]) % dims[1];
-          plane = static_cast<int64>(voxelIdx) / (dims[0] * dims[1]);
+          int64 xIdx = voxelIndex % dims[0];
+          int64 yIdx = (voxelIndex / dims[0]) % dims[1];
+          int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
-          for(int64 j = 0; j < 6; j++) // Loop over each of the 6 neighbor faces
+          // Loop over the 6 face neighbors of the voxel
+          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          for(const auto& faceIndex : faceNeighborInternalIdx)
           {
-            int64 neighborIdx = static_cast<int64>(voxelIdx) + neighpoints[j];
-            // clang-format off
-            // Do NOT even look at any voxel along the outside boundary of the volume
-            if((j == 0 && plane == 0) ||
-               (j == 1 && row == 0) ||
-               (j == 2 && column == 0) ||
-               (j == 3 && column == (dims[0] - 1)) ||
-               (j == 4 && row == (dims[1] - 1)) ||
-               (j == 5 && plane == (dims[2] - 1)))
+            if(!isValidFaceNeighbor[faceIndex])
             {
               continue;
             }
-            // clang-format on
+
+            int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
             // If the neighbor voxel's mask is false, then ....
-            if(!maskCompare->isTrue(neighborIdx))
+            if(!maskCompare->isTrue(neighborPoint))
             {
               // Make sure both cells phase values are identical and valid
-              if(cellPhases[voxelIdx] == cellPhases[neighborIdx] && cellPhases[voxelIdx] > 0)
+              if(cellPhases[voxelIndex] == cellPhases[neighborPoint] && cellPhases[voxelIndex] > 0)
               {
-                ebsdlib::QuatD quat2(quats[neighborIdx * 4], quats[neighborIdx * 4 + 1], quats[neighborIdx * 4 + 2], quats[neighborIdx * 4 + 3]);
+                ebsdlib::QuatD quat2(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
                 quat2.positiveOrientation();
                 // Quaternion Math is not commutative so do not reorder
                 ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
                 if(axisAngle[3] < misorientationTolerance)
                 {
-                  neighborCount[neighborIdx]++;
+                  neighborCount[neighborPoint]++;
                 }
               }
             }

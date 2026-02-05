@@ -5,6 +5,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
 
@@ -165,19 +166,13 @@ Result<> RequireMinNumNeighbors::operator()()
   // Create a temp array to hold the neighbor values
   std::vector<int32> neighbors(featureIds.getNumberOfTuples(), -1);
 
-  int32 good = 1;
   int32 current = 0;
   int32 most = 0;
   int64 neighborPoint = 0;
   usize numFeatures = numNeighbors.getNumberOfTuples();
 
-  int64 neighborPointIdx[6] = {0, 0, 0, 0, 0, 0};
-  neighborPointIdx[0] = -dims[0] * dims[1];
-  neighborPointIdx[1] = -dims[0];
-  neighborPointIdx[2] = -1;
-  neighborPointIdx[3] = 1;
-  neighborPointIdx[4] = dims[0];
-  neighborPointIdx[5] = dims[0] * dims[1];
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   usize counter = 1;
   int64 voxelIndex = 0;
@@ -186,7 +181,7 @@ Result<> RequireMinNumNeighbors::operator()()
   int32 featureName = 0;
   int32 feature = 0;
   int32 neighbor = 0;
-  std::vector<int32> n(numFeatures + 1, 0);
+  std::vector<int32> voteCount(numFeatures + 1, 0);
   std::vector<usize> badFeatureIdIndexes;
 
   while(counter != 0)
@@ -197,15 +192,15 @@ Result<> RequireMinNumNeighbors::operator()()
     }
     counter = 0;
     badFeatureIdIndexes.clear();
-    for(int64 k = 0; k < dims[2]; k++)
+    for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      kStride = dims[0] * dims[1] * k;
-      for(int64 j = 0; j < dims[1]; j++)
+      kStride = dims[0] * dims[1] * zIdx;
+      for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        jStride = dims[0] * j;
-        for(int64 i = 0; i < dims[0]; i++)
+        jStride = dims[0] * yIdx;
+        for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          voxelIndex = kStride + jStride + i;
+          voxelIndex = kStride + jStride + xIdx;
           featureName = featureIds[voxelIndex]; // Get the featureId value
           if(featureName < 0)                   // Was this voxel marked to be removed
           {
@@ -214,41 +209,20 @@ Result<> RequireMinNumNeighbors::operator()()
             current = 0;
             most = 0;
             // Loop over the 6 face neighbors of the voxel
-            for(int32 l = 0; l < 6; l++)
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            for(const auto& faceIndex : faceNeighborInternalIdx)
             {
-              good = 1;
-              neighborPoint = voxelIndex + neighborPointIdx[l];
-              if(l == 0 && k == 0)
+              if(!isValidFaceNeighbor[faceIndex])
               {
-                good = 0;
+                continue;
               }
-              if(l == 5 && k == (dims[2] - 1))
-              {
-                good = 0;
-              }
-              if(l == 1 && j == 0)
-              {
-                good = 0;
-              }
-              if(l == 4 && j == (dims[1] - 1))
-              {
-                good = 0;
-              }
-              if(l == 2 && i == 0)
-              {
-                good = 0;
-              }
-              if(l == 3 && i == (dims[0] - 1))
-              {
-                good = 0;
-              }
-              if(good == 1)
+              neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
               {
                 feature = featureIds[neighborPoint];
                 if(feature >= 0)
                 {
-                  n[feature]++;
-                  current = n[feature];
+                  voteCount[feature]++;
+                  current = voteCount[feature];
                   if(current > most)
                   {
                     most = current;
@@ -257,48 +231,13 @@ Result<> RequireMinNumNeighbors::operator()()
                 }
               }
             }
-            // Loop over the 6 face neighbors of the voxel
-            for(int32 l = 0; l < 6; l++)
-            {
-              good = 1;
-              neighborPoint = voxelIndex + neighborPointIdx[l];
-              if(l == 0 && k == 0)
-              {
-                good = 0;
-              }
-              if(l == 5 && k == (dims[2] - 1))
-              {
-                good = 0;
-              }
-              if(l == 1 && j == 0)
-              {
-                good = 0;
-              }
-              if(l == 4 && j == (dims[1] - 1))
-              {
-                good = 0;
-              }
-              if(l == 2 && i == 0)
-              {
-                good = 0;
-              }
-              if(l == 3 && i == (dims[0] - 1))
-              {
-                good = 0;
-              }
-              if(good == 1)
-              {
-                feature = featureIds[neighborPoint];
-                if(feature >= 0)
-                {
-                  n[feature] = 0;
-                }
-              }
-            }
+
+            // Reset the voteCount array to all zeros
+            std::fill(voteCount.begin(), voteCount.end(), 0);
           }
           else if(featureName >= numFeatures)
           {
-            std::string message = fmt::format("Error: Found a feature Id '{}' that is >= the number of features '{}' at voxel index X={},Y={},Z={}.", featureName, numFeatures, i, j, k);
+            std::string message = fmt::format("Error: Found a feature Id '{}' that is >= the number of features '{}' at voxel index X={},Y={},Z={}.", featureName, numFeatures, xIdx, yIdx, zIdx);
             m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, message});
             return MakeErrorResult(-55567, message);
           }
@@ -310,7 +249,7 @@ Result<> RequireMinNumNeighbors::operator()()
     m_MessageHandler(nx::core::IFilter::Message::Type::Info, message);
 
     // TODO: This can be parallelized much like NeighborOrientationCorrelation, just do not update the featureIds array during that section. Wait until everything is complete
-    //  This next section finds the "FeatureIds" array and moves that array to the end of the list
+    // This next section finds the "FeatureIds" array and moves that array to the end of the list
     auto featureIdsIter = std::find(cellDataArrayPaths.begin(), cellDataArrayPaths.end(), m_InputValues->FeatureIdsPath);
     if(featureIdsIter != cellDataArrayPaths.end())
     {

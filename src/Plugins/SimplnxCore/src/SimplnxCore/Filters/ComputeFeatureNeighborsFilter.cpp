@@ -14,7 +14,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
-
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <sstream>
@@ -218,9 +218,6 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   SizeVec3 uDims = imageGeom.getDimensions();
-  const auto imageGeomNumX = imageGeom.getNumXCells();
-  const auto imageGeomNumY = imageGeom.getNumYCells();
-  const auto imageGeomNumZ = imageGeom.getNumZCells();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(uDims[0]),
@@ -228,16 +225,12 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
       static_cast<int64>(uDims[2]),
   };
 
-  std::array<int64, 6> neighPoints = {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  int64 column = 0;
-  int64 row = 0;
-  int64 plane = 0;
   int32 feature = 0;
   int32 nnum = 0;
   uint8 onsurf = 0;
-  bool good = false;
-  int64 neighbor = 0;
 
   std::vector<std::vector<int32>> neighborlist(totalFeatures);
   std::vector<std::vector<float>> neighborsurfacearealist(totalFeatures);
@@ -247,29 +240,29 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
   MessageHelper messageHelper(messageHandler);
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   // Initialize the neighbor lists
-  for(usize i = 1; i < totalFeatures; i++)
+  for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
     auto now = std::chrono::steady_clock::now();
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(featureIdx, totalFeatures)); });
 
     if(shouldCancel)
     {
       return {};
     }
 
-    numNeighbors[i] = 0;
-    neighborlist[i].resize(nListSize);
-    neighborsurfacearealist[i].assign(nListSize, -1.0f);
+    numNeighbors[featureIdx] = 0;
+    neighborlist[featureIdx].resize(nListSize);
+    neighborsurfacearealist[featureIdx].assign(nListSize, -1.0f);
     if(storeSurfaceFeatures && surfaceFeatures != nullptr)
     {
-      surfaceFeatures->setValue(i, false);
+      surfaceFeatures->setValue(featureIdx, false);
     }
   }
 
   // Loop over all points to generate the neighbor lists
-  for(usize j = 0; j < totalPoints; j++)
+  for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(j, totalPoints)); });
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIndex, totalPoints)); });
 
     if(shouldCancel)
     {
@@ -277,58 +270,41 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
     }
 
     onsurf = 0;
-    feature = featureIds[j];
+    feature = featureIds[voxelIndex];
     if(feature > 0 && feature < neighborlist.size())
     {
-      column = static_cast<int64>(j % imageGeomNumX);
-      row = static_cast<int64>((j / imageGeomNumX) % imageGeomNumY);
-      plane = static_cast<int64>(j / (imageGeomNumX * imageGeomNumY));
+      int64 xIdx = voxelIndex % dims[0];
+      int64 yIdx = (voxelIndex / dims[0]) % dims[1];
+      int64 zIdx = voxelIndex / (dims[0] * dims[1]);
+
       if(storeSurfaceFeatures && surfaceFeatures != nullptr)
       {
-        if((column == 0 || column == static_cast<int64>((imageGeomNumX - 1)) || row == 0 || row == static_cast<int64>((imageGeomNumY)-1) || plane == 0 ||
-            plane == static_cast<int64>((imageGeomNumZ - 1))) &&
-           imageGeomNumZ != 1)
+        if((xIdx == 0 || xIdx == static_cast<int64>((dims[0] - 1)) || yIdx == 0 || yIdx == static_cast<int64>((dims[1]) - 1) || zIdx == 0 || zIdx == static_cast<int64>((dims[2] - 1))) && dims[2] != 1)
         {
           surfaceFeatures->setValue(feature, true);
         }
-        if((column == 0 || column == static_cast<int64>((imageGeomNumX - 1)) || row == 0 || row == static_cast<int64>((imageGeomNumY - 1))) && imageGeomNumZ == 1)
+        if((xIdx == 0 || xIdx == static_cast<int64>((dims[0] - 1)) || yIdx == 0 || yIdx == static_cast<int64>((dims[1] - 1))) && dims[2] == 1)
         {
           surfaceFeatures->setValue(feature, true);
         }
       }
-      for(size_t k = 0; k < 6; k++)
+
+      // Loop over the 6 face neighbors of the voxel
+      std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      for(const auto& faceIndex : faceNeighborInternalIdx)
       {
-        good = true;
-        neighbor = static_cast<int64>(j + neighPoints[k]);
-        if(k == 0 && plane == 0)
+        if(!isValidFaceNeighbor[faceIndex])
         {
-          good = false;
+          continue;
         }
-        if(k == 5 && plane == (imageGeomNumZ - 1))
-        {
-          good = false;
-        }
-        if(k == 1 && row == 0)
-        {
-          good = false;
-        }
-        if(k == 4 && row == (imageGeomNumY - 1))
-        {
-          good = false;
-        }
-        if(k == 2 && column == 0)
-        {
-          good = false;
-        }
-        if(k == 3 && column == (imageGeomNumX - 1))
-        {
-          good = false;
-        }
-        if(good && featureIds[neighbor] != feature && featureIds[neighbor] > 0)
+
+        const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+
+        if(featureIds[neighborPoint] != feature && featureIds[neighborPoint] > 0)
         {
           onsurf++;
           nnum = numNeighbors[feature];
-          neighborlist[feature].push_back(featureIds[neighbor]);
+          neighborlist[feature].push_back(featureIds[neighborPoint]);
           nnum++;
           numNeighbors[feature] = nnum;
         }
@@ -336,7 +312,7 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
     }
     if(storeBoundaryCells && boundaryCells != nullptr)
     {
-      boundaryCells->setValue(j, static_cast<int32>(onsurf));
+      boundaryCells->setValue(voxelIndex, static_cast<int32>(onsurf));
     }
   }
 

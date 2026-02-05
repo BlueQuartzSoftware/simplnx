@@ -138,24 +138,6 @@ private:
    */
   void phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64_t, 3>& dims, size_t numFeatures) const;
 
-  /**
-   * @brief Get the 6 face-connected neighbor offsets
-   * @param dims Image geometry dimensions
-   * @return Array of 6 neighbor offsets
-   */
-  static std::array<int64_t, 6> getNeighborOffsets(const std::array<int64_t, 3>& dims);
-
-  /**
-   * @brief Check if a neighbor direction is valid for a given voxel position
-   * @param neighborIdx Neighbor direction index (0-5)
-   * @param column X coordinate
-   * @param row Y coordinate
-   * @param plane Z coordinate
-   * @param dims Image geometry dimensions
-   * @return True if the neighbor is valid (not out of bounds)
-   */
-  static bool isValidNeighbor(int32 neighborIdx, int64_t column, int64_t row, int64_t plane, const std::array<int64_t, 3>& dims);
-
   DataStructure& m_DataStructure;
   const FillBadDataInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;

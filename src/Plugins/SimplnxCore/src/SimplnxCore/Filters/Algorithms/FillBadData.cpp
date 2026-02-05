@@ -5,6 +5,7 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -49,7 +50,7 @@ namespace
 //
 // @param featureIds The feature IDs array indicating which voxels are bad data
 // @param outputDataStore The data array to update
-// @param neighbors The neighbor assignments (index of neighbor to copy from)
+// @param neighbors The neighbor assignments (index of the neighbor to copy from)
 template <typename T>
 void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int32>& neighbors)
 {
@@ -69,8 +70,8 @@ void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractD
       continue;
     }
 
-    // Copy data from valid neighbor to bad data voxel
-    // Only copy if current voxel is bad data (-1) and neighbor is valid (>0)
+    // Copy data from the valid neighbor to bad data voxel
+    // Only copy if the current voxel is bad data (-1) and the neighbor is valid (>0)
     if(featureName < 0 && neighbor != -1 && featureIds[static_cast<usize>(neighbor)] > 0)
     {
       // Copy all components from neighbor tuple to current tuple
@@ -119,7 +120,7 @@ struct FillBadDataUpdateTuplesFunctor
 // -----------------------------------------------------------------------------
 // This performs a simple root lookup without path compression. Path compression
 // is deferred to the flatten() method to avoid wasting cycles updating paths
-// that will be modified again during subsequent merges.
+// that will be modified again during later merges.
 //
 // @param x The label to find the root for
 // @return The root label of the equivalence class
@@ -133,7 +134,7 @@ int64 ChunkAwareUnionFind::find(int64 x)
     m_Size[x] = 0;
   }
 
-  // Find root iteratively without path compression
+  // Find root iteratively without using the path compression algorithm
   // Path compression is deferred to flatten() to avoid wasting cycles
   // during frequent merges where paths would be updated repeatedly
   int64 root = x;
@@ -164,7 +165,7 @@ void ChunkAwareUnionFind::unite(int64 a, int64 b)
     return;
   }
 
-  // Union by rank: attach smaller tree under root of larger tree
+  // Union by rank: attach the smaller tree object under the root of the larger tree
   // This keeps the tree height logarithmic for better find() performance
   if(m_Rank[rootA] < m_Rank[rootB])
   {
@@ -176,7 +177,7 @@ void ChunkAwareUnionFind::unite(int64 a, int64 b)
   }
   else
   {
-    // Equal rank: arbitrarily choose rootA as parent and increment its rank
+    // Equal rank: arbitrarily choose rootA as the parent and increment its rank
     m_Parent[rootB] = rootA;
     m_Rank[rootA]++;
   }
@@ -275,60 +276,13 @@ const std::atomic_bool& FillBadData::getCancel() const
   return m_ShouldCancel;
 }
 
-// -----------------------------------------------------------------------------
-// Calculate neighbor offsets for 6-connected (face-sharing) neighbors
-// -----------------------------------------------------------------------------
-// Returns array of linear index offsets for the 6 face-connected neighbors
-// in a 3D image grid. Order: -Z, -Y, -X, +X, +Y, +Z
-//
-// @param dims Image dimensions [X, Y, Z]
-// @return Array of 6 linear index offsets
-std::array<int64, 6> FillBadData::getNeighborOffsets(const std::array<int64, 3>& dims)
-{
-  // 6 face-connected neighbors: -Z, -Y, -X, +X, +Y, +Z
-  return {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
-}
-
-// -----------------------------------------------------------------------------
-// Check if a neighbor is valid (not out of bounds)
-// -----------------------------------------------------------------------------
-// Validates that a neighbor direction is within the image bounds for a given
-// voxel position. Prevents accessing neighbors outside the volume.
-//
-// @param neighborIdx Neighbor direction index (0-5): 0=-Z, 1=-Y, 2=-X, 3=+X, 4=+Y, 5=+Z
-// @param column X coordinate of current voxel
-// @param row Y coordinate of current voxel
-// @param plane Z coordinate of current voxel
-// @param dims Image dimensions [X, Y, Z]
-// @return True if the neighbor is valid (within bounds), false otherwise
-bool FillBadData::isValidNeighbor(int32 neighborIdx, int64 column, int64 row, int64 plane, const std::array<int64, 3>& dims)
-{
-  switch(neighborIdx)
-  {
-  case 0: // -Z
-    return plane > 0;
-  case 1: // -Y
-    return row > 0;
-  case 2: // -X
-    return column > 0;
-  case 3: // +X
-    return column < (dims[0] - 1);
-  case 4: // +Y
-    return row < (dims[1] - 1);
-  case 5: // +Z
-    return plane < (dims[2] - 1);
-  default:
-    return false;
-  }
-}
-
 // =============================================================================
 // PHASE 1: Chunk-Sequential Connected Component Labeling (CCL)
 // =============================================================================
 //
 // Performs connected component labeling on bad data voxels (FeatureId == 0)
 // using a chunk-sequential scanline algorithm. This approach is optimized for
-// out-of-core datasets where data is stored in chunks on disk.
+// out-of-core datasets where data is stored in chunks on the disk.
 //
 // Algorithm:
 // 1. Process chunks sequentially, loading one chunk at a time
@@ -341,7 +295,7 @@ bool FillBadData::isValidNeighbor(int32 neighborIdx, int64 column, int64 row, in
 // X, Y, and Z directions) instead of all 6 face neighbors, because later
 // neighbors haven't been processed yet.
 //
-// @param featureIdsStore The feature IDs data store (may be out-of-core)
+// @param featureIdsStore The feature IDs data store (maybe out-of-core)
 // @param unionFind Union-Find structure for tracking label equivalences
 // @param provisionalLabels Map from voxel index to assigned provisional label
 // @param dims Image dimensions [X, Y, Z]
@@ -490,7 +444,7 @@ void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::
 // Large regions may optionally be assigned to a new phase (if storeAsNewPhase is true).
 //
 // @param featureIdsStore The feature IDs data store
-// @param cellPhasesPtr Cell phases array (may be null)
+// @param cellPhasesPtr Cell phases array (maybe null)
 // @param provisionalLabels Map from voxel index to provisional label (from Phase 1)
 // @param smallRegions Unused in current implementation (kept for interface compatibility)
 // @param unionFind Union-Find structure with resolved equivalences (from Phase 2)
@@ -515,7 +469,7 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
     }
   }
 
-  // Classify regions as small (need filling) or large (keep or assign to new phase)
+  // Classify regions as small (need filling) or large (keep or assign to a new phase)
   std::unordered_set<int64> localSmallRegions;
   for(const auto& [root, size] : rootSizes)
   {
@@ -559,7 +513,7 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
             }
             else
             {
-              // Large region - keep as bad data (0) or assign to new phase
+              // Large region - keep as bad data (0) or assign to a new phase
               featureIdsStore[index] = 0;
 
               // Optionally assign large bad data regions to a new phase
@@ -599,12 +553,14 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 {
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
   const usize totalPoints = featureIdsStore.getNumberOfTuples();
-  const auto neighborOffsets = getNeighborOffsets(dims);
 
-  // Neighbor assignment array: neighbors[i] = index of neighbor to copy from
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+
+  // Neighbor assignment array: neighbors[i] = index of the neighbor to copy from
   std::vector<int32> neighbors(totalPoints, -1);
 
-  // Feature vote counter: tracks how many times each feature appears as neighbor
+  // Feature vote counter: tracks how many times each feature appears as the neighbor
   std::vector<int32> featureNumber(numFeatures + 1, 0);
 
   // Get a list of all cell arrays that need to be updated during filling
@@ -620,20 +576,20 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
   MessageHelper messageHelper(m_MessageHandler, std::chrono::milliseconds(1000));
   auto throttledMessenger = messageHelper.createThrottledMessenger(std::chrono::milliseconds(1000));
 
-  usize count = 1;     // Number of -1 voxels remaining
+  usize count = 1;     // Number of voxels with -1 value that remain
   usize iteration = 0; // Current iteration number
 
   // Iteratively fill until no voxels with -1 value remain
   while(count != 0)
   {
     iteration++;
-    count = 0; // Reset count of -1 voxels for this iteration
+    count = 0; // Reset count of voxels with a -1 value for this iteration
 
     // Pass 1: Determine neighbor assignments for all -1 voxels
     // For each -1 voxel, find the most common positive feature among neighbors
-    for(usize i = 0; i < totalPoints; i++)
+    for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
-      int32 featureName = featureIdsStore[i];
+      int32 featureName = featureIdsStore[voxelIndex];
 
       // Only process voxels marked for filling (-1)
       if(featureName < 0)
@@ -641,22 +597,23 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
         count++;        // Count this voxel as needing filling
         int32 most = 0; // Highest vote count seen so far
 
-        // Compute 3D position from linear index
-        auto column = static_cast<int64>(i % dims[0]);
-        auto row = static_cast<int64>((i / dims[0]) % dims[1]);
-        auto plane = static_cast<int64>(i / (dims[0] * dims[1]));
+        // Compute 3D position from the linear index
+        int64 xIdx = voxelIndex % dims[0];
+        int64 yIdx = (voxelIndex / dims[0]) % dims[1];
+        int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
         // Vote for the most common positive neighbor feature
-        // Check all 6 face-connected neighbors
-        for(int32 j = 0; j < 6; j++)
+        // Loop over the 6 face neighbors of the voxel
+        std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        for(const auto& faceIndex : faceNeighborInternalIdx)
         {
           // Skip neighbors outside image bounds
-          if(!isValidNeighbor(j, column, row, plane, dims))
+          if(!isValidFaceNeighbor[faceIndex])
           {
             continue;
           }
 
-          auto neighborPoint = static_cast<int64>(i) + neighborOffsets[j];
+          auto neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
           int32 feature = featureIdsStore[neighborPoint];
 
           // Only vote for positive features (valid data)
@@ -670,21 +627,23 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
             if(current > most)
             {
               most = current;
-              neighbors[i] = static_cast<int32>(neighborPoint); // Store neighbor to copy from
+              neighbors[voxelIndex] = static_cast<int32>(neighborPoint); // Store neighbor to copy from
             }
           }
         }
 
         // Reset vote counters for next voxel
         // Only reset features that were actually counted to save time
-        for(int32 j = 0; j < 6; j++)
+        // Loop over the 6 face neighbors of the voxel
+        isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        for(const auto& faceIndex : faceNeighborInternalIdx)
         {
-          if(!isValidNeighbor(j, column, row, plane, dims))
+          if(!isValidFaceNeighbor[faceIndex])
           {
             continue;
           }
 
-          int64 neighborPoint = static_cast<int64>(i) + neighborOffsets[j];
+          int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
           int32 feature = featureIdsStore[neighborPoint];
 
           if(feature > 0)
@@ -707,7 +666,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 
       auto* oldCellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
 
-      // Use type-dispatched update function to handle all data types
+      // Use the type-dispatched update function to handle all data types
       ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, oldCellArray->getDataType(), featureIdsStore, oldCellArray, neighbors);
     }
 

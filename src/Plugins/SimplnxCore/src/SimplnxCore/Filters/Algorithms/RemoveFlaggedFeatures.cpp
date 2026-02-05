@@ -9,6 +9,7 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
@@ -21,9 +22,14 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
   SizeVec3 uDims = imageGeom.getDimensions();
 
-  int64 dims[3] = {static_cast<int64>(uDims[0]), static_cast<int64>(uDims[1]), static_cast<int64>(uDims[2])};
+  std::array<int64, 3> dims = {
+      static_cast<int64>(uDims[0]),
+      static_cast<int64>(uDims[1]),
+      static_cast<int64>(uDims[2]),
+  };
 
-  const int64 neighborPoints[6] = {(-dims[0] * dims[1]), (-dims[0]), -1, 1, dims[0], (dims[0] * dims[1])};
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   bool shouldLoop = false;
 
@@ -31,7 +37,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
   usize progressCounter = 0;
   int32 featureName;
   int64 kStride, jStride;
-  for(int64 k = 0; k < dims[2]; k++)
+  for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
   {
     if(shouldCancel)
     {
@@ -40,19 +46,19 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
     if(progressCounter > progressIncrement)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(k, dims[2])); });
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
       progressCounter = 0;
     }
     progressCounter++;
 
-    kStride = dims[0] * dims[1] * k;
-    for(int64 j = 0; j < dims[1]; j++)
+    kStride = dims[0] * dims[1] * zIdx;
+    for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
     {
-      jStride = dims[0] * j;
-      for(int64 i = 0; i < dims[0]; i++)
+      jStride = dims[0] * yIdx;
+      for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
       {
-        int64 count = kStride + jStride + i;
-        featureName = featureIds[count];
+        int64 voxelIndex = kStride + jStride + xIdx;
+        featureName = featureIds[voxelIndex];
         if(featureName > 0)
         {
           continue;
@@ -63,34 +69,16 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
         std::vector<int32> numHits(6, 0);
         std::vector<int32> discoveredFeatures = {};
         discoveredFeatures.reserve(6);
-        for(int8 l = 0; l < 6; l++)
+        // Loop over the 6 face neighbors of the voxel
+        std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        for(const auto& faceIndex : faceNeighborInternalIdx)
         {
-          if(l == 5 && k == (dims[2] - 1))
-          {
-            continue;
-          }
-          if(l == 1 && j == 0)
-          {
-            continue;
-          }
-          if(l == 4 && j == (dims[1] - 1))
-          {
-            continue;
-          }
-          if(l == 2 && i == 0)
-          {
-            continue;
-          }
-          if(l == 3 && i == (dims[0] - 1))
-          {
-            continue;
-          }
-          if(l == 0 && k == 0)
+          if(!isValidFaceNeighbor[faceIndex])
           {
             continue;
           }
 
-          int64 neighborPoint = count + neighborPoints[l];
+          int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
           int32 feature = featureIds[neighborPoint];
           if(feature >= 0)
           {
@@ -105,7 +93,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
                 if(current > most)
                 {
                   most = current;
-                  storageArray[count] = static_cast<int32>(neighborPoint);
+                  storageArray[voxelIndex] = static_cast<int32>(neighborPoint);
                 }
                 break;
               }

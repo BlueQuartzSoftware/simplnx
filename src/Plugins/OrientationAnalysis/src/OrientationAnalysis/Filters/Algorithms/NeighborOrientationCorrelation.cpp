@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -24,7 +25,7 @@ public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
-  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64_t>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
+  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
   : m_MessageHelper(messageHelper)
   , m_TotalPoints(totalPoints)
   , m_BestNeighbor(bestNeighbor)
@@ -44,7 +45,7 @@ public:
     for(size_t i = 0; i < m_TotalPoints; i++)
     {
       throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
-      int64_t neighbor = m_BestNeighbor[i];
+      int64 neighbor = m_BestNeighbor[i];
       if(neighbor != -1)
       {
         m_DataArrayPtr->copyTuple(neighbor, i);
@@ -55,7 +56,7 @@ public:
 private:
   MessageHelper& m_MessageHelper;
   size_t m_TotalPoints = 0;
-  std::vector<int64_t> m_BestNeighbor;
+  std::vector<int64> m_BestNeighbor;
   std::shared_ptr<IDataArray> m_DataArrayPtr;
 };
 
@@ -91,44 +92,34 @@ Result<> NeighborOrientationCorrelation::operator()()
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
   SizeVec3 udims = imageGeom.getDimensions();
 
-  int64_t dims[3] = {
-      static_cast<int64_t>(udims[0]),
-      static_cast<int64_t>(udims[1]),
-      static_cast<int64_t>(udims[2]),
+  std::array<int64, 3> dims = {
+      static_cast<int64>(udims[0]),
+      static_cast<int64>(udims[1]),
+      static_cast<int64>(udims[2]),
   };
 
-  int32_t best = 0;
-  bool good = true;
-  bool good2 = true;
-  int64_t neighbor = 0;
-  int64_t neighbor2 = 0;
-  int64_t column = 0, row = 0, plane = 0;
+  int32 best = 0;
+  int64 neighborPoint2 = 0;
 
-  int64_t neighpoints[6] = {0, 0, 0, 0, 0, 0};
-  neighpoints[0] = static_cast<int64_t>(-dims[0] * dims[1]);
-  neighpoints[1] = static_cast<int64_t>(-dims[0]);
-  neighpoints[2] = static_cast<int64_t>(-1);
-  neighpoints[3] = static_cast<int64_t>(1);
-  neighpoints[4] = static_cast<int64_t>(dims[0]);
-  neighpoints[5] = static_cast<int64_t>(dims[0] * dims[1]);
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  std::vector<int32_t> neighborDiffCount(totalPoints, 0);
-  std::vector<int32_t> neighborSimCount(6, 0);
-  std::vector<int64_t> bestNeighbor(totalPoints, -1);
-  const int32_t startLevel = 6;
-  float* currentQuatPtr = nullptr;
+  std::vector<int32> neighborDiffCount(totalPoints, 0);
+  std::vector<int32> neighborSimCount(6, 0);
+  std::vector<int64> bestNeighbor(totalPoints, -1);
+  const int32 startLevel = 6;
 
   MessageHelper messageHelper(m_MessageHandler);
 
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
 
-  for(int32_t currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
+  for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
-
-    for(size_t i = 0; i < totalPoints; i++)
+    for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
       throttledMessenger.sendThrottledMessage([&]() {
-        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level, CalculatePercentComplete(i, totalPoints));
+        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
+                           CalculatePercentComplete(voxelIndex, totalPoints));
       });
 
       if(m_ShouldCancel)
@@ -136,138 +127,77 @@ Result<> NeighborOrientationCorrelation::operator()()
         break;
       }
 
-      if(confidenceIndex[i] < m_InputValues->MinConfidence)
+      if(confidenceIndex[voxelIndex] < m_InputValues->MinConfidence)
       {
-        column = static_cast<int64_t>(i % dims[0]);
-        row = (i / dims[0]) % dims[1];
-        plane = i / (dims[0] * dims[1]);
-        for(size_t j = 0; j < 6; j++)
+        int64 xIdx = voxelIndex % dims[0];
+        int64 yIdx = (voxelIndex / dims[0]) % dims[1];
+        int64 zIdx = voxelIndex / (dims[0] * dims[1]);
+        // Loop over the 6 face neighbors of the voxel
+        std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        for(const auto& faceIndexJ : faceNeighborInternalIdx)
         {
-          good = true;
-          neighbor = int64_t(i) + neighpoints[j];
-          if(j == 0 && plane == 0)
+          if(!isValidFaceNeighbor[faceIndexJ])
           {
-            good = false;
+            continue;
           }
-          if(j == 5 && plane == (dims[2] - 1))
+          const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndexJ];
+
+          uint32 laueClass = crystalStructures[cellPhases[voxelIndex]];
+          ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);
+          ebsdlib::QuatD quat2(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
+          ebsdlib::AxisAngleDType axisAngle(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
+          if(cellPhases[voxelIndex] == cellPhases[neighborPoint] && cellPhases[voxelIndex] > 0)
           {
-            good = false;
+            axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
           }
-          if(j == 1 && row == 0)
+          if(axisAngle[3] > misorientationToleranceR)
           {
-            good = false;
+            neighborDiffCount[voxelIndex]++;
           }
-          if(j == 4 && row == (dims[1] - 1))
+
+          isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          for(size_t faceIndexK = faceIndexJ + 1; faceIndexK < k_FaceNeighborCount; faceIndexK++)
           {
-            good = false;
-          }
-          if(j == 2 && column == 0)
-          {
-            good = false;
-          }
-          if(j == 3 && column == (dims[0] - 1))
-          {
-            good = false;
-          }
-          if(good)
-          {
-            uint32 laueClass = crystalStructures[cellPhases[i]];
-            ebsdlib::QuatD quat1(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-            ebsdlib::QuatD quat2(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
-            ebsdlib::AxisAngleDType axisAngle(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
-            if(cellPhases[i] == cellPhases[neighbor] && cellPhases[i] > 0)
+            if(!isValidFaceNeighbor[faceIndexK])
+            {
+              continue;
+            }
+            neighborPoint2 = voxelIndex + neighborVoxelIndexOffsets[faceIndexK];
+
+            laueClass = crystalStructures[cellPhases[neighborPoint2]];
+            quat1 = ebsdlib::QuatD(quats[neighborPoint2 * 4], quats[neighborPoint2 * 4 + 1], quats[neighborPoint2 * 4 + 2], quats[neighborPoint2 * 4 + 3]);
+            quat2 = ebsdlib::QuatD(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
+            axisAngle = ebsdlib::AxisAngleDType(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
+            if(cellPhases[neighborPoint2] == cellPhases[neighborPoint] && cellPhases[neighborPoint2] > 0)
             {
               axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
             }
-            if(axisAngle[3] > misorientationToleranceR)
+            if(axisAngle[3] < misorientationToleranceR)
             {
-              neighborDiffCount[i]++;
-            }
-            for(size_t k = j + 1; k < 6; k++)
-            {
-              good2 = true;
-              neighbor2 = int64_t(i) + neighpoints[k];
-              if(k == 0 && plane == 0)
-              {
-                good2 = false;
-              }
-              if(k == 5 && plane == (dims[2] - 1))
-              {
-                good2 = false;
-              }
-              if(k == 1 && row == 0)
-              {
-                good2 = false;
-              }
-              if(k == 4 && row == (dims[1] - 1))
-              {
-                good2 = false;
-              }
-              if(k == 2 && column == 0)
-              {
-                good2 = false;
-              }
-              if(k == 3 && column == (dims[0] - 1))
-              {
-                good2 = false;
-              }
-              if(good2)
-              {
-                laueClass = crystalStructures[cellPhases[neighbor2]];
-                quat1 = ebsdlib::QuatD(quats[neighbor2 * 4], quats[neighbor2 * 4 + 1], quats[neighbor2 * 4 + 2], quats[neighbor2 * 4 + 3]);
-                quat2 = ebsdlib::QuatD(quats[neighbor * 4], quats[neighbor * 4 + 1], quats[neighbor * 4 + 2], quats[neighbor * 4 + 3]);
-                axisAngle = ebsdlib::AxisAngleDType(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
-                if(cellPhases[neighbor2] == cellPhases[neighbor] && cellPhases[neighbor2] > 0)
-                {
-                  axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
-                }
-                if(axisAngle[3] < misorientationToleranceR)
-                {
-                  neighborSimCount[j]++;
-                  neighborSimCount[k]++;
-                }
-              }
+              neighborSimCount[faceIndexJ]++;
+              neighborSimCount[faceIndexK]++;
             }
           }
         }
-        for(size_t j = 0; j < 6; j++)
+
+        // Loop over the 6 face neighbors of the voxel
+        isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        for(const auto& faceIndex : faceNeighborInternalIdx)
         {
+          if(!isValidFaceNeighbor[faceIndex])
+          {
+            continue;
+          }
           best = 0;
-          good = true;
-          neighbor = int64_t(i) + neighpoints[j];
-          if(j == 0 && plane == 0)
+
+          const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+
+          if(neighborSimCount[faceIndex] > best)
           {
-            good = false;
+            best = neighborSimCount[faceIndex];
+            bestNeighbor[voxelIndex] = neighborPoint;
           }
-          if(j == 5 && plane == (dims[2] - 1))
-          {
-            good = false;
-          }
-          if(j == 1 && row == 0)
-          {
-            good = false;
-          }
-          if(j == 4 && row == (dims[1] - 1))
-          {
-            good = false;
-          }
-          if(j == 2 && column == 0)
-          {
-            good = false;
-          }
-          if(j == 3 && column == (dims[0] - 1))
-          {
-            good = false;
-          }
-          if(good)
-          {
-            if(neighborSimCount[j] > best)
-            {
-              best = neighborSimCount[j];
-              bestNeighbor[i] = neighbor;
-            }
-            neighborSimCount[j] = 0;
-          }
+          neighborSimCount[faceIndex] = 0;
         }
       }
     }
