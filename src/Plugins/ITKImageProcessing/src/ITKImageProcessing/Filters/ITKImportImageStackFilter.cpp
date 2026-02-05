@@ -383,7 +383,7 @@ std::string ITKImportImageStackFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImportImageStackFilter::defaultTags() const
 {
-  return {className(), "IO", "Input", "Read", "Import"};
+  return {className(), "IO", "Input", "Read", "Import", "Image", "Tif", "JPEG", "PNG"};
 }
 
 //------------------------------------------------------------------------------
@@ -414,11 +414,11 @@ Parameters ITKImportImageStackFilter::parameters() const
                                                                     "Mode can be [0] Do Not Rescale, [1] Scaling as Percent, [2] Exact X/Y Dimensions For Resampling Along Z Axis",
                                                                     ::k_NoResampleModeIndex, ::k_ResamplingChoices));
   params.insert(std::make_unique<Float32Parameter>(
-      k_Scaling_Key, "Scaling",
+      k_Scaling_Key, "Scaling (%)",
       "The scaling of the 3D volume, in percentages. Percentage must be greater than or equal to 1.0f. Larger percentages will cause more voxels, smaller percentages "
       "will cause less voxels. For example, 10.0 is one-tenth the original number of pixels.  200.0 is double the number of pixels.",
       100.0f));
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactXYDimensions_Key, "Exact 2D Dimensions",
+  params.insert(std::make_unique<VectorUInt64Parameter>(k_ExactXYDimensions_Key, "Exact 2D Dimensions (Pixels)",
                                                         "The supplied dimensions will be used to determine the resampled output geometry size. See associated Filter documentation for further detail.",
                                                         std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"})));
 
