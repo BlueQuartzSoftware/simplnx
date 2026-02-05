@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/TimeUtilities.hpp"
 
 using namespace nx::core;
 
@@ -38,20 +39,25 @@ public:
   {
     ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     std::string arrayName = m_DataArrayPtr->getName();
-    for(usize i = 0; i < m_TotalPoints; i++)
+    usize prog = m_TotalPoints / 100;
+    if(prog == 0)
     {
-      if(m_TotalPoints % 100 == 0)
+      prog = 1;
+    }
+    for(usize voxelIndex = 0; voxelIndex < m_TotalPoints; voxelIndex++)
+    {
+      if(voxelIndex % prog == 0)
       {
-        throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
+        throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(voxelIndex, m_TotalPoints)); });
       }
 
-      int32 currentFeatureId = m_FeatureIds.getValue(i);
-      int64 currentNeighborFeatureId = m_NeighborsVoxelIndex[i];
+      int32 currentFeatureId = m_FeatureIds.getValue(voxelIndex);
+      int64 currentNeighborFeatureId = m_NeighborsVoxelIndex[voxelIndex];
       if(currentNeighborFeatureId >= 0)
       {
         if(currentFeatureId < 0 && m_FeatureIds.getValue(currentNeighborFeatureId) >= 0)
         {
-          m_DataArrayPtr->copyTuple(currentNeighborFeatureId, i);
+          m_DataArrayPtr->copyTuple(currentNeighborFeatureId, voxelIndex);
         }
       }
     }
@@ -234,11 +240,13 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
       }
     }
 
+    StopWatch stopWatch;
+    stopWatch.start();
     // Build up a list of the DataArrays that we are going to operate on.
     const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsPath, {});
 
     ParallelTaskAlgorithm taskRunner;
-    taskRunner.setParallelizationEnabled(true);
+    taskRunner.setParallelizationEnabled(false);
     for(const auto& voxelArray : voxelArrays)
     {
       // We need to skip updating the FeatureIds until all the other arrays are updated
@@ -255,6 +263,9 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
     taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, featureIDataArray, messageHelper));
+    stopWatch.stop();
+
+    messageHelper.sendMessage(fmt::format("RequireMinimumSizeFeatures::assignBadVoxels Updating Data Arrays Complete. Time:{}", stopWatch.toString()));
   }
 }
 
