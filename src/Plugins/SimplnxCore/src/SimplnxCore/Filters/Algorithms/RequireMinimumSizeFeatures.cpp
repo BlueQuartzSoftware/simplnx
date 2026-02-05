@@ -20,13 +20,14 @@ public:
   RequireMinimumSizeFeaturesTransferDataImpl(const RequireMinimumSizeFeaturesTransferDataImpl&) = default;
 
   RequireMinimumSizeFeaturesTransferDataImpl(RequireMinimumSizeFeatures* filterAlg, usize totalPoints, const Int32AbstractDataStore& featureIds, const std::vector<int64>& neighborVoxelIndex,
-                                             const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
+                                             const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_NeighborsVoxelIndex(neighborVoxelIndex)
   , m_DataArrayPtr(dataArrayPtr)
   , m_FeatureIds(featureIds)
   , m_MessageHelper(messageHelper)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   RequireMinimumSizeFeaturesTransferDataImpl(RequireMinimumSizeFeaturesTransferDataImpl&&) = default;                // Move Constructor is Not Implemented
@@ -39,16 +40,16 @@ public:
   {
     ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     std::string arrayName = m_DataArrayPtr->getName();
-    usize prog = m_TotalPoints / 100;
-    if(prog == 0)
-    {
-      prog = 1;
-    }
+    usize prog = std::max(m_TotalPoints / 100ULL, 1ULL);
     for(usize voxelIndex = 0; voxelIndex < m_TotalPoints; voxelIndex++)
     {
       if(voxelIndex % prog == 0)
       {
         throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(voxelIndex, m_TotalPoints)); });
+      }
+      if(m_ShouldCancel)
+      {
+        return;
       }
 
       int32 currentFeatureId = m_FeatureIds.getValue(voxelIndex);
@@ -70,6 +71,7 @@ private:
   const std::shared_ptr<IDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
   MessageHelper& m_MessageHelper;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 } // namespace
@@ -159,8 +161,8 @@ Result<> RequireMinimumSizeFeatures::operator()()
 void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int32AbstractDataStore& featureNumCellsStoreRef)
 {
   MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Assigning voxels...."));
 
-  messageHelper.sendMessage(fmt::format("RequireMinimumSizeFeatures::assignBadVoxels Starting"));
   Int32AbstractDataStore& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
   usize totalPoints = featureIds.getNumberOfTuples();
 
@@ -240,13 +242,13 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
       }
     }
 
-    StopWatch stopWatch;
-    stopWatch.start();
+    messageHelper.sendMessage(fmt::format("Remaining voxels: {} - Updating Data Arrays... ", counter));
+
     // Build up a list of the DataArrays that we are going to operate on.
     const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsPath, {});
 
     ParallelTaskAlgorithm taskRunner;
-    taskRunner.setParallelizationEnabled(false);
+    taskRunner.setParallelizationEnabled(true);
     for(const auto& voxelArray : voxelArrays)
     {
       // We need to skip updating the FeatureIds until all the other arrays are updated
@@ -256,16 +258,13 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
         continue;
       }
 
-      taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, voxelArray, messageHelper));
+      taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, voxelArray, messageHelper, m_ShouldCancel));
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
     // Now update the feature Ids
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, featureIDataArray, messageHelper));
-    stopWatch.stop();
-
-    messageHelper.sendMessage(fmt::format("RequireMinimumSizeFeatures::assignBadVoxels Updating Data Arrays Complete. Time:{}", stopWatch.toString()));
+    taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, featureIDataArray, messageHelper, m_ShouldCancel));
   }
 }
 
@@ -274,6 +273,9 @@ std::vector<bool> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractD
                                                                   const Int32AbstractDataStore* featurePhases, int32 phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize,
                                                                   Error& errorReturn)
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Removing small features...."));
+
   usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 
   bool good = false;
