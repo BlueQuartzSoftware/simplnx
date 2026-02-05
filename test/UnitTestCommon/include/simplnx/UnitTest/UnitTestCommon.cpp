@@ -88,4 +88,33 @@ std::error_code TestFileSentinel::decompress()
   auto resultPair = reproc::run(args, options);
   return resultPair.second;
 }
+
+PreferencesSentinel::PreferencesSentinel(std::string largeDataFormat, int64 largeDataSize, bool forceOocData)
+{
+  auto* prefs = nx::core::Application::Instance()->getPreferences();
+
+  // Save current preference values
+  m_OriginalFormat = prefs->largeDataFormat();
+  m_OriginalSize = prefs->valueAs<int64>(nx::core::Preferences::k_LargeDataSize_Key);
+  m_OriginalForceOoc = prefs->forceOocData();
+
+  // Set new preference values
+  prefs->setLargeDataFormat(std::move(largeDataFormat));
+  prefs->setValue(nx::core::Preferences::k_LargeDataSize_Key, largeDataSize);
+  prefs->setForceOocData(forceOocData);
+}
+
+PreferencesSentinel::~PreferencesSentinel()
+{
+  auto* prefs = nx::core::Application::Instance()->getPreferences();
+
+  // Restore original preference values
+  prefs->setLargeDataFormat(m_OriginalFormat);
+  prefs->setValue(nx::core::Preferences::k_LargeDataSize_Key, m_OriginalSize);
+  prefs->setForceOocData(m_OriginalForceOoc);
+
+  // Save preferences to disk
+  nx::core::Application::Instance()->savePreferences();
+}
+
 } // namespace nx::core::UnitTest
