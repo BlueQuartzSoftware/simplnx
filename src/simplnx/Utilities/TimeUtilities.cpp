@@ -29,5 +29,5 @@ void StopWatch::print(std::ostream& os) const
 std::string StopWatch::toString() const
 {
   auto elapsed = end_time - start_time;
-  return fmt::format("{:%H:%M:%S}.{:03}", elapsed, std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() % 1000);
+  return fmt::format("{:%H:%M:%S}", elapsed, std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() % 1000);
 }
