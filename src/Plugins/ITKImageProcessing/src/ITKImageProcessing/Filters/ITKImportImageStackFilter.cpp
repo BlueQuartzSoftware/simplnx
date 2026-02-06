@@ -21,6 +21,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/GeometryHelpers.hpp"
 
 #include <itkImageFileReader.h>
 #include <itkImageIOBase.h>
@@ -517,6 +518,9 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
 
   DataStructure tmpDs;
   std::vector<usize> outputDims;
+  std::vector<float32> outputSpacing;
+  std::vector<float32> outputOrigin;
+  IGeometry::LengthUnit outputUnits;
 
   // Create a sub-filter to read each image, although for preflight we are going to read the first image in the
   // list and hope the rest are correct.
@@ -552,6 +556,9 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   if(createImageGeomActionPtr != nullptr)
   {
     outputDims = createImageGeomActionPtr->dims();
+    outputSpacing = createImageGeomActionPtr->spacing();
+    outputOrigin = createImageGeomActionPtr->origin();
+    outputUnits = createImageGeomActionPtr->units();
 
     // Compute Z dimension, taking into account possible Z cropping
     usize totalSlices = files.size();
@@ -690,6 +697,9 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
       std::vector<usize> dims = createImageGeomActionPtr->dims();
       dims.back() = outputDims.back();
       outputDims = dims;
+      outputSpacing = createImageGeomActionPtr->spacing();
+      outputOrigin = createImageGeomActionPtr->origin();
+      outputUnits = createImageGeomActionPtr->units();
       resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
                                                                                            createImageGeomActionPtr->spacing(), createImageGeomActionPtr->cellAttributeMatrixName(),
                                                                                            createImageGeomActionPtr->units()));
@@ -782,12 +792,16 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     std::ranges::transform(spacing.begin(), spacing.end(), spacingf.begin(), [](float64 v) { return static_cast<float32>(v); });
     resultOutputActions.value().appendDeferredAction(std::make_unique<UpdateImageGeomAction>(shouldChangeOrigin ? FloatVec3(originf) : std::optional<FloatVec3>{},
                                                                                              shouldChangeSpacing ? FloatVec3(spacingf) : std::optional<FloatVec3>{}, currentImageGeomPath));
+    outputSpacing = spacingf;
+    outputOrigin = originf;
   }
 
   if(currentImageGeomPath != imageGeomPath)
   {
     resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(currentImageGeomPath, imageGeomPath.getTargetName()));
   }
+
+  preflightUpdatedValues.push_back({"Output Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(outputDims, outputSpacing, outputOrigin, outputUnits)});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
