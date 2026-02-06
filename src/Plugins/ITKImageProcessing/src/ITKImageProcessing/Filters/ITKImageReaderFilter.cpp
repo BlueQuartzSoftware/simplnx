@@ -25,6 +25,13 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
+namespace
+{
+const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const Uuid k_CropImageGeomFilterId = *Uuid::FromString("e6476737-4aa7-48ba-a702-3dfab82c96e2");
+const FilterHandle k_CropImageGeomFilterHandle(k_CropImageGeomFilterId, k_SimplnxCorePluginId);
+} // namespace
+
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -71,6 +78,11 @@ Parameters ITKImageReaderFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry",
                                                    to_underlying(IGeometry::LengthUnit::Micrometer), IGeometry::GetAllLengthUnitStrings()));
 
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Set the final created image data type.", false));
+  params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", 0ULL,
+                                                   ChoicesParameter::Choices{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
+
+  params.insertSeparator(Parameters::Separator{"Origin & Spacing Options"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", false));
   params.insert(
       std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Input Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
@@ -80,22 +92,23 @@ Parameters ITKImageReaderFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", false));
   params.insert(std::make_unique<VectorFloat64Parameter>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float64>{1, 1, 1},
                                                          std::vector<std::string>{"X", "Y", "Z"}));
-
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Set the final created image data type.", false));
-  params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", 0ULL,
-                                                   ChoicesParameter::Choices{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER
+  params.insert(std::make_unique<ChoicesParameter>(k_OriginSpacingProcessing_Key, "Origin & Spacing Processing", "Whether the origin & spacing should be preprocessed or postprocessed.", 1,
+                                                   ChoicesParameter::Choices{"Preprocessed", "Postprocessed"}));
 
   params.linkParameters(k_ChangeDataType_Key, k_ImageDataType_Key, true);
 
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
   params.linkParameters(k_ChangeOrigin_Key, k_CenterOrigin_Key, std::make_any<bool>(true));
   params.linkParameters(k_ChangeSpacing_Key, k_Spacing_Key, std::make_any<bool>(true));
+  params.linkParameters(k_ChangeOrigin_Key, k_OriginSpacingProcessing_Key, true);
+  params.linkParameters(k_ChangeSpacing_Key, k_OriginSpacingProcessing_Key, true);
 
   params.insertSeparator(Parameters::Separator{"Cropping Options"});
+  auto croppingOptions = CropGeometryParameter::ValueType{};
+  croppingOptions.is2D = true;
   params.insert(std::make_unique<CropGeometryParameter>(
       k_CroppingOptions_Key, "Cropping Options",
-      "The cropping options used to crop images.  These include picking the cropping type, the cropping dimensions, and the cropping ranges for each chosen dimension.",
-      CropGeometryParameter::ValueType{}));
+      "The cropping options used to crop images.  These include picking the cropping type, the cropping dimensions, and the cropping ranges for each chosen dimension.", croppingOptions));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "The path to the created Image Geometry", DataPath({"ImageDataContainer"})));
@@ -131,8 +144,10 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
+  auto originSpacingProcessing = static_cast<cxItkImageReaderFilter::OriginSpacingProcessingTiming>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto pChoiceType = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
+  auto croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
 
   std::string fileNameString = fileName.string();
 
@@ -143,8 +158,10 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   imageReaderOptions.OriginAtCenterOfGeometry = shouldCenterOrigin;
   imageReaderOptions.Origin = FloatVec3(static_cast<float32>(origin[0]), static_cast<float32>(origin[1]), static_cast<float32>(origin[2]));
   imageReaderOptions.Spacing = FloatVec3(static_cast<float32>(spacing[0]), static_cast<float32>(spacing[1]), static_cast<float32>(spacing[2]));
+  imageReaderOptions.ProcessingTiming = originSpacingProcessing;
   imageReaderOptions.ChangeDataType = pChangeDataType;
   imageReaderOptions.ImageDataType = ITK::detail::ConvertChoiceToDataType(pChoiceType);
+  imageReaderOptions.CroppingOptions = croppingOptions;
 
   Result<OutputActions> result = cxItkImageReaderFilter::ReadImagePreflight(fileNameString, imageGeomPath, cellDataName, imageDataArrayName, imageReaderOptions);
 
@@ -159,13 +176,15 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
   auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
   auto imageDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
-  //  auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
+  auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   //  auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
-  //  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
+  auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
+  auto originSpacingProcessing = static_cast<cxItkImageReaderFilter::OriginSpacingProcessingTiming>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
   auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto newDataType = ITK::detail::ConvertChoiceToDataType(filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key));
+  auto croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
 
   DataPath imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
 
@@ -177,17 +196,23 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
 
   std::string fileNameString = fileName.string();
 
+  std::optional<std::vector<float64>> spacingOpt =
+      shouldChangeSpacing && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed ? std::make_optional(spacing) : std::nullopt;
+
+  std::optional<std::vector<float64>> originOpt =
+      shouldChangeOrigin && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed ? std::make_optional(origin) : std::nullopt;
+
   Result<> result = {};
   if(pChangeDataType)
   {
-    result = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, fileNameString, imageDataArrayPath, newDataType);
+    return cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, fileNameString, imageDataArrayPath, newDataType, croppingOptions,
+                                                                                                       spacingOpt, originOpt);
   }
   else
   {
-    result = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString);
+    return cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(fileNameString, dataStructure, imageDataArrayPath, fileNameString, croppingOptions, spacingOpt,
+                                                                                                       originOpt);
   }
-
-  return result;
 }
 
 namespace
