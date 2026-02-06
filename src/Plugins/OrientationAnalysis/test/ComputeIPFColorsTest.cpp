@@ -50,7 +50,7 @@ constexpr StringLiteral k_ImageDataContainer("ImageDataContainer");
 constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
 } // namespace nx::core::Constants
 
-TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][ComputeIPFColors]")
+TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
 
   {

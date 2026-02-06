@@ -14,7 +14,7 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("OrientationAnalysis::ReadAngData: Exemplary Test", "[OrientationAnalysis][ReadAngData]")
+TEST_CASE("OrientationAnalysis::ReadAngData: Exemplary Test", "[OrientationAnalysis][ReadAngDataFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -50,7 +50,7 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Exemplary Test", "[OrientationAnaly
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("OrientationAnalysis::ReadAngData: Invalid Phase", "[OrientationAnalysis][ReadAngData]")
+TEST_CASE("OrientationAnalysis::ReadAngData: Invalid Phase", "[OrientationAnalysis][ReadAngDataFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -79,7 +79,7 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Invalid Phase", "[OrientationAnalys
   REQUIRE(executeResult.result.errors()[0].code == -150);
 }
 
-TEST_CASE("OrientationAnalysis::ReadAngData: Invalid Columns & Rows", "[OrientationAnalysis][ReadAngData]")
+TEST_CASE("OrientationAnalysis::ReadAngData: Invalid Columns & Rows", "[OrientationAnalysis][ReadAngDataFilter]")
 {
   UnitTest::LoadPlugins();
 
