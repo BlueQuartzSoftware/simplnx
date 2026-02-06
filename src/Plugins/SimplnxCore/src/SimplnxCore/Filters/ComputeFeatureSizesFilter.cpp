@@ -125,7 +125,7 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   const auto& featAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(featureAttributeMatrixPath);
 
   ShapeType tupleDimensions = featAttributeMatrix.getShape();
-  uint64 numberOfComponents = 1;
+  usize numberOfComponents = 1;
 
   auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath, arrayDataFormat);
   auto createEquivalentDiametersAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, equivalentDiametersPath, arrayDataFormat);
