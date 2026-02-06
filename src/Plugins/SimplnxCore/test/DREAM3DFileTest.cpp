@@ -266,7 +266,7 @@ DREAM3D::FileData CreateFileData()
 
 } // End Namespace
 
-TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
+TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -306,7 +306,7 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test")
   }
 }
 
-TEST_CASE("DREAM3DFileTest::StringArray")
+TEST_CASE("DREAM3DFileTest::StringArray", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
   auto app = Application::GetOrCreateInstance();
 
@@ -341,7 +341,7 @@ TEST_CASE("DREAM3DFileTest::StringArray")
   REQUIRE(std::equal(stringArray->begin(), stringArray->end(), values.begin(), values.end()));
 }
 
-TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
+TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -378,7 +378,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test")
   }
 }
 
-TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test")
+TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -397,7 +397,7 @@ TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test")
   UnitTest::CheckArraysInheritTupleDims(importDataStructure);
 }
 
-TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
+TEST_CASE("DREAM3DFileTest: Existing Data Objects Test", "[ReadDREAM3DFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -450,7 +450,7 @@ TEST_CASE("DREAM3DFileTest: Existing Data Objects Test")
   UnitTest::CheckArraysInheritTupleDims(ds, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
-TEST_CASE("DREAM3DFileTest: Path Import Policy Tests")
+TEST_CASE("DREAM3DFileTest: Path Import Policy Tests", "[ReadDREAM3DFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   auto filePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));

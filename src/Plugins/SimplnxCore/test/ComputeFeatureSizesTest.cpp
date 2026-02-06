@@ -20,7 +20,7 @@ const std::string k_EquivalentDiameters("EquivalentDiameters");
 
 } // namespace
 
-TEST_CASE("SimplnxCore::ComputeFeatureSizes", "[SimplnxCore][ComputeFeatureSizes]")
+TEST_CASE("SimplnxCore::ComputeFeatureSizes", "[SimplnxCore][ComputeFeatureSizesFilter]")
 {
   UnitTest::LoadPlugins();
 

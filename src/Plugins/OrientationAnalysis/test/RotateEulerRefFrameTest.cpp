@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis]")
+TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][RotateEulerRefFrameFilter]")
 {
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
 

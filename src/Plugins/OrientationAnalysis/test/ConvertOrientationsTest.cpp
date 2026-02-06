@@ -15,7 +15,7 @@
  * NOTE the format of the ```TEST_CASE``` macro. Please stick to this format to
  * allow easier parsing of the unit tests.
  *
- * When you start working on this unit test remove "[ConvertOrientations][.][UNIMPLEMENTED]"
+ * When you start working on this unit test remove "[ConvertOrientationsFilter][.][UNIMPLEMENTED]"
  * from the TEST_CASE macro. This will enable this unit test to be run by default
  * and report errors.
  */
@@ -86,7 +86,7 @@ void _make_code()
   }
 }
 
-TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[OrientationAnalysis][ConvertOrientations]")
+TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[OrientationAnalysis][ConvertOrientationsFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -152,7 +152,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
  * @brief TEST_CASE This test case will execute all the combinations of the ConvertOrientations filter. This test only
  * tests the execution of the filter and not the final output.
  */
-TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
+TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution", "[ConvertOrientationsFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -235,7 +235,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution")
   }
 }
 
-TEST_CASE("OrientationAnalysis::ConvertOrientations: Equal Representations")
+TEST_CASE("OrientationAnalysis::ConvertOrientations: Equal Representations", "[ConvertOrientationsFilter]")
 {
   typedef ebsdlib::OrientationConverter<EbsdDataArray<float32>, float32> OCType;
   const std::vector<ebsdlib::orientations::Type> ocTypes = OCType::GetOrientationTypes();

@@ -65,7 +65,7 @@ const std::string k_Exemplar_AvgEulersName = "AvgEulerAngles";
 
 } // namespace compute_avg_orientation
 
-TEST_CASE("OrientationAnalysis::ComputeAvgOrientations", "[OrientationAnalysis][ComputeAvgOrientations]")
+TEST_CASE("OrientationAnalysis::ComputeAvgOrientations", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
   UnitTest::LoadPlugins();
 
