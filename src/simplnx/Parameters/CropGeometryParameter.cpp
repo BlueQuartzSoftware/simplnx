@@ -84,6 +84,7 @@ Result<std::any> CropGeometryParameter::fromJsonImpl(const nlohmann::json& json,
   }
   value.type = static_cast<ValueType::TypeEnum>(keyJson.get<uint8>());
 
+  if(json.contains(k_Is2D_Key))
   {
     const auto& is2dJson = json[k_Is2D_Key];
     if(!is2dJson.is_boolean())
