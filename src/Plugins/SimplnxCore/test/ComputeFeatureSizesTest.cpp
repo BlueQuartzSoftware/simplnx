@@ -180,8 +180,8 @@ DataStructure CreateRectGridDataStructure()
   // clang-format off
   // Expected Outputs:
   // numElements: 0 39 15 10
-  // volumes: 0.0 0.0 0.0 0.0
-  // eqDiameters: 0.0 0.0 0.0 0.0
+  // volumes: 0.0 2358.834 352.462 15.59
+  // eqDiameters: 0.0 16.516 8.764 3.0994
   const std::array<uint8, 125> featureIdsArray = {
     1, 2, 2, 2,
     1, 1, 1, 1,
@@ -236,7 +236,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Expected Outputs:
@@ -287,7 +287,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes"
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Expected Outputs:
@@ -338,7 +338,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D", "[SimplnxCo
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Expected Outputs:
@@ -389,7 +389,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element 
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Expected Outputs:
@@ -420,17 +420,19 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element 
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid", "[SimplnxCore][ComputeFeatureSizes]")
 {
+  DataStructure dataStructure = Test::CreateRectGridDataStructure();
+
   {
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureGroup));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(volumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(numElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -440,6 +442,76 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid", "[Simplnx
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
+  // numElements: 0 39 15 10
+  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(Test::k_NumElementsPath);
+  REQUIRE(numElements.getValue(1) == 39);
+  REQUIRE(numElements.getValue(2) == 15);
+  REQUIRE(numElements.getValue(3) == 10);
+  // volumes: 0.0 2358.834 352.462 15.59
+  const auto& volumes = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
+  REQUIRE(volumes.getValue(1) == 2358.834f);
+  REQUIRE(volumes.getValue(2) == 352.462f);
+  REQUIRE(volumes.getValue(3) == 15.59f);
+  // eqDiameters: 0.0 16.516 8.764 3.0994
+  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(Test::k_EquivalentDiametersPath);
+  REQUIRE(equivalentDiameters.getValue(1) == 16.516f);
+  REQUIRE(equivalentDiameters.getValue(2) == 8.764f);
+  REQUIRE(equivalentDiameters.getValue(3) == 3.0994f);
+
+  // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid with Element Size", "[SimplnxCore][ComputeFeatureSizes]")
+{
+  DataStructure dataStructure = Test::CreateRectGridDataStructure();
+
+  {
+    ComputeFeatureSizesFilter filter;
+    Arguments args;
+
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(true));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    // Execute the filter and check the result
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  // numElements: 0 39 15 10
+  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(Test::k_NumElementsPath);
+  REQUIRE(numElements.getValue(1) == 39);
+  REQUIRE(numElements.getValue(2) == 15);
+  REQUIRE(numElements.getValue(3) == 10);
+  // volumes: 0.0 2358.834 352.462 15.59
+  const auto& volumes = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
+  REQUIRE(volumes.getValue(1) == 2358.834f);
+  REQUIRE(volumes.getValue(2) == 352.462f);
+  REQUIRE(volumes.getValue(3) == 15.59f);
+  // eqDiameters: 0.0 16.516 8.764 3.0994
+  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(Test::k_EquivalentDiametersPath);
+  REQUIRE(equivalentDiameters.getValue(1) == 16.516f);
+  REQUIRE(equivalentDiameters.getValue(2) == 8.764f);
+  REQUIRE(equivalentDiameters.getValue(3) == 3.0994f);
+
+  // Write the DataStructure out to the file system
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid_w_elemnt_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+#endif
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Execution Failure", "[SimplnxCore][ComputeFeatureSizes]")
