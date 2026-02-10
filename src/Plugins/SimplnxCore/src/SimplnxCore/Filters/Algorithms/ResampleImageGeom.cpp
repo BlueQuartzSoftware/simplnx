@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
@@ -18,7 +19,7 @@ class ResampleImageGeomArrayImpl
 {
 public:
   ResampleImageGeomArrayImpl(const IDataArray& srcArray, IDataArray& destArray, const FloatVec3& newSpacing, const FloatVec3& origSpacing, const SizeVec3& origDims, const SizeVec3& destDims,
-                             const std::atomic_bool& shouldCancel)
+                             const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
   : m_SrcArray(srcArray)
   , m_DestArray(destArray)
   , m_NewSpacing(newSpacing)
@@ -26,6 +27,7 @@ public:
   , m_OrigDims(origDims)
   , m_DestDims(destDims)
   , m_ShouldCancel(shouldCancel)
+  , m_ProgressMessageHelper(progressMessageHelper)
   {
   }
 
@@ -33,6 +35,11 @@ public:
   {
     const auto& srcDataStore = m_SrcArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& destDataStore = m_DestArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
+
+    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+
+    usize counter = 0;
+    usize counterIncrement = (range.max() - range.min()) / 100;
 
     for(usize idx = range.min(); idx < range.max(); idx++)
     {
@@ -62,7 +69,15 @@ public:
       {
         destDataStore.fillTuple(idx, 0);
       }
+
+      counter++;
+      if(counter >= counterIncrement)
+      {
+        progressMessenger.sendProgressMessage(counter);
+        counter = 0;
+      }
     }
+    progressMessenger.sendProgressMessage(counter);
   }
 
 private:
@@ -73,6 +88,7 @@ private:
   SizeVec3 m_OrigDims;
   SizeVec3 m_DestDims;
   const std::atomic_bool& m_ShouldCancel;
+  ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace
 
@@ -110,6 +126,13 @@ Result<> ResampleImageGeom::operator()()
   const auto& srcCellDataAM = selectedImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
+  MessageHelper messageHelper(m_MessageHandler);
+  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
+  progressMessageHelper.setMaxProgresss(totalDestTuples);
+
+  usize arrayIndex = 0;
+  usize totalArrays = srcCellDataAM.getSize();
+
   for(const auto& [dataId, oldDataObject] : srcCellDataAM)
   {
     if(m_ShouldCancel)
@@ -117,14 +140,19 @@ Result<> ResampleImageGeom::operator()()
       return {};
     }
 
+    arrayIndex++;
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Resample Volume || Resampling Data Array {}", srcName));
+    m_MessageHandler(fmt::format("Resample Volume || Resampling Data Array {} ({}/{})", srcName, arrayIndex, totalArrays));
+
+    progressMessageHelper.resetProgress();
+    progressMessageHelper.setProgressMessageTemplate(fmt::format("Resample Volume || Array {} ({}/{}): {{:.2f}}% complete", srcName, arrayIndex, totalArrays));
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, totalDestTuples);
-    ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), dataAlg, oldDataArray, newDataArray, newSpacing, origSpacing, sourceDims, destDims, m_ShouldCancel);
+    ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), dataAlg, oldDataArray, newDataArray, newSpacing, origSpacing, sourceDims, destDims, m_ShouldCancel,
+                                                        progressMessageHelper);
   }
 
   if(m_ShouldCancel)
