@@ -75,7 +75,8 @@ size_t ConvertDataTypeToByteCount(ZeissTxmDataType txmDataType)
 }
 
 template <typename T>
-Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructure& dataStructure, const ZeissTxmHeaderMetadata& metadata, const IFilter::MessageHandler& m_MessageHandler)
+Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructure& dataStructure, const ZeissTxmHeaderMetadata& metadata, const IFilter::MessageHandler& m_MessageHandler,
+                    const std::atomic_bool& m_ShouldCancel)
 {
   using DataArrayType = DataArray<T>;
   using DataStoreType = DataStore<T>;
@@ -137,6 +138,7 @@ Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructur
     std::optional<usize> result = srcImageGeom->getIndex(xBoundPhysical[0], yBoundPhysical[0], zBoundPhysical[0]);
     if(!result.has_value())
     {
+      storage->close();
       return MakeErrorResult(-33520,
                              fmt::format("Could not calculate the image geometry cell index that corresponds to the cropped geometry's starting physical bounds ({}, {}, {}).  This index is needed to "
                                          "determine which block of image geometry cells to crop.",
@@ -150,6 +152,7 @@ Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructur
     result = srcImageGeom->getIndex(xBoundPhysical[1], yBoundPhysical[1], zBoundPhysical[1]);
     if(!result.has_value())
     {
+      storage->close();
       return MakeErrorResult(-33521,
                              fmt::format("Could not calculate the image geometry cell index that corresponds to the cropped geometry's ending physical bounds ({}, {}, {}).  This index is needed to "
                                          "determine which block of image geometry cells to crop.",
@@ -171,6 +174,11 @@ Result<> ReadImages(const ReadZeissTxmFileInputValues* inputValues, DataStructur
   Vec3<usize> destDims = destImageGeom.getDimensions();
   for(usize z = zStart + 1; z <= zEnd + 1; z++)
   {
+    if(m_ShouldCancel)
+    {
+      storage->close();
+      return {};
+    }
     std::stringstream pathStrm;
     pathStrm << "/ImageData" << imageGroupIndex << "/Image" << z;
     m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Constructing Image Path: {}", pathStrm.str())});
@@ -244,11 +252,11 @@ Result<> ReadZeissTxmFile::operator()() const
   switch(metaData.DataType)
   {
   case ZeissTxmDataType::FLOAT_TYPE:
-    return ReadImages<float32>(m_InputValues, m_DataStructure, metaData, m_MessageHandler);
+    return ReadImages<float32>(m_InputValues, m_DataStructure, metaData, m_MessageHandler, m_ShouldCancel);
   case ZeissTxmDataType::INT16_TYPE:
-    return ReadImages<uint16>(m_InputValues, m_DataStructure, metaData, m_MessageHandler);
+    return ReadImages<uint16>(m_InputValues, m_DataStructure, metaData, m_MessageHandler, m_ShouldCancel);
   case ZeissTxmDataType::UCHAR_TYPE:
-    return ReadImages<uint8>(m_InputValues, m_DataStructure, metaData, m_MessageHandler);
+    return ReadImages<uint8>(m_InputValues, m_DataStructure, metaData, m_MessageHandler, m_ShouldCancel);
   default:;
   }
   return MakeErrorResult(-33520, fmt::format("Unsupported data type: {}", to_underlying(metaData.DataType)));
