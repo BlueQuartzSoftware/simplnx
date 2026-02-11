@@ -18,14 +18,12 @@ template <typename T>
 class ResampleImageGeomArrayImpl
 {
 public:
-  ResampleImageGeomArrayImpl(const IDataArray& srcArray, IDataArray& destArray, const FloatVec3& newSpacing, const FloatVec3& origSpacing, const SizeVec3& origDims, const SizeVec3& destDims,
-                             const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+  ResampleImageGeomArrayImpl(const IDataArray& srcArray, IDataArray& destArray, const ImageGeom& srcImageGeom, const ImageGeom& destImageGeom, const std::atomic_bool& shouldCancel,
+                             ProgressMessageHelper& progressMessageHelper)
   : m_SrcArray(srcArray)
   , m_DestArray(destArray)
-  , m_NewSpacing(newSpacing)
-  , m_OrigSpacing(origSpacing)
-  , m_OrigDims(origDims)
-  , m_DestDims(destDims)
+  , m_SrcImageGeom(srcImageGeom)
+  , m_DestImageGeom(destImageGeom)
   , m_ShouldCancel(shouldCancel)
   , m_ProgressMessageHelper(progressMessageHelper)
   {
@@ -39,7 +37,6 @@ public:
     ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
     usize counter = 0;
-    usize counterIncrement = (range.max() - range.min()) / 100;
 
     for(usize idx = range.min(); idx < range.max(); idx++)
     {
@@ -48,22 +45,14 @@ public:
         return;
       }
 
-      // Decompose linear index to 3D (z-slowest, x-fastest)
-      usize z = idx / (m_DestDims[0] * m_DestDims[1]);
-      usize rem = idx % (m_DestDims[0] * m_DestDims[1]);
-      usize y = rem / m_DestDims[0];
-      usize x = rem % m_DestDims[0];
+      // Get the destination voxel center.
+      Point3D<float64> coords = m_DestImageGeom.getPlaneCoords(idx);
+      // Based on that position, figure out which source voxel we are in...
+      std::optional<usize> srcIndex = m_SrcImageGeom.getIndex(coords[0], coords[1], coords[2]);
 
-      // Compute source voxel coordinates
-      auto col = static_cast<int64>(static_cast<float32>(x) * m_NewSpacing[0] / m_OrigSpacing[0]);
-      auto row = static_cast<int64>(static_cast<float32>(y) * m_NewSpacing[1] / m_OrigSpacing[1]);
-      auto plane = static_cast<int64>(static_cast<float32>(z) * m_NewSpacing[2] / m_OrigSpacing[2]);
-
-      int64 srcIndex = static_cast<int64>(plane * m_OrigDims[1] * m_OrigDims[0]) + static_cast<int64>(row * m_OrigDims[0]) + col;
-
-      if(srcIndex >= 0)
+      if(srcIndex.has_value())
       {
-        destDataStore.copyFrom(idx, srcDataStore, static_cast<usize>(srcIndex), 1);
+        destDataStore.copyFrom(idx, srcDataStore, srcIndex.value(), 1);
       }
       else
       {
@@ -71,11 +60,6 @@ public:
       }
 
       counter++;
-      if(counter >= counterIncrement)
-      {
-        progressMessenger.sendProgressMessage(counter);
-        counter = 0;
-      }
     }
     progressMessenger.sendProgressMessage(counter);
   }
@@ -83,10 +67,8 @@ public:
 private:
   const IDataArray& m_SrcArray;
   IDataArray& m_DestArray;
-  FloatVec3 m_NewSpacing;
-  FloatVec3 m_OrigSpacing;
-  SizeVec3 m_OrigDims;
-  SizeVec3 m_DestDims;
+  const ImageGeom& m_SrcImageGeom;
+  const ImageGeom& m_DestImageGeom;
   const std::atomic_bool& m_ShouldCancel;
   ProgressMessageHelper& m_ProgressMessageHelper;
 };
@@ -114,13 +96,10 @@ const std::atomic_bool& ResampleImageGeom::getCancel()
 Result<> ResampleImageGeom::operator()()
 {
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
-  SizeVec3 sourceDims = selectedImageGeom.getDimensions();
-  FloatVec3 origSpacing = selectedImageGeom.getSpacing();
 
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->CreatedImageGeometryPath);
   SizeVec3 destDims = destImageGeom.getDimensions();
 
-  FloatVec3 newSpacing = {m_InputValues->Spacing[0], m_InputValues->Spacing[1], m_InputValues->Spacing[2]};
   usize totalDestTuples = destDims[0] * destDims[1] * destDims[2];
 
   const auto& srcCellDataAM = selectedImageGeom.getCellDataRef();
@@ -151,8 +130,7 @@ Result<> ResampleImageGeom::operator()()
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, totalDestTuples);
-    ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), dataAlg, oldDataArray, newDataArray, newSpacing, origSpacing, sourceDims, destDims, m_ShouldCancel,
-                                                        progressMessageHelper);
+    ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), dataAlg, oldDataArray, newDataArray, selectedImageGeom, destImageGeom, m_ShouldCancel, progressMessageHelper);
   }
 
   if(m_ShouldCancel)
