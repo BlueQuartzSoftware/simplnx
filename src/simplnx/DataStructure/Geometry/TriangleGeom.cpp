@@ -174,104 +174,121 @@ usize TriangleGeom::getNumberOfVerticesPerFace() const
   return k_NumFaceVerts;
 }
 
-IGeometry::StatusCode TriangleGeom::findElementSizes(bool recalculate)
+Result<> TriangleGeom::findElementSizes(bool recalculate)
 {
   auto* triangleSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(triangleSizes != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(triangleSizes == nullptr)
   {
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfFaces()}, std::vector<usize>{1}, 0.0f);
     triangleSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+    if(triangleSizes == nullptr)
+    {
+      m_ElementSizesId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2230, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(triangleSizes == nullptr)
-  {
-    m_ElementSizesId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), triangleSizes);
   m_ElementSizesId = triangleSizes->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TriangleGeom::findElementsContainingVert(bool recalculate)
+Result<> TriangleGeom::findElementsContainingVert(bool recalculate)
 {
   auto* trianglesContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(trianglesContainingVert != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(trianglesContainingVert == nullptr)
   {
     trianglesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
+    if(trianglesContainingVert == nullptr)
+    {
+      m_CellContainingVertDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2231, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid dynamic list array.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(trianglesContainingVert == nullptr)
-  {
-    m_CellContainingVertDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), trianglesContainingVert, getNumberOfVertices());
   m_CellContainingVertDataArrayId = trianglesContainingVert->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TriangleGeom::findElementNeighbors(bool recalculate)
+Result<> TriangleGeom::findElementNeighbors(bool recalculate)
 {
   auto* triangleNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(triangleNeighbors != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
 
-  StatusCode err = findElementsContainingVert(recalculate);
-  if(err < 0)
+  Result<> result = findElementsContainingVert(recalculate);
+  if(result.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
-    return err;
+    return result;
   }
   if(triangleNeighbors == nullptr)
   {
     triangleNeighbors = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
+    if(triangleNeighbors == nullptr)
+    {
+      m_CellNeighborsDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2232, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a dynamic list array.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(triangleNeighbors == nullptr)
-  {
-    m_CellNeighborsDataArrayId.reset();
-    return -1;
-  }
+
   m_CellNeighborsDataArrayId = triangleNeighbors->getId();
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, IGeometry::Type::Triangle);
-  if(err < 0)
-  {
-    return err;
-  }
-  return 1;
+
+  // No error value ( < 0) returned from below function ever
+  GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), triangleNeighbors, Type::Triangle);
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TriangleGeom::findElementCentroids(bool recalculate)
+Result<> TriangleGeom::findElementCentroids(bool recalculate)
 {
   auto* triangleCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(triangleCentroids != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(triangleCentroids == nullptr)
   {
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfFaces()}, std::vector<usize>{3}, 0.0f);
     triangleCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
   }
   if(triangleCentroids == nullptr)
   {
     m_CellCentroidsDataArrayId.reset();
-    return -1;
+    // Used to be error code `-1`
+    return MakeErrorResult(-2233, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
   }
+
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
   m_CellCentroidsDataArrayId = triangleCentroids->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-::Point3D<float64> TriangleGeom::getParametricCenter() const
+Point3D<float64> TriangleGeom::getParametricCenter() const
 {
   return {1.0 / 3.0, 1.0 / 3.0, 0.0};
 }
@@ -289,35 +306,41 @@ void TriangleGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pC
   shape[5] = 1.0;
 }
 
-IGeometry::StatusCode TriangleGeom::findEdges(bool recalculate)
+Result<> TriangleGeom::findEdges(bool recalculate)
 {
   auto* edgeList = getDataStructureRef().getDataAsUnsafe<UInt64Array>(m_EdgeDataArrayId);
   if(edgeList != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(edgeList == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<uint64>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
     edgeList = DataArray<uint64>::Create(*getDataStructure(), k_SharedEdgeListName, std::move(dataStore), getId());
+    if(edgeList == nullptr)
+    {
+      m_EdgeDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2234, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid shared edges array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(edgeList == nullptr)
-  {
-    m_EdgeDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   m_EdgeDataArrayId = edgeList->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TriangleGeom::findUnsharedEdges(bool recalculate)
+Result<> TriangleGeom::findUnsharedEdges(bool recalculate)
 {
   auto* unsharedEdgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
   if(unsharedEdgeList != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(unsharedEdgeList == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
@@ -326,9 +349,12 @@ IGeometry::StatusCode TriangleGeom::findUnsharedEdges(bool recalculate)
   if(unsharedEdgeList == nullptr)
   {
     m_UnsharedEdgeListId.reset();
-    return -1;
+    // Used to be error code `-1`
+    return MakeErrorResult(-2235, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid unshared edges array or data store.", __FILE__, __LINE__, __func__));
   }
+
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
-  return 1;
+
+  return {};
 }

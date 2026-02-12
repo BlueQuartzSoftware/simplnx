@@ -142,38 +142,66 @@ BoundingBox<float64> ImageGeom::getBoundingBox() const
 
 usize ImageGeom::getNumberOfCells() const
 {
-  return (m_Dimensions[0] * m_Dimensions[1] * m_Dimensions[2]);
+  return m_Dimensions[0] * m_Dimensions[1] * m_Dimensions[2];
 }
 
-IGeometry::StatusCode ImageGeom::findElementSizes(bool recalculate)
+Result<> ImageGeom::findElementSizes(bool recalculate)
 {
   auto* voxelSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(voxelSizes != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
 
-  FloatVec3 res = getSpacing();
-
-  if(res[0] <= 0.0f || res[1] <= 0.0f || res[2] <= 0.0f)
+  if(m_Spacing[0] <= 0.0f || m_Spacing[1] <= 0.0f || m_Spacing[2] <= 0.0f)
   {
     m_ElementSizesId.reset();
-    return -1;
+    // Used to be error code `-1`
+    return MakeErrorResult(-1530, fmt::format("{}({}) ImageGeom::{} Error: Invalid spacing detected. X-Spacing: {}, Y-Spacing: {}, Z-Spacing: {}", __FILE__, __LINE__, __func__, m_Spacing[0],
+                                              m_Spacing[1], m_Spacing[2]));
   }
 
+  uint32 emptyDimsCount = 0;
+  emptyDimsCount += static_cast<int32>(m_Dimensions[0] == 1);
+  emptyDimsCount += static_cast<int32>(m_Dimensions[1] == 1);
+  emptyDimsCount += static_cast<int32>(m_Dimensions[2] == 1);
+  if(emptyDimsCount > 1)
+  {
+    return MakeErrorResult(
+        -1531, fmt::format("{}({}) ImageGeom::{} Error: Unable to calculate element sizes.\nImage have more than 2 dimensions greater than 1.\nX-Dimension: {}, Y-Dimension: {}, Z-Dimension: {}",
+                           __FILE__, __LINE__, __func__, m_Dimensions[0], m_Dimensions[1], m_Dimensions[2]));
+  }
+
+  // if x dimension has a size of 1 then xSpacing = 1; else xSpacing = spacing[0]
+  const float32 xSpacing = (m_Spacing[0] * static_cast<float32>(m_Dimensions[0] > 1ULL)) + (1.0f * static_cast<float32>(m_Dimensions[0] < 2ULL));
+  // if y dimension has a size of 1 then ySpacing = 1; else ySpacing = spacing[1]
+  const float32 ySpacing = (m_Spacing[1] * static_cast<float32>(m_Dimensions[1] > 1ULL)) + (1.0f * static_cast<float32>(m_Dimensions[1] < 2ULL));
+  // if z dimension has a size of 1 then zSpacing = 1; else zSpacing = spacing[2]
+  const float32 zSpacing = (m_Spacing[2] * static_cast<float32>(m_Dimensions[2] > 1ULL)) + (1.0f * static_cast<float32>(m_Dimensions[2] < 2ULL));
+
+  // This value will be filled with area if 2D or volume if 3D
+  const float32 singleVoxelSize = xSpacing * ySpacing * zSpacing;
+
+  // if true first instance, else recalculate
   if(voxelSizes == nullptr)
   {
-    float32 initValue = res[0] * res[1] * res[2];
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, initValue);
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, singleVoxelSize);
     voxelSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+    if(voxelSizes == nullptr)
+    {
+      m_ElementSizesId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-1532, fmt::format("{}({}) ImageGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+    }
+    m_ElementSizesId = voxelSizes->getId();
   }
-  if(voxelSizes == nullptr)
+  else
   {
-    m_ElementSizesId.reset();
-    return -1;
+    voxelSizes->fill(singleVoxelSize);
   }
-  m_ElementSizesId = voxelSizes->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
 Point3D<float64> ImageGeom::getParametricCenter() const

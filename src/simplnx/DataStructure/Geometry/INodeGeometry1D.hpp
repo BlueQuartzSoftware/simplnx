@@ -7,15 +7,15 @@ namespace nx::core
 class SIMPLNX_EXPORT INodeGeometry1D : public INodeGeometry0D
 {
 public:
-  static inline constexpr StringLiteral k_EdgeAttributeMatrixName = "Edge Data";
-  static inline constexpr StringLiteral k_EdgeFeatureAttributeMatrix = "Edge Feature Data";
-  static inline constexpr StringLiteral k_SharedEdgeListName = "Shared Edge List";
-  static inline constexpr StringLiteral k_UnsharedEdgesListName = "Unshared Edge List";
-  static inline constexpr StringLiteral k_UnsharedFacesListName = "Unshared Face List";
+  static constexpr StringLiteral k_EdgeAttributeMatrixName = "Edge Data";
+  static constexpr StringLiteral k_EdgeFeatureAttributeMatrix = "Edge Feature Data";
+  static constexpr StringLiteral k_SharedEdgeListName = "Shared Edge List";
+  static constexpr StringLiteral k_UnsharedEdgesListName = "Unshared Edge List";
+  static constexpr StringLiteral k_UnsharedFacesListName = "Unshared Face List";
 
-  static inline constexpr StringLiteral k_TypeName = "INodeGeometry1D";
+  static constexpr StringLiteral k_TypeName = "INodeGeometry1D";
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumEdgeVerts = 2;
 
   ~INodeGeometry1D() noexcept override = default;
 
@@ -102,11 +102,13 @@ public:
   void getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const;
 
   /**
-   * @brief
-   * recalculate If true, this function will recalculate the array. Otherwise, it will leave the array as is.
-   * @return StatusCode
+   * @brief Pure-Virtual intended to calculate the sizes of each element
+   * in the geometry and store it in a new or existing array in the datastructure
+   * @param recalculate This will allow for skipping execution when an
+   * `ElementDynamicList` exists and recalculate is `false`
+   * @return Result<>
    */
-  virtual StatusCode findElementsContainingVert(bool recalculate) = 0;
+  virtual Result<> findElementsContainingVert(bool recalculate) = 0;
 
   /**
    * @brief
@@ -120,10 +122,13 @@ public:
   void deleteElementsContainingVert();
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief Pure-Virtual intended to calculate the sizes of each element
+   * in the geometry and store it in a new or existing array in the datastructure
+   * @param recalculate This will allow for skipping execution when an
+   * `ElementDynamicList` exists and recalculate is `false`
+   * @return Result<>
    */
-  virtual StatusCode findElementNeighbors(bool recalculate) = 0;
+  virtual Result<> findElementNeighbors(bool recalculate) = 0;
 
   /**
    * @brief
@@ -137,10 +142,13 @@ public:
   void deleteElementNeighbors();
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief Pure-Virtual intended to calculate the centroids of each element
+   * in the geometry and store it in a new or existing array in the datastructure
+   * @param recalculate This will allow for skipping execution when an Element Centroids
+   * Array exists and recalculate is `false`
+   * @return Result<>
    */
-  virtual StatusCode findElementCentroids(bool recalculate) = 0;
+  virtual Result<> findElementCentroids(bool recalculate) = 0;
 
   /**
    * @brief

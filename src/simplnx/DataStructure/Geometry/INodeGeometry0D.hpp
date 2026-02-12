@@ -14,9 +14,9 @@ namespace nx::core
 class SIMPLNX_EXPORT INodeGeometry0D : public IGeometry
 {
 public:
-  static inline constexpr StringLiteral k_TypeName = "INodeGeometry0D";
-  static inline constexpr StringLiteral k_SharedVertexListName = "Shared Vertex List";
-  static inline constexpr StringLiteral k_VertexAttributeMatrixName = "Vertex Data";
+  static constexpr StringLiteral k_TypeName = "INodeGeometry0D";
+  static constexpr StringLiteral k_SharedVertexListName = "Shared Vertex List";
+  static constexpr StringLiteral k_VertexAttributeMatrixName = "Vertex Data";
 
   INodeGeometry0D() = delete;
   INodeGeometry0D(const INodeGeometry0D&) = default;
@@ -85,21 +85,21 @@ public:
   BoundingBox3Df getBoundingBox() const;
 
   /**
-   * @brief Returns whether or not this geometry is in a YZ plane.
+   * @brief Returns whether this geometry is in a YZ plane.
    * Returns empty if the vertex list does not exist.
    * @return
    */
   Result<bool> isYZPlane() const;
 
   /**
-   * @brief Returns whether or not this geometry is in a XY plane
+   * @brief Returns whether this geometry is in a XY plane
    * Returns empty if the vertex list does not exist.
    * @return
    */
   Result<bool> isXYPlane() const;
 
   /**
-   * @brief Returns whether or not this geometry is in a XZ plane
+   * @brief Returns whether this geometry is in a XZ plane
    * Returns empty if the vertex list does not exist.
    * @return
    */

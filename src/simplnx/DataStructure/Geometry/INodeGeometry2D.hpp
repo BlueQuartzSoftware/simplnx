@@ -105,10 +105,13 @@ public:
   void getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief Pure-Virtual intended to find the shared edges of each element
+   * in the geometry and store it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an Edge
+   * Array exists and recalculate is `false`
+   * @return Result<>
    */
-  virtual StatusCode findEdges(bool recalculate) = 0;
+  virtual Result<> findEdges(bool recalculate) = 0;
 
   /**
    * @brief Deletes the shared edge list and removes it from the DataStructure.
@@ -124,10 +127,13 @@ public:
   void setUnsharedEdgesId(const OptionalId& unsharedEdgesId);
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief Pure-Virtual intended to find the unshared edges of each element
+   * in the geometry and store it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an Unshared Edge
+   * Array exists and recalculate is `false`
+   * @return Result<>
    */
-  virtual StatusCode findUnsharedEdges(bool recalculate) = 0;
+  virtual Result<> findUnsharedEdges(bool recalculate) = 0;
 
   /**
    * @brief Returns a const pointer to the unshared edge list. Returns nullptr

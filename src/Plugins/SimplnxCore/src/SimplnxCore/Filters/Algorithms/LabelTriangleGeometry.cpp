@@ -35,10 +35,10 @@ Result<> LabelTriangleGeometry::operator()()
   {
     usize numTris = triangle.getNumberOfFaces();
 
-    auto check = triangle.findElementNeighbors(false); // use auto since return time is a class declared typename
-    if(check < 0)
+    Result<> result = triangle.findElementNeighbors(false); // use auto since return time is a class declared typename
+    if(result.invalid())
     {
-      return MakeErrorResult(check, fmt::format("Error finding element neighbors for {} geometry", triangle.getName()));
+      return result;
     }
 
     const TriangleGeom::ElementDynamicList* triangleNeighborsPtr = triangle.getElementNeighbors();

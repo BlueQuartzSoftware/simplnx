@@ -21,7 +21,7 @@ class SIMPLNX_EXPORT ImageGeom : public IGridGeometry
 public:
   friend class DataStructure;
 
-  static inline constexpr StringLiteral k_TypeName = "ImageGeom";
+  static constexpr StringLiteral k_TypeName = "ImageGeom";
 
   enum class ErrorType : EnumType
   {
@@ -163,10 +163,16 @@ public:
   usize getNumberOfCells() const override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief !!! NOTE: This function will return areas for "2D" and volume for "3D" !!!
+   * This function calculates the sizes of each voxel in the geometry and
+   * store it in a new or existing array in the DataStructure. This function
+   * will error out if more than two dimensions have a size of `1` aka are empty (think about
+   * a geometry XYZ 1x1x5, do you use X or Y spacing for area).
+   * @param recalculate This will allow for skipping execution when an
+   * Element Sizes Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementSizes(bool recalculate) override;
+  Result<> findElementSizes(bool recalculate) override;
 
   /**
    * @brief

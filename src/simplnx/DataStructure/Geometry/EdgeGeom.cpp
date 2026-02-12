@@ -139,23 +139,26 @@ std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
   return nullptr;
 }
 
-IGeometry::StatusCode EdgeGeom::findElementSizes(bool recalculate)
+Result<> EdgeGeom::findElementSizes(bool recalculate)
 {
   auto* sizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(sizes != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(sizes == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
     sizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+    if(sizes == nullptr)
+    {
+      m_ElementSizesId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2430, fmt::format("{}({}) EdgeGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(sizes == nullptr)
-  {
-    m_ElementSizesId.reset();
-    return -1;
-  }
+
   m_ElementSizesId = sizes->getId();
 
   std::array<Point3Df, 2> verts = {Point3Df(0.0f, 0.0f, 0.0f), Point3Df(0.0f, 0.0f, 0.0f)};
@@ -171,7 +174,8 @@ IGeometry::StatusCode EdgeGeom::findElementSizes(bool recalculate)
     (*sizes)[i] = std::sqrt(length);
   }
 
-  return 1;
+  // Used to be error code `1`
+  return {};
 }
 
 usize EdgeGeom::getNumberOfVerticesPerEdge() const
@@ -179,80 +183,91 @@ usize EdgeGeom::getNumberOfVerticesPerEdge() const
   return k_NumEdgeVerts;
 }
 
-IGeometry::StatusCode EdgeGeom::findElementsContainingVert(bool recalculate)
+Result<> EdgeGeom::findElementsContainingVert(bool recalculate)
 {
   auto* edgesContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(edgesContainingVert != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(edgesContainingVert == nullptr)
   {
     edgesContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
+    if(edgesContainingVert == nullptr)
+    {
+      m_CellContainingVertDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2431, fmt::format("{}({}) EdgeGeom::{} Error: Unable to find or create a valid dynamic list array.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(edgesContainingVert == nullptr)
-  {
-    m_CellContainingVertDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getEdges(), edgesContainingVert, getNumberOfVertices());
   m_CellContainingVertDataArrayId = edgesContainingVert->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode EdgeGeom::findElementNeighbors(bool recalculate)
+Result<> EdgeGeom::findElementNeighbors(bool recalculate)
 {
   auto* edgeNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(edgeNeighbors != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
 
-  StatusCode err = findElementsContainingVert(recalculate);
-  if(err < 0)
+  Result<> result = findElementsContainingVert(recalculate);
+  if(result.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
-    return err;
+    return result;
   }
   if(edgeNeighbors == nullptr)
   {
     edgeNeighbors = ElementDynamicList::Create(*getDataStructure(), k_EltNeighbors, getId());
+    if(edgeNeighbors == nullptr)
+    {
+      m_CellNeighborsDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2432, fmt::format("{}({}) EdgeGeom::{} Error: Unable to find or create a dynamic list array.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(edgeNeighbors == nullptr)
-  {
-    m_CellNeighborsDataArrayId.reset();
-    return -1;
-  }
+
   m_CellNeighborsDataArrayId = edgeNeighbors->getId();
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, IGeometry::Type::Edge);
-  if(edgeNeighbors == nullptr)
-  {
-    m_CellNeighborsDataArrayId.reset();
-    return -1;
-  }
-  return 1;
+
+  // No error value ( < 0) returned from below function ever
+  GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getEdges(), getElementsContainingVert(), edgeNeighbors, Type::Edge);
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode EdgeGeom::findElementCentroids(bool recalculate)
+Result<> EdgeGeom::findElementCentroids(bool recalculate)
 {
   auto* edgeCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(edgeCentroids != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(edgeCentroids == nullptr)
   {
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
     edgeCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
+    if(edgeCentroids == nullptr)
+    {
+      m_CellCentroidsDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2433, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(edgeCentroids == nullptr)
-  {
-    m_CellCentroidsDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Topology::FindElementCentroids(getEdges(), getVertices(), edgeCentroids);
   m_CellCentroidsDataArrayId = edgeCentroids->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
 Point3D<float64> EdgeGeom::getParametricCenter() const

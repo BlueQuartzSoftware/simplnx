@@ -1396,12 +1396,12 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     const DataPath srcImageGeoPath({Constants::k_ImageGeometry});
     auto* geom = dataStruct.getDataAs<ImageGeom>(srcImageGeoPath);
 
-    IGeometry::StatusCode status = geom->findElementSizes(false);
-    REQUIRE(status == 1);
+    Result<> status = geom->findElementSizes(false);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
   }
 
   SECTION("Rectilinear Grid Geometry")
@@ -1409,10 +1409,10 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     const DataPath srcRectGeoPath({k_RectGridGeo});
     auto* geom = dataStruct.getDataAs<RectGridGeom>(srcRectGeoPath);
 
-    IGeometry::StatusCode status = geom->findElementSizes(false);
-    REQUIRE(status == 0);
+    Result<> status = geom->findElementSizes(false);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
   }
 
   SECTION("Vertex Geometry")
@@ -1420,10 +1420,10 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     const DataPath srcGeoPath({Constants::k_VertexGeometry});
     auto* geom = dataStruct.getDataAs<VertexGeom>(srcGeoPath);
 
-    IGeometry::StatusCode status = geom->findElementSizes(false);
-    REQUIRE(status == 0);
+    Result<> status = geom->findElementSizes(false);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
   }
 
   SECTION("Edge Geometry")
@@ -1431,25 +1431,25 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     const DataPath srcGeoPath({k_EdgeGeo});
     auto* geom = dataStruct.getDataAs<EdgeGeom>(srcGeoPath);
 
-    IGeometry::StatusCode status = geom->findElementSizes(false);
-    REQUIRE(status == 0);
+    Result<> status = geom->findElementSizes(false);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementsContainingVert(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementsContainingVert(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementNeighbors(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementNeighbors(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementCentroids(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementCentroids(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
   }
 
   SECTION("Triangle Geometry")
@@ -1457,37 +1457,37 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     const DataPath srcGeoPath({Constants::k_TriangleGeometryName});
     auto* geom = dataStruct.getDataAs<TriangleGeom>(srcGeoPath);
 
-    IGeometry::StatusCode status = geom->findElementSizes(false);
-    REQUIRE(status == 1);
+    Result<> status = geom->findElementSizes(false);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementsContainingVert(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementsContainingVert(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementNeighbors(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementNeighbors(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementCentroids(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementCentroids(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findEdges(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findEdges(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findUnsharedEdges(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findUnsharedEdges(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
   }
 
   SECTION("Quad Geometry")
@@ -1495,37 +1495,37 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     const DataPath srcGeoPath({k_QuadGeo});
     auto* geom = dataStruct.getDataAs<QuadGeom>(srcGeoPath);
 
-    IGeometry::StatusCode status = geom->findElementSizes(false);
-    REQUIRE(status == 1);
+    Result<> status = geom->findElementSizes(false);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementsContainingVert(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementsContainingVert(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementNeighbors(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementNeighbors(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementCentroids(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementCentroids(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findEdges(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findEdges(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findUnsharedEdges(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findUnsharedEdges(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
   }
 
   SECTION("Tetrahedral Geometry")
@@ -1533,45 +1533,45 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     const DataPath srcGeoPath({k_TetGeo});
     auto* geom = dataStruct.getDataAs<TetrahedralGeom>(srcGeoPath);
 
-    IGeometry::StatusCode status = geom->findElementSizes(false);
-    REQUIRE(status == 0);
+    Result<> status = geom->findElementSizes(false);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementsContainingVert(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementsContainingVert(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementNeighbors(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementNeighbors(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementCentroids(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementCentroids(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findEdges(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findEdges(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findUnsharedEdges(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findUnsharedEdges(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findFaces(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findFaces(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findUnsharedFaces(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findUnsharedFaces(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
   }
 
   SECTION("Hexahedral Geometry")
@@ -1579,45 +1579,45 @@ TEST_CASE("NodeBasedGeometryFindElementsTest")
     const DataPath srcGeoPath({k_HexGeo});
     auto* geom = dataStruct.getDataAs<HexahedralGeom>(srcGeoPath);
 
-    IGeometry::StatusCode status = geom->findElementSizes(false);
-    REQUIRE(status == 0);
+    Result<> status = geom->findElementSizes(false);
+    REQUIRE(status.valid());
     status = geom->findElementSizes(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementsContainingVert(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementsContainingVert(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementNeighbors(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementNeighbors(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findElementCentroids(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findElementCentroids(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findEdges(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findEdges(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findUnsharedEdges(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findUnsharedEdges(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findFaces(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findFaces(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
 
     status = geom->findUnsharedFaces(false);
-    REQUIRE(status == 0);
+    REQUIRE(status.valid());
     status = geom->findUnsharedFaces(true);
-    REQUIRE(status == 1);
+    REQUIRE(status.valid());
   }
 }
 

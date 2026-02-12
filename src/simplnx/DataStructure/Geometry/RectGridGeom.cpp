@@ -304,18 +304,33 @@ usize RectGridGeom::getNumberOfCells() const
   return m_Dimensions.getX() * m_Dimensions.getY() * m_Dimensions.getZ();
 }
 
-IGeometry::StatusCode RectGridGeom::findElementSizes(bool recalculate)
+Result<> RectGridGeom::findElementSizes(bool recalculate)
 {
   auto* sizeArray = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(sizeArray != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
 
-  auto sizes = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
-  auto xBnds = getXBounds();
-  auto yBnds = getYBounds();
-  auto zBnds = getZBounds();
+  auto sizes = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
+  const auto* xBnds = getXBounds();
+  if(xBnds == nullptr)
+  {
+    // Used to be error code `-1`
+    return MakeErrorResult(-1830, fmt::format("{}({}) RectGridGeom::{} Error: No valid X Bounds Array", __FILE__, __LINE__, __func__));
+  }
+  const auto* yBnds = getYBounds();
+  if(yBnds == nullptr)
+  {
+    // Used to be error code `-1`
+    return MakeErrorResult(-1831, fmt::format("{}({}) RectGridGeom::{} Error: No valid Y Bounds Array", __FILE__, __LINE__, __func__));
+  }
+  const auto* zBnds = getZBounds();
+  if(zBnds == nullptr)
+  {
+    // Used to be error code `-1`
+    return MakeErrorResult(-1832, fmt::format("{}({}) RectGridGeom::{} Error: No valid Z Bounds Array", __FILE__, __LINE__, __func__));
+  }
   float32 xRes = 0.0f;
   float32 yRes = 0.0f;
   float32 zRes = 0.0f;
@@ -332,25 +347,27 @@ IGeometry::StatusCode RectGridGeom::findElementSizes(bool recalculate)
         if(xRes <= 0.0f || yRes <= 0.0f || zRes <= 0.0f)
         {
           m_ElementSizesId.reset();
-          return -1;
+          // Used to be error code `-1`
+          return MakeErrorResult(
+              -1833, fmt::format("{}({}) RectGridGeom::{} Error: Found voxel with a spacing of zero or less.\nX-Index: {} | X-Spacing: {}\nY-Index: {} | Y-Spacing: {}\nZ-Index: {} | Z-Spacing: {}",
+                                 __FILE__, __LINE__, __func__, x, xRes, y, yRes, z, zRes));
         }
         (*sizes)[(m_Dimensions[0] * m_Dimensions[1] * z) + (m_Dimensions[0] * y) + x] = zRes * yRes * xRes;
       }
     }
   }
 
-  if(sizeArray == nullptr)
-  {
-    sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(sizes), getId());
-  }
+  sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(sizes), getId());
   if(sizeArray == nullptr)
   {
     m_ElementSizesId.reset();
-    return -1;
+    // Used to be error code `-1`
+    return MakeErrorResult(-1834, fmt::format("{}({}) RectGridGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
   }
-
   m_ElementSizesId = sizeArray->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
 Point3D<float64> RectGridGeom::getParametricCenter() const

@@ -173,101 +173,121 @@ usize QuadGeom::getNumberOfVerticesPerFace() const
   return k_NumFaceVerts;
 }
 
-IGeometry::StatusCode QuadGeom::findElementSizes(bool recalculate)
+Result<> QuadGeom::findElementSizes(bool recalculate)
 {
   auto* quadSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(quadSizes != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(quadSizes == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(getNumberOfCells(), 0.0f);
     quadSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+
+    if(quadSizes == nullptr)
+    {
+      m_ElementSizesId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2630, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(quadSizes == nullptr)
-  {
-    m_ElementSizesId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Topology::Find2DElementAreas(getFaces(), getVertices(), quadSizes);
   m_ElementSizesId = quadSizes->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode QuadGeom::findElementsContainingVert(bool recalculate)
+Result<> QuadGeom::findElementsContainingVert(bool recalculate)
 {
   auto* quadsContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(quadsContainingVert != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(quadsContainingVert == nullptr)
   {
     quadsContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
+
+    if(quadsContainingVert == nullptr)
+    {
+      m_CellContainingVertDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2631, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid dynamic list array.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(quadsContainingVert == nullptr)
-  {
-    m_CellContainingVertDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getFaces(), quadsContainingVert, getNumberOfVertices());
   m_CellContainingVertDataArrayId = quadsContainingVert->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode QuadGeom::findElementNeighbors(bool recalculate)
+Result<> QuadGeom::findElementNeighbors(bool recalculate)
 {
   auto* quadNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(quadNeighbors != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
 
-  StatusCode err = findElementsContainingVert(recalculate);
-  if(err < 0)
+  Result<> result = findElementsContainingVert(recalculate);
+  if(result.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
-    return err;
+    return result;
   }
+
   if(quadNeighbors == nullptr)
   {
     quadNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
+    if(quadNeighbors == nullptr)
+    {
+      m_CellNeighborsDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2632, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a dynamic list array.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(quadNeighbors == nullptr)
-  {
-    m_CellNeighborsDataArrayId.reset();
-    return -1;
-  }
+
   m_CellNeighborsDataArrayId = quadNeighbors->getId();
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), quadNeighbors, IGeometry::Type::Quad);
-  if(err < 0)
-  {
-    return err;
-  }
-  return 1;
+
+  // No error value ( < 0) returned from below function ever
+  GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getFaces(), getElementsContainingVert(), quadNeighbors, Type::Quad);
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode QuadGeom::findElementCentroids(bool recalculate)
+Result<> QuadGeom::findElementCentroids(bool recalculate)
 {
   auto* quadCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(quadCentroids != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(quadCentroids == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
     quadCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
+    if(quadCentroids == nullptr)
+    {
+      m_CellCentroidsDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2633, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(quadCentroids == nullptr)
-  {
-    m_CellCentroidsDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), quadCentroids);
   m_CellCentroidsDataArrayId = quadCentroids->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
 Point3D<float64> QuadGeom::getParametricCenter() const
@@ -290,45 +310,56 @@ void QuadGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shape
   shape[7] = rm;
 }
 
-IGeometry::StatusCode QuadGeom::findEdges(bool recalculate)
+Result<> QuadGeom::findEdges(bool recalculate)
 {
   auto* edgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
   if(edgeList != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(edgeList == nullptr)
   {
     edgeList = createSharedEdgeList(0);
+    if(edgeList == nullptr)
+    {
+      m_EdgeDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2634, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid shared edges array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(edgeList == nullptr)
-  {
-    m_EdgeDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::Find2DElementEdges(getFaces(), edgeList);
   m_EdgeDataArrayId = edgeList->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode QuadGeom::findUnsharedEdges(bool recalculate)
+Result<> QuadGeom::findUnsharedEdges(bool recalculate)
 {
   auto* unsharedEdgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
   if(unsharedEdgeList != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(unsharedEdgeList == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
     unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdgesListName, std::move(dataStore), getId());
+
+    if(unsharedEdgeList == nullptr)
+    {
+      m_UnsharedEdgeListId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2635, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid unshared edges array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(unsharedEdgeList == nullptr)
-  {
-    m_UnsharedEdgeListId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::Find2DUnsharedEdges<MeshIndexType>(getFaces(), unsharedEdgeList);
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }

@@ -101,28 +101,39 @@ public:
   usize getNumberOfVerticesPerEdge() const override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief calculates the sizes of each edge in the geometry
+   * and store it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when
+   * an Element Sizes Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementSizes(bool recalculate) override;
+  Result<> findElementSizes(bool recalculate) override;
 
   /**
    * @brief
-   * @return StatusCode
+   * @param recalculate This will allow for skipping execution when an
+   * `ElementDynamicList` exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementsContainingVert(bool recalculate) override;
+  Result<> findElementsContainingVert(bool recalculate) override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief finds the neighbors of each edge in the geometry
+   * and store it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an
+   * `ElementDynamicList` exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementNeighbors(bool recalculate) override;
+  Result<> findElementNeighbors(bool recalculate) override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief calculates the centroids of each edge in the geometry
+   * and store it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an Element
+   * Centroids Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementCentroids(bool recalculate) override;
+  Result<> findElementCentroids(bool recalculate) override;
 
   /**
    * @brief

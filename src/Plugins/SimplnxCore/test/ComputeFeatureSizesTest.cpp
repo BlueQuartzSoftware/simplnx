@@ -155,6 +155,8 @@ DataStructure CreateRectGridDataStructure()
   xBoundsArray->setValue(2, 0.9f);
   xBoundsArray->setValue(3, 2.1f);
   xBoundsArray->setValue(4, 13.0f);
+  rectGridGeom->setXBoundsId(xBoundsArray->getId());
+
   // yBounds -> 0.0f, 0.1f, 1.0f, 10.0f, 100.0f
   Float32Array* yBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
   yBoundsArray->setValue(0, 0.0f);
@@ -162,6 +164,8 @@ DataStructure CreateRectGridDataStructure()
   yBoundsArray->setValue(2, 1.0f);
   yBoundsArray->setValue(3, 10.0f);
   yBoundsArray->setValue(4, 100.0f);
+  rectGridGeom->setYBoundsId(yBoundsArray->getId());
+
   // zBounds -> 0.0f, -1.0f, -1.2f, -2.0f, -2.1f
   Float32Array* zBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
   zBoundsArray->setValue(0, 0.0f);
@@ -169,6 +173,7 @@ DataStructure CreateRectGridDataStructure()
   zBoundsArray->setValue(2, -1.2f);
   zBoundsArray->setValue(3, -2.0f);
   zBoundsArray->setValue(4, -2.1f);
+  rectGridGeom->setZBoundsId(zBoundsArray->getId());
 
   AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 5}, rectGridGeom->getId());
   rectGridGeom->setCellData(*cellData);

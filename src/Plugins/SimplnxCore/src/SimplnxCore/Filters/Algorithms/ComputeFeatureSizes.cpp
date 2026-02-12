@@ -169,11 +169,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   if(saveElementSizes)
   {
     msgHelper.sendMessage("Calculating Element Sizes...");
-    int32 err = imageGeom.findElementSizes(false);
-    if(err < 0)
-    {
-      return MakeErrorResult(err, fmt::format("Error computing Element sizes for Geometry type {}", imageGeom.getTypeName()));
-    }
+    return imageGeom.findElementSizes(false);
   }
 
   return {};
@@ -188,10 +184,10 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   const usize numFeatures = volumes.getNumberOfTuples();
 
   msgHelper.sendMessage("Finding Element Sizes...");
-  int32 err = rectGridGeom.findElementSizes(false);
-  if(err < 0)
+  Result<> result = rectGridGeom.findElementSizes(false);
+  if(result.invalid())
   {
-    return MakeErrorResult(err, fmt::format("Error computing Element sizes for Geometry type {}", rectGridGeom.getTypeName()));
+    return result;
   }
 
   const Float32AbstractDataStore& elemSizes = rectGridGeom.getElementSizes()->getDataStoreRef();

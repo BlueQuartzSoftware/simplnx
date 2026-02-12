@@ -32,10 +32,10 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
   m_NRingTriangles.clear();
 
   // Make sure we have the proper connectivity built
-  err = triangleGeom->findElementsContainingVert(false);
-  if(err < 0)
+  Result<> result = triangleGeom->findElementsContainingVert(false);
+  if(result.invalid())
   {
-    return MakeErrorResult(err, "Failed to find elements containing vert");
+    return result;
   }
   const INodeGeometry1D::ElementDynamicList* node2TrianglePtr = triangleGeom->getElementsContainingVert();
 
