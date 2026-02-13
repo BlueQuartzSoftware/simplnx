@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
 
@@ -11,47 +12,43 @@ namespace
 struct IdentifySampleFunctor
 {
   template <typename T>
-  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles)
+  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
-    std::vector<usize> cDims = {1};
+    ShapeType cDims = {1};
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     const auto totalPoints = static_cast<int64>(goodVoxelsPtr->getNumberOfTuples());
 
-    SizeVec3 uDims = imageGeom->getDimensions();
+    SizeVec3 udims = imageGeom->getDimensions();
 
-    const int64 dims[3] = {
-        static_cast<int64>(uDims[0]),
-        static_cast<int64>(uDims[1]),
-        static_cast<int64>(uDims[2]),
+    std::array<int64_t, 3> dims = {
+        static_cast<int64_t>(udims[0]),
+        static_cast<int64_t>(udims[1]),
+        static_cast<int64_t>(udims[2]),
     };
 
-    int64 neighborPoints[6] = {0, 0, 0, 0, 0, 0};
-    const int64 xp = dims[0];
-    const int64 yp = dims[1];
-    const int64 zp = dims[2];
+    int64_t neighborPoint = 0;
+    std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+    std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-    neighborPoints[0] = -(xp * yp);
-    neighborPoints[1] = -xp;
-    neighborPoints[2] = -1;
-    neighborPoints[3] = 1;
-    neighborPoints[4] = xp;
-    neighborPoints[5] = (xp * yp);
     std::vector<int64> currentVList;
     std::vector<bool> checked(totalPoints, false);
     std::vector<bool> sample(totalPoints, false);
     int64 biggestBlock = 0;
 
-    int64 neighbor = 0;
-
     // In this loop over the data we are finding the biggest contiguous set of GoodVoxels and calling that the 'sample'  All GoodVoxels that do not touch the 'sample'
     // are flipped to be called 'bad' voxels or 'not sample'
     float threshold = 0.0f;
-    for(int64 i = 0; i < totalPoints; i++)
+    for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
-      const float percentIncrement = static_cast<float>(i) / static_cast<float>(totalPoints) * 100.0f;
+      if(shouldCancel)
+      {
+        return;
+      }
+      const float percentIncrement = static_cast<float>(voxelIndex) / static_cast<float>(totalPoints) * 100.0f;
       if(percentIncrement > threshold)
       {
+        messageHandler(IFilter::Message::Type::Info, fmt::format("Completed: {}", percentIncrement));
         threshold = threshold + 5.0f;
         if(threshold < percentIncrement)
         {
@@ -59,48 +56,29 @@ struct IdentifySampleFunctor
         }
       }
 
-      if(!checked[i] && goodVoxels.getValue(i))
+      if(!checked[voxelIndex] && goodVoxels.getValue(voxelIndex))
       {
-        currentVList.push_back(i);
+        currentVList.push_back(voxelIndex);
         usize count = 0;
         while(count < currentVList.size())
         {
           int64 index = currentVList[count];
-          int64 column = index % xp;
-          int64 row = (index / xp) % yp;
-          int64 plane = index / (xp * yp);
-          for(int32 j = 0; j < 6; j++)
+          int64 xIdx = index % dims[0];
+          int64 yIdx = (index / dims[0]) % dims[1];
+          int64 zIdx = index / (dims[0] * dims[1]);
+          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          for(const auto& faceIndex : faceNeighborInternalIdx)
           {
-            int32 good = 1;
-            neighbor = index + neighborPoints[j];
-            if(j == 0 && plane == 0)
+            if(!isValidFaceNeighbor[faceIndex])
             {
-              good = 0;
+              continue;
             }
-            if(j == 5 && plane == (zp - 1))
+            neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
+
+            if(!checked[neighborPoint] && goodVoxels.getValue(neighborPoint))
             {
-              good = 0;
-            }
-            if(j == 1 && row == 0)
-            {
-              good = 0;
-            }
-            if(j == 4 && row == (yp - 1))
-            {
-              good = 0;
-            }
-            if(j == 2 && column == 0)
-            {
-              good = 0;
-            }
-            if(j == 3 && column == (xp - 1))
-            {
-              good = 0;
-            }
-            if(good == 1 && !checked[neighbor] && goodVoxels.getValue(neighbor))
-            {
-              currentVList.push_back(neighbor);
-              checked[neighbor] = true;
+              currentVList.push_back(neighborPoint);
+              checked[neighborPoint] = true;
             }
           }
           count++;
@@ -132,10 +110,16 @@ struct IdentifySampleFunctor
     threshold = 0.0F;
     if(fillHoles)
     {
+      messageHandler(IFilter::Message::Type::Info, fmt::format("Filling holes in sample..."));
+
       bool touchesBoundary = false;
-      for(int64 i = 0; i < totalPoints; i++)
+      for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
       {
-        const float percentIncrement = static_cast<float>(i) / static_cast<float>(totalPoints) * 100.0f;
+        if(shouldCancel)
+        {
+          return;
+        }
+        const float percentIncrement = static_cast<float>(voxelIndex) / static_cast<float>(totalPoints) * 100.0f;
         if(percentIncrement > threshold)
         {
           threshold = threshold + 5.0f;
@@ -145,53 +129,35 @@ struct IdentifySampleFunctor
           }
         }
 
-        if(!checked[i] && !goodVoxels.getValue(i))
+        if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
         {
-          currentVList.push_back(i);
+          currentVList.push_back(voxelIndex);
           usize count = 0;
           touchesBoundary = false;
           while(count < currentVList.size())
           {
             int64 index = currentVList[count];
-            int64 column = index % xp;
-            int64 row = (index / xp) % yp;
-            int64 plane = index / (xp * yp);
-            if(column == 0 || column == (xp - 1) || row == 0 || row == (yp - 1) || plane == 0 || plane == (zp - 1))
+            int64 xIdx = index % dims[0];
+            int64 yIdx = (index / dims[0]) % dims[1];
+            int64 zIdx = index / (dims[0] * dims[1]);
+            if(xIdx == 0 || xIdx == (dims[0] - 1) || yIdx == 0 || yIdx == (dims[1] - 1) || zIdx == 0 || zIdx == (dims[2] - 1))
             {
               touchesBoundary = true;
             }
-            for(int32 j = 0; j < 6; j++)
+            // Loop over the 6 face neighbors of the voxel
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            for(const auto& faceIndex : faceNeighborInternalIdx)
             {
-              int32 good = 1;
-              neighbor = index + neighborPoints[j];
-              if(j == 0 && plane == 0)
+              if(!isValidFaceNeighbor[faceIndex])
               {
-                good = 0;
+                continue;
               }
-              if(j == 5 && plane == (zp - 1))
+              neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
+
+              if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
               {
-                good = 0;
-              }
-              if(j == 1 && row == 0)
-              {
-                good = 0;
-              }
-              if(j == 4 && row == (yp - 1))
-              {
-                good = 0;
-              }
-              if(j == 2 && column == 0)
-              {
-                good = 0;
-              }
-              if(j == 3 && column == (xp - 1))
-              {
-                good = 0;
-              }
-              if(good == 1 && !checked[neighbor] && !goodVoxels.getValue(neighbor))
-              {
-                currentVList.push_back(neighbor);
-                checked[neighbor] = true;
+                currentVList.push_back(neighborPoint);
+                checked[neighborPoint] = true;
               }
             }
             count++;
@@ -221,7 +187,7 @@ struct IdentifySampleSliceBySliceFunctor
   };
 
   template <typename T>
-  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, Plane plane)
+  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, Plane plane, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
@@ -265,6 +231,12 @@ struct IdentifySampleSliceBySliceFunctor
 
     for(int64 fixedIdx = 0; fixedIdx < fixedDim; ++fixedIdx) // Process each slice
     {
+      if(shouldCancel)
+      {
+        return;
+      }
+      messageHandler(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
+
       std::vector<bool> checked(planeDim1 * planeDim2, false);
       std::vector<bool> sample(planeDim1 * planeDim2, false);
       std::vector<int64> currentVList;
@@ -325,6 +297,10 @@ struct IdentifySampleSliceBySliceFunctor
           }
         }
       }
+      if(shouldCancel)
+      {
+        return;
+      }
 
       for(int64 p2 = 0; p2 < planeDim2; ++p2)
       {
@@ -339,7 +315,10 @@ struct IdentifySampleSliceBySliceFunctor
           }
         }
       }
-
+      if(shouldCancel)
+      {
+        return;
+      }
       if(fillHoles)
       {
         for(int64 p2 = 0; p2 < planeDim2; ++p2)
@@ -421,24 +400,17 @@ IdentifySample::~IdentifySample() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> IdentifySample::operator()()
 {
-
-  // const auto fillHoles = filterArgs.value<bool>(k_FillHoles_Key);
-  // const auto sliceBySlice = filterArgs.value<bool>(k_SliceBySlice_Key);
-  // const auto sliceBySlicePlane = static_cast<IdentifySampleSliceBySliceFunctor::Plane>(filterArgs.value<ChoicesParameter::ValueType>(k_SliceBySlicePlane_Key));
-  // const auto imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  // const auto goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-
   auto* inputData = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
   const auto* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
 
   if(m_InputValues->SliceBySlice)
   {
     ExecuteDataFunction(IdentifySampleSliceBySliceFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles,
-                        static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex));
+                        static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex), m_MessageHandler, m_ShouldCancel);
   }
   else
   {
-    ExecuteDataFunction(IdentifySampleFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles);
+    ExecuteDataFunction(IdentifySampleFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
   }
 
   return {};

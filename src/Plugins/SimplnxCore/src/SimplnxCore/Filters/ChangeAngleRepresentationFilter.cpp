@@ -5,11 +5,11 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/format.h>
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <cmath>
 
@@ -115,7 +115,13 @@ IFilter::UniquePointer ChangeAngleRepresentationFilter::clone() const
 IFilter::PreflightResult ChangeAngleRepresentationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  return {};
+  auto pAnglesDataPathValue = filterArgs.value<DataPath>(k_AnglesArrayPath_Key);
+
+  nx::core::Result<OutputActions> resultOutputActions;
+
+  nx::core::MarkDataPathModified(dataStructure, resultOutputActions, pAnglesDataPathValue);
+
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

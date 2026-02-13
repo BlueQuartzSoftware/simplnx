@@ -45,6 +45,13 @@ void AppendDataObjectModifications(const DataStructure& dataStructure, std::vect
 }
 
 // -----------------------------------------------------------------------------
+void MarkDataPathModified(const DataStructure& dataStructure, nx::core::Result<OutputActions>& resultOutputActions, const DataPath& targetDataPath)
+{
+  resultOutputActions.value().modifiedActions.push_back(
+      DataObjectModification{targetDataPath, DataObjectModification::ModifiedType::Modified, dataStructure.getDataRef(targetDataPath).getDataObjectType()});
+}
+
+// -----------------------------------------------------------------------------
 IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& dataStructure, const DataPath& featureIdsPath, const DataPath& numNeighborsPath,
                                                           nx::core::Result<OutputActions>& resultOutputActions)
 {
