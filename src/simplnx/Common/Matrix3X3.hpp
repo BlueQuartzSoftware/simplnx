@@ -1,7 +1,7 @@
 #pragma once
 
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Constants.hpp"
-#include "simplnx/Common/Matrix3X1.hpp"
 #include "simplnx/Common/Types.hpp"
 
 #include <Eigen/Dense>

@@ -1,6 +1,6 @@
 #include "ComputeVertexToTriangleDistances.hpp"
 
-#include "simplnx/Common/Matrix3X1.hpp"
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -16,18 +16,6 @@ namespace
 using RTreeType = RTree<size_t, float, 3, float>;
 using SharedTriListT = AbstractDataStore<IGeometry::SharedTriList::value_type>;
 using SharedVertexListT = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
-
-// using Matrix3X1F = Matrix3X1<float>;
-
-// Matrix3X1F operator*(const float scalar, const Matrix3X1F& rhs)
-// {
-//   return {rhs[0] * scalar, rhs[1] * scalar, rhs[2] * scalar};
-// }
-//
-// Matrix3X1F operator*(const Matrix3X1F& rhs, const float scalar)
-// {
-//   return {rhs[0] * scalar, rhs[1] * scalar, rhs[2] * scalar};
-// }
 
 /**
  * @brief Take from https://github.com/embree/embree/blob/master/tutorials/common/math/closest_point.h

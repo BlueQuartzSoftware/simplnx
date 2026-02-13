@@ -359,8 +359,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Types.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/TypesUtility.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Uuid.hpp
-    ${SIMPLNX_SOURCE_DIR}/Common/Matrix3X3.hpp
-    ${SIMPLNX_SOURCE_DIR}/Common/Matrix3X1.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Matrix3X3.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Core/Application.hpp
   ${SIMPLNX_SOURCE_DIR}/Core/Preferences.hpp
