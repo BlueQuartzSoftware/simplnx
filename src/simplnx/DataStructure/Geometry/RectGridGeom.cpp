@@ -312,7 +312,19 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
     return {};
   }
 
-  auto sizes = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
+  if(sizeArray == nullptr)
+  {
+    // If we are here we are not recalculating so create array
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
+    sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+    if(sizeArray == nullptr)
+    {
+      m_ElementSizesId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-1834, fmt::format("{}({}) RectGridGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+    }
+  }
+
   const auto* xBnds = getXBounds();
   if(xBnds == nullptr)
   {
@@ -352,18 +364,11 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
               -1833, fmt::format("{}({}) RectGridGeom::{} Error: Found voxel with a spacing of zero or less.\nX-Index: {} | X-Spacing: {}\nY-Index: {} | Y-Spacing: {}\nZ-Index: {} | Z-Spacing: {}",
                                  __FILE__, __LINE__, __func__, x, xRes, y, yRes, z, zRes));
         }
-        (*sizes)[(m_Dimensions[0] * m_Dimensions[1] * z) + (m_Dimensions[0] * y) + x] = zRes * yRes * xRes;
+        sizeArray->setValue((m_Dimensions[0] * m_Dimensions[1] * z) + (m_Dimensions[0] * y) + x, zRes * yRes * xRes);
       }
     }
   }
 
-  sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(sizes), getId());
-  if(sizeArray == nullptr)
-  {
-    m_ElementSizesId.reset();
-    // Used to be error code `-1`
-    return MakeErrorResult(-1834, fmt::format("{}({}) RectGridGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
-  }
   m_ElementSizesId = sizeArray->getId();
 
   // Used to be error code `1`
