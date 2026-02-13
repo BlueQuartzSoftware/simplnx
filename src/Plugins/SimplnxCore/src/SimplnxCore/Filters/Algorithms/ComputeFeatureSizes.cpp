@@ -16,8 +16,15 @@ namespace
 {
 constexpr int32 k_BadFeatureCount = -78231;
 constexpr uint64 k_MaxVoxelCount = std::numeric_limits<int32>::max();
-constexpr float32 k_ESDVolumeDenominator = (4.0f / 3.0f) * nx::core::numbers::pi_v<float32>;
-constexpr float32 k_ECDAreaDenominator = nx::core::numbers::pi_v<float32>;
+/**
+ * Volume of Sphere - `V = 4/3 * pi * r^3`
+ * Radius of Sphere - `r = cubed_root(3V / 4pi)`
+ * However we can cut a multiplication out of the
+ * equation at runtime by isolating the `V`
+ * 3V / 4pi == V / (4pi / 3)
+ */
+constexpr float64 k_ESDVolumeDenominator = (4.0 * nx::core::numbers::pi_v<float64>) / 3.0;
+constexpr float64 k_ECDAreaDenominator = nx::core::numbers::pi_v<float64>;
 
 Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
                           const Int32AbstractDataStore& featureIds, const bool saveElementSizes, MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
@@ -80,14 +87,14 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
      **/
 
     // if x dimension has a size of 1 then xSpacing = 1; else xSpacing = spacing[0]
-    const float32 xSpacing = (spacing[0] * static_cast<float32>(xDimSize > 1ULL)) + (1.0f * static_cast<float32>(xDimSize < 2ULL));
+    const float64 xSpacing = (static_cast<float64>(spacing[0]) * static_cast<float64>(xDimSize > 1ULL)) + (1.0f * static_cast<float64>(xDimSize < 2ULL));
     // if y dimension has a size of 1 then ySpacing = 1; else ySpacing = spacing[1]
-    const float32 ySpacing = (spacing[1] * static_cast<float32>(yDimSize > 1ULL)) + (1.0f * static_cast<float32>(yDimSize < 2ULL));
+    const float64 ySpacing = (static_cast<float64>(spacing[1]) * static_cast<float64>(yDimSize > 1ULL)) + (1.0f * static_cast<float64>(yDimSize < 2ULL));
     // if z dimension has a size of 1 then zSpacing = 1; else zSpacing = spacing[2]
-    const float32 zSpacing = (spacing[2] * static_cast<float32>(zDimSize > 1ULL)) + (1.0f * static_cast<float32>(zDimSize < 2ULL));
+    const float64 zSpacing = (static_cast<float64>(spacing[2]) * static_cast<float64>(zDimSize > 1ULL)) + (1.0f * static_cast<float64>(zDimSize < 2ULL));
 
     // Calculate the area of a single voxel
-    const float32 voxelArea = xSpacing * ySpacing * zSpacing;
+    const float64 voxelArea = xSpacing * ySpacing * zSpacing;
 
     msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
     // Process each feature storing feature voxel counts, areas, and equivalent circular diameter
@@ -110,8 +117,8 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
       numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
 
       // Calculate and store the area of the feature
-      const float32 newArea = static_cast<float32>(featureVoxelCounts[featureIdx]) * voxelArea;
-      volumes.setValue(featureIdx, newArea);
+      const float64 newArea = static_cast<float64>(featureVoxelCounts[featureIdx]) * voxelArea;
+      volumes.setValue(featureIdx, static_cast<float32>(newArea));
 
       /** Determine diameter from area:
        * Area of Circle - `A = pi * r^2`
@@ -120,7 +127,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
        * Thus
        * Equivalent Circular Diameter - `2 * square_root(A / pi)`
        **/
-      equivalentDiameters.setValue(featureIdx, 2 * std::sqrt(newArea / k_ECDAreaDenominator));
+      equivalentDiameters.setValue(featureIdx, static_cast<float32>(2.0 * std::sqrt(newArea / k_ECDAreaDenominator)));
     }
   }
   else
@@ -129,7 +136,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
     msgHelper.sendMessage("Image Stack detected. Proceeding with 3D calculations...");
 
     // Calculate the volume of a single voxel
-    const float32 voxelVolume = spacing[0] * spacing[1] * spacing[2];
+    const float64 voxelVolume = spacing[0] * spacing[1] * spacing[2];
 
     msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Volume and ESD...");
     // Process each feature storing feature voxel counts, volumes, and equivalent spherical diameter
@@ -152,17 +159,17 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
       numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
 
       // Calculate and store the volume of the feature
-      const float32 newVolume = static_cast<float32>(featureVoxelCounts[featureIdx]) * voxelVolume;
-      volumes.setValue(featureIdx, newVolume);
+      const float64 newVolume = static_cast<float64>(featureVoxelCounts[featureIdx]) * voxelVolume;
+      volumes.setValue(featureIdx, static_cast<float32>(newVolume));
 
       /** Determine diameter from volume:
        * Volume of Sphere - `V = 4/3 * pi * r^3`
-       * Radius of Sphere - `r = cubed_root(V / (4/3 * pi))`
+       * Radius of Sphere - `r = cubed_root(3V / 4pi)`
        * Diameter of Sphere - `d = 2 * r`
        * Thus
-       * Equivalent Spherical Diameter - `2 * cubed_root(V / (4/3 * pi))`
+       * Equivalent Spherical Diameter - `2 * cubed_root(V / (4pi / 3))`
        **/
-      equivalentDiameters.setValue(featureIdx, 2.0f * std::cbrt(newVolume / k_ESDVolumeDenominator));
+      equivalentDiameters.setValue(featureIdx, static_cast<float32>(2.0 * std::cbrt(newVolume / k_ESDVolumeDenominator)));
     }
   }
 
@@ -193,6 +200,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   const Float32AbstractDataStore& elemSizes = rectGridGeom.getElementSizes()->getDataStoreRef();
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
+  std::vector<float64> featureVolumes(numFeatures, 0.0);
 
   msgHelper.sendMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
   // Count and store the number of voxels in each feature
@@ -206,11 +214,10 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
     throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
 
     const int32 voxelFeatureId = featureIds.getValue(voxelIdx);
-    featureVoxelCounts[featureIds.getValue(voxelIdx)] += 1.0f;
+    featureVoxelCounts[featureIds.getValue(voxelIdx)]++;
 
     // Use summation to determine overall volume
-    const float32 temp2 = volumes.getValue(voxelFeatureId);
-    volumes.setValue(voxelFeatureId, temp2 + elemSizes.getValue(voxelIdx));
+    featureVolumes[voxelFeatureId] += static_cast<float64>(elemSizes.getValue(voxelIdx));
   }
 
   msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating ESD...");
@@ -232,15 +239,17 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
 
     // Store the number of voxels in feature as int32
     numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
+    // Store the volume of the feature
+    volumes.setValue(featureIdx, static_cast<float32>(featureVolumes[featureIdx]));
 
     /** Determine diameter from volume:
      * Volume of Sphere - `V = 4/3 * pi * r^3`
-     * Radius of Sphere - `r = cubed_root(V / (4/3 * pi))`
+     * Radius of Sphere - `r = cubed_root(3V / 4pi)`
      * Diameter of Sphere - `d = 2 * r`
      * Thus
-     * Equivalent Spherical Diameter - `2 * cubed_root(V / (4/3 * pi))`
+     * Equivalent Spherical Diameter - `2 * cubed_root(V / (4pi / 3))`
      **/
-    equivalentDiameters.setValue(featureIdx, 2.0f * std::cbrt(volumes.getValue(featureIdx) / k_ESDVolumeDenominator));
+    equivalentDiameters.setValue(featureIdx, static_cast<float32>(2.0 * std::cbrt(featureVolumes[featureIdx] / k_ESDVolumeDenominator)));
   }
 
   if(!saveElementSizes)

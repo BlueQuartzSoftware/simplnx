@@ -78,6 +78,31 @@ DataStructure Create2DImageDataStructure()
   return dataStructure;
 }
 
+void Validate2DImageDataStructure(const DataStructure& dataStructure)
+{
+  // Since we are using 20.2f the trash bits are one decimal place higher
+  // this means we cant use the typical 1e-6 epsilon provided by standard library
+  constexpr float32 epsilon = 0.00001;
+
+  // Expected Outputs:
+  // Single Voxel Area: 2.02
+  // numElements: 0 11 1 13
+  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(k_NumElementsPath);
+  REQUIRE(numElements.getValue(1) == 11);
+  REQUIRE(numElements.getValue(2) == 1);
+  REQUIRE(numElements.getValue(3) == 13);
+  // areas: 0.0 22.22 2.02 26.26
+  const auto& areas = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
+  REQUIRE((areas.getValue(1) - 22.22f) < epsilon);
+  REQUIRE((areas.getValue(2) - 2.02f) < epsilon);
+  REQUIRE((areas.getValue(3) - 26.26f) < epsilon);
+  // eqDiameters: 0.0 5.319 1.603728 5.78232
+  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
+  REQUIRE((equivalentDiameters.getValue(1) - 5.319f) < epsilon);
+  REQUIRE((equivalentDiameters.getValue(2) - 1.603728f) < epsilon);
+  REQUIRE((equivalentDiameters.getValue(3) - 5.78232f) < epsilon);
+}
+
 DataStructure Create3DImageDataStructure()
 {
   // Create an ImageGeom
@@ -141,6 +166,29 @@ DataStructure Create3DImageDataStructure()
   return dataStructure;
 }
 
+void Validate3DImageDataStructure(const DataStructure& dataStructure)
+{
+  constexpr float32 epsilon = 0.00001;
+
+  // Expected Outputs:
+  // Single Voxel Volume: 2.268
+  // numElements: 0 73 29 23
+  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(k_NumElementsPath);
+  REQUIRE(numElements.getValue(1) == 73);
+  REQUIRE(numElements.getValue(2) == 29);
+  REQUIRE(numElements.getValue(3) == 23);
+  // volumes: 0.0 165.564 65.772 52.164
+  const auto& volumes = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
+  REQUIRE((volumes.getValue(1) - 165.564f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE((volumes.getValue(2) - 65.772f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE((volumes.getValue(3) - 52.164f) < std::numeric_limits<float32>::epsilon());
+  // eqDiameters: 0.0 6.81275 5.00819 4.63579
+  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
+  REQUIRE((equivalentDiameters.getValue(1) - 6.81275f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE((equivalentDiameters.getValue(2) - 5.00819f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE((equivalentDiameters.getValue(3) - 4.63579f) < epsilon);
+}
+
 DataStructure CreateRectGridDataStructure()
 {
   // Create an ImageGeom
@@ -166,16 +214,16 @@ DataStructure CreateRectGridDataStructure()
   yBoundsArray->setValue(4, 100.0f);
   rectGridGeom->setYBoundsId(yBoundsArray->getId());
 
-  // zBounds -> 0.0f, -1.0f, -1.2f, -2.0f, -2.1f
+  // zBounds -> 0.0f, 1.0f, 1.2f, 2.0f, 2.1f
   Float32Array* zBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
   zBoundsArray->setValue(0, 0.0f);
-  zBoundsArray->setValue(1, -1.0f);
-  zBoundsArray->setValue(2, -1.2f);
-  zBoundsArray->setValue(3, -2.0f);
-  zBoundsArray->setValue(4, -2.1f);
+  zBoundsArray->setValue(1, 1.0f);
+  zBoundsArray->setValue(2, 1.2f);
+  zBoundsArray->setValue(3, 2.0f);
+  zBoundsArray->setValue(4, 2.1f);
   rectGridGeom->setZBoundsId(zBoundsArray->getId());
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 5}, rectGridGeom->getId());
+  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{4, 4, 4}, rectGridGeom->getId());
   rectGridGeom->setCellData(*cellData);
 
   Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
@@ -185,7 +233,7 @@ DataStructure CreateRectGridDataStructure()
   // clang-format off
   // Expected Outputs:
   // numElements: 0 39 15 10
-  // volumes: 0.0 2358.834 352.462 15.59
+  // volumes: 0.0 2358.834 352.462 15.104
   // eqDiameters: 0.0 16.516 8.764 3.0994
   const std::array<uint8, 125> featureIdsArray = {
     1, 2, 2, 2,
@@ -244,23 +292,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Expected Outputs:
-  // Single Voxel Area: 2.02
-  // numElements: 0 11 1 13
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(Test::k_NumElementsPath);
-  REQUIRE(numElements.getValue(1) == 11);
-  REQUIRE(numElements.getValue(2) == 1);
-  REQUIRE(numElements.getValue(3) == 13);
-  // areas: 0.0 22.22 2.02 26.26
-  const auto& areas = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
-  REQUIRE(areas.getValue(1) == 22.22f);
-  REQUIRE(areas.getValue(2) == 2.02f);
-  REQUIRE(areas.getValue(3) == 26.26f);
-  // eqDiameters: 0.0 5.319 1.6037 5.782
-  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(Test::k_EquivalentDiametersPath);
-  REQUIRE(equivalentDiameters.getValue(1) == 5.319f);
-  REQUIRE(equivalentDiameters.getValue(2) == 1.6037f);
-  REQUIRE(equivalentDiameters.getValue(3) == 5.782f);
+  Test::Validate2DImageDataStructure(dataStructure);
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -295,23 +327,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes"
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Expected Outputs:
-  // Single Voxel Area: 2.02
-  // numElements: 0 11 1 13
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(Test::k_NumElementsPath);
-  REQUIRE(numElements.getValue(1) == 11);
-  REQUIRE(numElements.getValue(2) == 1);
-  REQUIRE(numElements.getValue(3) == 13);
-  // areas: 0.0 22.22 2.02 26.26
-  const auto& areas = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
-  REQUIRE(areas.getValue(1) == 22.22f);
-  REQUIRE(areas.getValue(2) == 2.02f);
-  REQUIRE(areas.getValue(3) == 26.26f);
-  // eqDiameters: 0.0 5.319 1.6037 5.782
-  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(Test::k_EquivalentDiametersPath);
-  REQUIRE(equivalentDiameters.getValue(1) == 5.319f);
-  REQUIRE(equivalentDiameters.getValue(2) == 1.6037f);
-  REQUIRE(equivalentDiameters.getValue(3) == 5.782f);
+  Test::Validate2DImageDataStructure(dataStructure);
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -346,23 +362,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D", "[SimplnxCo
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Expected Outputs:
-  // Single Voxel Volume: 2.268
-  // numElements: 0 73 29 23
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(Test::k_NumElementsPath);
-  REQUIRE(numElements.getValue(1) == 73);
-  REQUIRE(numElements.getValue(2) == 29);
-  REQUIRE(numElements.getValue(3) == 23);
-  // volumes: 0.0 165.564 65.772 52.164
-  const auto& volumes = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
-  REQUIRE(volumes.getValue(1) == 165.564f);
-  REQUIRE(volumes.getValue(2) == 65.772f);
-  REQUIRE(volumes.getValue(3) == 52.164f);
-  // eqDiameters: 0.0 6.813 5.008 4.636
-  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(Test::k_EquivalentDiametersPath);
-  REQUIRE(equivalentDiameters.getValue(1) == 6.183f);
-  REQUIRE(equivalentDiameters.getValue(2) == 5.008f);
-  REQUIRE(equivalentDiameters.getValue(3) == 4.636f);
+  Test::Validate3DImageDataStructure(dataStructure);
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -397,23 +397,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element 
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // Expected Outputs:
-  // Single Voxel Volume: 2.268
-  // numElements: 0 73 29 23
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(Test::k_NumElementsPath);
-  REQUIRE(numElements.getValue(1) == 73);
-  REQUIRE(numElements.getValue(2) == 29);
-  REQUIRE(numElements.getValue(3) == 23);
-  // volumes: 0.0 165.564 65.772 52.164
-  const auto& volumes = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
-  REQUIRE(volumes.getValue(1) == 165.564f);
-  REQUIRE(volumes.getValue(2) == 65.772f);
-  REQUIRE(volumes.getValue(3) == 52.164f);
-  // eqDiameters: 0.0 6.813 5.008 4.636
-  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(Test::k_EquivalentDiametersPath);
-  REQUIRE(equivalentDiameters.getValue(1) == 6.183f);
-  REQUIRE(equivalentDiameters.getValue(2) == 5.008f);
-  REQUIRE(equivalentDiameters.getValue(3) == 4.636f);
+  Test::Validate3DImageDataStructure(dataStructure);
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -452,11 +436,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid", "[Simplnx
   REQUIRE(numElements.getValue(1) == 39);
   REQUIRE(numElements.getValue(2) == 15);
   REQUIRE(numElements.getValue(3) == 10);
-  // volumes: 0.0 2358.834 352.462 15.59
+  // volumes: 0.0 2358.834 356.062 15.104
   const auto& volumes = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
   REQUIRE(volumes.getValue(1) == 2358.834f);
-  REQUIRE(volumes.getValue(2) == 352.462f);
-  REQUIRE(volumes.getValue(3) == 15.59f);
+  REQUIRE(volumes.getValue(2) == 356.062f);
+  REQUIRE(volumes.getValue(3) == 15.104f);
   // eqDiameters: 0.0 16.516 8.764 3.0994
   const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(Test::k_EquivalentDiametersPath);
   REQUIRE(equivalentDiameters.getValue(1) == 16.516f);
