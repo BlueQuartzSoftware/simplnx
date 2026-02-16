@@ -130,7 +130,7 @@ Result<> AttributeMatrix::validate() const
   {
     if(array->getNumberOfTuples() != numTuples)
     {
-      result = MergeResults(result, MakeErrorResult(-4701, fmt::format("AttributeMatrix '{}' has {} tuples but the contained IArray objet '{}' has {} total tuples.", getName(), numTuples,
+      result = MergeResults(result, MakeErrorResult(-4701, fmt::format("AttributeMatrix '{}' has {} tuples but the contained IArray object '{}' has {} total tuples.", getName(), numTuples,
                                                                        array->getName(), array->getNumberOfTuples())));
     }
   }

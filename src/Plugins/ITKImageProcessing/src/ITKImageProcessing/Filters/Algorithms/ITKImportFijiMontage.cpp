@@ -211,17 +211,21 @@ private:
       image->setOrigin(bound.Origin);
       image->setSpacing(FloatVec3(1.0f, 1.0f, 1.0f));
 
+      CropGeometryParameter::ValueType croppingOptions;
+      croppingOptions.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
+
       // Use ITKUtils to read the image into the DataStructure
       Result<> imageReaderResult;
       if(m_InputValues->changeDataType)
       {
         imageReaderResult = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, bound.Filepath.string(),
-                                                                                                                        imageDataPath, m_InputValues->destType);
+                                                                                                                        imageDataPath, m_InputValues->destType, croppingOptions,
+                                                                                                                        std::optional<std::vector<float64>>{}, std::optional<std::vector<float64>>{});
       }
       else
       {
-        imageReaderResult =
-            cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string());
+        imageReaderResult = cxItkImageReaderFilter::ReadImageExecute<cxItkImageReaderFilter::ReadImageIntoArrayFunctor>(
+            bound.Filepath.string(), m_DataStructure, imageDataPath, bound.Filepath.string(), croppingOptions, std::optional<std::vector<float64>>{}, std::optional<std::vector<float64>>{});
       }
       if(imageReaderResult.invalid())
       {

@@ -10,11 +10,57 @@ ITKImageProcessing (ITKImageProcessing)
 
 Read in a stack of 2D images and stack the images into a 3D Volume using the ITK library. Supports most common scalar pixel types and the many file formats supported by ITK.
 
-The filter will create a new Image Geometry. The user can specify a value for the origin and the spacing if the defaults are not appropriate. The default value for the origin will be at (0, 0, 0) and the default spacing value will be (1.0, 1.0, 1.0). If the user needs to have the create Image Geometry located in a different location in the global reference frame, the user can change the default origin value. The "origin" of the image is at a normal Cartesian style origin.
+### Processing Order
 
-The user can decide to scale the images as they are being read in by turning on the Scale Images option, and setting a scale value.  A scale value of 10.0 resamples the images in the stack to one-tenth the number of pixels, a scale value of 200.0 resamples the images in the stack to double the number of pixels.  The default scale value is 100.0.
+Image operations are applied in the following order:
+1. Read image
+2. Crop image
+3. Resample image
+4. Convert to grayscale
+5. Flip image in X or Y
 
-The user can also decide to crop the incoming image geometry using the Cropping Options section.  The cropping type options are `No Cropping` to read the full volume into an image geometry, `Voxel Subvolume` to read a subvolume into an image geometry using voxel coordinates, and `Physical Subvolume` to read a subvolume into an image geometry using physical coordinates.  Both subvolume cropping types have checkboxes to turn on/off cropping in each of the X, Y, and Z dimensions.  So for example, if the cropping type `Physical Subvolume` is selected, `Crop Y Dimension` is turned on, and `Crop X Dimension` and `Crop Z Dimension` are turned off, then the incoming volume will be cropped in the Y dimension only and the cropping bounds will be in physical units.
+### Origin & Spacing Options
+
+The filter will create a new Image Geometry. The user can optionally override the origin and spacing for the created geometry. The default values from the input files will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options. If the user needs to have the created Image Geometry located in a different location in the global reference frame, the user can change the default origin value. The "origin" of the image is at a normal Cartesian style origin.
+
+When setting a custom origin, the user can choose whether to place the origin at the corner of the geometry (default) or at the center of the geometry.
+
+The **Origin & Spacing Processing Order** parameter controls when origin and spacing overrides are applied relative to the Processing Order above:
+
+- **Preprocessed**: Origin and spacing are applied before the image cropping step, so the order becomes:
+  1. Read image
+  2. Set origin and spacing values
+  3. Crop image
+  4. Resample image
+  5. Convert to grayscale
+  6. Flip image in X or Y
+- **Postprocessed**: Origin and spacing are applied after the image flipping step, so the order becomes:
+  1. Read image
+  2. Crop image
+  3. Resample image
+  4. Convert to grayscale
+  5. Flip image in X or Y
+  6. Set origin and spacing values
+
+### Resampling Options
+
+The user can decide to scale the images as they are being read in by turning on the Scale Images option, and setting a scale value. A scale value of 10.0 resamples the images in the stack to one-tenth the number of pixels, a scale value of 200.0 resamples the images in the stack to double the number of pixels. The default scale value is 100.0.
+
+### Data Type Conversion
+
+The user can optionally convert the image data to a different data type by enabling the "Set Image Data Type" option. Supported output data types include:
+- uint8
+- uint16
+- uint32
+
+### Cropping Options
+
+The user can crop the incoming image geometry using the Cropping Options section. The cropping type options are:
+- **No Cropping**: Read the full volume into an image geometry
+- **Voxel Subvolume**: Read a subvolume into an image geometry using voxel coordinates
+- **Physical Subvolume**: Read a subvolume into an image geometry using physical coordinates
+
+Both subvolume cropping types have checkboxes to turn on/off cropping in each of the X, Y, and Z dimensions. For example, if **Physical Subvolume** is selected, **Crop Y Dimension** is enabled, and **Crop X Dimension** and **Crop Z Dimension** are disabled, then the incoming volume will be cropped in the Y dimension only and the cropping bounds will be in physical units.
 
 ## Image Operations
 
