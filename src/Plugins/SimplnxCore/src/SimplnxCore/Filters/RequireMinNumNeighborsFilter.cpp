@@ -18,7 +18,6 @@ namespace nx::core
 {
 namespace
 {
-constexpr int64 k_MissingFeaturePhasesError = -251;
 constexpr int32 k_InconsistentTupleCount = -252;
 
 } // namespace
@@ -128,13 +127,6 @@ IFilter::PreflightResult RequireMinNumNeighborsFilter::preflightImpl(const DataS
 
   if(applyToSinglePhase)
   {
-    auto* featurePhasesArray = dataStructure.getDataAs<Int32Array>(featurePhasesPath);
-    if(featurePhasesArray == nullptr)
-    {
-      std::string ss = fmt::format("Could not find Feature Phases array at path '{}'", featurePhasesPath.toString());
-      return {MakeErrorResult<OutputActions>(k_MissingFeaturePhasesError, ss)};
-    }
-
     dataArrayPaths.push_back(featurePhasesPath);
   }
 

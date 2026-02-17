@@ -149,10 +149,6 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
   if(pUseMaskValue)
   {
     maskArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
-    if(maskArray->getDataType() != DataType::boolean && maskArray->getDataType() != DataType::uint8)
-    {
-      return {MakeErrorResult<OutputActions>(-57206, fmt::format("Mask array '{}' must be of type Boolean or UInt8", maskArray->getName())), {}};
-    }
   }
 
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)

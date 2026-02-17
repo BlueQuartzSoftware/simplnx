@@ -90,13 +90,9 @@ IFilter::PreflightResult ComputeVolumeFractionsFilter::preflightImpl(const DataS
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* cellEnsembleData = dataStructure.getDataAs<AttributeMatrix>(pCellEnsembleAttributeMatrixPathValue);
-  if(cellEnsembleData == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-47630, fmt::format("Could not find selected feature Attribute Matrix at path '{}'", pCellEnsembleAttributeMatrixPathValue.toString()))};
-  }
+  const auto& cellEnsembleData = dataStructure.getDataRefAs<AttributeMatrix>(pCellEnsembleAttributeMatrixPathValue);
 
-  auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, cellEnsembleData->getShape(), std::vector<usize>{1}, volFractionsArrayPath);
+  auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, cellEnsembleData.getShape(), std::vector<usize>{1}, volFractionsArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

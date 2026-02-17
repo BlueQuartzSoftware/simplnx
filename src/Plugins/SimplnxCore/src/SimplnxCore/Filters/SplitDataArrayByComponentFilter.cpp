@@ -93,11 +93,8 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto* inputArray = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
-  if(inputArray == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-65400, fmt::format("Cannot find input data array at path '{}'", pInputArrayPath.toString()))};
-  }
+  const auto& inputArrayRef = dataStructure.getDataRefAs<IDataArray>(pInputArrayPath);
+  const auto* inputArray = &inputArrayRef;
   usize numComponents = inputArray->getNumberOfComponents();
   if(numComponents <= 1)
   {

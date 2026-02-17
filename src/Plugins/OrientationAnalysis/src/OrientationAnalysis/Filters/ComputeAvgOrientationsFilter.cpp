@@ -13,17 +13,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-
-using FeatureIdsArrayType = Int32Array;
-using GoodVoxelsArrayType = BoolArray;
-
-constexpr int32 k_IncorrectInputArray = -7000;
-constexpr int32 k_MissingInputArray = -7001;
-constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -7002;
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -110,37 +99,10 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   auto pAvgQuatsArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgQuatsArrayName_Key));
   auto pAvgEulerAnglesArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_AvgEulerAnglesArrayName_Key));
 
-  // Validate the Crystal Structures array
-  const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
-  if(crystalStructures.getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Crystal Structures Input Array must be a 1 component Int32 array")};
-  }
-
   std::vector<DataPath> dataPaths;
 
-  // Validate the Quats array
-  const Float32Array& quats = dataStructure.getDataRefAs<Float32Array>(pCellQuatsArrayPathValue);
-  if(quats.getNumberOfComponents() != 4)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array")};
-  }
   dataPaths.push_back(pCellQuatsArrayPathValue);
-
-  // Validate the Phases array
-  const Int32Array& phases = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
-  if(phases.getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Phases Input Array must be a 1 component Int32 array")};
-  }
   dataPaths.push_back(pCellPhasesArrayPathValue);
-
-  // Validate the FeatureIds array
-  const Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(pCellFeatureIdsArrayPathValue);
-  if(featureIds.getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "FeatureIds Input Array must be a 1 component Int32 array")};
-  }
   dataPaths.push_back(pCellFeatureIdsArrayPathValue);
 
   // Make sure all the arrays have the same number of Tuples
@@ -150,15 +112,10 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
     return {MakeErrorResult<OutputActions>(-651, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto* cellFeatAttMatrix = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
-  if(cellFeatAttMatrix == nullptr)
-  {
-    return {
-        nonstd::make_unexpected(std::vector<Error>{Error{k_MissingInputArray, fmt::format("Could not find selected Attribute matrix at path '{}'", pCellFeatureAttributeMatrixPathValue.toString())}})};
-  }
+  const auto& cellFeatAttMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
 
   // Create output DataStructure Items
-  auto tDims = cellFeatAttMatrix->getShape();
+  auto tDims = cellFeatAttMatrix.getShape();
   auto createAvgQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, tDims, std::vector<usize>{4}, pAvgQuatsArrayPathValue);
   auto createAvgEulerAction = std::make_unique<CreateArrayAction>(DataType::float32, tDims, std::vector<usize>{3}, pAvgEulerAnglesArrayPathValue);
 

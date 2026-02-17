@@ -233,11 +233,6 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   {
     pVertexListPath = filterArgs.value<DataPath>(k_VertexListPath_Key);
     pVertexAMName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
-
-    if(dataStructure.getDataAs<Float32Array>(pVertexListPath) == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9840, fmt::format("Cannot find selected vertex list at path '{}'", pVertexListPath.toString()))};
-    }
   }
   if(pGeometryType == k_TriangleGeometry || pGeometryType == k_QuadGeometry)
   {
@@ -280,29 +275,17 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
     auto pXBoundsPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
     auto pYBoundsPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
     auto pZBoundsPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
-    const auto xBounds = dataStructure.getDataAs<Float32Array>(pXBoundsPath);
-    if(xBounds == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9841, fmt::format("Cannot find selected quadrilateral list at path '{}'", pXBoundsPath.toString()))};
-    }
-    const auto yBounds = dataStructure.getDataAs<Float32Array>(pYBoundsPath);
-    if(yBounds == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9842, fmt::format("Cannot find selected quadrilateral list at path '{}'", pYBoundsPath.toString()))};
-    }
-    const auto zBounds = dataStructure.getDataAs<Float32Array>(pZBoundsPath);
-    if(zBounds == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9843, fmt::format("Cannot find selected quadrilateral list at path '{}'", pZBoundsPath.toString()))};
-    }
-    usize xTuples = xBounds->getNumberOfTuples();
-    usize yTuples = yBounds->getNumberOfTuples();
-    usize zTuples = zBounds->getNumberOfTuples();
+    const auto& xBounds = dataStructure.getDataRefAs<Float32Array>(pXBoundsPath);
+    const auto& yBounds = dataStructure.getDataRefAs<Float32Array>(pYBoundsPath);
+    const auto& zBounds = dataStructure.getDataRefAs<Float32Array>(pZBoundsPath);
+    usize xTuples = xBounds.getNumberOfTuples();
+    usize yTuples = yBounds.getNumberOfTuples();
+    usize zTuples = zBounds.getNumberOfTuples();
     if(xTuples < 2 || yTuples < 2 || zTuples < 2)
     {
       return {nonstd::make_unexpected(
           std::vector<Error>{Error{-9844, fmt::format("One of the bounds arrays has a size less than two; all sizes must be at least two\nX Bounds Size: {}\nY Bounds Size: {}\nZ Bounds Size: {}\n",
-                                                      xBounds->getNumberOfTuples(), yBounds->getNumberOfTuples(), zBounds->getNumberOfTuples())}})};
+                                                      xBounds.getNumberOfTuples(), yBounds.getNumberOfTuples(), zBounds.getNumberOfTuples())}})};
     }
 
     auto createRectGridGeometryAction = std::make_unique<CreateRectGridGeometryAction>(pGeometryPath, pXBoundsPath, pYBoundsPath, pZBoundsPath, pCellAMName, ArrayHandlingType{pArrayHandling});
@@ -317,10 +300,6 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   {
     auto pEdgeListPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
     auto pEdgeAMName = filterArgs.value<std::string>(k_EdgeAttributeMatrixName_Key);
-    if(const auto* edgeList = dataStructure.getDataAs<UInt64Array>(pEdgeListPath); edgeList == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9845, fmt::format("Cannot find selected edge list at path '{}'", pEdgeListPath.toString()))};
-    }
 
     auto createEdgeGeomAction = std::make_unique<CreateEdgeGeometryAction>(pGeometryPath, pVertexListPath, pEdgeListPath, pVertexAMName, pEdgeAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createEdgeGeomAction));
@@ -328,10 +307,6 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_TriangleGeometry) // TriangleGeom
   {
     auto pTriangleListPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
-    if(const auto* triangleList = dataStructure.getDataAs<UInt64Array>(pTriangleListPath); triangleList == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9846, fmt::format("Cannot find selected triangle list at path '{}'", pTriangleListPath.toString()))};
-    }
 
     auto createTriangleGeomAction = std::make_unique<CreateTriangleGeometryAction>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createTriangleGeomAction));
@@ -339,10 +314,6 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_QuadGeometry) // QuadGeom
   {
     auto pQuadListPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
-    if(const auto* quadList = dataStructure.getDataAs<UInt64Array>(pQuadListPath); quadList == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9847, fmt::format("Cannot find selected quadrilateral list at path '{}'", pQuadListPath.toString()))};
-    }
 
     auto createQuadGeomAction = std::make_unique<CreateQuadGeometryAction>(pGeometryPath, pVertexListPath, pQuadListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createQuadGeomAction));
@@ -350,10 +321,6 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_TetGeometry) // TetrahedralGeom
   {
     auto pTetListPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
-    if(const auto* tetList = dataStructure.getDataAs<UInt64Array>(pTetListPath); tetList == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9848, fmt::format("Cannot find selected quadrilateral list at path '{}'", pTetListPath.toString()))};
-    }
 
     auto createTetGeomAction = std::make_unique<CreateTetrahedralGeometryAction>(pGeometryPath, pVertexListPath, pTetListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createTetGeomAction));
@@ -361,10 +328,6 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   if(pGeometryType == k_HexGeometry) // HexahedralGeom
   {
     auto pHexListPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
-    if(const auto* hexList = dataStructure.getDataAs<UInt64Array>(pHexListPath); hexList == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-9849, fmt::format("Cannot find selected quadrilateral list at path '{}'", pHexListPath.toString()))};
-    }
 
     auto createHexGeomAction = std::make_unique<CreateHexahedralGeometryAction>(pGeometryPath, pVertexListPath, pHexListPath, pVertexAMName, pCellAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createHexGeomAction));

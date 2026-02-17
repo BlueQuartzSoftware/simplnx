@@ -2,7 +2,6 @@
 #include "OrientationAnalysis/Filters/Algorithms/ComputeGBCD.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -120,42 +119,12 @@ IFilter::PreflightResult ComputeGBCDFilter::preflightImpl(const DataStructure& d
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(dataStructure.getDataAs<Float32Array>(pFeatureEulerAnglesArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-74350, fmt::format("Could not find euler angles array at path '{}'", pFeatureEulerAnglesArrayPathValue.toString()))};
-  }
-  if(dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-74351, fmt::format("Could not find phases array at path '{}'", pFeaturePhasesArrayPathValue.toString()))};
-  }
-  const auto* crystalStructures = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);
-  if(crystalStructures == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-74352, fmt::format("Could not find crystal structures array at path '{}'", pCrystalStructuresArrayPathValue.toString()))};
-  }
+  // Use the size of the crystal structures to size the face AttributeMatrix
+  const auto& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
 
-  // order here matters...because we are going to use the size of the crystal structures to size the face AttributeMatrix
-  if(dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-74353, fmt::format("Could not find triangle geometry array at path '{}'", pTriangleGeometryPathValue.toString()))};
-  }
-
-  ShapeType tupleShape(1, crystalStructures->getNumberOfTuples());
+  ShapeType tupleShape(1, crystalStructures.getNumberOfTuples());
   auto createAttributeMatrixAction = std::make_unique<CreateAttributeMatrixAction>(faceEnsembleAttributeMatrixPath, tupleShape);
   resultOutputActions.value().appendAction(std::move(createAttributeMatrixAction));
-
-  if(dataStructure.getDataAs<Int32Array>(pSurfaceMeshFaceLabelsArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-74354, fmt::format("Could not find face labels array at path '{}'", pSurfaceMeshFaceLabelsArrayPathValue.toString()))};
-  }
-  if(dataStructure.getDataAs<Float64Array>(pSurfaceMeshFaceNormalsArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-74355, fmt::format("Could not find face normals array at path '{}'", pSurfaceMeshFaceNormalsArrayPathValue.toString()))};
-  }
-  if(dataStructure.getDataAs<Float64Array>(pSurfaceMeshFaceAreasArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-74356, fmt::format("Could not find face areas array at path '{}'", pSurfaceMeshFaceAreasArrayPathValue.toString()))};
-  }
 
   // call the sizeGBCD function to get the GBCD ranges, dimensions, etc.  Note that the input parameters do not affect the size and can be dummy values here;
   SizeGBCD sizeGbcd(0, 0, pGBCDResValue);

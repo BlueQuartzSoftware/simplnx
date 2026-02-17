@@ -141,16 +141,12 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(srcImagePath);
-  if(nullptr == srcImageGeomPtr)
-  {
-    return {MakeErrorResult<OutputActions>(-4115, "Input Image geometry pointer was null")};
-  }
-  auto srcDims = srcImageGeomPtr->getDimensions();
-  auto srcOrigin = srcImageGeomPtr->getOrigin();
-  auto srcSpacing = srcImageGeomPtr->getSpacing();
+  const auto& srcImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
+  auto srcDims = srcImageGeom.getDimensions();
+  auto srcOrigin = srcImageGeom.getOrigin();
+  auto srcSpacing = srcImageGeom.getSpacing();
 
-  SizeVec3 destGeomDims = srcImageGeomPtr->getDimensions();
+  SizeVec3 destGeomDims = srcImageGeom.getDimensions();
   if(pPadXDim)
   {
     destGeomDims[0] += (pXMinMaxValue[0] + pXMinMaxValue[1]);
@@ -164,7 +160,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     destGeomDims[2] += (pZMinMaxValue[0] + pZMinMaxValue[1]);
   }
 
-  FloatVec3 targetOrigin = srcImageGeomPtr->getOrigin();
+  FloatVec3 targetOrigin = srcImageGeom.getOrigin();
   if(pUpdateOriginValue)
   {
     if(pPadXDim)
@@ -211,7 +207,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   // not need to manually copy these arrays to the destination image geometry
   {
     // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
-    const AttributeMatrix* selectedCellData = srcImageGeomPtr->getCellData();
+    const AttributeMatrix* selectedCellData = srcImageGeom.getCellData();
     if(selectedCellData == nullptr)
     {
       return {MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
@@ -221,7 +217,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, destGeomDims.toContainer<CreateImageGeometryAction::DimensionType>(),
                                                                                          targetOrigin.toContainer<CreateImageGeometryAction::OriginType>(),
-                                                                                         srcSpacing.toContainer<CreateImageGeometryAction::SpacingType>(), cellDataName, srcImageGeomPtr->getUnits()));
+                                                                                         srcSpacing.toContainer<CreateImageGeometryAction::SpacingType>(), cellDataName, srcImageGeom.getUnits()));
 
     // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
     // in the destination image geometry's attribute matrix
@@ -242,10 +238,10 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     cropOptionsStr.append(pPadZDim ? "Z" : "");
     preflightUpdatedValues.push_back({"Pad Dimensions", cropOptionsStr});
 
-    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
-                                                                                                                          srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
+    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(),
+                                                                                                                          srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
     preflightUpdatedValues.push_back({"Padded Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(
-                                                                        destGeomDims, srcSpacing.toContainer<CreateImageGeometryAction::SpacingType>(), targetOrigin, srcImageGeomPtr->getUnits())});
+                                                                        destGeomDims, srcSpacing.toContainer<CreateImageGeometryAction::SpacingType>(), targetOrigin, srcImageGeom.getUnits())});
   }
 
   // This section covers copying the other Attribute Matrix objects from the source geometry

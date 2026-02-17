@@ -106,18 +106,9 @@ IFilter::PreflightResult WriteGBCDGMTFileFilter::preflightImpl(const DataStructu
     pOutputFileValue = pOutputFileValue.parent_path() / fileName;
   }
 
-  if(dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-96710, fmt::format("Could not find crystal structures array at path '{}'", pCrystalStructuresArrayPathValue.toString()))};
-  }
+  const auto& gbcd = dataStructure.getDataRefAs<Float64Array>(pGBCDArrayPathValue);
 
-  const auto* gbcd = dataStructure.getDataAs<Float64Array>(pGBCDArrayPathValue);
-  if(gbcd == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-96711, fmt::format("Could not find GBCD array at path '{}'", pGBCDArrayPathValue.toString()))};
-  }
-
-  auto numEnsembles = gbcd->getNumberOfTuples();
+  auto numEnsembles = gbcd.getNumberOfTuples();
   if(pPhaseOfInterestValue >= numEnsembles)
   {
     return {MakeErrorResult<OutputActions>(-96712, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};

@@ -4,7 +4,6 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -139,11 +138,6 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   std::vector<PreflightValue> preflightUpdatedValues;
 
   std::vector<size_t> cDims(1, 1);
-  const auto* contiguousNeighborList = dataStructure.getDataAs<NeighborList<int32>>(pContiguousNeighborListArrayPathValue);
-  if(contiguousNeighborList == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-6874600, fmt::format("Could not find contiguous neighbor list of type Int32 at path '{}' ", pContiguousNeighborListArrayPathValue.toString())), {}};
-  }
 
   std::vector<size_t> tDims(1, 0);
   auto newCellFeatureAction = std::make_unique<CreateAttributeMatrixAction>(pNewCellFeatureAttributeMatrixNameValue, tDims);
@@ -152,44 +146,22 @@ IFilter::PreflightResult MergeTwinsFilter::preflightImpl(const DataStructure& da
   std::vector<DataPath> dataArrayPaths;
 
   // Cell Data
-  const auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
-  if(nullptr == featureIds)
-  {
-    return {MakeErrorResult<OutputActions>(-6874602, fmt::format("Could not find feature ids array of type Int32 at path '{}' ", pFeatureIdsArrayPathValue.toString())), {}};
-  }
-  auto cellParentIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, featureIds->getIDataStore()->getTupleShape(), cDims, pCellParentIdsArrayNameValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  auto cellParentIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, featureIds.getIDataStore()->getTupleShape(), cDims, pCellParentIdsArrayNameValue);
   resultOutputActions.value().appendAction(std::move(cellParentIdsAction));
 
   // Feature Data
-  const auto* phases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);
-  if(nullptr == phases)
-  {
-    return {MakeErrorResult<OutputActions>(-6874603, fmt::format("Could not find phases array of type Int32 at path '{}' ", pFeaturePhasesArrayPathValue.toString())), {}};
-  }
+  const auto& phases = dataStructure.getDataRefAs<Int32Array>(pFeaturePhasesArrayPathValue);
   dataArrayPaths.push_back(pFeaturePhasesArrayPathValue);
 
-  auto featureParentIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, phases->getIDataStore()->getTupleShape(), cDims, pFeatureParentIdsArrayNameValue);
+  auto featureParentIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, phases.getIDataStore()->getTupleShape(), cDims, pFeatureParentIdsArrayNameValue);
   resultOutputActions.value().appendAction(std::move(featureParentIdsAction));
 
-  cDims[0] = 4;
-  const auto* avgQuats = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
-  if(nullptr == avgQuats)
-  {
-    return {MakeErrorResult<OutputActions>(-6874602, fmt::format("Could not find average quaternions array of type Float32 at path '{}' ", pAvgQuatsArrayPathValue.toString())), {}};
-  }
   dataArrayPaths.push_back(pAvgQuatsArrayPathValue);
 
   // New Feature Data
-  cDims[0] = 1;
   auto activeAction = std::make_unique<CreateArrayAction>(DataType::boolean, tDims, cDims, pActiveArrayNameValue);
   resultOutputActions.value().appendAction(std::move(activeAction));
-
-  // Ensemble Data
-  const auto* crystalStructures = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);
-  if(nullptr == crystalStructures)
-  {
-    return {MakeErrorResult<OutputActions>(-6874602, fmt::format("Could not find crystal structures array of type UInt32 at path '{}' ", pCrystalStructuresArrayPathValue.toString())), {}};
-  }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)

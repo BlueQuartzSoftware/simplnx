@@ -140,12 +140,8 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   // Feature Data:
   // Validating the Feature Attribute Matrix and trying to find a child of the Group
   // that is an IDataArray subclass, so we can get the proper tuple shape
-  const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
-  if(featureAttrMatrix == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-12600, "Cell Feature AttributeMatrix Path is NOT an AttributeMatrix")};
-  }
-  tupleShape = featureAttrMatrix->getShape();
+  const auto& featureAttrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(featureAttrMatrixPath);
+  tupleShape = featureAttrMatrix.getShape();
 
   // Create the NumNeighbors Output Data Array in the Feature Attribute Matrix
   {

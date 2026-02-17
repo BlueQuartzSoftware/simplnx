@@ -23,10 +23,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int64 k_IncorrectInputArray = -600;
-constexpr int64 k_MissingInputArray = -601;
-constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
-constexpr int32 k_MissingGeomError = -440;
 } // namespace
 
 namespace nx::core
@@ -116,49 +112,21 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   DataPath cellFeaturesPath = gridGeomPath.createChildPath(cellFeaturesName);
   DataPath activeArrayPath = cellFeaturesPath.createChildPath(activeArrayName);
 
-  if(dataStructure.getDataAs<IGridGeometry>(gridGeomPath) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingGeomError, fmt::format("A Grid Geometry is required for {}", humanName()))};
-  }
-
-  const auto* gridGeometryPtr = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
-  auto gridDims = gridGeometryPtr->getDimensions();
+  const auto& gridGeometry = dataStructure.getDataRefAs<IGridGeometry>(gridGeomPath);
+  auto gridDims = gridGeometry.getDimensions();
   const std::vector<usize> cellTupleDims = {gridDims[2], gridDims[1], gridDims[0]};
   std::vector<DataPath> dataPaths;
 
-  std::string createdArrayFormat = "";
   // Input Array
-  if(const auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(inputDataPath))
-  {
-    createdArrayFormat = inputDataArrayPtr->getDataFormat();
-    if(inputDataArrayPtr->getNumberOfComponents() != 1)
-    {
-      return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, fmt::format("Input Array must be a an array with a single component.", inputDataArrayPtr->getNumberOfComponents()))};
-    }
-    dataPaths.push_back(inputDataPath);
-  }
-  else
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, "Input Array must be specified")};
-  }
+  const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataPath);
+  std::string createdArrayFormat = inputDataArray.getDataFormat();
+  dataPaths.push_back(inputDataPath);
 
   // Validate the GoodVoxels/Mask Array combination
   bool useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
-  DataPath goodVoxelsPath;
   if(useGoodVoxels)
   {
-    goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-
-    const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
-    if(nullptr == goodVoxelsArray)
-    {
-      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString()))};
-    }
-    if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)
-    {
-      return {
-          MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool or UInt8.", goodVoxelsPath.toString()))};
-    }
+    DataPath goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
     dataPaths.push_back(goodVoxelsPath);
   }
 

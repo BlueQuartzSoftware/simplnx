@@ -17,8 +17,6 @@ namespace nx::core
 {
 namespace
 {
-constexpr int32 k_MissingMovingVertex = -4500;
-constexpr int32 k_MissingTargetVertex = -4501;
 constexpr int32 k_BadNumIterations = -4502;
 } // namespace
 
@@ -88,21 +86,8 @@ IFilter::UniquePointer IterativeClosestPointFilter::clone() const
 IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto movingVertexPath = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
-  auto targetVertexPath = filterArgs.value<DataPath>(k_TargetVertexPath_Key);
   auto numIterations = filterArgs.value<uint64>(k_NumIterations_Key);
   auto transformArrayPath = filterArgs.value<DataPath>(k_TransformArrayPath_Key);
-
-  if(dataStructure.getDataAs<VertexGeom>(movingVertexPath) == nullptr)
-  {
-    auto ss = fmt::format("Moving Vertex Geometry not found at path: {}", movingVertexPath.toString());
-    return {MakeErrorResult<OutputActions>(k_MissingMovingVertex, ss)};
-  }
-  if(dataStructure.getDataAs<VertexGeom>(targetVertexPath) == nullptr)
-  {
-    auto ss = fmt::format("Target Vertex Geometry not found at path: {}", targetVertexPath.toString());
-    return {MakeErrorResult<OutputActions>(k_MissingTargetVertex, ss)};
-  }
 
   if(numIterations < 1)
   {

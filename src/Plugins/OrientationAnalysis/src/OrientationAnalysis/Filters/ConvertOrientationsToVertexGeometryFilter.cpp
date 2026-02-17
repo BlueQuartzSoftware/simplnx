@@ -119,18 +119,9 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  if(static_cast<int>(inputRepType) < 0 || inputRepType >= ebsdlib::orientations::Type::Unknown)
-  {
-    return {MakeErrorResult<OutputActions>(-1001, fmt::format("Input Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(inputRepType)))};
-  }
-
   auto& inputOrientationsArray = dataStructure.getDataRefAs<Float32Array>(inputOrientationsArrayPath);
 
   std::vector<usize> inputCompShape = inputOrientationsArray.getComponentShape();
-  if(inputCompShape.size() > 1)
-  {
-    return {MakeErrorResult<OutputActions>(-1002, fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
-  }
 
   using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float32>, float32>;
   auto representationNames = OrientationConverterType::GetOrientationTypeStrings<std::vector<std::string>>();

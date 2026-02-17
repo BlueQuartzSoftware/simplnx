@@ -102,12 +102,6 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(pConversionAlgorithmValue > 3)
-  {
-    return {MakeErrorResult<OutputActions>(
-        -10701, fmt::format("Conversion Algorithm choice is invalid. Valid values are 0=Luminosity, 1=Average, 2=Lightness, 3=SingleChannel. Value supplied is {}", pConversionAlgorithmValue))};
-  }
-
   if(pConversionAlgorithmValue == 3 && pColorChannelValue > 3)
   {
     return {MakeErrorResult<OutputActions>(-10701, fmt::format("Color channel selection is invalid. Valid values are 0, 1, 2. Value supplied is {}", pColorChannelValue))};
@@ -135,18 +129,14 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
   DataPath outputDataArrayPath;
   for(const auto& inputDataArrayPath : inputDataArrayPaths)
   {
-    const auto* inputArray = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
-    if(inputArray == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-10700, fmt::format("Input Data Array does not exist at DataPath {}", inputDataArrayPath.toString()))};
-    }
+    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
     std::vector<std::string> inputPathVector = inputDataArrayPath.getPathVector();
     std::string inputArrayName = inputDataArrayPath.getTargetName();
     std::string outputArrayName = fmt::format("{}{}", outputArrayPrefix, inputArrayName);
     inputPathVector.back() = outputArrayName;
     outputDataArrayPath = DataPath(inputPathVector);
     resultOutputActions.value().appendAction(
-        std::make_unique<CreateArrayAction>(nx::core::DataType::uint8, inputArray->getIDataStoreRef().getTupleShape(), std::vector<usize>(1, 1), outputDataArrayPath));
+        std::make_unique<CreateArrayAction>(nx::core::DataType::uint8, inputArray.getIDataStoreRef().getTupleShape(), std::vector<usize>(1, 1), outputDataArrayPath));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()

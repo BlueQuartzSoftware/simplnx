@@ -26,7 +26,6 @@ using PhasesArrayType = Int32Array;
 namespace
 {
 constexpr int32 k_BadMinAllowedFeatureSize = -5555;
-constexpr int32 k_BadNumCellsPath = -5556;
 constexpr int32 k_ParentlessPathError = -5557;
 
 } // namespace
@@ -114,16 +113,6 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
     return {MakeErrorResult<OutputActions>(-k_BadMinAllowedFeatureSize, ss)};
   }
 
-  const auto* featureIdsPtr = dataStructure.getDataAs<FeatureIdsArrayType>(featureIdsPath);
-  if(featureIdsPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_BadNumCellsPath, "FeatureIds not provided as an Int32 Array.")};
-  }
-  const auto* numCellsPtr = dataStructure.getDataAs<NumCellsArrayType>(featureNumCellsPath);
-  if(numCellsPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_BadNumCellsPath, "Num Cells not provided as an Int32 Array.")};
-  }
   dataArrayPaths.push_back(featureNumCellsPath);
 
   if(applyToSinglePhase)

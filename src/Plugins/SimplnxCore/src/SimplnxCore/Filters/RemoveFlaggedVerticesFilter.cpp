@@ -27,8 +27,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_VertexGeomNotFound = -277;
-
 struct RemoveFlaggedVerticesFunctor
 {
   // copy data to masked geometry
@@ -125,24 +123,13 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
 
   std::vector<DataPath> dataArrayPaths;
 
-  const auto* inputVertexGeomPtr = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
-  if(inputVertexGeomPtr == nullptr)
-  {
-    const std::string errorMsg = fmt::format("Vertex Geometry not found at path: '{}'", vertexGeomPath.toString());
-    return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
-  }
-  auto verticesId = inputVertexGeomPtr->getSharedVertexDataArrayId();
-  const auto* inputSharedVertexPtr = dataStructure.getDataAs<Float32Array>(verticesId);
-  if(inputSharedVertexPtr == nullptr)
-  {
-    const std::string errorMsg = fmt::format("Vertex Geometry does not have a vertex list");
-    return {MakeErrorResult<OutputActions>(::k_VertexGeomNotFound, errorMsg)};
-  }
+  const auto& inputVertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
+  auto verticesId = inputVertexGeom.getSharedVertexDataArrayId();
 
-  const std::string vertexAttrMatName = inputVertexGeomPtr->getVertexAttributeMatrixDataPath().getTargetName();
+  const std::string vertexAttrMatName = inputVertexGeom.getVertexAttributeMatrixDataPath().getTargetName();
 
   // Create vertex geometry
-  const uint64 numVertices = inputVertexGeomPtr->getNumberOfVertices();
+  const uint64 numVertices = inputVertexGeom.getNumberOfVertices();
   auto reduced = std::make_unique<CreateVertexGeometryAction>(reducedVertexPath, numVertices, vertexAttrMatName, VertexGeom::k_SharedVertexListName);
   const DataPath reducedVertexDataPath = reduced->getVertexDataPath();
   resultOutputActions.value().appendAction(std::move(reduced));
@@ -161,7 +148,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
   // not need to manually copy these arrays to the destination image geometry
   {
     // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
-    const AttributeMatrix* selectedCellDataPtr = inputVertexGeomPtr->getVertexAttributeMatrix();
+    const AttributeMatrix* selectedCellDataPtr = inputVertexGeom.getVertexAttributeMatrix();
     if(selectedCellDataPtr == nullptr)
     {
       return {MakeErrorResult<OutputActions>(-5751, fmt::format("'{}' must have cell data attribute matrix", vertexGeomPath.toString()))};

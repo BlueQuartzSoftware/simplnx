@@ -102,32 +102,22 @@ IFilter::PreflightResult ComputeVertexToTriangleDistancesFilter::preflightImpl(c
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto* vertexGeomPtr = dataStructure.getDataAs<VertexGeom>(pVertexGeometryDataPath);
-  if(vertexGeomPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-4530, fmt::format("The DataPath {} is not a valid VertexGeometry.", pVertexGeometryDataPath.toString()))};
-  }
+  const auto& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(pVertexGeometryDataPath);
+  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
 
-  auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  if(triangleGeomPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-4531, fmt::format("The DataPath {} is not a valid TriangleGeometry.", pTriangleGeometryDataPath.toString()))};
-  }
+  const DataPath vertexDataPath = pVertexGeometryDataPath.createChildPath(vertexGeom.getVertexAttributeMatrix()->getName());
 
-  const DataPath vertexDataPath = pVertexGeometryDataPath.createChildPath(vertexGeomPtr->getVertexAttributeMatrix()->getName());
-
-  auto createDistancesArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{vertexGeomPtr->getNumberOfVertices()}, std::vector<usize>{1},
-                                                                        vertexDataPath.createChildPath(pDistancesDataName));
+  auto createDistancesArrayAction =
+      std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{vertexGeom.getNumberOfVertices()}, std::vector<usize>{1}, vertexDataPath.createChildPath(pDistancesDataName));
   resultOutputActions.value().appendAction(std::move(createDistancesArrayAction));
 
-  auto createClosestTriangleIdArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int64, std::vector<usize>{vertexGeomPtr->getNumberOfVertices()}, std::vector<usize>{1},
+  auto createClosestTriangleIdArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int64, std::vector<usize>{vertexGeom.getNumberOfVertices()}, std::vector<usize>{1},
                                                                                 vertexDataPath.createChildPath(pClosestTriangleIdDataName));
   resultOutputActions.value().appendAction(std::move(createClosestTriangleIdArrayAction));
 
   // Create temp array then deferred delete
   auto tempTriBoundsDataPath = DataPath({::k_TriangleBounds});
-  auto createTriBoundsArrayAction =
-      std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{6}, tempTriBoundsDataPath);
+  auto createTriBoundsArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, std::vector<usize>{triangleGeom.getNumberOfFaces()}, std::vector<usize>{6}, tempTriBoundsDataPath);
   resultOutputActions.value().appendAction(std::move(createTriBoundsArrayAction));
 
   auto removeTempArrayAction = std::make_unique<DeleteDataAction>(tempTriBoundsDataPath);

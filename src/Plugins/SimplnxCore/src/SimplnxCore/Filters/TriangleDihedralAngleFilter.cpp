@@ -168,13 +168,9 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  if(triangleGeom == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-9860, fmt::format("Cannot find the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
-  }
+  const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
   // Get the Face AttributeMatrix from the Geometry (It should have been set at construction of the Triangle Geometry)
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
+  const AttributeMatrix* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
   if(faceAttributeMatrix == nullptr)
   {
     return {MakeErrorResult<OutputActions>(-9861, fmt::format("Cannot find the face data Attribute Matrix for the selected Triangle Geometry at path '{}'", pTriangleGeometryDataPath.toString()))};
@@ -184,7 +180,7 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
   {
     DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pMinDihedralAnglesName);
     // Create the face areas DataArray Action and store it into the resultOutputActions
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom.getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

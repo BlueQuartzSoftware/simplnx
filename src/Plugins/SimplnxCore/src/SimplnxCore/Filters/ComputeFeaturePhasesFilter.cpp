@@ -88,18 +88,10 @@ IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStr
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  if(dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-4630, fmt::format("Could not find selected feature ids array at path '{}'", pFeatureIdsArrayPathValue.toString()))};
-  }
-  const auto* cellFeatData = dataStructure.getDataAs<AttributeMatrix>(pCellFeatureAMPathValue);
-  if(cellFeatData == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-4631, fmt::format("Could not find selected cell features Attribute Matrix at path '{}'", pCellFeatureAMPathValue.toString()))};
-  }
+  const auto& cellFeatData = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAMPathValue);
 
   {
-    auto createFeaturePhasesAction = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatData->getShape(), std::vector<usize>{1}, pFeaturePhasesArrayPathValue);
+    auto createFeaturePhasesAction = std::make_unique<CreateArrayAction>(DataType::int32, cellFeatData.getShape(), std::vector<usize>{1}, pFeaturePhasesArrayPathValue);
     resultOutputActions.value().appendAction(std::move(createFeaturePhasesAction));
   }
 

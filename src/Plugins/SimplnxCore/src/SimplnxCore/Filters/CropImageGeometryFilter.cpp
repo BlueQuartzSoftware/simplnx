@@ -492,16 +492,12 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
   {
     ignorePaths.push_back(cellFeatureAmPath);
 
-    const auto* srcCellFeatureData = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAmPath);
-    if(nullptr == srcCellFeatureData)
-    {
-      return {MakeErrorResult<OutputActions>(-55502, fmt::format("Could not find the selected Attribute Matrix '{}'", cellFeatureAmPath.toString())), preflightUpdatedValues};
-    }
+    const auto& srcCellFeatureData = dataStructure.getDataRefAs<AttributeMatrix>(cellFeatureAmPath);
     std::string warningMsg;
     DataPath destCellFeatureAmPath = destImagePath.createChildPath(cellFeatureAmPath.getTargetName());
-    auto tDims = srcCellFeatureData->getShape();
+    auto tDims = srcCellFeatureData.getShape();
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
-    for(const auto& [identifier, object] : *srcCellFeatureData)
+    for(const auto& [identifier, object] : srcCellFeatureData)
     {
       if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
       {

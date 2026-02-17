@@ -105,18 +105,9 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-34640, fmt::format("Could not find crystal structures array at path '{}'", pCrystalStructuresArrayPathValue.toString()))};
-  }
+  const auto& gbcd = dataStructure.getDataRefAs<Float64Array>(pGBCDArrayPathValue);
 
-  const auto gbcd = dataStructure.getDataAs<Float64Array>(pGBCDArrayPathValue);
-  if(gbcd == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-34641, fmt::format("Could not find GBCD array at path '{}'", pGBCDArrayPathValue.toString()))};
-  }
-
-  auto numEnsembles = gbcd->getNumberOfTuples();
+  auto numEnsembles = gbcd.getNumberOfTuples();
   if(pPhaseOfInterestValue >= numEnsembles)
   {
     return {MakeErrorResult<OutputActions>(-34642, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
