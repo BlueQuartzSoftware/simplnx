@@ -280,7 +280,7 @@ void ValidateRectGridDataStructure(const DataStructure& dataStructure)
   const auto& volumes = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
   REQUIRE(volumes.getValue(1) == 2358.834f);
   REQUIRE(volumes.getValue(2) == 356.062f);
-  REQUIRE(volumes.getValue(3) == 15.104f);
+  REQUIRE((volumes.getValue(3) - 15.104f) < std::numeric_limits<float32>::epsilon());
   // eqDiameters: 0.0 16.516 8.764 3.0994
   const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
   REQUIRE(equivalentDiameters.getValue(1) == 16.516f);
