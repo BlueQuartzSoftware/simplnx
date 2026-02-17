@@ -235,7 +235,7 @@ DataStructure CreateRectGridDataStructure()
   // numElements: 0 39 15 10
   // volumes: 0.0 2358.834 352.462 15.104
   // eqDiameters: 0.0 16.516 8.764 3.0994
-  const std::array<uint8, 125> featureIdsArray = {
+  const std::array<uint8, 64> featureIdsArray = {
     1, 2, 2, 2,
     1, 1, 1, 1,
     1, 1, 1, 2,

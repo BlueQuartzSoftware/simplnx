@@ -201,6 +201,8 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
   std::vector<float64> featureVolumes(numFeatures, 0.0);
+  // Needed for Kahan summation of volumes
+  std::vector<float64> featureCompensators(numFeatures, 0.0);
 
   msgHelper.sendMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
   // Count and store the number of voxels in each feature
@@ -216,8 +218,19 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
     const int32 voxelFeatureId = featureIds.getValue(voxelIdx);
     featureVoxelCounts[featureIds.getValue(voxelIdx)]++;
 
-    // Use summation to determine overall volume
-    featureVolumes[voxelFeatureId] += static_cast<float64>(elemSizes.getValue(voxelIdx));
+    // Use Kahan summation to determine overall volume
+
+    // Attempt to recover low-order into value, first instance is 0
+    float64 value = static_cast<float64>(elemSizes.getValue(voxelIdx)) - featureCompensators[voxelFeatureId];
+
+    // low-order may be lost
+    float64 volSum = featureVolumes[voxelFeatureId] + value;
+
+    // recover and cache low-order
+    featureCompensators[voxelFeatureId] = (volSum - featureVolumes[voxelFeatureId]) - value;
+
+    // store volumes
+    featureVolumes[voxelFeatureId] = volSum;
   }
 
   msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating ESD...");
