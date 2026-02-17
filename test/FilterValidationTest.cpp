@@ -268,3 +268,59 @@ TEST_CASE("nx::core::Test Filter Name", "[simplnx][Filter]")
   }
   REQUIRE(output.str().empty() == true);
 }
+
+TEST_CASE("nx::core::Test Filter Version", "[simplnx][Filter]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* filterListPtr = Application::Instance()->getFilterList();
+  REQUIRE(filterListPtr->size() > 0);
+  const auto pluginListPtr = Application::Instance()->getPluginList();
+  // Loop on each Plugin
+  for(const auto& plugin : pluginListPtr)
+  {
+    const std::string plugName = plugin->getName();
+
+    const auto& pluginFilterHandles = plugin->getFilterHandles();
+
+    // Loop on each Filter
+    for(const auto& filterHandle : pluginFilterHandles)
+    {
+      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+      const int filterVersion = filter->parametersVersion();
+
+      REQUIRE(filterVersion >= 1);
+    }
+  }
+
+  Application::DeleteInstance();
+  REQUIRE(Application::Instance() == nullptr);
+}
+
+TEST_CASE("nx::core::Test Filter Clone", "[simplnx][Filter]")
+{
+  UnitTest::LoadPlugins();
+
+  auto* filterListPtr = Application::Instance()->getFilterList();
+  REQUIRE(filterListPtr->size() > 0);
+  const auto pluginListPtr = Application::Instance()->getPluginList();
+  // Loop on each Plugin
+  for(const auto& plugin : pluginListPtr)
+  {
+    const std::string plugName = plugin->getName();
+
+    const auto& pluginFilterHandles = plugin->getFilterHandles();
+
+    // Loop on each Filter
+    for(const auto& filterHandle : pluginFilterHandles)
+    {
+      IFilter::UniquePointer filter = filterListPtr->createFilter(filterHandle);
+      IFilter::UniquePointer clone = filter->clone();
+
+      REQUIRE(filter->uuid() == clone->uuid());
+    }
+  }
+
+  Application::DeleteInstance();
+  REQUIRE(Application::Instance() == nullptr);
+}
