@@ -12,9 +12,9 @@ This **Filter** determines the **Ensemble** of each **Feature** by querying the 
 
 ## Example Pipelines
 
-+ (10) SmallIN100 Full Reconstruction
++ (02) Small IN100 Full Reconstruction
 + INL Export
-+ (06) SmallIN100 Postsegmentation Processing
+
 
 ## License & Copyright
 

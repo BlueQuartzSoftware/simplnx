@@ -12,7 +12,7 @@ This **Filter** computes the 5D grain boundary character distribution (GBCD) for
 
 ## Example Pipelines
 
-+ (04) SmallIN100 GBCD
++ (08) Small IN100 GBCD
 
 ## License & Copyright
 

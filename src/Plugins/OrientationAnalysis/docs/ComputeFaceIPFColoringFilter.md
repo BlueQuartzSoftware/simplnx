@@ -18,7 +18,7 @@ This **Filter** generates a pair of colors for each **Triangle** in a **Triangle
 
 ## Example Pipelines
 
-+ (03) SmallIN100 Mesh Statistics
++ (07) Small IN100 Mesh Statistics
 
 ## License & Copyright
 

@@ -54,8 +54,7 @@ From the above before and after images you can see that this filter can help mod
 
 ## Example Pipelines
 
-+ (10) SmallIN100 Full Reconstruction
-+ (04) SmallIN100 Presegmentation Processing
++ (02) Small IN100 Full Reconstruction
 + INL Export
 + 04_Steiner Compact
 

@@ -12,7 +12,7 @@ This **Filter** computes the minimum dihedral angle of each **Triangle** in a **
 
 ## Example Pipelines
 
-+ (03) SmallIN100 Mesh Statistics
++ (07) Small IN100 Mesh Statistics
 + Triangle_Face_Data_Demo.d3dpipeline
 
 ## License & Copyright

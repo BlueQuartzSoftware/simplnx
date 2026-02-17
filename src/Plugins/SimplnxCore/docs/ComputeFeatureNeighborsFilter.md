@@ -19,12 +19,12 @@ While performing the above steps, the number of neighboring **Cells** with a dif
 
 ## Example Pipelines
 
-+ (01) SmallIN100 Morphological Statistics
-+ (10) SmallIN100 Full Reconstruction
++ (03) Small IN100 Morphological Statistics
++ (02) Small IN100 Full Reconstruction
 + (02) Single Hexagonal Phase Equiaxed
 + (03) Single Cubic Phase Rolled
 + (05) Composite
-+ (06) SmallIN100 Postsegmentation Processing
+
 + (01) Single Cubic Phase Equiaxed
 + (04) Two Phase Cubic Hexagonal Particles Equiaxed
 + (06) SmallIN100 Synthetic

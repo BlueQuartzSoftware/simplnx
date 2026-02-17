@@ -50,7 +50,7 @@ By modifying the cell level data, any feature data that was previously computed 
 
 ## Example Pipelines
 
-+ (08) SmallIN100 Full Reconstruction
++ (02) SmallIN100 Full Reconstruction
 
 ## License & Copyright
 

@@ -30,8 +30,7 @@ IPF Legends for most all of the Laue classes can be found in the Data/Orientatio
 
 ## Example Pipelines
 
-+ (10) SmallIN100 Full Reconstruction
-+ (04) SmallIN100 Presegmentation Processing
++ (02) Small IN100 Full Reconstruction
 + (02) Single Hexagonal Phase Equiaxed
 + (03) Single Cubic Phase Rolled
 + INL Export
@@ -42,7 +41,6 @@ IPF Legends for most all of the Laue classes can be found in the Data/Orientatio
 + Edax IPF Colors
 + (01) Single Cubic Phase Equiaxed
 + (04) Two Phase Cubic Hexagonal Particles Equiaxed
-+ (03) SmallIN100 Alignment
 + (06) SmallIN100 Synthetic
 
 ## License & Copyright

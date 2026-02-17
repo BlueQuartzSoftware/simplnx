@@ -31,7 +31,7 @@ This **Filter** calculates the second-order moments of each **Feature** in order
 
 ## Example Pipelines
 
-+ (01) SmallIN100 Morphological Statistics
++ (03) Small IN100 Morphological Statistics
 + (06) SmallIN100 Synthetic
 
 ## License & Copyright

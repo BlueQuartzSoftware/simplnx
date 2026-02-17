@@ -39,7 +39,7 @@ Because even a single slice has *volume* according to DREAM3D-NX, results will s
 
 ## Example Pipelines
 
-+ (01) SmallIN100 Morphological Statistics
++ (03) Small IN100 Morphological Statistics
 
 ## License & Copyright
 

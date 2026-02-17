@@ -29,10 +29,9 @@ To illustrate why this is think about an image geometry with the dimensions of `
 
 ## Example Pipelines
 
-+ (01) SmallIN100 Morphological Statistics
-+ (10) SmallIN100 Full Reconstruction
++ (03) Small IN100 Morphological Statistics
++ (02) Small IN100 Full Reconstruction
 + InsertTransformationPhase
-+ (06) SmallIN100 Postsegmentation Processing
 + (06) SmallIN100 Synthetic
 + (09) Image Segmentation
 

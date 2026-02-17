@@ -46,9 +46,8 @@ is to still use the 6 face neighbors ("Face Only") in order to stay consistent w
 
 ## Example Pipelines
 
-+ (10) SmallIN100 Full Reconstruction
++ (02) Small IN100 Full Reconstruction
 + INL Export
-+ (05) SmallIN100 Segmentation
 + 04_Steiner Compact
 
 ## License & Copyright
