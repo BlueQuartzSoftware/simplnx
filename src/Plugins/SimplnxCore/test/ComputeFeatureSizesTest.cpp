@@ -208,7 +208,7 @@ DataStructure CreateRectGridDataStructure()
   // yBounds -> 0.0f, 0.1f, 1.0f, 10.0f, 100.0f
   Float32Array* yBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
   yBoundsArray->setValue(0, 0.0f);
-  yBoundsArray->setValue(1, 0.9f);
+  yBoundsArray->setValue(1, 0.1f);
   yBoundsArray->setValue(2, 1.0f);
   yBoundsArray->setValue(3, 10.0f);
   yBoundsArray->setValue(4, 100.0f);
