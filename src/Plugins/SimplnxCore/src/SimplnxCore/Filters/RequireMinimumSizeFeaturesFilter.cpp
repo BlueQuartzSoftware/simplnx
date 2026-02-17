@@ -152,6 +152,10 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
     return result;
   }
 
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), {});
+
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

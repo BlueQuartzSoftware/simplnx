@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <random>
@@ -137,6 +138,10 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({pSeedArrayNameValue}));
     resultOutputActions.value().appendAction(std::move(createAction));
   }
+
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imgGeomPtr->getCellDataPath(), {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

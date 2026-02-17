@@ -322,6 +322,12 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
+  // Inform users that the following arrays are going to be modified in place
+  for(const DataPath& path : cellArrayPaths)
+  {
+    nx::core::MarkDataPathModified(dataStructure, resultOutputActions, path);
+  }
+
   return {std::move(resultOutputActions)};
 }
 

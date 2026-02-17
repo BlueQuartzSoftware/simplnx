@@ -8,6 +8,7 @@
 #include "simplnx/Parameters/DataPathSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -96,7 +97,14 @@ IFilter::UniquePointer LaplacianSmoothingFilter::clone() const
 IFilter::PreflightResult LaplacianSmoothingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  return {};
+  auto pTriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
+
+  nx::core::Result<OutputActions> resultOutputActions;
+
+  // Inform users that the geometry vertex coordinates are going to be modified in place
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriangleGeomPath, {});
+
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

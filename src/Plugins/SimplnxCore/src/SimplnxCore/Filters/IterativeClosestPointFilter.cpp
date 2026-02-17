@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -86,6 +87,7 @@ IFilter::UniquePointer IterativeClosestPointFilter::clone() const
 IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
+  auto movingVertexPath = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
   auto numIterations = filterArgs.value<uint64>(k_NumIterations_Key);
   auto transformArrayPath = filterArgs.value<DataPath>(k_TransformArrayPath_Key);
 
@@ -97,10 +99,17 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
 
   auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformArrayPath);
 
-  OutputActions actions;
-  actions.appendAction(std::move(action));
+  nx::core::Result<OutputActions> resultOutputActions;
+  resultOutputActions.value().appendAction(std::move(action));
 
-  return {std::move(actions)};
+  // If the transformation will be applied, the moving geometry's vertices are modified in place
+  auto applyTransformation = filterArgs.value<bool>(k_ApplyTransformation_Key);
+  if(applyTransformation)
+  {
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, movingVertexPath, {});
+  }
+
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
@@ -132,7 +133,12 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
                                                                                  __LINE__, removeValueString, fmt::underlying(inputDataObject->getDataObjectType())));
   }
 
-  return {};
+  nx::core::Result<OutputActions> resultOutputActions;
+
+  // Inform users that the following arrays are going to be modified in place
+  nx::core::MarkDataPathModified(dataStructure, resultOutputActions, selectedArrayPath);
+
+  return {std::move(resultOutputActions)};
 }
 
 Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,

@@ -11,6 +11,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -106,6 +107,12 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
                                            "level data should be rerun to ensure accurate final results from your pipeline.";
   preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
   resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
+
+  // Inform users that the following arrays are going to be modified in place
+  // Cell Data is going to be modified
+  auto featureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  auto ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), ignoredDataArrayPaths);
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

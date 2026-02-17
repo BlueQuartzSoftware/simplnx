@@ -259,6 +259,9 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
   }
   }
 
+  // Inform users that the following arrays are going to be modified in place
+  nx::core::MarkDataPathModified(dataStructure, resultOutputActions, filterArgs.value<DataPath>(k_ArrayPath_Key));
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 

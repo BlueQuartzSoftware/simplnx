@@ -9,6 +9,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -84,7 +85,15 @@ IFilter::UniquePointer ErodeDilateMaskFilter::clone() const
 IFilter::PreflightResult ErodeDilateMaskFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  return {};
+  auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+
+  nx::core::Result<OutputActions> resultOutputActions;
+
+  // Inform users that the following arrays are going to be modified in place
+  // Mask array is going to be modified
+  nx::core::MarkDataPathModified(dataStructure, resultOutputActions, pMaskArrayPathValue);
+
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

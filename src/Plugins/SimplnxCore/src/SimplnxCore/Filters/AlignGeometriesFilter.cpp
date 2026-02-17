@@ -6,6 +6,7 @@
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <string>
@@ -75,8 +76,13 @@ IFilter::UniquePointer AlignGeometriesFilter::clone() const
 IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  OutputActions actions;
-  return {std::move(actions)};
+  nx::core::Result<OutputActions> resultOutputActions;
+
+  // Inform users that the moving geometry is going to be modified in place
+  auto pMovingGeomPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pMovingGeomPath, {});
+
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
