@@ -1,5 +1,4 @@
 __pycache__/
-.claude/
 .cproject
 .ctags
 .floo
@@ -31,3 +30,6 @@ DREAM3D_Data
 test_data/
 vcpkg_installed/
 Workspace
+/CLAUDE.md
+TODO.md
+/.claude/settings.local.json

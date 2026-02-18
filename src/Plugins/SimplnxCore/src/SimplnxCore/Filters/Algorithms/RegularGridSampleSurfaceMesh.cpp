@@ -1,110 +1,138 @@
 #include "RegularGridSampleSurfaceMesh.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/SliceTriangleGeometry.hpp"
-
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
-#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
+
+#include <algorithm>
+#include <vector>
 
 using namespace nx::core;
 
 namespace
 {
-
-// ----------------------------------------------------------------------------
-//
-inline std::array<nx::core::Point3Df, 2> GetEdgeCoordinates(usize edgeId, const INodeGeometry0D::SharedVertexList& verts, const INodeGeometry1D::SharedEdgeList& edges)
+// Represents a 2D edge segment in the XY plane produced by slicing a triangle at a Z-plane.
+struct SliceEdge
 {
-  usize v0Idx = edges[edgeId * 2];
-  usize v1Idx = edges[edgeId * 2 + 1];
-  return {Point3Df{verts[v0Idx * 3], verts[v0Idx * 3 + 1], verts[v0Idx * 3 + 2]}, Point3Df{verts[v1Idx * 3], verts[v1Idx * 3 + 1], verts[v1Idx * 3 + 2]}};
-}
+  float32 x1, y1;  // First endpoint
+  float32 x2, y2;  // Second endpoint
+  usize faceIndex; // Index of the triangle face that produced this edge
+};
 
-// ----------------------------------------------------------------------------
-// Helper function to check if a point lies inside a polygon using ray-casting
-bool pointInPolygon(const EdgeGeom& edgeGeom, const std::vector<usize>& edgeIndices, const Point3Df& point, const INodeGeometry0D::SharedVertexList& verts,
-                    const INodeGeometry1D::SharedEdgeList& edges)
+// Represents a scanline-edge intersection used for sorting and filling.
+struct ScanlineIntersection
 {
-  size_t intersections = 0;
-  size_t numEdges = edgeIndices.size();
-  std::array<nx::core::Point3Df, 2> edgeVertices;
+  float32 x;       // X coordinate of the intersection
+  usize faceIndex; // Face that was crossed
+};
 
-  for(size_t i = 0; i < numEdges; ++i)
+// -----------------------------------------------------------------------------
+// Compute the intersection of a triangle with a horizontal Z-plane.
+// Uses a half-open interval (z >= zPlane is "above") to avoid double-counting
+// at shared vertices and edges.
+// Returns true if a valid (non-degenerate) edge was produced.
+// -----------------------------------------------------------------------------
+bool sliceTriangleAtZ(const std::array<Point3Df, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
+{
+  // Classify each vertex: true = above or on the plane, false = below
+  std::array<bool, 3> above = {verts[0][2] >= zPlane, verts[1][2] >= zPlane, verts[2][2] >= zPlane};
+
+  // If all vertices are on the same side, no intersection
+  if(above[0] == above[1] && above[1] == above[2])
   {
+    return false;
+  }
 
-    edgeVertices = GetEdgeCoordinates(edgeIndices[i], verts, edges);
-    // edgeGeom.getEdgeCoordinates(edgeIndices[i], edgeVertices);
+  // Find the two points where triangle edges cross the Z-plane
+  float32 pts[2][2];
+  int32 numPts = 0;
 
-    Point3Df& p1 = edgeVertices[0];
-    p1[2] = 0.0f; // Force down to the zero plane
-    Point3Df& p2 = edgeVertices[1];
-    p2[2] = 0.0f; // Force down to the zero plane
-
-    if(p1[1] > p2[1])
+  for(int32 i = 0; i < 3 && numPts < 2; i++)
+  {
+    int32 j = (i + 1) % 3;
+    if(above[i] != above[j])
     {
-      std::swap(p1, p2);
-    }
-
-    // Check if the ray intersects the edge
-    if(point[1] > p1[1] && point[1] <= p2[1] && point[0] <= std::max(p1[0], p2[0]))
-    {
-      float xIntersection = (point[1] - p1[1]) * (p2[0] - p1[0]) / (p2[1] - p1[1]) + p1[0];
-      if(point[0] <= xIntersection)
-      {
-        intersections++;
-      }
+      float32 dz = verts[j][2] - verts[i][2];
+      float32 t = (zPlane - verts[i][2]) / dz;
+      pts[numPts][0] = verts[i][0] + t * (verts[j][0] - verts[i][0]);
+      pts[numPts][1] = verts[i][1] + t * (verts[j][1] - verts[i][1]);
+      numPts++;
     }
   }
-  return (intersections % 2) == 1;
+
+  if(numPts != 2)
+  {
+    return false;
+  }
+
+  // Skip degenerate zero-length edges (vertex exactly on the plane)
+  float32 dx = pts[1][0] - pts[0][0];
+  float32 dy = pts[1][1] - pts[0][1];
+  if(dx * dx + dy * dy < 1e-12f)
+  {
+    return false;
+  }
+
+  outX1 = pts[0][0];
+  outY1 = pts[0][1];
+  outX2 = pts[1][0];
+  outY2 = pts[1][1];
+  return true;
 }
 
-// ----------------------------------------------------------------------------
-//
-class SampleSurfaceMeshSliceImpl
+struct ZSliceFunctor
 {
-public:
-  SampleSurfaceMeshSliceImpl() = delete;
-  SampleSurfaceMeshSliceImpl(const SampleSurfaceMeshSliceImpl&) = default;
-
-  SampleSurfaceMeshSliceImpl(RegularGridSampleSurfaceMesh* filterAlg, const EdgeGeom& edgeGeom, int32 currentSliceId, usize imageGeomIdx, const ImageGeom& imageGeom, const Int32Array& sliceIds,
-                             Int32Array& featureIds, const std::atomic_bool& shouldCancel)
-  : m_FilterAlg(filterAlg)
-  , m_EdgeGeom(edgeGeom)
-  , m_CurrentSliceId(currentSliceId)
-  , m_ImageGeomIdx(imageGeomIdx)
-  , m_ImageGeom(imageGeom)
-  , m_SliceIds(sliceIds)
-  , m_FeatureIds(featureIds)
-  , m_ShouldCancel(shouldCancel)
+  template <typename T>
+  void operator()(DataStructure& dataStructure, const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler, const ImageGeom& imageGeom, const TriangleGeom& triangleGeom,
+                  const DataPath& faceLabelsArrayPath, const DataPath& featureIdsDataPath)
   {
-  }
-  SampleSurfaceMeshSliceImpl(SampleSurfaceMeshSliceImpl&&) = default;                // Move Constructor Not Implemented
-  SampleSurfaceMeshSliceImpl& operator=(const SampleSurfaceMeshSliceImpl&) = delete; // Copy Assignment Not Implemented
-  SampleSurfaceMeshSliceImpl& operator=(SampleSurfaceMeshSliceImpl&&) = delete;      // Move Assignment Not Implemented
+    // -------------------------------------------------------------------------
+    // 1. Get references to input data
+    // -------------------------------------------------------------------------
+    SizeVec3 dims = imageGeom.getDimensions();
+    FloatVec3 origin = imageGeom.getOrigin();
+    FloatVec3 spacing = imageGeom.getSpacing();
 
-  ~SampleSurfaceMeshSliceImpl() = default;
+    usize xDim = dims[0];
+    usize yDim = dims[1];
+    usize zDim = dims[2];
+    usize cellsPerSlice = xDim * yDim;
+    usize numTriangles = triangleGeom.getNumberOfFaces();
+    const auto& verticesRef = triangleGeom.getVertices()->getDataStoreRef();
+    const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
 
-  void operator()() const
-  {
-    usize numEdges = m_EdgeGeom.getNumberOfEdges();
-    std::vector<usize> edgeIndices;
-    edgeIndices.reserve(1024); // Reserve some space in the vector. This is just a guess.
-    SizeVec3 dimensions = m_ImageGeom.getDimensions();
-    size_t cellsPerSlice = dimensions[0] * dimensions[1];
-    const INodeGeometry0D::SharedVertexList& verts = m_EdgeGeom.getVerticesRef();
-    const INodeGeometry1D::SharedEdgeList& edges = m_EdgeGeom.getEdgesRef();
+    using DataArrayType = DataArray<T>;
+    const auto& faceLabelsArray = dataStructure.getDataRefAs<DataArrayType>(faceLabelsArrayPath);
+    usize numFaceLabelComps = faceLabelsArray.getNumberOfComponents();
+    const auto& faceLabelsRef = faceLabelsArray.getDataStoreRef();
 
-    // Loop over all edges and find the edges that are just for the current Slice Id
-    for(usize edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)
+    auto& featureIds = dataStructure.getDataRefAs<DataArrayType>(featureIdsDataPath);
+    auto& featureIdsRef = featureIds.getDataStoreRef();
+    // -------------------------------------------------------------------------
+    // 2. Precompute per-triangle Z-range for fast rejection
+    // -------------------------------------------------------------------------
+    m_MessageHandler({IFilter::Message::Type::Info, "Preprocessing triangle data..."});
+
+    struct TriangleZRange
     {
-      int32 sliceIndex = m_SliceIds[edgeIdx];
-      if(m_CurrentSliceId == sliceIndex)
-      {
-        edgeIndices.push_back(edgeIdx);
-      }
+      float32 zMin = 0.0f;
+      float32 zMax = 0.0f;
+    };
+
+    std::vector<TriangleZRange> triZRanges(numTriangles);
+    for(usize t = 0; t < numTriangles; t++)
+    {
+      usize v0Idx = facesRef[t * 3];
+      usize v1Idx = facesRef[t * 3 + 1];
+      usize v2Idx = facesRef[t * 3 + 2];
+
+      float32 z0 = verticesRef[v0Idx * 3 + 2];
+      float32 z1 = verticesRef[v1Idx * 3 + 2];
+      float32 z2 = verticesRef[v2Idx * 3 + 2];
+
+      triZRanges[t].zMin = std::min({z0, z1, z2});
+      triZRanges[t].zMax = std::max({z0, z1, z2});
     }
 
     if(m_ShouldCancel)
@@ -112,40 +140,156 @@ public:
       return;
     }
 
-    std::vector<int32> featureIds(cellsPerSlice, 0);
+    // -------------------------------------------------------------------------
+    // 3. Process each Z-slice using scanline rasterization
+    // -------------------------------------------------------------------------
+    m_MessageHandler({IFilter::Message::Type::Info, "Sampling surface mesh using scanline rasterization..."});
 
-    // Now that we have the edges that are on this slice, iterate over all
-    // voxels on this slice
-    for(size_t planeIdx = 0; planeIdx < cellsPerSlice; planeIdx++)
+    // Reusable buffers to avoid per-slice allocations
+    std::vector<SliceEdge> edges;
+    std::vector<ScanlineIntersection> intersections;
+
+    for(usize z = 0; z < zDim; z++)
     {
-      Point3Df imagePoint = m_ImageGeom.getCoordsf(m_ImageGeomIdx + planeIdx);
-      imagePoint[2] = 0.0f; // Force this down to the zero plane.
-
-      if(pointInPolygon(m_EdgeGeom, edgeIndices, imagePoint, verts, edges))
-      {
-        // featureIds[m_ImageGeomIdx + planeIdx] = 1;
-        featureIds[planeIdx] = 1; // Parallel version
-      }
-
       if(m_ShouldCancel)
       {
-        return;
+        break;
+      }
+
+      if(z % 10 == 0)
+      {
+        m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Processing Z-slice {}/{}", z, zDim)});
+      }
+
+      float32 zCoord = origin[2] + (static_cast<float32>(z) + 0.5f) * spacing[2];
+
+      // ----- Find all triangles spanning this Z and compute 2D edges -----
+      edges.clear();
+      for(usize t = 0; t < numTriangles; t++)
+      {
+        const auto& zRange = triZRanges[t];
+        if(zRange.zMax < zCoord || zRange.zMin > zCoord)
+        {
+          continue;
+        }
+
+        // Reconstruct vertices from the original geometry arrays
+        usize v0Idx = facesRef[t * 3];
+        usize v1Idx = facesRef[t * 3 + 1];
+        usize v2Idx = facesRef[t * 3 + 2];
+        std::array<Point3Df, 3> verts = {Point3Df{verticesRef[v0Idx * 3], verticesRef[v0Idx * 3 + 1], verticesRef[v0Idx * 3 + 2]},
+                                         Point3Df{verticesRef[v1Idx * 3], verticesRef[v1Idx * 3 + 1], verticesRef[v1Idx * 3 + 2]},
+                                         Point3Df{verticesRef[v2Idx * 3], verticesRef[v2Idx * 3 + 1], verticesRef[v2Idx * 3 + 2]}};
+
+        float32 ex1, ey1, ex2, ey2;
+        if(sliceTriangleAtZ(verts, zCoord, ex1, ey1, ex2, ey2))
+        {
+          edges.push_back({ex1, ey1, ex2, ey2, t});
+        }
+      }
+
+      // ----- Scanline fill for each Y row -----
+      for(usize y = 0; y < yDim; y++)
+      {
+        float32 yCoord = origin[1] + (static_cast<float32>(y) + 0.5f) * spacing[1];
+
+        // Find X-intersections of this scanline with all 2D edges
+        intersections.clear();
+        for(const auto& edge : edges)
+        {
+          float32 eYMin, eYMax;
+          if(edge.y1 < edge.y2)
+          {
+            eYMin = edge.y1;
+            eYMax = edge.y2;
+          }
+          else
+          {
+            eYMin = edge.y2;
+            eYMax = edge.y1;
+          }
+
+          // Half-open interval [yMin, yMax) to avoid double-counting at endpoints
+          if(yCoord < eYMin || yCoord >= eYMax)
+          {
+            continue;
+          }
+
+          float32 dy = edge.y2 - edge.y1;
+          if(std::abs(dy) < 1e-10f)
+          {
+            continue; // Skip horizontal edges
+          }
+
+          float32 t = (yCoord - edge.y1) / dy;
+          float32 xIntersect = edge.x1 + t * (edge.x2 - edge.x1);
+          intersections.push_back({xIntersect, edge.faceIndex});
+        }
+
+        // Sort intersections by X coordinate
+        std::sort(intersections.begin(), intersections.end(), [](const ScanlineIntersection& a, const ScanlineIntersection& b) { return a.x < b.x; });
+
+        // Walk left to right, toggling feature IDs at each crossing
+        T currentFeature = 0;
+        usize nextIsect = 0;
+        usize rowOffset = z * cellsPerSlice + y * xDim;
+
+        for(usize x = 0; x < xDim; x++)
+        {
+          float32 xCoord = origin[0] + (static_cast<float32>(x) + 0.5f) * spacing[0];
+
+          // Process all crossings up to this voxel center
+          while(nextIsect < intersections.size() && intersections[nextIsect].x <= xCoord)
+          {
+            usize faceIdx = intersections[nextIsect].faceIndex;
+            T label0 = faceLabelsRef[faceIdx];
+            T label1 = T{0};
+            if(numFaceLabelComps == 2)
+            {
+              label0 = faceLabelsRef[faceIdx * 2];
+              label1 = faceLabelsRef[faceIdx * 2 + 1];
+            }
+
+            // Toggle: if we are currently in one of the two bordering features,
+            // switch to the other. This correctly handles entering, exiting,
+            // and transitioning between adjacent features.
+            if(currentFeature == label0)
+            {
+              currentFeature = label1;
+            }
+            else if(currentFeature == label1)
+            {
+              currentFeature = label0;
+            }
+            else
+            {
+              // Neither label matches current feature (first crossing from
+              // outside or mesh inconsistency). Pick the positive label.
+              currentFeature = 0;
+              if(label0 > 0 && label1 <= 0)
+              {
+                currentFeature = label0;
+              }
+              else if(label1 > 0 && label0 <= 0)
+              {
+                currentFeature = label1;
+              }
+              else
+              {
+                // Both positive but neither matches — take the larger label
+                // as a deterministic fallback.
+                currentFeature = std::max(label0, label1);
+              }
+            }
+
+            nextIsect++;
+          }
+
+          featureIdsRef[rowOffset + x] = currentFeature;
+        }
       }
     }
-
-    m_FilterAlg->sendThreadSafeUpdate(m_FeatureIds, featureIds, m_ImageGeomIdx);
   }
-
-private:
-  RegularGridSampleSurfaceMesh* m_FilterAlg = nullptr;
-  ;
-  const EdgeGeom& m_EdgeGeom;
-  int32 m_CurrentSliceId;
-  usize m_ImageGeomIdx;
-  const ImageGeom m_ImageGeom;
-  const Int32Array& m_SliceIds;
-  Int32Array& m_FeatureIds;
-  const std::atomic_bool& m_ShouldCancel;
 };
 
 } // namespace
@@ -153,8 +297,7 @@ private:
 // -----------------------------------------------------------------------------
 RegularGridSampleSurfaceMesh::RegularGridSampleSurfaceMesh(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                            RegularGridSampleSurfaceMeshInputValues* inputValues)
-: SampleSurfaceMesh(dataStructure, shouldCancel, mesgHandler)
-, m_DataStructure(dataStructure)
+: m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
@@ -165,119 +308,13 @@ RegularGridSampleSurfaceMesh::RegularGridSampleSurfaceMesh(DataStructure& dataSt
 RegularGridSampleSurfaceMesh::~RegularGridSampleSurfaceMesh() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& RegularGridSampleSurfaceMesh::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
-void RegularGridSampleSurfaceMesh::generatePoints(std::vector<Point3Df>& points)
-{
-  auto dims = m_InputValues->Dimensions;
-  auto spacing = m_InputValues->Spacing;
-  auto origin = m_InputValues->Origin;
-
-  points.reserve(dims[0] * dims[1] * dims[2]);
-
-  for(int32 k = 0; k < dims[2]; k++)
-  {
-    float32 f_k = static_cast<float32>(k) + 0.5f;
-    for(int32 j = 0; j < dims[1]; j++)
-    {
-      float32 f_j = static_cast<float32>(j) + 0.5f;
-      for(int32 i = 0; i < dims[0]; i++)
-      {
-        float32 f_i = static_cast<float32>(i) + 0.5f;
-        points.emplace_back(f_i * spacing[0] + origin[0], f_j * spacing[1] + origin[1], f_k * spacing[2] + origin[2]);
-      }
-    }
-  }
-}
-
-// -----------------------------------------------------------------------------
 Result<> RegularGridSampleSurfaceMesh::operator()()
 {
-  const ChoicesParameter::ValueType k_UserDefinedRange = 1;
-  /////////////////////////////////////////////////////////////////////////////
-  // Slice the Triangle Geometry
-  SliceTriangleGeometryInputValues inputValues;
-  inputValues.SliceRange = k_UserDefinedRange;
-  inputValues.Zstart = m_InputValues->Origin[2] + (m_InputValues->Spacing[2] * 0.5);
-  inputValues.Zend = m_InputValues->Origin[2] + (m_InputValues->Dimensions[2] * m_InputValues->Spacing[2]) + (m_InputValues->Spacing[2] * 0.5);
-  inputValues.SliceResolution = m_InputValues->Spacing[2];
-  inputValues.HaveRegionIds = false;
-  inputValues.CADDataContainerName = m_InputValues->TriangleGeometryPath;
-  // inputValues.RegionIdArrayPath;
-  DataPath edgeDataPath({fmt::format(".{}_sliced", m_InputValues->TriangleGeometryPath.getTargetName())});
-  inputValues.SliceDataContainerName = edgeDataPath;
-  inputValues.EdgeAttributeMatrixName = "EdgeAttributeMatrix";
-  inputValues.SliceIdArrayName = "SliceIds";
-  inputValues.SliceAttributeMatrixName = "SliceAttributeMatrix";
-
-  Result<> result = nx::core::SliceTriangleGeometry(m_DataStructure, m_MessageHandler, m_ShouldCancel, &inputValues)();
-  if(result.invalid())
-  {
-    return result;
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  // RASTER THE PIXELS BASED ON POINT IN POLYGON
-  DataPath edgeAmPath = edgeDataPath.createChildPath(inputValues.EdgeAttributeMatrixName);
-  DataPath sliceIdDataPath = edgeAmPath.createChildPath(inputValues.SliceIdArrayName);
-  auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(edgeDataPath);
-  auto& sliceId = m_DataStructure.getDataRefAs<Int32Array>(sliceIdDataPath);
-
-  // Get the Image Geometry that is the sampling Grid
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryOutputPath);
-  FloatVec3 origin = imageGeom.getOrigin();
-  FloatVec3 spacing = imageGeom.getSpacing();
-  SizeVec3 dimensions = imageGeom.getDimensions();
 
-  // Get the Feature Ids array
-  auto featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath); //->getDataStoreRef();
-
-  ParallelTaskAlgorithm taskRunner;
-  taskRunner.setParallelizationEnabled(true);
-
-  int32 currentSliceId = 0;
-  int32 totalSlices = static_cast<int32>((inputValues.Zend - inputValues.Zstart) / inputValues.SliceResolution);
-  // Loop over each slice that generated a polygon for the outline of the mesh
-  for(float zValue = inputValues.Zstart; zValue <= inputValues.Zend; zValue += inputValues.SliceResolution)
-  {
-    if(m_ShouldCancel)
-    {
-      break;
-    }
-    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Raster {}/{}", currentSliceId, totalSlices)});
-
-    // Compute the raw index into the ImageGeometry Cell Data
-    nx::core::Point3Df coord = {origin[0] + spacing[0] * 0.5f, origin[1] + spacing[1] * 0.5f, zValue};
-    auto possibleIndex = imageGeom.getIndex(coord[0], coord[1], coord[2]);
-    if(!possibleIndex.has_value())
-    {
-      // fmt::print("{} NO Index into Image Geometry for coord {}\n", currentSliceId, fmt::join(coord, ","));
-      currentSliceId++;
-      continue;
-    }
-
-    taskRunner.execute(SampleSurfaceMeshSliceImpl(this, edgeGeom, currentSliceId, possibleIndex.value(), imageGeom, sliceId, featureIds, m_ShouldCancel));
-
-    currentSliceId++;
-  }
-
-  taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
+  ExecuteDataFunctionNoBool(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->SurfaceMeshFaceLabelsArrayPath)->getDataType(), m_DataStructure, m_ShouldCancel,
+                            m_MessageHandler, imageGeom, triangleGeom, m_InputValues->SurfaceMeshFaceLabelsArrayPath, m_InputValues->FeatureIdsArrayPath);
 
   return {};
-}
-
-// -----------------------------------------------------------------------------
-void RegularGridSampleSurfaceMesh::sendThreadSafeUpdate(Int32Array& featureIds, const std::vector<int32>& rasterBuffer, usize offset)
-{
-  // We lock access to the DataArray since I don't think DataArray is thread safe.
-  std::lock_guard<std::mutex> lock(m_ProgressMessage_Mutex);
-  auto& dataStore = featureIds.getDataStoreRef();
-  for(usize idx = 0; idx < rasterBuffer.size(); idx++)
-  {
-    dataStore[offset + idx] = rasterBuffer[idx];
-  }
 }
