@@ -18,13 +18,6 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 
 using namespace nx::core;
-namespace
-{
-constexpr int32 k_MissingGeomError = -440;
-constexpr int32 k_IncorrectInputArray = -600;
-constexpr int32 k_MissingInputArray = -601;
-constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -602;
-} // namespace
 
 namespace nx::core
 {
@@ -146,22 +139,9 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
 
   // Validate the GoodVoxels/Mask Array combination
   bool useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
-  DataPath goodVoxelsPath;
   if(useGoodVoxels)
   {
-    goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-
-    const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
-    if(nullptr == goodVoxelsArray)
-    {
-      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString()))};
-    }
-    if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)
-    {
-      return {
-          MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool or UInt8.", goodVoxelsPath.toString()))};
-    }
-    dataPaths.push_back(goodVoxelsPath);
+    dataPaths.push_back(filterArgs.value<DataPath>(k_MaskArrayPath_Key));
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);

@@ -15,13 +15,6 @@
 
 namespace nx::core
 {
-namespace
-{
-constexpr nx::core::int32 k_MissingGeometry = -73225;
-constexpr nx::core::int32 k_MissingFeatureIds = -74789;
-constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -74769;
-} // namespace
-
 std::string ComputeFeatureSizesFilter::name() const
 {
   return FilterTraits<ComputeFeatureSizesFilter>::name;
@@ -99,30 +92,13 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
   DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
 
-  const auto* featureIdsArray = dataStructure.getDataAs<Int32Array>(featureIdsPath);
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
-  const auto* geometry = dataStructure.getDataAs<IGeometry>(geometryPath);
+  const std::string arrayDataFormat = featureIdsArray.getDataFormat();
 
-  if(geometry == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingGeometry, "Could not find the target geometry.")};
-  }
+  const auto& featAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(featureAttributeMatrixPath);
 
-  if(featureIdsArray == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingFeatureIds, "Could not find Feature IDs array.")};
-  }
-
-  const std::string arrayDataFormat = featureIdsArray->getDataFormat();
-
-  const auto* featAttributeMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttributeMatrixPath);
-  if(featAttributeMatrix == nullptr)
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_MissingFeatureAttributeMatrix, fmt::format("Could not find Feature Attribute Matrix at path '{}'", featureAttributeMatrixPath.toString())}})};
-  }
-
-  ShapeType tupleDimensions = featAttributeMatrix->getShape();
+  ShapeType tupleDimensions = featAttributeMatrix.getShape();
   uint64 numberOfComponents = 1;
 
   auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath, arrayDataFormat);

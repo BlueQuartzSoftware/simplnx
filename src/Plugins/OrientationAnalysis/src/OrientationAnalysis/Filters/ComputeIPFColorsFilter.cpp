@@ -14,17 +14,6 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 
 using namespace nx::core;
-namespace
-{
-
-using FeatureIdsArrayType = Int32Array;
-using GoodVoxelsArrayType = BoolArray;
-
-constexpr int32 k_MissingGeomError = -71440;
-constexpr int32 k_IncorrectInputArray = -71441;
-constexpr int32 k_MissingInputArray = -71442;
-constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -71443;
-} // namespace
 
 namespace nx::core
 {
@@ -116,49 +105,14 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pCellIPFColorsArrayNameValue = pCellEulerAnglesArrayPathValue.replaceName(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
 
-  // Validate the Crystal Structures array
-  const UInt32Array& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
-  if(crystalStructures.getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Crystal Structures Input Array must be a 1 component Int32 array")};
-  }
-
   std::vector<DataPath> dataPaths;
 
-  // Validate the Eulers array
-  const Float32Array& quats = dataStructure.getDataRefAs<Float32Array>(pCellEulerAnglesArrayPathValue);
-  if(quats.getNumberOfComponents() != 3)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Euler Angles Input Array must be a 3 component Float32 array")};
-  }
   dataPaths.push_back(pCellEulerAnglesArrayPathValue);
-
-  // Validate the Phases array
-  const Int32Array& phases = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
-  if(phases.getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Phases Input Array must be a 1 component Int32 array")};
-  }
   dataPaths.push_back(pCellPhasesArrayPathValue);
 
-  // Validate the GoodVoxels/Mask Array combination
-  DataPath goodVoxelsPath;
   if(pUseGoodVoxelsValue)
   {
-    goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-
-    const nx::core::IDataArray* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
-    if(nullptr == goodVoxelsArray)
-    {
-      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString()))};
-    }
-
-    if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)
-    {
-      return {nonstd::make_unexpected(
-          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool or UInt8", goodVoxelsPath.toString())}})};
-    }
-    dataPaths.push_back(goodVoxelsPath);
+    dataPaths.push_back(pGoodVoxelsArrayPathValue);
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
@@ -168,10 +122,10 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
   }
 
   // Get the number of tuples
-  auto* eulersArray = dataStructure.getDataAs<Float32Array>(pCellEulerAnglesArrayPathValue);
+  const auto& eulersArray = dataStructure.getDataRefAs<Float32Array>(pCellEulerAnglesArrayPathValue);
 
   // Create output DataStructure Items
-  auto createIpfColorsAction = std::make_unique<CreateArrayAction>(DataType::uint8, eulersArray->getIDataStore()->getTupleShape(), std::vector<usize>{3}, pCellIPFColorsArrayNameValue);
+  auto createIpfColorsAction = std::make_unique<CreateArrayAction>(DataType::uint8, eulersArray.getIDataStore()->getTupleShape(), std::vector<usize>{3}, pCellIPFColorsArrayNameValue);
 
   OutputActions actions;
   actions.appendAction(std::move(createIpfColorsAction));

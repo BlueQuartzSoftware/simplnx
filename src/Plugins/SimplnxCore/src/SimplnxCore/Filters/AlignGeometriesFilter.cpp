@@ -75,14 +75,6 @@ IFilter::UniquePointer AlignGeometriesFilter::clone() const
 IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto alignmentType = filterArgs.value<uint64>(k_AlignmentType_Key);
-
-  if(alignmentType != 0 && alignmentType != 1)
-  {
-    std::string ss = fmt::format("Invalid selection for alignment type");
-    return {MakeErrorResult<OutputActions>(-1, ss)};
-  }
-
   OutputActions actions;
   return {std::move(actions)};
 }

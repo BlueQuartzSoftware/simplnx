@@ -14,7 +14,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_IncorrectInputArrayType = -2363;
 constexpr int32 k_InconsistentTupleCount = -2364;
 
 struct FindThresholdFunctor
@@ -114,21 +113,8 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
 
   std::vector<DataPath> dataPaths;
 
-  // Validate that the input path is NOT a bool array.
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  if(dynamic_cast<const BoolArray*>(&inputArray) != nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType, "Input Data Array to threshold cannot be of type bool")};
-  }
   dataPaths.push_back(inputArrayPath);
-
-  // Validate that the Gradient Image is of the correct type
-  const DataObject* dataObject = dataStructure.getData(gradientArrayPath);
-  if(dynamic_cast<const Float32Array*>(dataObject) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArrayType,
-                                           fmt::format("Gradient Data Array must be of type Float. The object at path '{}' is '{}'", gradientArrayPath.toString(), dataObject->getTypeName()))};
-  }
   dataPaths.push_back(gradientArrayPath);
 
   ShapeType tupleDims = {inputArray.getTupleShape()};

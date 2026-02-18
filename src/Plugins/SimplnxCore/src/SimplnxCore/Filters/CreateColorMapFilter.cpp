@@ -19,10 +19,6 @@
 using namespace nx::core;
 namespace
 {
-constexpr int32 k_MissingGeomError = -72440;
-constexpr int32 k_IncorrectInputArray = -72441;
-constexpr int32 k_MissingInputArray = -72442;
-constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -72443;
 } // namespace
 
 namespace nx::core
@@ -122,23 +118,9 @@ IFilter::PreflightResult CreateColorMapFilter::preflightImpl(const DataStructure
   dataPaths.push_back(pSelectedDataArrayPathValue);
 
   // Validate the GoodVoxels/Mask Array combination
-  DataPath goodVoxelsPath;
   if(pUseGoodVoxelsValue)
   {
-    goodVoxelsPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-
-    const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(goodVoxelsPath);
-    if(nullptr == goodVoxelsArray)
-    {
-      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", goodVoxelsPath.toString()))};
-    }
-
-    if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)
-    {
-      return {nonstd::make_unexpected(
-          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool or UInt8", goodVoxelsPath.toString())}})};
-    }
-    dataPaths.push_back(goodVoxelsPath);
+    dataPaths.push_back(pGoodVoxelsArrayPathValue);
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);

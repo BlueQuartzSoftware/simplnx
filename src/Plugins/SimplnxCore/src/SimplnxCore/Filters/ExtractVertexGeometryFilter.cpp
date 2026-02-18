@@ -19,10 +19,6 @@
 using namespace nx::core;
 namespace
 {
-constexpr int32 k_MissingGeomError = -72440;
-constexpr int32 k_IncorrectInputArray = -72441;
-constexpr int32 k_MissingInputArray = -72442;
-constexpr int32 k_MissingOrIncorrectGoodVoxelsArray = -72443;
 } // namespace
 
 namespace nx::core
@@ -133,17 +129,6 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   // Validate the GoodVoxels/Mask Array combination
   if(pUseGoodVoxelsValue)
   {
-    const auto* goodVoxelsArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
-    if(nullptr == goodVoxelsArray)
-    {
-      return {MakeErrorResult<OutputActions>(k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array is not located at path: '{}'", pMaskArrayPathValue.toString()))};
-    }
-
-    if(goodVoxelsArray->getDataType() != DataType::boolean && goodVoxelsArray->getDataType() != DataType::uint8)
-    {
-      return {nonstd::make_unexpected(
-          std::vector<Error>{Error{k_MissingOrIncorrectGoodVoxelsArray, fmt::format("Mask array at path '{}' is not of the correct type. It must be Bool or UInt8", pMaskArrayPathValue.toString())}})};
-    }
     dataPaths.push_back(pMaskArrayPathValue);
   }
 

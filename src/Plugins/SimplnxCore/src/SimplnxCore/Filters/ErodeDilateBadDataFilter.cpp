@@ -109,11 +109,6 @@ IFilter::PreflightResult ErodeDilateBadDataFilter::preflightImpl(const DataStruc
   preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
   resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
 
-  if(pOperationValue != detail::k_DilateIndex && pOperationValue != detail::k_ErodeIndex)
-  {
-    MakeErrorResult(-16700, fmt::format("Operation Selection must be 0 (Dilate) or 1 (Erode). {} was passed into the filter. ", pOperationValue));
-  }
-
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
   nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pFeatureIdsArrayPathValue.getParent(), pIgnoredDataArrayPathsValue);

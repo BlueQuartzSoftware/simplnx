@@ -412,14 +412,10 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto* inputArray = dataStructure.getDataAs<IArray>(pInputArrayPath);
-  if(inputArray == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::NoInputArray), fmt::format("Cannot find input array at path '{}'", pInputArrayPath.toString()))};
-  }
+  const auto& inputArray = dataStructure.getDataRefAs<IArray>(pInputArrayPath);
 
   // Output input array's tuple shape to preflight updated values
-  std::vector<std::string> displayPaths = createDisplayPaths({pInputArrayPath.toString()}, {inputArray->getTupleShape()});
+  std::vector<std::string> displayPaths = createDisplayPaths({pInputArrayPath.toString()}, {inputArray.getTupleShape()});
   std::vector<std::string_view> displayPathsViews(displayPaths.begin(), displayPaths.end());
   preflightUpdatedValues.push_back({"Input Array", StringUtilities::join(displayPathsViews, "\n")});
 
@@ -437,8 +433,8 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   if(pOutputContainer == SplitDataArrayByTuple::OutputContainer::NewDataGroup || pOutputContainer == SplitDataArrayByTuple::OutputContainer::ExistingDataGroup)
   {
     // Outputting to data group
-    auto result = preflightDataGroupOutput(pOutputContainer, pInputArrayPath, pNewDataGroupPath, pExistingDataGroupPath, inputArray->getTupleShape(), pSplitDimensionCounts, splitDimension,
-                                           tupleShapes, arrayPaths, preflightUpdatedValues);
+    auto result = preflightDataGroupOutput(pOutputContainer, pInputArrayPath, pNewDataGroupPath, pExistingDataGroupPath, inputArray.getTupleShape(), pSplitDimensionCounts, splitDimension, tupleShapes,
+                                           arrayPaths, preflightUpdatedValues);
     if(result.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(result), {}), preflightUpdatedValues};
@@ -452,7 +448,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   else
   {
     // Outputting to attribute matrix
-    auto result = preflightAttrMatrixOutput(pOutputContainer, pInputArrayPath, pNewAttrMatrixPath, pExistingAttrMatrixPath, inputArray->getTupleShape(), pNewAttrMatrixTupleShape[0], splitDimension,
+    auto result = preflightAttrMatrixOutput(pOutputContainer, pInputArrayPath, pNewAttrMatrixPath, pExistingAttrMatrixPath, inputArray.getTupleShape(), pNewAttrMatrixTupleShape[0], splitDimension,
                                             dataStructure, arrayPaths, tupleShapes, preflightUpdatedValues);
     if(result.invalid())
     {
@@ -468,16 +464,16 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   // Create the split arrays
   for(usize i = 0; i < arrayPaths.size(); ++i)
   {
-    switch(inputArray->getArrayType())
+    switch(inputArray.getArrayType())
     {
     case IArray::ArrayType::DataArray: {
-      auto iInputDataArray = dynamic_cast<const IDataArray*>(inputArray);
+      auto iInputDataArray = dynamic_cast<const IDataArray*>(&inputArray);
       ShapeType cDims = iInputDataArray->getComponentShape();
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(iInputDataArray->getDataType(), tupleShapes[i], cDims, arrayPaths[i]));
       break;
     }
     case IArray::ArrayType::NeighborListArray: {
-      auto iInputNeighborList = dynamic_cast<const INeighborList*>(inputArray);
+      auto iInputNeighborList = dynamic_cast<const INeighborList*>(&inputArray);
       resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(iInputNeighborList->getDataType(), tupleShapes[i], arrayPaths[i]));
       break;
     }

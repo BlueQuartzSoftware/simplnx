@@ -115,13 +115,6 @@ IFilter::UniquePointer ChangeAngleRepresentationFilter::clone() const
 IFilter::PreflightResult ChangeAngleRepresentationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pConversionTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
-
-  if(pConversionTypeValue > 1)
-  {
-    return {MakeErrorResult<OutputActions>(-67001, fmt::format("The conversion type must be either [0|1]. Value given is '{}'", pConversionTypeValue))};
-  }
-
   return {};
 }
 

@@ -92,7 +92,6 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
                                                           const ExecutionContext& executionContext) const
 {
   auto pMinAllowedDefectSizeValue = filterArgs.value<int32>(k_MinAllowedDefectSize_Key);
-  auto cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
   if(pMinAllowedDefectSizeValue < 1)
   {
@@ -107,14 +106,6 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
                                            "level data should be rerun to ensure accurate final results from your pipeline.";
   preflightUpdatedValues.emplace_back(PreflightValue{"Feature Data Modification Warning", featureModificationWarning});
   resultOutputActions.warnings().push_back(Warning{-14600, featureModificationWarning});
-
-  auto storeAsNewPhase = filterArgs.value<bool>(k_StoreAsNewPhase_Key);
-  // Get the Feature Phases Array and get its TupleShape
-  const auto* cellPhases = dataStructure.getDataAs<Int32Array>(cellPhasesArrayPath);
-  if(storeAsNewPhase && nullptr == cellPhases)
-  {
-    return MakePreflightErrorResult(-12801, "Cell Phases Data Array is not of the correct type or was not found at the given path");
-  }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

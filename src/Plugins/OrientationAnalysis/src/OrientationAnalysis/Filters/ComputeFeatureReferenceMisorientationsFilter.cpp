@@ -171,13 +171,9 @@ IFilter::PreflightResult ComputeFeatureReferenceMisorientationsFilter::preflight
     }
     else
     {
-      auto* cellFeatAM = dataStructure.getDataAs<AttributeMatrix>(pCellFeatAttributeMatrixArrayPathValue);
-      if(cellFeatAM == nullptr)
-      {
-        return {MakeErrorResult<OutputActions>(-94520, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", pCellFeatAttributeMatrixArrayPathValue.toString()))};
-      }
+      const auto& cellFeatAM = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatAttributeMatrixArrayPathValue);
       featAvgMisorientationsPath = pCellFeatAttributeMatrixArrayPathValue.createChildPath(pFeatureAvgMisorientationsArrayNameValue);
-      tupleShape = cellFeatAM->getShape();
+      tupleShape = cellFeatAM.getShape();
 
       auto createArrayAction =
           std::make_unique<CreateArrayAction>(DataType::float32, tupleShape, ShapeType{3}, pCellFeatAttributeMatrixArrayPathValue.createChildPath(pFeatureEuclideanArrayNameValue));

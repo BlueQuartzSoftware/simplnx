@@ -21,15 +21,6 @@
 #endif
 using namespace nx::core;
 
-namespace
-{
-// Error Code constants
-constexpr nx::core::int32 k_InputRepresentationTypeError = -67001;
-constexpr nx::core::int32 k_OutputRepresentationTypeError = -67002;
-constexpr nx::core::int32 k_InputComponentDimensionError = -67003;
-constexpr nx::core::int32 k_InputComponentCountError = -67004;
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -100,18 +91,6 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 {
   auto inputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto outputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
-
-  if(static_cast<int>(inputType) < 0 || inputType >= ebsdlib::orientations::Type::Unknown)
-  {
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputRepresentationTypeError,
-                                           fmt::format("Input Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(inputType)))};
-  }
-
-  if(static_cast<int>(outputType) < 0 || outputType >= ebsdlib::orientations::Type::Unknown)
-  {
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_OutputRepresentationTypeError,
-                                           fmt::format("Output Representation Type must be a value from 0 to 6. '{}'", fmt::underlying(outputType)))};
-  }
 
   if(inputType == outputType)
   {

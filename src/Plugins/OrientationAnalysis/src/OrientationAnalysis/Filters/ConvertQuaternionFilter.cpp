@@ -19,9 +19,6 @@ using namespace nx::core;
 namespace
 {
 const ChoicesParameter::Choices k_Choices = {"To Scalar Vector ( w, [x, y, z] )", "To Vector Scalar ( [x, y, z], w )"};
-
-constexpr int32 k_IncorrectInputArray = -7000;
-constexpr int32 k_MissingInputArray = -7001;
 } // namespace
 
 namespace nx::core
@@ -98,12 +95,7 @@ IFilter::PreflightResult ConvertQuaternionFilter::preflightImpl(const DataStruct
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Validate the Quats array
   const auto& quats = dataStructure.getDataRefAs<IDataArray>(pQuaternionDataArrayPathValue);
-  if(quats.getNumberOfComponents() != 4)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array")};
-  }
 
   {
     auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(quats.getDataType(), quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);

@@ -17,9 +17,6 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_MissingGeomError = -580090;
-constexpr int32 k_MissingInputArray = -580091;
-constexpr int32 k_IncorrectInputArray = -580092;
 constexpr int32 k_InvalidNumTuples = -580093;
 } // namespace
 
@@ -114,83 +111,12 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeomPathValue);
-  if(imageGeomPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingGeomError, fmt::format("Could not find input image geometry at path '{}'", pImageGeomPathValue.toString()))};
-  }
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPathValue);
 
   std::vector<DataPath> dataArrayPaths;
 
-  // Validate the confidence index array
-  auto* confIndexPtr = dataStructure.getDataAs<IDataArray>(pConfidenceIndexArrayPathValue);
-  if(nullptr == confIndexPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find confidence index array at path '{}'", pConfidenceIndexArrayPathValue.toString()))};
-  }
-  auto* confIndexFloatPtr = dataStructure.getDataAs<Float32Array>(pConfidenceIndexArrayPathValue);
-  if(nullptr == confIndexFloatPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray,
-                                           fmt::format("Confidence index array at path '{}' is not of the correct type. It must be Float32.", pConfidenceIndexArrayPathValue.toString()))};
-  }
-  if(confIndexFloatPtr->getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Confidence index input array must be a 1 component Float32 array")};
-  }
   dataArrayPaths.push_back(pConfidenceIndexArrayPathValue);
-
-  // validate the cell phases array
-  auto* cellPhasesPtr = dataStructure.getDataAs<IDataArray>(pCellPhasesArrayPathValue);
-  if(nullptr == cellPhasesPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find cell phases array at path '{}'", pCellPhasesArrayPathValue.toString()))};
-  }
-  auto* cellPhasesInt32Ptr = dataStructure.getDataAs<Int32Array>(pCellPhasesArrayPathValue);
-  if(nullptr == cellPhasesInt32Ptr)
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_IncorrectInputArray, fmt::format("Cell phases array at path '{}' is not of the correct type. It must be Int32.", pCellPhasesArrayPathValue.toString())}})};
-  }
-  if(cellPhasesInt32Ptr->getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Cell phases input array must be a 1 component Int32 array")};
-  }
   dataArrayPaths.push_back(pCellPhasesArrayPathValue);
-
-  // validate the crystal structures array
-  auto* crystalStructuresPtr = dataStructure.getDataAs<IDataArray>(pCrystalStructuresArrayPathValue);
-  if(nullptr == crystalStructuresPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find crystal structures array at path '{}'", pCrystalStructuresArrayPathValue.toString()))};
-  }
-  auto* crystalStructuresUInt32Ptr = dataStructure.getDataAs<UInt32Array>(pCrystalStructuresArrayPathValue);
-  if(nullptr == crystalStructuresUInt32Ptr)
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_IncorrectInputArray, fmt::format("Crystal structures array at path '{}' is not of the correct type. It must be UInt32.", pCellPhasesArrayPathValue.toString())}})};
-  }
-  if(crystalStructuresUInt32Ptr->getNumberOfComponents() != 1)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Crystal structures input array must be a 1 component UInt32 array")};
-  }
-
-  // validate the quaternions array
-  auto* quatsPtr = dataStructure.getDataAs<IDataArray>(pQuatsArrayPathValue);
-  if(nullptr == quatsPtr)
-  {
-    return {MakeErrorResult<OutputActions>(k_MissingInputArray, fmt::format("Could not find quaternions array at path '{}'", pQuatsArrayPathValue.toString()))};
-  }
-  auto* quatsFloat32Ptr = dataStructure.getDataAs<Float32Array>(pQuatsArrayPathValue);
-  if(nullptr == quatsFloat32Ptr)
-  {
-    return {nonstd::make_unexpected(
-        std::vector<Error>{Error{k_IncorrectInputArray, fmt::format("Quaternions array at path '{}' is not of the correct type. It must be Float32.", pCellPhasesArrayPathValue.toString())}})};
-  }
-  if(quatsFloat32Ptr->getNumberOfComponents() != 4)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion input array must be a 4 component Float32 array")};
-  }
   dataArrayPaths.push_back(pQuatsArrayPathValue);
 
   // collect the rest of the geometry's arrays that aren't ignored to check the tuple count
@@ -232,7 +158,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imageGeomPtr->getCellDataPath(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imageGeom.getCellDataPath(), {});
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

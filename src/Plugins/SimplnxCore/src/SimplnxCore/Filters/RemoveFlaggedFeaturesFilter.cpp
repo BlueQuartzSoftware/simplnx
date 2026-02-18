@@ -121,16 +121,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
-  if(featureIdsPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-9890, fmt::format("Could not find selected Feature Ids Data Array at path '{}'", pFeatureIdsArrayPathValue.toString()))};
-  }
-
-  if(dataStructure.getDataAs<BoolArray>(pFlaggedFeaturesArrayPathValue) == nullptr && dataStructure.getDataAs<UInt8Array>(pFlaggedFeaturesArrayPathValue) == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-9891, fmt::format("Could not find selected Flagged Features Data Array at path '{}'", pFlaggedFeaturesArrayPathValue.toString()))};
-  }
+  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
 
   DataPath const cellFeatureAttributeMatrixPath = pFlaggedFeaturesArrayPathValue.getParent();
   const auto* cellFeatureAmPtr = dataStructure.getDataAs<AttributeMatrix>(cellFeatureAttributeMatrixPath);
@@ -159,7 +150,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   {
     DataPath const tempPath = pFlaggedFeaturesArrayPathValue.replaceName(k_boundsName);
     auto action =
-        std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{featureIdsPtr->getNumberOfTuples()}, std::vector<usize>{featureIdsPtr->getNumberOfComponents() * 6}, tempPath);
+        std::make_unique<CreateArrayAction>(DataType::uint32, std::vector<usize>{featureIdsArray.getNumberOfTuples()}, std::vector<usize>{featureIdsArray.getNumberOfComponents() * 6}, tempPath);
 
     // After the execute function has been done, delete the temp array
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(tempPath));

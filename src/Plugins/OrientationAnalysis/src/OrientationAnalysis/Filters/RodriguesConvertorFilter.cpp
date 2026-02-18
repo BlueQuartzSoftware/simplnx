@@ -14,11 +14,6 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
 using namespace nx::core;
-namespace
-{
-constexpr int32 k_IncorrectInputArray = -7300;
-constexpr int32 k_MissingInputArray = -7301;
-} // namespace
 
 namespace nx::core
 {
@@ -92,12 +87,7 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Validate the Rodrigues array
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pRodriguesDataArrayPathValue);
-  if(quats.getNumberOfComponents() != 3)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Rodrigues Input Array must be a 3 component Float32 array")};
-  }
 
   {
     auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);

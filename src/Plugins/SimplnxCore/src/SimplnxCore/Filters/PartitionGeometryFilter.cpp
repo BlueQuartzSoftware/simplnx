@@ -198,9 +198,6 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
     psGeomMetadata.geometryUnits = psGeom.getUnits();
     break;
   }
-  default: {
-    return {MakeErrorResult<PartitionGeometry::PSGeomInfo>(-3011, "Unable to create partitioning scheme geometry - Unknown partitioning mode.")};
-  }
   }
 
   return {psGeomMetadata};
@@ -435,9 +432,6 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
     }
     inputGeometryInformation = "Hexahedral geometry space unknown during preflight.";
     break;
-  }
-  default: {
-    return {MakeErrorResult<OutputActions>(-3017, fmt::format("{}: Unable to partition geometry - Unknown geometry type detected.", humanName()))};
   }
   }
 

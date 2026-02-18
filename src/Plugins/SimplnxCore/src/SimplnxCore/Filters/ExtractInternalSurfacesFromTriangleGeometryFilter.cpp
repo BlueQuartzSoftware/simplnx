@@ -16,7 +16,6 @@ namespace
 {
 constexpr int32 k_MissingTriangleVerticesArray = -351;
 constexpr int32 k_MissingTriangleFacesArray = -352;
-constexpr int32 k_NoNodeTypesArray = -353;
 constexpr int32 k_MissingVertexArray = -354;
 constexpr int32 k_MissingTriangleArray = -355;
 
@@ -121,12 +120,6 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
     }
     std::vector<DataPath> vertexArrays;
     vertexArrays.push_back(triangleGeom.getVertices()->getDataPaths().front());
-    const auto* nodeTypesPtr = dataStructure.getDataAs<Int8Array>(nodeTypesArrayPath);
-    if(nodeTypesPtr == nullptr)
-    {
-      std::string ss("Node Types array not found at path '{}'. Array must be of type Int8");
-      return {MakeErrorResult<OutputActions>(k_NoNodeTypesArray, ss)};
-    }
     vertexArrays.push_back(nodeTypesArrayPath);
 
     auto tupleValidityCheck = dataStructure.validateNumberOfTuples(vertexArrays);

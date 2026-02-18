@@ -118,13 +118,6 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
     return {MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attibute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
 
-  // Get the Centroids Feature Array and get its TupleShape
-  const auto* centroids = dataStructure.getDataAs<Float32Array>(pCentroidsArrayPath);
-  if(nullptr == centroids)
-  {
-    return {MakeErrorResult<OutputActions>(-12802, "Centroids Feature Data Array is not of the correct type")};
-  }
-
   ShapeType tupleShape = featureAttrMatrix->getShape();
 
   // Create the CreateArrayAction within a scope so that we do not accidentally use the variable is it is getting "moved"

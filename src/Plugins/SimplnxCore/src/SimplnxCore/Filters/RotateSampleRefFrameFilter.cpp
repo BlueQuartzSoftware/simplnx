@@ -190,12 +190,8 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   }
 
   {
-    const AttributeMatrix* selectedCellData = selectedImageGeom.getCellData();
-    if(selectedCellData == nullptr)
-    {
-      return {MakeErrorResult<OutputActions>(-5951, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
-    }
-    std::string cellDataName = selectedCellData->getName();
+    const AttributeMatrix& selectedCellData = selectedImageGeom.getCellDataRef();
+    std::string cellDataName = selectedCellData.getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, dims, origin, spacing, cellDataName));
@@ -203,7 +199,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     // Create the Cell AttributeMatrix in the Destination Geometry
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
 
-    for(const auto& [id, object] : *selectedCellData)
+    for(const auto& [id, object] : selectedCellData)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();

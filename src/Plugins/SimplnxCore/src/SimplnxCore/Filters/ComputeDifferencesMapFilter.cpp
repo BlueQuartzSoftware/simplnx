@@ -17,7 +17,6 @@ namespace nx::core
 
 namespace
 {
-constexpr int32 k_MissingInputArray = -567;
 constexpr int32 k_ComponentCountMismatchError = -90003;
 constexpr int32 k_InvalidNumTuples = -90004;
 
@@ -142,21 +141,10 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 
   std::vector<DataPath> dataArrayPaths;
 
-  auto* firstInputArray = dataStructure.getDataAs<IDataArray>(firstInputArrayPath);
-  if(firstInputArray == nullptr)
-  {
-    std::string ss = fmt::format("Could not find input array at path {}", firstInputArrayPath.toString());
-    return {MakeErrorResult<OutputActions>(-k_MissingInputArray, ss)};
-  }
-
+  const auto& firstInputArray = dataStructure.getDataRefAs<IDataArray>(firstInputArrayPath);
   dataArrayPaths.push_back(firstInputArrayPath);
 
-  auto* secondInputArray = dataStructure.getDataAs<IDataArray>(secondInputArrayPath);
-  if(secondInputArray == nullptr)
-  {
-    std::string ss = fmt::format("Could not find input array at path {}", secondInputArrayPath.toString());
-    return {MakeErrorResult<OutputActions>(-k_MissingInputArray, ss)};
-  }
+  const auto& secondInputArray = dataStructure.getDataRefAs<IDataArray>(secondInputArrayPath);
   dataArrayPaths.push_back(secondInputArrayPath);
 
   if(!dataArrayPaths.empty())
@@ -174,8 +162,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
     warnings = warnOnUnsignedTypes(dataStructure, dataArrayPaths);
   }
 
-  // Safe to check array component dimensions since we won't get here if the pointers are null
-  if(firstInputArray->getNumberOfComponents() != secondInputArray->getNumberOfComponents())
+  if(firstInputArray.getNumberOfComponents() != secondInputArray.getNumberOfComponents())
   {
     std::string ss = fmt::format("Selected Attribute Arrays must have the same component dimensions");
     return {MakeErrorResult<OutputActions>(nx::core::k_ComponentCountMismatchError, ss)};
@@ -191,9 +178,9 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 
   // At this point we have two valid arrays of the same type and component dimensions, so we
   // are safe to make the output array with the correct type and component dimensions
-  DataType dataType = firstInputArray->getDataType();
-  auto action = std::make_unique<CreateArrayAction>(dataType, firstInputArray->getIDataStore()->getTupleShape(), firstInputArray->getIDataStore()->getComponentShape(), differenceMapArrayPath,
-                                                    firstInputArray->getDataFormat());
+  DataType dataType = firstInputArray.getDataType();
+  auto action = std::make_unique<CreateArrayAction>(dataType, firstInputArray.getIDataStore()->getTupleShape(), firstInputArray.getIDataStore()->getComponentShape(), differenceMapArrayPath,
+                                                    firstInputArray.getDataFormat());
 
   //
   nx::core::Result<OutputActions> actions;

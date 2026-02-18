@@ -137,11 +137,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto* gridGeom = dataStructure.getDataAs<IGridGeometry>(pGridGeomDataPath);
-  if(gridGeom == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-76530, fmt::format("Could not find find selected grid geometry at path '{}'", pGridGeomDataPath.toString()))};
-  }
+  const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
   constexpr usize numElements = 0;
 
   // Use FeatureIds DataStore format for created DataArrays

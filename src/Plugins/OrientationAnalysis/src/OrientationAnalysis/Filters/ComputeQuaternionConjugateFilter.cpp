@@ -15,12 +15,6 @@
 
 using namespace nx::core;
 
-namespace
-{
-constexpr int32 k_IncorrectInputArray = -7100;
-constexpr int32 k_MissingInputArray = -7101;
-} // namespace
-
 namespace nx::core
 {
 //------------------------------------------------------------------------------
@@ -92,12 +86,7 @@ IFilter::PreflightResult ComputeQuaternionConjugateFilter::preflightImpl(const D
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Validate the Quats array
   const auto& quats = dataStructure.getDataRefAs<Float32Array>(pQuaternionDataArrayPathValue);
-  if(quats.getNumberOfComponents() != 4)
-  {
-    return {MakeErrorResult<OutputActions>(k_IncorrectInputArray, "Quaternion Input Array must be a 4 component Float32 array")};
-  }
 
   {
     auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);

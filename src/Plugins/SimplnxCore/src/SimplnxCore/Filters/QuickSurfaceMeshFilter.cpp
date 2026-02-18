@@ -136,13 +136,9 @@ IFilter::PreflightResult QuickSurfaceMeshFilter::preflightImpl(const DataStructu
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* gridGeom = dataStructure.getDataAs<IGridGeometry>(pGridGeomDataPath);
-  if(gridGeom == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-76530, fmt::format("Could not find find selected grid geometry at path '{}'", pGridGeomDataPath.toString()))};
-  }
+  const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
 
-  const usize elementTupleCount = gridGeom->getCellData()->getNumberOfTuples();
+  const usize elementTupleCount = gridGeom.getCellData()->getNumberOfTuples();
   constexpr usize numElements = 0;
 
   // Use FeatureIds DataStore format for created DataArrays

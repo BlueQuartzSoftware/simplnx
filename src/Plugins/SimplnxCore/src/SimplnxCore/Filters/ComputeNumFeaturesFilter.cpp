@@ -89,13 +89,9 @@ IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStruc
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* cellEnsembleData = dataStructure.getDataAs<AttributeMatrix>(pEnsembleDataPathValue);
-  if(cellEnsembleData == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-47630, fmt::format("Could not find selected ensemble Attribute Matrix at path '{}'", pEnsembleDataPathValue.toString()))};
-  }
+  const auto& cellEnsembleData = dataStructure.getDataRefAs<AttributeMatrix>(pEnsembleDataPathValue);
 
-  auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, cellEnsembleData->getShape(), std::vector<usize>{1}, pNumFeaturesArrayPathValue);
+  auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, cellEnsembleData.getShape(), std::vector<usize>{1}, pNumFeaturesArrayPathValue);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

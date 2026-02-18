@@ -166,13 +166,6 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto* iGeometryPtr = dataStructure.getDataAs<IGeometry>(pSelectedGeometryPathValue);
-
-  if(iGeometryPtr == nullptr)
-  {
-    return {MakeErrorResult<OutputActions>(-82000, "Input Geometry must be either ImageGeom or Vertex, Edge, Triangle, Quad, Hexahedron, Tetrahedron.")};
-  }
-
   const ShapeType cDims = {4, 4};
 
   // Reset the final Transformation Matrix to all Zeros before we fill it with what the user has entered.
@@ -267,9 +260,6 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       }
       transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
-    }
-    default: {
-      return {MakeErrorResult<OutputActions>(-82003, "Invalid selection for transformation operation. Valid values are [0,5]")};
     }
     }
 
