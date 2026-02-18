@@ -278,6 +278,14 @@ SIMPLNX_EXPORT void AppendDataObjectModifications(const DataStructure& dataStruc
                                                   const std::vector<DataPath>& ignoredDataPaths);
 
 /**
+ * @brief This will append a DataModifiedAction to the DataPath given
+ * @param dataStructure The DataStructure object
+ * @param resultOutputActions The nx::core::Result<OutputActions> object to append the action into.
+ * @param targetDataPath The DataPath to apply the Modification action
+ */
+SIMPLNX_EXPORT void MarkDataPathModified(const DataStructure& dataStructure, nx::core::Result<OutputActions>& resultOutputActions, const DataPath& targetDataPath);
+
+/**
  * @brief This will create warnings about the removal of NeighborLists
  * @param dataStructure The DataStructure object
  * @param featureIdsPath The DataPath to the "FeatureIds" Array
