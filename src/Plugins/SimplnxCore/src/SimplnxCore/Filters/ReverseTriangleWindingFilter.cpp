@@ -5,6 +5,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -112,7 +113,15 @@ IFilter::UniquePointer ReverseTriangleWindingFilter::clone() const
 IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  return {};
+  auto pTriGeomPathValue = filterArgs.value<DataPath>(k_TriGeomPath_Key);
+
+  nx::core::Result<OutputActions> resultOutputActions;
+
+  // Inform users that the following arrays are going to be modified in place
+  // Triangle geometry face list is going to be modified
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriGeomPathValue, {});
+
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

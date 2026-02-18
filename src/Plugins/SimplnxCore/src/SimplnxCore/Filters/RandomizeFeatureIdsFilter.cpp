@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <stdexcept>
 
@@ -82,7 +83,18 @@ IFilter::UniquePointer RandomizeFeatureIdsFilter::clone() const
 IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  return {};
+  auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  auto featureAMPath = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
+
+  nx::core::Result<OutputActions> resultOutputActions;
+
+  // Inform users that the following arrays are going to be modified in place
+  // FeatureIds array is going to be remapped
+  nx::core::MarkDataPathModified(dataStructure, resultOutputActions, featureIdsPath);
+  // Feature Attribute Matrix arrays are going to be reordered
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureAMPath, {});
+
+  return {std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------

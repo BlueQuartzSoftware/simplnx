@@ -24,6 +24,7 @@
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
@@ -462,6 +463,9 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
                                                 pCellAttributeMatrixPath.getTargetName())};
       resultOutputActions.warnings().push_back(warning);
     }
+
+    // For non-ImageGeom geometries, vertex data is modified in place
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pSelectedGeometryPathValue, {});
   }
 
   // Are we saving the transform matrix
