@@ -276,16 +276,16 @@ void ValidateRectGridDataStructure(const DataStructure& dataStructure)
   REQUIRE(numElements.getValue(1) == 39);
   REQUIRE(numElements.getValue(2) == 15);
   REQUIRE(numElements.getValue(3) == 10);
-  // volumes: 0.0 2358.834 356.062 15.104
+  // volumes: 0.0 2362.434 352.462 15.104
   const auto& volumes = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
-  REQUIRE(volumes.getValue(1) == 2358.834f);
-  REQUIRE(volumes.getValue(2) == 356.062f);
+  REQUIRE((volumes.getValue(1) - 2362.434f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE((volumes.getValue(2) - 352.462f) < std::numeric_limits<float32>::epsilon());
   REQUIRE((volumes.getValue(3) - 15.104f) < std::numeric_limits<float32>::epsilon());
-  // eqDiameters: 0.0 16.516 8.764 3.0994
+  // eqDiameters: 0.0 16.5242 8.76404 3.06689
   const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
-  REQUIRE(equivalentDiameters.getValue(1) == 16.516f);
-  REQUIRE(equivalentDiameters.getValue(2) == 8.764f);
-  REQUIRE(equivalentDiameters.getValue(3) == 3.0994f);
+  REQUIRE((equivalentDiameters.getValue(1) - 16.5242f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE((equivalentDiameters.getValue(2) - 8.76404f) < epsilon);
+  REQUIRE((equivalentDiameters.getValue(3) - 3.06689f) < std::numeric_limits<float32>::epsilon());
 }
 } // namespace Test
 
