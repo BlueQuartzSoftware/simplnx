@@ -14,6 +14,11 @@
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_InvalidInputDimensions = -74770;
+} // namespace
+
 std::string ComputeFeatureSizesFilter::name() const
 {
   return FilterTraits<ComputeFeatureSizesFilter>::name;
