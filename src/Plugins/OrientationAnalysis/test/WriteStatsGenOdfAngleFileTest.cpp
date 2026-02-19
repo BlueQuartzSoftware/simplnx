@@ -18,8 +18,7 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: Valid Filter Ex
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "write_stats_gen_odf_angle_file.tar.gz",
-                                                              "write_stats_gen_odf_angle_file");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "write_stats_gen_odf_angle_file.tar.gz", "write_stats_gen_odf_angle_file");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/write_stats_gen_odf_angle_file/write_stats_gen_odf_angle_file.dream3d", unit_test::k_TestFilesDir));
@@ -72,8 +71,7 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter 
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "write_stats_gen_odf_angle_file.tar.gz",
-                                                              "write_stats_gen_odf_angle_file");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "write_stats_gen_odf_angle_file.tar.gz", "write_stats_gen_odf_angle_file");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/write_stats_gen_odf_angle_file/write_stats_gen_odf_angle_file.dream3d", unit_test::k_TestFilesDir));

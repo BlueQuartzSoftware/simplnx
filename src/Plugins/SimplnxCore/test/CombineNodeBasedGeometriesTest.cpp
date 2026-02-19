@@ -638,48 +638,42 @@ void LoadAndExecute3DNodeGeometriesTest(const fs::path& inputFilePath)
 
 TEST_CASE("Combine Node Geometries: Vertex", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz",
-                                                                     "combine_vertex_geometries.dream3d");
+  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_vertex_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_vertex_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute0DNodeGeometriesTest<VertexGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Edge", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz",
-                                                                     "combine_edge_geometries.dream3d");
+  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_edge_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_edge_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute1DNodeGeometriesTest<EdgeGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Triangle", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz",
-                                                                     "combine_triangle_geometries.dream3d");
+  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_triangle_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_triangle_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute2DNodeGeometriesTest<TriangleGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Quad", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz",
-                                                                     "combine_quad_geometries.dream3d");
+  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_quad_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_quad_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute2DNodeGeometriesTest<QuadGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Tetrahedral", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz",
-                                                                     "combine_tetrahedral_geometries.dream3d");
+  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_tetrahedral_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_tetrahedral_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute3DNodeGeometriesTest<TetrahedralGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Hexahedral", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz",
-                                                                     "combine_hexahedral_geometries.dream3d");
+  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_hexahedral_geometries.dream3d");
 
   auto inputFilePath = std::filesystem::path(fmt::format("{}/combine_node_based_geometries/combine_hexahedral_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute3DNodeGeometriesTest<HexahedralGeom>(inputFilePath);

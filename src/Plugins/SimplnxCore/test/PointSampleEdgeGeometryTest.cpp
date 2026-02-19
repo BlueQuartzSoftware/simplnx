@@ -21,8 +21,7 @@ const DataPath k_ExemplarySampledVertexGeomPath = DataPath({"Exemplary Sampled V
 
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Valid Filter Execution", "[SimplnxCore][PointSampleEdgeGeometryFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "point_sample_edge_geometry.tar.gz",
-                                                              "point_sample_edge_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "point_sample_edge_geometry.tar.gz", "point_sample_edge_geometry");
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
@@ -55,8 +54,7 @@ TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Valid Filter Execution", 
 
 TEST_CASE("SimplnxCore::PointSampleEdgeGeometryFilter: Invalid Filter Execution", "[SimplnxCore][PointSampleEdgeGeometryFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "point_sample_edge_geometry.tar.gz",
-                                                              "point_sample_edge_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "point_sample_edge_geometry.tar.gz", "point_sample_edge_geometry");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/point_sample_edge_geometry/point_sample_edge_geometry.dream3d", unit_test::k_TestFilesDir)));
 

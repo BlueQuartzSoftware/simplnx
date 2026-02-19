@@ -39,8 +39,7 @@ inline const DataPath k_FeatureIdsMaskAllPath = k_InputGeometryPath.createChildP
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:Face", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz",
-                                                              "segment_features_test_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -95,8 +94,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:Face", "[OrientationAnalysi
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:All", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz",
-                                                              "segment_features_test_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -151,8 +149,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:All", "[OrientationAnalysis
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:MaskFace", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz",
-                                                              "segment_features_test_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -207,8 +204,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:MaskFace", "[OrientationAna
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures:MaskAll", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz",
-                                                              "segment_features_test_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

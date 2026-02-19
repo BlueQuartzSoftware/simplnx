@@ -23,7 +23,7 @@ const std::string k_ImageDataName = "ImageData";
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Read_Basic", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -66,7 +66,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Read_Basic", "[ITKImageProc
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Origin", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -112,7 +112,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Origin", "[ITKImag
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Centering_Origin", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -156,7 +156,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Centering_Origin", "[ITKIma
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Cropping", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   // This block generates every combination of croppingOptions, changeOrigin, and changeSpacing and then the entire test executes for each combination
   std::vector<float64> spacing = {2.0, 2.0, 1.0};
@@ -233,7 +233,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Cropping", "[ITKImageProces
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Spacing", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -279,7 +279,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Spacing", "[ITKIma
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Preprocessed", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -337,7 +337,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Preprocessed"
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Postprocessed", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -396,7 +396,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Postprocessed
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: DataType_Conversion", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -443,7 +443,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: DataType_Conversion", "[ITK
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_Crop_DataType", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -499,7 +499,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_Crop_DataType",
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_All", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;

@@ -26,8 +26,7 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "label_triangle_geometry_test_v2.tar.gz",
-                                                              "label_triangle_geometry_test_v2", true, true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "label_triangle_geometry_test_v2.tar.gz", "label_triangle_geometry_test_v2", true, true);
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 

@@ -49,8 +49,7 @@ const DataPath k_GeneratedIncoherencePath = k_FaceDataPath.createChildPath(k_Gen
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherence", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz",
-                                                              "compute_twin_boundaries_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_twin_boundaries_test/validation/7_0_Compute_Twin_Boundaries_Test.dream3d", unit_test::k_TestFilesDir));
@@ -103,8 +102,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherenc
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz",
-                                                              "compute_twin_boundaries_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_twin_boundaries_test/validation/7_0_Compute_Twin_Boundaries_Test.dream3d", unit_test::k_TestFilesDir));
@@ -168,8 +166,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
 
 TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check", "[SimplnxCore][ComputeTwinBoundariesFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz",
-                                                              "compute_twin_boundaries_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_twin_boundaries_test_v2.tar.gz", "compute_twin_boundaries_test");
 
   // Read the modified Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_twin_boundaries_test/validation/7_0_Compute_Twin_Boundaries_Test.dream3d", unit_test::k_TestFilesDir));

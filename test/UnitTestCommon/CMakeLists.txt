@@ -1,5 +1,4 @@
 find_package(Catch2 CONFIG REQUIRED)
-find_package(reproc++ CONFIG REQUIRED)
 
 add_library(SimplnxUnitTestCommon INTERFACE)
 add_library(simplnx::UnitTestCommon ALIAS SimplnxUnitTestCommon)
@@ -13,7 +12,7 @@ target_link_libraries(SimplnxUnitTestCommon
   INTERFACE
     simplnx
     Catch2::Catch2
-    reproc++
+    ZLIB::ZLIB
 )
 
 target_sources(SimplnxUnitTestCommon

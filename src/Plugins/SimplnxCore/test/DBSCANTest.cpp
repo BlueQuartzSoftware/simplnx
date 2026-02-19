@@ -49,7 +49,7 @@ const fs::path k_2DTestFile(fmt::format("{}/dbscan_test/7_0_2d_dbscan_test_data.
 
 void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsVal, const DataPath& exemplarClusterIds)
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_2DTestFile);
 
   const std::string k_GeneratedIdsName = targetPath.getTargetName() + k_IdsPostFix;
@@ -111,7 +111,7 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
 {
   REQUIRE((randomType == to_underlying(DBSCAN::ParseOrder::Random) || randomType == to_underlying(DBSCAN::ParseOrder::SeededRandom)));
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_2DTestFile);
 
   const std::string k_GeneratedIdsName = targetPath.getTargetName() + k_IdsPostFix;
@@ -251,7 +251,7 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Varied", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCAN]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/dbscan_test/7_0_3d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir)));
 
   const DataPath vertexGeom = DataPath{{"Reduced Vertex Geom"}};

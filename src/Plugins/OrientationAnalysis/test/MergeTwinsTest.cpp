@@ -18,8 +18,7 @@ TEST_CASE("OrientationAnalysis::MergeTwinsFilter: Valid Execution", "[Orientatio
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_MergeTwins.tar.gz",
-                                                              "6_5_MergeTwins/6_5_MergeTwins.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_MergeTwins.tar.gz", "6_5_MergeTwins/6_5_MergeTwins.dream3d");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_5_MergeTwins/6_5_MergeTwins.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

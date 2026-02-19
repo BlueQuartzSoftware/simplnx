@@ -28,8 +28,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_resample_rect_grid_to_image_geom.tar.gz",
-                                                              "6_6_resample_rect_grid_to_image_geom.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_resample_rect_grid_to_image_geom.tar.gz", "6_6_resample_rect_grid_to_image_geom.dream3d");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ResampleRectGridToImageGeomFilter filter;
@@ -93,8 +92,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: InValid Filter Execut
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_resample_rect_grid_to_image_geom.tar.gz",
-                                                              "6_6_resample_rect_grid_to_image_geom.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_resample_rect_grid_to_image_geom.tar.gz", "6_6_resample_rect_grid_to_image_geom.dream3d");
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ResampleRectGridToImageGeomFilter filter;
   DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_resample_rect_grid_to_image_geom.dream3d", unit_test::k_TestFilesDir)));

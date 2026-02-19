@@ -20,7 +20,7 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "identify_sample.tar.gz", "identify_sample", true, true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "identify_sample.tar.gz", "identify_sample", true, true);
   using TestArgType = std::tuple<bool, bool, int>;
   /* clang-format off */
   std::vector<TestArgType> allTestParams = {

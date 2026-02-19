@@ -36,7 +36,7 @@ const std::vector<DataPath> k_TriangleArrays = {DataPath::FromString("TriangleGe
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instantiate)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
   UnitTest::LoadPlugins();
-  const TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
+  const TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -61,7 +61,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instan
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed Vertex Copy)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
   UnitTest::LoadPlugins();
-  const TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
+  const TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -84,7 +84,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed Face Copy)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
   UnitTest::LoadPlugins();
-  const TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
+  const TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -106,7 +106,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Data)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
   LoadPlugins();
-  const TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
+  const TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);

@@ -126,8 +126,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz",
-                                                              "combine_transformation_matrices_test.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
 
@@ -209,8 +208,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Image Geometries - 
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz",
-                                                              "combine_transformation_matrices_test.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
 
@@ -363,8 +361,7 @@ TEST_CASE("SimplnxCore::CombineTransformationMatricesFilter: Vertex Geometries",
 
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz",
-                                                              "combine_transformation_matrices_test.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_transformation_matrices_test.tar.gz", "combine_transformation_matrices_test.dream3d");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/combine_transformation_matrices_test.dream3d", unit_test::k_TestFilesDir));
 

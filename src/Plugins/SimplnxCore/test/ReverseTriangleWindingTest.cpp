@@ -18,8 +18,7 @@ TEST_CASE("SimplnxCore::ReverseTriangleWindingFilter: Valid Filter Execution", "
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "reverse_triangle_winding.tar.gz",
-                                                              "reverse_triangle_winding");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "reverse_triangle_winding.tar.gz", "reverse_triangle_winding");
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/reverse_triangle_winding/6_6_exemplar_triangle_winding.dream3d", unit_test::k_TestFilesDir)));
 

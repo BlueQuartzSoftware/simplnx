@@ -40,7 +40,7 @@ TEST_CASE("SimplnxCore::ReadVolumeGraphicsFileFilter - Valid filter execution", 
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "volume_graphics_test.tar.gz", "volume_graphics_test.vgi");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "volume_graphics_test.tar.gz", "volume_graphics_test.vgi");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   const ReadVolumeGraphicsFileFilter filter;

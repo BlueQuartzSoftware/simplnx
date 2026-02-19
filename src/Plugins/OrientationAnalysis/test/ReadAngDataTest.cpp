@@ -18,7 +18,7 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Exemplary Test", "[OrientationAnaly
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "read_ang_test.tar.gz", "read_ang_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "read_ang_test.tar.gz", "read_ang_test");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/read_ang_test/read_ang_test.dream3d", unit_test::k_TestFilesDir));
@@ -54,7 +54,7 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Invalid Phase", "[OrientationAnalys
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "read_ang_test.tar.gz", "read_ang_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "read_ang_test.tar.gz", "read_ang_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadAngDataFilter filter;
@@ -83,7 +83,7 @@ TEST_CASE("OrientationAnalysis::ReadAngData: Invalid Columns & Rows", "[Orientat
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "read_ang_test.tar.gz", "read_ang_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "read_ang_test.tar.gz", "read_ang_test");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadAngDataFilter filter;

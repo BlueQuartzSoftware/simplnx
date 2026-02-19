@@ -68,7 +68,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter", "[SimplnxCore][ReadVtkSt
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadVtkStructuredPointsFilter filter;
@@ -108,7 +108,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dimensions Errors", "[Sim
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   test_invalid_case(k_InputDirPath / "dims_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DimsKeywordErr));
   test_invalid_case(k_InputDirPath / "dims_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
@@ -122,7 +122,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Origin Errors", "[Simplnx
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   test_invalid_case(k_InputDirPath / "origin_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginKeywordErr));
   test_invalid_case(k_InputDirPath / "origin_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
@@ -137,7 +137,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Spacing Errors", "[Simpln
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   test_invalid_case(k_InputDirPath / "spacing_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingKeywordErr));
   test_invalid_case(k_InputDirPath / "spacing_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
@@ -152,7 +152,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Lookup Table Errors", "[S
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   test_invalid_case(k_InputDirPath / "read_lookup_table_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableKeywordErr));
   test_invalid_case(k_InputDirPath / "read_lookup_table_keyword_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableKeywordErr));
@@ -164,7 +164,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dataset Errors", "[Simpln
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   test_invalid_case(k_InputDirPath / "dataset_data_type_number_conversion_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
   test_invalid_case(k_InputDirPath / "dataset_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetKeywordErr));
@@ -178,7 +178,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Other Errors", "[SimplnxC
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   test_invalid_case(k_InputDirPath / "convert_vtk_data_type_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ConvertVtkDataTypeErr));
   test_invalid_case(k_InputDirPath / "file_type_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::FileTypeErr));

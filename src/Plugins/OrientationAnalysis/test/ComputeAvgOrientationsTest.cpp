@@ -69,7 +69,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations", "[OrientationAnalysis][
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_ComputeAvgOrientation.tar.gz", "7_ComputeAvgOrientation");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ComputeAvgOrientation.tar.gz", "7_ComputeAvgOrientation");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ComputeAvgOrientation/7_ComputeAvgOrientation.dream3d", unit_test::k_TestFilesDir));

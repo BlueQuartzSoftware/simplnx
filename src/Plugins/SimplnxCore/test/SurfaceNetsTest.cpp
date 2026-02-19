@@ -17,7 +17,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v3/SurfaceNetsTest_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
@@ -118,7 +118,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v3/SurfaceNetsTest_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
@@ -218,7 +218,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v3/SurfaceNetsTest_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
@@ -317,7 +317,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/SurfaceNetsTest_v3/SurfaceNetsTest_v3.dream3d", nx::core::unit_test::k_TestFilesDir));
