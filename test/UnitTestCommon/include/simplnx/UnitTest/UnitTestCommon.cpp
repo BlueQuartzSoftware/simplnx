@@ -106,6 +106,27 @@ bool isZeroBlock(const std::array<char, 512>& block)
   }
   return true;
 }
+
+// Validate the tar header checksum (offset 148, 8 bytes octal).
+// The checksum is the unsigned sum of all 512 header bytes, treating
+// the 8-byte checksum field itself as spaces (0x20).
+bool validateChecksum(const std::array<char, 512>& header)
+{
+  uint64 stored = parseOctal(header.data() + 148, 8);
+  uint64 computed = 0;
+  for(size_t i = 0; i < 512; i++)
+  {
+    if(i >= 148 && i < 156)
+    {
+      computed += ' ';
+    }
+    else
+    {
+      computed += static_cast<unsigned char>(header[i]);
+    }
+  }
+  return computed == stored;
+}
 } // namespace
 
 std::error_code TestFileSentinel::decompress()
@@ -121,19 +142,22 @@ std::error_code TestFileSentinel::decompress()
 
   constexpr size_t k_BlockSize = 512;
   std::array<char, k_BlockSize> header{};
+  std::string gnuLongName;
 
   while(true)
   {
-    int bytesRead = gzread(gz, header.data(), k_BlockSize);
-    if(bytesRead == 0)
     {
-      break; // EOF
-    }
-    if(bytesRead < 0 || bytesRead != k_BlockSize)
-    {
-      std::cout << "Failed to read tar header from: " << archivePath << std::endl;
-      gzclose(gz);
-      return std::make_error_code(std::errc::io_error);
+      int bytesRead = gzread(gz, header.data(), k_BlockSize);
+      if(bytesRead == 0)
+      {
+        break; // EOF
+      }
+      if(bytesRead < 0 || bytesRead != k_BlockSize)
+      {
+        std::cout << "Failed to read tar header from: " << archivePath << std::endl;
+        gzclose(gz);
+        return std::make_error_code(std::errc::io_error);
+      }
     }
 
     // Two consecutive zero blocks mark end of archive
@@ -142,14 +166,76 @@ std::error_code TestFileSentinel::decompress()
       break;
     }
 
+    // Validate tar header checksum
+    if(!validateChecksum(header))
+    {
+      std::cout << "Invalid tar header checksum in: " << archivePath << std::endl;
+      gzclose(gz);
+      return std::make_error_code(std::errc::io_error);
+    }
+
     // Parse tar header fields
     // offset 345, 155 bytes: prefix; offset 0, 100 bytes: name
     std::string prefix(header.data() + 345, strnlen(header.data() + 345, 155));
     std::string name(header.data(), strnlen(header.data(), 100));
     std::string entryPath = prefix.empty() ? name : (prefix + "/" + name);
 
+    // If a GNU long name was read from a previous 'L' entry, use it instead
+    if(!gnuLongName.empty())
+    {
+      entryPath = std::move(gnuLongName);
+      gnuLongName.clear();
+    }
+
     uint64 fileSize = parseOctal(header.data() + 124, 12);
     char typeFlag = header[156];
+
+    // Handle GNU long name extension (typeflag 'L'): the data blocks contain
+    // the long filename for the next entry
+    if(typeFlag == 'L')
+    {
+      uint64 blocks = (fileSize + k_BlockSize - 1) / k_BlockSize;
+      std::string longName;
+      longName.reserve(fileSize);
+      std::array<char, k_BlockSize> dataBuf{};
+      for(uint64 i = 0; i < blocks; i++)
+      {
+        int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
+        if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
+        {
+          std::cout << "Unexpected end of archive reading GNU long name in: " << archivePath << std::endl;
+          gzclose(gz);
+          return std::make_error_code(std::errc::io_error);
+        }
+        uint64 useful = std::min(fileSize - longName.size(), static_cast<uint64>(k_BlockSize));
+        longName.append(dataBuf.data(), useful);
+      }
+      // Remove trailing null if present
+      if(!longName.empty() && longName.back() == '\0')
+      {
+        longName.pop_back();
+      }
+      gnuLongName = std::move(longName);
+      continue;
+    }
+
+    // Handle GNU long link name extension (typeflag 'K'): skip data blocks
+    if(typeFlag == 'K')
+    {
+      uint64 blocks = (fileSize + k_BlockSize - 1) / k_BlockSize;
+      std::array<char, k_BlockSize> dataBuf{};
+      for(uint64 i = 0; i < blocks; i++)
+      {
+        int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
+        if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
+        {
+          std::cout << "Unexpected end of archive reading GNU long link in: " << archivePath << std::endl;
+          gzclose(gz);
+          return std::make_error_code(std::errc::io_error);
+        }
+      }
+      continue;
+    }
 
     std::string fullPath = fmt::format("{}/{}", m_TestFilesDir, entryPath);
 
@@ -176,8 +262,8 @@ std::error_code TestFileSentinel::decompress()
       std::array<char, k_BlockSize> dataBuf{};
       while(remaining > 0)
       {
-        int toRead = gzread(gz, dataBuf.data(), k_BlockSize);
-        if(toRead <= 0)
+        int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
+        if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
           std::cout << "Unexpected end of archive reading: " << entryPath << std::endl;
           gzclose(gz);
@@ -194,7 +280,13 @@ std::error_code TestFileSentinel::decompress()
       uint64 blocks = (fileSize + k_BlockSize - 1) / k_BlockSize;
       for(uint64 i = 0; i < blocks; i++)
       {
-        gzread(gz, header.data(), k_BlockSize);
+        int bytesRead = gzread(gz, header.data(), k_BlockSize);
+        if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
+        {
+          std::cout << "Unexpected end of archive skipping data for: " << entryPath << std::endl;
+          gzclose(gz);
+          return std::make_error_code(std::errc::io_error);
+        }
       }
     }
   }
