@@ -30,8 +30,7 @@ TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: Valid filter execution", "
   ComputeVolumeFractionsFilter filter;
   Arguments args;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
-                                                              "6_6_volume_fraction_feature_count.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz", "6_6_volume_fraction_feature_count.dream3d");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);
 
@@ -68,8 +67,7 @@ TEST_CASE("SimplnxCore::ComputeVolumeFractionsFilter: InValid filter execution",
   ComputeVolumeFractionsFilter filter;
   Arguments args;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz",
-                                                              "6_6_volume_fraction_feature_count.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_volume_fraction_feature_count.dream3d.tar.gz", "6_6_volume_fraction_feature_count.dream3d");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_volFractions_and_numFeatures_test.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);

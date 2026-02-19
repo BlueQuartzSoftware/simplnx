@@ -27,8 +27,7 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: Valid filter execution", 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
-                                                              "6_6_find_feature_centroids.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
 
   DataStructure alteredDs = UnitTest::LoadDataStructure(k_BaseDataFilePath);
   const int32 removeCompIndex = 1;
@@ -99,8 +98,7 @@ TEST_CASE("SimplnxCore::ExtractComponentAsArrayFilter: InValid filter execution"
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz",
-                                                              "6_6_find_feature_centroids.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_centroids.tar.gz", "6_6_find_feature_centroids.dream3d");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractComponentAsArrayFilter filter;

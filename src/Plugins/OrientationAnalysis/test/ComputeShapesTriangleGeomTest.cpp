@@ -50,8 +50,7 @@ using namespace ComputeShapesTriangleGeomFilterTest;
 // !!! See filter documentation for information on included data and how it was generated and visually validated !!!
 TEST_CASE("OrientationAnalysis::ComputeShapesTriangleGeom", "[OrientationAnalysis][ComputeShapesTriangleGeom]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_compute_triangle_shapes_test.tar.gz",
-                                                              "7_compute_triangle_shapes_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_compute_triangle_shapes_test.tar.gz", "7_compute_triangle_shapes_test");
 
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/7_compute_triangle_shapes_test/test/7_exemplar_triangle_shapes.dream3d", unit_test::k_TestFilesDir)));
 

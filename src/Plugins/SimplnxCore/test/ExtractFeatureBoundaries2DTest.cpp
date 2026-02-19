@@ -58,8 +58,7 @@ void VerifyOutput(const DataStructure& dataStructure, const DataPath& exemplarDa
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
   UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz",
-                                                              "ExtractFeatureBoundaries2D", true);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D", true);
 
   std::vector<std::string> exemplarFilePaths = {"01_simple_adjacent.dream3d", "02_non_touching.dream3d",   "03_checkerboard.dream3d",  "04_single_feature.dream3d",
                                                 "05_nested_features.dream3d", "06_corner_contact.dream3d", "07_complex_mixed.dream3d", "08_complex_mixed.dream3d"};
@@ -108,8 +107,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[Simp
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
   UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz",
-                                                              "ExtractFeatureBoundaries2D");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ExtractFeatureBoundaries2D/08_complex_mixed.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -146,8 +144,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore]
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
   UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz",
-                                                              "ExtractFeatureBoundaries2D");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ExtractFeatureBoundaries2D/08_complex_mixed.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
@@ -185,8 +182,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCo
 TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[SimplnxCore][ExtractFeatureBoundaries2DFilter]")
 {
   UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz",
-                                                              "ExtractFeatureBoundaries2D");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ExtractFeatureBoundaries2D.tar.gz", "ExtractFeatureBoundaries2D");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ExtractFeatureBoundaries2D/08_complex_mixed.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);

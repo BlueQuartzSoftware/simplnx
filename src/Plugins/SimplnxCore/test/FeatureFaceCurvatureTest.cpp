@@ -61,7 +61,7 @@ TEST_CASE("SimplnxCore::FeatureFaceCurvatureFilter: Test Algorithm", "[FeatureFa
   DataPath k_MeanCurvature_Path = faceAttribMatrixPath.createChildPath("MeanCurvatures-2");
   DataPath k_WeingartenMatrix_Path = faceAttribMatrixPath.createChildPath("WeingartenMatrix-2");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_Goldfeather.tar.gz", "6_5_Goldfeather");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_Goldfeather.tar.gz", "6_5_Goldfeather");
 
   FeatureFaceCurvatureFilter filter;
 

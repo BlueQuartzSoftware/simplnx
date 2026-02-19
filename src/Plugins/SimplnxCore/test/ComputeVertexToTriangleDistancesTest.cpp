@@ -22,8 +22,7 @@ TEST_CASE("SimplnxCore::ComputeVertexToTriangleDistancesFilter", "[SimplnxCore][
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_vertex_to_triangle_distances.tar.gz",
-                                                              "6_6_vertex_to_triangle_distances.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_vertex_to_triangle_distances.tar.gz", "6_6_vertex_to_triangle_distances.dream3d");
 
   // Read the Small IN100 Data set
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_vertex_to_triangle_distances.dream3d", unit_test::k_TestFilesDir)));

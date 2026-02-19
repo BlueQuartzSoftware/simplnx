@@ -56,8 +56,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz",
-                                                              "6_6_interpolate_point_cloud_to_regular_grid");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz", "6_6_interpolate_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_interpolate_point_cloud_to_regular_grid/6_6_interpolate_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
@@ -98,8 +97,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Valid Filter E
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz",
-                                                              "6_6_interpolate_point_cloud_to_regular_grid");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz", "6_6_interpolate_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_interpolate_point_cloud_to_regular_grid/6_6_interpolate_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
@@ -140,8 +138,7 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz",
-                                                              "6_6_interpolate_point_cloud_to_regular_grid");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_interpolate_point_cloud_to_regular_grid.tar.gz", "6_6_interpolate_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_interpolate_point_cloud_to_regular_grid/6_6_interpolate_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));

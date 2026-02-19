@@ -44,8 +44,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_gbpd_metric_based.tar.gz",
-                                                              "6_6_find_gbpd_metric_based");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_gbpd_metric_based.tar.gz", "6_6_find_gbpd_metric_based");
 
   auto* filterList = Application::Instance()->getFilterList();
 
@@ -169,8 +168,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: InValid Filter Exe
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz",
-                                                              "6_6_find_gbcd_metric_based");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz", "6_6_find_gbcd_metric_based");
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_find_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));

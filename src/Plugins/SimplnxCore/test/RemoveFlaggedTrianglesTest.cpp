@@ -29,7 +29,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Test Algorithm", "[Simplnx
 {
   UnitTest::LoadPlugins();
 
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_CMakeExecutable, unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "remove_flagged_elements_data.tar.gz", "remove_flagged_elements_data");
 
   // Load DataStructure containing the base geometry and an exemplar cleaned geometry
   DataStructure dataStructure = UnitTest::LoadDataStructure(k_BaseDataFilePath);

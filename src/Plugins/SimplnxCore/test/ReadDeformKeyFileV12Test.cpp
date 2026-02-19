@@ -157,7 +157,7 @@ const DataPath k_VertexPath = k_QuadGeomPath.createChildPath(k_VertexData);
 
 TEST_CASE("SimplnxCore::ReadDeformKeyFileV12: Case 0", "[Core][ReadDeformKeyFileV12]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_import_deform_12.tar.gz", "6_6_import_deform_12");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_import_deform_12.tar.gz", "6_6_import_deform_12");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_import_deform_12/6_6_read_deform_12_0.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);
@@ -198,7 +198,7 @@ TEST_CASE("SimplnxCore::ReadDeformKeyFileV12: Case 0", "[Core][ReadDeformKeyFile
 
 TEST_CASE("SimplnxCore::ReadDeformKeyFileV12Filter: Case 1", "[Core][ReadDeformKeyFileV12Filter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_import_deform_12.tar.gz", "6_6_import_deform_12");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_import_deform_12.tar.gz", "6_6_import_deform_12");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_import_deform_12/6_6_read_deform_12_1.dream3d", unit_test::k_TestFilesDir));
   DataStructure exemplarDataStructure = LoadDataStructure(exemplarFilePath);

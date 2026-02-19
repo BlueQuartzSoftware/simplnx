@@ -2,8 +2,11 @@
 
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 
-#include <reproc++/reproc.hpp>
-#include <reproc++/run.hpp>
+#include <zlib.h>
+
+#include <array>
+#include <cstring>
+#include <fstream>
 
 namespace nx::core::UnitTest
 {
@@ -42,9 +45,8 @@ DataStructure LoadDataStructure(const fs::path& filepath)
   return dataStructure;
 }
 
-TestFileSentinel::TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles, bool removeTemp)
-: m_CMakeExecutable(std::move(cmakeExecutable))
-, m_TestFilesDir(std::move(testFilesDir))
+TestFileSentinel::TestFileSentinel(std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles, bool removeTemp)
+: m_TestFilesDir(std::move(testFilesDir))
 , m_InputArchiveName(std::move(inputArchiveName))
 , m_ExpectedTopLevelOutput(std::move(expectedTopLevelOutput))
 , m_Decompress(decompressFiles)
@@ -75,18 +77,130 @@ TestFileSentinel::~TestFileSentinel()
   }
 }
 
+namespace
+{
+// Parse an octal field from a tar header, returning 0 on empty/null fields
+uint64 parseOctal(const char* data, size_t length)
+{
+  uint64 value = 0;
+  for(size_t i = 0; i < length; i++)
+  {
+    if(data[i] == '\0' || data[i] == ' ')
+    {
+      break;
+    }
+    value = value * 8 + static_cast<uint64>(data[i] - '0');
+  }
+  return value;
+}
+
+// Check if a 512-byte tar header block is all zeros (end-of-archive marker)
+bool isZeroBlock(const std::array<char, 512>& block)
+{
+  for(char c : block)
+  {
+    if(c != '\0')
+    {
+      return false;
+    }
+  }
+  return true;
+}
+} // namespace
+
 std::error_code TestFileSentinel::decompress()
 {
-  reproc::options options;
-  options.redirect.parent = true;
-  options.deadline = reproc::milliseconds(600000);
-  options.working_directory = m_TestFilesDir.c_str();
-  options.nonblocking = false;
+  const std::string archivePath = fmt::format("{}/{}", m_TestFilesDir, m_InputArchiveName);
 
-  std::vector<std::string> args = {m_CMakeExecutable, "-E", "tar", "xvzf", fmt::format("{}/{}", m_TestFilesDir, m_InputArchiveName)};
+  gzFile gz = gzopen(archivePath.c_str(), "rb");
+  if(gz == nullptr)
+  {
+    std::cout << "Failed to open archive: " << archivePath << std::endl;
+    return std::make_error_code(std::errc::no_such_file_or_directory);
+  }
 
-  auto resultPair = reproc::run(args, options);
-  return resultPair.second;
+  constexpr size_t k_BlockSize = 512;
+  std::array<char, k_BlockSize> header{};
+
+  while(true)
+  {
+    int bytesRead = gzread(gz, header.data(), k_BlockSize);
+    if(bytesRead == 0)
+    {
+      break; // EOF
+    }
+    if(bytesRead < 0 || bytesRead != k_BlockSize)
+    {
+      std::cout << "Failed to read tar header from: " << archivePath << std::endl;
+      gzclose(gz);
+      return std::make_error_code(std::errc::io_error);
+    }
+
+    // Two consecutive zero blocks mark end of archive
+    if(isZeroBlock(header))
+    {
+      break;
+    }
+
+    // Parse tar header fields
+    // offset 345, 155 bytes: prefix; offset 0, 100 bytes: name
+    std::string prefix(header.data() + 345, strnlen(header.data() + 345, 155));
+    std::string name(header.data(), strnlen(header.data(), 100));
+    std::string entryPath = prefix.empty() ? name : (prefix + "/" + name);
+
+    uint64 fileSize = parseOctal(header.data() + 124, 12);
+    char typeFlag = header[156];
+
+    std::string fullPath = fmt::format("{}/{}", m_TestFilesDir, entryPath);
+
+    // typeFlag: '5' = directory, '0' or '\0' = regular file, '2' = symlink
+    if(typeFlag == '5')
+    {
+      std::filesystem::create_directories(fullPath);
+    }
+    else if(typeFlag == '0' || typeFlag == '\0')
+    {
+      // Ensure parent directory exists
+      std::filesystem::path filePath(fullPath);
+      std::filesystem::create_directories(filePath.parent_path());
+
+      std::ofstream outFile(fullPath, std::ios::binary);
+      if(!outFile)
+      {
+        std::cout << "Failed to create file: " << fullPath << std::endl;
+        gzclose(gz);
+        return std::make_error_code(std::errc::io_error);
+      }
+
+      uint64 remaining = fileSize;
+      std::array<char, k_BlockSize> dataBuf{};
+      while(remaining > 0)
+      {
+        int toRead = gzread(gz, dataBuf.data(), k_BlockSize);
+        if(toRead <= 0)
+        {
+          std::cout << "Unexpected end of archive reading: " << entryPath << std::endl;
+          gzclose(gz);
+          return std::make_error_code(std::errc::io_error);
+        }
+        uint64 writeSize = std::min(remaining, static_cast<uint64>(k_BlockSize));
+        outFile.write(dataBuf.data(), static_cast<std::streamsize>(writeSize));
+        remaining -= writeSize;
+      }
+    }
+    else
+    {
+      // For other types (symlinks, etc.), skip the data blocks
+      uint64 blocks = (fileSize + k_BlockSize - 1) / k_BlockSize;
+      for(uint64 i = 0; i < blocks; i++)
+      {
+        gzread(gz, header.data(), k_BlockSize);
+      }
+    }
+  }
+
+  gzclose(gz);
+  return {};
 }
 
 PreferencesSentinel::PreferencesSentinel(std::string largeDataFormat, int64 largeDataSize, bool forceOocData)

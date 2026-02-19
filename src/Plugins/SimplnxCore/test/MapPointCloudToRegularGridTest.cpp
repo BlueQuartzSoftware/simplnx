@@ -40,8 +40,7 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz",
-                                                              "6_6_map_point_cloud_to_regular_grid");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
@@ -79,8 +78,7 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz",
-                                                              "6_6_map_point_cloud_to_regular_grid");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
@@ -119,8 +117,7 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Valid Filter Execution
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz",
-                                                              "6_6_map_point_cloud_to_regular_grid");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));
@@ -155,8 +152,7 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Invalid Filter Executi
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz",
-                                                              "6_6_map_point_cloud_to_regular_grid");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_map_point_cloud_to_regular_grid.tar.gz", "6_6_map_point_cloud_to_regular_grid");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_map_point_cloud_to_regular_grid/6_6_map_point_cloud_to_regular_grid.dream3d", unit_test::k_TestFilesDir));

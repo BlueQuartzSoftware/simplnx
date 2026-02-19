@@ -24,9 +24,8 @@ const fs::path k_WrittenFilePath = fs::path(fmt::format("{}/7_0_spparks_sites_wr
 TEST_CASE("SimplnxCore::WriteSPParksSitesFilter: Single File Valid", "[SimplnxCore][WriteSPParksSitesFilter]")
 {
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_spparks_sites_writer.tar.gz",
-                                                               "6_5_spparks_sites_writer");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel2(nx::core::unit_test::k_TestFilesDir, "6_5_spparks_sites_writer.tar.gz", "6_5_spparks_sites_writer");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/INL_writer/6_6_INL_writer.dream3d", unit_test::k_TestFilesDir)));
 

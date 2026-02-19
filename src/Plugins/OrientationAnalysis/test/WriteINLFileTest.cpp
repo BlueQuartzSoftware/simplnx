@@ -67,7 +67,7 @@ TEST_CASE("OrientationAnalysis::WriteINLFileFilter: Valid Filter Execution", "[O
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "INL_writer.tar.gz", "INL_writer");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   WriteINLFileFilter filter;

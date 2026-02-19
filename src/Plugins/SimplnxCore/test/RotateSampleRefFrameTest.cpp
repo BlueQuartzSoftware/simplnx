@@ -66,8 +66,7 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "Rotate_Sample_Ref_Frame_Test_v3.tar.gz",
-                                                              "Rotate_Sample_Ref_Frame_Test_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Rotate_Sample_Ref_Frame_Test_v3.tar.gz", "Rotate_Sample_Ref_Frame_Test_v3");
 
   const DataPath k_OriginalGeomPath({"Original"});
 

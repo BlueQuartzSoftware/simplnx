@@ -781,8 +781,7 @@ TEST_CASE("nx::core: 6.6 Mega Pipeline Conversion", "[simplnx][Filter]")
   UnitTest::LoadPlugins();
   auto filterList = app->getFilterList();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "backwards_compatibility_test.tar.gz",
-                                                              "backwards_compatibility_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "backwards_compatibility_test.tar.gz", "backwards_compatibility_test");
 
   std::string pipelinePath = fmt::format("{}/backwards_compatibility_test/6_6/mega-pipeline.d3dpipeline", unit_test::k_TestFilesDir);
 
@@ -971,8 +970,7 @@ TEST_CASE("nx::core: 6.5 prebuilt pipeline read in check")
   UnitTest::LoadPlugins();
   auto filterList = app->getFilterList();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "backwards_compatibility_test.tar.gz",
-                                                              "backwards_compatibility_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "backwards_compatibility_test.tar.gz", "backwards_compatibility_test");
 
   fs::path pipelineDirectoryPath = fs::path(fmt::format("{}/backwards_compatibility_test/6_5", unit_test::k_TestFilesDir));
 

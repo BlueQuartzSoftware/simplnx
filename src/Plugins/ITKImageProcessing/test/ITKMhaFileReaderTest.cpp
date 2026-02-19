@@ -14,7 +14,7 @@ using namespace nx::core;
 
 TEST_CASE("ITKImageProcessing::ITKMhaFileReaderFilter: Read 2D & 3D Image Data", "[ITKImageProcessing][ITKMhaFileReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_v3.tar.gz", "ITKMhaFileReaderTest_v3");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ITKMhaFileReaderTest_v3.tar.gz", "ITKMhaFileReaderTest_v3");
 
   // Load plugins (this is needed because ITKMhaFileReaderFilter needs access to the SimplnxCore plugin)
   UnitTest::LoadPlugins();

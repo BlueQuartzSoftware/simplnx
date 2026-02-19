@@ -35,8 +35,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: Invalid Parameters", "[SimplnxCore][R
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
-                                                              "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -89,8 +88,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
-                                                              "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -235,8 +233,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
-                                                              "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -381,8 +378,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][Resample
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
-                                                              "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;
@@ -477,8 +473,7 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz",
-                                                              "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar_2.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   ResampleImageGeomFilter filter;
   Arguments args;

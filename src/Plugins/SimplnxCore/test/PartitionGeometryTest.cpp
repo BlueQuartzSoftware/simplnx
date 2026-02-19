@@ -154,7 +154,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeo
     // First time through, decompress the test data
     if(index == 0)
     {
-      s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
+      s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
     }
 
     std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
@@ -261,7 +261,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Advanced", "[Plugins][Partition
     // First time through, decompress the test data
     if(index == 0)
     {
-      s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
+      s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
     }
 
     std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
@@ -360,7 +360,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Bounding Box", "[Plugins][Parti
     // First time through, decompress the test data
     if(index == 0)
     {
-      s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
+      s_FileSentinel = std::make_shared<FileSentinelType>(nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
     }
 
     std::cout << "Basic Partition Arguments: " << filePaths[index] << std::endl;
@@ -418,7 +418,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Valid filter execution", "[Plug
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
 
   Arguments partitionGeometryArgs;
   Arguments importD3DArgs;
@@ -542,7 +542,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Invalid filter execution")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PartitionGeometryTest.tar.gz", "PartitionGeometryTest");
 
   Arguments partitionGeometryArgs;
   Arguments importD3DArgs;

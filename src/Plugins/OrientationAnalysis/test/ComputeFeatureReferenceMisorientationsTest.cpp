@@ -42,8 +42,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter_Ave
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_feature_reference_misorientation.tar.gz",
-                                                              "compute_feature_reference_misorientation");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_feature_reference_misorientation.tar.gz", "compute_feature_reference_misorientation");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_feature_reference_misorientation/compute_feature_reference_misorientation.dream3d", unit_test::k_TestFilesDir));
@@ -117,8 +116,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceMisorientationsFilter_Euc
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_feature_reference_misorientation.tar.gz",
-                                                              "compute_feature_reference_misorientation");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_feature_reference_misorientation.tar.gz", "compute_feature_reference_misorientation");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_feature_reference_misorientation/compute_feature_reference_misorientation.dream3d", unit_test::k_TestFilesDir));

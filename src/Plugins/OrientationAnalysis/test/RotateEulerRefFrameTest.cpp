@@ -20,7 +20,7 @@ using namespace nx::core;
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][RotateEulerRefFrameFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
 
   // Instantiate an "Application" instance to load plugins
   UnitTest::LoadPlugins();

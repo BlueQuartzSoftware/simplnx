@@ -67,8 +67,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][Comput
 
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz",
-                                                              "so3_cubic_high_ipf_001.dream3d");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz", "so3_cubic_high_ipf_001.dream3d");
 
   DataStructure dataStructure;
   {

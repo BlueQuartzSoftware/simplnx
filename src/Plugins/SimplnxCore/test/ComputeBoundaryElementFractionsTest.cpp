@@ -21,8 +21,7 @@ TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: Valid Filter Exec
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_boundary_element_fractions.tar.gz",
-                                                              "6_6_find_feature_boundary_element_fractions");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_boundary_element_fractions.tar.gz", "6_6_find_feature_boundary_element_fractions");
 
   DataStructure dataStructure =
       UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_boundary_element_fractions/6_6_find_feature_boundary_element_fractions.dream3d", unit_test::k_TestFilesDir)));

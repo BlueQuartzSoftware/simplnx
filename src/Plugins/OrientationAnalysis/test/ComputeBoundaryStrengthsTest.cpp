@@ -28,7 +28,7 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Exe
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz",
                                                               "feature_boundary_neighbor_slip_transmission");
 
   DataStructure dataStructure =

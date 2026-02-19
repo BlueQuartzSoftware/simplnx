@@ -28,7 +28,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Valid Filter Execution", 
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_2_AvgCAxis.tar.gz", "7_2_AvgCAxis");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_2_AvgCAxis.tar.gz", "7_2_AvgCAxis");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/7_2_AvgCAxis/7_2_AvgCAxis.dream3d", unit_test::k_TestFilesDir));
@@ -64,7 +64,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Invalid Filter Execution"
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "caxis_data.tar.gz", "caxis_data");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/caxis_data/7_0_find_caxis_data.dream3d", unit_test::k_TestFilesDir));

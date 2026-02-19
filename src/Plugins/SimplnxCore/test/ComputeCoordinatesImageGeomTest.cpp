@@ -29,7 +29,7 @@ const DataPath k_ComputedIndicesPath({"Computed Indices"});
 
 TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Physical", "[SimplnxCore][ComputeCoordinatesImageGeom]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
   {
@@ -58,7 +58,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Physical", "[SimplnxCore][C
 
 TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Indices", "[SimplnxCore][ComputeCoordinatesImageGeom]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
   {
@@ -87,7 +87,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Indices", "[SimplnxCore][Co
 
 TEST_CASE("SimplnxCore::ComputeCoordinatesImageGeom: Both", "[SimplnxCore][ComputeCoordinatesImageGeom]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "image_coords_test.tar.gz", "image_coords_test");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/image_coords_test/compute_coord_image_geom_test.dream3d", unit_test::k_TestFilesDir)));
   {

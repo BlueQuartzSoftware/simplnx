@@ -255,7 +255,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
 
   DataStructure dataStructure;
   DataStructure& dsRef = dataStructure;

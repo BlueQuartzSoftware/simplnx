@@ -94,9 +94,6 @@ if("${DATA_ARCHIVE_WEB_SITE}" STREQUAL "")
   set(DATA_ARCHIVE_WEB_SITE "https://github.com/bluequartzsoftware/simplnx/releases/download/Data_Archive/")
 endif()
 
-# ------------------------------------------------------------------------------
-file(TO_CMAKE_PATH "${CMAKE_COMMAND}" CMAKE_COMMAND_NORM)
-
 project(simplnx
   VERSION 1.7.0
   DESCRIPTION "SIMPLNX is a collection of C++ codes to process data, particularly Materials Science data, including EBSD data."
@@ -1040,6 +1037,7 @@ if(SIMPLNX_ENABLE_PACKAGING)
 endif()
 
 if(SIMPLNX_BUILD_TESTS)
+  find_package(ZLIB REQUIRED)
   include(CTest)
   add_subdirectory(test)
 endif()

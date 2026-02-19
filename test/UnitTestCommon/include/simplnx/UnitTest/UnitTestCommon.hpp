@@ -243,9 +243,6 @@ public:
    * @brief Construct a File Sentinel object that will decompress on construction and remove the
    * contents on destruction.
    *
-   * This class uses the actual CMake executable to do the decompression and the removal.
-   *
-   * @param cmakeExecutable The absolute path to the cmake(.exe) executable.
    * @param testFilesDir The directory where the archive is located
    * @param inputArchiveName The full name of the archive. The location is assumed to be in the TestFiles directory
    * @param expectedTopLevelOutput The name of the decompressed folder or file. WARNING: This assumes
@@ -254,7 +251,7 @@ public:
    * @param decompressFiles Decompress the archive
    * @param removeTemp delete files that were decompressed
    */
-  TestFileSentinel(std::string cmakeExecutable, std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles = true, bool removeTemp = true);
+  TestFileSentinel(std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles = true, bool removeTemp = true);
 
   ~TestFileSentinel();
 
@@ -270,7 +267,6 @@ public:
   std::error_code decompress();
 
 private:
-  std::string m_CMakeExecutable;
   std::string m_TestFilesDir;
   std::string m_InputArchiveName;
   std::string m_ExpectedTopLevelOutput;

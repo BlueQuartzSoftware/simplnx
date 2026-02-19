@@ -148,7 +148,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[Simplnx
 {
   UnitTest::LoadPlugins();
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/extract_vertex_geometry/extract_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -204,7 +204,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask",
 {
   UnitTest::LoadPlugins();
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/extract_vertex_geometry/extract_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -260,7 +260,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[Simplnx
 {
   UnitTest::LoadPlugins();
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/extract_vertex_geometry/extract_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -316,7 +316,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask",
 {
   UnitTest::LoadPlugins();
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/extract_vertex_geometry/extract_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);

@@ -18,7 +18,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnal
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ReadChannel5_Test/7_ReadChannel5_Test.dream3d", unit_test::k_TestFilesDir));
@@ -74,7 +74,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAna
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadChannel5_Test.tar.gz", "7_ReadChannel5_Test");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ReadChannel5_Test/7_ReadChannel5_Test.dream3d", unit_test::k_TestFilesDir));

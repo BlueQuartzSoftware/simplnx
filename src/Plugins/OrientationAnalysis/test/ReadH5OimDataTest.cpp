@@ -29,8 +29,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Single Scan", "[Orientation
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz",
-                                                              "7_read_oem_ebsd_h5_files");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz", "7_read_oem_ebsd_h5_files");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/7_read_oem_ebsd_h5_files.dream3d", unit_test::k_TestFilesDir));
@@ -82,8 +81,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Multi Scan", "[OrientationA
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz",
-                                                              "7_read_oem_ebsd_h5_files");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz", "7_read_oem_ebsd_h5_files");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/7_read_oem_ebsd_h5_files/7_read_oem_ebsd_h5_files.dream3d", unit_test::k_TestFilesDir));
@@ -135,8 +133,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: InValid Filter Execution", 
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz",
-                                                              "7_read_oem_ebsd_h5_files");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_read_oem_ebsd_h5_files.tar.gz", "7_read_oem_ebsd_h5_files");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadH5OimDataFilter filter;

@@ -26,7 +26,7 @@ const std::vector<std::string> k_InputNames = {"comma", "semi_colon", "space", "
 TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[SimplnxCore][ReadStringDataArrayFilter]")
 {
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_ReadStringArray.tar.gz", "7_ReadStringArray");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadStringArray.tar.gz", "7_ReadStringArray");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ReadStringArray/7_read_string_array.dream3d", unit_test::k_TestFilesDir));
@@ -178,7 +178,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[Si
 
 TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Invalid filter execution", "[SimplnxCore][ReadStringDataArrayFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "7_ReadStringArray.tar.gz", "7_ReadStringArray");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadStringArray.tar.gz", "7_ReadStringArray");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ReadStringArray/7_read_string_array.dream3d", unit_test::k_TestFilesDir));

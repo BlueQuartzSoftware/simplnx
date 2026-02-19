@@ -17,7 +17,7 @@ TEST_CASE("nx::core::Test SIMPL Json Conversion", "[simplnx][Filter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "simpl_json_exemplars.tar.gz", "simpl_json_exemplars");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "simpl_json_exemplars.tar.gz", "simpl_json_exemplars");
   // Read Exemplar DREAM3D File Filter
   auto exemplarDirPath = fs::path(fmt::format("{}/simpl_json_exemplars/uuid", unit_test::k_TestFilesDir));
 

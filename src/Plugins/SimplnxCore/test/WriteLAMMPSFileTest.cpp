@@ -64,7 +64,7 @@ TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Valid Filter Execution", "[Simpln
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "write_lammps_test.tar.gz", "write_lammps_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "write_lammps_test.tar.gz", "write_lammps_test");
 
   DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/write_lammps_test/testing/lammps_precursor.dream3d", unit_test::k_TestFilesDir)));
 

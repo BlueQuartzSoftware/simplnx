@@ -18,7 +18,7 @@ TEST_CASE("OrientationAnalysis::ReadCtfData: Valid Execution", "[OrientationAnal
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_read_ctf_data_2.tar.gz", "6_6_read_ctf_data_2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_read_ctf_data_2.tar.gz", "6_6_read_ctf_data_2");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_read_ctf_data_2/6_6_read_ctf_data.dream3d", unit_test::k_TestFilesDir));

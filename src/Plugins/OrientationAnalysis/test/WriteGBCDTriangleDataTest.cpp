@@ -43,7 +43,7 @@ constexpr float32 k_EPSILON = 0.001;
 
 TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execution")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   UnitTest::LoadPlugins();
   auto* filterList = Application::Instance()->getFilterList();
@@ -195,7 +195,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter exec
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   // Instantiate the filter and an Arguments Object
   WriteGBCDTriangleDataFilter filter;

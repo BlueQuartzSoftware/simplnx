@@ -72,8 +72,7 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "generate_color_table_test.tar.gz",
-                                                              "generate_color_table_test");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "generate_color_table_test.tar.gz", "generate_color_table_test");
 
   DataStructure dataStructure;
 

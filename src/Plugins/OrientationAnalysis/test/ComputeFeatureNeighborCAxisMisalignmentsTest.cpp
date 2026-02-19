@@ -32,7 +32,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_feature_neighbor_caxis_misalignments.tar.gz",
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_feature_neighbor_caxis_misalignments.tar.gz",
                                                               "compute_feature_neighbor_caxis_misalignments");
 
   // Read Exemplar DREAM3D File Filter

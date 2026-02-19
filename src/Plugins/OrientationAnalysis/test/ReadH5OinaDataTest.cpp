@@ -27,7 +27,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Valid Filter Execution", "
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "H5Oina_Test_Data.tar.gz", "H5Oina_Test_Data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "H5Oina_Test_Data.tar.gz", "H5Oina_Test_Data");
 
   // Read Exemplar DREAM3D File
   auto exemplarFilePath = fs::path(fmt::format("{}/H5Oina_Test_Data/H5Oina_Test_Data.dream3d", unit_test::k_TestFilesDir));
@@ -86,7 +86,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: InValid Filter Execution",
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_ImportH5Data.tar.gz", "6_6_ImportH5Data");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ReadH5OinaDataFilter filter;

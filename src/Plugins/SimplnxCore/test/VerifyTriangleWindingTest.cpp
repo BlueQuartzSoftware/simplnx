@@ -19,7 +19,7 @@ const DataPath k_FaceDataPath = k_TriangleGeomPath.createChildPath(Constants::k_
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   DataStructure dataStructure = {};
   {
@@ -141,7 +141,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   DataStructure dataStructure = {};
   {
@@ -254,7 +254,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Duplicate Vertices Catch", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   DataStructure dataStructure = {};
   {

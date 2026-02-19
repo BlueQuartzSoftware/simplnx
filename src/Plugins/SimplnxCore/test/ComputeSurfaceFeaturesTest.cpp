@@ -39,8 +39,7 @@ std::vector<K> ConvertVectorReverse(const std::vector<T>& input)
 void test_impl(const std::vector<uint64>& geometryDims, const std::string& featureIdsFileName, const std::string& exemplaryFileName)
 {
   UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz",
-                                                              "ComputeSurfaceFeaturesTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "FindSurfaceFeaturesTest.tar.gz", "ComputeSurfaceFeaturesTest");
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeSurfaceFeaturesFilter filter;
@@ -124,7 +123,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", nx::core::unit_test::k_TestFilesDir));

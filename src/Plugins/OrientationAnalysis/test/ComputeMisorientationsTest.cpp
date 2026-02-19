@@ -186,7 +186,7 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:MakeTestData", "[Or
 
 TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientation", "[OrientationAnalysis][ComputeMisorientations]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_misorientations.tar.gz", "compute_misorientations");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_misorientations.tar.gz", "compute_misorientations");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_misorientations/ComputeMisorientationsFilter_Ref.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
@@ -228,7 +228,7 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
 
 TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Reconstruction][ComputeMisorientationsFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_misorientations.tar.gz", "compute_misorientations");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_misorientations.tar.gz", "compute_misorientations");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_misorientations/ComputeMisorientationsFilter_Arrays.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);

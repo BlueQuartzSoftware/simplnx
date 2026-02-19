@@ -34,7 +34,7 @@ const DataPath k_ExemplarSubVolumePath({"Exemplar Sub Volume"});
 TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Full_Volume", "[SimplnxReview][ReadZeissTxmFileFilter]")
 {
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.dream3d", unit_test::k_TestFilesDir));
@@ -90,7 +90,7 @@ TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Sub_Volume", "[SimplnxRevi
   auto croppingOptions = GENERATE_COPY(from_range(allCropVals));
   // ************************************************************************************************
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ReadZeissTxmFileTest_v2.tar.gz", "ReadZeissTxmFileTest");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/ReadZeissTxmFileTest/ReadZeissTxmFileTest.dream3d", unit_test::k_TestFilesDir));

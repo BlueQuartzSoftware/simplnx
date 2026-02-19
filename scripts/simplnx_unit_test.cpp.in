@@ -39,7 +39,7 @@ TEST_CASE("@PLUGIN_NAME@::@FILTER_NAME@: Valid Filter Execution","[@PLUGIN_NAME@
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, 
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(
                                                               nx::core::unit_test::k_TestFilesDir, 
                                                               "@FILTER_NAME@.tar.gz", 
                                                               "@FILTER_NAME@");

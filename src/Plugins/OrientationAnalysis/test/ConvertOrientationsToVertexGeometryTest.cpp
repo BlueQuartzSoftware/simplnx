@@ -19,8 +19,7 @@ const DataPath k_InputCrystalStructuresPath({"DataContainer", "All_Laue_Classes"
 
 TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[OrientationAnalysis][ConvertOrientationsToVertexGeometry]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "convert_orientations_to_vertex_geometry.tar.gz",
-                                                              "convert_orientations_to_vertex_geometry");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "convert_orientations_to_vertex_geometry.tar.gz", "convert_orientations_to_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/convert_orientations_to_vertex_geometry/convert_orientations_to_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
   const std::vector<std::string> k_PhaseNames = {"Laue_1", "Laue_2", "Laue_222", "Laue_23", "Laue_3", "Laue_32", "Laue_4", "Laue_422", "Laue_432", "Laue_6", "Laue_622"};

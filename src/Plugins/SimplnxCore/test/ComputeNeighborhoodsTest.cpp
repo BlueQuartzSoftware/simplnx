@@ -32,8 +32,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_1", "[SimplnxCore][ComputeNeighborh
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_feature_neighborhoods.tar.gz",
-                                                              "compute_feature_neighborhoods");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_feature_neighborhoods.tar.gz", "compute_feature_neighborhoods");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_feature_neighborhoods/compute_feature_neighborhoods.dream3d", unit_test::k_TestFilesDir));
@@ -89,8 +88,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_3", "[SimplnxCore][ComputeNeighborh
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_CMakeExecutable, nx::core::unit_test::k_TestFilesDir, "compute_feature_neighborhoods.tar.gz",
-                                                              "compute_feature_neighborhoods");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_feature_neighborhoods.tar.gz", "compute_feature_neighborhoods");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/compute_feature_neighborhoods/compute_feature_neighborhoods.dream3d", unit_test::k_TestFilesDir));
