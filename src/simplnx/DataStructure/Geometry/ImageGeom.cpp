@@ -162,13 +162,13 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   }
 
   uint32 emptyDimsCount = 0;
-  emptyDimsCount += static_cast<int32>(m_Dimensions[0] == 1);
-  emptyDimsCount += static_cast<int32>(m_Dimensions[1] == 1);
-  emptyDimsCount += static_cast<int32>(m_Dimensions[2] == 1);
+  emptyDimsCount += static_cast<uint32>(m_Dimensions[0] == 1);
+  emptyDimsCount += static_cast<uint32>(m_Dimensions[1] == 1);
+  emptyDimsCount += static_cast<uint32>(m_Dimensions[2] == 1);
   if(emptyDimsCount > 1)
   {
     return MakeErrorResult(
-        -1531, fmt::format("{}({}) ImageGeom::{} Error: Unable to calculate element sizes.\nImage have more than 2 dimensions greater than 1.\nX-Dimension: {}, Y-Dimension: {}, Z-Dimension: {}",
+        -1531, fmt::format("{}({}) ImageGeom::{} Error: Unable to calculate element sizes.\nImage has 2 or more dimensions equal to 1.\nX-Dimension: {}, Y-Dimension: {}, Z-Dimension: {}",
                            __FILE__, __LINE__, __func__, m_Dimensions[0], m_Dimensions[1], m_Dimensions[2]));
   }
 

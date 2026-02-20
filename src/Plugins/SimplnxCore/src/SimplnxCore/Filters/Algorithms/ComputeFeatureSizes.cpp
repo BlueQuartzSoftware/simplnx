@@ -39,7 +39,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
 
-  msgHelper.sendMessage("Finding Max Feature Id...");
+  msgHelper.sendMessage("Cell Level: Finding Voxel Counts...");
   // Count and store the number of voxels in each feature
   for(usize voxelIdx = 0; voxelIdx < numVoxels; voxelIdx++)
   {
@@ -67,7 +67,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
 
     /**
      * IMPORTANT: Due the nature of ImageGeom the preflight is expected to impose a
-     * restriction on the number of empty dimensions (dentoted as `1`) in an input
+     * restriction on the number of empty dimensions (denoted as `1`) in an input
      * ImageGeom. To illustrate why this is consider the following cases:
      *
      * An ImageGeom with 2 "empty" dimensions, such as 5x1x1. In this case the code would
@@ -79,9 +79,9 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
      * but you lack the orientation information to determine the proper orientation.
      *
      * An ImageGeom with 3 "empty" dimensions, ie 1x1x1. This is a semi-ludicrous case since
-     * the value can be derived directly from the spcaing, but the issue previously outlined
+     * the value can be derived directly from the spacing, but the issue previously outlined
      * will present itself once again. You cannot determine the orientation for proper area
-     * calcualtion.
+     * calculation.
      *
      * For these two cases the following code would BREAK, so do not enable.
      **/
@@ -216,7 +216,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
     throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
 
     const int32 voxelFeatureId = featureIds.getValue(voxelIdx);
-    featureVoxelCounts[featureIds.getValue(voxelIdx)]++;
+    featureVoxelCounts[voxelFeatureId]++;
 
     // Use Kahan summation to determine overall volume
 

@@ -308,6 +308,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
 
   Test::Validate2DImageDataStructure(dataStructure);
 
+  // validate Feature Sizes does not exist
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  REQUIRE_FALSE(imageGeom.getElementSizesId().has_value());
+  REQUIRE(imageGeom.getElementSizes() == nullptr);
+
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
@@ -342,6 +347,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes"
   }
 
   Test::Validate2DImageDataStructure(dataStructure);
+
+  // validate Feature Sizes exists
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  REQUIRE(imageGeom.getElementSizesId().has_value());
+  REQUIRE(imageGeom.getElementSizes() != nullptr);
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -378,6 +388,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D", "[SimplnxCo
 
   Test::Validate3DImageDataStructure(dataStructure);
 
+  // validate Feature Sizes does not exist
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  REQUIRE_FALSE(imageGeom.getElementSizesId().has_value());
+  REQUIRE(imageGeom.getElementSizes() == nullptr);
+
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack.dream3d", unit_test::k_BinaryTestOutputDir)));
@@ -413,9 +428,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element 
 
   Test::Validate3DImageDataStructure(dataStructure);
 
+  // validate Feature Sizes exists
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  REQUIRE(imageGeom.getElementSizesId().has_value());
+  REQUIRE(imageGeom.getElementSizes() != nullptr);
+
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack_w_elemnt_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -447,6 +467,11 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid", "[Simplnx
   }
 
   Test::ValidateRectGridDataStructure(dataStructure);
+
+  // validate Feature Sizes does not exist
+  const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(Test::k_ImageGeomPath);
+  REQUIRE_FALSE(rectGridGeom.getElementSizesId().has_value());
+  REQUIRE(rectGridGeom.getElementSizes() == nullptr);
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -483,9 +508,14 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid with Elemen
 
   Test::ValidateRectGridDataStructure(dataStructure);
 
+  // validate Feature Sizes exists
+  const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(Test::k_ImageGeomPath);
+  REQUIRE(rectGridGeom.getElementSizesId().has_value());
+  REQUIRE(rectGridGeom.getElementSizes() != nullptr);
+
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid_w_elemnt_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

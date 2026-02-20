@@ -4,8 +4,6 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 
-#include <stdexcept>
-
 using namespace nx::core;
 
 EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name)
@@ -259,7 +257,7 @@ Result<> EdgeGeom::findElementCentroids(bool recalculate)
     {
       m_CellCentroidsDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2433, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2433, fmt::format("{}({}) EdgeGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
     }
   }
 

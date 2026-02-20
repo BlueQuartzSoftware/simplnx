@@ -265,7 +265,7 @@ Result<> HexahedralGeom::findElementNeighbors(bool recalculate)
   }
   if(hexNeighbors == nullptr)
   {
-    hexNeighbors = DynamicListArray<uint16_t, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
+    hexNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
     if(hexNeighbors == nullptr)
     {
       m_CellNeighborsDataArrayId.reset();
@@ -447,7 +447,7 @@ Result<> HexahedralGeom::findUnsharedFaces(bool recalculate)
     {
       m_UnsharedFaceListId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2137, fmt::format("{}({}) HexahedralGeom::{} Error: Unable to find or create a valid unshared faces array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2537, fmt::format("{}({}) HexahedralGeom::{} Error: Unable to find or create a valid unshared faces array or data store.", __FILE__, __LINE__, __func__));
     }
   }
 

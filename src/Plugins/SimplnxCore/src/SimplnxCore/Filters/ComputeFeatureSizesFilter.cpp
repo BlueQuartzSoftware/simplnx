@@ -75,7 +75,14 @@ Parameters ComputeFeatureSizesFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeFeatureSizesFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Description:
+  // Enabled RectGrid Geom for Input Grid Geom (key: "input_image_geometry_path")
+  //
+  // Change 1:
+  // Expanded existing parameter acceptable types
+  // Solution - No change needed;
 }
 
 IFilter::UniquePointer ComputeFeatureSizesFilter::clone() const

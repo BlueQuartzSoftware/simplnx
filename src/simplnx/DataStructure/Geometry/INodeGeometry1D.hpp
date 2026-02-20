@@ -102,8 +102,7 @@ public:
   void getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const;
 
   /**
-   * @brief Pure-Virtual intended to calculate the sizes of each element
-   * in the geometry and store it in a new or existing array in the datastructure
+   * @brief Pure-Virtual
    * @param recalculate This will allow for skipping execution when an
    * `ElementDynamicList` exists and recalculate is `false`
    * @return Result<>
@@ -122,7 +121,7 @@ public:
   void deleteElementsContainingVert();
 
   /**
-   * @brief Pure-Virtual intended to calculate the sizes of each element
+   * @brief Pure-Virtual intended to find the neighbors of each element
    * in the geometry and store it in a new or existing array in the datastructure
    * @param recalculate This will allow for skipping execution when an
    * `ElementDynamicList` exists and recalculate is `false`
@@ -215,12 +214,10 @@ public:
   std::optional<IdType> getElementContainingVertId() const;
   std::optional<IdType> getElementNeighborsId() const;
   std::optional<IdType> getElementCentroidsId() const;
-  std::optional<IdType> getElementSizesId() const;
 
   void setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId);
   void setElementNeighborsId(const std::optional<IdType>& elementNeighborsId);
   void setElementCentroidsId(const std::optional<IdType>& centroidsId);
-  void setElementSizesId(const std::optional<IdType>& sizesId);
 
   /**
    * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.

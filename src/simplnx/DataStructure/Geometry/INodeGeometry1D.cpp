@@ -233,11 +233,6 @@ std::optional<DataObject::IdType> INodeGeometry1D::getElementCentroidsId() const
   return m_CellCentroidsDataArrayId;
 }
 
-std::optional<DataObject::IdType> INodeGeometry1D::getElementSizesId() const
-{
-  return m_ElementSizesId;
-}
-
 void INodeGeometry1D::setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId)
 {
   m_CellContainingVertDataArrayId = elementsContainingVertId;
@@ -251,11 +246,6 @@ void INodeGeometry1D::setElementNeighborsId(const std::optional<IdType>& element
 void INodeGeometry1D::setElementCentroidsId(const std::optional<IdType>& centroidsId)
 {
   m_CellCentroidsDataArrayId = centroidsId;
-}
-
-void INodeGeometry1D::setElementSizesId(const std::optional<IdType>& sizesId)
-{
-  m_ElementSizesId = sizesId;
 }
 
 void INodeGeometry1D::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
