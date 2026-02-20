@@ -3,10 +3,6 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeFeatureNeighbors.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -16,6 +12,8 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <memory>
 
 namespace nx::core
 {
@@ -172,16 +170,23 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
 {
   ComputeFeatureNeighborsInputValues inputValues;
 
+  // Options
   inputValues.StoreBoundaryCells = filterArgs.value<BoolParameter::ValueType>(k_StoreBoundary_Key);
   inputValues.StoreSurfaceFeatures = filterArgs.value<BoolParameter::ValueType>(k_StoreSurface_Key);
+
+  // Geometry
   inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeometryPath_Key);
+
+  // Cell Data
   inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
-  inputValues.BoundaryCellsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundaryCellsName_Key);
-  inputValues.NumberOfNeighborsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_NumNeighborsName_Key);
-  inputValues.NeighborListName = filterArgs.value<DataObjectNameParameter::ValueType>(k_NeighborListName_Key);
-  inputValues.SharedSurfaceAreaListName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SharedSurfaceAreaName_Key);
-  inputValues.SurfaceFeaturesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceFeaturesName_Key);
+  inputValues.BoundaryCellsPath = inputValues.FeatureIdsPath.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundaryCellsName_Key));
+
+  // Feature Data
   inputValues.CellFeatureArrayPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeaturesPath_Key);
+  inputValues.NumberOfNeighborsPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NumNeighborsName_Key));
+  inputValues.NeighborListPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NeighborListName_Key));
+  inputValues.SharedSurfaceAreaListPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SharedSurfaceAreaName_Key));
+  inputValues.SurfaceFeaturesPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceFeaturesName_Key));
 
   return ComputeFeatureNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

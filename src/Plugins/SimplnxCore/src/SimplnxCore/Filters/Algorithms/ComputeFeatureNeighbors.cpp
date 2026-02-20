@@ -1,15 +1,17 @@
 #include "ComputeFeatureNeighbors.hpp"
 
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
-#include <sstream>
-
 using namespace nx::core;
+
+namespace
+{
+constexpr int32 k_DefaultNeighborListSize = 100;
+}
 
 // -----------------------------------------------------------------------------
 ComputeFeatureNeighbors::ComputeFeatureNeighbors(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -27,31 +29,14 @@ ComputeFeatureNeighbors::~ComputeFeatureNeighbors() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighbors::operator()()
 {
-  auto storeBoundaryCells = m_InputValues->StoreBoundaryCells;
-  auto storeSurfaceFeatures = m_InputValues->StoreSurfaceFeatures;
-  auto imageGeomPath = m_InputValues->InputImageGeometryPath;
-  auto featureIdsPath = m_InputValues->FeatureIdsPath;
-  auto boundaryCellsName = m_InputValues->BoundaryCellsName;
-  auto numNeighborsName = m_InputValues->NumberOfNeighborsName;
-  auto neighborListName = m_InputValues->NeighborListName;
-  auto sharedSurfaceAreaName = m_InputValues->SharedSurfaceAreaListName;
-  auto surfaceFeaturesName = m_InputValues->SurfaceFeaturesName;
-  auto featureAttrMatrixPath = m_InputValues->CellFeatureArrayPath;
+  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+  auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumberOfNeighborsPath)->getDataStoreRef();
 
-  DataPath boundaryCellsPath = featureIdsPath.replaceName(boundaryCellsName);
-  DataPath numNeighborsPath = featureAttrMatrixPath.createChildPath(numNeighborsName);
-  DataPath neighborListPath = featureAttrMatrixPath.createChildPath(neighborListName);
-  DataPath sharedSurfaceAreaPath = featureAttrMatrixPath.createChildPath(sharedSurfaceAreaName);
-  DataPath surfaceFeaturesPath = featureAttrMatrixPath.createChildPath(surfaceFeaturesName);
+  auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborList>(m_InputValues->NeighborListPath);
+  auto& sharedSurfaceAreaList = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->SharedSurfaceAreaListPath);
 
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(featureIdsPath)->getDataStoreRef();
-  auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(numNeighborsPath)->getDataStoreRef();
-
-  auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborList>(neighborListPath);
-  auto& sharedSurfaceAreaList = m_DataStructure.getDataRefAs<Float32NeighborList>(sharedSurfaceAreaPath);
-
-  auto* boundaryCells = storeBoundaryCells ? m_DataStructure.getDataAs<Int8Array>(boundaryCellsPath)->getDataStore() : nullptr;
-  auto* surfaceFeatures = storeSurfaceFeatures ? m_DataStructure.getDataAs<BoolArray>(surfaceFeaturesPath)->getDataStore() : nullptr;
+  auto* boundaryCells = m_InputValues->StoreBoundaryCells ? m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore() : nullptr;
+  auto* surfaceFeatures = m_InputValues->StoreSurfaceFeatures ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->StoreSurfaceFeatures)->getDataStore() : nullptr;
 
   usize totalPoints = featureIds.getNumberOfTuples();
   usize totalFeatures = numNeighbors.getNumberOfTuples();
@@ -61,13 +46,13 @@ Result<> ComputeFeatureNeighbors::operator()()
   if(static_cast<usize>(*maxFeatureId) >= totalFeatures)
   {
     std::stringstream out;
-    out << "Data Array " << featureIdsPath.getTargetName() << " has a maximum value of " << *maxFeatureId << " which is greater than the "
-        << " number of features from array " << numNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the "
+    out << "Data Array " << m_InputValues->FeatureIdsPath.getTargetName() << " has a maximum value of " << *maxFeatureId << " which is greater than the "
+        << " number of features from array " << m_InputValues->NumberOfNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the "
         << " incorrect array for the 'FeatureIds' array?";
     return MakeErrorResult(-24500, out.str());
   }
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
   SizeVec3 uDims = imageGeom.getDimensions();
 
   std::array<int64, 3> dims = {
@@ -81,20 +66,17 @@ Result<> ComputeFeatureNeighbors::operator()()
 
   int32 feature = 0;
   int32 nnum = 0;
-  uint8 onsurf = 0;
+  int8 onsurf = 0;
 
   std::vector<std::vector<int32>> neighborlist(totalFeatures);
   std::vector<std::vector<float>> neighborsurfacearealist(totalFeatures);
-
-  int32 nListSize = 100;
 
   MessageHelper messageHelper(m_MessageHandler);
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   // Initialize the neighbor lists
   for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
-    auto now = std::chrono::steady_clock::now();
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(featureIdx, totalFeatures)); });
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(featureIdx, totalFeatures)); });
 
     if(m_ShouldCancel)
     {
@@ -102,9 +84,9 @@ Result<> ComputeFeatureNeighbors::operator()()
     }
 
     numNeighbors[featureIdx] = 0;
-    neighborlist[featureIdx].resize(nListSize);
-    neighborsurfacearealist[featureIdx].assign(nListSize, -1.0f);
-    if(storeSurfaceFeatures && surfaceFeatures != nullptr)
+    neighborlist[featureIdx].resize(k_DefaultNeighborListSize);
+    neighborsurfacearealist[featureIdx].assign(k_DefaultNeighborListSize, -1.0f);
+    if(m_InputValues->StoreSurfaceFeatures && surfaceFeatures != nullptr)
     {
       surfaceFeatures->setValue(featureIdx, false);
     }
@@ -113,7 +95,7 @@ Result<> ComputeFeatureNeighbors::operator()()
   // Loop over all points to generate the neighbor lists
   for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIndex, totalPoints)); });
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIndex, totalPoints)); });
 
     if(m_ShouldCancel)
     {
@@ -128,13 +110,13 @@ Result<> ComputeFeatureNeighbors::operator()()
       int64 yIdx = (voxelIndex / dims[0]) % dims[1];
       int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
-      if(storeSurfaceFeatures && surfaceFeatures != nullptr)
+      if(m_InputValues->StoreSurfaceFeatures && surfaceFeatures != nullptr)
       {
-        if((xIdx == 0 || xIdx == static_cast<int64>((dims[0] - 1)) || yIdx == 0 || yIdx == static_cast<int64>((dims[1]) - 1) || zIdx == 0 || zIdx == static_cast<int64>((dims[2] - 1))) && dims[2] != 1)
+        if((xIdx == 0 || xIdx == dims[0] - 1 || yIdx == 0 || yIdx == dims[1] - 1 || zIdx == 0 || zIdx == dims[2] - 1) && dims[2] != 1)
         {
           surfaceFeatures->setValue(feature, true);
         }
-        if((xIdx == 0 || xIdx == static_cast<int64>((dims[0] - 1)) || yIdx == 0 || yIdx == static_cast<int64>((dims[1] - 1))) && dims[2] == 1)
+        if((xIdx == 0 || xIdx == dims[0] - 1 || yIdx == 0 || yIdx == dims[1] - 1) && dims[2] == 1)
         {
           surfaceFeatures->setValue(feature, true);
         }
@@ -161,9 +143,9 @@ Result<> ComputeFeatureNeighbors::operator()()
         }
       }
     }
-    if(storeBoundaryCells && boundaryCells != nullptr)
+    if(m_InputValues->StoreBoundaryCells && boundaryCells != nullptr)
     {
-      boundaryCells->setValue(voxelIndex, static_cast<int32>(onsurf));
+      boundaryCells->setValue(voxelIndex, onsurf);
     }
   }
 
@@ -172,7 +154,7 @@ Result<> ComputeFeatureNeighbors::operator()()
   // We do this to create new set of NeighborList objects
   for(usize i = 1; i < totalFeatures; i++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Calculating Surface Areas || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); });
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Calculating Surface Areas || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); });
 
     if(m_ShouldCancel)
     {
@@ -180,10 +162,10 @@ Result<> ComputeFeatureNeighbors::operator()()
     }
 
     std::map<int32, int32> neighToCount;
-    auto numneighs = static_cast<int32>(neighborlist[i].size());
+    auto neighborCount = static_cast<int32>(neighborlist[i].size());
 
     // this increments the voxel counts for each feature
-    for(int32 j = 0; j < numneighs; j++)
+    for(int32 j = 0; j < neighborCount; j++)
     {
       neighToCount[neighborlist[i][j]]++;
     }
@@ -210,11 +192,11 @@ Result<> ComputeFeatureNeighbors::operator()()
     numNeighbors[i] = static_cast<int32>(neighborlist[i].size());
 
     // Set the vector for each list into the NeighborList Object
-    NeighborList<int32>::SharedVectorType sharedNeiLst(new std::vector<int32>);
+    auto sharedNeiLst = std::make_shared<NeighborList<int32>::VectorType>();
     sharedNeiLst->assign(neighborlist[i].begin(), neighborlist[i].end());
     neighborList.setList(static_cast<int32>(i), sharedNeiLst);
 
-    NeighborList<float32>::SharedVectorType sharedSAL(new std::vector<float32>);
+    auto sharedSAL = std::make_shared<NeighborList<float32>::VectorType>();
     sharedSAL->assign(neighborsurfacearealist[i].begin(), neighborsurfacearealist[i].end());
     sharedSurfaceAreaList.setList(static_cast<int32>(i), sharedSAL);
   }
