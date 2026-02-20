@@ -1550,8 +1550,8 @@ using Point2Dd = Vec2<float64>;
 template <typename T>
 using Matrix3X1 = Vec3<T>;
 
-using Matrix3X1F = Vec3<float32>;
-using Matrix3X1D = Vec3<float64>;
+using Matrix3X1f = Vec3<float32>;
+using Matrix3X1d = Vec3<float64>;
 
 // Free operator* functions for scalar * Vec3 with mixed types
 template <typename T1, typename T2>

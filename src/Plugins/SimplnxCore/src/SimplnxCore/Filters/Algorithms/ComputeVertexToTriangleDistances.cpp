@@ -26,11 +26,11 @@ using SharedVertexListT = AbstractDataStore<IGeometry::SharedVertexList::value_t
  * @param c
  * @return
  */
-Matrix3X1F closestPointTriangle(const Matrix3X1F& p, const Matrix3X1F& a, const Matrix3X1F& b, const Matrix3X1F& c)
+Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const Matrix3X1f& b, const Matrix3X1f& c)
 {
-  const Matrix3X1F ab = b - a;
-  const Matrix3X1F ac = c - a;
-  const Matrix3X1F ap = p - a;
+  const Matrix3X1f ab = b - a;
+  const Matrix3X1f ac = c - a;
+  const Matrix3X1f ap = p - a;
 
   const float d1 = ab.dot(ap); // dot(ab, ap);
   const float d2 = ac.dot(ap); // dot(ac, ap);
@@ -39,7 +39,7 @@ Matrix3X1F closestPointTriangle(const Matrix3X1F& p, const Matrix3X1F& a, const 
     return a;
   }
 
-  const Matrix3X1F bp = p - b;
+  const Matrix3X1f bp = p - b;
   const float d3 = ab.dot(bp); // dot(ab, bp);
   const float d4 = ac.dot(bp); // dot(ac, bp);
   if(d3 >= 0.f && d4 <= d3)
@@ -47,7 +47,7 @@ Matrix3X1F closestPointTriangle(const Matrix3X1F& p, const Matrix3X1F& a, const 
     return b;
   }
 
-  const Matrix3X1F cp = p - c;
+  const Matrix3X1f cp = p - c;
   const float d5 = ab.dot(cp); // dot(ab, cp);
   const float d6 = ac.dot(cp); // dot(ac, cp);
   if(d6 >= 0.f && d5 <= d6)
@@ -79,21 +79,21 @@ Matrix3X1F closestPointTriangle(const Matrix3X1F& p, const Matrix3X1F& a, const 
   const float denominator = 1.f / (va + vb + vc);
   const float v = vb * denominator;
   const float w = vc * denominator;
-  const Matrix3X1F pointInTriangle = a + v * ab + w * ac;
+  const Matrix3X1f pointInTriangle = a + v * ab + w * ac;
 
   return pointInTriangle;
 }
 
-float32 PointTriangleDistance(const Matrix3X1F& point, const Matrix3X1F& vert0, const Matrix3X1F& vert1, const Matrix3X1F& vert2, const int64 triangle, const Float64AbstractDataStore& normals)
+float32 PointTriangleDistance(const Matrix3X1f& point, const Matrix3X1f& vert0, const Matrix3X1f& vert1, const Matrix3X1f& vert2, const int64 triangle, const Float64AbstractDataStore& normals)
 {
 
-  Matrix3X1F closestPointInTriangle = closestPointTriangle(point, vert0, vert1, vert2);
+  Matrix3X1f closestPointInTriangle = closestPointTriangle(point, vert0, vert1, vert2);
 
   auto diffPoint = point - closestPointInTriangle; // Gives a vector pointing from the closest point in triangle to point
   // Only do the dot-product of the vector with itself, so we don't incur the penalty of a square root that we might not need
   float dist = diffPoint.dot(diffPoint);
 
-  Matrix3X1F normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
+  Matrix3X1f normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
 
   float32 cosTheta = normal.cosTheta(diffPoint);
 
@@ -139,7 +139,7 @@ public:
     size_t numTuples = m_SharedTriangleList.getNumberOfTuples(); // allocate vector of all possible indexes
     for(usize v = start; v < end; v++)
     {
-      Matrix3X1F sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
+      Matrix3X1f sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
 
       std::vector<size_t> hitTriangleIds;
       std::function<bool(size_t)> func = [&](size_t triangleIndex) {
@@ -160,10 +160,10 @@ public:
           auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
           auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
           auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
-          const Matrix3X1F point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
-          const Matrix3X1F v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
-          const Matrix3X1F v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
-          const Matrix3X1F v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
+          const Matrix3X1f point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
+          const Matrix3X1f v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
+          const Matrix3X1f v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
+          const Matrix3X1f v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
 
           float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
 
@@ -186,10 +186,10 @@ public:
           auto p = static_cast<int64>(m_SharedTriangleList[t * 3 + 0]);
           auto q = static_cast<int64>(m_SharedTriangleList[t * 3 + 1]);
           auto r = static_cast<int64>(m_SharedTriangleList[t * 3 + 2]);
-          const Matrix3X1F point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
-          const Matrix3X1F v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
-          const Matrix3X1F v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
-          const Matrix3X1F v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
+          const Matrix3X1f point = {m_SourcePoints[3 * v + 0], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]};
+          const Matrix3X1f v0(m_TriangleVertices[p * 3 + 0], m_TriangleVertices[p * 3 + 1], m_TriangleVertices[p * 3 + 2]);
+          const Matrix3X1f v1(m_TriangleVertices[q * 3 + 0], m_TriangleVertices[q * 3 + 1], m_TriangleVertices[q * 3 + 2]);
+          const Matrix3X1f v2(m_TriangleVertices[r * 3 + 0], m_TriangleVertices[r * 3 + 1], m_TriangleVertices[r * 3 + 2]);
 
           float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), m_Normals);
 

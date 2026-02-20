@@ -584,13 +584,13 @@ TEST_CASE("Vec3 Type Aliases")
 
   SECTION("Matrix3X1F alias")
   {
-    Matrix3X1F v(1.0f, 2.0f, 3.0f);
+    Matrix3X1f v(1.0f, 2.0f, 3.0f);
     REQUIRE(v[0] == 1.0f);
   }
 
   SECTION("Matrix3X1D alias")
   {
-    Matrix3X1D v(1.0, 2.0, 3.0);
+    Matrix3X1d v(1.0, 2.0, 3.0);
     REQUIRE(v[0] == 1.0);
   }
 }

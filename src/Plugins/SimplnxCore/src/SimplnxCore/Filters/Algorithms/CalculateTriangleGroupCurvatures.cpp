@@ -256,20 +256,20 @@ void CalculateTriangleGroupCurvatures::operator()() const
     double sub[3] = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
     subtractVector3d(*patchCentroids, sub);
 
-    nx::core::Matrix3X1D np = {patchNormals->getComponentValue(0, 0), patchNormals->getComponentValue(0, 1), patchNormals->getComponentValue(0, 2)};
+    nx::core::Matrix3X1d np = {patchNormals->getComponentValue(0, 0), patchNormals->getComponentValue(0, 1), patchNormals->getComponentValue(0, 2)};
 
-    nx::core::Matrix3X1D seedCentroid = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
-    nx::core::Matrix3X1D firstCentroid = {patchCentroids->getComponentValue(1, 0), patchCentroids->getComponentValue(1, 1), patchCentroids->getComponentValue(1, 2)};
+    nx::core::Matrix3X1d seedCentroid = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
+    nx::core::Matrix3X1d firstCentroid = {patchCentroids->getComponentValue(1, 0), patchCentroids->getComponentValue(1, 1), patchCentroids->getComponentValue(1, 2)};
 
-    nx::core::Matrix3X1D temp = {firstCentroid[0] - seedCentroid[0], firstCentroid[1] - seedCentroid[1], firstCentroid[2] - seedCentroid[2]};
-    nx::core::Matrix3X1D vp = {0.0, 0.0, 0.0};
+    nx::core::Matrix3X1d temp = {firstCentroid[0] - seedCentroid[0], firstCentroid[1] - seedCentroid[1], firstCentroid[2] - seedCentroid[2]};
+    nx::core::Matrix3X1d vp = {0.0, 0.0, 0.0};
 
     // Cross Product of np and temp
     np = np.normalize();
     vp = np.cross(temp).normalize();
 
     // get the third orthogonal vector
-    Matrix3X1D up = vp.cross(np).normalize();
+    Matrix3X1d up = vp.cross(np).normalize();
 
     // this constitutes a rotation matrix to a local coordinate system
     nx::core::Matrix3X3D rot = {up[0], up[1], up[2], vp[0], vp[1], vp[2], np[0], np[1], np[2]};
@@ -277,7 +277,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
     // Transform all centroids and normals to a new coordinate system
     for(size_t m = 0; m < patchCentroids->getNumberOfTuples(); ++m)
     {
-      nx::core::Matrix3X1D patchCentroid = {patchCentroids->getComponentValue(m, 0), patchCentroids->getComponentValue(m, 1), patchCentroids->getComponentValue(m, 2)};
+      nx::core::Matrix3X1d patchCentroid = {patchCentroids->getComponentValue(m, 0), patchCentroids->getComponentValue(m, 1), patchCentroids->getComponentValue(m, 2)};
       auto out = rot * patchCentroid;
 
       if(std::isnan(out[0]) || std::isnan(out[1]) || std::isnan(out[2]))
@@ -287,7 +287,7 @@ void CalculateTriangleGroupCurvatures::operator()() const
       // Copy the result back into `patchCentroids`
       patchCentroids->setTuple(m, out.data());
 
-      nx::core::Matrix3X1D patchNormal = {patchNormals->getComponentValue(m, 0), patchNormals->getComponentValue(m, 1), patchNormals->getComponentValue(m, 2)};
+      nx::core::Matrix3X1d patchNormal = {patchNormals->getComponentValue(m, 0), patchNormals->getComponentValue(m, 1), patchNormals->getComponentValue(m, 2)};
       out = rot * patchNormal;
       patchNormals->setTuple(m, out.data());
 
