@@ -4,6 +4,7 @@
 #include <catch2/catch.hpp>
 
 #include <cmath>
+#include <iostream>
 #include <sstream>
 
 using namespace nx::core;
@@ -537,13 +538,19 @@ TEST_CASE("Vec3 Stream Output")
   std::ostringstream oss;
   oss << v;
   std::string result = oss.str();
-  REQUIRE(result.find("1") != std::string::npos);
-  REQUIRE(result.find("2") != std::string::npos);
-  REQUIRE(result.find("3") != std::string::npos);
+  REQUIRE(result == "<1, 2, 3>");
 }
 
 TEST_CASE("Vec3 Type Aliases")
 {
+  STATIC_REQUIRE(std::is_same_v<FloatVec3::value_type, float32>);
+  STATIC_REQUIRE(std::is_same_v<Float64Vec3::value_type, float64>);
+  STATIC_REQUIRE(std::is_same_v<IntVec3::value_type, int32>);
+  STATIC_REQUIRE(std::is_same_v<SizeVec3::value_type, usize>);
+  STATIC_REQUIRE(std::is_same_v<Point3Df::value_type, float32>);
+  STATIC_REQUIRE(std::is_same_v<Matrix3X1f::value_type, float32>);
+  STATIC_REQUIRE(std::is_same_v<Matrix3X1d::value_type, float64>);
+
   SECTION("FloatVec3")
   {
     FloatVec3 v(1.0f, 2.0f, 3.0f);
@@ -570,7 +577,7 @@ TEST_CASE("Vec3 Type Aliases")
 
   SECTION("Point3D alias")
   {
-    Point3D<float32> v(1.0f, 2.0f, 3.0f);
+    Point3Df v(1.0f, 2.0f, 3.0f);
     REQUIRE(v[0] == 1.0f);
   }
 
@@ -582,13 +589,13 @@ TEST_CASE("Vec3 Type Aliases")
     REQUIRE(v[2] == 3.0f);
   }
 
-  SECTION("Matrix3X1F alias")
+  SECTION("Matrix3X1d alias")
   {
     Matrix3X1f v(1.0f, 2.0f, 3.0f);
     REQUIRE(v[0] == 1.0f);
   }
 
-  SECTION("Matrix3X1D alias")
+  SECTION("Matrix3X1d alias")
   {
     Matrix3X1d v(1.0, 2.0, 3.0);
     REQUIRE(v[0] == 1.0);

@@ -182,7 +182,6 @@ Matrix4fR GenerateRotationTransformationMatrix(const VectorFloat32Parameter::Val
   const float rotAngle = pRotationValue[3] * nx::core::Constants::k_PiOver180F;
   // Ensure the axis part is normalized
   FloatVec3 normalizedAxis = FloatVec3(pRotationValue[0], pRotationValue[1], pRotationValue[2]).normalize();
-  normalizedAxis = normalizedAxis.normalize();
 
   const float cosTheta = cos(rotAngle);
   const float oneMinusCosTheta = 1 - cosTheta;

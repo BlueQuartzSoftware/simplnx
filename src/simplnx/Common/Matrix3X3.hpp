@@ -52,13 +52,6 @@ public:
   {
   }
 
-  Matrix3X3(const Matrix3X3&) = default;                // Copy Constructor Default Implemented
-  Matrix3X3(Matrix3X3&&) noexcept = default;            // Move Constructor Default Implemented
-  Matrix3X3& operator=(const Matrix3X3&) = default;     // Copy Assignment Default Implemented
-  Matrix3X3& operator=(Matrix3X3&&) noexcept = default; // Move Assignment Default Implemented
-
-  ~Matrix3X3() = default;
-
   const T& operator()(size_t row, size_t col) const
   {
     if(row > 2 || col > 2)
@@ -164,9 +157,17 @@ public:
   }
 
   /**
+   * @brief Returns a const pointer to the underlying data
+   * @return
+   */
+  const T* data() const
+  {
+    return m_Data.data();
+  }
+
+  /**
    * @brief Performs the Matrix Multiplication returns the result into outMat.
    * @param rhs
-   * @param outMat
    */
   Matrix3X3 operator*(const SelfType& rhs) const
   {
