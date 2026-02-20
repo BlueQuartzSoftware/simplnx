@@ -196,101 +196,120 @@ usize TetrahedralGeom::getNumberOfCells() const
   return tets.getNumberOfTuples();
 }
 
-IGeometry::StatusCode TetrahedralGeom::findElementSizes(bool recalculate)
+Result<> TetrahedralGeom::findElementSizes(bool recalculate)
 {
   auto* tetSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(tetSizes != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(tetSizes == nullptr)
   {
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
     tetSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
+    if(tetSizes == nullptr)
+    {
+      m_ElementSizesId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2130, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(tetSizes == nullptr)
-  {
-    m_ElementSizesId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Topology::FindTetVolumes(getPolyhedra(), getVertices(), tetSizes);
   m_ElementSizesId = tetSizes->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TetrahedralGeom::findElementsContainingVert(bool recalculate)
+Result<> TetrahedralGeom::findElementsContainingVert(bool recalculate)
 {
   auto* tetsContainingVert = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellContainingVertDataArrayId);
   if(tetsContainingVert != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(tetsContainingVert == nullptr)
   {
     tetsContainingVert = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltsContainingVert, getId());
+    if(tetsContainingVert == nullptr)
+    {
+      m_CellContainingVertDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2131, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid dynamic list array.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(tetsContainingVert == nullptr)
-  {
-    m_CellContainingVertDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::FindElementsContainingVert<uint16, MeshIndexType>(getPolyhedra(), tetsContainingVert, getNumberOfVertices());
   m_CellContainingVertDataArrayId = tetsContainingVert->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TetrahedralGeom::findElementNeighbors(bool recalculate)
+Result<> TetrahedralGeom::findElementNeighbors(bool recalculate)
 {
   auto* tetNeighbors = getDataStructureRef().getDataAsUnsafe<ElementDynamicList>(m_CellNeighborsDataArrayId);
   if(tetNeighbors != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
 
-  StatusCode err = findElementsContainingVert(recalculate);
-  if(err < 0)
+  Result<> result = findElementsContainingVert(recalculate);
+  if(result.invalid())
   {
     m_CellNeighborsDataArrayId.reset();
-    return err;
+    return result;
   }
+
   if(tetNeighbors == nullptr)
   {
     tetNeighbors = DynamicListArray<uint16, MeshIndexType>::Create(*getDataStructure(), k_EltNeighbors, getId());
+    if(tetNeighbors == nullptr)
+    {
+      m_CellNeighborsDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2132, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a dynamic list array.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(tetNeighbors == nullptr)
-  {
-    m_CellNeighborsDataArrayId.reset();
-    return -1;
-  }
+
   m_CellNeighborsDataArrayId = tetNeighbors->getId();
-  err = GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), tetNeighbors, IGeometry::Type::Tetrahedral);
-  if(err < 0)
-  {
-    return err;
-  }
-  return 1;
+
+  // No error value ( < 0) returned from below function ever
+  GeometryHelpers::Connectivity::FindElementNeighbors<uint16, MeshIndexType>(getPolyhedra(), getElementsContainingVert(), tetNeighbors, Type::Tetrahedral);
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TetrahedralGeom::findElementCentroids(bool recalculate)
+Result<> TetrahedralGeom::findElementCentroids(bool recalculate)
 {
   auto* tetCentroids = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_CellCentroidsDataArrayId);
   if(tetCentroids != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(tetCentroids == nullptr)
   {
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
+    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{3}, 0.0f);
     tetCentroids = DataArray<float32>::Create(*getDataStructure(), k_EltCentroids, std::move(dataStore), getId());
+
+    if(tetCentroids == nullptr)
+    {
+      m_CellCentroidsDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2133, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(tetCentroids == nullptr)
-  {
-    m_CellCentroidsDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Topology::FindElementCentroids(getPolyhedra(), getVertices(), tetCentroids);
   m_CellCentroidsDataArrayId = tetCentroids->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
 Point3D<float64> TetrahedralGeom::getParametricCenter() const
@@ -319,88 +338,108 @@ void TetrahedralGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>&
   shape[11] = 1.0;
 }
 
-IGeometry::StatusCode TetrahedralGeom::findEdges(bool recalculate)
+Result<> TetrahedralGeom::findEdges(bool recalculate)
 {
   auto* edgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_EdgeDataArrayId);
   if(edgeList != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(edgeList == nullptr)
   {
     edgeList = createSharedEdgeList(0);
+    if(edgeList == nullptr)
+    {
+      m_EdgeDataArrayId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2134, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid shared edges array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(edgeList == nullptr)
-  {
-    m_EdgeDataArrayId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::FindTetEdges(getPolyhedra(), edgeList);
   m_EdgeDataArrayId = edgeList->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TetrahedralGeom::findFaces(bool recalculate)
+Result<> TetrahedralGeom::findFaces(bool recalculate)
 {
   auto* triList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_FaceListId);
   if(triList != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(triList == nullptr)
   {
     triList = createSharedTriList(0);
+    if(triList == nullptr)
+    {
+      m_FaceListId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2135, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid shared faces array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(triList == nullptr)
-  {
-    m_FaceListId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::FindTetFaces(getPolyhedra(), triList);
   m_FaceListId = triList->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TetrahedralGeom::findUnsharedEdges(bool recalculate)
+Result<> TetrahedralGeom::findUnsharedEdges(bool recalculate)
 {
   auto* unsharedEdgeList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedEdgeListId);
   if(unsharedEdgeList != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(unsharedEdgeList == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
     unsharedEdgeList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedEdgesListName, std::move(dataStore), getId());
+    if(unsharedEdgeList == nullptr)
+    {
+      m_UnsharedEdgeListId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2136, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid unshared edges array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(unsharedEdgeList == nullptr)
-  {
-    m_UnsharedEdgeListId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::FindUnsharedTetEdges<MeshIndexType>(getPolyhedra(), unsharedEdgeList);
   m_UnsharedEdgeListId = unsharedEdgeList->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
-IGeometry::StatusCode TetrahedralGeom::findUnsharedFaces(bool recalculate)
+Result<> TetrahedralGeom::findUnsharedFaces(bool recalculate)
 {
   auto* unsharedTriList = getDataStructureRef().getDataAsUnsafe<DataArray<MeshIndexType>>(m_UnsharedFaceListId);
   if(unsharedTriList != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   if(unsharedTriList == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{3}, 0);
     unsharedTriList = DataArray<MeshIndexType>::Create(*getDataStructure(), k_UnsharedFacesListName, std::move(dataStore), getId());
+    if(unsharedTriList == nullptr)
+    {
+      m_UnsharedFaceListId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2137, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid unshared faces array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(unsharedTriList == nullptr)
-  {
-    m_UnsharedFaceListId.reset();
-    return -1;
-  }
+
   GeometryHelpers::Connectivity::FindUnsharedTetFaces<MeshIndexType>(getPolyhedra(), unsharedTriList);
   m_UnsharedFaceListId = unsharedTriList->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }

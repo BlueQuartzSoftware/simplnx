@@ -67,10 +67,13 @@ public:
   usize getNumberOfPolyhedra() const;
 
   /**
-   * @brief Creates and assigns the face list array for the current values.
-   * @return StatusCode
+   * @brief Pure-Virtual intended to find the shared faces of each element
+   * in the geometry and store it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when a Shared Face
+   * Array exists and recalculate is `false`
+   * @return Result<>
    */
-  virtual StatusCode findFaces(bool recalculate) = 0;
+  virtual Result<> findFaces(bool recalculate) = 0;
 
   /**
    * @brief Deletes the current face list array.
@@ -90,9 +93,13 @@ public:
   void setUnsharedFacedId(const OptionalId& id);
 
   /**
-   * @brief Creates and assigns the unshared face list array for the current values.
+   * @brief Pure-Virtual intended to find the unshared faces of each element
+   * in the geometry and store it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an Unshared Faces
+   * Array exists and recalculate is `false`
+   * @return Result<>
    */
-  virtual StatusCode findUnsharedFaces(bool recalculate) = 0;
+  virtual Result<> findUnsharedFaces(bool recalculate) = 0;
 
   /**
    * @brief Returns a pointer to the unshared face list array.

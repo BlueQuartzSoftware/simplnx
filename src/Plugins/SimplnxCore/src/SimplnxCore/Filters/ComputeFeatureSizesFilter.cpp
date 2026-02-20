@@ -10,11 +10,15 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_InvalidInputDimensions = -74770;
+} // namespace
+
 std::string ComputeFeatureSizesFilter::name() const
 {
   return FilterTraits<ComputeFeatureSizesFilter>::name;
@@ -50,8 +54,8 @@ Parameters ComputeFeatureSizesFilter::parameters() const
                                                 "If checked this will generate and store the element sizes ONLY if the geometry does not already contain them.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Input Image Geometry", "DataPath to input Image Geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Input Grid Geometry", "DataPath to input Image or Rectilinear Grid Geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -60,9 +64,10 @@ Parameters ComputeFeatureSizesFilter::parameters() const
                                                                     DataPath({"Cell Feature Data"})));
 
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_EquivalentDiametersName_Key, "Equivalent Diameters", "DataPath to equivalent diameters array", "EquivalentDiameters"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_NumElementsName_Key, "Number of Elements", "DataPath to Num Elements array", "NumElements"));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesName_Key, "Volumes", "DataPath to volumes array", "Volumes"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_EquivalentDiametersName_Key, "Feature Equivalent Diameters Name",
+                                                          "Name of the array that will store the equivalent spherical/circular diameters of each feature", "EquivalentDiameters"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_NumElementsName_Key, "Feature Voxel Counts Name", "Name of the array that will store the number of voxels per feature", "NumElements"));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_VolumesName_Key, "Volumes/Area Name", "Name of the array that will store the volumes/area of each feature", "Volumes"));
 
   return params;
 }
@@ -70,7 +75,14 @@ Parameters ComputeFeatureSizesFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeFeatureSizesFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Description:
+  // Enabled RectGrid Geom for Input Grid Geom (key: "input_image_geometry_path")
+  //
+  // Change 1:
+  // Expanded existing parameter acceptable types
+  // Solution - No change needed;
 }
 
 IFilter::UniquePointer ComputeFeatureSizesFilter::clone() const
@@ -92,6 +104,32 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
   DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
 
+  const auto& geomRef = dataStructure.getDataRefAs<IGeometry>(geometryPath);
+  IGeometry::Type geomType = geomRef.getGeomType();
+  if(geomType == IGeometry::Type::Image)
+  {
+    const auto& imageGeom = dynamic_cast<const ImageGeom&>(geomRef);
+
+    usize emptyDimCount = 0;
+    if(imageGeom.getNumXCells() < 2)
+    {
+      emptyDimCount++;
+    }
+    if(imageGeom.getNumYCells() < 2)
+    {
+      emptyDimCount++;
+    }
+    if(imageGeom.getNumZCells() < 2)
+    {
+      emptyDimCount++;
+    }
+
+    if(emptyDimCount > 1)
+    {
+      return MakePreflightErrorResult(k_InvalidInputDimensions, "This filter requires at least 2 valid dimensions in the image geom. Two or more 1's were found in the image's dimensions");
+    }
+  }
+
   const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
 
   const std::string arrayDataFormat = featureIdsArray.getDataFormat();
@@ -99,7 +137,7 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   const auto& featAttributeMatrix = dataStructure.getDataRefAs<AttributeMatrix>(featureAttributeMatrixPath);
 
   ShapeType tupleDimensions = featAttributeMatrix.getShape();
-  uint64 numberOfComponents = 1;
+  usize numberOfComponents = 1;
 
   auto createVolumesAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, volumesPath, arrayDataFormat);
   auto createEquivalentDiametersAction = std::make_unique<CreateArrayAction>(DataType::float32, tupleDimensions, std::vector<usize>{numberOfComponents}, equivalentDiametersPath, arrayDataFormat);
@@ -117,6 +155,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   ComputeFeatureSizesInputValues inputValues;
+
   inputValues.EquivalentDiametersName = filterArgs.value<DataObjectNameParameter::ValueType>(k_EquivalentDiametersName_Key);
   inputValues.FeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAttributeMatrixPath_Key);
   inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
@@ -124,6 +163,7 @@ Result<> ComputeFeatureSizesFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.NumElementsName = filterArgs.value<DataObjectNameParameter::ValueType>(k_NumElementsName_Key);
   inputValues.SaveElementSizes = filterArgs.value<BoolParameter::ValueType>(k_SaveElementSizes_Key);
   inputValues.VolumesName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VolumesName_Key);
+
   return ComputeFeatureSizes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 

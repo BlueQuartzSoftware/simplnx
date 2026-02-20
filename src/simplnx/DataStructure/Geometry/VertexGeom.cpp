@@ -112,27 +112,32 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
   return nullptr;
 }
 
-IGeometry::StatusCode VertexGeom::findElementSizes(bool recalculate)
+Result<> VertexGeom::findElementSizes(bool recalculate)
 {
   auto* vertexSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
   if(vertexSizes != nullptr && !recalculate)
   {
-    return 0;
+    return {};
   }
+
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
   if(vertexSizes == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
     vertexSizes = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
+    if(vertexSizes == nullptr)
+    {
+      m_ElementSizesId.reset();
+      // Used to be error code `-1`
+      return MakeErrorResult(-2730, fmt::format("{}({}) VertexGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+    }
   }
-  if(vertexSizes == nullptr)
-  {
-    m_ElementSizesId.reset();
-    return -1;
-  }
+
   m_ElementSizesId = vertexSizes->getId();
-  return 1;
+
+  // Used to be error code `1`
+  return {};
 }
 
 Point3D<float64> VertexGeom::getParametricCenter() const

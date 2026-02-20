@@ -1,6 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Array.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
@@ -12,8 +13,6 @@ class SIMPLNX_EXPORT IGeometry : public BaseGroup
 {
 public:
   friend class DataStructure;
-
-  using StatusCode = int32;
 
   using MeshIndexType = uint64;
   using MeshIndexArrayType = DataArray<MeshIndexType>;
@@ -107,10 +106,13 @@ public:
   virtual usize getNumberOfCells() const = 0;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief Pure-Virtual intended to calculate the sizes of each element
+   * in the geometry and store it in a new or existing array in the datastructure
+   * @param recalculate This will allow for skipping execution when an Element Sizes
+   * Array exists and recalculate is `false`
+   * @return Result<>
    */
-  virtual StatusCode findElementSizes(bool recalculate) = 0;
+  virtual Result<> findElementSizes(bool recalculate) = 0;
 
   /**
    * @brief

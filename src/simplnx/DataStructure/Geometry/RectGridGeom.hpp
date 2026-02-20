@@ -205,10 +205,13 @@ public:
   usize getNumberOfCells() const override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief This function calculates the sizes of each voxel in the
+   * geometry and store it in a new or existing array in the datastructure
+   * @param recalculate This will allow for skipping execution when an
+   * Element Sizes Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementSizes(bool recalculate) override;
+  Result<> findElementSizes(bool recalculate) override;
 
   /**
    * @brief

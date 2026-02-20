@@ -58,9 +58,9 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   if(nullptr != inode2DPtr)
   {
     //  Generate the Unique Edges
-    if(inode2DPtr->findEdges(false) < 0)
+    if(Result<> result = inode2DPtr->findEdges(false); result.invalid())
     {
-      return MakeErrorResult(-560, "Error retrieving or creating the shared edge list");
+      return result;
     }
   }
 

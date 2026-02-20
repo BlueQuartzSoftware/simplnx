@@ -30,10 +30,10 @@ const std::atomic_bool& SliceTriangleGeometry::getCancel()
 Result<> SliceTriangleGeometry::operator()()
 {
   auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->CADDataContainerName);
-  int32 err = triangle.findEdges(true);
-  if(err < 0)
+  Result<> edgesResult = triangle.findEdges(true);
+  if(edgesResult.invalid())
   {
-    return MakeErrorResult(-62101, "Error retrieving the shared edge list");
+    return edgesResult;
   }
 
   AbstractDataStore<int32>* triRegionIdPtr = nullptr;

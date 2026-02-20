@@ -91,10 +91,13 @@ public:
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief Points have no space, so this function stores `0`s in a new
+   * or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an
+   * Element Sizes Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementSizes(bool recalculate) override;
+  Result<> findElementSizes(bool recalculate) override;
 
   /**
    * @brief

@@ -120,28 +120,39 @@ public:
   usize getNumberOfCells() const override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief calculates the sizes of each tetrahedron in the geometry
+   * and stores it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an
+   * Element Sizes Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementSizes(bool recalculate) override;
+  Result<> findElementSizes(bool recalculate) override;
 
   /**
    * @brief
-   * @return StatusCode
+   * @param recalculate This will allow for skipping execution when an
+   * `ElementDynamicList` exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementsContainingVert(bool recalculate) override;
+  Result<> findElementsContainingVert(bool recalculate) override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief finds the neighbors of each tetrahedron in the geometry
+   * and stores it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an
+   * `ElementDynamicList` exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementNeighbors(bool recalculate) override;
+  Result<> findElementNeighbors(bool recalculate) override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief calculates the centroid of each tetrahedron in the geometry
+   * and stores it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an
+   * Element Centroids Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findElementCentroids(bool recalculate) override;
+  Result<> findElementCentroids(bool recalculate) override;
 
   /**
    * @brief
@@ -157,28 +168,40 @@ public:
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief finds the shared edges (no duplicates) of each tetrahedron in the
+   * geometry and stores it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when a
+   * Shared Edge Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findEdges(bool recalculate) override;
+  Result<> findEdges(bool recalculate) override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief finds the shared faces (no duplicates) of each tetrahedron in the
+   * geometry and stores it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when a
+   * Shared Faces Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findFaces(bool recalculate) override;
+  Result<> findFaces(bool recalculate) override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief finds the edges (including duplicates) of each tetrahedron in the
+   * geometry and stores it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an
+   * Unshared Edges Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findUnsharedEdges(bool recalculate) override;
+  Result<> findUnsharedEdges(bool recalculate) override;
 
   /**
-   * @brief
-   * @return StatusCode
+   * @brief finds the faces (including duplicates) of each tetrahedron in the
+   * geometry and store it in a new or existing array in the DataStructure
+   * @param recalculate This will allow for skipping execution when an
+   * Unshared Faces Array exists and recalculate is `false`
+   * @return Result<>
    */
-  StatusCode findUnsharedFaces(bool recalculate) override;
+  Result<> findUnsharedFaces(bool recalculate) override;
 
 protected:
   /**

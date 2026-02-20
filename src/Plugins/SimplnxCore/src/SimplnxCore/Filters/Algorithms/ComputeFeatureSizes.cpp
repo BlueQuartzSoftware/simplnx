@@ -2,9 +2,11 @@
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <cmath>
 
@@ -12,9 +14,262 @@ using namespace nx::core;
 
 namespace
 {
-constexpr nx::core::int32 k_BadFeatureCount = -78231;
-constexpr nx::core::float32 k_PI = nx::core::numbers::pi_v<nx::core::float32>;
+constexpr int32 k_BadFeatureCount = -78231;
+constexpr uint64 k_MaxVoxelCount = std::numeric_limits<int32>::max();
+/**
+ * Volume of Sphere - `V = 4/3 * pi * r^3`
+ * Radius of Sphere - `r = cubed_root(3V / 4pi)`
+ * However we can cut a multiplication out of the
+ * equation at runtime by isolating the `V`
+ * 3V / 4pi == V / (4pi / 3)
+ */
+constexpr float64 k_ESDVolumeDenominator = (4.0 * nx::core::numbers::pi_v<float64>) / 3.0;
+constexpr float64 k_ECDAreaDenominator = nx::core::numbers::pi_v<float64>;
 
+Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
+                          const Int32AbstractDataStore& featureIds, const bool saveElementSizes, MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
+{
+  ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
+
+  const usize numVoxels = featureIds.getNumberOfTuples();
+  const usize numFeatures = volumes.getNumberOfTuples();
+
+  std::vector<uint64> featureVoxelCounts(numFeatures, 0);
+
+  msgHelper.sendMessage("Finding Voxel Counts...");
+  // Count and store the number of voxels in each feature
+  for(usize voxelIdx = 0; voxelIdx < numVoxels; voxelIdx++)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Counting || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
+
+    featureVoxelCounts[featureIds.getValue(voxelIdx)]++;
+  }
+
+  const FloatVec3 spacing = imageGeom.getSpacing();
+
+  const usize xDimSize = imageGeom.getNumXCells();
+  const usize yDimSize = imageGeom.getNumYCells();
+  const usize zDimSize = imageGeom.getNumZCells();
+
+  // Treat dimensions of 1 as flat for image geom
+  if(xDimSize == 1 || yDimSize == 1 || zDimSize == 1)
+  {
+    msgHelper.sendMessage("Singular image detected. Proceeding with 2D calculations...");
+    // One of the dimensions is empty, so we will be calculating area instead
+
+    /**
+     * IMPORTANT: Due the nature of ImageGeom the preflight is expected to impose a
+     * restriction on the number of empty dimensions (denoted as `1`) in an input
+     * ImageGeom. To illustrate why this is consider the following cases:
+     *
+     * An ImageGeom with 2 "empty" dimensions, such as 5x1x1. In this case the code would
+     * calculate the area/volume (ie distance between points) by only using the valid dimension.
+     * Functionally flattening the problem to 1D. You may think the solution is to explicitly
+     * define the area cases, but there is a caveat of which of the two empty dimensions to
+     * select for the area calculation. An image with 1x1x5 (XYZ) illustrates this problem,
+     * would you select X or Y for the scaling for area calculation? Clearly it has been rotated,
+     * but you lack the orientation information to determine the proper orientation.
+     *
+     * An ImageGeom with 3 "empty" dimensions, ie 1x1x1. This is a semi-ludicrous case since
+     * the value can be derived directly from the spacing, but the issue previously outlined
+     * will present itself once again. You cannot determine the orientation for proper area
+     * calculation.
+     *
+     * For these two cases the following code would BREAK, so do not enable.
+     **/
+
+    // if x dimension has a size of 1, then xSpacing = 1; else xSpacing = spacing[0]
+    const float64 xSpacing = (static_cast<float64>(spacing[0]) * static_cast<float64>(xDimSize > 1ULL)) + (1.0f * static_cast<float64>(xDimSize < 2ULL));
+    // if y dimension has a size of 1, then ySpacing = 1; else ySpacing = spacing[1]
+    const float64 ySpacing = (static_cast<float64>(spacing[1]) * static_cast<float64>(yDimSize > 1ULL)) + (1.0f * static_cast<float64>(yDimSize < 2ULL));
+    // if z dimension has a size of 1, then zSpacing = 1; else zSpacing = spacing[2]
+    const float64 zSpacing = (static_cast<float64>(spacing[2]) * static_cast<float64>(zDimSize > 1ULL)) + (1.0f * static_cast<float64>(zDimSize < 2ULL));
+
+    // Calculate the area of a single voxel
+    const float64 voxelArea = xSpacing * ySpacing * zSpacing;
+
+    msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
+    // Process each feature storing feature voxel counts, areas, and equivalent circular diameter
+    for(usize featureIdx = 1; featureIdx < numFeatures; featureIdx++)
+    {
+      if(shouldCancel)
+      {
+        return {};
+      }
+
+      // Check for integer overflow
+      if(featureVoxelCounts[featureIdx] > k_MaxVoxelCount)
+      {
+        return MakeErrorResult(k_BadFeatureCount, fmt::format("Feature {} contains more voxels ({}) than the 32-bit integer limit ({}).", featureIdx, featureVoxelCounts[featureIdx], k_MaxVoxelCount));
+      }
+
+      throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+
+      // Store the number of voxels in feature as int32
+      numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
+
+      // Calculate and store the area of the feature
+      const float64 newArea = static_cast<float64>(featureVoxelCounts[featureIdx]) * voxelArea;
+      volumes.setValue(featureIdx, static_cast<float32>(newArea));
+
+      /** Determine diameter from area:
+       * Area of Circle - `A = pi * r^2`
+       * Radius of Circle - `r = square_root(A / pi)`
+       * Diameter of Circle - `d = 2 * r`
+       * Thus
+       * Equivalent Circular Diameter - `2 * square_root(A / pi)`
+       **/
+      equivalentDiameters.setValue(featureIdx, static_cast<float32>(2.0 * std::sqrt(newArea / k_ECDAreaDenominator)));
+    }
+  }
+  else
+  {
+    // If we are here, it is an image stack and thus should be treated as 3D.
+    msgHelper.sendMessage("Image Stack detected. Proceeding with 3D calculations...");
+
+    // Calculate the volume of a single voxel
+    const float64 voxelVolume = spacing[0] * spacing[1] * spacing[2];
+
+    msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Volume and ESD...");
+    // Process each feature storing feature voxel counts, volumes, and equivalent spherical diameter
+    for(usize featureIdx = 1; featureIdx < numFeatures; featureIdx++)
+    {
+      if(shouldCancel)
+      {
+        return {};
+      }
+
+      // Check for integer overflow
+      if(featureVoxelCounts[featureIdx] > k_MaxVoxelCount)
+      {
+        return MakeErrorResult(k_BadFeatureCount, fmt::format("Feature {} contains more voxels ({}) than the 32-bit integer limit ({}).", featureIdx, featureVoxelCounts[featureIdx], k_MaxVoxelCount));
+      }
+
+      throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+
+      // Store the number of voxels in feature as int32
+      numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
+
+      // Calculate and store the volume of the feature
+      const float64 newVolume = static_cast<float64>(featureVoxelCounts[featureIdx]) * voxelVolume;
+      volumes.setValue(featureIdx, static_cast<float32>(newVolume));
+
+      /** Determine diameter from volume:
+       * Volume of Sphere - `V = 4/3 * pi * r^3`
+       * Radius of Sphere - `r = cubed_root(3V / 4pi)`
+       * Diameter of Sphere - `d = 2 * r`
+       * Thus
+       * Equivalent Spherical Diameter - `2 * cubed_root(V / (4pi / 3))`
+       **/
+      equivalentDiameters.setValue(featureIdx, static_cast<float32>(2.0 * std::cbrt(newVolume / k_ESDVolumeDenominator)));
+    }
+  }
+
+  if(saveElementSizes)
+  {
+    msgHelper.sendMessage("Calculating Element Sizes...");
+    return imageGeom.findElementSizes(false);
+  }
+
+  return {};
+}
+
+Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
+                             const Int32AbstractDataStore& featureIds, const bool saveElementSizes, MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
+{
+  ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
+
+  const usize numVoxels = featureIds.getNumberOfTuples();
+  const usize numFeatures = volumes.getNumberOfTuples();
+
+  msgHelper.sendMessage("Finding Element Sizes...");
+  Result<> result = rectGridGeom.findElementSizes(false);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  const Float32AbstractDataStore& elemSizes = rectGridGeom.getElementSizes()->getDataStoreRef();
+
+  std::vector<uint64> featureVoxelCounts(numFeatures, 0);
+  std::vector<float64> featureVolumes(numFeatures, 0.0);
+  // Needed for Kahan summation of volumes
+  std::vector<float64> featureCompensators(numFeatures, 0.0);
+
+  msgHelper.sendMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
+  // Count and store the number of voxels in each feature
+  for(usize voxelIdx = 0; voxelIdx < numVoxels; voxelIdx++)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
+
+    const int32 voxelFeatureId = featureIds.getValue(voxelIdx);
+    featureVoxelCounts[voxelFeatureId]++;
+
+    // Use Kahan summation to determine overall volume
+
+    // Attempt to recover low order into the value. The first instance is 0
+    float64 value = static_cast<float64>(elemSizes.getValue(voxelIdx)) - featureCompensators[voxelFeatureId];
+
+    // low order may be lost
+    float64 volSum = featureVolumes[voxelFeatureId] + value;
+
+    // recover and cache low order
+    featureCompensators[voxelFeatureId] = (volSum - featureVolumes[voxelFeatureId]) - value;
+
+    // store volumes
+    featureVolumes[voxelFeatureId] = volSum;
+  }
+
+  msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating ESD...");
+  // Process each feature storing feature voxel counts and equivalent spherical diameter
+  for(usize featureIdx = 1; featureIdx < numFeatures; featureIdx++)
+  {
+    if(shouldCancel)
+    {
+      return {};
+    }
+
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+
+    // Check for integer overflow
+    if(featureVoxelCounts[featureIdx] > k_MaxVoxelCount)
+    {
+      return MakeErrorResult(k_BadFeatureCount, fmt::format("Feature {} contains more voxels ({}) than the 32-bit integer limit ({}).", featureIdx, featureVoxelCounts[featureIdx], k_MaxVoxelCount));
+    }
+
+    // Store the number of voxels in feature as int32
+    numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
+    // Store the volume of the feature
+    volumes.setValue(featureIdx, static_cast<float32>(featureVolumes[featureIdx]));
+
+    /** Determine diameter from volume:
+     * Volume of Sphere - `V = 4/3 * pi * r^3`
+     * Radius of Sphere - `r = cubed_root(3V / 4pi)`
+     * Diameter of Sphere - `d = 2 * r`
+     * Thus
+     * Equivalent Spherical Diameter - `2 * cubed_root(V / (4pi / 3))`
+     **/
+    equivalentDiameters.setValue(featureIdx, static_cast<float32>(2.0 * std::cbrt(featureVolumes[featureIdx] / k_ESDVolumeDenominator)));
+  }
+
+  if(!saveElementSizes)
+  {
+    msgHelper.sendMessage("Cleaning Up Element Sizes...");
+    rectGridGeom.deleteElementSizes();
+  }
+
+  return {};
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -32,156 +287,47 @@ ComputeFeatureSizes::~ComputeFeatureSizes() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureSizes::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
 
-  auto saveElementSizes = m_InputValues->SaveElementSizes;
+  const bool saveElementSizes = m_InputValues->SaveElementSizes;
 
-  auto featureIdsArrayPath = m_InputValues->FeatureIdsPath;
-  auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
-  const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
+  messageHelper.sendMessage("Validating Feature Ids and Feature Attribute Matrix...");
+  const DataPath featureIdsArrayPath = m_InputValues->FeatureIdsPath;
+  const auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
   {
-    auto featureAttributeMatrixPath = m_InputValues->FeatureAttributeMatrixPath;
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, featureAttributeMatrixPath, *featureIdsArrayPtr, false, m_MessageHandler);
+    const DataPath featureAttributeMatrixPath = m_InputValues->FeatureAttributeMatrixPath;
+    Result<> validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, featureAttributeMatrixPath, *featureIdsArrayPtr, false, m_MessageHandler);
     if(validateNumFeatResult.invalid())
     {
       return validateNumFeatResult;
     }
   }
-  usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 
-  auto geomPath = m_InputValues->InputImageGeometryPath;
-  auto* geom = m_DataStructure.getDataAs<IGeometry>(geomPath);
-  auto featureAttributeMatrixPath = m_InputValues->FeatureAttributeMatrixPath;
+  const DataPath geomPath = m_InputValues->InputImageGeometryPath;
+  auto& geom = m_DataStructure.getDataRefAs<IGeometry>(geomPath);
+  const auto& featureIds = featureIdsArrayPtr->getDataStoreRef();
 
-  DataPath volumesPath = featureAttributeMatrixPath.createChildPath(m_InputValues->VolumesName);
-  DataPath equivDiamPath = featureAttributeMatrixPath.createChildPath(m_InputValues->EquivalentDiametersName);
-  DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(m_InputValues->NumElementsName);
+  const DataPath featureAttributeMatrixPath = m_InputValues->FeatureAttributeMatrixPath;
+  const DataPath volumesPath = featureAttributeMatrixPath.createChildPath(m_InputValues->VolumesName);
+  const DataPath equivDiamPath = featureAttributeMatrixPath.createChildPath(m_InputValues->EquivalentDiametersName);
+  const DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(m_InputValues->NumElementsName);
 
-  // If the geometry is an ImageGeometry or a RectilinearGeometry
-  auto* imageGeom = dynamic_cast<ImageGeom*>(geom);
-  if(nullptr != imageGeom)
+  auto& volumes = m_DataStructure.getDataAs<Float32Array>(volumesPath)->getDataStoreRef();
+  auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(equivDiamPath)->getDataStoreRef();
+  auto& numElements = m_DataStructure.getDataAs<Int32Array>(numElementsPath)->getDataStoreRef();
+
+  const IGeometry::Type geomType = geom.getGeomType();
+  if(geomType == IGeometry::Type::Image)
   {
-
-    auto& volumes = m_DataStructure.getDataAs<Float32Array>(volumesPath)->getDataStoreRef();
-    auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(equivDiamPath)->getDataStoreRef();
-    auto& numElements = m_DataStructure.getDataAs<Int32Array>(numElementsPath)->getDataStoreRef();
-
-    usize featureIdsMaxIdx = std::distance(featureIdsStoreRef.begin(), std::max_element(featureIdsStoreRef.cbegin(), featureIdsStoreRef.cend()));
-    usize maxValue = featureIdsStoreRef[featureIdsMaxIdx];
-    usize numFeatures = maxValue + 1;
-
-    std::vector<uint64> featureCounts(numFeatures, 0);
-
-    for(size_t j = 0; j < totalPoints; j++)
-    {
-      int32_t gnum = featureIdsStoreRef[j];
-      auto temp = featureCounts[gnum] + 1;
-      featureCounts[gnum] = temp;
-    }
-
-    FloatVec3 spacing = imageGeom->getSpacing();
-
-    if(imageGeom->getNumXCells() == 1 || imageGeom->getNumYCells() == 1 || imageGeom->getNumZCells() == 1)
-    {
-      float res_scalar = 0.0f;
-      if(imageGeom->getNumXCells() == 1)
-      {
-        res_scalar = spacing[1] * spacing[2];
-      }
-      else if(imageGeom->getNumYCells() == 1)
-      {
-        res_scalar = spacing[0] * spacing[2];
-      }
-      else if(imageGeom->getNumZCells() == 1)
-      {
-        res_scalar = spacing[0] * spacing[1];
-      }
-
-      for(size_t i = 1; i < numFeatures; i++)
-      {
-        numElements[i] = static_cast<int32_t>(featureCounts[i]);
-        if(featureCounts[i] > 9007199254740992ULL)
-        {
-          std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
-          return MakeErrorResult(k_BadFeatureCount, ss);
-        }
-        volumes[i] = static_cast<float32>(featureCounts[i]) * static_cast<float32>(res_scalar);
-
-        float32 rad = volumes[i] / k_PI;
-        float32 diameter = (2 * sqrtf(rad));
-        equivalentDiameters[i] = diameter;
-      }
-    }
-    else
-    {
-      float32 res_scalar = spacing[0] * spacing[1] * spacing[2];
-      float vol_term = (4.0f / 3.0f) * k_PI;
-      for(usize i = 1; i < numFeatures; i++)
-      {
-        numElements[i] = static_cast<int32>(featureCounts[i]);
-        if(featureCounts[i] > 9007199254740992ULL)
-        {
-          std::string ss = fmt::format("Number of voxels belonging to feature {} ({}) is greater than 9007199254740992", i, featureCounts[i]);
-          return MakeErrorResult(k_BadFeatureCount, ss);
-        }
-
-        volumes[i] = static_cast<float32>(featureCounts[i]) * static_cast<float32>(res_scalar);
-
-        float32 rad = volumes[i] / vol_term;
-        float32 diameter = 2.0f * powf(rad, 0.3333333333f);
-        equivalentDiameters[i] = diameter;
-      }
-    }
-
-    if(saveElementSizes)
-    {
-      int32 err = imageGeom->findElementSizes(false);
-      if(err < 0)
-      {
-        std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", imageGeom->getTypeName());
-        return MakeErrorResult(err, ss);
-      }
-    }
+    messageHelper.sendMessage("Beginning Processing Features in Image Geometry...");
+    auto& imageGeom = dynamic_cast<ImageGeom&>(geom);
+    return ProcessImageGeom(imageGeom, volumes, equivalentDiameters, numElements, featureIds, saveElementSizes, messageHelper, m_ShouldCancel);
   }
-  else
+  if(geomType == IGeometry::Type::RectGrid)
   {
-    auto& volumes = m_DataStructure.getDataAs<Float32Array>(volumesPath)->getDataStoreRef();
-    auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(equivDiamPath)->getDataStoreRef();
-    auto& numElements = m_DataStructure.getDataAs<Int32Array>(numElementsPath)->getDataStoreRef();
-
-    usize numFeatures = volumes.getNumberOfTuples();
-
-    int32_t err = geom->findElementSizes(false);
-    if(err < 0)
-    {
-      std::string ss = fmt::format("Error computing Element sizes for Geometry type {}", geom->getTypeName());
-      return MakeErrorResult(err, ss);
-    }
-
-    const Float32Array* elemSizes = geom->getElementSizes();
-
-    std::vector<float> featureCounts(numFeatures, 1);
-
-    for(size_t j = 0; j < totalPoints; j++)
-    {
-      int32 gnum = featureIdsStoreRef[j];
-      auto temp = featureCounts[gnum] + 1;
-      featureCounts[gnum] = temp;
-      auto temp2 = volumes[gnum];
-      volumes[gnum] = temp2 + (*elemSizes)[j];
-    }
-    float vol_term = (4.0f / 3.0f) * k_PI;
-    for(size_t i = 1; i < numFeatures; i++)
-    {
-      numElements[i] = static_cast<int32>(featureCounts[i]);
-      float rad = volumes[i] / vol_term;
-      float diameter = 2.0f * powf(rad, 0.3333333333f);
-      equivalentDiameters[i] = diameter;
-    }
-
-    if(!saveElementSizes)
-    {
-      geom->deleteElementSizes();
-    }
+    messageHelper.sendMessage("Beginning Processing Features in Rectilinear Grid Geometry...");
+    auto& rectGridGeom = dynamic_cast<RectGridGeom&>(geom);
+    return ProcessRectGridGeom(rectGridGeom, volumes, equivalentDiameters, numElements, featureIds, saveElementSizes, messageHelper, m_ShouldCancel);
   }
 
   return {};
