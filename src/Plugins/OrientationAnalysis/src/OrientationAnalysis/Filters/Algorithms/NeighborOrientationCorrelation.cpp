@@ -114,10 +114,9 @@ Result<> NeighborOrientationCorrelation::operator()()
   MessageHelper messageHelper(m_MessageHandler);
 
   int32 totalLevels = startLevel - m_InputValues->Level;
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
-      [totalLevels, totalPoints](int32 levelNum, usize voxelIdx) {
-        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", levelNum, totalLevels, CalculatePercentComplete(voxelIdx, totalPoints));
-      });
+  auto throttledMessenger = messageHelper.createThrottledMessenger([totalLevels, totalPoints](int32 levelNum, usize voxelIdx) {
+    return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", levelNum, totalLevels, CalculatePercentComplete(voxelIdx, totalPoints));
+  });
 
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {

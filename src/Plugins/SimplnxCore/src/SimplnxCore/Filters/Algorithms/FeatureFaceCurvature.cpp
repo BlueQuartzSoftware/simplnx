@@ -104,9 +104,8 @@ Result<> FeatureFaceCurvature::operator()()
   messageHelper.sendMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
 #endif
 
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(sharedFeatureFaces.size(), [](usize currentProgress, usize maxProgress) {
-    return fmt::format("Feature Face Curvature: {}/{}", currentProgress, maxProgress);
-  });
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+      sharedFeatureFaces.size(), [](usize currentProgress, usize maxProgress) { return fmt::format("Feature Face Curvature: {}/{}", currentProgress, maxProgress); });
 
   for(auto& sharedFeatureFace : sharedFeatureFaces)
   {

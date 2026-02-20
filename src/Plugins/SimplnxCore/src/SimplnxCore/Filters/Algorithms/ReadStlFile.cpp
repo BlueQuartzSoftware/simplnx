@@ -139,8 +139,8 @@ Result<> ReadStlFile::operator()()
   std::vector<uint8_t> triangleAttributeBuffer(std::numeric_limits<uint16_t>::max()); // Just allocate a buffer of max UINT16 elements
 
   MessageHelper messageHelper(m_MessageHandler);
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
-      [total = static_cast<usize>(triCount)](usize current) { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(current, total)); });
+  auto throttledMessenger =
+      messageHelper.createThrottledMessenger([total = static_cast<usize>(triCount)](usize current) { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(current, total)); });
 
   fpos_t pos;
 

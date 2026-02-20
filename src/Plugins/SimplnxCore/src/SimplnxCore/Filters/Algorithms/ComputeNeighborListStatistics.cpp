@@ -215,9 +215,8 @@ Result<> ComputeNeighborListStatistics::operator()()
   }
 
   MessageHelper messageHelper(m_MessageHandler);
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(numTuples, [](usize currentProgress, usize maxProgress) {
-    return fmt::format("Finding Statistics || {:.2f}% Completed", CalculatePercentComplete(currentProgress, maxProgress));
-  });
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+      numTuples, [](usize currentProgress, usize maxProgress) { return fmt::format("Finding Statistics || {:.2f}% Completed", CalculatePercentComplete(currentProgress, maxProgress)); });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;

@@ -84,8 +84,7 @@ class SampleSurfaceMeshImplByPoints
 {
 public:
   SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3Df>& faceBBs,
-                                const std::vector<Point3Df>& points, const usize featureId, Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel,
-                                ProgressHelper& progressHelper)
+                                const std::vector<Point3Df>& points, const usize featureId, Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel, ProgressHelper& progressHelper)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
@@ -277,8 +276,8 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
 
   m_MessageHelper.sendMessage("Sampling triangle geometry ...");
 
-  ProgressHelper progressHelper = m_MessageHelper.createProgressHelper(
-      points.size(), [](usize currentProgress, usize maxProgress) { return fmt::format("Points Completed: {} of {}", currentProgress, maxProgress); });
+  ProgressHelper progressHelper =
+      m_MessageHelper.createProgressHelper(points.size(), [](usize currentProgress, usize maxProgress) { return fmt::format("Points Completed: {} of {}", currentProgress, maxProgress); });
 
   // C++11 RIGHT HERE....
   auto nthreads = static_cast<int32>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform

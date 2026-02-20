@@ -250,8 +250,8 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
   }
 
   // Loop over all points to generate the neighbor lists
-  auto neighborListMessenger = messageHelper.createThrottledMessenger(
-      [totalPoints](usize voxelIdx) { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, totalPoints)); });
+  auto neighborListMessenger =
+      messageHelper.createThrottledMessenger([totalPoints](usize voxelIdx) { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, totalPoints)); });
   for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
     neighborListMessenger.sendMessage(static_cast<usize>(voxelIndex));

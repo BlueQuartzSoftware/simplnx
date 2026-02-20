@@ -114,8 +114,8 @@ Result<> RotateEulerRefFrame::operator()()
   axis = axis.normalize();
 
   MessageHelper messageHelper(m_MessageHandler);
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(
-      totalElements, [](usize current, usize max) { return fmt::format("RotateEulerRefFrame: {:.2f}% complete", CalculatePercentComplete(current, max)); });
+  ProgressHelper progressHelper =
+      messageHelper.createProgressHelper(totalElements, [](usize current, usize max) { return fmt::format("RotateEulerRefFrame: {:.2f}% complete", CalculatePercentComplete(current, max)); });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;

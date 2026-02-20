@@ -314,9 +314,8 @@ Result<> ComputeArrayHistogramByFeature::operator()()
 
     bool histFullRange = !m_InputValues->UserDefinedRange;
 
-    ProgressHelper progressHelper = messageHelper.createProgressHelper(numFeatures, [](usize currentProgress, usize maxProgress) {
-      return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress);
-    });
+    ProgressHelper progressHelper =
+        messageHelper.createProgressHelper(numFeatures, [](usize currentProgress, usize maxProgress) { return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress); });
 
     if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
     {

@@ -49,8 +49,7 @@ TEST_CASE("MessageHelper: ThrottledMessenger single usize argument (atomic speci
 
   {
     MessageHelper messageHelper(handler);
-    auto messenger = messageHelper.createThrottledMessenger(
-        [](usize current) { return fmt::format("Progress: {}", current); }, std::chrono::milliseconds(50));
+    auto messenger = messageHelper.createThrottledMessenger([](usize current) { return fmt::format("Progress: {}", current); }, std::chrono::milliseconds(50));
 
     // Send multiple values rapidly
     for(usize i = 0; i < 1000; i++)
@@ -82,8 +81,8 @@ TEST_CASE("MessageHelper: ThrottledMessenger multi-argument", "[MessageHelper]")
 
   {
     MessageHelper messageHelper(handler);
-    auto messenger = messageHelper.createThrottledMessenger(
-        [](usize iteration, usize voxel, float32 error) { return fmt::format("Iter {}: voxel {} err {:.2f}", iteration, voxel, error); }, std::chrono::milliseconds(50));
+    auto messenger = messageHelper.createThrottledMessenger([](usize iteration, usize voxel, float32 error) { return fmt::format("Iter {}: voxel {} err {:.2f}", iteration, voxel, error); },
+                                                            std::chrono::milliseconds(50));
 
     messenger.sendMessage(static_cast<usize>(5), static_cast<usize>(100), 0.42f);
 
@@ -182,7 +181,8 @@ TEST_CASE("MessageHelper: ProgressHelper single worker", "[MessageHelper]")
   {
     MessageHelper messageHelper(handler);
     usize maxProgress = 1000;
-    auto progressHelper = messageHelper.createProgressHelper(maxProgress, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
+    auto progressHelper = messageHelper.createProgressHelper(
+        maxProgress, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
 
     auto worker = progressHelper.createWorkerHandle();
 
@@ -211,7 +211,8 @@ TEST_CASE("MessageHelper: ProgressHelper multiple workers", "[MessageHelper]")
   {
     MessageHelper messageHelper(handler);
     usize maxProgress = 4000;
-    auto progressHelper = messageHelper.createProgressHelper(maxProgress, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
+    auto progressHelper = messageHelper.createProgressHelper(
+        maxProgress, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
 
     // Spawn 4 worker threads each incrementing 1000 times
     std::vector<std::thread> threads;
@@ -249,7 +250,8 @@ TEST_CASE("MessageHelper: ProgressHelper resetProgress", "[MessageHelper]")
 
   {
     MessageHelper messageHelper(handler);
-    auto progressHelper = messageHelper.createProgressHelper(100, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
+    auto progressHelper = messageHelper.createProgressHelper(
+        100, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
 
     auto worker = progressHelper.createWorkerHandle();
     for(usize i = 0; i < 50; i++)

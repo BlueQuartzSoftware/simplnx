@@ -21,10 +21,12 @@ digraph MessagingSystem {
     leg_internal [label="Internal / Implementation", shape=box, style=filled, fillcolor="#F9E79F"];
     leg_singleton [label="Singleton", shape=box, style=filled, fillcolor="#F5B7B1"];
     leg_unchanged [label="Unchanged (IFilter types)", shape=box, style=filled, fillcolor="#D5F5E3"];
+    leg_metaprog [label="Template Metaprogramming", shape=box, style=filled, fillcolor="#E8DAEF"];
 
     leg_user -> leg_internal [label="owns (shared_ptr)", style=bold, color=black];
     leg_internal -> leg_singleton [label="weak_ptr registration", style=dashed, color=blue];
     leg_singleton -> leg_unchanged [label="calls / uses", style=dotted, color=gray40];
+    leg_unchanged -> leg_metaprog [label="compile-time deduction", style=dotted, color="#8E44AD"];
   }
 
   // =========================================================================
@@ -84,7 +86,7 @@ digraph MessagingSystem {
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
           <TR><TD BGCOLOR="#D4E6F1"><B>MessageHelper</B></TD></TR>
           <TR><TD ALIGN="LEFT">- m_MessageHandler : const MessageHandler&amp;</TD></TR>
-          <TR><TD ALIGN="LEFT">+ sendMessage(string) : void<BR/>+ createThrottledMessenger(formatter, interval)<BR/>    -&gt; ThrottledMessenger&lt;Args...&gt;<BR/>+ createProgressHelper(max, formatter, interval)<BR/>    -&gt; ProgressHelper</TD></TR>
+          <TR><TD ALIGN="LEFT">+ sendMessage(string) : void [synchronous]<BR/>+ createThrottledMessenger(formatter, interval)<BR/>    -&gt; ThrottledMessenger&lt;Args...&gt;<BR/>+ createProgressHelper(max, formatter, interval)<BR/>    -&gt; ProgressHelper</TD></TR>
         </TABLE>
       >,
       shape=plain
@@ -95,7 +97,7 @@ digraph MessagingSystem {
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
           <TR><TD BGCOLOR="#D4E6F1"><B>ThrottledMessenger&lt;Args...&gt;</B></TD></TR>
           <TR><TD ALIGN="LEFT">- m_Channel : shared_ptr&lt;ThrottledChannel&lt;Args...&gt;&gt;</TD></TR>
-          <TR><TD ALIGN="LEFT">+ sendMessage(Args... args) : void<BR/>    [HOT PATH: ~15-25ns]<BR/>+ ~ThrottledMessenger() : finalFlush()</TD></TR>
+          <TR><TD ALIGN="LEFT">+ sendMessage(Args... args) : void<BR/>    [HOT PATH: ~15-25ns general, ~10ns usize]<BR/>+ ~ThrottledMessenger() calls finalFlush()</TD></TR>
         </TABLE>
       >,
       shape=plain
@@ -106,7 +108,7 @@ digraph MessagingSystem {
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
           <TR><TD BGCOLOR="#D4E6F1"><B>ProgressHelper</B></TD></TR>
           <TR><TD ALIGN="LEFT">- m_Channel : shared_ptr&lt;ProgressChannel&gt;</TD></TR>
-          <TR><TD ALIGN="LEFT">+ createWorkerHandle() : ProgressWorker<BR/>+ resetProgress() : void</TD></TR>
+          <TR><TD ALIGN="LEFT">+ createWorkerHandle() : ProgressWorker<BR/>+ resetProgress() : void<BR/>+ ~ProgressHelper() calls finalFlush()</TD></TR>
         </TABLE>
       >,
       shape=plain
@@ -117,7 +119,17 @@ digraph MessagingSystem {
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
           <TR><TD BGCOLOR="#D4E6F1"><B>ProgressWorker</B></TD></TR>
           <TR><TD ALIGN="LEFT">- m_Channel : shared_ptr&lt;ProgressChannel&gt;</TD></TR>
-          <TR><TD ALIGN="LEFT">+ incrementProgress(amount) : void<BR/>    [HOT PATH: atomic add, ~5ns]</TD></TR>
+          <TR><TD ALIGN="LEFT">+ incrementProgress(amount) : void<BR/>    [HOT PATH: atomic add, ~10ns]</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    UtilFunc [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#D4E6F1"><B>CalculatePercentComplete&lt;T&gt;()</B></TD></TR>
+          <TR><TD ALIGN="LEFT">+ (usize current, usize max) -&gt; T<BR/>    [constexpr utility]</TD></TR>
         </TABLE>
       >,
       shape=plain
@@ -143,12 +155,23 @@ digraph MessagingSystem {
       shape=plain
     ];
 
-    ThrottledChannel [
+    ThrottledChannelGeneral [
       label=<
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
-          <TR><TD BGCOLOR="#F9E79F"><B>ThrottledChannel&lt;Args...&gt;</B></TD></TR>
+          <TR><TD BGCOLOR="#F9E79F"><B>ThrottledChannel&lt;Args...&gt;</B><BR/>(General Template)</TD></TR>
           <TR><TD ALIGN="LEFT">- m_Formatter : std::function&lt;string(Args...)&gt;<BR/>- m_Handler : const MessageHandler&amp;<BR/>- m_Interval : milliseconds<BR/>- m_LastSendTime : time_point<BR/>- m_ArgsMutex : std::mutex<BR/>- m_LatestArgs : std::tuple&lt;Args...&gt;<BR/>- m_HasNewData : std::atomic&lt;bool&gt;</TD></TR>
-          <TR><TD ALIGN="LEFT">+ storeArgs(Args...) : void<BR/>+ tryFlush() : bool [override]<BR/>+ finalFlush() : void [override]</TD></TR>
+          <TR><TD ALIGN="LEFT">+ storeArgs(Args...) : void [mutex + atomic]<BR/>+ tryFlush() : bool [override]<BR/>+ finalFlush() : void [override]</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    ThrottledChannelUsize [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#F9E79F"><B>ThrottledChannel&lt;usize&gt;</B><BR/>(Atomic Specialization)</TD></TR>
+          <TR><TD ALIGN="LEFT">- m_Formatter : std::function&lt;string(usize)&gt;<BR/>- m_Handler : const MessageHandler&amp;<BR/>- m_Interval : milliseconds<BR/>- m_LastSendTime : time_point<BR/>- m_LatestValue : std::atomic&lt;usize&gt;<BR/>- m_HasNewData : std::atomic&lt;bool&gt;</TD></TR>
+          <TR><TD ALIGN="LEFT">+ storeArgs(usize) : void [lock-free atomics]<BR/>+ tryFlush() : bool [override]<BR/>+ finalFlush() : void [override]</TD></TR>
         </TABLE>
       >,
       shape=plain
@@ -158,18 +181,8 @@ digraph MessagingSystem {
       label=<
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
           <TR><TD BGCOLOR="#F9E79F"><B>ProgressChannel</B></TD></TR>
-          <TR><TD ALIGN="LEFT">- m_Formatter : std::function&lt;string(usize, usize)&gt;<BR/>- m_Handler : const MessageHandler&amp;<BR/>- m_Interval : milliseconds<BR/>- m_MaxProgress : usize<BR/>- m_CurrentProgress : std::atomic&lt;usize&gt;<BR/>- m_HasNewData : std::atomic&lt;bool&gt;</TD></TR>
-          <TR><TD ALIGN="LEFT">+ incrementAndStore(usize) : void<BR/>+ tryFlush() : bool [override]<BR/>+ finalFlush() : void [override]</TD></TR>
-        </TABLE>
-      >,
-      shape=plain
-    ];
-
-    CallableTraits [
-      label=<
-        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
-          <TR><TD BGCOLOR="#F9E79F"><B>callable_traits&lt;T&gt;</B></TD></TR>
-          <TR><TD ALIGN="LEFT">args_tuple : std::tuple&lt;Args...&gt;</TD></TR>
+          <TR><TD ALIGN="LEFT">- m_Formatter : std::function&lt;string(usize, usize)&gt;<BR/>- m_Handler : const MessageHandler&amp;<BR/>- m_MaxProgress : usize<BR/>- m_Interval : milliseconds<BR/>- m_LastSendTime : time_point<BR/>- m_CurrentProgress : std::atomic&lt;usize&gt;<BR/>- m_HasNewData : std::atomic&lt;bool&gt;</TD></TR>
+          <TR><TD ALIGN="LEFT">+ incrementAndStore(usize) : void [atomic add]<BR/>+ resetProgress() : void<BR/>+ tryFlush() : bool [override]<BR/>+ finalFlush() : void [override]</TD></TR>
         </TABLE>
       >,
       shape=plain
@@ -177,10 +190,53 @@ digraph MessagingSystem {
   }
 
   // =========================================================================
+  // Template Metaprogramming (purple)
+  // =========================================================================
+  subgraph cluster_metaprog {
+    label="Template Metaprogramming (detail namespace)";
+    style=rounded;
+    color="#8E44AD";
+    bgcolor="#F5EEF8";
+
+    CallableTraits [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#E8DAEF"><B>callable_traits&lt;T&gt;</B></TD></TR>
+          <TR><TD ALIGN="LEFT">args_tuple : std::tuple&lt;decay_t&lt;Args&gt;...&gt;</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    CallableTraitsConstMethod [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#E8DAEF"><B>callable_traits&lt;R(C::*)(Args...) const&gt;</B></TD></TR>
+          <TR><TD ALIGN="LEFT">Specialization for const member functions<BR/>(lambda operator() const)</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    CallableTraitsFuncPtr [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#E8DAEF"><B>callable_traits&lt;R(*)(Args...)&gt;</B></TD></TR>
+          <TR><TD ALIGN="LEFT">Specialization for function pointers</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    CallableTraits -> CallableTraitsConstMethod [label="primary\nspecialization", style=dotted, color="#8E44AD"];
+    CallableTraits -> CallableTraitsFuncPtr [label="function ptr\nspecialization", style=dotted, color="#8E44AD"];
+  }
+
+  // =========================================================================
   // Singleton (red)
   // =========================================================================
   subgraph cluster_singleton {
-    label="Singleton";
+    label="Singleton (Process-Wide)";
     style=rounded;
     color="#E74C3C";
     bgcolor="#FDEDEC";
@@ -189,11 +245,28 @@ digraph MessagingSystem {
       label=<
         <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
           <TR><TD BGCOLOR="#F5B7B1"><B>MessageDispatcher (Singleton)</B></TD></TR>
-          <TR><TD ALIGN="LEFT">- m_TimerThread : std::thread<BR/>- m_Running : std::atomic&lt;bool&gt;<BR/>- m_ChannelsMutex : std::mutex<BR/>- m_ShutdownCv : std::condition_variable<BR/>- m_Channels : vector&lt;weak_ptr&lt;IThrottledChannel&gt;&gt;<BR/>- k_TickInterval : 100ms</TD></TR>
-          <TR><TD ALIGN="LEFT">+ instance() : MessageDispatcher&amp;<BR/>+ registerChannel(weak_ptr&lt;IThrottledChannel&gt;)<BR/>+ shutdown() : void<BR/>- timerLoop() : void</TD></TR>
+          <TR><TD ALIGN="LEFT">- m_Impl : unique_ptr&lt;Impl&gt; [pimpl]</TD></TR>
+          <TR><TD ALIGN="LEFT">+ instance() : MessageDispatcher&amp; [static]<BR/>+ registerChannel(weak_ptr&lt;IThrottledChannel&gt;)</TD></TR>
         </TABLE>
       >,
       shape=plain
+    ];
+
+    DispatcherImpl [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#F5B7B1"><B>MessageDispatcher::Impl</B></TD></TR>
+          <TR><TD ALIGN="LEFT">- m_TimerThread : std::thread<BR/>- m_Running : std::atomic&lt;bool&gt;<BR/>- m_ChannelsMutex : std::mutex<BR/>- m_ShutdownMutex : std::mutex<BR/>- m_ShutdownCv : std::condition_variable<BR/>- m_Channels : vector&lt;weak_ptr&lt;IThrottledChannel&gt;&gt;<BR/>- k_TickInterval : 100ms</TD></TR>
+          <TR><TD ALIGN="LEFT">+ registerChannel(weak_ptr) : void<BR/>+ shutdown() : void<BR/>- timerLoop() : void<BR/>- ensureRunning() : void [lazy start]</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    MessageDispatcher -> DispatcherImpl [
+      label="pimpl",
+      style=bold,
+      color="#E74C3C"
     ];
   }
 
@@ -218,9 +291,14 @@ digraph MessagingSystem {
     color=gray40
   ];
 
-  // ThrottledMessenger owns ThrottledChannel
-  ThrottledMessenger -> ThrottledChannel [
+  // ThrottledMessenger owns ThrottledChannel (either variant)
+  ThrottledMessenger -> ThrottledChannelGeneral [
     label="owns\n(shared_ptr)",
+    style=bold,
+    color=black
+  ];
+  ThrottledMessenger -> ThrottledChannelUsize [
+    label="owns (when Args = usize)\n(shared_ptr)",
     style=bold,
     color=black
   ];
@@ -245,7 +323,12 @@ digraph MessagingSystem {
   ];
 
   // Channels implement IThrottledChannel
-  ThrottledChannel -> IThrottledChannel [
+  ThrottledChannelGeneral -> IThrottledChannel [
+    label="implements",
+    arrowhead=empty,
+    style=solid
+  ];
+  ThrottledChannelUsize -> IThrottledChannel [
     label="implements",
     arrowhead=empty,
     style=solid
@@ -257,7 +340,13 @@ digraph MessagingSystem {
   ];
 
   // Channels are registered with MessageDispatcher
-  ThrottledChannel -> MessageDispatcher [
+  ThrottledChannelGeneral -> MessageDispatcher [
+    label="registered\n(weak_ptr)",
+    style=dashed,
+    color="#3498DB",
+    dir=back
+  ];
+  ThrottledChannelUsize -> MessageDispatcher [
     label="registered\n(weak_ptr)",
     style=dashed,
     color="#3498DB",
@@ -271,8 +360,13 @@ digraph MessagingSystem {
   ];
 
   // Channels call MessageHandler
-  ThrottledChannel -> MessageHandler [
-    label="  calls (from\n  timer thread)  ",
+  ThrottledChannelGeneral -> MessageHandler [
+    label="calls (from\ntimer thread)",
+    style=dotted,
+    color="#E74C3C"
+  ];
+  ThrottledChannelUsize -> MessageHandler [
+    label="calls (from\ntimer thread)",
     style=dotted,
     color="#E74C3C"
   ];
@@ -283,17 +377,25 @@ digraph MessagingSystem {
   ];
 
   // MessageDispatcher calls tryFlush on channels
-  MessageDispatcher -> IThrottledChannel [
+  DispatcherImpl -> IThrottledChannel [
     label="calls tryFlush()\nevery 100ms",
     style=bold,
     color="#E74C3C"
   ];
 
-  // MessageHelper calls createThrottledMessenger which uses callable_traits
+  // MessageHelper uses callable_traits for arg deduction
   MessageHelper -> CallableTraits [
     label="uses for\narg deduction",
     style=dotted,
-    color=gray40
+    color="#8E44AD"
+  ];
+
+  // Specialization relationship between channel variants
+  ThrottledChannelUsize -> ThrottledChannelGeneral [
+    label="explicit\nspecialization of",
+    style=dashed,
+    color="#F39C12",
+    arrowhead=empty
   ];
 
   // =========================================================================
@@ -305,11 +407,13 @@ digraph MessagingSystem {
     color=gray60;
     bgcolor="#F8F9F9";
 
-    step1 [label="1. Filter loop calls\nthrottledMessenger.sendMessage(args...)", shape=note, fillcolor=white, style=filled];
-    step2 [label="2. Args stored in\nThrottledChannel\n(mutex + atomic flag)", shape=note, fillcolor=white, style=filled];
-    step3 [label="3. Dispatcher timer\nwakes every 100ms", shape=note, fillcolor=white, style=filled];
-    step4 [label="4. tryFlush() checks flag,\ninterval, formats string,\ncalls MessageHandler", shape=note, fillcolor=white, style=filled];
+    step1 [label="1. Filter loop calls\nthrottledMessenger.sendMessage(args...)\nor worker.incrementProgress(n)", shape=note, fillcolor=white, style=filled];
+    step2 [label="2. Args stored in channel\n(atomic store for usize,\nmutex+tuple for multi-arg,\natomic add for progress)", shape=note, fillcolor=white, style=filled];
+    step3 [label="3. Dispatcher timer\nwakes every 100ms\n(condition_variable::wait_for)", shape=note, fillcolor=white, style=filled];
+    step4 [label="4. tryFlush(): check flag,\ncheck interval, format string\nvia formatter lambda,\ncall MessageHandler", shape=note, fillcolor=white, style=filled];
+    step5 [label="5. On destruction:\nfinalFlush() sends last\npending message", shape=note, fillcolor=white, style=filled];
 
     step1 -> step2 -> step3 -> step4 [style=bold, color="#8E44AD"];
+    step4 -> step5 [style=dashed, color="#8E44AD"];
   }
 }

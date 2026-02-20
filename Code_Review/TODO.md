@@ -216,7 +216,7 @@ From section 9 in the Design.md document:
 
 ## Phase 9: Documentation
 
-- [x] Write up a document explaining how to use the new system. Place this new document into the docs directory in a file called "SendingFilterUpdates.md"
+- [ ] Write up a document explaining how to use the new system. Place this new document into the docs directory in a file called "SendingFilterUpdates.md"
 
 ---
 

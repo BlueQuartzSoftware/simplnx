@@ -78,8 +78,8 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
 
   double deg2Rad = (nx::core::numbers::pi / 180.0);
   usize totalSlices = static_cast<usize>(dims[2]);
-  auto throttledMessenger = getMessageHelper().createThrottledMessenger(
-      [totalSlices](usize iter) { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, totalSlices)); });
+  auto throttledMessenger =
+      getMessageHelper().createThrottledMessenger([totalSlices](usize iter) { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, totalSlices)); });
   if(m_InputValues->StoreAlignmentShifts)
   {
     auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();

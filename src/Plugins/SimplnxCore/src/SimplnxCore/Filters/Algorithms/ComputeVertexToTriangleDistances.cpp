@@ -299,9 +299,8 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   closestTriangleIdsArray.fill(-1); // -1 means it never found the closest triangle?
 
   MessageHelper messageHelper(m_MessageHandler);
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(totalElements, [](usize currentProgress, usize maxProgress) {
-    return fmt::format("Finding Distances || {:.2f}% Completed", CalculatePercentComplete(currentProgress, maxProgress));
-  });
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+      totalElements, [](usize currentProgress, usize maxProgress) { return fmt::format("Finding Distances || {:.2f}% Completed", CalculatePercentComplete(currentProgress, maxProgress)); });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;

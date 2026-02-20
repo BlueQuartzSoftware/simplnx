@@ -73,9 +73,8 @@ public:
 
   void compute(usize start, usize end) const
   {
-    auto throttledMessenger = m_MessageHelper.createThrottledMessenger([](usize s, usize e, usize current, usize total) {
-      return fmt::format("Calculating statistics for feature [{}-{}] {}/{}", s, e, current, total);
-    });
+    auto throttledMessenger =
+        m_MessageHelper.createThrottledMessenger([](usize s, usize e, usize current, usize total) { return fmt::format("Calculating statistics for feature [{}-{}] {}/{}", s, e, current, total); });
 
     const usize numTuples = m_FeatureIds.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
@@ -180,9 +179,7 @@ public:
       std::vector<float64> sumOfDiffs(numCurrentFeatures, 0.0f);
       progressCount = 0;
 
-      auto stdDevMessenger = m_MessageHelper.createThrottledMessenger([](usize s, usize e, float32 pct) {
-        return fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", s, e, pct);
-      });
+      auto stdDevMessenger = m_MessageHelper.createThrottledMessenger([](usize s, usize e, float32 pct) { return fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", s, e, pct); });
 
       for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
       {
@@ -285,9 +282,8 @@ public:
 
   void compute(usize start, usize end) const
   {
-    auto throttledMessenger = m_MessageHelper.createThrottledMessenger([](usize s, usize e, usize current, usize total) {
-      return fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", s, e, current, total);
-    });
+    auto throttledMessenger =
+        m_MessageHelper.createThrottledMessenger([](usize s, usize e, usize current, usize total) { return fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", s, e, current, total); });
     const usize numTuples = m_Source.getNumberOfTuples();
     for(usize featureId = start; featureId < end; featureId++)
     {

@@ -58,8 +58,7 @@ public:
   CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting, Float64Array* principleCurvature1,
                                    Float64Array* principleCurvature2, Float64Array* principleDirection1, Float64Array* principleDirection2, Float64Array* gaussianCurvature,
                                    Float64Array* meanCurvature, Float64Array* weingartenMatrix, TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals,
-                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                   ProgressHelper& progressHelper);
+                                   Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ProgressHelper& progressHelper);
 
   virtual ~CalculateTriangleGroupCurvatures();
 

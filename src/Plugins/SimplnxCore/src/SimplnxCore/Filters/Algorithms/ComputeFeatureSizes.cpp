@@ -29,10 +29,12 @@ constexpr float64 k_ECDAreaDenominator = nx::core::numbers::pi_v<float64>;
 Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
                           const Int32AbstractDataStore& featureIds, const bool saveElementSizes, MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
 {
-  ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
-
   const usize numVoxels = featureIds.getNumberOfTuples();
   const usize numFeatures = volumes.getNumberOfTuples();
+
+  auto countingMessenger = msgHelper.createThrottledMessenger([numVoxels](usize voxelIdx) { return fmt::format(" - Counting || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
+  auto calculatingMessenger =
+      msgHelper.createThrottledMessenger([numFeatures](usize featureIdx) { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
 
@@ -45,7 +47,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
       return {};
     }
 
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Counting || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
+    countingMessenger.sendMessage(voxelIdx);
 
     featureVoxelCounts[featureIds.getValue(voxelIdx)]++;
   }
@@ -108,7 +110,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
         return MakeErrorResult(k_BadFeatureCount, fmt::format("Feature {} contains more voxels ({}) than the 32-bit integer limit ({}).", featureIdx, featureVoxelCounts[featureIdx], k_MaxVoxelCount));
       }
 
-      throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+      calculatingMessenger.sendMessage(featureIdx);
 
       // Store the number of voxels in feature as int32
       numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
@@ -150,7 +152,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
         return MakeErrorResult(k_BadFeatureCount, fmt::format("Feature {} contains more voxels ({}) than the 32-bit integer limit ({}).", featureIdx, featureVoxelCounts[featureIdx], k_MaxVoxelCount));
       }
 
-      throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+      calculatingMessenger.sendMessage(featureIdx);
 
       // Store the number of voxels in feature as int32
       numElements.setValue(featureIdx, static_cast<int32>(featureVoxelCounts[featureIdx]));
@@ -182,10 +184,12 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
 Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
                              const Int32AbstractDataStore& featureIds, const bool saveElementSizes, MessageHelper& msgHelper, const std::atomic_bool& shouldCancel)
 {
-  ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
-
   const usize numVoxels = featureIds.getNumberOfTuples();
   const usize numFeatures = volumes.getNumberOfTuples();
+
+  auto countingMessenger = msgHelper.createThrottledMessenger([numVoxels](usize voxelIdx) { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
+  auto calculatingMessenger =
+      msgHelper.createThrottledMessenger([numFeatures](usize featureIdx) { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
 
   msgHelper.sendMessage("Finding Element Sizes...");
   Result<> result = rectGridGeom.findElementSizes(false);
@@ -210,7 +214,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
       return {};
     }
 
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
+    countingMessenger.sendMessage(voxelIdx);
 
     const int32 voxelFeatureId = featureIds.getValue(voxelIdx);
     featureVoxelCounts[voxelFeatureId]++;
@@ -239,7 +243,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
       return {};
     }
 
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(featureIdx, numFeatures)); });
+    calculatingMessenger.sendMessage(featureIdx);
 
     // Check for integer overflow
     if(featureVoxelCounts[featureIdx] > k_MaxVoxelCount)

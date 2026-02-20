@@ -131,8 +131,7 @@ Result<> WriteLAMMPSFile::operator()()
   messageHelper.sendMessage("Exporting Data...");
   // Write the Atom positions (Vertices)
   usize numVerts = verts.getNumberOfTuples();
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
-      [numVerts](usize current) { return fmt::format("Exporting Data {:.2f}% completed", CalculatePercentComplete(current, numVerts)); });
+  auto throttledMessenger = messageHelper.createThrottledMessenger([numVerts](usize current) { return fmt::format("Exporting Data {:.2f}% completed", CalculatePercentComplete(current, numVerts)); });
   for(usize i = 0; i < numVerts; i++)
   {
     if(m_ShouldCancel)

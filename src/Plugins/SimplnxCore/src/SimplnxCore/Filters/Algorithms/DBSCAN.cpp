@@ -115,34 +115,34 @@ public:
     std::array<float32, 6> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
     {
-    auto boundsMessenger = messageHelper.createThrottledMessenger(
-        [numTuples = inputArray.getNumberOfTuples()](usize current) { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(current, numTuples)); });
-    for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
-    {
-      if(shouldCancel)
+      auto boundsMessenger = messageHelper.createThrottledMessenger(
+          [numTuples = inputArray.getNumberOfTuples()](usize current) { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(current, numTuples)); });
+      for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
       {
-        return;
+        if(shouldCancel)
+        {
+          return;
+        }
+
+        boundsMessenger.sendMessage(i);
+
+        if(!mask->isTrue(i))
+        {
+          continue;
+        }
+
+        auto xVal = static_cast<float32>(inputArray.getValue((i * 3) + 0));
+        auto yVal = static_cast<float32>(inputArray.getValue((i * 3) + 1));
+        auto zVal = static_cast<float32>(inputArray.getValue((i * 3) + 2));
+
+        bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
+        bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
+        bounds[2] = std::isnan(bounds[2]) ? zVal : std::min(bounds[2], zVal);
+
+        bounds[3] = std::isnan(bounds[3]) ? xVal : std::max(bounds[3], xVal);
+        bounds[4] = std::isnan(bounds[4]) ? yVal : std::max(bounds[4], yVal);
+        bounds[5] = std::isnan(bounds[5]) ? zVal : std::max(bounds[5], zVal);
       }
-
-      boundsMessenger.sendMessage(i);
-
-      if(!mask->isTrue(i))
-      {
-        continue;
-      }
-
-      auto xVal = static_cast<float32>(inputArray.getValue((i * 3) + 0));
-      auto yVal = static_cast<float32>(inputArray.getValue((i * 3) + 1));
-      auto zVal = static_cast<float32>(inputArray.getValue((i * 3) + 2));
-
-      bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
-      bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
-      bounds[2] = std::isnan(bounds[2]) ? zVal : std::min(bounds[2], zVal);
-
-      bounds[3] = std::isnan(bounds[3]) ? xVal : std::max(bounds[3], xVal);
-      bounds[4] = std::isnan(bounds[4]) ? yVal : std::max(bounds[4], yVal);
-      bounds[5] = std::isnan(bounds[5]) ? zVal : std::max(bounds[5], zVal);
-    }
     } // boundsMessenger scope
 
     // Grid Info - DO NOT MODIFY - basis for algorithm
@@ -167,8 +167,8 @@ public:
       // Build a set of non-empty grids and temporarily store their positions
       {
         usize numTup = inputArray.getNumberOfTuples();
-        auto binningMessenger = messageHelper.createThrottledMessenger(
-            [total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
+        auto binningMessenger =
+            messageHelper.createThrottledMessenger([total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -330,32 +330,32 @@ public:
     std::array<float32, 4> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN()};
     {
-    auto boundsMessenger = messageHelper.createThrottledMessenger(
-        [numTuples = inputArray.getNumberOfTuples()](usize current) { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(current, numTuples)); });
-    for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
-    {
-      if(shouldCancel)
+      auto boundsMessenger = messageHelper.createThrottledMessenger(
+          [numTuples = inputArray.getNumberOfTuples()](usize current) { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(current, numTuples)); });
+      for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
       {
-        return;
+        if(shouldCancel)
+        {
+          return;
+        }
+
+        boundsMessenger.sendMessage(i);
+
+        if(!mask->isTrue(i))
+        {
+          continue;
+        }
+
+        // Determine the voxel
+        auto xVal = static_cast<float32>(inputArray.getValue((i * 2) + 0));
+        auto yVal = static_cast<float32>(inputArray.getValue((i * 2) + 1));
+
+        bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
+        bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
+
+        bounds[2] = std::isnan(bounds[2]) ? xVal : std::max(bounds[2], xVal);
+        bounds[3] = std::isnan(bounds[3]) ? yVal : std::max(bounds[3], yVal);
       }
-
-      boundsMessenger.sendMessage(i);
-
-      if(!mask->isTrue(i))
-      {
-        continue;
-      }
-
-      // Determine the voxel
-      auto xVal = static_cast<float32>(inputArray.getValue((i * 2) + 0));
-      auto yVal = static_cast<float32>(inputArray.getValue((i * 2) + 1));
-
-      bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
-      bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
-
-      bounds[2] = std::isnan(bounds[2]) ? xVal : std::max(bounds[2], xVal);
-      bounds[3] = std::isnan(bounds[3]) ? yVal : std::max(bounds[3], yVal);
-    }
     } // boundsMessenger scope
 
     // Grid Info - DO NOT MODIFY - basis for algorithm
@@ -378,8 +378,8 @@ public:
       // Build a set of non-empty grids and temporarily store their positions
       {
         usize numTup = inputArray.getNumberOfTuples();
-        auto binningMessenger = messageHelper.createThrottledMessenger(
-            [total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
+        auto binningMessenger =
+            messageHelper.createThrottledMessenger([total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -796,53 +796,53 @@ public:
     m_MessageHelper.sendMessage("Identifying Qualifying Independent Clusters:");
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
     {
-    auto identifyMessenger = m_MessageHelper.createThrottledMessenger(
-        [totalCoreGrids = coreGridIds.size()](usize current) { return fmt::format(" - Identifying clusters || {:.2f}% Complete", CalculatePercentComplete(current, totalCoreGrids)); });
-    for(usize i = 0; i < coreGridIds.size(); i++)
-    {
-      if(m_ShouldCancel)
+      auto identifyMessenger = m_MessageHelper.createThrottledMessenger(
+          [totalCoreGrids = coreGridIds.size()](usize current) { return fmt::format(" - Identifying clusters || {:.2f}% Complete", CalculatePercentComplete(current, totalCoreGrids)); });
+      for(usize i = 0; i < coreGridIds.size(); i++)
       {
-        return {};
-      }
-
-      identifyMessenger.sendMessage(i);
-
-      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridIds[i], hyperGridBitMap);
-
-      std::vector<usize> cluster = {};
-      cluster.push_back(coreGridIds[i]);
-      for(const usize gridId : neighborGrids)
-      {
-        // If true they are in the same cluster
-        if(clusterForest.infer(coreGridIds[i], gridId))
+        if(m_ShouldCancel)
         {
-          continue;
+          return {};
         }
 
-        // Check if a point in neighbor grid is density reachable
-        if(canMerge(coreGridIds[i], gridId))
+        identifyMessenger.sendMessage(i);
+
+        std::vector<usize> neighborGrids = NeighborGridQuery(coreGridIds[i], hyperGridBitMap);
+
+        std::vector<usize> cluster = {};
+        cluster.push_back(coreGridIds[i]);
+        for(const usize gridId : neighborGrids)
         {
-          // Check if it's a border grid and check if its unvisited
-          if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && clusterForest.clusterForestNodes[gridId].parent == gridId)
+          // If true they are in the same cluster
+          if(clusterForest.infer(coreGridIds[i], gridId))
           {
-            // Border grids can not be their own cluster, which means this
-            // is unvisited currently so merge it into the current cluster
-            clusterForest.clusterForestNodes[gridId].parent = coreGridIds[i];
+            continue;
           }
-          else
+
+          // Check if a point in neighbor grid is density reachable
+          if(canMerge(coreGridIds[i], gridId))
           {
-            // Either this is a density-reachable core grid
-            // OR
-            // This border grid belongs to another cluster, but the fact it is
-            // reachable here means that the two clusters are one and need to
-            // be merged
-            cluster.push_back(gridId);
+            // Check if it's a border grid and check if its unvisited
+            if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && clusterForest.clusterForestNodes[gridId].parent == gridId)
+            {
+              // Border grids can not be their own cluster, which means this
+              // is unvisited currently so merge it into the current cluster
+              clusterForest.clusterForestNodes[gridId].parent = coreGridIds[i];
+            }
+            else
+            {
+              // Either this is a density-reachable core grid
+              // OR
+              // This border grid belongs to another cluster, but the fact it is
+              // reachable here means that the two clusters are one and need to
+              // be merged
+              cluster.push_back(gridId);
+            }
           }
         }
-      }
 
-      clusterForest.mergeLRC(cluster);
-    }
+        clusterForest.mergeLRC(cluster);
+      }
     } // identifyMessenger scope
 
     // Now determine if non-core grids are close enough to a cluster to be border else noise

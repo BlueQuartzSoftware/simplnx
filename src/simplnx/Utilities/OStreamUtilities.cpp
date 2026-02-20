@@ -37,8 +37,9 @@ struct PrintNeighborList
 
     MessageHelper messageHelper(mesgHandler);
     std::string listName = neighborList.getName();
-    auto throttledMessenger = messageHelper.createThrottledMessenger(
-        [listName, numLists](usize currentList) { return fmt::format("Processing {}: {}% completed", listName, static_cast<int32>(100 * static_cast<float>(currentList) / static_cast<float>(numLists))); });
+    auto throttledMessenger = messageHelper.createThrottledMessenger([listName, numLists](usize currentList) {
+      return fmt::format("Processing {}: {}% completed", listName, static_cast<int32>(100 * static_cast<float>(currentList) / static_cast<float>(numLists)));
+    });
 
     if(hasHeader)
     {
@@ -143,8 +144,9 @@ struct PrintDataArray
 
     MessageHelper messageHelper(mesgHandler);
     std::string arrayName = inputDataArray.getName();
-    auto throttledMessenger = messageHelper.createThrottledMessenger(
-        [arrayName, numTuples](usize currentTuple) { return fmt::format("Processing {}: {}% completed", arrayName, static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples))); });
+    auto throttledMessenger = messageHelper.createThrottledMessenger([arrayName, numTuples](usize currentTuple) {
+      return fmt::format("Processing {}: {}% completed", arrayName, static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples)));
+    });
 
     usize numComps = inputDataArray.getNumberOfComponents();
     int32 tuplesWritten = 0;
@@ -208,8 +210,9 @@ Result<> PrintStringArray(std::ostream& outputStrm, const StringArray& inputStri
 
   MessageHelper messageHelper(mesgHandler);
   std::string arrayName = inputStringArray.getName();
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
-      [arrayName, numTuples](usize currentTuple) { return fmt::format("Processing {}: {}% completed", arrayName, static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples))); });
+  auto throttledMessenger = messageHelper.createThrottledMessenger([arrayName, numTuples](usize currentTuple) {
+    return fmt::format("Processing {}: {}% completed", arrayName, static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples)));
+  });
 
   for(size_t tuple = 0; tuple < numTuples; tuple++)
   {

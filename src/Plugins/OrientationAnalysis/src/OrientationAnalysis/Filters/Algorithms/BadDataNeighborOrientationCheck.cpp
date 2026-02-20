@@ -67,8 +67,8 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   std::vector<int32> neighborCount(totalPoints, 0);
 
   MessageHelper messageHelper(m_MessageHandler);
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
-      [totalPoints](usize voxelIdx) { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
+  auto throttledMessenger =
+      messageHelper.createThrottledMessenger([totalPoints](usize voxelIdx) { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
   // Loop over every point finding the number of neighbors that fall within the
   // user defined angle tolerance.
   for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
@@ -127,10 +127,9 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   // Now we loop over all the points again, but this time we do it as many times
   // as the user has requested to iteratively flip voxels
   int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors;
-  auto levelMessenger = messageHelper.createThrottledMessenger(
-      [totalLevels, totalPoints](int32 levelNum, int32 loopNum, usize voxelIdx) {
-        return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", levelNum, totalLevels, loopNum, CalculatePercentComplete(voxelIdx, totalPoints));
-      });
+  auto levelMessenger = messageHelper.createThrottledMessenger([totalLevels, totalPoints](int32 levelNum, int32 loopNum, usize voxelIdx) {
+    return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", levelNum, totalLevels, loopNum, CalculatePercentComplete(voxelIdx, totalPoints));
+  });
   while(currentLevel >= m_InputValues->NumberOfNeighbors)
   {
     counter = 1;

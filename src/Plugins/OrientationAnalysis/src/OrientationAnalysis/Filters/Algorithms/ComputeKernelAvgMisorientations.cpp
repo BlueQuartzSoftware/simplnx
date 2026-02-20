@@ -18,8 +18,7 @@ namespace
 class FindKernelAvgMisorientationsImpl
 {
 public:
-  FindKernelAvgMisorientationsImpl(ProgressHelper& progressHelper, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
-                                   const std::atomic_bool& shouldCancel)
+  FindKernelAvgMisorientationsImpl(ProgressHelper& progressHelper, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues, const std::atomic_bool& shouldCancel)
   : m_ProgressHelper(progressHelper)
   , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)

@@ -574,8 +574,8 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 
   // Create a message helper for throttled progress updates (1 update per second)
   MessageHelper messageHelper(m_MessageHandler);
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
-      [](usize iteration, usize count) { return fmt::format("  Iteration {}: {} voxels remaining to fill", iteration, count); }, std::chrono::milliseconds(1000));
+  auto throttledMessenger = messageHelper.createThrottledMessenger([](usize iteration, usize count) { return fmt::format("  Iteration {}: {} voxels remaining to fill", iteration, count); },
+                                                                   std::chrono::milliseconds(1000));
 
   usize count = 1;     // Number of voxels with -1 value that remain
   usize iteration = 0; // Current iteration number

@@ -220,9 +220,8 @@ Result<> ComputeNeighborhoods::operator()()
   const usize totalFeatures = equivalentDiameters.getNumberOfTuples();
 
   MessageHelper messageHelper(m_MessageHandler);
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(totalFeatures, [](usize currentProgress, usize maxProgress) {
-    return fmt::format("Finding Feature Neighborhoods: {:.2f}%", CalculatePercentComplete(currentProgress, maxProgress));
-  });
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+      totalFeatures, [](usize currentProgress, usize maxProgress) { return fmt::format("Finding Feature Neighborhoods: {:.2f}%", CalculatePercentComplete(currentProgress, maxProgress)); });
 
   m_LocalNeighborhoodList.resize(totalFeatures);
 
