@@ -32,14 +32,11 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
 
   const usize numVoxels = featureIds.getNumberOfTuples();
-
-  msgHelper.sendMessage("Finding Max Feature Id...");
-  const usize maxFeatureIdx = *std::max_element(featureIds.cbegin(), featureIds.cend());
-  const usize numFeatures = maxFeatureIdx + 1;
+  const usize numFeatures = volumes.getNumberOfTuples();
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
 
-  msgHelper.sendMessage("Cell Level: Finding Voxel Counts...");
+  msgHelper.sendMessage("Finding Voxel Counts...");
   // Count and store the number of voxels in each feature
   for(usize voxelIdx = 0; voxelIdx < numVoxels; voxelIdx++)
   {
@@ -63,7 +60,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   if(xDimSize == 1 || yDimSize == 1 || zDimSize == 1)
   {
     msgHelper.sendMessage("Singular image detected. Proceeding with 2D calculations...");
-    // One of the dimensions is empty so we will be calculating area instead
+    // One of the dimensions is empty, so we will be calculating area instead
 
     /**
      * IMPORTANT: Due the nature of ImageGeom the preflight is expected to impose a
@@ -86,11 +83,11 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
      * For these two cases the following code would BREAK, so do not enable.
      **/
 
-    // if x dimension has a size of 1 then xSpacing = 1; else xSpacing = spacing[0]
+    // if x dimension has a size of 1, then xSpacing = 1; else xSpacing = spacing[0]
     const float64 xSpacing = (static_cast<float64>(spacing[0]) * static_cast<float64>(xDimSize > 1ULL)) + (1.0f * static_cast<float64>(xDimSize < 2ULL));
-    // if y dimension has a size of 1 then ySpacing = 1; else ySpacing = spacing[1]
+    // if y dimension has a size of 1, then ySpacing = 1; else ySpacing = spacing[1]
     const float64 ySpacing = (static_cast<float64>(spacing[1]) * static_cast<float64>(yDimSize > 1ULL)) + (1.0f * static_cast<float64>(yDimSize < 2ULL));
-    // if z dimension has a size of 1 then zSpacing = 1; else zSpacing = spacing[2]
+    // if z dimension has a size of 1, then zSpacing = 1; else zSpacing = spacing[2]
     const float64 zSpacing = (static_cast<float64>(spacing[2]) * static_cast<float64>(zDimSize > 1ULL)) + (1.0f * static_cast<float64>(zDimSize < 2ULL));
 
     // Calculate the area of a single voxel
@@ -132,7 +129,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   }
   else
   {
-    // If we are here it is an image stack and thus should be treated as 3D
+    // If we are here, it is an image stack and thus should be treated as 3D.
     msgHelper.sendMessage("Image Stack detected. Proceeding with 3D calculations...");
 
     // Calculate the volume of a single voxel
@@ -220,13 +217,13 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
 
     // Use Kahan summation to determine overall volume
 
-    // Attempt to recover low-order into value, first instance is 0
+    // Attempt to recover low order into the value. The first instance is 0
     float64 value = static_cast<float64>(elemSizes.getValue(voxelIdx)) - featureCompensators[voxelFeatureId];
 
-    // low-order may be lost
+    // low order may be lost
     float64 volSum = featureVolumes[voxelFeatureId] + value;
 
-    // recover and cache low-order
+    // recover and cache low order
     featureCompensators[voxelFeatureId] = (volSum - featureVolumes[voxelFeatureId]) - value;
 
     // store volumes

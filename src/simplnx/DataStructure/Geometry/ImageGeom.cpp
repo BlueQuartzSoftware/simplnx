@@ -167,9 +167,9 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   emptyDimsCount += static_cast<uint32>(m_Dimensions[2] == 1);
   if(emptyDimsCount > 1)
   {
-    return MakeErrorResult(
-        -1531, fmt::format("{}({}) ImageGeom::{} Error: Unable to calculate element sizes.\nImage has 2 or more dimensions equal to 1.\nX-Dimension: {}, Y-Dimension: {}, Z-Dimension: {}",
-                           __FILE__, __LINE__, __func__, m_Dimensions[0], m_Dimensions[1], m_Dimensions[2]));
+    return MakeErrorResult(-1531,
+                           fmt::format("{}({}) ImageGeom::{} Error: Unable to calculate element sizes.\nImage has 2 or more dimensions equal to 1.\nX-Dimension: {}, Y-Dimension: {}, Z-Dimension: {}",
+                                       __FILE__, __LINE__, __func__, m_Dimensions[0], m_Dimensions[1], m_Dimensions[2]));
   }
 
   // if x dimension has a size of 1 then xSpacing = 1; else xSpacing = spacing[0]
