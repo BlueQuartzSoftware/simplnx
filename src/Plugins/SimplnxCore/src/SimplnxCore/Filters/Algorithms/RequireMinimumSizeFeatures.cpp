@@ -6,7 +6,6 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
-#include "simplnx/Utilities/TimeUtilities.hpp"
 
 using namespace nx::core;
 

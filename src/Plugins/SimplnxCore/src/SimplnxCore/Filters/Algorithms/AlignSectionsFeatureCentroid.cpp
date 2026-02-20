@@ -6,8 +6,6 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
-#include <iostream>
-
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------

@@ -19,8 +19,8 @@ From section 9 in the Design.md document:
       UI and pipeline runner
 - [x] Code compiles cleanly
 - [x] Unit Tests all pass (except for 1 failure with the Reproc++ library)
-- [ ] Git commit what was done/change
-- [ ] Git push to the repository
+- [x] Git commit what was done/change
+- [x] Git push to the repository
 - [x] TODO.md file is updated
 
 ## Phase 2: Core Infrastructure
@@ -40,8 +40,8 @@ From section 9 in the Design.md document:
   - [x] Verify clean shutdown
 - [x] Code compiles cleanly
 - [x] Unit Tests all pass (except for 1 failure with the Reproc++ library)
-- [ ] Git commit what was done/change
-- [ ] Git push to the repository
+- [x] Git commit what was done/change
+- [x] Git push to the repository
 - [x] TODO.md file is updated
 
 ## Phase 3: ThrottledMessenger Implementation
@@ -66,8 +66,8 @@ From section 9 in the Design.md document:
   - [x] Verify no messages sent if sendMessage never called
 - [x] Code compiles cleanly
 - [x] Unit Tests all pass (except for 1 failure with the Reproc++ library)
-- [ ] Git commit what was done/change
-- [ ] Git push to the repository
+- [x] Git commit what was done/change
+- [x] Git push to the repository
 - [x] TODO.md file is updated
 
 
@@ -89,8 +89,8 @@ From section 9 in the Design.md document:
   - [x] Verify messages report correct cumulative progress
 - [x] Code compiles cleanly
 - [x] Unit Tests all pass (except for 1 failure with the Reproc++ library)
-- [ ] Git commit what was done/change
-- [ ] Git push to the repository
+- [x] Git commit what was done/change
+- [x] Git push to the repository
 - [x] TODO.md file is updated
 
 
@@ -120,8 +120,8 @@ From section 9 in the Design.md document:
 - [x] Keep `CalculatePercentComplete<T>()` utility function (still useful)
 - [x] Code compiles cleanly
 - [x] Unit Tests all pass (except for 1 failure with the Reproc++ library)
-- [ ] Git commit what was done/change
-- [ ] Git push to the repository
+- [x] Git commit what was done/change
+- [x] Git push to the repository
 - [x] TODO.md file is updated
 
 
@@ -179,8 +179,8 @@ From section 9 in the Design.md document:
 
 - [x] Code compiles cleanly
 - [x] Unit Tests all pass (except for 1 failure with the Reproc++ library)
-- [ ] Git commit what was done/change
-- [ ] Git push to the repository
+- [x] Git commit what was done/change
+- [x] Git push to the repository
 - [x] TODO.md file is updated
 
 
@@ -190,33 +190,33 @@ From section 9 in the Design.md document:
 - [x] Run all unit tests (`ctest`) -- 87% pass (936/1071), all failures pre-existing
 - [x] 10/10 new MessageHelper unit tests pass
 - [x] 58/58 tests for migrated filter files pass (100%)
-- [ ] Verify no performance regressions in filter execution
-- [ ] Profile hot-path cost of `sendMessage()` in a tight loop
+- [x] Verify no performance regressions in filter execution
+- [x] Profile hot-path cost of `sendMessage()` in a tight loop
 - [x] Verify message delivery timing (messages sent ~every 1 second)
 - [x] Test multi-threaded progress reporting (concurrent workers)
-- [ ] Test filter cancellation still works properly with new messenger
+- [x] Test filter cancellation still works properly with new messenger
 - [x] Code compiles cleanly
 - [x] Unit Tests all pass (except for 1 failure with the Reproc++ library)
-- [ ] Git commit what was done/change
-- [ ] Git push to the repository
+- [x] Git commit what was done/change
+- [x] Git push to the repository
 - [x] TODO.md file is updated
 
 
 ## Phase 8: Cleanup
 
 - [x] Remove spdlog from vcpkg.json / CMakeLists.txt (if fully unused)
-- [ ] Update any documentation referencing old API
-- [ ] Remove any unused includes from migrated files
-- [ ] Final code review pass for naming conventions and style compliance
+- [x] Update any documentation referencing old API
+- [x] Remove any unused includes from migrated files
+- [x] Final code review pass for naming conventions and style compliance
 - [x] Code compiles cleanly
 - [x] Unit Tests all pass (except for 1 failure with the Reproc++ library)
-- [ ] Git commit what was done/change
-- [ ] Git push to the repository
-- [ ] TODO.md file is updated
+- [x] Git commit what was done/change
+- [x] Git push to the repository
+- [x] TODO.md file is updated
 
 ## Phase 9: Documentation
 
-- [ ] Write up a document explaining how to use the new system. Place this new document into the docs directory in a file called "SendingFilterUpdates.md"
+- [x] Write up a document explaining how to use the new system. Place this new document into the docs directory in a file called "SendingFilterUpdates.md"
 
 ---
 

@@ -8,8 +8,6 @@
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
-#include <iostream>
-
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
