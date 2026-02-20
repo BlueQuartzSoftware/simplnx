@@ -2,10 +2,13 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+
+#include <mutex>
 
 namespace nx::core
 {
@@ -27,6 +30,10 @@ struct SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
  * intersected with the Z-plane to produce 2D edges. Each Y-scanline then
  * finds X-intersections with those edges, sorts them, and fills voxels
  * between crossings using face label toggling to assign feature IDs.
+ *
+ * Z-slices are processed in parallel. Each worker thread rasterizes into
+ * a thread-local buffer and then copies results back to the output DataArray
+ * under a mutex, ensuring thread safety with out-of-core DataStore implementations.
  */
 class SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMesh
 {
@@ -41,10 +48,30 @@ public:
 
   Result<> operator()();
 
+  /**
+   * @brief Thread-safe method to copy a completed Z-slice buffer into the
+   * output DataArray. Called by worker threads after rasterizing a slice.
+   * @param zSlice The Z-slice index
+   * @param sliceBuffer The thread-local buffer containing rasterized feature IDs
+   */
+  template <typename T>
+  void sendThreadSafeSliceUpdate(usize zSlice, const std::vector<T>& sliceBuffer)
+  {
+    std::lock_guard<std::mutex> lock(m_Mutex);
+    auto& featureIdsRef = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+    usize offset = zSlice * m_CellsPerSlice;
+    for(usize i = 0; i < m_CellsPerSlice; i++)
+    {
+      featureIdsRef[offset + i] = sliceBuffer[i];
+    }
+  }
+
 private:
   DataStructure& m_DataStructure;
   const RegularGridSampleSurfaceMeshInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+  mutable std::mutex m_Mutex;
+  usize m_CellsPerSlice = 0;
 };
 } // namespace nx::core
