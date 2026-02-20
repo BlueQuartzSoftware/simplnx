@@ -53,7 +53,6 @@ private:
 
   // Thread safe Progress Message
   mutable std::mutex m_ProgressMessage_Mutex;
-  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
 
   ThrottledMessenger* m_ThrottledMessengerPtr = nullptr;
 };

@@ -47,14 +47,18 @@ public:
         return;
       }
 
-      // Get the destination voxel center.
+      // Get the destination voxel origin (min corner).
       Point3D<float64> coords = m_DestImageGeom.getPlaneCoords(destVoxelIdx);
       // Based on that position, figure out which source voxel we are in...
       std::optional<usize> srcIndex = m_SrcImageGeom.getIndex(coords[0], coords[1], coords[2]);
 
       if(srcIndex.has_value())
       {
-        destDataStore.copyFrom(destVoxelIdx, srcDataStore, srcIndex.value(), 1);
+        auto result = destDataStore.copyFrom(destVoxelIdx, srcDataStore, srcIndex.value(), 1);
+        if(result.invalid())
+        {
+          destDataStore.fillTuple(destVoxelIdx, 0);
+        }
       }
       else
       {
@@ -110,10 +114,6 @@ Result<> ResampleImageGeom::operator()()
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->CreatedImageGeometryPath);
-  SizeVec3 destDims = destImageGeom.getDimensions();
-
-  usize totalDestTuples = destDims[0] * destDims[1] * destDims[2];
-
   const auto& srcCellDataAM = selectedImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
@@ -139,7 +139,7 @@ Result<> ResampleImageGeom::operator()()
     ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), taskRunner, this, oldDataArray, newDataArray, selectedImageGeom, destImageGeom, m_ShouldCancel);
   }
 
-  taskRunner.wait(); // This will spill over if the number of geometries to processes does not divide evenly by the number of threads.
+  taskRunner.wait(); // This will spill over if the number of geometries to process does not divide evenly by the number of threads.
 
   if(m_ShouldCancel)
   {
