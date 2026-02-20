@@ -79,7 +79,9 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
   const auto halfDim1 = static_cast<int64_t>(dims[1] * 0.5f);
 
   double deg2Rad = (nx::core::numbers::pi / 180.0);
-  ThrottledMessenger throttledMessenger = getMessageHelper().createThrottledMessenger();
+  usize totalSlices = static_cast<usize>(dims[2]);
+  auto throttledMessenger = getMessageHelper().createThrottledMessenger(
+      [totalSlices](usize iter) { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, totalSlices)); });
   if(m_InputValues->StoreAlignmentShifts)
   {
     auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
@@ -92,7 +94,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
       {
         return {};
       }
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
+      throttledMessenger.sendMessage(static_cast<usize>(iter));
       if(getCancel())
       {
         return {};
@@ -200,7 +202,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     // Loop over the Z Direction
     for(int64_t iter = 1; iter < dims[2]; iter++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
+      throttledMessenger.sendMessage(static_cast<usize>(iter));
       if(getCancel())
       {
         return {};

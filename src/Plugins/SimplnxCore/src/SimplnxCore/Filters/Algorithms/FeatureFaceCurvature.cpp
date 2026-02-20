@@ -104,8 +104,9 @@ Result<> FeatureFaceCurvature::operator()()
   messageHelper.sendMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
 #endif
 
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(sharedFeatureFaces.size());
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(sharedFeatureFaces.size(), [](usize currentProgress, usize maxProgress) {
+    return fmt::format("Feature Face Curvature: {}/{}", currentProgress, maxProgress);
+  });
 
   for(auto& sharedFeatureFace : sharedFeatureFaces)
   {
@@ -114,7 +115,7 @@ Result<> FeatureFaceCurvature::operator()()
     CalculateTriangleGroupCurvatures func(this, m_InputValues->NRingCount, triangleIds, m_InputValues->useNormalsForCurveFitting, surfaceMeshPrincipalCurvature1sArrayPtr,
                                           surfaceMeshPrincipalCurvature2sArrayPtr, surfaceMeshPrincipalDirection1sArrayPtr, surfaceMeshPrincipalDirection2sArrayPtr,
                                           surfaceMeshGaussianCurvaturesArrayPtr, surfaceMeshMeanCurvaturesArrayPtr, surfaceMeshWeingartenMatrixArrayPtr, triangleGeomPtr, surfaceMeshFaceLabelsArrayPtr,
-                                          surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel, progressMessageHelper);
+                                          surfaceMeshFaceNormalsArrayPtr, surfaceMeshTriangleCentroidsArrayPtr, m_MessageHandler, m_ShouldCancel, progressHelper);
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
     {

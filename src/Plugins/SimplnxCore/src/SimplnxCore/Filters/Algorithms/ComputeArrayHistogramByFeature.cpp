@@ -38,7 +38,7 @@ public:
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, NeighborList<Type>* modalBinRangesList,
                                const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax, bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins,
                                AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
-                               std::atomic<usize>& overflow, ProgressMessageHelper& progressMessageHelper)
+                               std::atomic<usize>& overflow, ProgressHelper& progressHelper)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -52,14 +52,14 @@ public:
   , m_FeatureIdsStore(featureIdsStore)
   , m_Mask(mask)
   , m_Overflow(overflow)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ProgressHelper(progressHelper)
   {
   }
 
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax,
                                bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<SizeType>& histogramStore,
                                AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow,
-                               ProgressMessageHelper& progressMessageHelper)
+                               ProgressHelper& progressHelper)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -73,7 +73,7 @@ public:
   , m_FeatureIdsStore(featureIdsStore)
   , m_Mask(mask)
   , m_Overflow(overflow)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ProgressHelper(progressHelper)
   {
   }
 
@@ -90,7 +90,7 @@ public:
 
   void compute(usize start, usize end) const
   {
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+    ProgressWorker progressWorker = m_ProgressHelper.createWorkerHandle();
 
     const usize numTuples = m_FeatureIdsStore.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
@@ -213,14 +213,13 @@ public:
       progressCount++;
       if(progressCount > progressIncrement)
       {
-        progressMessenger.sendProgressMessage(progressCount,
-                                              [&](usize currentProgress, usize maxProgress) { return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress); });
+        progressWorker.incrementProgress(progressCount);
         progressCount = 0;
       }
     }
 
     // Send one at the end so that the progress is communicated properly
-    progressMessenger.sendProgressMessage(progressCount);
+    progressWorker.incrementProgress(progressCount);
   }
 
 private:
@@ -237,7 +236,7 @@ private:
   AbstractDataStore<uint64>& m_MostPopulatedStore;
   NeighborList<Type>* m_ModalBinRangesList;
   std::atomic<usize>& m_Overflow;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ProgressHelper& m_ProgressHelper;
 };
 
 /**
@@ -315,8 +314,9 @@ Result<> ComputeArrayHistogramByFeature::operator()()
 
     bool histFullRange = !m_InputValues->UserDefinedRange;
 
-    ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-    progressMessageHelper.setMaxProgresss(numFeatures);
+    ProgressHelper progressHelper = messageHelper.createProgressHelper(numFeatures, [](usize currentProgress, usize maxProgress) {
+      return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress);
+    });
 
     if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
     {
@@ -325,12 +325,12 @@ Result<> ComputeArrayHistogramByFeature::operator()()
       modalBinRanges->resizeTuples({numFeatures});
       ExecuteParallelFunctor<InstantiateHistogramByFeatureImplFunctor, NoBooleanType>(InstantiateHistogramByFeatureImplFunctor{}, inputData->getDataType(), dataAlg, modalBinRanges, inputData,
                                                                                       binRanges, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange, histFullRange, m_ShouldCancel,
-                                                                                      numBins, counts, mostPopulated, mask, overflow, progressMessageHelper);
+                                                                                      numBins, counts, mostPopulated, mask, overflow, progressHelper);
     }
     else
     {
       ExecuteParallelFunctor(InstantiateHistogramByFeatureImplFunctor{}, inputData->getDataType(), dataAlg, inputData, binRanges, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange,
-                             histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, progressMessageHelper);
+                             histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, progressHelper);
     }
 
     messageHelper.sendMessage(fmt::format("Calculated {} feature histograms!", numFeatures));

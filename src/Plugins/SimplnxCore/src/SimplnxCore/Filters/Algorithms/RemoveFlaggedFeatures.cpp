@@ -18,8 +18,6 @@ namespace
 {
 bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
 {
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-
   SizeVec3 uDims = imageGeom.getDimensions();
 
   std::array<int64, 3> dims = {
@@ -28,13 +26,14 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
       static_cast<int64>(uDims[2]),
   };
 
+  auto throttledMessenger = messageHelper.createThrottledMessenger(
+      [totalSlices = static_cast<usize>(dims[2])](usize currentSlice) { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(currentSlice, totalSlices)); });
+
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   bool shouldLoop = false;
 
-  auto progressIncrement = dims[2] / 100;
-  usize progressCounter = 0;
   int32 featureName;
   int64 kStride, jStride;
   for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
@@ -44,12 +43,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
       return false;
     }
 
-    if(progressCounter > progressIncrement)
-    {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(zIdx, dims[2])); });
-      progressCounter = 0;
-    }
-    progressCounter++;
+    throttledMessenger.sendMessage(static_cast<usize>(zIdx));
 
     kStride = dims[0] * dims[1] * zIdx;
     for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)

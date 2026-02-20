@@ -110,7 +110,7 @@ class ComputeVertexToTriangleDistancesImpl
 public:
   ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListT& triangles, const SharedVertexListT& vertices, SharedVertexListT& sourcePoints,
                                        Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType rtree,
-                                       ProgressMessageHelper& progressMessageHelper)
+                                       ProgressHelper& progressHelper)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
   , m_TriangleVertices(vertices)
@@ -119,7 +119,7 @@ public:
   , m_ClosestTri(closestTri)
   , m_Normals(normals)
   , m_RTree(rtree)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ProgressHelper(progressHelper)
   {
   }
   virtual ~ComputeVertexToTriangleDistancesImpl() = default;
@@ -131,7 +131,7 @@ public:
 
   void compute(usize start, usize end) const
   {
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+    ProgressWorker progressWorker = m_ProgressHelper.createWorkerHandle();
 
     int64 counter = 0;
     auto progIncrement = static_cast<int64>((end - start) / 100);
@@ -214,12 +214,12 @@ public:
 
       if(counter > progIncrement)
       {
-        progressMessenger.sendProgressMessage(counter);
+        progressWorker.incrementProgress(counter);
         counter = 0;
       }
       counter++;
     }
-    progressMessenger.sendProgressMessage(counter);
+    progressWorker.incrementProgress(counter);
   }
 
 private:
@@ -231,7 +231,7 @@ private:
   Int64AbstractDataStore& m_ClosestTri;
   const Float64AbstractDataStore& m_Normals;
   const RTreeType m_RTree;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ProgressHelper& m_ProgressHelper;
 };
 
 void GetBoundingBoxAtTri(const SharedTriListT& triList, const SharedVertexListT& vertList, size_t triId, nonstd::span<float> bounds)
@@ -299,15 +299,15 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   closestTriangleIdsArray.fill(-1); // -1 means it never found the closest triangle?
 
   MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(totalElements);
-  progressMessageHelper.setProgressMessageTemplate("Finding Distances || {:.2f}% Completed");
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(totalElements, [](usize currentProgress, usize maxProgress) {
+    return fmt::format("Finding Distances || {:.2f}% Completed", CalculatePercentComplete(currentProgress, maxProgress));
+  });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(true);
   dataAlg.setRange(0, totalElements);
-  dataAlg.execute(ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, progressMessageHelper));
+  dataAlg.execute(ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, progressHelper));
 
   return {};
 }

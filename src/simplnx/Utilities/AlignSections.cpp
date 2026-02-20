@@ -7,8 +7,6 @@
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include <chrono>
-
 using namespace nx::core;
 
 namespace
@@ -40,15 +38,17 @@ public:
   {
     MessageHelper& messageHelper = m_Filter->getMessageHelper();
 
-    ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
-
     T var = static_cast<T>(0);
 
     std::string arrayName = m_DataArray.getName();
+    usize totalSlices = m_Dims[2];
+
+    auto progressMessenger = messageHelper.createThrottledMessenger(
+        [arrayName, totalSlices](usize currentSlice) { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(currentSlice, totalSlices)); });
 
     for(size_t i = 1; i < m_Dims[2]; i++)
     {
-      progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
+      progressMessenger.sendMessage(i);
       if(m_Filter->getCancel())
       {
         return;

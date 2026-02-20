@@ -40,11 +40,13 @@ public:
 
   void operator()() const
   {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     std::string arrayName = m_DataArrayPtr->getName();
+    usize totalPoints = m_TotalPoints;
+    auto throttledMessenger = m_MessageHelper.createThrottledMessenger(
+        [arrayName, totalPoints](usize current) { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(current, totalPoints)); });
     for(size_t i = 0; i < m_TotalPoints; i++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
+      throttledMessenger.sendMessage(i);
       int64 neighbor = m_BestNeighbor[i];
       if(neighbor != -1)
       {
@@ -111,16 +113,17 @@ Result<> NeighborOrientationCorrelation::operator()()
 
   MessageHelper messageHelper(m_MessageHandler);
 
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  int32 totalLevels = startLevel - m_InputValues->Level;
+  auto throttledMessenger = messageHelper.createThrottledMessenger(
+      [totalLevels, totalPoints](int32 levelNum, usize voxelIdx) {
+        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", levelNum, totalLevels, CalculatePercentComplete(voxelIdx, totalPoints));
+      });
 
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
     for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
-      throttledMessenger.sendThrottledMessage([&]() {
-        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
-                           CalculatePercentComplete(voxelIndex, totalPoints));
-      });
+      throttledMessenger.sendMessage((startLevel - currentLevel) + 1, static_cast<usize>(voxelIndex));
 
       if(m_ShouldCancel)
       {

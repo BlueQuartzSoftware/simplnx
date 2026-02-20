@@ -49,7 +49,6 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   std::mutex m_Mutex;
-  MessageHelper m_MessageHelper;
   Int32Array* m_Neighborhoods = nullptr;
   std::vector<std::vector<int32_t>> m_LocalNeighborhoodList;
 };

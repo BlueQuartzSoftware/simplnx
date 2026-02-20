@@ -110,12 +110,13 @@ public:
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-
     messageHelper.sendMessage(" - Determining bounds...");
     // Load array bounds
     std::array<float32, 6> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
+    {
+    auto boundsMessenger = messageHelper.createThrottledMessenger(
+        [numTuples = inputArray.getNumberOfTuples()](usize current) { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(current, numTuples)); });
     for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
     {
       if(shouldCancel)
@@ -123,7 +124,7 @@ public:
         return;
       }
 
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(i, inputArray.getNumberOfTuples())); });
+      boundsMessenger.sendMessage(i);
 
       if(!mask->isTrue(i))
       {
@@ -142,6 +143,7 @@ public:
       bounds[4] = std::isnan(bounds[4]) ? yVal : std::max(bounds[4], yVal);
       bounds[5] = std::isnan(bounds[5]) ? zVal : std::max(bounds[5], zVal);
     }
+    } // boundsMessenger scope
 
     // Grid Info - DO NOT MODIFY - basis for algorithm
     float32 sideLength = epsilon / std::sqrt(Dimensions);
@@ -165,6 +167,8 @@ public:
       // Build a set of non-empty grids and temporarily store their positions
       {
         usize numTup = inputArray.getNumberOfTuples();
+        auto binningMessenger = messageHelper.createThrottledMessenger(
+            [total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -174,7 +178,7 @@ public:
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(tup, numTup * 2)); });
+          binningMessenger.sendMessage(tup);
 
           if(!mask->isTrue(tup))
           {
@@ -221,7 +225,7 @@ public:
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(numTup + tup, numTup * 2)); });
+          binningMessenger.sendMessage(numTup + tup);
 
           if(!mask->isTrue(tup))
           {
@@ -322,11 +326,12 @@ public:
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-
     // Load array bounds
     std::array<float32, 4> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN()};
+    {
+    auto boundsMessenger = messageHelper.createThrottledMessenger(
+        [numTuples = inputArray.getNumberOfTuples()](usize current) { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(current, numTuples)); });
     for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
     {
       if(shouldCancel)
@@ -334,7 +339,7 @@ public:
         return;
       }
 
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(i, inputArray.getNumberOfTuples())); });
+      boundsMessenger.sendMessage(i);
 
       if(!mask->isTrue(i))
       {
@@ -351,6 +356,7 @@ public:
       bounds[2] = std::isnan(bounds[2]) ? xVal : std::max(bounds[2], xVal);
       bounds[3] = std::isnan(bounds[3]) ? yVal : std::max(bounds[3], yVal);
     }
+    } // boundsMessenger scope
 
     // Grid Info - DO NOT MODIFY - basis for algorithm
     float32 sideLength = epsilon / std::sqrt(Dimensions);
@@ -372,6 +378,8 @@ public:
       // Build a set of non-empty grids and temporarily store their positions
       {
         usize numTup = inputArray.getNumberOfTuples();
+        auto binningMessenger = messageHelper.createThrottledMessenger(
+            [total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -381,7 +389,7 @@ public:
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(tup, numTup * 2)); });
+          binningMessenger.sendMessage(tup);
 
           if(!mask->isTrue(tup))
           {
@@ -426,7 +434,7 @@ public:
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(numTup + tup, numTup * 2)); });
+          binningMessenger.sendMessage(numTup + tup);
 
           if(!mask->isTrue(tup))
           {
@@ -786,8 +794,10 @@ public:
     }
 
     m_MessageHelper.sendMessage("Identifying Qualifying Independent Clusters:");
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
+    {
+    auto identifyMessenger = m_MessageHelper.createThrottledMessenger(
+        [totalCoreGrids = coreGridIds.size()](usize current) { return fmt::format(" - Identifying clusters || {:.2f}% Complete", CalculatePercentComplete(current, totalCoreGrids)); });
     for(usize i = 0; i < coreGridIds.size(); i++)
     {
       if(m_ShouldCancel)
@@ -795,7 +805,7 @@ public:
         return {};
       }
 
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Identifying clusters || {:.2f}% Complete", CalculatePercentComplete(i, coreGridIds.size())); });
+      identifyMessenger.sendMessage(i);
 
       std::vector<usize> neighborGrids = NeighborGridQuery(coreGridIds[i], hyperGridBitMap);
 
@@ -833,9 +843,12 @@ public:
 
       clusterForest.mergeLRC(cluster);
     }
+    } // identifyMessenger scope
 
     // Now determine if non-core grids are close enough to a cluster to be border else noise
     m_MessageHelper.sendMessage("Expanding and Merging Applicable Clusters:");
+    auto expandMessenger = m_MessageHelper.createThrottledMessenger(
+        [totalGrids = hyperGridBitMap.gridVoxels.size()](usize current) { return fmt::format(" - Expanding clusters || {:.2f}% Complete", CalculatePercentComplete(current, totalGrids)); });
     usize loop = 1;
     usize operations = 0;
     do
@@ -844,7 +857,7 @@ public:
       operations = 0;
       for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
       {
-        throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Expanding clusters || {:.2f}% Complete", CalculatePercentComplete(i, hyperGridBitMap.gridVoxels.size())); });
+        expandMessenger.sendMessage(i);
         if(m_ShouldCancel)
         {
           return {};
@@ -937,7 +950,8 @@ public:
       return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
     }
 
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+    auto labelMessenger = m_MessageHelper.createThrottledMessenger(
+        [totalGrids = hyperGridBitMap.gridVoxels.size()](usize current) { return fmt::format(" - Labeling || {:.2f}% Complete", CalculatePercentComplete(current, totalGrids)); });
     // label
     fIdsDataStore.fill(0);
     for(usize gridIdx = 0; gridIdx < hyperGridBitMap.gridVoxels.size(); gridIdx++)
@@ -947,7 +961,7 @@ public:
         return {};
       }
 
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Labeling || {:.2f}% Complete", CalculatePercentComplete(gridIdx, hyperGridBitMap.gridVoxels.size())); });
+      labelMessenger.sendMessage(gridIdx);
 
       int32 featureId = clusterForest.clusterForestNodes[clusterForest.findClusterRoot(gridIdx)].clusterId;
       for(usize pointIdx : hyperGridBitMap.gridVoxels[gridIdx])

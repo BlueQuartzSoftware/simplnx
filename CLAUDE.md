@@ -2,6 +2,7 @@
 
 ## Project Overview
 
+<<<<<<< HEAD
 [SIMPLNX Issue 1284](https://github.com/BlueQuartzSoftware/simplnx/issues/1284)
 I would like to work on this issue more by converting Filters that have anything more than a trivial execute implementation to move that implementation to an "Algorithm" class like the bulk of the other filters.
 
@@ -12,6 +13,41 @@ Look at the other filters and understand how we create the Algorithm classes and
 Each Algorithm class that gets updated should be moved out of the "not_used" folder.
 
 If anything is ambiguous please ask.
+=======
+I would like to update the Filter messaging system that is primarily defined in MessageHelper.hpp. The main issue that we have is a performance issue where ThrottledMessenger::sendThrottledMessage() will use the C++ call `std::chrono::steady_clock::now();` which is very expensive and will drag down the performance of some filters. We would like to be able to be in a tight loop in a filter and just call `throttledMessenger.sendMessage(Args...)` and the ThrottledMessenger will only send messages every 1 second (or what ever is set by the developers.). We would also like to put off the string construction until the message is actually sent. So in psudo code we have something like this:
+
+```c++
+usize totalVoxels = .....
+ // Create a message helper for throttled progress updates (1 update per second)
+MessageHelper messageHelper(m_MessageHandler, std::chrono::milliseconds(1000));
+auto throttledMessenger = messageHelper.createThrottledMessenger(std::chrono::milliseconds(1000));
+
+nx::core::ProgressMessageTemplate progressMessageTemplate;
+progressMessageTemplate.setMaxProgress = totalVoxels;
+progressMessageTemplate.setMessageTemplate = "{} voxels remaining to fill";
+
+throttledMessenger.setMessageArguments(progressMessageTemplate)
+
+// Start a tight loop
+for(usize voxelIndex = 0; voxelIndex < totalVoxels; voxelIndex++)
+{
+  ... do work... 
+
+  throttledMessenger.sendThrottledMessage(voxelIndex);
+}
+```
+
+For the design I would like there to be a thread that gets spawned that will wake up every 1 second and check to see if there are any messages to send and if there are, then just send the last throttledMessage that got set. The last design spawned a new message sending thread for each worker thread. I would like a design that somehow only has a single thread. Maybe a singleton pattern for the inner workings of the class?
+
+As an additional design constraint, I would like to be able to setup messages that have multiple arguments such as:
+
+```c++
+throttledMessenger.sendMessage (currentIteration, currentVoxel, someOtherValue);
+```
+
+Maybe I need to setup a functor or use a lambda when defining the ProgressMessageTemplate class? The idea is to put off the std::string construction until the message is actually sent.
+
+>>>>>>> ace4ffc7 (ENH: Redesign ThrottledMessenger with background timer thread and deferred formatting)
 
 ## Directory Structure
 - `src/simplnx/` - Core library (Common, Core, DataStructure, Filter, Parameters, Pipeline, Plugin, Utilities)
@@ -154,6 +190,7 @@ class MyParallelWorker
 
 Example configuring the project
 ```bash
+<<<<<<< HEAD
 cd /Users/mjackson/Workspace2/simplnx && cmake --preset simplnx-Rel
 ```
 
@@ -162,11 +199,25 @@ cd /Users/mjackson/Workspace2/simplnx && cmake --preset simplnx-Rel
 Example building the project
 ```bash
 cd /Users/mjackson/Workspace2/DREAM3D-Build/simplnx-Rel && cmake --build . --target all
+=======
+cd /Users/mjackson/Workspace5/simplnx && cmake --preset simplnx-Rel
+```
+
+- Build directory is located at "/Users/mjackson/Workspace5/DREAM3D-Build/simplnx-Rel"
+
+Example building the project
+```bash
+cd /Users/mjackson/Workspace5/DREAM3D-Build/simplnx-Rel && cmake --build . --target all
+>>>>>>> ace4ffc7 (ENH: Redesign ThrottledMessenger with background timer thread and deferred formatting)
 ```
 
 Ensuring all test data files are downloaded
 ```bash
+<<<<<<< HEAD
 cd /Users/mjackson/Workspace2/DREAM3D-Build/simplnx-Rel &&  cmake --build . --target Fetch_Remote_Data_Files
+=======
+cd /Users/mjackson/Workspace5/DREAM3D-Build/simplnx-Rel &&  cmake --build . --target Fetch_Remote_Data_Files
+>>>>>>> ace4ffc7 (ENH: Redesign ThrottledMessenger with background timer thread and deferred formatting)
 ```
 
 - Python anaconda environment 'dream3d' can be used if needed
@@ -183,12 +234,20 @@ cd /Users/mjackson/Workspace2/DREAM3D-Build/simplnx-Rel &&  cmake --build . --ta
 
 Example - Running a specific test:
 ```bash
+<<<<<<< HEAD
 cd /Users/mjackson/Workspace2/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel && ctest -R "SimplnxCore::FillBadData" --verbose
+=======
+cd /Users/mjackson/Workspace5/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel && ctest -R "SimplnxCore::FillBadData" --verbose
+>>>>>>> ace4ffc7 (ENH: Redesign ThrottledMessenger with background timer thread and deferred formatting)
 ```
 
 Example - Running all SimplnxCore tests:
 ```bash
+<<<<<<< HEAD
 cd /Users/mjackson/Workspace2/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel && ctest -R "SimplnxCore::" --verbose
+=======
+cd /Users/mjackson/Workspace5/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel && ctest -R "SimplnxCore::" --verbose
+>>>>>>> ace4ffc7 (ENH: Redesign ThrottledMessenger with background timer thread and deferred formatting)
 ```
 
 ### Printing debug statements in unit tests

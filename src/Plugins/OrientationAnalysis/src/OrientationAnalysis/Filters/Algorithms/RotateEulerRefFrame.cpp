@@ -8,6 +8,8 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <fmt/format.h>
+
 #include <EbsdLib/Orientation/AxisAngle.hpp>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>
@@ -25,12 +27,12 @@ class RotateEulerRefFrameImpl
 {
 
 public:
-  RotateEulerRefFrameImpl(Float32Array& data, const FloatVec3& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+  RotateEulerRefFrameImpl(Float32Array& data, std::vector<float>& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressHelper& progressHelper)
   : m_CellEulerAngles(data)
   , m_AxisAngle(rotAxis)
   , m_Angle(angle)
   , m_ShouldCancel(shouldCancel)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ProgressHelper(progressHelper)
   {
   }
   virtual ~RotateEulerRefFrameImpl() = default;
@@ -41,7 +43,7 @@ public:
 
     OrientationUtilities::Matrix3dR rotMat = om.toEigenGMatrix();
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+    ProgressWorker worker = m_ProgressHelper.createWorkerHandle();
 
     usize counter = 0;
     usize counterIncrement = (end - start) / 100;
@@ -54,7 +56,7 @@ public:
       }
       if(counter >= counterIncrement)
       {
-        progressMessenger.sendProgressMessage(counter);
+        worker.incrementProgress(counter);
         counter = 0;
       }
 
@@ -67,7 +69,7 @@ public:
       m_CellEulerAngles[3 * i + 2] = eu[2];
       counter++;
     }
-    progressMessenger.sendProgressMessage(counter);
+    worker.incrementProgress(counter);
   }
 
   void operator()(const Range& range) const
@@ -80,7 +82,7 @@ private:
   FloatVec3 m_AxisAngle;
   float m_Angle = 0.0F;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ProgressHelper& m_ProgressHelper;
 };
 } // namespace
 
@@ -112,14 +114,13 @@ Result<> RotateEulerRefFrame::operator()()
   axis = axis.normalize();
 
   MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(totalElements);
-  progressMessageHelper.setProgressMessageTemplate("RotateEulerRefFrame: {:.2f}% complete");
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+      totalElements, [](usize current, usize max) { return fmt::format("RotateEulerRefFrame: {:.2f}% complete", CalculatePercentComplete(current, max)); });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, totalElements);
-  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel, progressMessageHelper));
+  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel, progressHelper));
   return {};
 }
 

@@ -67,12 +67,13 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   std::vector<int32> neighborCount(totalPoints, 0);
 
   MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  auto throttledMessenger = messageHelper.createThrottledMessenger(
+      [totalPoints](usize voxelIdx) { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
   // Loop over every point finding the number of neighbors that fall within the
   // user defined angle tolerance.
   for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIndex, totalPoints)); });
+    throttledMessenger.sendMessage(static_cast<usize>(voxelIndex));
     // If the mask was set to false, then we check this voxel
     if(!maskCompare->isTrue(voxelIndex))
     {
@@ -125,6 +126,11 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 
   // Now we loop over all the points again, but this time we do it as many times
   // as the user has requested to iteratively flip voxels
+  int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors;
+  auto levelMessenger = messageHelper.createThrottledMessenger(
+      [totalLevels, totalPoints](int32 levelNum, int32 loopNum, usize voxelIdx) {
+        return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", levelNum, totalLevels, loopNum, CalculatePercentComplete(voxelIdx, totalPoints));
+      });
   while(currentLevel >= m_InputValues->NumberOfNeighbors)
   {
     counter = 1;
@@ -134,10 +140,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       counter = 0; // Set this while control variable to zero
       for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
       {
-        throttledMessenger.sendThrottledMessage([&] {
-          return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->NumberOfNeighbors, loopNumber,
-                             CalculatePercentComplete(voxelIndex, totalPoints));
-        });
+        levelMessenger.sendMessage((startLevel - currentLevel) + 1, loopNumber, voxelIndex);
 
         // We are comparing the number-of-neighbors of the current voxel, and if it
         // is > the current level and the mask is FALSE, then we drop into this

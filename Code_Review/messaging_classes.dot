@@ -1,0 +1,315 @@
+// Threaded Throttled Messenger - Class Relationship Diagram
+// Render with: dot -Tpng messaging_classes.dot -o messaging_classes.png
+// Or:          dot -Tsvg messaging_classes.dot -o messaging_classes.svg
+
+digraph MessagingSystem {
+  rankdir=TB;
+  fontname="Helvetica";
+  node [fontname="Helvetica", fontsize=11];
+  edge [fontname="Helvetica", fontsize=9];
+
+  // =========================================================================
+  // Color Legend
+  // =========================================================================
+  subgraph cluster_legend {
+    label="Legend";
+    style=dashed;
+    color=gray60;
+    fontsize=10;
+
+    leg_user [label="User-Facing API", shape=box, style=filled, fillcolor="#D4E6F1"];
+    leg_internal [label="Internal / Implementation", shape=box, style=filled, fillcolor="#F9E79F"];
+    leg_singleton [label="Singleton", shape=box, style=filled, fillcolor="#F5B7B1"];
+    leg_unchanged [label="Unchanged (IFilter types)", shape=box, style=filled, fillcolor="#D5F5E3"];
+
+    leg_user -> leg_internal [label="owns (shared_ptr)", style=bold, color=black];
+    leg_internal -> leg_singleton [label="weak_ptr registration", style=dashed, color=blue];
+    leg_singleton -> leg_unchanged [label="calls / uses", style=dotted, color=gray40];
+  }
+
+  // =========================================================================
+  // Unchanged IFilter Types (green)
+  // =========================================================================
+  subgraph cluster_ifilter {
+    label="IFilter Types (Unchanged)";
+    style=rounded;
+    color="#27AE60";
+    bgcolor="#EAFAF1";
+
+    MessageType [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#D5F5E3"><B>IFilter::Message</B></TD></TR>
+          <TR><TD ALIGN="LEFT">+ type : Message::Type<BR/>+ message : std::string</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    ProgressMessage [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#D5F5E3"><B>IFilter::ProgressMessage</B></TD></TR>
+          <TR><TD ALIGN="LEFT">+ progress : int32</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    MessageHandler [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#D5F5E3"><B>IFilter::MessageHandler</B></TD></TR>
+          <TR><TD ALIGN="LEFT">+ m_Callback : std::function&lt;void(Message&amp;)&gt;<BR/>+ operator()(Message&amp;)<BR/>+ operator()(string)<BR/>+ operator()(Type, string)<BR/>+ operator()(Type, string, int32)</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    ProgressMessage -> MessageType [label="inherits", arrowhead=empty, style=solid];
+    MessageHandler -> MessageType [label="sends", style=dotted, color=gray40];
+  }
+
+  // =========================================================================
+  // User-Facing API (blue)
+  // =========================================================================
+  subgraph cluster_user_api {
+    label="User-Facing API";
+    style=rounded;
+    color="#2980B9";
+    bgcolor="#EBF5FB";
+
+    MessageHelper [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#D4E6F1"><B>MessageHelper</B></TD></TR>
+          <TR><TD ALIGN="LEFT">- m_MessageHandler : const MessageHandler&amp;</TD></TR>
+          <TR><TD ALIGN="LEFT">+ sendMessage(string) : void<BR/>+ createThrottledMessenger(formatter, interval)<BR/>    -&gt; ThrottledMessenger&lt;Args...&gt;<BR/>+ createProgressHelper(max, formatter, interval)<BR/>    -&gt; ProgressHelper</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    ThrottledMessenger [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#D4E6F1"><B>ThrottledMessenger&lt;Args...&gt;</B></TD></TR>
+          <TR><TD ALIGN="LEFT">- m_Channel : shared_ptr&lt;ThrottledChannel&lt;Args...&gt;&gt;</TD></TR>
+          <TR><TD ALIGN="LEFT">+ sendMessage(Args... args) : void<BR/>    [HOT PATH: ~15-25ns]<BR/>+ ~ThrottledMessenger() : finalFlush()</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    ProgressHelper [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#D4E6F1"><B>ProgressHelper</B></TD></TR>
+          <TR><TD ALIGN="LEFT">- m_Channel : shared_ptr&lt;ProgressChannel&gt;</TD></TR>
+          <TR><TD ALIGN="LEFT">+ createWorkerHandle() : ProgressWorker<BR/>+ resetProgress() : void</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    ProgressWorker [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#D4E6F1"><B>ProgressWorker</B></TD></TR>
+          <TR><TD ALIGN="LEFT">- m_Channel : shared_ptr&lt;ProgressChannel&gt;</TD></TR>
+          <TR><TD ALIGN="LEFT">+ incrementProgress(amount) : void<BR/>    [HOT PATH: atomic add, ~5ns]</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+  }
+
+  // =========================================================================
+  // Internal Implementation (yellow)
+  // =========================================================================
+  subgraph cluster_internal {
+    label="Internal Implementation";
+    style=rounded;
+    color="#F39C12";
+    bgcolor="#FEF9E7";
+
+    IThrottledChannel [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#F9E79F"><B>&lt;&lt;interface&gt;&gt;<BR/>IThrottledChannel</B></TD></TR>
+          <TR><TD ALIGN="LEFT">+ tryFlush() : bool [pure virtual]<BR/>+ finalFlush() : void [pure virtual]</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    ThrottledChannel [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#F9E79F"><B>ThrottledChannel&lt;Args...&gt;</B></TD></TR>
+          <TR><TD ALIGN="LEFT">- m_Formatter : std::function&lt;string(Args...)&gt;<BR/>- m_Handler : const MessageHandler&amp;<BR/>- m_Interval : milliseconds<BR/>- m_LastSendTime : time_point<BR/>- m_ArgsMutex : std::mutex<BR/>- m_LatestArgs : std::tuple&lt;Args...&gt;<BR/>- m_HasNewData : std::atomic&lt;bool&gt;</TD></TR>
+          <TR><TD ALIGN="LEFT">+ storeArgs(Args...) : void<BR/>+ tryFlush() : bool [override]<BR/>+ finalFlush() : void [override]</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    ProgressChannel [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#F9E79F"><B>ProgressChannel</B></TD></TR>
+          <TR><TD ALIGN="LEFT">- m_Formatter : std::function&lt;string(usize, usize)&gt;<BR/>- m_Handler : const MessageHandler&amp;<BR/>- m_Interval : milliseconds<BR/>- m_MaxProgress : usize<BR/>- m_CurrentProgress : std::atomic&lt;usize&gt;<BR/>- m_HasNewData : std::atomic&lt;bool&gt;</TD></TR>
+          <TR><TD ALIGN="LEFT">+ incrementAndStore(usize) : void<BR/>+ tryFlush() : bool [override]<BR/>+ finalFlush() : void [override]</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+
+    CallableTraits [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#F9E79F"><B>callable_traits&lt;T&gt;</B></TD></TR>
+          <TR><TD ALIGN="LEFT">args_tuple : std::tuple&lt;Args...&gt;</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+  }
+
+  // =========================================================================
+  // Singleton (red)
+  // =========================================================================
+  subgraph cluster_singleton {
+    label="Singleton";
+    style=rounded;
+    color="#E74C3C";
+    bgcolor="#FDEDEC";
+
+    MessageDispatcher [
+      label=<
+        <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
+          <TR><TD BGCOLOR="#F5B7B1"><B>MessageDispatcher (Singleton)</B></TD></TR>
+          <TR><TD ALIGN="LEFT">- m_TimerThread : std::thread<BR/>- m_Running : std::atomic&lt;bool&gt;<BR/>- m_ChannelsMutex : std::mutex<BR/>- m_ShutdownCv : std::condition_variable<BR/>- m_Channels : vector&lt;weak_ptr&lt;IThrottledChannel&gt;&gt;<BR/>- k_TickInterval : 100ms</TD></TR>
+          <TR><TD ALIGN="LEFT">+ instance() : MessageDispatcher&amp;<BR/>+ registerChannel(weak_ptr&lt;IThrottledChannel&gt;)<BR/>+ shutdown() : void<BR/>- timerLoop() : void</TD></TR>
+        </TABLE>
+      >,
+      shape=plain
+    ];
+  }
+
+  // =========================================================================
+  // Relationships
+  // =========================================================================
+
+  // MessageHelper creates ThrottledMessenger and ProgressHelper
+  MessageHelper -> ThrottledMessenger [
+    label="creates",
+    style=bold,
+    color="#2980B9"
+  ];
+  MessageHelper -> ProgressHelper [
+    label="creates",
+    style=bold,
+    color="#2980B9"
+  ];
+  MessageHelper -> MessageHandler [
+    label="  references  ",
+    style=dotted,
+    color=gray40
+  ];
+
+  // ThrottledMessenger owns ThrottledChannel
+  ThrottledMessenger -> ThrottledChannel [
+    label="owns\n(shared_ptr)",
+    style=bold,
+    color=black
+  ];
+
+  // ProgressHelper owns ProgressChannel and creates ProgressWorker
+  ProgressHelper -> ProgressChannel [
+    label="owns\n(shared_ptr)",
+    style=bold,
+    color=black
+  ];
+  ProgressHelper -> ProgressWorker [
+    label="creates",
+    style=bold,
+    color="#2980B9"
+  ];
+
+  // ProgressWorker shares ProgressChannel
+  ProgressWorker -> ProgressChannel [
+    label="shares\n(shared_ptr)",
+    style=bold,
+    color=black
+  ];
+
+  // Channels implement IThrottledChannel
+  ThrottledChannel -> IThrottledChannel [
+    label="implements",
+    arrowhead=empty,
+    style=solid
+  ];
+  ProgressChannel -> IThrottledChannel [
+    label="implements",
+    arrowhead=empty,
+    style=solid
+  ];
+
+  // Channels are registered with MessageDispatcher
+  ThrottledChannel -> MessageDispatcher [
+    label="registered\n(weak_ptr)",
+    style=dashed,
+    color="#3498DB",
+    dir=back
+  ];
+  ProgressChannel -> MessageDispatcher [
+    label="registered\n(weak_ptr)",
+    style=dashed,
+    color="#3498DB",
+    dir=back
+  ];
+
+  // Channels call MessageHandler
+  ThrottledChannel -> MessageHandler [
+    label="  calls (from\n  timer thread)  ",
+    style=dotted,
+    color="#E74C3C"
+  ];
+  ProgressChannel -> MessageHandler [
+    label="calls (from\ntimer thread)",
+    style=dotted,
+    color="#E74C3C"
+  ];
+
+  // MessageDispatcher calls tryFlush on channels
+  MessageDispatcher -> IThrottledChannel [
+    label="calls tryFlush()\nevery 100ms",
+    style=bold,
+    color="#E74C3C"
+  ];
+
+  // MessageHelper calls createThrottledMessenger which uses callable_traits
+  MessageHelper -> CallableTraits [
+    label="uses for\narg deduction",
+    style=dotted,
+    color=gray40
+  ];
+
+  // =========================================================================
+  // Data Flow Annotation
+  // =========================================================================
+  subgraph cluster_dataflow {
+    label="Data Flow (Hot Path)";
+    style=rounded;
+    color=gray60;
+    bgcolor="#F8F9F9";
+
+    step1 [label="1. Filter loop calls\nthrottledMessenger.sendMessage(args...)", shape=note, fillcolor=white, style=filled];
+    step2 [label="2. Args stored in\nThrottledChannel\n(mutex + atomic flag)", shape=note, fillcolor=white, style=filled];
+    step3 [label="3. Dispatcher timer\nwakes every 100ms", shape=note, fillcolor=white, style=filled];
+    step4 [label="4. tryFlush() checks flag,\ninterval, formats string,\ncalls MessageHandler", shape=note, fillcolor=white, style=filled];
+
+    step1 -> step2 -> step3 -> step4 [style=bold, color="#8E44AD"];
+  }
+}

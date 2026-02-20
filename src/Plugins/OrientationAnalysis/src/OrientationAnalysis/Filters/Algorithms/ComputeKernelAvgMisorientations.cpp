@@ -9,7 +9,7 @@
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
-#include <chrono>
+#include <fmt/format.h>
 
 using namespace nx::core;
 
@@ -18,9 +18,9 @@ namespace
 class FindKernelAvgMisorientationsImpl
 {
 public:
-  FindKernelAvgMisorientationsImpl(ProgressMessageHelper& progressMessenger, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
+  FindKernelAvgMisorientationsImpl(ProgressHelper& progressHelper, DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues* inputValues,
                                    const std::atomic_bool& shouldCancel)
-  : m_ProgressMessageHelper(progressMessenger)
+  : m_ProgressHelper(progressHelper)
   , m_DataStructure(dataStructure)
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
@@ -56,7 +56,7 @@ public:
     usize counter = 0;
     usize increment = (zEnd - zStart) / 100;
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+    ProgressWorker worker = m_ProgressHelper.createWorkerHandle();
 
     auto xPoints = static_cast<int64_t>(udims[0]);
     auto yPoints = static_cast<int64_t>(udims[1]);
@@ -70,7 +70,7 @@ public:
 
       if(counter > increment)
       {
-        progressMessenger.sendProgressMessage(counter);
+        worker.incrementProgress(counter);
         counter = 0;
       }
 
@@ -142,7 +142,7 @@ public:
         }
       }
     }
-    progressMessenger.sendProgressMessage(counter);
+    worker.incrementProgress(counter);
   }
 
   void operator()(const Range3D& range) const
@@ -151,7 +151,7 @@ public:
   }
 
 private:
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ProgressHelper& m_ProgressHelper;
   DataStructure& m_DataStructure;
   const ComputeKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
@@ -179,10 +179,8 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   SizeVec3 udims = gridGeom->getDimensions();
 
   MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-
-  progressMessageHelper.setMaxProgresss(udims[2] * udims[1] * udims[0]);
-  progressMessageHelper.setProgressMessageTemplate("Finding Kernel Average Misorientations || {:.2f}%");
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+      udims[2] * udims[1] * udims[0], [](usize current, usize max) { return fmt::format("Finding Kernel Average Misorientations || {:.2f}%", CalculatePercentComplete(current, max)); });
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath));
@@ -194,7 +192,7 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));
   parallelAlgorithm.requireArraysInMemory(algArrays);
-  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(progressMessageHelper, m_DataStructure, m_InputValues, m_ShouldCancel));
+  parallelAlgorithm.execute(FindKernelAvgMisorientationsImpl(progressHelper, m_DataStructure, m_InputValues, m_ShouldCancel));
 
   return {};
 }

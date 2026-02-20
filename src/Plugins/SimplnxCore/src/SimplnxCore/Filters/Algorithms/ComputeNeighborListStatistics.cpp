@@ -22,7 +22,7 @@ public:
   using StoreType = AbstractDataStore<T>;
 
   ComputeNeighborListStatisticsImpl(ComputeNeighborListStatistics* filter, const INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
-                                    std::vector<IDataArray*>& arrays, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+                                    std::vector<IDataArray*>& arrays, const std::atomic_bool& shouldCancel, ProgressHelper& progressHelper)
   : m_Filter(filter)
   , m_ShouldCancel(shouldCancel)
   , m_Source(source)
@@ -34,7 +34,7 @@ public:
   , m_StdDeviation(stdDeviation)
   , m_Summation(summation)
   , m_Arrays(arrays)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ProgressHelper(progressHelper)
   {
   }
 
@@ -80,7 +80,7 @@ public:
 
     const auto& sourceList = dynamic_cast<const NeighborListType&>(m_Source);
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+    ProgressWorker progressWorker = m_ProgressHelper.createWorkerHandle();
     for(usize i = start; i < end; i++)
     {
       if(m_ShouldCancel)
@@ -126,7 +126,7 @@ public:
         array6->setValue(i, val);
       }
 
-      progressMessenger.sendProgressMessage(1);
+      progressWorker.incrementProgress(1);
     }
   }
 
@@ -149,7 +149,7 @@ private:
   bool m_Summation = false;
 
   std::vector<IDataArray*>& m_Arrays;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ProgressHelper& m_ProgressHelper;
 };
 } // namespace
 
@@ -215,16 +215,16 @@ Result<> ComputeNeighborListStatistics::operator()()
   }
 
   MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progresssMessageHelper = messageHelper.createProgressMessageHelper();
-  progresssMessageHelper.setMaxProgresss(numTuples);
-  progresssMessageHelper.setProgressMessageTemplate("Finding Statistics || {:.2f}% Completed");
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(numTuples, [](usize currentProgress, usize maxProgress) {
+    return fmt::format("Finding Statistics || {:.2f}% Completed", CalculatePercentComplete(currentProgress, maxProgress));
+  });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
   ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputINeighborList, m_InputValues->FindLength, m_InputValues->FindMin, m_InputValues->FindMax,
                                                                             m_InputValues->FindMean, m_InputValues->FindMedian, m_InputValues->FindStdDeviation, m_InputValues->FindSummation, arrays,
-                                                                            m_ShouldCancel, progresssMessageHelper);
+                                                                            m_ShouldCancel, progressHelper);
 
   return {};
 }

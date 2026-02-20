@@ -8,8 +8,6 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include <chrono>
-
 using namespace nx::core;
 
 namespace
@@ -87,7 +85,7 @@ class SampleSurfaceMeshImplByPoints
 public:
   SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3Df>& faceBBs,
                                 const std::vector<Point3Df>& points, const usize featureId, Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel,
-                                ProgressMessageHelper& progressMessageHelper)
+                                ProgressHelper& progressHelper)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
@@ -96,14 +94,14 @@ public:
   , m_PolyIds(polyIds)
   , m_FeatureId(featureId)
   , m_ShouldCancel(shouldCancel)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ProgressHelper(progressHelper)
   {
   }
   virtual ~SampleSurfaceMeshImplByPoints() = default;
 
   void checkPoints(usize start, usize end) const
   {
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+    ProgressWorker progressWorker = m_ProgressHelper.createWorkerHandle();
 
     usize iter = m_FeatureId;
 
@@ -129,8 +127,7 @@ public:
       // Send some feedback
       if(pointsVisited % 1000 == 0)
       {
-        progressMessenger.sendProgressMessage(
-            1000, [&](usize currentProgress, usize maxProgress) { return fmt::format("Feature {} | Points Completed: {} of {}", m_FeatureId, currentProgress, maxProgress); });
+        progressWorker.incrementProgress(1000);
       }
       // Check for the filter being cancelled.
       if(m_ShouldCancel)
@@ -154,7 +151,7 @@ private:
   Int32AbstractDataStore& m_PolyIds;
   const usize m_FeatureId = 0;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ProgressHelper& m_ProgressHelper;
 };
 } // namespace
 
@@ -280,8 +277,8 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
 
   m_MessageHelper.sendMessage("Sampling triangle geometry ...");
 
-  ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(points.size());
+  ProgressHelper progressHelper = m_MessageHelper.createProgressHelper(
+      points.size(), [](usize currentProgress, usize maxProgress) { return fmt::format("Points Completed: {} of {}", currentProgress, maxProgress); });
 
   // C++11 RIGHT HERE....
   auto nthreads = static_cast<int32>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
@@ -299,7 +296,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
     {
       ParallelDataAlgorithm dataAlg;
       dataAlg.setRange(0, points.size());
-      dataAlg.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel, progressMessageHelper));
+      dataAlg.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel, progressHelper));
     }
   }
 

@@ -395,9 +395,16 @@ Result<> ComputeGBCD::operator()()
 
   // create an array to hold the total face area for each phase and initialize the array to 0.0
   std::vector<double> totalFaceArea(totalPhases, 0.0);
-  auto startTime = std::chrono::steady_clock::now();
+  auto startTime = std::make_shared<std::chrono::steady_clock::time_point>(std::chrono::steady_clock::now());
   messageHelper.sendMessage("1/2 Starting GBCD Calculation and Summation Phase");
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  auto throttledMessenger = messageHelper.createThrottledMessenger(
+      [totalFaces, startTime](usize lastTriangleIndex, usize chunkSize) {
+        auto currentTime = std::chrono::steady_clock::now();
+        float32 currentRate = static_cast<float32>(chunkSize) / static_cast<float32>(std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - *startTime).count());
+        uint64 estimatedTime = static_cast<uint64>(totalFaces - lastTriangleIndex) / currentRate;
+        *startTime = currentTime;
+        return fmt::format("Calculating GBCD || Triangles {}/{} Completed || Est. Time Remain: {}", lastTriangleIndex, totalFaces, ConvertMillisToHrsMinSecs(estimatedTime));
+      });
 
   for(usize i = 0; i < totalFaces; i = i + triangleChunkSize)
   {
@@ -452,14 +459,7 @@ Result<> ComputeGBCD::operator()()
       }
     }
 
-    throttledMessenger.sendThrottledMessage([&]() {
-      auto currentTime = throttledMessenger.getLastTime();
-      const usize k_LastTriangleIndex = i + triangleChunkSize;
-      float32 currentRate = static_cast<float32>(triangleChunkSize) / static_cast<float32>(std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime).count());
-      uint64 estimatedTime = static_cast<uint64>(totalFaces - k_LastTriangleIndex) / currentRate;
-      startTime = currentTime;
-      return fmt::format("Calculating GBCD || Triangles {}/{} Completed || Est. Time Remain: {}", k_LastTriangleIndex, totalFaces, ConvertMillisToHrsMinSecs(estimatedTime));
-    });
+    throttledMessenger.sendMessage(i + triangleChunkSize, triangleChunkSize);
   }
 
   messageHelper.sendMessage("2/2 Starting GBCD Normalization Phase");

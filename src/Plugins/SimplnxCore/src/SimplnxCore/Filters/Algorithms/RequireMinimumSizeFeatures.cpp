@@ -38,15 +38,12 @@ public:
 
   void operator()() const
   {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     std::string arrayName = m_DataArrayPtr->getName();
-    usize prog = std::max(m_TotalPoints / 100ULL, 1ULL);
+    auto throttledMessenger = m_MessageHelper.createThrottledMessenger(
+        [arrayName, totalPoints = m_TotalPoints](usize current) { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(current, totalPoints)); });
     for(usize voxelIndex = 0; voxelIndex < m_TotalPoints; voxelIndex++)
     {
-      if(voxelIndex % prog == 0)
-      {
-        throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(voxelIndex, m_TotalPoints)); });
-      }
+      throttledMessenger.sendMessage(voxelIndex);
       if(m_ShouldCancel)
       {
         return;

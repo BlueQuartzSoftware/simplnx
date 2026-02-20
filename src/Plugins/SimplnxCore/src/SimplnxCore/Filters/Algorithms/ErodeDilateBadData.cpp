@@ -36,11 +36,12 @@ public:
 
   void operator()() const
   {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     std::string arrayName = m_DataArrayPtr->getName();
+    auto throttledMessenger = m_MessageHelper.createThrottledMessenger(
+        [arrayName, totalPoints = m_TotalPoints](usize current) { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(current, totalPoints)); });
     for(usize i = 0; i < m_TotalPoints; i++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
+      throttledMessenger.sendMessage(i);
 
       const int32 featureName = m_FeatureIds[i];
       const int64 neighbor = m_Neighbors[i];

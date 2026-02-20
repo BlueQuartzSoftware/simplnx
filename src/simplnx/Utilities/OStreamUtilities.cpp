@@ -4,7 +4,6 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
-#include <chrono>
 #include <iomanip>
 #include <ostream>
 #include <string>
@@ -34,8 +33,12 @@ struct PrintNeighborList
                       bool hasIndex = false, bool hasHeader = false)
   {
     auto& neighborList = *dynamic_cast<NeighborList<ScalarType>*>(inputNeighborList);
-    auto start = std::chrono::steady_clock::now();
     auto numLists = neighborList.getNumberOfLists();
+
+    MessageHelper messageHelper(mesgHandler);
+    std::string listName = neighborList.getName();
+    auto throttledMessenger = messageHelper.createThrottledMessenger(
+        [listName, numLists](usize currentList) { return fmt::format("Processing {}: {}% completed", listName, static_cast<int32>(100 * static_cast<float>(currentList) / static_cast<float>(numLists))); });
 
     if(hasHeader)
     {
@@ -49,16 +52,10 @@ struct PrintNeighborList
     {
       for(size_t list = 0; list < numLists; list++)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+        throttledMessenger.sendMessage(static_cast<usize>(list));
+        if(shouldCancel)
         {
-          auto string = fmt::format("Processing {}: {}% completed", neighborList.getName(), static_cast<int32>(100 * static_cast<float>(list) / static_cast<float>(numLists)));
-          mesgHandler(IFilter::Message::Type::Info, string);
-          start = now;
-          if(shouldCancel)
-          {
-            return {};
-          }
+          return {};
         }
         const auto grain = neighborList.at(list);
         outputStrm << list << delimiter << grain.size() << delimiter;
@@ -88,16 +85,10 @@ struct PrintNeighborList
     {
       for(size_t list = 0; list < neighborList.getNumberOfLists(); list++)
       {
-        auto now = std::chrono::steady_clock::now();
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+        throttledMessenger.sendMessage(static_cast<usize>(list));
+        if(shouldCancel)
         {
-          auto string = fmt::format("Processing {}: {}% completed", neighborList.getName(), static_cast<int32>(static_cast<float>(list) / static_cast<float>(numLists)));
-          mesgHandler(IFilter::Message::Type::Info, string);
-          start = now;
-          if(shouldCancel)
-          {
-            return {};
-          }
+          return {};
         }
         const auto grain = neighborList.at(list);
         outputStrm << grain.size() << delimiter;
@@ -144,7 +135,6 @@ struct PrintDataArray
                       int32 tuplesPerLine = 0)
   {
     const auto& dataStore = inputDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
-    auto start = std::chrono::steady_clock::now();
     auto numTuples = inputDataArray.getNumberOfTuples();
     if(tuplesPerLine == 0)
     {
@@ -152,14 +142,15 @@ struct PrintDataArray
     }
 
     MessageHelper messageHelper(mesgHandler);
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    std::string arrayName = inputDataArray.getName();
+    auto throttledMessenger = messageHelper.createThrottledMessenger(
+        [arrayName, numTuples](usize currentTuple) { return fmt::format("Processing {}: {}% completed", arrayName, static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples))); });
 
     usize numComps = inputDataArray.getNumberOfComponents();
     int32 tuplesWritten = 0;
     for(size_t tuple = 0; tuple < numTuples; tuple++)
     {
-      throttledMessenger.sendThrottledMessage(
-          [&]() { return fmt::format("Processing {}: {}% completed", inputDataArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples))); });
+      throttledMessenger.sendMessage(static_cast<usize>(tuple));
       if(shouldCancel)
       {
         return {};
@@ -213,21 +204,19 @@ struct PrintDataArray
 Result<> PrintStringArray(std::ostream& outputStrm, const StringArray& inputStringArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                           const std::string& delimiter = ",")
 {
-  auto start = std::chrono::steady_clock::now();
   auto numTuples = inputStringArray.getNumberOfTuples();
+
+  MessageHelper messageHelper(mesgHandler);
+  std::string arrayName = inputStringArray.getName();
+  auto throttledMessenger = messageHelper.createThrottledMessenger(
+      [arrayName, numTuples](usize currentTuple) { return fmt::format("Processing {}: {}% completed", arrayName, static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples))); });
 
   for(size_t tuple = 0; tuple < numTuples; tuple++)
   {
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    throttledMessenger.sendMessage(static_cast<usize>(tuple));
+    if(shouldCancel)
     {
-      auto string = fmt::format("Processing {}: {}% completed", inputStringArray.getName(), static_cast<int32>(100 * static_cast<float>(tuple) / static_cast<float>(numTuples)));
-      mesgHandler(IFilter::Message::Type::Info, string);
-      start = now;
-      if(shouldCancel)
-      {
-        return {};
-      }
+      return {};
     }
     outputStrm << inputStringArray[tuple] << "\n";
   }
@@ -510,7 +499,10 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
 {
   const auto& firstDataArray = dataStructure.getDataRefAs<IArray>(objectPaths[0]);
   usize numTuples = firstDataArray.getNumberOfTuples();
-  auto start = std::chrono::steady_clock::now();
+
+  MessageHelper messageHelper(mesgHandler);
+  auto throttledMessenger = messageHelper.createThrottledMessenger(
+      [numTuples](usize currentTuple) { return fmt::format("Printing tuples: {}% completed", static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples))); });
 
   // Create our wrapper classes for each DataArray
   std::vector<std::shared_ptr<ITupleWriter>> writers;
@@ -579,16 +571,10 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   }
   for(usize tupleIndex = writerIndexStart; tupleIndex < numTuples; tupleIndex++)
   {
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
+    throttledMessenger.sendMessage(tupleIndex);
+    if(shouldCancel)
     {
-      auto string = fmt::format("Printing tuples: {}% completed", static_cast<int32>(100 * static_cast<float>(tupleIndex) / static_cast<float>(numTuples)));
-      mesgHandler(IFilter::Message::Type::Info, string);
-      start = now;
-      if(shouldCancel)
-      {
-        return;
-      }
+      return;
     }
     if(includeIndex)
     {

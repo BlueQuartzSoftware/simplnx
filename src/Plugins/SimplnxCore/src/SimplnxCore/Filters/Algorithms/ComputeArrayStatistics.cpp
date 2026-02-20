@@ -73,12 +73,14 @@ public:
 
   void compute(usize start, usize end) const
   {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+    auto throttledMessenger = m_MessageHelper.createThrottledMessenger([](usize s, usize e, usize current, usize total) {
+      return fmt::format("Calculating statistics for feature [{}-{}] {}/{}", s, e, current, total);
+    });
 
     const usize numTuples = m_FeatureIds.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
-    auto msgHandler = [this](const std::string& msg) { m_MessageHelper.trySendMessage("Preparing features/ensembles for stats calculation " + msg); };
+    auto msgHandler = [this](const std::string& msg) { m_MessageHelper.sendMessage("Preparing features/ensembles for stats calculation " + msg); };
     auto [length, min, max, summation, modalMaps] = HistogramUtilities::concurrent::CalculateFeatureHasDataStats(m_Source, m_FeatureIds, start, end, m_Mask, msgHandler, m_ShouldCancel);
     if(m_ShouldCancel)
     {
@@ -165,10 +167,8 @@ public:
       progressCount++;
       if(progressCount > progressIncrement)
       {
-        throttledMessenger.sendThrottledMessage([&]() {
-          progressCount = 0;
-          return fmt::format("Calculating statistics for feature [{}-{}] {}/{}", start, end, j, end);
-        });
+        throttledMessenger.sendMessage(start, end, j, end);
+        progressCount = 0;
       }
     }
 
@@ -179,6 +179,10 @@ public:
       // This should probably be done with Kahan Summation instead
       std::vector<float64> sumOfDiffs(numCurrentFeatures, 0.0f);
       progressCount = 0;
+
+      auto stdDevMessenger = m_MessageHelper.createThrottledMessenger([](usize s, usize e, float32 pct) {
+        return fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", s, e, pct);
+      });
 
       for(usize tupleIndex = 0; tupleIndex < numTuples; tupleIndex++)
       {
@@ -204,10 +208,8 @@ public:
         progressCount++;
         if(progressCount > progressIncrement)
         {
-          throttledMessenger.sendThrottledMessage([&]() {
-            progressCount = 0;
-            return fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float>(tupleIndex) / static_cast<float>(numTuples));
-          });
+          stdDevMessenger.sendMessage(start, end, 100.0f * static_cast<float32>(tupleIndex) / static_cast<float32>(numTuples));
+          progressCount = 0;
         }
       }
 
@@ -283,7 +285,9 @@ public:
 
   void compute(usize start, usize end) const
   {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+    auto throttledMessenger = m_MessageHelper.createThrottledMessenger([](usize s, usize e, usize current, usize total) {
+      return fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", s, e, current, total);
+    });
     const usize numTuples = m_Source.getNumberOfTuples();
     for(usize featureId = start; featureId < end; featureId++)
     {
@@ -396,7 +400,7 @@ public:
         m_FeatureHasDataArray->initializeTuple(truePosition, false);
       }
 
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Storing data for feature/ensembles [{}-{}] {}/{}", start, end, featureId, end); });
+      throttledMessenger.sendMessage(start, end, featureId, end);
     }
   } // end of compute
 

@@ -59,7 +59,7 @@ public:
                                    Float64Array* principleCurvature2, Float64Array* principleDirection1, Float64Array* principleDirection2, Float64Array* gaussianCurvature,
                                    Float64Array* meanCurvature, Float64Array* weingartenMatrix, TriangleGeom* trianglesGeom, Int32Array* surfaceMeshFaceLabels, Float64Array* surfaceMeshFaceNormals,
                                    Float64Array* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                   ProgressMessageHelper& progressMessageHelper);
+                                   ProgressHelper& progressHelper);
 
   virtual ~CalculateTriangleGroupCurvatures();
 
@@ -85,6 +85,6 @@ private:
   Float64Array* m_SurfaceMeshTriangleCentroids;
   const IFilter::MessageHandler& m_MessageHandler;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ProgressHelper& m_ProgressHelper;
 };
 } // namespace nx::core

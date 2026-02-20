@@ -68,14 +68,14 @@ class ComputeNeighborhoodsImpl
 {
 public:
   ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, const nx::core::AbstractDataStore<float>& centroids, const std::vector<int64>& bins, float32 avgDiam, float32 multiplesOfAverage,
-                           const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+                           const std::atomic_bool& shouldCancel, ProgressHelper& progressHelper)
   : m_Filter(filter)
   , m_Centroids(centroids)
   , m_Bins(bins)
   , m_AvgDiam(avgDiam)
   , m_MultiplesOfAverage(multiplesOfAverage)
   , m_ShouldCancel(shouldCancel)
-  , m_ProgressMessageHelper(progressMessageHelper)
+  , m_ProgressHelper(progressHelper)
   {
   }
 
@@ -101,13 +101,13 @@ public:
     const float32 radiusSq = radius * radius;
     const int64 k = static_cast<int64>(std::ceil(m_MultiplesOfAverage));
 
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+    ProgressWorker progressWorker = m_ProgressHelper.createWorkerHandle();
     for(usize i = start; i < end; i++)
     {
       incCount++;
       if(incCount >= increment)
       {
-        progressMessenger.sendProgressMessage(incCount, [&](usize currentProgress, usize maxProgress) { return fmt::format("{}/{}", currentProgress, maxProgress); });
+        progressWorker.incrementProgress(incCount);
         incCount = 0;
       }
 
@@ -168,7 +168,7 @@ public:
         }
       }
     }
-    progressMessenger.sendProgressMessage(incCount);
+    progressWorker.incrementProgress(incCount);
   }
 
   void operator()(const Range& range) const
@@ -183,7 +183,7 @@ private:
   float32 m_AvgDiam;
   float32 m_MultiplesOfAverage;
   const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
+  ProgressHelper& m_ProgressHelper;
 };
 } // namespace
 
@@ -193,7 +193,6 @@ ComputeNeighborhoods::ComputeNeighborhoods(DataStructure& dataStructure, const I
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_MessageHelper(m_MessageHandler)
 {
 }
 
@@ -220,9 +219,10 @@ Result<> ComputeNeighborhoods::operator()()
 
   const usize totalFeatures = equivalentDiameters.getNumberOfTuples();
 
-  ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(totalFeatures);
-  progressMessageHelper.setProgressMessageTemplate("Finding Feature Neighborhoods: {:.2f}%");
+  MessageHelper messageHelper(m_MessageHandler);
+  ProgressHelper progressHelper = messageHelper.createProgressHelper(totalFeatures, [](usize currentProgress, usize maxProgress) {
+    return fmt::format("Finding Feature Neighborhoods: {:.2f}%", CalculatePercentComplete(currentProgress, maxProgress));
+  });
 
   m_LocalNeighborhoodList.resize(totalFeatures);
 
@@ -256,7 +256,7 @@ Result<> ComputeNeighborhoods::operator()()
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
   parallelAlgorithm.setParallelizationEnabled(true);
-  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, avgDiameter, multiplesOfAverage, m_ShouldCancel, progressMessageHelper));
+  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, avgDiameter, multiplesOfAverage, m_ShouldCancel, progressHelper));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborhoodListArrayName);

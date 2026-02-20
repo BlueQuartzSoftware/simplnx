@@ -137,7 +137,7 @@ SegmentFeatures::~SegmentFeatures() = default;
 // -----------------------------------------------------------------------------
 Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
-  ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
+  auto throttledMessenger = m_MessageHelper.createThrottledMessenger([](float percentComplete, int32 gnum) { return fmt::format("{:.2f}% - Current Feature Count: {}", percentComplete, gnum); });
 
   SizeVec3 udims = gridGeom->getDimensions();
 
@@ -207,7 +207,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
     // Send a progress message
     float percentComplete = static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels) * 100.0f;
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{:.2f}% - Current Feature Count: {}", percentComplete, gnum); });
+    throttledMessenger.sendMessage(percentComplete, gnum);
     // Increment or set values for the next iteration
     voxelsList.assign(size + 1, -1);
     gnum++;
