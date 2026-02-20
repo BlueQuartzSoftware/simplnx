@@ -242,12 +242,16 @@ struct ZSliceFunctor
           while(nextIsect < intersections.size() && intersections[nextIsect].x <= xCoord)
           {
             usize faceIdx = intersections[nextIsect].faceIndex;
-            T label0 = faceLabelsRef[faceIdx];
-            T label1 = T{0};
+            T label0, label1;
             if(numFaceLabelComps == 2)
             {
               label0 = faceLabelsRef[faceIdx * 2];
               label1 = faceLabelsRef[faceIdx * 2 + 1];
+            }
+            else
+            {
+              label0 = faceLabelsRef[faceIdx];
+              label1 = T{0};
             }
 
             // Toggle: if we are currently in one of the two bordering features,
@@ -313,8 +317,8 @@ Result<> RegularGridSampleSurfaceMesh::operator()()
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryOutputPath);
 
-  ExecuteDataFunctionNoBool(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->SurfaceMeshFaceLabelsArrayPath)->getDataType(), m_DataStructure, m_ShouldCancel,
-                            m_MessageHandler, imageGeom, triangleGeom, m_InputValues->SurfaceMeshFaceLabelsArrayPath, m_InputValues->FeatureIdsArrayPath);
+  ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->SurfaceMeshFaceLabelsArrayPath)->getDataType(), m_DataStructure, m_ShouldCancel,
+                             m_MessageHandler, imageGeom, triangleGeom, m_InputValues->SurfaceMeshFaceLabelsArrayPath, m_InputValues->FeatureIdsArrayPath);
 
   return {};
 }
