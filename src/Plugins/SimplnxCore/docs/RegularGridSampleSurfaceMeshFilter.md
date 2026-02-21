@@ -6,12 +6,25 @@ Sampling (Resolution)
 
 ## Description
 
-This **Filter** "samples" a triangulated surface mesh on a rectilinear grid. The user can specify the number of **Cells** along the X, Y, and Z directions in addition to the resolution in each direction and origin to define a rectilinear grid.  The sampling is then performed by the following steps:
+This **Filter** "samples" a triangulated surface mesh onto a regular grid (Image Geometry) using scanline rasterization. The user can either create a new Image Geometry by specifying dimensions, spacing, and origin, or use an existing Image Geometry. The filter assigns a **Feature Id** (or part number) to each voxel based on which region of the surface mesh the voxel falls within.
 
-1. Determine the bounding box and **Triangle** list of each **Feature** by scanning all **Triangles** and noting the **Features** on either side of the **Triangle**
-2. For each **Cell** in the rectilinear grid, determine which bounding box(es) they fall in (*Note:* the bounding box of multiple **Features** can overlap)
-3. For each bounding box a **Cell** falls in, check against that **Feature's** **Triangle** list to determine if the **Cell** falls within that n-sided polyhedra (*Note:* if the surface mesh is conformal, then each **Cell** will only belong to one **Feature**, but if not, the last **Feature** the **Cell** is found to fall inside will *own* the **Cell**)
-4. Assign the **Feature** number that the **Cell** falls within to the *Feature Ids* array in the new rectilinear grid geometry
+### Algorithm
+
+The sampling is performed using the following scanline rasterization approach:
+
+1. For each Z-slice of the grid, determine which **Triangles** intersect the Z-plane at the voxel center height and compute 2D edge segments from those intersections
+2. For each Y-scanline within a Z-slice, find the X-coordinates where the scanline crosses the 2D edges
+3. Sort the crossings by X-coordinate and walk left to right across the voxels, toggling the current **Feature Id** at each boundary crossing
+4. Assign the current **Feature Id** to each voxel in the *Feature Ids* output array
+
+### Face Labels / Part Numbers
+
+The **Face Labels/Part Numbers** input array specifies which **Features** (or parts) border each **Triangle** face. This array accepts any integer data type and supports two formats:
+
+- **2-component arrays**: Each face has two labels identifying the **Features** on either side. When a scanline crosses a face boundary, the algorithm toggles between the two labels. This is the standard format produced by surface meshing filters.
+- **1-component arrays**: Each face has a single part number. When a scanline crosses a face boundary, the voxel is assigned the part number of that face. This format is useful for imported meshes (e.g., STL files) where each face belongs to a single part.
+
+The output *Feature Ids* array will have the same integer data type as the input **Face Labels/Part Numbers** array.
 
 ### Origin, Dimension, and Spacing's Effect on the Output
 
