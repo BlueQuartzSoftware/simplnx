@@ -43,8 +43,10 @@ Result<> EBSDSegmentFeatures::operator()()
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   m_FeatureIdsArray->fill(0); // initialize the output array with zeros
 
-  // Run the segmentation algorithm
-  execute(gridGeom);
+  // Run the CCL-based segmentation algorithm
+  auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
+  executeCCL(gridGeom, featureIdsStore);
+
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
@@ -151,4 +153,56 @@ bool EBSDSegmentFeatures::determineGrouping(int64 referencePoint, int64 neighbor
   }
 
   return group;
+}
+
+// -----------------------------------------------------------------------------
+bool EBSDSegmentFeatures::isValidVoxel(int64 point) const
+{
+  // Check mask
+  if(m_InputValues->UseMask && !m_GoodVoxelsArray->isTrue(point))
+  {
+    return false;
+  }
+  // Check that the voxel has a valid phase (> 0)
+  AbstractDataStore<int32>& cellPhases = m_CellPhases->getDataStoreRef();
+  if(cellPhases[point] <= 0)
+  {
+    return false;
+  }
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+bool EBSDSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
+{
+  // The neighbor must also be valid
+  if(!isValidVoxel(point2))
+  {
+    return false;
+  }
+
+  AbstractDataStore<int32>& cellPhases = m_CellPhases->getDataStoreRef();
+
+  // Must be same phase
+  if(cellPhases[point1] != cellPhases[point2])
+  {
+    return false;
+  }
+
+  // Check crystal structure validity
+  int32 laueClass = (*m_CrystalStructures)[cellPhases[point1]];
+  if(static_cast<usize>(laueClass) >= m_OrientationOps.size())
+  {
+    return false;
+  }
+
+  // Calculate misorientation
+  Float32Array& quats = *m_QuatsArray;
+  const ebsdlib::QuatD q1(quats[point1 * 4], quats[point1 * 4 + 1], quats[point1 * 4 + 2], quats[point1 * 4 + 3]);
+  const ebsdlib::QuatD q2(quats[point2 * 4], quats[point2 * 4 + 1], quats[point2 * 4 + 2], quats[point2 * 4 + 3]);
+
+  ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass]->calculateMisorientation(q1, q2);
+  float w = static_cast<float>(axisAngle[3]);
+
+  return w < m_InputValues->MisorientationTolerance;
 }

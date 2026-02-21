@@ -557,6 +557,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/UnionFind.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp

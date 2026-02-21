@@ -7,9 +7,6 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
-#include <unordered_map>
-#include <unordered_set>
-
 using namespace nx::core;
 
 // =============================================================================
@@ -100,162 +97,6 @@ struct FillBadDataUpdateTuplesFunctor
 } // namespace
 
 // =============================================================================
-// ChunkAwareUnionFind Implementation
-// =============================================================================
-//
-// A Union-Find (Disjoint Set) data structure optimized for tracking connected
-// component equivalences during chunk-sequential processing. Uses union-by-rank
-// for efficient merging and defers path compression to a single flatten() pass
-// to avoid redundant updates during construction.
-//
-// Key features:
-// - Lazily creates entries as labels are encountered
-// - Tracks rank for balanced union operations
-// - Accumulates sizes at each label (not root) during construction
-// - Single-pass path compression and size accumulation in flatten()
-// =============================================================================
-
-// -----------------------------------------------------------------------------
-// Find the root representative of a label's equivalence class
-// -----------------------------------------------------------------------------
-// This performs a simple root lookup without path compression. Path compression
-// is deferred to the flatten() method to avoid wasting cycles updating paths
-// that will be modified again during later merges.
-//
-// @param x The label to find the root for
-// @return The root label of the equivalence class
-int64 ChunkAwareUnionFind::find(int64 x)
-{
-  // Create a parent entry if it doesn't exist (lazy initialization)
-  if(!m_Parent.contains(x))
-  {
-    m_Parent[x] = x;
-    m_Rank[x] = 0;
-    m_Size[x] = 0;
-  }
-
-  // Find root iteratively without using the path compression algorithm
-  // Path compression is deferred to flatten() to avoid wasting cycles
-  // during frequent merges where paths would be updated repeatedly
-  int64 root = x;
-  while(m_Parent[root] != root)
-  {
-    root = m_Parent[root];
-  }
-
-  return root;
-}
-
-// -----------------------------------------------------------------------------
-// Unite two labels into the same equivalence class
-// -----------------------------------------------------------------------------
-// Merges the sets containing labels a and b using union-by-rank heuristic.
-// This keeps the tree balanced for better performance.
-//
-// @param a First label
-// @param b Second label
-void ChunkAwareUnionFind::unite(int64 a, int64 b)
-{
-  int64 rootA = find(a);
-  int64 rootB = find(b);
-
-  // Already in the same set
-  if(rootA == rootB)
-  {
-    return;
-  }
-
-  // Union by rank: attach the smaller tree object under the root of the larger tree
-  // This keeps the tree height logarithmic for better find() performance
-  if(m_Rank[rootA] < m_Rank[rootB])
-  {
-    m_Parent[rootA] = rootB;
-  }
-  else if(m_Rank[rootA] > m_Rank[rootB])
-  {
-    m_Parent[rootB] = rootA;
-  }
-  else
-  {
-    // Equal rank: arbitrarily choose rootA as the parent and increment its rank
-    m_Parent[rootB] = rootA;
-    m_Rank[rootA]++;
-  }
-}
-
-// -----------------------------------------------------------------------------
-// Add voxel count to a label's size
-// -----------------------------------------------------------------------------
-// During construction, sizes are accumulated at each label (not root).
-// This allows concurrent size updates without needing to find roots.
-// All sizes will be accumulated to roots during flatten().
-//
-// @param label The label to add size to
-// @param count Number of voxels to add
-void ChunkAwareUnionFind::addSize(int64 label, uint64 count)
-{
-  // Add size to the label itself, not the root
-  // Sizes will be accumulated to roots during flatten()
-  m_Size[label] += count;
-}
-
-// -----------------------------------------------------------------------------
-// Get the total size of a label's equivalence class
-// -----------------------------------------------------------------------------
-// Returns the accumulated size for a label's root. Should only be called
-// after flatten() has been executed to get accurate totals.
-//
-// @param label The label to query
-// @return Total number of voxels in the equivalence class
-uint64 ChunkAwareUnionFind::getSize(int64 label)
-{
-  int64 root = find(label);
-  auto it = m_Size.find(root);
-  if(it == m_Size.end())
-  {
-    return 0;
-  }
-  return it->second;
-}
-
-// -----------------------------------------------------------------------------
-// Flatten the Union-Find structure with path compression
-// -----------------------------------------------------------------------------
-// Performs a single-pass path compression and size accumulation after all
-// merges are complete. This is more efficient than doing path compression
-// during every find() operation when there are frequent merges.
-//
-// After flatten():
-// - Every label points directly to its root (fully compressed paths)
-// - All sizes are accumulated at root labels
-// - Subsequent find() and getSize() operations are O(1)
-void ChunkAwareUnionFind::flatten()
-{
-  // First pass: flatten all parents with path compression
-  // Make every label point directly to its root for O(1) lookups
-  // This is done in a single pass after all merges to avoid wasting
-  // cycles updating paths repeatedly during construction
-  std::unordered_map<int64, int64> finalRoots;
-  for(auto& [label, parent] : m_Parent)
-  {
-    int64 root = find(label);
-    finalRoots[label] = root;
-  }
-
-  // Second pass: accumulate sizes to roots
-  // Sum up all the sizes from individual labels to their root representatives
-  std::unordered_map<int64, uint64> rootSizes;
-  for(const auto& [label, root] : finalRoots)
-  {
-    rootSizes[root] += m_Size[label];
-  }
-
-  // Replace maps with flattened versions for O(1) access
-  m_Parent = finalRoots;
-  m_Size = rootSizes;
-}
-
-// =============================================================================
 // FillBadData Implementation
 // =============================================================================
 
@@ -281,133 +122,116 @@ const std::atomic_bool& FillBadData::getCancel() const
 // =============================================================================
 //
 // Performs connected component labeling on bad data voxels (FeatureId == 0)
-// using a chunk-sequential scanline algorithm. This approach is optimized for
-// out-of-core datasets where data is stored in chunks on the disk.
+// using a chunk-sequential scanline algorithm optimized for out-of-core data.
 //
-// Algorithm:
-// 1. Process chunks sequentially, loading one chunk at a time
-// 2. For each bad data voxel, check already-processed neighbors (-X, -Y, -Z)
-// 3. If neighbors exist, reuse their label; otherwise assign new label
-// 4. Track label equivalences in Union-Find structure
-// 5. Track size of each connected component
-//
-// The scanline order ensures we only need to check 3 neighbors (previous in
-// X, Y, and Z directions) instead of all 6 face neighbors, because later
-// neighbors haven't been processed yet.
+// Key optimization: backward neighbor lookups read from the in-memory
+// provisionalLabels buffer instead of featureIdsStore, avoiding cross-chunk
+// reads that would cause segfaults or severe chunk thrashing with OOC storage.
 //
 // @param featureIdsStore The feature IDs data store (maybe out-of-core)
 // @param unionFind Union-Find structure for tracking label equivalences
-// @param provisionalLabels Map from voxel index to assigned provisional label
+// @param provisionalLabels Dense buffer (0 = not bad data, >0 = provisional label)
+// @param nextLabel Output: next available label after Phase 1
 // @param dims Image dimensions [X, Y, Z]
 // =============================================================================
-void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64, 3>& dims)
+void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, UnionFind& unionFind, std::vector<int32>& provisionalLabels, int32& nextLabel, const std::array<int64, 3>& dims)
 {
-  // Use negative labels for bad data regions to distinguish from positive feature IDs
-  int64 nextLabel = -1;
+  nextLabel = 1;
 
+  const int64 sliceStride = dims[0] * dims[1];
   const uint64 numChunks = featureIdsStore.getNumberOfChunks();
 
-  // Process each chunk sequentially (load, process, unload)
+  // Process each chunk sequentially
   for(uint64 chunkIdx = 0; chunkIdx < numChunks; chunkIdx++)
   {
-    // Load the current chunk into memory
     featureIdsStore.loadChunk(chunkIdx);
 
-    // Get chunk bounds (INCLUSIVE ranges in [Z, Y, X] order)
+    // Chunk bounds are INCLUSIVE and in [Z, Y, X] order
     const auto chunkLowerBounds = featureIdsStore.getChunkLowerBounds(chunkIdx);
     const auto chunkUpperBounds = featureIdsStore.getChunkUpperBounds(chunkIdx);
 
-    // Process voxels in this chunk using scanline algorithm
-    // Iterate in Z-Y-X order (slowest to fastest) to maintain scanline consistency
-    // Note: chunk bounds are INCLUSIVE and in [Z, Y, X] order (slowest to fastest)
     for(usize z = chunkLowerBounds[0]; z <= chunkUpperBounds[0]; z++)
     {
       for(usize y = chunkLowerBounds[1]; y <= chunkUpperBounds[1]; y++)
       {
         for(usize x = chunkLowerBounds[2]; x <= chunkUpperBounds[2]; x++)
         {
-          // Calculate linear index for current voxel
-          const usize index = z * dims[0] * dims[1] + y * dims[0] + x;
+          const usize index = z * sliceStride + y * dims[0] + x;
 
           // Only process bad data voxels (FeatureId == 0)
-          // Skip valid feature voxels (FeatureId > 0)
           if(featureIdsStore[index] != 0)
           {
             continue;
           }
 
-          // Check already-processed neighbors (scanline order: -Z, -Y, -X)
-          // We only check "backward" neighbors because "forward" neighbors
-          // haven't been processed yet in the scanline order
-          std::vector<int64> neighborLabels;
+          // Check backward neighbors using in-memory buffer (no OOC reads)
+          int32 assignedLabel = 0;
 
           // Check -X neighbor
           if(x > 0)
           {
-            const usize neighborIdx = index - 1;
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
+            int32 neighLabel = provisionalLabels[index - 1];
+            if(neighLabel > 0)
             {
-              neighborLabels.push_back(provisionalLabels[neighborIdx]);
+              if(assignedLabel == 0)
+              {
+                assignedLabel = neighLabel;
+              }
+              else if(assignedLabel != neighLabel)
+              {
+                unionFind.unite(assignedLabel, neighLabel);
+              }
             }
           }
 
           // Check -Y neighbor
           if(y > 0)
           {
-            const usize neighborIdx = index - dims[0];
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
+            int32 neighLabel = provisionalLabels[index - dims[0]];
+            if(neighLabel > 0)
             {
-              neighborLabels.push_back(provisionalLabels[neighborIdx]);
+              if(assignedLabel == 0)
+              {
+                assignedLabel = neighLabel;
+              }
+              else if(assignedLabel != neighLabel)
+              {
+                unionFind.unite(assignedLabel, neighLabel);
+              }
             }
           }
 
           // Check -Z neighbor
           if(z > 0)
           {
-            const usize neighborIdx = index - dims[0] * dims[1];
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
+            int32 neighLabel = provisionalLabels[index - sliceStride];
+            if(neighLabel > 0)
             {
-              neighborLabels.push_back(provisionalLabels[neighborIdx]);
-            }
-          }
-
-          // Assign label based on neighbors
-          int64 assignedLabel;
-          if(neighborLabels.empty())
-          {
-            // No labeled neighbors found - this is a new connected component
-            // Assign a new negative label and initialize in union-find
-            assignedLabel = nextLabel--;
-            unionFind.find(assignedLabel); // Initialize in union-find (creates entry)
-          }
-          else
-          {
-            // One or more labeled neighbors found - join their equivalence class
-            // Use the first neighbor's label as the representative
-            assignedLabel = neighborLabels[0];
-
-            // If multiple neighbors have different labels, unite them
-            // This handles the case where different regions merge at this voxel
-            for(usize i = 1; i < neighborLabels.size(); i++)
-            {
-              if(neighborLabels[i] != assignedLabel)
+              if(assignedLabel == 0)
               {
-                unionFind.unite(assignedLabel, neighborLabels[i]);
+                assignedLabel = neighLabel;
+              }
+              else if(assignedLabel != neighLabel)
+              {
+                unionFind.unite(assignedLabel, neighLabel);
               }
             }
           }
 
-          // Store the assigned label for this voxel
-          provisionalLabels[index] = assignedLabel;
+          // If no matching backward neighbor, assign new label
+          if(assignedLabel == 0)
+          {
+            assignedLabel = nextLabel++;
+            unionFind.find(assignedLabel); // Initialize in union-find
+          }
 
-          // Increment the size count for this label (will be accumulated to root in flatten())
+          provisionalLabels[index] = assignedLabel;
           unionFind.addSize(assignedLabel, 1);
         }
       }
     }
   }
 
-  // Flush to ensure all chunks are written back to storage
   featureIdsStore.flush();
 }
 
@@ -422,13 +246,9 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
 // - Region sizes can be queried in O(1) time
 //
 // @param unionFind Union-Find structure containing label equivalences
-// @param smallRegions Unused in current implementation (kept for interface compatibility)
 // =============================================================================
-void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::unordered_set<int64>& smallRegions)
+void FillBadData::phaseTwoGlobalResolution(UnionFind& unionFind)
 {
-  // Flatten the union-find structure to:
-  // 1. Compress all paths (make every label point directly to root)
-  // 2. Accumulate all sizes to root labels
   unionFind.flatten();
 }
 
@@ -440,57 +260,46 @@ void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::
 // - Small regions (< minAllowedDefectSize): marked with -1 for filling in Phase 4
 // - Large regions (>= minAllowedDefectSize): kept as 0 (or assigned new phase)
 //
-// This phase processes chunks to relabel voxels based on their region classification.
-// Large regions may optionally be assigned to a new phase (if storeAsNewPhase is true).
+// Uses direct vector lookups (indexed by provisional label) instead of hash maps
+// for O(1) classification of each voxel.
 //
 // @param featureIdsStore The feature IDs data store
 // @param cellPhasesPtr Cell phases array (maybe null)
-// @param provisionalLabels Map from voxel index to provisional label (from Phase 1)
-// @param smallRegions Unused in current implementation (kept for interface compatibility)
+// @param provisionalLabels Dense buffer from Phase 1 (0 = not bad data, >0 = label)
+// @param nextLabel Number of provisional labels assigned in Phase 1
 // @param unionFind Union-Find structure with resolved equivalences (from Phase 2)
 // @param maxPhase Maximum existing phase value (for new phase assignment)
 // =============================================================================
-void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
-                                       const std::unordered_set<int64>& smallRegions, ChunkAwareUnionFind& unionFind, usize maxPhase) const
+void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::vector<int32>& provisionalLabels, int32 nextLabel, UnionFind& unionFind,
+                                       usize maxPhase) const
 {
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
   const SizeVec3 udims = selectedImageGeom.getDimensions();
   const uint64 numChunks = featureIdsStore.getNumberOfChunks();
 
-  // Collect all unique root labels and their sizes
-  // After flatten(), all labels point to roots and sizes are accumulated
-  std::unordered_map<int64, uint64> rootSizes;
-  for(const auto& [index, label] : provisionalLabels)
+  // Build classification vector: isSmallRoot[label] indicates if root is small
+  // 0 = unclassified, 1 = small (fill), -1 = large (keep)
+  std::vector<int8> isSmallRoot(static_cast<usize>(nextLabel), 0);
+  for(int32 label = 1; label < nextLabel; label++)
   {
-    int64 root = unionFind.find(label);
-    if(!rootSizes.contains(root))
+    int32 root = static_cast<int32>(unionFind.find(label));
+    if(isSmallRoot[root] == 0)
     {
-      rootSizes[root] = unionFind.getSize(root);
+      uint64 regionSize = unionFind.getSize(root);
+      isSmallRoot[root] = (static_cast<int32>(regionSize) < m_InputValues->minAllowedDefectSizeValue) ? 1 : -1;
     }
-  }
-
-  // Classify regions as small (need filling) or large (keep or assign to a new phase)
-  std::unordered_set<int64> localSmallRegions;
-  for(const auto& [root, size] : rootSizes)
-  {
-    if(static_cast<int32>(size) < m_InputValues->minAllowedDefectSizeValue)
-    {
-      localSmallRegions.insert(root);
-    }
+    // Propagate classification to non-root labels for O(1) lookup
+    isSmallRoot[label] = isSmallRoot[root];
   }
 
   // Process each chunk to relabel voxels based on region classification
   for(uint64 chunkIdx = 0; chunkIdx < numChunks; chunkIdx++)
   {
-    // Load chunk into memory
     featureIdsStore.loadChunk(chunkIdx);
 
-    // Get chunk bounds (INCLUSIVE ranges in [Z, Y, X] order)
     const auto chunkLowerBounds = featureIdsStore.getChunkLowerBounds(chunkIdx);
     const auto chunkUpperBounds = featureIdsStore.getChunkUpperBounds(chunkIdx);
 
-    // Iterate through all voxels in this chunk
-    // Note: chunk bounds are INCLUSIVE and in [Z, Y, X] order (slowest to fastest)
     for(usize z = chunkLowerBounds[0]; z <= chunkUpperBounds[0]; z++)
     {
       for(usize y = chunkLowerBounds[1]; y <= chunkUpperBounds[1]; y++)
@@ -499,14 +308,10 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
         {
           const usize index = z * udims[0] * udims[1] + y * udims[0] + x;
 
-          // Check if this voxel was labeled as bad data in Phase 1
-          auto labelIter = provisionalLabels.find(index);
-          if(labelIter != provisionalLabels.end())
+          int32 provLabel = provisionalLabels[index];
+          if(provLabel > 0)
           {
-            // Find the root label for this voxel's connected component
-            int64 root = unionFind.find(labelIter->second);
-
-            if(localSmallRegions.contains(root))
+            if(isSmallRoot[provLabel] == 1)
             {
               // Small region - mark with -1 for filling in Phase 4
               featureIdsStore[index] = -1;
@@ -516,7 +321,6 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
               // Large region - keep as bad data (0) or assign to a new phase
               featureIdsStore[index] = 0;
 
-              // Optionally assign large bad data regions to a new phase
               if(m_InputValues->storeAsNewPhase && cellPhasesPtr != nullptr)
               {
                 (*cellPhasesPtr)[index] = static_cast<int32>(maxPhase) + 1;
@@ -528,7 +332,6 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
     }
   }
 
-  // Write all chunks back to storage
   featureIdsStore.flush();
 }
 
@@ -739,21 +542,21 @@ Result<> FillBadData::operator()() const
   }
 
   // Initialize data structures for chunk-aware connected component labeling
-  ChunkAwareUnionFind unionFind;                      // Tracks label equivalences and sizes
-  std::unordered_map<usize, int64> provisionalLabels; // Maps voxel index to provisional label
-  std::unordered_set<int64> smallRegions;             // Set of small region roots (unused currently)
+  UnionFind unionFind;
+  std::vector<int32> provisionalLabels(totalPoints, 0); // Dense buffer: 0 = not bad data
+  int32 nextLabel = 1;
 
   // Phase 1: Chunk-Sequential Connected Component Labeling
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 1/4: Labeling connected components..."});
-  phaseOneCCL(featureIdsStore, unionFind, provisionalLabels, dims);
+  phaseOneCCL(featureIdsStore, unionFind, provisionalLabels, nextLabel, dims);
 
   // Phase 2: Global Resolution of equivalences
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 2/4: Resolving region equivalences..."});
-  phaseTwoGlobalResolution(unionFind, smallRegions);
+  phaseTwoGlobalResolution(unionFind);
 
   // Phase 3: Relabeling based on region size classification
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 3/4: Classifying region sizes..."});
-  phaseThreeRelabeling(featureIdsStore, cellPhasesPtr, provisionalLabels, smallRegions, unionFind, maxPhase);
+  phaseThreeRelabeling(featureIdsStore, cellPhasesPtr, provisionalLabels, nextLabel, unionFind, maxPhase);
 
   // Phase 4: Iterative morphological fill
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 4/4: Filling small defects..."});
