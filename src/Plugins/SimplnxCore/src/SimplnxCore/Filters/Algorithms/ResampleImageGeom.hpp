@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <vector>
 
@@ -42,11 +43,18 @@ public:
 
   const std::atomic_bool& getCancel();
 
+  void sendThreadSafeProgressMessage(const std::string& message);
+
 private:
   DataStructure& m_DataStructure;
   const ResampleImageGeomInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  // Thread safe Progress Message
+  mutable std::mutex m_ProgressMessage_Mutex;
+
+  ThrottledMessenger* m_ThrottledMessengerPtr = nullptr;
 };
 
 } // namespace nx::core
