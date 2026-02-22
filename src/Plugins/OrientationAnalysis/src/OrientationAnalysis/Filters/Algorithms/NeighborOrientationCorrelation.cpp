@@ -19,12 +19,25 @@
 
 using namespace nx::core;
 
+/**
+ * @class NeighborOrientationCorrelationTransferDataImpl
+ * @brief Functor that copies tuple data from best-neighbor voxels into low-confidence voxels
+ * for a single DataArray. Designed to be executed in parallel across multiple DataArrays
+ * via ParallelTaskAlgorithm.
+ */
 class NeighborOrientationCorrelationTransferDataImpl
 {
 public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
+  /**
+   * @brief Constructs the transfer functor for a single DataArray.
+   * @param messageHelper Reference to the MessageHelper for progress reporting
+   * @param totalPoints Total number of voxels in the volume
+   * @param bestNeighbor Vector mapping each voxel index to its best neighbor's index (-1 if none)
+   * @param dataArrayPtr Shared pointer to the DataArray whose tuples will be copied
+   */
   NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
   : m_MessageHelper(messageHelper)
   , m_TotalPoints(totalPoints)
@@ -38,6 +51,9 @@ public:
 
   ~NeighborOrientationCorrelationTransferDataImpl() = default;
 
+  /**
+   * @brief Iterates all voxels and copies tuple data from the best neighbor where applicable.
+   */
   void operator()() const
   {
     ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
@@ -74,17 +90,37 @@ NeighborOrientationCorrelation::NeighborOrientationCorrelation(DataStructure& da
 NeighborOrientationCorrelation::~NeighborOrientationCorrelation() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Executes the neighbor orientation correlation cleanup algorithm.
+ *
+ * The algorithm proceeds through cleanup levels from 6 down to Level (inclusive),
+ * decrementing by 2 each iteration (due to the additional decrement at the end of
+ * the loop body). At each level, the algorithm:
+ *
+ * 1. **Z-slice buffering**: Maintains a rolling window of 3 Z-slices for quaternion
+ *    and phase data, plus 1 slice for confidence index. This avoids random chunk
+ *    access in out-of-core mode where arrays may be stored as compressed Zarr chunks.
+ *
+ * 2. **Neighbor correlation**: For each low-confidence voxel, examines its 6 face
+ *    neighbors. Valid neighbor pairs with the same nonzero phase are compared via
+ *    misorientation. Neighbors within the angular tolerance accumulate similarity
+ *    counts. The last face neighbor with a positive similarity count is selected
+ *    as the best replacement source.
+ *
+ * 3. **Data transfer**: All cell DataArrays (except ignored ones) are updated in
+ *    parallel, copying tuple data from each voxel's best neighbor.
+ *
+ * @return Result<> Empty result on success, or containing errors if any occurred
+ */
 Result<> NeighborOrientationCorrelation::operator()()
 {
-  size_t progress = 0;
-  size_t totalProgress = 0;
-
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  const auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ConfidenceIndexArrayPath);
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
+  auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ConfidenceIndexArrayPath);
+  auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+
   size_t totalPoints = confidenceIndex.getNumberOfTuples();
 
   float misorientationToleranceR = m_InputValues->MisorientationTolerance * numbers::pi_v<float> / 180.0f;
@@ -98,106 +134,190 @@ Result<> NeighborOrientationCorrelation::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  int32 best = 0;
-  int64 neighborPoint2 = 0;
-
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  std::vector<int32> neighborDiffCount(totalPoints, 0);
-  std::vector<int32> neighborSimCount(6, 0);
+  std::array<int32, 6> neighborSimCount = {};
   std::vector<int64> bestNeighbor(totalPoints, -1);
   const int32 startLevel = 6;
 
   MessageHelper messageHelper(m_MessageHandler);
-
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+
+  // Z-slice buffering: read 3 adjacent Z-slices of the most-accessed arrays
+  // into local memory to eliminate OOC chunk thrashing. The algorithm accesses
+  // each voxel's 6 face neighbors, requiring data from z-1, z, and z+1 slices.
+  // By buffering these slices, all neighbor lookups become local memory reads.
+  const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
+
+  // Rolling window: slot 0 = z-1, slot 1 = z (current), slot 2 = z+1
+  std::array<std::vector<float32>, 3> quatSlices;
+  std::array<std::vector<int32>, 3> phaseSlices;
+  std::vector<float32> ciSlice(sliceSize);
+
+  for(auto& qs : quatSlices)
+  {
+    qs.resize(sliceSize * 4);
+  }
+  for(auto& ps : phaseSlices)
+  {
+    ps.resize(sliceSize);
+  }
+
+  // Read a Z-slice of quats into a buffer slot (sequential access for OOC)
+  auto readQuatSlice = [&](int64 z, usize slot) {
+    for(int64 y = 0; y < dims[1]; y++)
+    {
+      for(int64 x = 0; x < dims[0]; x++)
+      {
+        usize inSlice = static_cast<usize>(y * dims[0] + x);
+        int64 vi = x + y * dims[0] + z * static_cast<int64>(sliceSize);
+        quatSlices[slot][inSlice * 4] = quats[vi * 4];
+        quatSlices[slot][inSlice * 4 + 1] = quats[vi * 4 + 1];
+        quatSlices[slot][inSlice * 4 + 2] = quats[vi * 4 + 2];
+        quatSlices[slot][inSlice * 4 + 3] = quats[vi * 4 + 3];
+      }
+    }
+  };
+
+  auto readPhaseSlice = [&](int64 z, usize slot) {
+    for(int64 y = 0; y < dims[1]; y++)
+    {
+      for(int64 x = 0; x < dims[0]; x++)
+      {
+        usize inSlice = static_cast<usize>(y * dims[0] + x);
+        int64 vi = x + y * dims[0] + z * static_cast<int64>(sliceSize);
+        phaseSlices[slot][inSlice] = cellPhases[vi];
+      }
+    }
+  };
+
+  auto readCISlice = [&](int64 z) {
+    for(int64 y = 0; y < dims[1]; y++)
+    {
+      for(int64 x = 0; x < dims[0]; x++)
+      {
+        usize inSlice = static_cast<usize>(y * dims[0] + x);
+        int64 vi = x + y * dims[0] + z * static_cast<int64>(sliceSize);
+        ciSlice[inSlice] = confidenceIndex[vi];
+      }
+    }
+  };
 
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
-    for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
-    {
-      throttledMessenger.sendThrottledMessage([&]() {
-        return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
-                           CalculatePercentComplete(voxelIndex, totalPoints));
-      });
+    usize processedVoxels = 0;
 
-      if(m_ShouldCancel)
+    // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
+    readQuatSlice(0, 1);
+    readPhaseSlice(0, 1);
+    if(dims[2] > 1)
+    {
+      readQuatSlice(1, 2);
+      readPhaseSlice(1, 2);
+    }
+
+    for(int64 zIdx = 0; zIdx < dims[2] && !m_ShouldCancel; zIdx++)
+    {
+      // Advance rolling window for z > 0
+      if(zIdx > 0)
       {
-        break;
+        std::swap(quatSlices[0], quatSlices[1]);
+        std::swap(quatSlices[1], quatSlices[2]);
+        std::swap(phaseSlices[0], phaseSlices[1]);
+        std::swap(phaseSlices[1], phaseSlices[2]);
+        if(zIdx + 1 < dims[2])
+        {
+          readQuatSlice(zIdx + 1, 2);
+          readPhaseSlice(zIdx + 1, 2);
+        }
       }
 
-      if(confidenceIndex[voxelIndex] < m_InputValues->MinConfidence)
+      readCISlice(zIdx);
+
+      for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        int64 xIdx = voxelIndex % dims[0];
-        int64 yIdx = (voxelIndex / dims[0]) % dims[1];
-        int64 zIdx = voxelIndex / (dims[0] * dims[1]);
-        // Loop over the 6 face neighbors of the voxel
-        std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-        for(const auto& faceIndexJ : faceNeighborInternalIdx)
+        for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          if(!isValidFaceNeighbor[faceIndexJ])
-          {
-            continue;
-          }
-          const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndexJ];
+          int64 voxelIndex = xIdx + yIdx * dims[0] + zIdx * static_cast<int64>(sliceSize);
+          usize inSlice = static_cast<usize>(yIdx * dims[0] + xIdx);
 
-          uint32 laueClass = crystalStructures[cellPhases[voxelIndex]];
-          ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);
-          ebsdlib::QuatD quat2(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
-          ebsdlib::AxisAngleDType axisAngle(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
-          if(cellPhases[voxelIndex] == cellPhases[neighborPoint] && cellPhases[voxelIndex] > 0)
-          {
-            axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
-          }
-          if(axisAngle[3] > misorientationToleranceR)
-          {
-            neighborDiffCount[voxelIndex]++;
-          }
+          throttledMessenger.sendThrottledMessage([&]() {
+            return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
+                               CalculatePercentComplete(processedVoxels, totalPoints));
+          });
 
-          isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-          for(size_t faceIndexK = faceIndexJ + 1; faceIndexK < k_FaceNeighborCount; faceIndexK++)
+          if(ciSlice[inSlice] < m_InputValues->MinConfidence)
           {
-            if(!isValidFaceNeighbor[faceIndexK])
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+
+            // Pre-read all valid neighbor quats and phases into local arrays.
+            // Neighbor buffer slots: 0=-Z, 1=-Y(same z), 2=-X(same z), 3=+X(same z), 4=+Y(same z), 5=+Z
+            // slot mapping: -Z→0, same-z→1, +Z→2
+            constexpr std::array<usize, 6> neighborSlot = {0, 1, 1, 1, 1, 2};
+            const std::array<int64, 6> neighborBufX = {xIdx, xIdx, xIdx - 1, xIdx + 1, xIdx, xIdx};
+            const std::array<int64, 6> neighborBufY = {yIdx, yIdx - 1, yIdx, yIdx, yIdx + 1, yIdx};
+
+            std::array<ebsdlib::QuatD, 6> nQuats;
+            std::array<int32, 6> nPhases = {};
+
+            for(usize f = 0; f < k_FaceNeighborCount; f++)
             {
-              continue;
+              if(isValidFaceNeighbor[f])
+              {
+                usize nIdx = static_cast<usize>(neighborBufY[f] * dims[0] + neighborBufX[f]);
+                usize nIdx4 = nIdx * 4;
+                nPhases[f] = phaseSlices[neighborSlot[f]][nIdx];
+                nQuats[f] = ebsdlib::QuatD(quatSlices[neighborSlot[f]][nIdx4], quatSlices[neighborSlot[f]][nIdx4 + 1], quatSlices[neighborSlot[f]][nIdx4 + 2], quatSlices[neighborSlot[f]][nIdx4 + 3]);
+              }
             }
-            neighborPoint2 = voxelIndex + neighborVoxelIndexOffsets[faceIndexK];
 
-            laueClass = crystalStructures[cellPhases[neighborPoint2]];
-            quat1 = ebsdlib::QuatD(quats[neighborPoint2 * 4], quats[neighborPoint2 * 4 + 1], quats[neighborPoint2 * 4 + 2], quats[neighborPoint2 * 4 + 3]);
-            quat2 = ebsdlib::QuatD(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
-            axisAngle = ebsdlib::AxisAngleDType(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
-            if(cellPhases[neighborPoint2] == cellPhases[neighborPoint] && cellPhases[neighborPoint2] > 0)
+            // Compute neighbor-neighbor similarity counts
+            neighborSimCount.fill(0);
+
+            for(usize faceIndexJ = 0; faceIndexJ < k_FaceNeighborCount; faceIndexJ++)
             {
-              axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
+              if(!isValidFaceNeighbor[faceIndexJ])
+              {
+                continue;
+              }
+
+              for(usize faceIndexK = faceIndexJ + 1; faceIndexK < k_FaceNeighborCount; faceIndexK++)
+              {
+                if(!isValidFaceNeighbor[faceIndexK])
+                {
+                  continue;
+                }
+
+                if(nPhases[faceIndexK] == nPhases[faceIndexJ] && nPhases[faceIndexK] > 0)
+                {
+                  uint32 laueClass = crystalStructures[nPhases[faceIndexK]];
+                  ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass]->calculateMisorientation(nQuats[faceIndexK], nQuats[faceIndexJ]);
+                  if(axisAngle[3] < misorientationToleranceR)
+                  {
+                    neighborSimCount[faceIndexJ]++;
+                    neighborSimCount[faceIndexK]++;
+                  }
+                }
+              }
             }
-            if(axisAngle[3] < misorientationToleranceR)
+
+            // Find the best neighbor (last valid face with highest similarity count)
+            for(usize faceIndex = 0; faceIndex < k_FaceNeighborCount; faceIndex++)
             {
-              neighborSimCount[faceIndexJ]++;
-              neighborSimCount[faceIndexK]++;
+              if(!isValidFaceNeighbor[faceIndex])
+              {
+                continue;
+              }
+
+              if(neighborSimCount[faceIndex] > 0)
+              {
+                bestNeighbor[voxelIndex] = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+              }
             }
           }
-        }
 
-        // Loop over the 6 face neighbors of the voxel
-        isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-        for(const auto& faceIndex : faceNeighborInternalIdx)
-        {
-          if(!isValidFaceNeighbor[faceIndex])
-          {
-            continue;
-          }
-          best = 0;
-
-          const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-
-          if(neighborSimCount[faceIndex] > best)
-          {
-            best = neighborSimCount[faceIndex];
-            bestNeighbor[voxelIndex] = neighborPoint;
-          }
-          neighborSimCount[faceIndex] = 0;
+          processedVoxels++;
         }
       }
     }

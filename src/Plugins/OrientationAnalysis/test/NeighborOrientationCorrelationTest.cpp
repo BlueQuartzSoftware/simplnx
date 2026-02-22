@@ -38,6 +38,8 @@ using namespace nx::core::UnitTest;
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN100 Pipeline", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
   UnitTest::LoadPlugins();
+  // 1 Z-slice of quats (largest array): 189*201*4*4 = 607824 bytes
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 600000, true);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "neighbor_orientation_correlation.tar.gz", "neighbor_orientation_correlation.dream3d");
 
