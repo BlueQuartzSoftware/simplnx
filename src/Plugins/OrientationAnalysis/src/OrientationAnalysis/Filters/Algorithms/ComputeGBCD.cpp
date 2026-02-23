@@ -3,7 +3,6 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/TimeUtilities.hpp"

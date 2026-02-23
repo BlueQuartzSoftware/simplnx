@@ -236,12 +236,6 @@ endforeach()
 # Extra Sources
 # ------------------------------------------------------------------------------
 
-source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math" PREFIX ${PLUGIN_NAME}
-             FILES "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X3.hpp"
-                    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Math/Matrix3X1.hpp"
-             )
-
-
 set(PLUGIN_EXTRA_SOURCES
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/inicpp.h"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/PhaseType.hpp"
@@ -260,7 +254,9 @@ set(PLUGIN_EXTRA_SOURCES
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities/EbsdReaderUtilities.hpp"
 )
 target_sources(${PLUGIN_NAME} PRIVATE ${PLUGIN_EXTRA_SOURCES})
-source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities" PREFIX ${PLUGIN_NAME} FILES ${PLUGIN_EXTRA_SOURCES})
+source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utilities" 
+              PREFIX ${PLUGIN_NAME} 
+              FILES ${PLUGIN_EXTRA_SOURCES})
 
 
 # ------------------------------------------------------------------------------

@@ -3,7 +3,6 @@
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 

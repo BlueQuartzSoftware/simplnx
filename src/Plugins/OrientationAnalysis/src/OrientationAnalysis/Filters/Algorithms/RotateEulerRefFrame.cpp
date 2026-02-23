@@ -2,9 +2,9 @@
 
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -25,7 +25,7 @@ class RotateEulerRefFrameImpl
 {
 
 public:
-  RotateEulerRefFrameImpl(Float32Array& data, std::vector<float>& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+  RotateEulerRefFrameImpl(Float32Array& data, const FloatVec3& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
   : m_CellEulerAngles(data)
   , m_AxisAngle(rotAxis)
   , m_Angle(angle)
@@ -77,7 +77,7 @@ public:
 
 private:
   Float32Array& m_CellEulerAngles;
-  std::vector<float> m_AxisAngle;
+  FloatVec3 m_AxisAngle;
   float m_Angle = 0.0F;
   const std::atomic_bool& m_ShouldCancel;
   ProgressMessageHelper& m_ProgressMessageHelper;
@@ -108,8 +108,8 @@ Result<> RotateEulerRefFrame::operator()()
 
   size_t totalElements = eulerAngles.getNumberOfTuples();
 
-  std::vector<float> axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
-  MatrixMath::Normalize3x1(axis.data());
+  nx::core::FloatVec3 axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
+  axis = axis.normalize();
 
   MessageHelper messageHelper(m_MessageHandler);
   ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();

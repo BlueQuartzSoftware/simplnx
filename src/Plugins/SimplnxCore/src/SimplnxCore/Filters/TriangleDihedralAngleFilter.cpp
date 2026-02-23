@@ -9,7 +9,6 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -40,9 +39,9 @@ public:
   void generate(size_t start, size_t end) const
   {
     // std::array<float64, 3> vectorEx = {x, y, z};  // coordinate example
-    std::array<float64, 3> vecAB = {0.0f, 0.0f, 0.0f};
-    std::array<float64, 3> vecAC = {0.0f, 0.0f, 0.0f};
-    std::array<float64, 3> vecBC = {0.0f, 0.0f, 0.0f};
+    nx::core::Vec3<float64> vecAB = {0.0f, 0.0f, 0.0f};
+    nx::core::Vec3<float64> vecAC = {0.0f, 0.0f, 0.0f};
+    nx::core::Vec3<float64> vecBC = {0.0f, 0.0f, 0.0f};
 
     for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
@@ -60,9 +59,9 @@ public:
         vecBC[i] = vertCoords[1][i] - vertCoords[2][i];
       }
 
-      float64 magAB = MatrixMath::Magnitude3x1(vecAB.data());
-      float64 magAC = MatrixMath::Magnitude3x1(vecAC.data());
-      float64 magBC = MatrixMath::Magnitude3x1(vecBC.data());
+      float64 magAB = vecAB.magnitude();
+      float64 magAC = vecAC.magnitude();
+      float64 magBC = vecBC.magnitude();
 
       if(magAB == 0.0f || magAC == 0.0f || magBC == 0.0f)
       {
@@ -71,11 +70,11 @@ public:
       else
       {
         std::vector<float64> dihedralAnglesVec;
-        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(MatrixMath::DotProduct3x1(vecAB.data(), vecAC.data())) / (magAB * magAC))));
+        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecAB.dot(vecAC)) / (magAB * magAC))));
 
         // 180 - angle because AB points out of vertex and BC points into vertex, so angle is actually angle outside of triangle
-        dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((std::fabs(MatrixMath::DotProduct3x1(vecAB.data(), vecBC.data())) / (magAB * magBC)))));
-        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(MatrixMath::DotProduct3x1(vecBC.data(), vecAC.data())) / (magBC * magAC))));
+        dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((std::fabs(vecAB.dot(vecBC)) / (magAB * magBC)))));
+        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecBC.dot(vecAC)) / (magBC * magAC))));
 
         m_DihedralAngles[triangleIndex] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
       }

@@ -2,10 +2,10 @@
 
 // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast, cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -114,8 +114,8 @@ Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGe
   triCount = 0; // Reset this to Zero. Increment for every triangle written
 
   size_t totalWritten = 0;
-  std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
-  std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
+  FloatVec3 vecA = {0.0f, 0.0f, 0.0f};
+  FloatVec3 vecB = {0.0f, 0.0f, 0.0f};
 
   std::array<char, 50> data = {};
   nonstd::span<float32> normalPtr(reinterpret_cast<float32*>(data.data()), 3);
@@ -162,8 +162,10 @@ Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGe
     vecB[1] = vert3Ptr[1] - vert1Ptr[1];
     vecB[2] = vert3Ptr[2] - vert1Ptr[2];
 
-    MatrixMath::CrossProduct(vecA.data(), vecB.data(), normalPtr.data());
-    MatrixMath::Normalize3x1(normalPtr.data());
+    auto temp = vecA.cross(vecB).normalize();
+    normalPtr[0] = temp[0];
+    normalPtr[1] = temp[1];
+    normalPtr[2] = temp[2];
 
     totalWritten = fwrite(data.data(), 1, 50, filePtr);
     if(totalWritten != 50)
@@ -284,8 +286,8 @@ public:
     triCount = 0; // Reset this to Zero. Increment for every triangle written
 
     size_t totalWritten = 0;
-    std::array<float, 3> vecA = {0.0f, 0.0f, 0.0f};
-    std::array<float, 3> vecB = {0.0f, 0.0f, 0.0f};
+    FloatVec3 vecA = {0.0f, 0.0f, 0.0f};
+    FloatVec3 vecB = {0.0f, 0.0f, 0.0f};
 
     std::array<char, 50> data = {};
     nonstd::span<float32> normalPtr(reinterpret_cast<float32*>(data.data()), 3);
@@ -371,8 +373,10 @@ public:
       vecB[1] = vert3Ptr[1] - vert1Ptr[1];
       vecB[2] = vert3Ptr[2] - vert1Ptr[2];
 
-      MatrixMath::CrossProduct(vecA.data(), vecB.data(), normalPtr.data());
-      MatrixMath::Normalize3x1(normalPtr.data());
+      auto temp = vecA.cross(vecB).normalize();
+      normalPtr[0] = temp[0];
+      normalPtr[1] = temp[1];
+      normalPtr[2] = temp[2];
 
       totalWritten = fwrite(data.data(), 1, 50, filePtr);
       if(totalWritten != 50)

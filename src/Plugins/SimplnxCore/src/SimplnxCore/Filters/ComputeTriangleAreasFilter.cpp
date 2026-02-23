@@ -8,7 +8,6 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -37,7 +36,7 @@ public:
 
   void convert(size_t start, size_t end) const
   {
-    std::array<float, 3> cross = {0.0f, 0.0f, 0.0f};
+    Point3Df cross = {0.0f, 0.0f, 0.0f};
     for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
     {
       if(m_ShouldCancel)
@@ -47,12 +46,12 @@ public:
       std::array<Point3Df, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
-      auto vecA = (vertCoords[0] - vertCoords[1]).toArray();
-      auto vecB = (vertCoords[0] - vertCoords[2]).toArray();
+      Point3Df vecA = (vertCoords[0] - vertCoords[1]).toArray();
+      Point3Df vecB = (vertCoords[0] - vertCoords[2]).toArray();
 
-      MatrixMath::CrossProduct(vecA.data(), vecB.data(), cross.data());
+      cross = vecA.cross(vecB);
 
-      m_Areas[triangleIndex] = 0.5F * MatrixMath::Magnitude3x1(cross.data());
+      m_Areas[triangleIndex] = 0.5F * cross.magnitude();
     }
   }
 

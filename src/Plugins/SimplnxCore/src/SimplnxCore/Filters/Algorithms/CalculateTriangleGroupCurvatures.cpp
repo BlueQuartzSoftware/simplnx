@@ -35,7 +35,7 @@
 
 #include "CalculateTriangleGroupCurvatures.hpp"
 
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
+#include "simplnx/Common/Matrix3X3.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/FindNRingNeighbors.hpp"
@@ -256,40 +256,40 @@ void CalculateTriangleGroupCurvatures::operator()() const
     double sub[3] = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
     subtractVector3d(*patchCentroids, sub);
 
-    double np[3] = {patchNormals->getComponentValue(0, 0), patchNormals->getComponentValue(0, 1), patchNormals->getComponentValue(0, 2)};
+    nx::core::Matrix3X1d np = {patchNormals->getComponentValue(0, 0), patchNormals->getComponentValue(0, 1), patchNormals->getComponentValue(0, 2)};
 
-    double seedCentroid[3] = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
-    double firstCentroid[3] = {patchCentroids->getComponentValue(1, 0), patchCentroids->getComponentValue(1, 1), patchCentroids->getComponentValue(1, 2)};
+    nx::core::Matrix3X1d seedCentroid = {patchCentroids->getComponentValue(0, 0), patchCentroids->getComponentValue(0, 1), patchCentroids->getComponentValue(0, 2)};
+    nx::core::Matrix3X1d firstCentroid = {patchCentroids->getComponentValue(1, 0), patchCentroids->getComponentValue(1, 1), patchCentroids->getComponentValue(1, 2)};
 
-    double temp[3] = {firstCentroid[0] - seedCentroid[0], firstCentroid[1] - seedCentroid[1], firstCentroid[2] - seedCentroid[2]};
-    double vp[3] = {0.0, 0.0, 0.0};
+    nx::core::Matrix3X1d temp = {firstCentroid[0] - seedCentroid[0], firstCentroid[1] - seedCentroid[1], firstCentroid[2] - seedCentroid[2]};
+    nx::core::Matrix3X1d vp = {0.0, 0.0, 0.0};
 
     // Cross Product of np and temp
-    MatrixMath::Normalize3x1(np);
-    MatrixMath::CrossProduct(np, temp, vp);
-    MatrixMath::Normalize3x1(vp);
+    np = np.normalize();
+    vp = np.cross(temp).normalize();
 
     // get the third orthogonal vector
-    double up[3] = {0.0, 0.0, 0.0};
-    MatrixMath::CrossProduct(vp, np, up);
+    Matrix3X1d up = vp.cross(np).normalize();
 
     // this constitutes a rotation matrix to a local coordinate system
-    double rot[3][3] = {{up[0], up[1], up[2]}, {vp[0], vp[1], vp[2]}, {np[0], np[1], np[2]}};
-    double out[3] = {0.0, 0.0, 0.0};
+    nx::core::Matrix3X3D rot = {up[0], up[1], up[2], vp[0], vp[1], vp[2], np[0], np[1], np[2]};
+    double outPtr[3] = {0.0, 0.0, 0.0};
     // Transform all centroids and normals to a new coordinate system
     for(size_t m = 0; m < patchCentroids->getNumberOfTuples(); ++m)
     {
-      ::memcpy(out, &patchCentroids->data()[m * 3], 3 * sizeof(double));
-      MatrixMath::Multiply3x3with3x1(rot, &patchCentroids->data()[m * 3], out);
+      nx::core::Matrix3X1d patchCentroid = {patchCentroids->getComponentValue(m, 0), patchCentroids->getComponentValue(m, 1), patchCentroids->getComponentValue(m, 2)};
+      auto out = rot * patchCentroid;
+
       if(std::isnan(out[0]) || std::isnan(out[1]) || std::isnan(out[2]))
       {
         break;
       }
-      ::memcpy(&patchCentroids->data()[m * 3], out, 3 * sizeof(double));
+      // Copy the result back into `patchCentroids`
+      patchCentroids->setTuple(m, out.data());
 
-      ::memcpy(out, &patchNormals->data()[m * 3], 3 * sizeof(double));
-      MatrixMath::Multiply3x3with3x1(rot, &patchNormals->data()[m * 3], out);
-      ::memcpy(&patchNormals->data()[m * 3], out, 3 * sizeof(double));
+      nx::core::Matrix3X1d patchNormal = {patchNormals->getComponentValue(m, 0), patchNormals->getComponentValue(m, 1), patchNormals->getComponentValue(m, 2)};
+      out = rot * patchNormal;
+      patchNormals->setTuple(m, out.data());
 
       // We rotate the normals now, but we don't use them yet. If we start using part 3 of Goldfeather's paper, then we
       // will need the normals.

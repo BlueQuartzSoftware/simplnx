@@ -5,6 +5,7 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <ostream>
 #include <tuple>
 #include <vector>
 
@@ -791,6 +792,12 @@ public:
     return std::sqrt(dot(*this));
   }
 
+  Vec3 normalize() const
+  {
+    T mag = magnitude();
+    return Vec3((*this)[0] / mag, (*this)[1] / mag, (*this)[2] / mag);
+  }
+
   /**
    * @brief Multiples this Vec3 with another Vec3 using element wise multiplication and returns a new instance
    * @param Vec3
@@ -885,6 +892,82 @@ public:
     (*this)[1] *= r;
     (*this)[2] *= r;
     return *this;
+  }
+
+  /**
+   * @brief Adds a scalar value to each element and returns a new instance
+   * @param scalar
+   * @return new Vec3 instance with the result
+   */
+  inline Vec3 operator+(T scalar) const
+  {
+    return Vec3((*this)[0] + scalar, (*this)[1] + scalar, (*this)[2] + scalar);
+  }
+
+  /**
+   * @brief Returns the dot product of this vector with itself (sum of squares)
+   * @return T
+   */
+  inline T dot() const
+  {
+    return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1] + (*this)[2] * (*this)[2];
+  }
+
+  /**
+   * @brief Returns a Vec3 containing the absolute value of each element
+   * @return Vec3<T>
+   */
+  inline Vec3 abs() const
+  {
+    return Vec3(std::abs((*this)[0]), std::abs((*this)[1]), std::abs((*this)[2]));
+  }
+
+  /**
+   * @brief Returns the cosine of the angle between this vector and another
+   * @param b The other vector
+   * @return T The cosine of the angle between the two vectors
+   */
+  T cosTheta(const Vec3<T>& b) const
+  {
+    T norm1 = this->magnitude();
+    T norm2 = b.magnitude();
+    if(norm1 == 0 || norm2 == 0)
+    {
+      return 1.0;
+    }
+    return this->dot(b) / (norm1 * norm2);
+  }
+
+  /**
+   * @brief Returns index of the element with maximum absolute value
+   * @return size_t
+   */
+  size_t maxValueIndex() const
+  {
+    T a = std::abs((*this)[0]);
+    T b = std::abs((*this)[1]);
+    T c = std::abs((*this)[2]);
+    if(a >= b && a >= c)
+    {
+      return 0;
+    }
+    if(b >= a && b >= c)
+    {
+      return 1;
+    }
+    return 2;
+  }
+
+  /**
+   * @brief Copies the values into the pointer, casting to type K
+   * @param ptr The pointer to the destination
+   */
+  template <typename K>
+  void copyInto(K* ptr) const
+  {
+    ptr[0] = static_cast<K>((*this)[0]);
+    ptr[1] = static_cast<K>((*this)[1]);
+    ptr[2] = static_cast<K>((*this)[2]);
   }
 };
 
@@ -1432,6 +1515,7 @@ public:
 };
 
 using FloatVec3 = Vec3<float32>;
+using Float64Vec3 = Vec3<float64>;
 using IntVec3 = Vec3<int32>;
 using UIntVec3 = Vec3<uint32>;
 using SizeVec3 = Vec3<usize>;
@@ -1461,4 +1545,28 @@ using Point2D = Vec2<T>;
 
 using Point2Df = Vec2<float32>;
 using Point2Dd = Vec2<float64>;
+
+// type aliasing from Vec3<T> to Matrix3x1 so that existing code keeps working
+template <typename T>
+using Matrix3X1 = Vec3<T>;
+
+using Matrix3X1f = Vec3<float32>;
+using Matrix3X1d = Vec3<float64>;
+
+// Free operator* functions for scalar * Vec3 with mixed types
+template <typename T1, typename T2>
+auto operator*(const T1& scalar, const Vec3<T2>& v) -> Vec3<typename std::common_type<T1, T2>::type>
+{
+  using ResultType = typename std::common_type<T1, T2>::type;
+  return Vec3<ResultType>(static_cast<ResultType>(v[0]) * static_cast<ResultType>(scalar), static_cast<ResultType>(v[1]) * static_cast<ResultType>(scalar),
+                          static_cast<ResultType>(v[2]) * static_cast<ResultType>(scalar));
+}
+
+template <typename T>
+inline std::ostream& operator<<(std::ostream& os, const Vec3<T>& obj)
+{
+  os << "<" << obj[0] << ", " << obj[1] << ", " << obj[2] << ">";
+  return os;
+}
+
 } // namespace nx::core

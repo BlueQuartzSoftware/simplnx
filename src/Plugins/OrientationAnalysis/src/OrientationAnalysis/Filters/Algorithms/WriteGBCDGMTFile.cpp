@@ -1,17 +1,14 @@
 #include "WriteGBCDGMTFile.hpp"
 
-// #include "OrientationAnalysis/Math/Matrix3X1.hpp"
-// #include "OrientationAnalysis/Math/Matrix3X3.hpp"
-
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -137,8 +134,8 @@ Result<> WriteGBCDGMTFile::operator()()
 
   {
     const float32 misAngle = m_InputValues->MisorientationRotation[0] * nx::core::Constants::k_PiOver180F;
-    std::array<float32, 3> normAxis = {m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]};
-    MatrixMath::Normalize3x1(normAxis.data());
+    nx::core::FloatVec3 normAxis = {m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3]};
+    normAxis = normAxis.normalize();
     // convert axis angle to matrix representation of misorientation
     auto out = ebsdlib::AxisAngleDType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix();
     dg = Matrix3X3Type(out.data());

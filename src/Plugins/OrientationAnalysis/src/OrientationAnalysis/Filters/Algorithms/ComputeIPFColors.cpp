@@ -1,17 +1,15 @@
 #include "ComputeIPFColors.hpp"
 
+#include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 
 using namespace nx::core;
-
-using FloatVec3Type = std::vector<float>;
 
 namespace
 {
@@ -23,8 +21,8 @@ namespace
 class ComputeIPFColorsImpl
 {
 public:
-  ComputeIPFColorsImpl(ComputeIPFColors* filter, FloatVec3Type referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures, int32_t numPhases,
-                       const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors)
+  ComputeIPFColorsImpl(ComputeIPFColors* filter, nx::core::FloatVec3 referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures,
+                       int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors)
   : m_Filter(filter)
   , m_ReferenceDir(referenceDir)
   , m_CellEulerAngles(eulers.getDataStoreRef())
@@ -118,7 +116,7 @@ public:
 
 private:
   ComputeIPFColors* m_Filter = nullptr;
-  FloatVec3Type m_ReferenceDir;
+  nx::core::FloatVec3 m_ReferenceDir;
   nx::core::Float32AbstractDataStore& m_CellEulerAngles;
   nx::core::Int32AbstractDataStore& m_CellPhases;
   nx::core::UInt32AbstractDataStore& m_CrystalStructures;
@@ -159,9 +157,8 @@ Result<> ComputeIPFColors::operator()()
   int32_t numPhases = static_cast<int32_t>(crystalStructures.getNumberOfTuples());
 
   // Make sure we are dealing with a unit 1 vector.
-  FloatVec3Type normRefDir = m_InputValues->referenceDirection; // Make a copy of the reference Direction
-
-  MatrixMath::Normalize3x1(normRefDir[0], normRefDir[1], normRefDir[2]);
+  nx::core::FloatVec3 normRefDir = m_InputValues->referenceDirection; // Make a copy of the reference Direction
+  normRefDir = normRefDir.normalize();
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&eulers);
