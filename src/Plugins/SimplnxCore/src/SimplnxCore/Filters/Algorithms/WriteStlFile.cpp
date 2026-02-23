@@ -171,7 +171,7 @@ Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGe
     if(totalWritten != 50)
     {
       fclose(filePtr);
-      filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(
+      filter->sendThreadSafeErrorResult({MakeWarningVoidResult(
           -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", path.filename().string(), triCount, totalWritten))});
       break;
     }
@@ -253,7 +253,7 @@ public:
     if(filePtr == nullptr)
     {
       fclose(filePtr);
-      m_Filter->sendThreadSafeProgressMessage(
+      m_Filter->sendThreadSafeErrorResult(
           {MakeWarningVoidResult(-27876, fmt::format("Error Opening STL File. Unable to create temp file at path '{}' for original file '{}'", activePath.string(), activePath.filename().string()))});
       return;
     }
@@ -263,7 +263,7 @@ public:
     { // Scope header output processing to keep overhead low and increase readability
       if(m_Header.size() >= 80)
       {
-        m_Filter->sendThreadSafeProgressMessage(MakeWarningVoidResult(
+        m_Filter->sendThreadSafeErrorResult(MakeWarningVoidResult(
             -27874, fmt::format("Warning: Writing STL File '{}'. Header was over the 80 characters supported by STL. Length of header: {}. Only the first 80 bytes will be written.",
                                 activePath.filename().string(), m_Header.length())));
       }
@@ -321,10 +321,10 @@ public:
         {
           if(overflowFileResult.errors().empty())
           {
-            m_Filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(-27878, "Issue creating overflow file")});
+            m_Filter->sendThreadSafeErrorResult({MakeWarningVoidResult(-27878, "Issue creating overflow file")});
             return;
           }
-          m_Filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(overflowFileResult.errors()[0].code, overflowFileResult.errors()[0].message)});
+          m_Filter->sendThreadSafeErrorResult({MakeWarningVoidResult(overflowFileResult.errors()[0].code, overflowFileResult.errors()[0].message)});
           return;
         }
         write(m_LimitBoundAtomicFile.m_AtomicFilesList[overflowFileResult.value()].tempFilePath(), triangle);
@@ -382,7 +382,7 @@ public:
       if(totalWritten != 50)
       {
         fclose(filePtr);
-        m_Filter->sendThreadSafeProgressMessage({MakeWarningVoidResult(
+        m_Filter->sendThreadSafeErrorResult({MakeWarningVoidResult(
             -27873, fmt::format("Error Writing STL File '{}': Not enough bytes written for triangle {}. Only {} bytes written of 50 bytes", activePath.filename().string(), triCount, totalWritten))});
         break;
       }
@@ -679,7 +679,7 @@ Result<> WriteStlFile::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void WriteStlFile::sendThreadSafeProgressMessage(Result<>&& result)
+void WriteStlFile::sendThreadSafeErrorResult(Result<>&& result)
 {
   std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
   if(result.invalid())

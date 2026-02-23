@@ -70,8 +70,6 @@ Result<> RotateSampleRefFrame::operator()()
   auto selectedCellDataChildren = GetAllChildArrayDataPaths(m_DataStructure, srcImageGeom.getCellDataPath());
   auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
 
-  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
-
   // The actual rotating of the dataStructure arrays is done in parallel where parallel here
   // refers to the cropping of each DataArray being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
@@ -93,7 +91,7 @@ Result<> RotateSampleRefFrame::operator()()
     m_MessageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
 
     ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, rotationMatrix,
-                                                                                            m_InputValues->SliceBySlice, &filterProgressCallback);
+                                                                                            m_InputValues->SliceBySlice, m_MessageHandler, m_ShouldCancel);
   }
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

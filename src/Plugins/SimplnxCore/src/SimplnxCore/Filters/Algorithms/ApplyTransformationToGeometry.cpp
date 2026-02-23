@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -60,8 +61,6 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   auto selectedCellDataChildren = GetAllChildArrayDataPaths(m_DataStructure, srcImageGeom.getCellDataPath());
   auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
 
-  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
-
   // The actual rotating of the dataStructure arrays is done in parallel where parallel here
   // refers to the cropping of each DataArray being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
@@ -105,14 +104,14 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
       m_MessageHandler(fmt::format("Applying Transform || Nearest Neighbor Interpolation {}", srcDataObject->getName()));
 
       ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
-                                                                                              m_TransformationMatrix, false, &filterProgressCallback);
+                                                                                              m_TransformationMatrix, false, m_MessageHandler, m_ShouldCancel);
     }
     else if(m_InputValues->InterpolationSelection == detail::k_LinearInterpolationIdx)
     {
       m_MessageHandler(fmt::format("Applying Transform || Trilinear Interpolation {}", srcDataObject->getName()));
 
       ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation, NoBooleanType>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr,
-                                                                                                                    rotateArgs, m_TransformationMatrix, &filterProgressCallback);
+                                                                                                                    rotateArgs, m_TransformationMatrix, m_MessageHandler, m_ShouldCancel);
     }
 
     if(getCancel())
@@ -133,12 +132,15 @@ Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 
   IGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
 
-  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
+  MessageHelper messageHelper(m_MessageHandler);
+  usize totalVertices = vertexList.getNumberOfTuples();
+  ProgressHelper progressHelper =
+      messageHelper.createProgressHelper(totalVertices, [](usize current, usize max) { return fmt::format("Transforming Nodes: {:.0f}% Complete", CalculatePercentComplete(current, max)); });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, vertexList.getNumberOfTuples());
-  dataAlg.execute(ImageRotationUtilities::ApplyTransformationToNodeGeometry(vertexList, m_TransformationMatrix, &filterProgressCallback));
+  dataAlg.setRange(0, totalVertices);
+  dataAlg.execute(ImageRotationUtilities::ApplyTransformationToNodeGeometry(vertexList, m_TransformationMatrix, progressHelper.createWorkerHandle(), m_ShouldCancel));
 
   return {};
 }

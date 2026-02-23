@@ -8,15 +8,13 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <Eigen/Dense>
 
-#include <chrono>
 #include <concepts>
-#include <fstream>
 #include <iostream>
-#include <mutex>
 
 namespace nx::core::ImageRotationUtilities
 {
@@ -286,56 +284,6 @@ inline void FindInterpolationValues(const RotateArgs& params, size_t octant, Siz
 }
 
 /**
- * @brief
- */
-class FilterProgressCallback
-{
-public:
-  FilterProgressCallback(const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel)
-  : m_MessageHandler(mesgHandler)
-  , m_ShouldCancel(shouldCancel)
-  {
-  }
-
-  void sendThreadSafeProgressMessage(int64_t counter)
-  {
-    static std::mutex mutex;
-    m_Progcounter += static_cast<int32>(counter);
-    const std::lock_guard<std::mutex> lock(mutex);
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000)
-    {
-      m_MessageHandler(IFilter::Message{IFilter::Message::Type::Info, fmt::format("Nodes Completed: {}", m_Progcounter)});
-      m_InitialTime = std::chrono::steady_clock::now();
-    }
-  }
-
-  void sendThreadSafeProgressMessage(const std::string& progressMessage)
-  {
-    static std::mutex mutex;
-    const std::lock_guard<std::mutex> lock(mutex);
-    auto now = std::chrono::steady_clock::now();
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialTime).count() > 1000)
-    {
-      m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, progressMessage});
-      m_InitialTime = std::chrono::steady_clock::now();
-    }
-  }
-
-  const std::atomic_bool& getCancel() const
-  {
-    return m_ShouldCancel;
-  }
-
-private:
-  const IFilter::MessageHandler& m_MessageHandler;
-  const std::atomic_bool& m_ShouldCancel;
-  mutable std::mutex m_ProgressMessage_Mutex;
-  std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
-  int32 m_Progcounter = 0;
-};
-
-/**
  * @brief The RotateImageGeometryWithTrilinearInterpolation class
  */
 template <typename T>
@@ -343,12 +291,13 @@ class RotateImageGeometryWithTrilinearInterpolation
 {
 public:
   RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& rotateArgs, const Matrix4fR& transformationMatrix,
-                                                FilterProgressCallback* filterCallback)
+                                                const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(rotateArgs)
   , m_TransformationMatrix(transformationMatrix)
-  , m_FilterCallback(filterCallback)
+  , m_MessageHandler(messageHandler)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -428,11 +377,13 @@ public:
     const size_t numComps = sourceArray.getNumberOfComponents();
     if(numComps == 0)
     {
-      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
+      m_MessageHandler(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
       return;
     }
 
-    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Starting", sourceArray.getName()));
+    m_MessageHandler(fmt::format("{}: Transform Starting", sourceArray.getName()));
+
+    ThrottledMessenger<std::string> messenger([](const std::string& msg) { return msg; }, m_MessageHandler, std::chrono::milliseconds(1000));
 
     auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
@@ -453,11 +404,11 @@ public:
 
     for(int64_t k = 0; k < m_Params.outputDims[2]; k++)
     {
-      if(m_FilterCallback->getCancel())
+      if(m_ShouldCancel)
       {
         break;
       }
-      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
+      messenger.sendMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
       int64_t ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
 
       for(int64_t j = 0; j < m_Params.outputDims[1]; j++)
@@ -501,7 +452,7 @@ public:
         }
       }
     }
-    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
+    m_MessageHandler(fmt::format("{}: Transform Ending", sourceArray.getName()));
   }
 
 private:
@@ -509,7 +460,8 @@ private:
   IDataArray* m_TargetArray;
   ImageRotationUtilities::RotateArgs m_Params;
   Matrix4fR m_TransformationMatrix;
-  FilterProgressCallback* m_FilterCallback = nullptr;
+  const IFilter::MessageHandler& m_MessageHandler;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 //------------------------------------------------------------------------------
@@ -518,13 +470,14 @@ class RotateImageGeometryWithNearestNeighbor
 {
 public:
   RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
-                                         FilterProgressCallback* filterCallback)
+                                         const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(args)
   , m_TransformationMatrix(transformationMatrix)
   , m_SliceBySlice(sliceBySlice)
-  , m_FilterCallback(filterCallback)
+  , m_MessageHandler(messageHandler)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -540,6 +493,8 @@ public:
 
   void convert() const
   {
+    ThrottledMessenger<std::string> messenger([](const std::string& msg) { return msg; }, m_MessageHandler, std::chrono::milliseconds(1000));
+
     DataStructure tempDataStructure;
     ImageGeom* srcImageGeomPtr = ImageGeom::Create(tempDataStructure, "source image geom");
     srcImageGeomPtr->setDimensions(m_Params.OriginalDims);
@@ -557,11 +512,11 @@ public:
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
     for(int64 k = 0; k < m_Params.outputDims[2]; k++)
     {
-      if(m_FilterCallback->getCancel())
+      if(m_ShouldCancel)
       {
         break;
       }
-      m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
+      messenger.sendMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
 
       int64 const ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
       for(int64 j = 0; j < m_Params.outputDims[1]; j++)
@@ -604,7 +559,7 @@ public:
         }
       }
     }
-    m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", m_SourceArray->getName()));
+    m_MessageHandler(fmt::format("{}: Transform Ending", m_SourceArray->getName()));
   }
 
   void operator()() const
@@ -618,7 +573,8 @@ private:
   ImageRotationUtilities::RotateArgs m_Params;
   const Matrix4fR& m_TransformationMatrix;
   bool m_SliceBySlice = false;
-  FilterProgressCallback* m_FilterCallback = nullptr;
+  const IFilter::MessageHandler& m_MessageHandler;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 /**
@@ -627,22 +583,23 @@ private:
 class ApplyTransformationToNodeGeometry
 {
 public:
-  ApplyTransformationToNodeGeometry(IGeometry::SharedVertexList& verticesPtr, const Matrix4fR& transformationMatrix, FilterProgressCallback* filterCallback)
+  ApplyTransformationToNodeGeometry(IGeometry::SharedVertexList& verticesPtr, const Matrix4fR& transformationMatrix, ProgressWorker progressWorker, const std::atomic_bool& shouldCancel)
   : m_TransformationMatrix(transformationMatrix)
   , m_Vertices(verticesPtr)
-  , m_FilterCallback(filterCallback)
+  , m_ProgressWorker(std::move(progressWorker))
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
-  void convert(size_t start, size_t end) const
+  /**
+   * @brief operator () This is called from the TBB style of code
+   * @param range The range to compute the values
+   */
+  void operator()(const Range& range) const
   {
-    int64_t progCounter = 0;
-    const size_t totalElements = (end - start);
-    const size_t progIncrement = static_cast<int64_t>(totalElements / 100);
-
-    for(size_t i = start; i < end; i++)
+    for(size_t i = range.min(); i < range.max(); i++)
     {
-      if(m_FilterCallback->getCancel())
+      if(m_ShouldCancel)
       {
         return;
       }
@@ -652,27 +609,14 @@ public:
       m_Vertices.setValue(3 * i + 1, transformedPosition[1]);
       m_Vertices.setValue(3 * i + 2, transformedPosition[2]);
 
-      if(progCounter > progIncrement)
-      {
-        m_FilterCallback->sendThreadSafeProgressMessage(progCounter);
-        progCounter = 0;
-      }
-      progCounter++;
+      m_ProgressWorker.incrementProgress(1);
     }
-  }
-
-  /**
-   * @brief operator () This is called from the TBB stye of code
-   * @param range The range to compute the values
-   */
-  void operator()(const Range& range) const
-  {
-    convert(range.min(), range.max());
   }
 
 private:
   const Matrix4fR& m_TransformationMatrix;
   IGeometry::SharedVertexList& m_Vertices;
-  FilterProgressCallback* m_FilterCallback = nullptr;
+  mutable ProgressWorker m_ProgressWorker;
+  const std::atomic_bool& m_ShouldCancel;
 };
 } // namespace nx::core::ImageRotationUtilities

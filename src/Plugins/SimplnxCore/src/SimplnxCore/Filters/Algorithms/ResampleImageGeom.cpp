@@ -19,9 +19,9 @@ template <typename T>
 class ResampleImageGeomArrayImpl
 {
 public:
-  ResampleImageGeomArrayImpl(ResampleImageGeom* algorithm, const IDataArray& srcArray, IDataArray& destArray, const ImageGeom& srcImageGeom, const ImageGeom& destImageGeom,
+  ResampleImageGeomArrayImpl(ProgressWorker progressWorker, const IDataArray& srcArray, IDataArray& destArray, const ImageGeom& srcImageGeom, const ImageGeom& destImageGeom,
                              const std::atomic_bool& shouldCancel)
-  : m_AlgorithmPtr(algorithm)
+  : m_ProgressWorker(std::move(progressWorker))
   , m_SrcArray(srcArray)
   , m_DestArray(destArray)
   , m_SrcImageGeom(srcImageGeom)
@@ -35,10 +35,7 @@ public:
     const auto& srcDataStore = m_SrcArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& destDataStore = m_DestArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    usize counter = 0;
-
     usize numVoxels = m_DestImageGeom.getNumberOfCells();
-    usize counterIncrement = numVoxels / 100 == 0 ? 100 : numVoxels / 100;
 
     for(usize destVoxelIdx = 0; destVoxelIdx < numVoxels; destVoxelIdx++)
     {
@@ -65,19 +62,12 @@ public:
         destDataStore.fillTuple(destVoxelIdx, 0);
       }
 
-      counter++;
-      if(counter >= counterIncrement)
-      {
-        float progress = static_cast<float>(destVoxelIdx) / static_cast<float>(numVoxels) * 100.0f;
-        m_AlgorithmPtr->sendThreadSafeProgressMessage(fmt::format("Resampling Data Array '{}' {:.0f}% Complete", m_DestArray.getName(), progress));
-        counter = 0;
-      }
+      m_ProgressWorker.incrementProgress(1);
     }
-    m_AlgorithmPtr->sendThreadSafeProgressMessage(fmt::format("Resampling Data Array '{}' Complete", m_DestArray.getName()));
   }
 
 private:
-  ResampleImageGeom* m_AlgorithmPtr = nullptr;
+  mutable ProgressWorker m_ProgressWorker;
   const IDataArray& m_SrcArray;
   IDataArray& m_DestArray;
   const ImageGeom& m_SrcImageGeom;
@@ -108,8 +98,6 @@ const std::atomic_bool& ResampleImageGeom::getCancel()
 Result<> ResampleImageGeom::operator()()
 {
   MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
-  m_ThrottledMessengerPtr = &throttledMessenger;
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
@@ -117,8 +105,14 @@ Result<> ResampleImageGeom::operator()()
   const auto& srcCellDataAM = selectedImageGeom.getCellDataRef();
   auto& destCellDataAM = destImageGeom.getCellDataRef();
 
-  usize arrayIndex = 0;
   usize totalArrays = srcCellDataAM.getSize();
+  usize numVoxels = destImageGeom.getNumberOfCells();
+  usize totalProgress = numVoxels * totalArrays;
+
+  ProgressHelper progressHelper =
+      messageHelper.createProgressHelper(totalProgress, [](usize current, usize max) { return fmt::format("Resampling: {:.0f}% Complete", CalculatePercentComplete(current, max)); });
+
+  usize arrayIndex = 0;
 
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
@@ -134,9 +128,10 @@ Result<> ResampleImageGeom::operator()()
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    messageHelper.sendMessage(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
 
-    ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), taskRunner, this, oldDataArray, newDataArray, selectedImageGeom, destImageGeom, m_ShouldCancel);
+    ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), taskRunner, progressHelper.createWorkerHandle(), oldDataArray, newDataArray, selectedImageGeom, destImageGeom,
+                                                        m_ShouldCancel);
   }
 
   taskRunner.wait(); // This will spill over if the number of geometries to process does not divide evenly by the number of threads.
@@ -208,13 +203,4 @@ Result<> ResampleImageGeom::operator()()
   }
 
   return {};
-}
-
-void ResampleImageGeom::sendThreadSafeProgressMessage(const std::string& message)
-{
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
-  if(nullptr != m_ThrottledMessengerPtr)
-  {
-    m_ThrottledMessengerPtr->sendThrottledMessage([&]() { return message; });
-  }
 }
