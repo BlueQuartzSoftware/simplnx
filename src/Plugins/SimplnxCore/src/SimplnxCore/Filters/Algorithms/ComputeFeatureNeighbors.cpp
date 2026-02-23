@@ -89,12 +89,17 @@ Result<> ComputeFeatureNeighbors::operator()()
   int32 nListSize = 100;
 
   MessageHelper messageHelper(m_MessageHandler);
-  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+  auto initMessenger = messageHelper.createThrottledMessenger(
+      [totalFeatures](usize featureIdx) { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(featureIdx, totalFeatures)); },
+      std::chrono::milliseconds(1000));
+  auto determineMessenger = messageHelper.createThrottledMessenger(
+      [totalPoints](usize voxelIndex) { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIndex, totalPoints)); }, std::chrono::milliseconds(1000));
+  auto surfaceMessenger = messageHelper.createThrottledMessenger(
+      [totalFeatures](usize i) { return fmt::format("Calculating Surface Areas || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); }, std::chrono::milliseconds(1000));
   // Initialize the neighbor lists
   for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
-    auto now = std::chrono::steady_clock::now();
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(featureIdx, totalFeatures)); });
+    initMessenger.sendMessage(featureIdx);
 
     if(m_ShouldCancel)
     {
@@ -113,7 +118,7 @@ Result<> ComputeFeatureNeighbors::operator()()
   // Loop over all points to generate the neighbor lists
   for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIndex, totalPoints)); });
+    determineMessenger.sendMessage(static_cast<usize>(voxelIndex));
 
     if(m_ShouldCancel)
     {
@@ -172,7 +177,7 @@ Result<> ComputeFeatureNeighbors::operator()()
   // We do this to create new set of NeighborList objects
   for(usize i = 1; i < totalFeatures; i++)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Calculating Surface Areas || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); });
+    surfaceMessenger.sendMessage(i);
 
     if(m_ShouldCancel)
     {

@@ -66,12 +66,13 @@ public:
       checkedFeatureVolumes.resize(numFeatures);
     }
     MessageHelper messageHelper(m_MessageHandler);
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    auto throttledMessenger = messageHelper.createThrottledMessenger(
+        [numParents](usize currentParentId) { return fmt::format("{}/{} {}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); }, std::chrono::milliseconds(1000));
 
     // Start the Parent Outer Loop
     for(usize currentParentId = 1; currentParentId < numParents; currentParentId++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{}/{} {}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); });
+      throttledMessenger.sendMessage(currentParentId);
 
       if(m_ShouldCancel)
       {

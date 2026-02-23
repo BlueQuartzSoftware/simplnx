@@ -27,9 +27,9 @@ class RotateEulerRefFrameImpl
 {
 
 public:
-  RotateEulerRefFrameImpl(Float32Array& data, std::vector<float>& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressHelper& progressHelper)
+  RotateEulerRefFrameImpl(Float32Array& data, FloatVec3& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressHelper& progressHelper)
   : m_CellEulerAngles(data)
-  , m_AxisAngle(rotAxis)
+  , m_Axis(rotAxis)
   , m_Angle(angle)
   , m_ShouldCancel(shouldCancel)
   , m_ProgressHelper(progressHelper)
@@ -39,7 +39,7 @@ public:
 
   void convert(size_t start, size_t end) const
   {
-    ebsdlib::OrientationMatrixDType om = ebsdlib::AxisAngleDType(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * nx::core::numbers::pi / 180.0).toOrientationMatrix();
+    ebsdlib::OrientationMatrixDType om = ebsdlib::AxisAngleDType(m_Axis[0], m_Axis[1], m_Axis[2], m_Angle * nx::core::numbers::pi / 180.0).toOrientationMatrix();
 
     OrientationUtilities::Matrix3dR rotMat = om.toEigenGMatrix();
 
@@ -64,9 +64,9 @@ public:
       OrientationUtilities::Matrix3dR gNew = (om * rotMat).colwise().normalized();
 
       ebsdlib::EulerDType eu = ebsdlib::OrientationMatrixDType(gNew.data()).toEuler();
-      m_CellEulerAngles[3 * i] = eu[0];
-      m_CellEulerAngles[3 * i + 1] = eu[1];
-      m_CellEulerAngles[3 * i + 2] = eu[2];
+      m_CellEulerAngles[3 * i] = static_cast<float32>(eu[0]);
+      m_CellEulerAngles[3 * i + 1] = static_cast<float32>(eu[1]);
+      m_CellEulerAngles[3 * i + 2] = static_cast<float32>(eu[2]);
       counter++;
     }
     worker.incrementProgress(counter);
@@ -79,7 +79,7 @@ public:
 
 private:
   Float32Array& m_CellEulerAngles;
-  FloatVec3 m_AxisAngle;
+  FloatVec3 m_Axis;
   float m_Angle = 0.0F;
   const std::atomic_bool& m_ShouldCancel;
   ProgressHelper& m_ProgressHelper;
@@ -106,9 +106,9 @@ Result<> RotateEulerRefFrame::operator()()
     return {};
   }
 
-  nx::core::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
+  auto& eulerAnglesRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
 
-  size_t totalElements = eulerAngles.getNumberOfTuples();
+  size_t totalElements = eulerAnglesRef.getNumberOfTuples();
 
   nx::core::FloatVec3 axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
   axis = axis.normalize();
@@ -120,7 +120,7 @@ Result<> RotateEulerRefFrame::operator()()
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, totalElements);
-  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel, progressHelper));
+  dataAlg.execute(RotateEulerRefFrameImpl(eulerAnglesRef, axis, m_InputValues->rotationAxis[3], m_ShouldCancel, progressHelper));
   return {};
 }
 
