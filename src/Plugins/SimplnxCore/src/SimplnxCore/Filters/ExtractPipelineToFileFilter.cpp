@@ -1,6 +1,7 @@
 #include "ExtractPipelineToFileFilter.hpp"
 
-#include "simplnx/Common/AtomicFile.hpp"
+#include "SimplnxCore/Filters/Algorithms/ExtractPipelineToFile.hpp"
+
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
@@ -10,8 +11,6 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <nlohmann/json.hpp>
-
-#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -119,49 +118,11 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
 Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto importFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
-  auto outputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
+  ExtractPipelineToFileInputValues inputValues;
+  inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
+  inputValues.OutputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
 
-  Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
-  if(pipelineResult.invalid())
-  {
-    return ConvertResult<nlohmann::json>(std::move(pipelineResult));
-  }
-  const nlohmann::json pipelineJson = pipelineResult.value();
-  const bool isLegacy = pipelineJson.contains(nx::core::Pipeline::k_SIMPLPipelineBuilderKey);
-
-  std::string extension = isLegacy ? Pipeline::k_SIMPLExtension : Pipeline::k_Extension;
-  if(!outputFile.has_extension())
-  {
-    outputFile.concat(extension);
-  }
-  if(outputFile.extension().string() != extension)
-  {
-    outputFile.replace_extension(extension);
-  }
-  auto atomicFileResult = AtomicFile::Create(outputFile);
-  if(atomicFileResult.invalid())
-  {
-    return ConvertResult(std::move(atomicFileResult));
-  }
-  AtomicFile atomicFile = std::move(atomicFileResult.value());
-  {
-    const fs::path exportFilePath = atomicFile.tempFilePath();
-    std::ofstream fOut(exportFilePath.string(), std::ofstream::out); // test name resolution and create file
-    if(!fOut.is_open())
-    {
-      return MakeErrorResult(-2582, fmt::format("Error opening output path {}", exportFilePath.string()));
-    }
-
-    fOut << pipelineJson.dump(2);
-  }
-  Result<> commitResult = atomicFile.commit();
-  if(commitResult.invalid())
-  {
-    return commitResult;
-  }
-
-  return {};
+  return ExtractPipelineToFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 Result<Arguments> ExtractPipelineToFileFilter::FromSIMPLJson(const nlohmann::json& json)

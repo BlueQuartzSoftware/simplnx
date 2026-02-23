@@ -1,56 +1,12 @@
 #include "ReverseTriangleWindingFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ReverseTriangleWinding.hpp"
+
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
-
-using namespace nx::core;
-
-namespace
-{
-/**
- * @brief The ReverseWindingImpl class implements a threaded algorithm that reverses the node
- * windings for a set of triangles
- */
-class ReverseWindingImpl
-{
-public:
-  using TriStore = AbstractDataStore<TriangleGeom::SharedFaceList::value_type>;
-  explicit ReverseWindingImpl(TriStore& triangles)
-  : m_Triangles(triangles)
-  {
-  }
-  ~ReverseWindingImpl() = default;
-
-  void generate(usize start, usize end) const
-  {
-
-    for(size_t i = start; i < end; i++)
-    {
-      // Swap the indices
-      TriangleGeom::MeshIndexType nId0 = m_Triangles[i * 3 + 0];
-      TriangleGeom::MeshIndexType nId2 = m_Triangles[i * 3 + 2];
-
-      m_Triangles[i * 3 + 0] = nId2;
-      m_Triangles[i * 3 + 2] = nId0;
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    generate(range.min(), range.max());
-  }
-
-private:
-  TriStore& m_Triangles;
-};
-} // namespace
 
 namespace nx::core
 {
@@ -128,13 +84,10 @@ IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataS
 Result<> ReverseTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(filterArgs.value<DataPath>(k_TriGeomPath_Key));
+  ReverseTriangleWindingInputValues inputValues;
+  inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TriGeomPath_Key);
 
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, triangleGeom.getNumberOfFaces());
-  dataAlg.execute(ReverseWindingImpl(triangleGeom.getFaces()->getDataStoreRef()));
-
-  return {};
+  return ReverseTriangleWinding(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

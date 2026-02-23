@@ -1,5 +1,7 @@
 #include "ComputeFeaturePhasesBinaryFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ComputeFeaturePhasesBinary.hpp"
+
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -8,7 +10,6 @@
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -106,37 +107,13 @@ IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const D
 Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto& featureIdsArray = dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key))->getDataStoreRef();
-  auto& featurePhasesArray =
-      dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_CellDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key)))->getDataStoreRef();
+  ComputeFeaturePhasesBinaryInputValues inputValues;
+  inputValues.FeatureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
+  inputValues.MaskArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MaskArrayPath_Key);
+  inputValues.CellDataAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellDataAMPath_Key);
+  inputValues.FeaturePhasesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeaturePhasesArrayName_Key);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> goodVoxelsMask;
-  try
-  {
-    goodVoxelsMask = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, filterArgs.value<DataPath>(k_MaskArrayPath_Key));
-  } catch(const std::out_of_range& exception)
-  {
-    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", filterArgs.value<DataPath>(k_MaskArrayPath_Key).toString());
-    return MakeErrorResult(-53800, message);
-  }
-
-  usize totalPoints = featureIdsArray.getNumberOfTuples();
-
-  for(usize i = 0; i < totalPoints; i++)
-  {
-    if(goodVoxelsMask->isTrue(i))
-    {
-      featurePhasesArray[featureIdsArray[i]] = 1;
-    }
-    else
-    {
-      featurePhasesArray[featureIdsArray[i]] = 0;
-    }
-  }
-
-  return {};
+  return ComputeFeaturePhasesBinary(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

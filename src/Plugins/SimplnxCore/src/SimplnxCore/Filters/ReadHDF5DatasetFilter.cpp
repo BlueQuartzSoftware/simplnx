@@ -1,4 +1,5 @@
 #include "ReadHDF5DatasetFilter.hpp"
+#include "SimplnxCore/Filters/Algorithms/ReadHDF5Dataset.hpp"
 
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -306,85 +307,10 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
 Result<> ReadHDF5DatasetFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pImportHDF5FileValue = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
-  auto pSelectedAttributeMatrixValue = pImportHDF5FileValue.parent;
-  auto inputFile = pImportHDF5FileValue.inputFile;
-  fs::path inputFilePath(inputFile);
-  auto datasetImportInfoList = pImportHDF5FileValue.datasets;
+  ReadHDF5DatasetInputValues inputValues;
+  inputValues.ImportHdf5Object = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(k_ImportHDF5File_Key);
 
-  auto h5FileReader = nx::core::HDF5::FileIO::ReadFile(inputFilePath);
-  if(h5FileReader.isValid() == false)
-  {
-    return MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile));
-  }
-
-  std::map<std::string, hid_t> openedParentPathsMap;
-  for(const auto& datasetImportInfo : datasetImportInfoList)
-  {
-    std::string datasetPath = datasetImportInfo.dataSetPath;
-    auto datasetReader = h5FileReader.openDataset(datasetPath);
-
-    std::string objectName = datasetReader.getName();
-
-    // Read dataset into DREAM3D-NX structure
-    DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
-    Result<> fillArrayResults;
-    auto h5TypeResult = datasetReader.getDataType();
-    const auto type = std::move(h5TypeResult.value());
-    switch(type)
-    {
-    case DataType::float32: {
-      fillArrayResults = HDF5::Support::FillDataArray<float32>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::float64: {
-      fillArrayResults = HDF5::Support::FillDataArray<float64>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::int8: {
-      fillArrayResults = HDF5::Support::FillDataArray<int8>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::int16: {
-      fillArrayResults = HDF5::Support::FillDataArray<int16>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::int32: {
-      fillArrayResults = HDF5::Support::FillDataArray<int32>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::int64: {
-      fillArrayResults = HDF5::Support::FillDataArray<int64>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::uint8: {
-      fillArrayResults = HDF5::Support::FillDataArray<uint8>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::uint16: {
-      fillArrayResults = HDF5::Support::FillDataArray<uint16>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::uint32: {
-      fillArrayResults = HDF5::Support::FillDataArray<uint32>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    case DataType::uint64: {
-      fillArrayResults = HDF5::Support::FillDataArray<uint64>(dataStructure, dataArrayPath, datasetReader);
-      break;
-    }
-    default: {
-      return MakeErrorResult(-21001,
-                             fmt::format("The selected dataset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, fmt::underlying(type)));
-    }
-    }
-    if(fillArrayResults.invalid())
-    {
-      return fillArrayResults;
-    }
-  } // End For Loop over dataset import info list
-
-  return {};
+  return ReadHDF5Dataset(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

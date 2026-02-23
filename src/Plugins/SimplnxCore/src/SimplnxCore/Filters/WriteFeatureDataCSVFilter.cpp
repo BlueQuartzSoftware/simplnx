@@ -1,22 +1,19 @@
 #include "WriteFeatureDataCSVFilter.hpp"
 
-#include "simplnx/Common/AtomicFile.hpp"
+#include "SimplnxCore/Filters/Algorithms/WriteFeatureDataCSV.hpp"
+
 #include "simplnx/Common/TypeTraits.hpp"
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
-#include <fstream>
 
 namespace fs = std::filesystem;
-
 using namespace nx::core;
 
 namespace nx::core
@@ -92,75 +89,14 @@ IFilter::PreflightResult WriteFeatureDataCSVFilter::preflightImpl(const DataStru
 Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key));
-  if(atomicFileResult.invalid())
-  {
-    return ConvertResult(std::move(atomicFileResult));
-  }
-  AtomicFile atomicFile = std::move(atomicFileResult.value());
+  WriteFeatureDataCSVInputValues inputValues;
+  inputValues.FeatureDataFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_FeatureDataFile_Key);
+  inputValues.WriteNumFeaturesLine = filterArgs.value<BoolParameter::ValueType>(k_WriteNumFeaturesLine_Key);
+  inputValues.DelimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoiceInt_Key);
+  inputValues.CellFeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAttributeMatrixPath_Key);
+  inputValues.WriteNeighborlistData = filterArgs.value<BoolParameter::ValueType>(k_WriteNeighborListData_Key);
 
-  auto pOutputFilePath = atomicFile.tempFilePath();
-  auto pWriteNumFeaturesLineValue = filterArgs.value<bool>(k_WriteNumFeaturesLine_Key);
-  auto pDelimiterChoiceIntValue = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoiceInt_Key);
-  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-
-  const std::string delimiter = OStreamUtilities::DelimiterToString(pDelimiterChoiceIntValue);
-
-  // Ensure the complete path to the output file exists or can be created
-  auto parentPath = pOutputFilePath.parent_path();
-  if(!std::filesystem::exists(parentPath))
-  {
-    if(!std::filesystem::create_directories(parentPath))
-    {
-      return MakeErrorResult(-64641, fmt::format("Error creating Output file at path '{}'. Parent path could not be created.", pOutputFilePath.string()));
-    }
-  }
-
-  // load list of DataPaths
-  std::vector<DataObject::Type> dataTypesToExtract;
-  if(filterArgs.value<bool>(k_WriteNeighborListData_Key))
-  {
-    dataTypesToExtract = {DataObject::Type::DataArray, DataObject::Type::StringArray, DataObject::Type::NeighborList};
-  }
-  else
-  {
-    dataTypesToExtract = {DataObject::Type::DataArray, DataObject::Type::StringArray};
-  }
-
-  std::vector<DataPath> arrayPaths;
-  std::vector<DataPath> neighborPaths;
-  for(const auto& element : dataTypesToExtract)
-  {
-    auto requestedPaths = *std::move(GetAllChildDataPaths(dataStructure, pCellFeatureAttributeMatrixPathValue, element));
-    if(element == DataObject::Type::NeighborList)
-    {
-      neighborPaths.insert(neighborPaths.end(), std::make_move_iterator(requestedPaths.begin()), std::make_move_iterator(requestedPaths.end()));
-    }
-    else
-    {
-      arrayPaths.insert(arrayPaths.end(), std::make_move_iterator(requestedPaths.begin()), std::make_move_iterator(requestedPaths.end()));
-    }
-  }
-
-  // Scope file writer in code block to get around file lock on windows (enforce destructor order)
-  {
-    std::ofstream fout(pOutputFilePath.string(), std::ofstream::out | std::ios_base::binary); // test name resolution and create file
-    if(!fout.is_open())
-    {
-      return MakeErrorResult(-64640, fmt::format("Error opening path {}", pOutputFilePath.string()));
-    }
-
-    // call ostream function
-    OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths, pWriteNumFeaturesLineValue);
-  }
-
-  Result<> commitResult = atomicFile.commit();
-  if(commitResult.invalid())
-  {
-    return commitResult;
-  }
-
-  return {};
+  return WriteFeatureDataCSV(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

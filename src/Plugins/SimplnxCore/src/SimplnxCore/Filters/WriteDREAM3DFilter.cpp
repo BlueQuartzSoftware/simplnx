@@ -1,22 +1,14 @@
 #include "WriteDREAM3DFilter.hpp"
 
-#include "simplnx/Common/AtomicFile.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
+#include "SimplnxCore/Filters/Algorithms/WriteDREAM3D.hpp"
+
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
-#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include <filesystem>
-namespace fs = std::filesystem;
 
 namespace
 {
 constexpr nx::core::int32 k_NoExportPathError = -1;
-constexpr nx::core::int32 k_FailedFindPipelineError = -15;
 } // namespace
 
 namespace nx::core
@@ -91,50 +83,12 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
 Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_ExportFilePath));
-  if(atomicFileResult.invalid())
-  {
-    return ConvertResult(std::move(atomicFileResult));
-  }
-  AtomicFile atomicFile = std::move(atomicFileResult.value());
+  WriteDREAM3DInputValues inputValues;
+  inputValues.ExportFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ExportFilePath);
+  inputValues.WriteXdmfFile = filterArgs.value<BoolParameter::ValueType>(k_WriteXdmf);
+  inputValues.PipelineNode = pipelineNode;
 
-  auto exportFilePath = atomicFile.tempFilePath();
-  auto writeXdmf = filterArgs.value<bool>(k_WriteXdmf);
-
-  Pipeline pipeline;
-
-  if(pipelineNode != nullptr)
-  {
-    auto pipelinePtr = pipelineNode->getPrecedingPipeline();
-    if(pipelinePtr == nullptr)
-    {
-      return MakeErrorResult(k_FailedFindPipelineError, "Failed to retrieve pipeline.");
-    }
-
-    pipeline = *pipelinePtr;
-  }
-
-  auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmf);
-  if(results.valid())
-  {
-    Result<> commitResult = atomicFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
-    }
-    if(writeXdmf)
-    {
-      fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
-      std::error_code errorCode;
-      fs::rename(xdmfFilePath, filterArgs.value<fs::path>(k_ExportFilePath).replace_extension(".xdmf"), errorCode);
-      if(errorCode)
-      {
-        std::string ss = fmt::format("Failed to rename xdmf file with error: '{}'", errorCode.message());
-        return MakeErrorResult(errorCode.value(), ss);
-      }
-    }
-  }
-  return results;
+  return WriteDREAM3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
