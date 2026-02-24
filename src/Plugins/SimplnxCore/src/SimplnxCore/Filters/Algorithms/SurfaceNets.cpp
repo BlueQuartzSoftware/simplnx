@@ -10,7 +10,6 @@
 
 #include "SimplnxCore/SurfaceNets/MMCellFlag.h"
 #include "SimplnxCore/SurfaceNets/MMCellMap.h"
-#include "SimplnxCore/SurfaceNets/MMGeometryOBJ.h"
 #include "SimplnxCore/SurfaceNets/MMSurfaceNet.h"
 
 using namespace nx::core;
@@ -159,8 +158,8 @@ Result<> SurfaceNets::operator()()
 
     triangleGeom.setVertexCoordinate(static_cast<usize>(vertIndex), position);
     cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());
-    MMCellMap::Cell* currentCellPtr = cellMapPtr->getCell(vertCellIndex.data());
-    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
+    size_t cellIdx = cellMapPtr->cellArrayIndex(vertCellIndex.data());
+    nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(MMCellFlag::numJunctionsFromFlag(cellMapPtr->cellFlag(cellIdx)));
   }
 
   usize triangleCount = 0;

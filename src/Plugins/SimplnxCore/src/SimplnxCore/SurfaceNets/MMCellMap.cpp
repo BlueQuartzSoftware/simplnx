@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cstdlib>
 #include <exception>
-#include <iostream>
 
 #include "MMCellMap.h"
 #include "MMSurfaceNet.h"
@@ -65,8 +64,7 @@ bool InsideNxVolume(const int32* cellIndex, const std::array<size_t, 3>& nxDims)
 
 // ----------------------------------------------------------------------------
 MMCellMap::MMCellMap(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3])
-: m_cellArray(nullptr)
-, m_VerticesStoreRef(verticesStore)
+: m_VerticesStoreRef(verticesStore)
 , m_NxLabelsPtr(labels)
 {
   m_NxDims = {arraySize[0], arraySize[1], arraySize[2]};
@@ -81,54 +79,26 @@ MMCellMap::MMCellMap(TriangleGeom::SharedVertexList::store_type& verticesStore, 
   size_t numCells = m_arraySize[0] * m_arraySize[1] * m_arraySize[2];
   try
   {
-    m_cellArray = new Cell[numCells];
-  } catch(std::bad_alloc& ba)
+    m_flagArray.resize(numCells, 0);
+    m_vertexIndexArray.resize(numCells, std::numeric_limits<size_t>::max());
+  } catch(std::bad_alloc&)
   {
-    m_cellArray = nullptr;
+    m_flagArray.clear();
+    m_vertexIndexArray.clear();
     return;
   }
 }
 
 // ----------------------------------------------------------------------------
-MMCellMap::~MMCellMap()
-{
-  delete[] m_cellArray;
-}
-
-// ----------------------------------------------------------------------------
 bool MMCellMap::valid() const
 {
-  return m_cellArray != nullptr;
+  return !m_flagArray.empty();
 }
 
 // ----------------------------------------------------------------------------
 bool MMCellMap::init()
 {
-  // Initialize interior cell contents. Each cell stores the label of it's bottom-left back corner.
-  usize cellIndex = 0;
-
-  for(int k = 0; k < m_arraySize[2]; k++)
-  {
-    for(int j = 0; j < m_arraySize[1]; j++)
-    {
-      for(int i = 0; i < m_arraySize[0]; i++)
-      {
-        if(i == 0 || i == m_arraySize[0] - 1 || j == 0 || j == m_arraySize[1] - 1 || k == 0 || k == m_arraySize[2] - 1)
-        {
-          Cell& cell = m_cellArray[cellIndex++];
-          cell.flag.clear();
-          cell.vertexIndex = std::numeric_limits<size_t>::max();
-        }
-        else
-        {
-          Cell& cell = m_cellArray[cellIndex++];
-          cell.flag.clear();
-          cell.vertexIndex = std::numeric_limits<size_t>::max();
-        }
-      }
-    }
-  }
-
+  // Vectors are already value-initialized in the constructor.
   // Set the cell vertices
   return setCellVertices();
 }
@@ -136,67 +106,117 @@ bool MMCellMap::init()
 // ----------------------------------------------------------------------------
 bool MMCellMap::setCellVertices()
 {
+  // Get raw pointer to label data for optimized lookups
+  const auto& labelStoreRef = m_NxLabelsPtr->getDataStoreRef();
+
+  // Precompute strides for NX flat index calculation
+  const size_t nxStrideY = m_NxDims[0];
+  const size_t nxStrideZ = m_NxDims[0] * m_NxDims[1];
+
+  // Precompute the 8 corner offsets relative to the NX flat index for cell (i,j,k)
+  // Corner 0: (i-1, j-1, k-1) => offset 0 (base)
+  // Corner 1: (i,   j-1, k-1) => offset +1
+  // Corner 2: (i,   j,   k-1) => offset +1 + nxStrideY
+  // Corner 3: (i-1, j,   k-1) => offset +nxStrideY
+  // Corner 4: (i-1, j-1, k)   => offset +nxStrideZ
+  // Corner 5: (i,   j-1, k)   => offset +1 + nxStrideZ
+  // Corner 6: (i,   j,   k)   => offset +1 + nxStrideY + nxStrideZ
+  // Corner 7: (i-1, j,   k)   => offset +nxStrideY + nxStrideZ
+  const std::array<size_t, 8> cornerOffsets = {0, 1, 1 + nxStrideY, nxStrideY, nxStrideZ, 1 + nxStrideZ, 1 + nxStrideY + nxStrideZ, nxStrideY + nxStrideZ};
+
   // Set cell type and count cell vertices. There are no vertices in right, front,
   // top faces.
   size_t numVertices = 0;
-  int32 cellIndex[3] = {0, 0, 0};
-  for(int k = 0; k < m_arraySize[2] - 1; k++)
+  m_numEdgeCrossings = 0;
+  const int iMax = static_cast<int>(m_arraySize[0]) - 1;
+  const int jMax = static_cast<int>(m_arraySize[1]) - 1;
+  const int kMax = static_cast<int>(m_arraySize[2]) - 1;
+
+  for(int k = 0; k < kMax; k++)
   {
-    for(int j = 0; j < m_arraySize[1] - 1; j++)
+    for(int j = 0; j < jMax; j++)
     {
-      for(int i = 0; i < m_arraySize[0] - 1; i++)
+      for(int i = 0; i < iMax; i++)
       {
-        Cell* pCell = getCell(i, j, k);
+        size_t cellIdx = cellArrayIndex(i, j, k);
         int32_t cellLabels[8];
 
-        cellIndex[0] = i;
-        cellIndex[1] = j;
-        cellIndex[2] = k;
-        // Label[0]
-        cellLabels[0] = label(cellIndex);
+        // Check if all 8 corners are inside the NX volume (interior cell)
+        // Interior cells have i in [1, iMax-1), j in [1, jMax-1), k in [1, kMax-1)
+        if(i >= 1 && i < iMax - 1 && j >= 1 && j < jMax - 1 && k >= 1 && k < kMax - 1)
+        {
+          // All 8 corners are inside: use direct flat index arithmetic
+          // NX index for corner 0 = (i-1) + (j-1)*nxStrideY + (k-1)*nxStrideZ
+          size_t nxBase = static_cast<size_t>(i - 1) + static_cast<size_t>(j - 1) * nxStrideY + static_cast<size_t>(k - 1) * nxStrideZ;
+          cellLabels[0] = labelStoreRef[nxBase + cornerOffsets[0]];
+          cellLabels[1] = labelStoreRef[nxBase + cornerOffsets[1]];
+          cellLabels[2] = labelStoreRef[nxBase + cornerOffsets[2]];
+          cellLabels[3] = labelStoreRef[nxBase + cornerOffsets[3]];
+          cellLabels[4] = labelStoreRef[nxBase + cornerOffsets[4]];
+          cellLabels[5] = labelStoreRef[nxBase + cornerOffsets[5]];
+          cellLabels[6] = labelStoreRef[nxBase + cornerOffsets[6]];
+          cellLabels[7] = labelStoreRef[nxBase + cornerOffsets[7]];
+        }
+        else
+        {
+          // Boundary cell: use label() which handles padding
+          int32 ci[3];
+          ci[0] = i;
+          ci[1] = j;
+          ci[2] = k;
+          cellLabels[0] = label(ci);
 
-        // Label[1]
-        cellIndex[0] = i + 1;
-        cellLabels[1] = label(cellIndex);
+          ci[0] = i + 1;
+          cellLabels[1] = label(ci);
 
-        // Label[2]
-        cellIndex[0] = i + 1;
-        cellIndex[1] = j + 1;
-        cellLabels[2] = label(cellIndex);
+          ci[0] = i + 1;
+          ci[1] = j + 1;
+          cellLabels[2] = label(ci);
 
-        // Label[3]
-        cellIndex[0] = i;
-        cellIndex[1] = j + 1;
-        cellLabels[3] = label(cellIndex);
+          ci[0] = i;
+          ci[1] = j + 1;
+          cellLabels[3] = label(ci);
 
-        // Label[4]
-        cellIndex[0] = i;
-        cellIndex[1] = j;
-        cellIndex[2] = k + 1;
-        cellLabels[4] = label(cellIndex);
+          ci[0] = i;
+          ci[1] = j;
+          ci[2] = k + 1;
+          cellLabels[4] = label(ci);
 
-        // Label[5]
-        cellIndex[0] = i + 1;
-        cellIndex[1] = j;
-        cellIndex[2] = k + 1;
-        cellLabels[5] = label(cellIndex);
+          ci[0] = i + 1;
+          ci[1] = j;
+          ci[2] = k + 1;
+          cellLabels[5] = label(ci);
 
-        // Label[6]
-        cellIndex[0] = i + 1;
-        cellIndex[1] = j + 1;
-        cellIndex[2] = k + 1;
-        cellLabels[6] = label(cellIndex);
+          ci[0] = i + 1;
+          ci[1] = j + 1;
+          ci[2] = k + 1;
+          cellLabels[6] = label(ci);
 
-        // Label[7]
-        cellIndex[0] = i;
-        cellIndex[1] = j + 1;
-        cellIndex[2] = k + 1;
-        cellLabels[7] = label(cellIndex);
+          ci[0] = i;
+          ci[1] = j + 1;
+          ci[2] = k + 1;
+          cellLabels[7] = label(ci);
+        }
 
-        pCell->flag.set(cellLabels);
-        if(pCell->flag.vertexType() != MMCellFlag::VertexType::NoVertex)
+        MMCellFlag::setFromLabels(m_flagArray[cellIdx], cellLabels);
+        uint32_t flag = m_flagArray[cellIdx];
+        if(MMCellFlag::vertexTypeFromFlag(flag) != MMCellFlag::VertexType::NoVertex)
         {
           numVertices++;
+        }
+
+        // Count edge crossings for the 3 edges we process per cell
+        if(MMCellFlag::isEdgeCrossingFromFlag(flag, MMCellFlag::Edge::BackBottomEdge))
+        {
+          m_numEdgeCrossings++;
+        }
+        if(MMCellFlag::isEdgeCrossingFromFlag(flag, MMCellFlag::Edge::LeftBottomEdge))
+        {
+          m_numEdgeCrossings++;
+        }
+        if(MMCellFlag::isEdgeCrossingFromFlag(flag, MMCellFlag::Edge::LeftBackEdge))
+        {
+          m_numEdgeCrossings++;
         }
       }
     }
@@ -207,26 +227,24 @@ bool MMCellMap::setCellVertices()
   {
     m_VerticesStoreRef.resizeTuples(ShapeType{numVertices});
     m_VertexArray.resize(numVertices);
-  } catch(std::bad_alloc& ba)
+  } catch(std::bad_alloc&)
   {
-    delete[] m_cellArray;
-    m_cellArray = nullptr;
+    m_flagArray.clear();
+    m_vertexIndexArray.clear();
     return false;
   }
   int idxVtx = 0;
-  for(int k = 0; k < m_arraySize[2] - 1; k++)
+  for(int k = 0; k < kMax; k++)
   {
-    for(int j = 0; j < m_arraySize[1] - 1; j++)
+    for(int j = 0; j < jMax; j++)
     {
-      for(int i = 0; i < m_arraySize[0] - 1; i++)
+      for(int i = 0; i < iMax; i++)
       {
-        Cell* pCell = getCell(i, j, k);
-        if(pCell->flag.vertexType() != MMCellFlag::VertexType::NoVertex)
+        size_t cellIdx = cellArrayIndex(i, j, k);
+        if(MMCellFlag::vertexTypeFromFlag(m_flagArray[cellIdx]) != MMCellFlag::VertexType::NoVertex)
         {
-          pCell->vertexIndex = idxVtx;
-          m_VertexArray[idxVtx].cellIndex[0] = i;
-          m_VertexArray[idxVtx].cellIndex[1] = j;
-          m_VertexArray[idxVtx].cellIndex[2] = k;
+          m_vertexIndexArray[cellIdx] = idxVtx;
+          m_VertexArray[idxVtx].cellFlatIndex = cellIdx;
 
           m_VerticesStoreRef.setValue(idxVtx * 3, 0.5f);
           m_VerticesStoreRef.setValue(idxVtx * 3 + 1, 0.5f);
@@ -251,44 +269,62 @@ int32_t MMCellMap::label(const int32 cellIndex[3]) const
     return MMSurfaceNet::ReservedLabel::Padding;
   }
 
-  int32_t label = 0x8BABABAB;
+  int32_t lbl = 0x8BABABAB;
   if(cellIndex[0] - 1 >= 0 && cellIndex[0] - 1 < m_arraySize[0] - 1 && cellIndex[1] - 1 >= 0 && cellIndex[1] - 1 < m_arraySize[1] - 1 && cellIndex[2] - 1 >= 0 && cellIndex[2] - 1 < m_arraySize[2] - 1)
   {
     size_t nxArrayIdx = ToNxFlatIndex(cellIndex, m_NxDims.data());
-    label = m_NxLabelsPtr->at(nxArrayIdx);
+    lbl = m_NxLabelsPtr->at(nxArrayIdx);
   }
-  return label;
+  return lbl;
 }
 
 // Relax vertex positions using relaxation attributes or reset to cell centers
 void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
 {
-  size_t numVertices = m_VertexArray.size();
-  for(int i = 0; i < relaxAttrs.numRelaxIterations; i++)
+  const size_t numVerts = m_VertexArray.size();
+  if(numVerts == 0)
   {
-    for(size_t idxVtx = 0; idxVtx < numVertices; idxVtx++)
+    return;
+  }
+
+  // Step 6: Copy positions into a local buffer for better cache locality
+  const size_t numFloats = numVerts * 3;
+  std::vector<float> localPos(numFloats);
+  for(size_t idx = 0; idx < numFloats; idx++)
+  {
+    localPos[idx] = m_VerticesStoreRef.getValue(idx);
+  }
+
+  for(int iter = 0; iter < relaxAttrs.numRelaxIterations; iter++)
+  {
+    for(size_t idxVtx = 0; idxVtx < numVerts; idxVtx++)
     {
       int cellIdx[3];
       getVertexCellIndex(idxVtx, cellIdx);
-      Cell* pCell = getCell(cellIdx);
+      size_t cellFlatIdx = cellArrayIndex(cellIdx);
+      uint32_t flag = m_flagArray[cellFlatIdx];
 
       int numNeighbors = 0;
       float avgP[3] = {0.0f, 0.0f, 0.0f};
-      if(pCell->flag.vertexType() == MMCellFlag::VertexType::SurfaceVertex)
+      MMCellFlag::VertexType vType = MMCellFlag::vertexTypeFromFlag(flag);
+
+      if(vType == MMCellFlag::VertexType::SurfaceVertex)
       {
         for(MMCellFlag::Face face = MMCellFlag::Face::LeftFace; face <= MMCellFlag::Face::TopFace; ++face)
         {
-          if(pCell->flag.faceCrossingType(face) != MMCellFlag::FaceCrossingType::NoFaceCrossing)
+          if(MMCellFlag::faceCrossingTypeFromFlag(flag, face) != MMCellFlag::FaceCrossingType::NoFaceCrossing)
           {
             int nbrIdx[3];
-            Cell* nbrCell = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
-            float avgpX = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3);
+            size_t nbrFlatIdx = getFaceNeighborAndIndex(cellIdx, face, nbrIdx);
+            size_t nbrVertIdx = m_vertexIndexArray[nbrFlatIdx];
+
+            float avgpX = nbrVertIdx == std::numeric_limits<size_t>::max() ? 0.5f : localPos[nbrVertIdx * 3];
             avgP[0] += avgpX + static_cast<float>(nbrIdx[0] - cellIdx[0]);
 
-            float avgpY = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3 + 1);
+            float avgpY = nbrVertIdx == std::numeric_limits<size_t>::max() ? 0.5f : localPos[nbrVertIdx * 3 + 1];
             avgP[1] += avgpY + static_cast<float>(nbrIdx[1] - cellIdx[1]);
 
-            float avgpZ = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3 + 2);
+            float avgpZ = nbrVertIdx == std::numeric_limits<size_t>::max() ? 0.5f : localPos[nbrVertIdx * 3 + 2];
             avgP[2] += avgpZ + static_cast<float>(nbrIdx[2] - cellIdx[2]);
 
             numNeighbors++;
@@ -299,18 +335,19 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
       {
         for(MMCellFlag::Face face = MMCellFlag::Face::LeftFace; face <= MMCellFlag::Face::TopFace; ++face)
         {
-          if(pCell->flag.faceCrossingType(face) == MMCellFlag::FaceCrossingType::JunctionFaceCrossing)
+          if(MMCellFlag::faceCrossingTypeFromFlag(flag, face) == MMCellFlag::FaceCrossingType::JunctionFaceCrossing)
           {
             int nbrIdx[3];
-            Cell* nbrCell = getFaceNeighborCellAndIndex(cellIdx, face, nbrIdx);
+            size_t nbrFlatIdx = getFaceNeighborAndIndex(cellIdx, face, nbrIdx);
+            size_t nbrVertIdx = m_vertexIndexArray[nbrFlatIdx];
 
-            float avgpX = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3);
+            float avgpX = nbrVertIdx == std::numeric_limits<size_t>::max() ? 0.5f : localPos[nbrVertIdx * 3];
             avgP[0] += avgpX + static_cast<float>(nbrIdx[0] - cellIdx[0]);
 
-            float avgpY = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3 + 1);
+            float avgpY = nbrVertIdx == std::numeric_limits<size_t>::max() ? 0.5f : localPos[nbrVertIdx * 3 + 1];
             avgP[1] += avgpY + static_cast<float>(nbrIdx[1] - cellIdx[1]);
 
-            float avgpZ = nbrCell->vertexIndex == std::numeric_limits<size_t>::max() ? 0.5f : m_VerticesStoreRef.getValue(nbrCell->vertexIndex * 3 + 2);
+            float avgpZ = nbrVertIdx == std::numeric_limits<size_t>::max() ? 0.5f : localPos[nbrVertIdx * 3 + 2];
             avgP[2] += avgpZ + static_cast<float>(nbrIdx[2] - cellIdx[2]);
             numNeighbors++;
           }
@@ -320,6 +357,7 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
       // Add a fraction of the averaged vertex position to the current position
       if(numNeighbors > 0)
       {
+        size_t vtxIdx = m_vertexIndexArray[cellFlatIdx];
         // Constrain vertex location to a max distance from the original voxel
         const float min = 0.5f - relaxAttrs.maxDistFromCellCenter;
         const float max = 0.5f + relaxAttrs.maxDistFromCellCenter;
@@ -329,19 +367,25 @@ void MMCellMap::relax(const MMSurfaceNet::RelaxAttrs& relaxAttrs) const
         avgP[2] /= static_cast<float>(numNeighbors);
         const float alpha = relaxAttrs.relaxFactor;
 
-        float x = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCell->vertexIndex * 3) + alpha * avgP[0];
+        float x = (1.0f - alpha) * localPos[vtxIdx * 3] + alpha * avgP[0];
         x = std::clamp(x, min, max);
-        m_VerticesStoreRef.setValue(pCell->vertexIndex * 3, x);
+        localPos[vtxIdx * 3] = x;
 
-        float y = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 1) + alpha * avgP[1];
+        float y = (1.0f - alpha) * localPos[vtxIdx * 3 + 1] + alpha * avgP[1];
         y = std::clamp(y, min, max);
-        m_VerticesStoreRef.setValue(pCell->vertexIndex * 3 + 1, y);
+        localPos[vtxIdx * 3 + 1] = y;
 
-        float z = (1.0f - alpha) * m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 2) + alpha * avgP[2];
+        float z = (1.0f - alpha) * localPos[vtxIdx * 3 + 2] + alpha * avgP[2];
         z = std::clamp(z, min, max);
-        m_VerticesStoreRef.setValue(pCell->vertexIndex * 3 + 2, z);
+        localPos[vtxIdx * 3 + 2] = z;
       }
     }
+  }
+
+  // Copy back to the DataStore
+  for(size_t idx = 0; idx < numFloats; idx++)
+  {
+    m_VerticesStoreRef.setValue(idx, localPos[idx]);
   }
 }
 
@@ -367,54 +411,14 @@ size_t MMCellMap::numVertices() const
 
 size_t MMCellMap::numEdgeCrossings() const
 {
-  size_t cellMapIdx = 0;
-  size_t numCrossings = 0;
-  for(int k = 0; k < m_arraySize[2]; k++)
-  {
-    for(int j = 0; j < m_arraySize[1]; j++)
-    {
-      for(int i = 0; i < m_arraySize[0]; i++)
-      {
-        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::LeftBackEdge))
-          numCrossings++;
-        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::LeftBottomEdge))
-          numCrossings++;
-        if(isEdgeCrossing(cellMapIdx, MMCellFlag::Edge::BackBottomEdge))
-          numCrossings++;
-        cellMapIdx++;
-      }
-    }
-  }
-  return numCrossings;
+  return m_numEdgeCrossings;
 }
 
 MMCellFlag::VertexType MMCellMap::vertexType(size_t vertexIndex) const
 {
   int cellIndex[3];
   getVertexCellIndex(vertexIndex, cellIndex);
-  return (cellVertexType(cellArrayIndex(cellIndex)));
-}
-
-// Returns true if there is an edge crossing and false otherwise. If there is an edge
-// crossing, we define a surface quad from vertices in the 4 cells touching the edge.
-// The four positions of the quad's corner vertices are inserted into quadCorners as
-// [x0, y0, z0, x1, y1 ...] in clockwise order and the quad face labels are inserted
-// into quadLabels as [labelTopFaceOfQuad, labelBottomFaceOfQuad]. If there is no edge
-// crossing, quadCorners and quadLabels will not be set.
-bool MMCellMap::getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, float quadCorners[12], int32_t quadLabels[2], usize quadNxArrayIndices[2])
-{
-  int cellIndex[3];
-  getVertexCellIndex(vertexIndex, cellIndex);
-  if(!isEdgeCrossing(cellArrayIndex(cellIndex), edge))
-  {
-    return false;
-  }
-
-  // Because there is an edge crossing, cell map access in the following will be
-  // in-bounds by construction of the cell map.
-  getEdgeLabels(cellIndex, edge, quadLabels, quadNxArrayIndices);
-  getEdgeQuadPositions(cellIndex, edge, quadCorners);
-  return true;
+  return cellVertexType(cellArrayIndex(cellIndex));
 }
 
 // Returns true if there is an edge crossing and false otherwise. If there is an edge
@@ -441,9 +445,20 @@ bool MMCellMap::getEdgeQuad(size_t vertexIndex, MMCellFlag::Edge edge, size_t qu
 
 void MMCellMap::getVertexPosition(size_t vertexIndex, float position[3]) const
 {
-  const Vertex& vertex = m_VertexArray[vertexIndex];
-  const int32_t* cellIndex = vertex.cellIndex;
+  int cellIndex[3];
+  getVertexCellIndex(vertexIndex, cellIndex);
   getVertexPosition(cellIndex, position);
+}
+
+// SoA accessors
+uint32_t MMCellMap::cellFlag(size_t cellArrayIdx) const
+{
+  return m_flagArray[cellArrayIdx];
+}
+
+size_t MMCellMap::cellVertexIndex(size_t cellArrayIdx) const
+{
+  return m_vertexIndexArray[cellArrayIdx];
 }
 
 // The caller is responsible for bounds checking to allow for optimal performance.
@@ -545,116 +560,86 @@ usize MMCellMap::getNxCellArrayIndex(size_t vertexIndex) const
 // The caller is responsible for bounds checking to allow for optimal performance.
 // Vertices are ordered clockwise around each edge beginning with the cell vertex, with
 // edges oriented left-to-right, back-to-front and bottom-to-top.
-void MMCellMap::getEdgeQuadPositions(int cellIndex[3], MMCellFlag::Edge edge, float quadCorners[12]) const
-{
-  size_t vtxIndices[4] = {0, 0, 0, 0};
-  getEdgeQuadVtxIndices(cellIndex, edge, vtxIndices);
-  for(int i = 0; i < 4; i++)
-  {
-    int cellIndexTemp[3];
-    getVertexCellIndex(vtxIndices[i], cellIndexTemp);
-    getVertexPosition(cellIndexTemp, &(quadCorners[i * 3]));
-  }
-}
-
-// The caller is responsible for bounds checking to allow for optimal performance.
-// Vertices are ordered clockwise around each edge beginning with the cell vertex, with
-// edges oriented left-to-right, back-to-front and bottom-to-top.
 void MMCellMap::getEdgeQuadVtxIndices(int cellIndex[3], MMCellFlag::Edge edge, size_t quadVtxIndices[4]) const
 {
-  Cell* pCell = getCell(cellIndex);
-  const int length = static_cast<int32_t>(m_arraySize[0]);
-  const int area = static_cast<int32_t>(m_arraySize[0] * m_arraySize[1]);
-  quadVtxIndices[0] = pCell->vertexIndex;
+  size_t baseCellIdx = cellArrayIndex(cellIndex);
+  const size_t length = m_arraySize[0];
+  const size_t area = m_arraySize[0] * m_arraySize[1];
+
+  quadVtxIndices[0] = m_vertexIndexArray[baseCellIdx];
   switch(edge)
   {
   case MMCellFlag::Edge::LeftBottomEdge:
-    quadVtxIndices[1] = (pCell - area)->vertexIndex;
-    quadVtxIndices[2] = (pCell - 1 - area)->vertexIndex;
-    quadVtxIndices[3] = (pCell - 1)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx - area];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx - 1 - area];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx - 1];
     break;
   case MMCellFlag::Edge::RightBottomEdge:
-    quadVtxIndices[1] = (pCell + 1)->vertexIndex;
-    quadVtxIndices[2] = (pCell + 1 - area)->vertexIndex;
-    quadVtxIndices[3] = (pCell - area)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx + 1];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx + 1 - area];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx - area];
     break;
   case MMCellFlag::Edge::BackBottomEdge:
-    quadVtxIndices[1] = (pCell - length)->vertexIndex;
-    quadVtxIndices[2] = (pCell - length - area)->vertexIndex;
-    quadVtxIndices[3] = (pCell - area)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx - length];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx - length - area];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx - area];
     break;
   case MMCellFlag::Edge::FrontBottomEdge:
-    quadVtxIndices[1] = (pCell - area)->vertexIndex;
-    quadVtxIndices[2] = (pCell + length - area)->vertexIndex;
-    quadVtxIndices[3] = (pCell + length)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx - area];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx + length - area];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx + length];
     break;
   case MMCellFlag::Edge::LeftTopEdge:
-    quadVtxIndices[1] = (pCell - 1)->vertexIndex;
-    quadVtxIndices[2] = (pCell - 1 + area)->vertexIndex;
-    quadVtxIndices[3] = (pCell + area)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx - 1];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx - 1 + area];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx + area];
     break;
   case MMCellFlag::Edge::RightTopEdge:
-    quadVtxIndices[1] = (pCell + area)->vertexIndex;
-    quadVtxIndices[2] = (pCell + 1 + area)->vertexIndex;
-    quadVtxIndices[3] = (pCell + 1)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx + area];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx + 1 + area];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx + 1];
     break;
   case MMCellFlag::Edge::BackTopEdge:
-    quadVtxIndices[1] = (pCell + area)->vertexIndex;
-    quadVtxIndices[2] = (pCell - length + area)->vertexIndex;
-    quadVtxIndices[3] = (pCell - length)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx + area];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx - length + area];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx - length];
     break;
   case MMCellFlag::Edge::FrontTopEdge:
-    quadVtxIndices[1] = (pCell + length)->vertexIndex;
-    quadVtxIndices[2] = (pCell + length + area)->vertexIndex;
-    quadVtxIndices[3] = (pCell + area)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx + length];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx + length + area];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx + area];
     break;
   case MMCellFlag::Edge::LeftBackEdge:
-    quadVtxIndices[1] = (pCell - 1)->vertexIndex;
-    quadVtxIndices[2] = (pCell - 1 - length)->vertexIndex;
-    quadVtxIndices[3] = (pCell - length)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx - 1];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx - 1 - length];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx - length];
     break;
   case MMCellFlag::Edge::RightBackEdge:
-    quadVtxIndices[1] = (pCell - length)->vertexIndex;
-    quadVtxIndices[2] = (pCell + 1 - length)->vertexIndex;
-    quadVtxIndices[3] = (pCell + 1)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx - length];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx + 1 - length];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx + 1];
     break;
   case MMCellFlag::Edge::LeftFrontEdge:
-    quadVtxIndices[1] = (pCell + length)->vertexIndex;
-    quadVtxIndices[2] = (pCell - 1 + length)->vertexIndex;
-    quadVtxIndices[3] = (pCell - 1)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx + length];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx - 1 + length];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx - 1];
     break;
   case MMCellFlag::Edge::RightFrontEdge:
-    quadVtxIndices[1] = (pCell + 1)->vertexIndex;
-    quadVtxIndices[2] = (pCell + 1 + length)->vertexIndex;
-    quadVtxIndices[3] = (pCell + length)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx + 1];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx + 1 + length];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx + length];
     break;
   default:
-    quadVtxIndices[1] = (pCell)->vertexIndex;
-    quadVtxIndices[2] = (pCell)->vertexIndex;
-    quadVtxIndices[3] = (pCell)->vertexIndex;
+    quadVtxIndices[1] = m_vertexIndexArray[baseCellIdx];
+    quadVtxIndices[2] = m_vertexIndexArray[baseCellIdx];
+    quadVtxIndices[3] = m_vertexIndexArray[baseCellIdx];
     break;
   }
-}
-
-// Access cell map. The caller is responsible for bounds checking.
-MMCellMap::Cell* MMCellMap::getCell(int cellIndex[3]) const
-{
-  return (&(m_cellArray[cellArrayIndex(cellIndex)]));
-}
-
-MMCellMap::Cell* MMCellMap::getCell(int i, int j, int k) const
-{
-  return (&(m_cellArray[cellArrayIndex(i, j, k)]));
-}
-
-MMCellMap::Cell* MMCellMap::getCell(size_t cellMapIndex) const
-{
-  return (&(m_cellArray[cellMapIndex]));
 }
 
 size_t MMCellMap::cellArrayIndex(const int cellIndex[3]) const
 {
-  return (cellArrayIndex(cellIndex[0], cellIndex[1], cellIndex[2]));
+  return cellArrayIndex(cellIndex[0], cellIndex[1], cellIndex[2]);
 }
 
 size_t MMCellMap::cellArrayIndex(int i, int j, int k) const
@@ -665,53 +650,24 @@ size_t MMCellMap::cellArrayIndex(int i, int j, int k) const
   return (ii + m_arraySize[0] * jj + m_arraySize[0] * m_arraySize[1] * kk);
 }
 
-void MMCellMap::getCellLabels(Cell* pCell, int32_t labels[8]) const
+bool MMCellMap::isEdgeCrossing(size_t cellArrayIdx, MMCellFlag::Edge edge) const
 {
-  // Labels of cell's 8 corner vertices. This ordering is used when computing cell
-  // flags.
-  Cell* cellPtr = pCell;
-  usize vertIdx = cellPtr->vertexIndex;
-  labels[0] = label(m_VertexArray.at(vertIdx).cellIndex);
-
-  cellPtr = pCell + 1;
-  vertIdx = cellPtr->vertexIndex;
-  labels[1] = label(m_VertexArray.at(vertIdx).cellIndex);
-
-  cellPtr = (pCell + 1 + m_arraySize[0]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[2] = label(m_VertexArray.at(vertIdx).cellIndex);
-
-  cellPtr = (pCell + m_arraySize[0]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[3] = label(m_VertexArray.at(vertIdx).cellIndex);
-
-  cellPtr = (pCell + m_arraySize[0] * m_arraySize[1]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[4] = label(m_VertexArray.at(vertIdx).cellIndex);
-
-  cellPtr = (pCell + 1 + m_arraySize[0] * m_arraySize[1]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[5] = label(m_VertexArray.at(vertIdx).cellIndex);
-
-  cellPtr = (pCell + 1 + m_arraySize[0] + m_arraySize[0] * m_arraySize[1]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[6] = label(m_VertexArray.at(vertIdx).cellIndex);
-
-  cellPtr = (pCell + m_arraySize[0] + m_arraySize[0] * m_arraySize[1]);
-  vertIdx = cellPtr->vertexIndex;
-  labels[7] = label(m_VertexArray.at(vertIdx).cellIndex);
+  return MMCellFlag::isEdgeCrossingFromFlag(m_flagArray[cellArrayIdx], edge);
 }
 
-bool MMCellMap::isEdgeCrossing(size_t cellMapIndex, MMCellFlag::Edge edge) const
+MMCellFlag::VertexType MMCellMap::cellVertexType(size_t cellArrayIdx) const
 {
-  Cell* pCell = getCell(cellMapIndex);
-  return (pCell->flag.isEdgeCrossing(edge));
+  return MMCellFlag::vertexTypeFromFlag(m_flagArray[cellArrayIdx]);
 }
 
-MMCellFlag::VertexType MMCellMap::cellVertexType(size_t cellMapIndex) const
+// Recover (i,j,k) from a flat cell index
+void MMCellMap::cellIndexFromFlat(size_t flatIdx, int& i, int& j, int& k) const
 {
-  Cell* pCell = getCell(cellMapIndex);
-  return (pCell->flag.vertexType());
+  const size_t sliceSize = m_arraySize[0] * m_arraySize[1];
+  k = static_cast<int>(flatIdx / sliceSize);
+  size_t remainder = flatIdx % sliceSize;
+  j = static_cast<int>(remainder / m_arraySize[0]);
+  i = static_cast<int>(remainder % m_arraySize[0]);
 }
 
 // Access vertex data
@@ -724,57 +680,21 @@ void MMCellMap::getVertexCellIndex(size_t vertexIndex, int cellIndex[3]) const
     cellIndex[2] = 0;
     return;
   }
-  const Vertex* pVertex = &(m_VertexArray[vertexIndex]);
-  cellIndex[0] = pVertex->cellIndex[0];
-  cellIndex[1] = pVertex->cellIndex[1];
-  cellIndex[2] = pVertex->cellIndex[2];
+  cellIndexFromFlat(m_VertexArray[vertexIndex].cellFlatIndex, cellIndex[0], cellIndex[1], cellIndex[2]);
 }
 
 void MMCellMap::getVertexPosition(const int cellIndex[3], float position[3]) const
 {
-  const Cell* pCell = getCell(cellArrayIndex(cellIndex));
+  size_t cellIdx = cellArrayIndex(cellIndex);
+  size_t vtxIdx = m_vertexIndexArray[cellIdx];
 
-  position[0] = m_voxelSize[0] * (static_cast<float>(cellIndex[0]) + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3));
-  position[1] = m_voxelSize[1] * (static_cast<float>(cellIndex[1]) + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 1));
-  position[2] = m_voxelSize[2] * (static_cast<float>(cellIndex[2]) + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 2));
-}
-
-void MMCellMap::getVertexPosition(int i, int j, int k, float position[3]) const
-{
-  const Cell* pCell = getCell(i, j, k);
-
-  position[0] = m_voxelSize[0] * (i + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3));
-  position[1] = m_voxelSize[1] * (j + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 1));
-  position[2] = m_voxelSize[2] * (k + m_VerticesStoreRef.getValue(pCell->vertexIndex * 3 + 2));
-}
-
-usize MMCellMap::vertexFaceNeighborVertexIndex(size_t vertexIndex, MMCellFlag::Face face) const
-{
-  const Vertex& vertex = m_VertexArray[vertexIndex];
-  const int32_t* cellIndex = vertex.cellIndex;
-
-  size_t cellMapIndex = cellArrayIndex(cellIndex);
-  switch(face)
-  {
-  case MMCellFlag::Face::LeftFace:
-    return (cellMapIndex - 1);
-  case MMCellFlag::Face::RightFace:
-    return (cellMapIndex + 1);
-  case MMCellFlag::Face::BackFace:
-    return (cellMapIndex - m_arraySize[0]);
-  case MMCellFlag::Face::FrontFace:
-    return (cellMapIndex + m_arraySize[0]);
-  case MMCellFlag::Face::BottomFace:
-    return (cellMapIndex - m_arraySize[0] * m_arraySize[1]);
-  case MMCellFlag::Face::TopFace:
-    return (cellMapIndex + m_arraySize[0] * m_arraySize[1]);
-  default:
-    return (cellMapIndex);
-  }
+  position[0] = m_voxelSize[0] * (static_cast<float>(cellIndex[0]) + m_VerticesStoreRef.getValue(vtxIdx * 3));
+  position[1] = m_voxelSize[1] * (static_cast<float>(cellIndex[1]) + m_VerticesStoreRef.getValue(vtxIdx * 3 + 1));
+  position[2] = m_voxelSize[2] * (static_cast<float>(cellIndex[2]) + m_VerticesStoreRef.getValue(vtxIdx * 3 + 2));
 }
 
 // Access cell neighbors
-MMCellMap::Cell* MMCellMap::getFaceNeighborCellAndIndex(const int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]) const
+size_t MMCellMap::getFaceNeighborAndIndex(const int cellIndex[3], MMCellFlag::Face face, int nbrCellIndex[3]) const
 {
   nbrCellIndex[0] = cellIndex[0];
   nbrCellIndex[1] = cellIndex[1];
@@ -802,5 +722,5 @@ MMCellMap::Cell* MMCellMap::getFaceNeighborCellAndIndex(const int cellIndex[3], 
   default:
     break;
   }
-  return (&(m_cellArray[cellArrayIndex(nbrCellIndex)]));
+  return cellArrayIndex(nbrCellIndex);
 }

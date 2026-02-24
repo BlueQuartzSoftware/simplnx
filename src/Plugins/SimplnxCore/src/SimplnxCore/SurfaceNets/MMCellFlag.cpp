@@ -104,71 +104,71 @@ uint32_t FaceCrossingTypeAsBits(int32_t c0, int32_t c1, int32_t c2, int32_t c3)
 }
 } // namespace
 
-void MMCellFlag::set(const int32_t cellLabels[8])
+void MMCellFlag::setFromLabels(uint32_t& bitFlag, const int32_t cellLabels[8])
 {
   // By default, the cell has no vertex and no face or edge crossings
-  m_BitFlag = 0;
+  bitFlag = 0;
 
   // Find edge crossings
   int32_t numEdgeCrossings = 0;
   if(cellLabels[0] != cellLabels[3])
   {
-    m_BitFlag |= k_LeftBottomEdgeCrossingBit;
+    bitFlag |= k_LeftBottomEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[1] != cellLabels[2])
   {
-    m_BitFlag |= k_RightBottomEdgeCrossingBit;
+    bitFlag |= k_RightBottomEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[0] != cellLabels[1])
   {
-    m_BitFlag |= k_BackBottomEdgeCrossingBit;
+    bitFlag |= k_BackBottomEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[2] != cellLabels[3])
   {
-    m_BitFlag |= k_FrontBottomEdgeCrossingBit;
+    bitFlag |= k_FrontBottomEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[4] != cellLabels[7])
   {
-    m_BitFlag |= k_LeftTopEdgeCrossingBit;
+    bitFlag |= k_LeftTopEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[5] != cellLabels[6])
   {
-    m_BitFlag |= k_RightTopEdgeCrossingBit;
+    bitFlag |= k_RightTopEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[4] != cellLabels[5])
   {
-    m_BitFlag |= k_BackTopEdgeCrossingBit;
+    bitFlag |= k_BackTopEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[6] != cellLabels[7])
   {
-    m_BitFlag |= k_FrontTopEdgeCrossingBit;
+    bitFlag |= k_FrontTopEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[0] != cellLabels[4])
   {
-    m_BitFlag |= k_LeftBackEdgeCrossingBit;
+    bitFlag |= k_LeftBackEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[1] != cellLabels[5])
   {
-    m_BitFlag |= k_RightBackEdgeCrossingBit;
+    bitFlag |= k_RightBackEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[3] != cellLabels[7])
   {
-    m_BitFlag |= k_LeftFrontEdgeCrossingBit;
+    bitFlag |= k_LeftFrontEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(cellLabels[2] != cellLabels[6])
   {
-    m_BitFlag |= k_RightFrontEdgeCrossingBit;
+    bitFlag |= k_RightFrontEdgeCrossingBit;
     numEdgeCrossings++;
   }
   if(numEdgeCrossings == 0)
@@ -178,29 +178,29 @@ void MMCellFlag::set(const int32_t cellLabels[8])
 
   // Find face crossings
   uint32_t faceTypeBits = FaceCrossingTypeAsBits(cellLabels[0], cellLabels[3], cellLabels[7], cellLabels[4]);
-  m_BitFlag |= (faceTypeBits << k_LeftFaceShift);
+  bitFlag |= (faceTypeBits << k_LeftFaceShift);
   faceTypeBits = FaceCrossingTypeAsBits(cellLabels[1], cellLabels[2], cellLabels[6], cellLabels[5]);
-  m_BitFlag |= (faceTypeBits << k_RightFaceShift);
+  bitFlag |= (faceTypeBits << k_RightFaceShift);
 
   faceTypeBits = FaceCrossingTypeAsBits(cellLabels[0], cellLabels[1], cellLabels[5], cellLabels[4]);
-  m_BitFlag |= (faceTypeBits << k_BackFaceShift);
+  bitFlag |= (faceTypeBits << k_BackFaceShift);
   faceTypeBits = FaceCrossingTypeAsBits(cellLabels[3], cellLabels[2], cellLabels[6], cellLabels[7]);
-  m_BitFlag |= (faceTypeBits << k_FrontFaceShift);
+  bitFlag |= (faceTypeBits << k_FrontFaceShift);
 
   faceTypeBits = FaceCrossingTypeAsBits(cellLabels[0], cellLabels[1], cellLabels[2], cellLabels[3]);
-  m_BitFlag |= (faceTypeBits << k_BottomFaceShift);
+  bitFlag |= (faceTypeBits << k_BottomFaceShift);
   faceTypeBits = FaceCrossingTypeAsBits(cellLabels[4], cellLabels[5], cellLabels[6], cellLabels[7]);
-  m_BitFlag |= (faceTypeBits << k_TopFaceShift);
+  bitFlag |= (faceTypeBits << k_TopFaceShift);
 
   // Determine vertex type
   int32_t numFaceCrossings = 0;
   uint32_t numJunctions = 0;
   for(Face face = Face::LeftFace; face <= Face::TopFace; ++face)
   {
-    if(faceCrossingType(face) != FaceCrossingType::NoFaceCrossing)
+    if(faceCrossingTypeFromFlag(bitFlag, face) != FaceCrossingType::NoFaceCrossing)
     {
       numFaceCrossings++;
-      if(faceCrossingType(face) == FaceCrossingType::JunctionFaceCrossing)
+      if(faceCrossingTypeFromFlag(bitFlag, face) == FaceCrossingType::JunctionFaceCrossing)
       {
         numJunctions++;
       }
@@ -221,15 +221,25 @@ void MMCellFlag::set(const int32_t cellLabels[8])
     {
       vertexTypeBits = static_cast<uint32_t>(VertexType::CornerVertex);
     }
-    m_BitFlag |= (vertexTypeBits << k_VertexTypeShift);
+    bitFlag |= (vertexTypeBits << k_VertexTypeShift);
   }
 
-  m_BitFlag |= numJunctions << k_NumJunctionsBitShift;
+  bitFlag |= numJunctions << k_NumJunctionsBitShift;
+}
+
+void MMCellFlag::set(const int32_t cellLabels[8])
+{
+  setFromLabels(m_BitFlag, cellLabels);
 }
 
 MMCellFlag::VertexType MMCellFlag::vertexType() const
 {
-  uint32_t vertexTypeBits = (m_BitFlag & k_VertexTypeBits) >> k_VertexTypeShift;
+  return vertexTypeFromFlag(m_BitFlag);
+}
+
+MMCellFlag::VertexType MMCellFlag::vertexTypeFromFlag(uint32_t bitFlag)
+{
+  uint32_t vertexTypeBits = (bitFlag & k_VertexTypeBits) >> k_VertexTypeShift;
   switch(vertexTypeBits)
   {
   case 0: {
@@ -249,33 +259,39 @@ MMCellFlag::VertexType MMCellFlag::vertexType() const
   }
   }
 }
+
 MMCellFlag::FaceCrossingType MMCellFlag::faceCrossingType(Face face) const
+{
+  return faceCrossingTypeFromFlag(m_BitFlag, face);
+}
+
+MMCellFlag::FaceCrossingType MMCellFlag::faceCrossingTypeFromFlag(uint32_t bitFlag, Face face)
 {
   uint32_t faceTypeBits = 0;
   switch(face)
   {
   case Face::LeftFace: {
-    faceTypeBits = (m_BitFlag & k_LeftFaceCrossingBits) >> k_LeftFaceShift;
+    faceTypeBits = (bitFlag & k_LeftFaceCrossingBits) >> k_LeftFaceShift;
     break;
   }
   case Face::RightFace: {
-    faceTypeBits = (m_BitFlag & k_RightFaceCrossingBits) >> k_RightFaceShift;
+    faceTypeBits = (bitFlag & k_RightFaceCrossingBits) >> k_RightFaceShift;
     break;
   }
   case Face::BackFace: {
-    faceTypeBits = (m_BitFlag & k_BackFaceCrossingBits) >> k_BackFaceShift;
+    faceTypeBits = (bitFlag & k_BackFaceCrossingBits) >> k_BackFaceShift;
     break;
   }
   case Face::FrontFace: {
-    faceTypeBits = (m_BitFlag & k_FrontFaceCrossingBits) >> k_FrontFaceShift;
+    faceTypeBits = (bitFlag & k_FrontFaceCrossingBits) >> k_FrontFaceShift;
     break;
   }
   case Face::BottomFace: {
-    faceTypeBits = (m_BitFlag & k_BottomFaceCrossingBits) >> k_BottomFaceShift;
+    faceTypeBits = (bitFlag & k_BottomFaceCrossingBits) >> k_BottomFaceShift;
     break;
   }
   case Face::TopFace: {
-    faceTypeBits = (m_BitFlag & k_TopFaceCrossingBits) >> k_TopFaceShift;
+    faceTypeBits = (bitFlag & k_TopFaceCrossingBits) >> k_TopFaceShift;
     break;
   }
   default: {
@@ -300,45 +316,51 @@ MMCellFlag::FaceCrossingType MMCellFlag::faceCrossingType(Face face) const
   }
   }
 }
+
 bool MMCellFlag::isEdgeCrossing(Edge edge) const
+{
+  return isEdgeCrossingFromFlag(m_BitFlag, edge);
+}
+
+bool MMCellFlag::isEdgeCrossingFromFlag(uint32_t bitFlag, Edge edge)
 {
   switch(edge)
   {
   case Edge::LeftBottomEdge: {
-    return (m_BitFlag & k_LeftBottomEdgeCrossingBit) > 0;
+    return (bitFlag & k_LeftBottomEdgeCrossingBit) > 0;
   }
   case Edge::RightBottomEdge: {
-    return (m_BitFlag & k_RightBottomEdgeCrossingBit) > 0;
+    return (bitFlag & k_RightBottomEdgeCrossingBit) > 0;
   }
   case Edge::BackBottomEdge: {
-    return (m_BitFlag & k_BackBottomEdgeCrossingBit) > 0;
+    return (bitFlag & k_BackBottomEdgeCrossingBit) > 0;
   }
   case Edge::FrontBottomEdge: {
-    return (m_BitFlag & k_FrontBottomEdgeCrossingBit) > 0;
+    return (bitFlag & k_FrontBottomEdgeCrossingBit) > 0;
   }
   case Edge::LeftTopEdge: {
-    return (m_BitFlag & k_LeftTopEdgeCrossingBit) > 0;
+    return (bitFlag & k_LeftTopEdgeCrossingBit) > 0;
   }
   case Edge::RightTopEdge: {
-    return (m_BitFlag & k_RightTopEdgeCrossingBit) > 0;
+    return (bitFlag & k_RightTopEdgeCrossingBit) > 0;
   }
   case Edge::BackTopEdge: {
-    return (m_BitFlag & k_BackTopEdgeCrossingBit) > 0;
+    return (bitFlag & k_BackTopEdgeCrossingBit) > 0;
   }
   case Edge::FrontTopEdge: {
-    return (m_BitFlag & k_FrontTopEdgeCrossingBit) > 0;
+    return (bitFlag & k_FrontTopEdgeCrossingBit) > 0;
   }
   case Edge::LeftBackEdge: {
-    return (m_BitFlag & k_LeftBackEdgeCrossingBit) > 0;
+    return (bitFlag & k_LeftBackEdgeCrossingBit) > 0;
   }
   case Edge::RightBackEdge: {
-    return (m_BitFlag & k_RightBackEdgeCrossingBit) > 0;
+    return (bitFlag & k_RightBackEdgeCrossingBit) > 0;
   }
   case Edge::LeftFrontEdge: {
-    return (m_BitFlag & k_LeftFrontEdgeCrossingBit) > 0;
+    return (bitFlag & k_LeftFrontEdgeCrossingBit) > 0;
   }
   case Edge::RightFrontEdge: {
-    return (m_BitFlag & k_RightFrontEdgeCrossingBit) > 0;
+    return (bitFlag & k_RightFrontEdgeCrossingBit) > 0;
   }
   default: {
     return false;

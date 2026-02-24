@@ -76,9 +76,19 @@ public:
     return m_BitFlag >> k_NumJunctionsBitShift;
   }
 
-private:
+  // Static methods for operating on raw uint32_t bitflag values (SoA access)
+  static void setFromLabels(uint32_t& bitFlag, const int32_t cellLabels[8]);
+  static VertexType vertexTypeFromFlag(uint32_t bitFlag);
+  static FaceCrossingType faceCrossingTypeFromFlag(uint32_t bitFlag, Face face);
+  static bool isEdgeCrossingFromFlag(uint32_t bitFlag, Edge edge);
+  static uint8_t numJunctionsFromFlag(uint32_t bitFlag)
+  {
+    return bitFlag >> k_NumJunctionsBitShift;
+  }
+
   static inline constexpr uint32_t k_NumJunctionsBitShift = 29;
 
+private:
   // The bitflag
   // The last 3 bits of the bitflag are the number of junctions
   // numJunctions can at most be 6

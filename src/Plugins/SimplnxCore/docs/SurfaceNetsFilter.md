@@ -75,7 +75,7 @@ This filter should be used in place of the "QuickMesh Surface Filter".
 
 ## Example Pipelines
 
-        Pipelines/SimplnxCore/SurfaceNets_Demo.d3dpipeline
+Pipelines/SimplnxCore/SurfaceNets_Demo.d3dpipeline
 
 ## Citations
 
@@ -83,8 +83,7 @@ This filter should be used in place of the "QuickMesh Surface Filter".
 
 ## License & Copyright
 
-`Sarah F. Frisken, SurfaceNets for Multi-Label Segmentations with Preservation of Sharp
-Boundaries, Journal of Computer Graphics Techniques (JCGT), vol. 11, no. 1, 34–54, 2022`
+`Sarah F. Frisken, SurfaceNets for Multi-Label Segmentations with Preservation of Sharp Boundaries, Journal of Computer Graphics Techniques (JCGT), vol. 11, no. 1, 34–54, 2022`
 [http://jcgt.org/published/0011/01/03](http://jcgt.org/published/0011/01/03)
 
 ## DREAM3D-NX Mailing Lists
