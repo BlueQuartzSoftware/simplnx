@@ -24,7 +24,7 @@ There are 2 outputs from this filter:
 
 ## Example Pipelines
 
-+ (01) SmallIN100 Morphological Statistics
++ (03) Small IN100 Morphological Statistics
 + InsertTransformationPhase
 + (06) SmallIN100 Synthetic
 

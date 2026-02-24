@@ -16,7 +16,7 @@ This **Filter** creates a pole figure from the Grain Boundary Character Distribu
 
 ## Example Pipelines
 
-+ (04) SmallIN100 GBCD
++ (08) Small IN100 GBCD
 
 ## License & Copyright
 

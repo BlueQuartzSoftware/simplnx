@@ -14,7 +14,7 @@ This **Filter** creates a .dat file that can be used in conjunction with [GMT](h
 
 ## Example Pipelines
 
-+ (04) SmallIN100 GBCD
++ (08) Small IN100 GBCD
 
 ## License & Copyright
 

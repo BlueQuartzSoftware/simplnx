@@ -48,8 +48,8 @@ In previous versions a file would have been produced instead. If you wish to rec
 
 ## Example Pipelines
 
-+ (10) SmallIN100 Full Reconstruction
-+ (03) SmallIN100 Alignment
++ (02) Small IN100 Full Reconstruction
+
 
 ## License & Copyright
 

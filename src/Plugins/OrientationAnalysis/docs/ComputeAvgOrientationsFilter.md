@@ -21,9 +21,8 @@ This **Filter** determines the average orientation of each **Feature** by the fo
 
 ## Example Pipelines
 
-+ (10) SmallIN100 Full Reconstruction
++ (02) Small IN100 Full Reconstruction
 + InsertTransformationPhase
-+ (06) SmallIN100 Postsegmentation Processing
 + (05) SmallIN100 Crystallographic Statistics
 + (06) SmallIN100 Synthetic
 

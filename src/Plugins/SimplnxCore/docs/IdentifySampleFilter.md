@@ -45,7 +45,6 @@ filling the surrounding overscan area.
 + (02) Small IN100 Full Reconstruction
 + INL Export
 
-
 ## License & Copyright
 
 Please see the description file distributed with this **Plugin**

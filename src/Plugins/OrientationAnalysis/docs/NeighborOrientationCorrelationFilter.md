@@ -43,8 +43,7 @@ This filter will copy all attribute data from neighboring cells into the target 
 
 ## Example Pipelines
 
-+ (04) SmallIN100 Presegmentation Processing
-+ (08) SmallIN100 Full Reconstruction
++ (02) SmallIN100 Full Reconstruction
 + INL Export
 
 ## License & Copyright

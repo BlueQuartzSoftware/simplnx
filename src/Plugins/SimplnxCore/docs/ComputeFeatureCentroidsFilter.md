@@ -12,7 +12,7 @@ This **Filter** calculates the *centroid* of each **Feature** by determining the
 
 ## Example Pipelines
 
-+ (01) SmallIN100 Morphological Statistics
++ (03) Small IN100 Morphological Statistics
 + InsertTransformationPhase
 + (06) SmallIN100 Synthetic
 

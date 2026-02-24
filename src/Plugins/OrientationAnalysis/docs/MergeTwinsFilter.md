@@ -14,8 +14,8 @@ This **Filter** groups neighboring **Features** that are in a twin relationship 
 
 ## Example Pipelines
 
-+ (10) SmallIN100 Full Reconstruction
-+ (06) SmallIN100 Postsegmentation Processing
++ (02) Small IN100 Full Reconstruction
+
 
 ## License & Copyright
 

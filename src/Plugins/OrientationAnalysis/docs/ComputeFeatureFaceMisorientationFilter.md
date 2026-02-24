@@ -12,7 +12,7 @@ This **Filter** generates a 3 component vector for each **Triangle** in a **Tria
 
 ## Example Pipelines
 
-+ (03) SmallIN100 Mesh Statistics
++ (07) Small IN100 Mesh Statistics
 
 ## License & Copyright
 
