@@ -1,6 +1,6 @@
-# ITK Standard Deviation Projection Image Filter (ITKStandardDeviationProjectionImage)
+# ITK Standard Deviation Projection Image Filter
 
-Mean projection.
+Standard deviation projection.
 
 ## Group (Subgroup)
 

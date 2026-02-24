@@ -4,7 +4,7 @@ This filter directly wraps an ITK filter of the same name.
 
 ## Group (Subgroup)
 
-ITKImageProcessing (ITKImageProcessing)
+ITKImageIntensity (ImageIntensity)
 
 ## Description
 

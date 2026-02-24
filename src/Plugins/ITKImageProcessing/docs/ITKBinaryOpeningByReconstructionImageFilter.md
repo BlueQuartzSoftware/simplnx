@@ -1,6 +1,6 @@
 # ITK Binary Opening By Reconstruction Image Filter
 
-binary morphological closing of an image.
+Binary morphological opening by reconstruction of an image.
 
 ## Group (Subgroup)
 

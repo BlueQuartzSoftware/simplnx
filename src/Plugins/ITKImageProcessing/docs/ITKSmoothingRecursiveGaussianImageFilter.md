@@ -1,4 +1,4 @@
-# ITK Smoothing Recursive Gaussian Image Filter (ITKSmoothingRecursiveGaussianImage)
+# ITK Smoothing Recursive Gaussian Image Filter
 
 Computes the smoothing of an image by convolution with the Gaussian kernels implemented as IIR filters.
 

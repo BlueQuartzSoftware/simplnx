@@ -101,3 +101,33 @@
 ### Build & Test
 - [x] Verify code compiles
 - [x] Verify unit tests pass
+
+---
+
+## ITKImageProcessing Plugin (Complete)
+
+### Doc Title Mismatches (doc title vs code humanName())
+- [x] ITKBoundedReciprocalImageFilter - remove extraneous "(ITKBoundedReciprocalImage)" suffix from title
+- [x] ITKMaximumProjectionImageFilter - remove extraneous "(ITKMaximumProjectionImage)" suffix from title
+- [x] ITKSmoothingRecursiveGaussianImageFilter - remove extraneous "(ITKSmoothingRecursiveGaussianImage)" suffix from title
+- [x] ITKStandardDeviationProjectionImageFilter - remove extraneous "(ITKStandardDeviationProjectionImage)" suffix from title
+- [x] ITKSumProjectionImageFilter - remove extraneous "(ITKSumProjectionImage)" suffix from title
+
+### Description Inaccuracies
+- [x] ITKAsinImageFilter - short description says "sine" but should say "inverse sine (arcsine)"
+- [x] ITKBinaryOpeningByReconstructionImageFilter - short description says "closing" but should say "opening by reconstruction"
+- [x] ITKStandardDeviationProjectionImageFilter - short description says "Mean projection" but should say "Standard deviation projection"
+
+### Doc Group/Subgroup Mismatches
+- [x] ITKImportFijiMontageFilter - "Import/Export (Import)" → "IO (Input)" to match defaultTags()
+- [x] ITKMaskImageFilter - "ITKImageProcessing (ITKImageProcessing)" → "ITKImageIntensity (ImageIntensity)" to match defaultTags()
+
+### Doc Format/Footer Fixes
+- [x] ITKBoundedReciprocalImageFilter - replace manual parameter table with auto-generated placeholder; fix "DREAM3D Mailing Lists" → "DREAM3D-NX Help" footer
+
+### Known Issue (Not Fixed)
+- [ ] ITKBoundedReciprocalImageFIlter.cpp - filename has capital "I" in "FIlter" (typo). Not renamed because it would require CMakeLists.txt changes and risk build breakage.
+
+### Build & Test
+- [x] Verify code compiles (ninja build: 16/16 succeeded)
+- [x] Verify unit tests pass (151/151 ITKImageProcessing tests pass)

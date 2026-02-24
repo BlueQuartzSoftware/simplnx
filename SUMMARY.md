@@ -260,3 +260,62 @@ Updated doc subgroup text from adjective form to match the noun form used in `de
 
 ### Documentation Files Deleted (1)
 - `src/Plugins/OrientationAnalysis/docs/GeneratePoleFigureFilter.md`
+
+---
+
+## ITKImageProcessing Plugin
+
+Audited all 88 ITKImageProcessing filter documentation files against their corresponding 88 C++ implementations. Fixed discrepancies across 9 markdown documentation files. No C++ code bugs were found in any `defaultTags()` functions.
+
+## Documentation Title Fixes (5 files)
+
+Removed extraneous parenthetical suffixes from doc titles to match `humanName()` in code:
+
+| File | Old Title | New Title |
+|------|-----------|-----------|
+| ITKBoundedReciprocalImageFilter.md | "ITK Bounded Reciprocal Image Filter (ITKBoundedReciprocalImage)" | "ITK Bounded Reciprocal Image Filter" |
+| ITKMaximumProjectionImageFilter.md | "ITK Maximum Projection Image Filter (ITKMaximumProjectionImage)" | "ITK Maximum Projection Image Filter" |
+| ITKSmoothingRecursiveGaussianImageFilter.md | "...Filter (ITKSmoothingRecursiveGaussianImage)" | "ITK Smoothing Recursive Gaussian Image Filter" |
+| ITKStandardDeviationProjectionImageFilter.md | "...Filter (ITKStandardDeviationProjectionImage)" | "ITK Standard Deviation Projection Image Filter" |
+| ITKSumProjectionImageFilter.md | "...Filter (ITKSumProjectionImage)" | "ITK Sum Projection Image Filter" |
+
+## Description Fixes (3 files)
+
+1. **ITKAsinImageFilter.md**: Changed short description from "Computes the sine of each pixel." to "Computes the inverse sine (arcsine) of each pixel." -- the original incorrectly described the sine function instead of the arcsine function.
+
+2. **ITKBinaryOpeningByReconstructionImageFilter.md**: Changed short description from "binary morphological closing of an image." to "Binary morphological opening by reconstruction of an image." -- copy-paste error from the closing filter.
+
+3. **ITKStandardDeviationProjectionImageFilter.md**: Changed short description from "Mean projection." to "Standard deviation projection." -- copy-paste error from the mean projection filter.
+
+## Doc Group/Subgroup Fixes (2 files)
+
+| File | Old Group (Subgroup) | New Group (Subgroup) |
+|------|---------------------|---------------------|
+| ITKImportFijiMontageFilter.md | "Import/Export (Import)" | "IO (Input)" |
+| ITKMaskImageFilter.md | "ITKImageProcessing (ITKImageProcessing)" | "ITKImageIntensity (ImageIntensity)" |
+
+## Doc Format/Footer Fixes (1 file)
+
+- **ITKBoundedReciprocalImageFilter.md**: Replaced manual parameter table (empty `## Parameters`, `## Required Geometry`, `## Required Objects`, `## Created Objects` sections) with the standard `% Auto generated parameter table will be inserted here` placeholder. Updated footer heading from "DREAM3D Mailing Lists" to "DREAM3D-NX Help".
+
+## Known Issue (Not Fixed)
+
+- **ITKBoundedReciprocalImageFIlter.cpp**: The .cpp filename has a typo -- capital "I" in "FIlter". The corresponding header and doc files are spelled correctly. Not renamed because it would require CMakeLists.txt and header changes, risking build breakage. Flagged for manual attention.
+
+## Build & Test Results
+
+- **Build**: Ninja build (16/16 targets) completed successfully with no errors.
+- **Tests**: All 151 ITKImageProcessing unit tests pass (100%). No new test failures introduced.
+
+## Files Modified
+
+### Documentation Files Modified (9)
+- `src/Plugins/ITKImageProcessing/docs/ITKAsinImageFilter.md`
+- `src/Plugins/ITKImageProcessing/docs/ITKBinaryOpeningByReconstructionImageFilter.md`
+- `src/Plugins/ITKImageProcessing/docs/ITKBoundedReciprocalImageFilter.md`
+- `src/Plugins/ITKImageProcessing/docs/ITKImportFijiMontageFilter.md`
+- `src/Plugins/ITKImageProcessing/docs/ITKMaskImageFilter.md`
+- `src/Plugins/ITKImageProcessing/docs/ITKMaximumProjectionImageFilter.md`
+- `src/Plugins/ITKImageProcessing/docs/ITKSmoothingRecursiveGaussianImageFilter.md`
+- `src/Plugins/ITKImageProcessing/docs/ITKStandardDeviationProjectionImageFilter.md`
+- `src/Plugins/ITKImageProcessing/docs/ITKSumProjectionImageFilter.md`
