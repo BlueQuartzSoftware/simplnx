@@ -7,22 +7,20 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
+  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
-  DataPath cellDataAttributeMatrix = smallIn100Group.createChildPath(k_CellData);
-  DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
-  DataPath cellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
+  DataPath smallIn100Group({Constants::k_DataContainer});
+  DataPath cellDataAttributeMatrix = smallIn100Group.createChildPath(Constants::k_CellData);
+  DataPath featureIdsDataPath({Constants::k_DataContainer, Constants::k_CellData, Constants::k_FeatureIds});
+  DataPath cellFeatureAttributeMatrixPath({Constants::k_DataContainer, Constants::k_CellFeatureData});
   std::string numNeighborName = "NumNeighbors_computed";
   std::string neighborListName = "NeighborList_computed";
   std::string sharedSurfaceAreaListName = "SharedSurfaceAreaList_computed";
@@ -58,7 +56,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter", "[SimplnxCore][ComputeFe
 
   // Output
   {
-    DataPath featureGroup = smallIn100Group.createChildPath(nx::core::Constants::k_CellFeatureData);
+    DataPath featureGroup = smallIn100Group.createChildPath(Constants::k_CellFeatureData);
     DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
     UnitTest::CompareArrays<bool>(dataStructure, exemplaryDataPath, cellFeatureAttributeMatrixPath.createChildPath(surfaceFeaturesName));
 

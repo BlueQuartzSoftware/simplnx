@@ -36,7 +36,7 @@ Result<> ComputeFeatureNeighbors::operator()()
   auto& sharedSurfaceAreaList = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->SharedSurfaceAreaListPath);
 
   auto* boundaryCells = m_InputValues->StoreBoundaryCells ? m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore() : nullptr;
-  auto* surfaceFeatures = m_InputValues->StoreSurfaceFeatures ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->StoreSurfaceFeatures)->getDataStore() : nullptr;
+  auto* surfaceFeatures = m_InputValues->StoreSurfaceFeatures ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore() : nullptr;
 
   usize totalPoints = featureIds.getNumberOfTuples();
   usize totalFeatures = numNeighbors.getNumberOfTuples();
