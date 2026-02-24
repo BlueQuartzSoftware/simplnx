@@ -6,7 +6,7 @@ Processing (Cleanup)
 
 ## Description
 
-This **Filter** allows the user to define a subvolume of the data set in which the **Filter** will reset all data by writing *zeros (0)* into every array for every **Cell** within the subvolume.
+This **Filter** allows the user to define a subvolume of the data set in which the **Filter** will reset all data for every **Cell** within the subvolume. The user can choose from three initialization modes: *Manual* (initialize to a user-specified value), *Random* (initialize with random values across the full range of the data type), or *Random With Range* (initialize with random values within a user-specified range).
 
 % Auto generated parameter table will be inserted here
 

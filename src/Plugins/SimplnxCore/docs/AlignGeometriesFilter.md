@@ -6,18 +6,12 @@ DREAM3DReview (DREAM3DReview)
 
 ## Description
 
-This **Filter** will align 2 Geometry objects using 1 of several alignment methods:
+This **Filter** will align 2 Geometry objects using 1 of the following alignment methods:
 
-- Centroid
 - Origin
-- XY Min Plane
-- XY Max Plane
-- XZ Min Plane
-- XZ Max Plane
-- YZ Min Plane
-- YZ Max Plane
+- Centroid
 
-The input geometries can be of any type. The *Moving* geometry is moved in space to the *Target* geometry.
+The input geometries can be of any type. The *Moving* geometry is translated in space to match the *Target* geometry. When using *Origin* alignment, the moving geometry is translated so that its minimum coordinate point matches the target geometry's minimum coordinate point. When using *Centroid* alignment, the moving geometry is translated so that its centroid matches the target geometry's centroid.
 
 % Auto generated parameter table will be inserted here
 

@@ -31,7 +31,6 @@ CreateScanVectors
 
 Please see the description file distributed with this plugin.
 
-## DREAM3D Mailing Lists
+## DREAM3D-NX Help
 
-If you need more help with a filter, please consider asking your question on the DREAM3D Users mailing list:
-https://groups.google.com/forum/?hl=en#!forum/dream3d-users
+If you need help, need to file a bug report or want to request a new feature, please head over to the [DREAM3DNX-Issues](https://github.com/BlueQuartzSoftware/DREAM3DNX-Issues/discussions) GitHub site where the community of DREAM3D-NX users can help answer your questions.

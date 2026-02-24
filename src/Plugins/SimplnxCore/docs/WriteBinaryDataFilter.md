@@ -6,7 +6,7 @@ IO (Output) (Write) (Export) (Binary)
 
 ## Description
 
-This **Filter** accepts DataArray(s) as input, extracts the data, creates the file(s), and writes it out to a single file in binary
+This **Filter** accepts DataArray(s) as input, extracts the data, and writes each array to a separate binary file in the specified output directory
 
 % Auto generated parameter table will be inserted here
 

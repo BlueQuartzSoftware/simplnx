@@ -1,4 +1,4 @@
-# Write Nodes and Elements File(s)
+# Write Nodes And Elements File(s)
 
 ## Group (Subgroup)
 
@@ -70,7 +70,7 @@ ELEMENT_NUM NUM_VERTS_IN_ELEMENT V0_Index V1_Index V2_Index
 | Triangle      | 3               |
 | Quad          | 4               |
 | Tetrahedral   | 4               |
-| Hexahedral    | 6               |
+| Hexahedral    | 8               |
 
 
 % Auto generated parameter table will be inserted here

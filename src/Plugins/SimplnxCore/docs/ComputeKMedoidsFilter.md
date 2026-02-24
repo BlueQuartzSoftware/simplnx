@@ -1,4 +1,4 @@
-# K Medoids
+# Compute K Medoids
 
 ## Group (Subgroup)
 

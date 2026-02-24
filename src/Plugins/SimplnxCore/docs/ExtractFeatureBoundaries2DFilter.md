@@ -1,4 +1,4 @@
-# Extract Feature Boundaries 2D
+# Create Feature Boundaries (2D)
 
 ## Group (Subgroup)
 

@@ -6,7 +6,7 @@ Core (Generation)
 
 ## Description
 
-This **Filter** creates an **Data Array** of any primitive type with any number of components along a *single component dimension*. For example, a scalar as (1) or a 3-vector as (3), but *not* a matrix as (3, 3). The array is initialized to a user define value or with random values within a specified range.
+This **Filter** creates an **Data Array** of any primitive type with any number of components along a *single component dimension*. For example, a scalar as (1) or a 3-vector as (3), but *not* a matrix as (3, 3). The array is initialized to a user defined value.
 
 When initializing a multicomponent array square bracket notation can be used to specify different initialization values for each component. For example say that I want to intialize a 2 component array where the first component is 0 and the second component is 1 we would use the following input string for the *Initialization Value*
 
@@ -40,8 +40,8 @@ If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the t
 
 | Type             | Size |        Range       |
 |------------------|------|--------------------|
-| Signed Integer | 8 bit |0 to 255|
-| Unsigned Integer | 8 bit |-128 to 127|
+| Signed Integer | 8 bit |-128 to 127|
+| Unsigned Integer | 8 bit |0 to 255|
 | Signed Integer | 16 bit |-32,768 to 32,767|
 | Unsigned Integer | 16 bit |0 to 65,535|
 | Signed Integer | 32 bit |-2,147,483,648 to 2,147,483,647|

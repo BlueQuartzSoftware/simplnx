@@ -1,4 +1,4 @@
-# Compute Vector Colors
+# Generate Vector Colors
 
 ## Group (Subgroup)
 

@@ -1,4 +1,4 @@
-# Calculate Triangle Centroids
+# Compute Triangle Centroids
 
 ## Group (Subgroup)
 

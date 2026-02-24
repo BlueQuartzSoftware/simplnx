@@ -1,4 +1,4 @@
-# Generate Triangle Face Ids
+# Compute Triangle Face Ids
 
 ## Group (Subgroup)
 

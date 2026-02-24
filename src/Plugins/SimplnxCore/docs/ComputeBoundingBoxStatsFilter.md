@@ -12,15 +12,14 @@ This **Filter** computes a variety of statistics for a given scalar array. The c
 
 | Statistic               | Primitive Type                      |
 |-------------------------|-------------------------------------|
-| Histogram               | uint64 (of user set component size) |
 | Length                  | signed 64-bit integer               |
 | Minimum                 | same type as input                  |
 | Maximum                 | same type as input                  |
-| Mean                    | double                              |
-| Median                  | double                              |
+| Mean                    | 32-bit float                        |
+| Median                  | 32-bit float                        |
 | Mode                    | same type as input                  |
-| Standard Deviation      | double                              |
-| Summation               | double                              |
+| Standard Deviation      | 32-bit float                        |
+| Summation               | 32-bit float                        |
 | Number of Unique Values | signed 32-bit integer               |
 
 The *Unified Bounds Array* is a 6 component **DataArray** that contains the lower XYZ bound and upper XYZ bound for the bounding box. The component ordering is expected as follows `{Min-X, Min-Y, Min-Z, Max-X, Max-Y, Max-Z}`. This ordering is provided so the user knows how to format imported external data. The *Compute Feature Bounds* filter's `Unified Array` option puts out a correctly formatted array for input to this filter.

@@ -1,4 +1,4 @@
-# Combine Transformation Matrices Filter
+# Combine Transformation Matrices
 
 ## Group (Subgroup)
 

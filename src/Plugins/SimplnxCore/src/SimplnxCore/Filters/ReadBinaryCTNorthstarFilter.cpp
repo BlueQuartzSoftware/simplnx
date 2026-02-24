@@ -357,7 +357,7 @@ std::string ReadBinaryCTNorthstarFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReadBinaryCTNorthstarFilter::defaultTags() const
 {
-  return {className(), "#IO", "#Input", "#Read", "#Import", "#Northstar", "#CT", "#Binary"};
+  return {className(), "IO", "Input", "Read", "Import", "Northstar", "CT", "Binary"};
 }
 
 //------------------------------------------------------------------------------

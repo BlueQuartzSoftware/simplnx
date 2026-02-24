@@ -1,8 +1,8 @@
-# Generate Python Plugin and/or Filters
+# Create Python Plugin and/or Filters
 
 ## Description
 
-The **Generate Python Plugin and/or Filters** is a powerful tool in the DREAM3D-NX environment that allows users to generate or update Python plugins and filter codes. This filter provides an interface for setting up and configuring Python filters within DREAM3D-NX pipelines, either by creating new plugins or by adding to existing ones.
+The **Create Python Plugin and/or Filters** is a tool in the DREAM3D-NX environment that allows users to generate or update Python plugins and filter codes. This filter provides an interface for setting up and configuring Python filters within DREAM3D-NX pipelines, either by creating new plugins or by adding to existing ones.
 
 ## Usage
 

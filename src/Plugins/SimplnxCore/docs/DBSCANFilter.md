@@ -151,7 +151,7 @@ There are many datasets that this is normal in such as `No Structure` from **Exa
 
 ## Note on Randomness
 
-The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Low Density First produced identical results faster in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.
+The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Three parse order options are available: *Low Density First* (deterministic, no seed needed), *Random* (non-deterministic, uses a time-based seed), and *Seeded Random* (deterministic, uses a user-supplied seed value for reproducibility). Low Density First produced identical results faster in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.
 
 % Auto generated parameter table will be inserted here
 

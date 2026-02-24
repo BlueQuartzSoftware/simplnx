@@ -46,7 +46,7 @@ std::string CreateImageGeometryFilter::humanName() const
 std::vector<std::string> CreateImageGeometryFilter::defaultTags() const
 {
   return {className(), "Core", "Generation",
-          "ImageGeometry"
+          "ImageGeometry",
           "Create Geometry"};
 }
 

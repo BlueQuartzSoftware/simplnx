@@ -1,4 +1,4 @@
-# Write SPParks Sites FIle
+# Write SPParks Sites File
 
 ## Group (Subgroup)
 

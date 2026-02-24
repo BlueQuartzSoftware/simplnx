@@ -1,4 +1,4 @@
-# Compute Coordinates/Indices Array From Image Geometry
+# Compute Coordinates/Indices Array From Image Geom
 
 ## Group (Subgroup)
 

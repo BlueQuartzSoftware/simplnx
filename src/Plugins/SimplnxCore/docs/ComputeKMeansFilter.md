@@ -8,14 +8,14 @@ DREAM3D Review (Clustering)
 
 ***Warning:* The randomnes in this filter is not currently consistent between operating systems even if the same seed is used. Specifically between Unix and Windows. This does not affect the results, but the IDs will not correspond. For example if the Cluster Identifier at index one on Linux is 1 it could be 2 on Windows, the overarching clusters will be the same, but their IDs will be different.**
 
-This **Filter** applies the k means algorithm to an **Attribute Array**.  K means is a *clustering algorithm* that assigns to each point of the **Attribute Array** a *cluster Id*.  The user must specify the number of clusters in which to partition the array.  Specifically, a k means partitioning is a *Voronoi tesselation*; an optimal solution to the k means problem is such that each point in the data set is associated with the cluster that has the closest mean.  This partitioning is the one that minimizes the within cluster variance (i.e., minimizes the within cluster sum of squares differences).  Thus, the "metric" used for k means is the 2-norm (the *Euclidean norm*; the squared Euclidean norm may also be used since this maintains the triangle inequality).
+This **Filter** applies the k means algorithm to an **Attribute Array**.  K means is a *clustering algorithm* that assigns to each point of the **Attribute Array** a *cluster Id*.  The user must specify the number of clusters in which to partition the array.  Specifically, a k means partitioning is a *Voronoi tesselation*; an optimal solution to the k means problem is such that each point in the data set is associated with the cluster that has the closest mean.  This partitioning is the one that minimizes the within cluster variance (i.e., minimizes the within cluster sum of squares differences).  The user may select from several distance metrics: *Euclidean*, *Squared Euclidean*, *Manhattan*, *Cosine*, *Pearson*, and *Squared Pearson*.
 
 Optimal solutions to the k means partitioning problem are computationally difficult; this **Filter** used *Lloyd's algorithm* to approximate the solution.  Lloyd's algorithm is an iterative algorithm that proceeds as follows:
 
 1. Choose k points at random to serve as the initial cluster "means"
 2. Until convergence, repeat the following steps:
 
-- Associate each point with the closest mean, where "closest" is the smallest 2-norm distance
+- Associate each point with the closest mean, where "closest" is determined by the selected distance metric
 - Recompute the means based on the new tesselation
 
 Convergence is defined as when the computed means change very little (precisely, when the differences are within machine epsilon).  Since Lloyd's algorithm is iterative, it only serves as an approximation, and may result in different classifications on each execution with the same input data.  The user may opt to use a mask to ignore certain points; where the mask is *false*, the points will be placed in cluster 0.

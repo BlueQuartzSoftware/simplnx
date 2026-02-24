@@ -381,7 +381,7 @@ std::string ReadVolumeGraphicsFileFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReadVolumeGraphicsFileFilter::defaultTags() const
 {
-  return {className(), "#IO", "#Input", "#Read", "#Import", "#CT", "#VolumeGraphics", "#vgi"};
+  return {className(), "IO", "Input", "Read", "Import", "CT", "VolumeGraphics", "vgi"};
 }
 
 //------------------------------------------------------------------------------
