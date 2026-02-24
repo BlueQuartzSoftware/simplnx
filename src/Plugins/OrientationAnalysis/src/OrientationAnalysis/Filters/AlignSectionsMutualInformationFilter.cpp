@@ -50,7 +50,7 @@ std::string AlignSectionsMutualInformationFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> AlignSectionsMutualInformationFilter::defaultTags() const
 {
-  return {className(), "#Reconstruction", "#Alignment"};
+  return {className(), "Reconstruction", "Alignment"};
 }
 
 //------------------------------------------------------------------------------

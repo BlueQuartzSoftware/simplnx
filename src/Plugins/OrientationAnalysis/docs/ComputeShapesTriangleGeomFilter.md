@@ -1,4 +1,4 @@
-# Compute Feature Shapes from Triangle Geometry
+# Compute Feature Shapes (Triangle Geometry)
 
 ## Group (Subgroup)
 

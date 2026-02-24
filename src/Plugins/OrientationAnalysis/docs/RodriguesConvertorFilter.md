@@ -2,7 +2,7 @@
 
 ## Group (Subgroup)
 
-OrientationAnalysis (Processing)
+Processing (Crystallography)
 
 ## Description
 

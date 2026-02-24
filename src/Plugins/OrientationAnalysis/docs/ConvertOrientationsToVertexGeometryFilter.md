@@ -1,4 +1,4 @@
-# Convert Orientations to Rodrigues Fundamental Zone Geometry
+# Convert Orientations To Rodrigues Geometry
 
 ## Group (Subgroup)
 

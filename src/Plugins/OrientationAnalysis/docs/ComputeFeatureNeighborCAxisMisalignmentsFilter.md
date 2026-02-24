@@ -2,7 +2,7 @@
 
 ## Group (Subgroup)
 
-Statistics (Crystallographic)
+Statistics (Crystallography)
 
 ## Description
 

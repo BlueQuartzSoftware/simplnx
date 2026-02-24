@@ -1,6 +1,6 @@
-# SimplnxCore Filter Documentation Audit - Summary of Changes
+# Filter Documentation Audit - Summary of Changes
 
-## Overview
+## SimplnxCore Plugin
 
 Audited all ~152 SimplnxCore filter documentation files against their corresponding C++ implementations. Fixed discrepancies across 4 C++ source files and ~30 markdown documentation files.
 
@@ -149,3 +149,114 @@ Updated doc titles to match `humanName()` in code:
 
 ### Documentation Files Deleted (1)
 - `src/Plugins/SimplnxCore/docs/UncertainRegularGridSampleSurfaceMesh.md`
+
+---
+
+## OrientationAnalysis Plugin
+
+Audited all 54 OrientationAnalysis filter documentation files against their corresponding C++ implementations. Fixed discrepancies across 2 C++ source files and 32 markdown documentation files, plus removed 1 orphan doc file.
+
+## C++ Code Bug Fixes (2 files)
+
+### Inconsistent Tag Prefixes
+
+1. **AlignSectionsMutualInformationFilter.cpp**: Removed `#` prefix from tags in `defaultTags()` (`"#Reconstruction"` -> `"Reconstruction"`, `"#Alignment"` -> `"Alignment"`). All other filters in the codebase use unprefixed tags.
+
+### Typo in Tags
+
+2. **CreateEnsembleInfoFilter.cpp**: Fixed typo `"Phae"` -> `"Phase"` in `defaultTags()`. The misspelling prevented the filter from being found when searching by the "Phase" tag.
+
+## Documentation Title Fixes (8 files)
+
+Updated doc titles to match `humanName()` in code:
+
+| File | Old Title | New Title |
+|------|-----------|-----------|
+| ComputeFZQuaternionsFilter.md | "Compute Reduction Orientations to Fundamental Zone" | "Compute Fundamental Zone Orientations" |
+| ComputeMisorientationsFilter.md | "Compute Misorientations" (plural) | "Compute Misorientation" (singular) |
+| ComputeQuaternionConjugateFilter.md | "Generate Quaternion Conjugate" | "Compute Quaternion Conjugate" |
+| ComputeShapesFilter.md | "Compute Feature Shapes" | "Compute Feature Shapes (Image Geometry)" |
+| ComputeShapesTriangleGeomFilter.md | "Compute Feature Shapes from Triangle Geometry" | "Compute Feature Shapes (Triangle Geometry)" |
+| ComputeTwinBoundariesFilter.md | "Find Twin Boundaries" | "Compute Twin Boundaries" |
+| ConvertOrientationsToVertexGeometryFilter.md | "Convert Orientations to Rodrigues Fundamental Zone Geometry" | "Convert Orientations To Rodrigues Geometry" |
+| ReadChannel5DataFilter.md | "REad Oxford Channel 5 Data File (.cpr/.crc)" (typo + mismatch) | "Read Oxford Instr. Channel 5 (.cpr/.crc)" |
+
+## Doc Group/Subgroup Fixes (32 files)
+
+### "Crystallographic" -> "Crystallography" (15 files)
+
+Updated doc subgroup text from adjective form to match the noun form used in `defaultTags()`:
+
+- ComputeAvgCAxesFilter.md, ComputeAvgOrientationsFilter.md, ComputeBoundaryStrengthsFilter.md, ComputeCAxisLocationsFilter.md, ComputeFeatureNeighborCAxisMisalignmentsFilter.md, ComputeFeatureNeighborMisorientationsFilter.md, ComputeFeatureReferenceCAxisMisorientationsFilter.md, ComputeFeatureReferenceMisorientationsFilter.md, ComputeGBCDFilter.md, ComputeGBCDMetricBasedFilter.md, ComputeGBPDMetricBasedFilter.md, ComputeKernelAvgMisorientationsFilter.md, ComputeSchmidsFilter.md, ComputeSlipTransmissionMetricsFilter.md, ComputeTwinBoundariesFilter.md
+
+### Group Name Mismatches (9 files)
+
+| File | Old Group (Subgroup) | New Group (Subgroup) |
+|------|---------------------|---------------------|
+| BadDataNeighborOrientationCheckFilter.md | "Orientation Analysis (Cleanup)" | "Processing (Cleanup)" |
+| ComputeFZQuaternionsFilter.md | "OrientationAnalysis (OrientationAnalysis)" | "Processing (OrientationAnalysis)" |
+| ComputeQuaternionConjugateFilter.md | "Processing (OrientationAnalysis)" | "Processing (Crystallography)" |
+| ConvertHexGridToSquareGridFilter.md | "Conversion, ANG File, EDAX, Hex Grid" | "Processing (Conversion)" |
+| ConvertOrientationsFilter.md | "Orientation Analysis (Conversion)" | "Processing (Conversion)" |
+| ConvertQuaternionFilter.md | "OrientationAnalysis (Conversions)" | "Processing (Conversion)" |
+| RodriguesConvertorFilter.md | "OrientationAnalysis (Processing)" | "Processing (Crystallography)" |
+| RotateEulerRefFrameFilter.md | "Orientation Analysis (Conversion)" | "Processing (Conversion)" |
+
+### IO Group Fixes (3 files)
+
+| File | Old Group (Subgroup) | New Group (Subgroup) |
+|------|---------------------|---------------------|
+| ReadH5EspritDataFilter.md | "Import/Export (Import)" | "IO (Input)" |
+| ReadH5OimDataFilter.md | "Import/Export (Import)" | "IO (Input)" |
+| ReadH5OinaDataFilter.md | "Import/Export (Import)" | "IO (Input)" |
+
+## Orphan File Removal (1 file)
+
+- **GeneratePoleFigureFilter.md**: Removed orphan doc file with no corresponding C++ filter. `WritePoleFigureFilter` is the replacement and already has its own documentation file (`WritePoleFigureFilter.md`).
+
+## Build & Test Results
+
+- **Build**: Full ninja build completed successfully with no errors.
+- **Tests**: All OrientationAnalysis unit tests pass; no new test failures introduced.
+
+## Files Modified
+
+### C++ Source Files (2)
+- `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/AlignSectionsMutualInformationFilter.cpp`
+- `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/CreateEnsembleInfoFilter.cpp`
+
+### Documentation Files Modified (32)
+- `src/Plugins/OrientationAnalysis/docs/BadDataNeighborOrientationCheckFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeAvgCAxesFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeAvgOrientationsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeBoundaryStrengthsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeCAxisLocationsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeFZQuaternionsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeFeatureNeighborCAxisMisalignmentsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeFeatureNeighborMisorientationsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeFeatureReferenceCAxisMisorientationsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeFeatureReferenceMisorientationsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeGBCDFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeGBCDMetricBasedFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeGBPDMetricBasedFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeKernelAvgMisorientationsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeMisorientationsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeQuaternionConjugateFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeSchmidsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeShapesFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeShapesTriangleGeomFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeSlipTransmissionMetricsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ComputeTwinBoundariesFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ConvertHexGridToSquareGridFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ConvertOrientationsFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ConvertOrientationsToVertexGeometryFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ConvertQuaternionFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ReadChannel5DataFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ReadH5EspritDataFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ReadH5OimDataFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/ReadH5OinaDataFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/RodriguesConvertorFilter.md`
+- `src/Plugins/OrientationAnalysis/docs/RotateEulerRefFrameFilter.md`
+
+### Documentation Files Deleted (1)
+- `src/Plugins/OrientationAnalysis/docs/GeneratePoleFigureFilter.md`

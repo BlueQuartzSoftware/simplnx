@@ -1,4 +1,4 @@
-# REad Oxford Channel 5 Data File (.cpr/.crc)
+# Read Oxford Instr. Channel 5 (.cpr/.crc)
 
 ## Group (Subgroup)
 
