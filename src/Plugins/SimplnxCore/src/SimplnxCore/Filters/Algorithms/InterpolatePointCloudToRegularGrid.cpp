@@ -5,7 +5,6 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -109,10 +108,9 @@ const std::atomic_bool& InterpolatePointCloudToRegularGrid::getCancel()
 // -----------------------------------------------------------------------------
 Result<> InterpolatePointCloudToRegularGrid::operator()()
 {
-  const DataPath interpolatedGroupPath = m_InputValues->imageGeomPath.createChildPath(m_InputValues->interpolatedGroupName);
-
   auto* vertices = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->vertexGeomPath);
   auto* image = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->imageGeomPath);
+  const DataPath interpolatedGroupPath = image->getCellDataPath();
   SizeVec3 dims = image->getDimensions();
   FloatVec3 res = image->getSpacing();
 
@@ -157,9 +155,6 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
   {
     mask = m_DataStructure.getDataAs<BoolArray>(m_InputValues->maskDataPath)->getDataStore();
   }
-
-  auto& voxelIndices = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->voxelIndicesPath);
-  usize maxImageIndex = (dimZ - 1) * dimX * dimY + (dimY - 1) * dimX + (dimX - 1);
 
   const bool needWelford = m_InputValues->findStdDeviation;
 
@@ -216,17 +211,13 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       continue;
     }
 
-    usize index = voxelIndices[i];
-    if(index == std::numeric_limits<uint64>::max())
+    Point3D<float32> coords = vertices->getVertexCoordinate(i);
+    std::optional<usize> optIndex = image->getIndex(coords[0], coords[1], coords[2]);
+    if(!optIndex.has_value())
     {
       continue;
     }
-    if(index > maxImageIndex)
-    {
-      return MakeErrorResult(-11004,
-                             fmt::format("Index present in the selected Voxel Indices array that falls outside the selected Image Geometry for interpolation.\n Index = {}\n Max Image Index = {}\n",
-                                         index, maxImageIndex));
-    }
+    usize index = optIndex.value();
 
     usize curX = index % dimX;
     usize curY = (index / dimX) % dimY;

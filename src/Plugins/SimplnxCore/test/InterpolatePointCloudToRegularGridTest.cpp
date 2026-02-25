@@ -19,14 +19,27 @@ namespace
 const DataPath k_VertexGeomPath({"VertexGeom"});
 const DataPath k_ImageGeomPath({"ImageGeom"});
 const DataPath k_VertexDataPath = k_VertexGeomPath.createChildPath("VertexData");
-const DataPath k_VoxelIndicesPath = k_VertexDataPath.createChildPath("VoxelIndices");
 const DataPath k_FaceAreasPath = k_VertexDataPath.createChildPath("FaceAreas");
 const DataPath k_MaskPath = k_VertexDataPath.createChildPath("Mask");
 
 const std::string k_InterpolatedGroupName = "InterpolatedData";
 const DataPath k_InterpGroupPath = k_ImageGeomPath.createChildPath(k_InterpolatedGroupName);
 
-// Create a test DataStructure with a 4x4x1 ImageGeom and a VertexGeom with known data
+// Convert a linear voxel index (in a 4x4x1 grid with spacing=1, origin=0) to cell-center coordinates
+void setVertexCoordsForVoxelIndex(Float32Array& vertices, usize vertexIdx, uint64 voxelIndex, usize dimX = 4, usize dimY = 4)
+{
+  usize x = voxelIndex % dimX;
+  usize y = (voxelIndex / dimX) % dimY;
+  usize z = voxelIndex / (dimX * dimY);
+
+  // Place vertex at the center of the voxel (spacing=1, origin=0)
+  vertices[vertexIdx * 3 + 0] = static_cast<float32>(x) + 0.5f;
+  vertices[vertexIdx * 3 + 1] = static_cast<float32>(y) + 0.5f;
+  vertices[vertexIdx * 3 + 2] = static_cast<float32>(z) + 0.5f;
+}
+
+// Create a test DataStructure with a 4x4x1 ImageGeom and a VertexGeom with known data.
+// Vertex coordinates are set to map to the given voxel indices.
 DataStructure createTestDataStructure(const std::vector<uint64>& voxelIndices, const std::vector<float64>& faceAreas, bool allMasked = true, usize maskedOutIndex = 0)
 {
   DataStructure ds;
@@ -36,16 +49,15 @@ DataStructure createTestDataStructure(const std::vector<uint64>& voxelIndices, c
   auto* vertexGeom = VertexGeom::Create(ds, "VertexGeom");
   auto* vertices = Float32Array::CreateWithStore<DataStore<float32>>(ds, "SharedVertexList", {numVertices}, {3}, vertexGeom->getId());
   vertexGeom->setVertices(*vertices);
-  vertices->fill(0.0f);
+
+  // Set vertex coordinates to map to the desired voxel indices
+  for(usize i = 0; i < numVertices; i++)
+  {
+    setVertexCoordsForVoxelIndex(*vertices, i, voxelIndices[i]);
+  }
 
   auto* vertexAM = AttributeMatrix::Create(ds, "VertexData", {numVertices}, vertexGeom->getId());
   vertexGeom->setVertexAttributeMatrix(*vertexAM);
-
-  auto* voxelArr = UInt64Array::CreateWithStore<DataStore<uint64>>(ds, "VoxelIndices", {numVertices}, {1}, vertexAM->getId());
-  for(usize i = 0; i < numVertices; i++)
-  {
-    (*voxelArr)[i] = voxelIndices[i];
-  }
 
   auto* faceArr = Float64Array::CreateWithStore<DataStore<float64>>(ds, "FaceAreas", {numVertices}, {1}, vertexAM->getId());
   for(usize i = 0; i < numVertices; i++)
@@ -67,6 +79,10 @@ DataStructure createTestDataStructure(const std::vector<uint64>& voxelIndices, c
   imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
   imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
 
+  // Cell data attribute matrix (required for getCellDataPath())
+  auto* cellAM = AttributeMatrix::Create(ds, k_InterpolatedGroupName, {1, 4, 4}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
   return ds;
 }
 
@@ -82,10 +98,9 @@ Arguments getBaseArgs(bool useMask, uint64 technique, std::vector<float32> kerne
   args.insertOrAssign(F::k_GaussianSigmas_Key, std::make_any<std::vector<float32>>(std::vector<float32>{1.0f, 1.0f, 1.0f}));
   args.insertOrAssign(F::k_SelectedVertexGeometryPath_Key, std::make_any<DataPath>(k_VertexGeomPath));
   args.insertOrAssign(F::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
-  args.insertOrAssign(F::k_VoxelIndicesPath_Key, std::make_any<DataPath>(k_VoxelIndicesPath));
   args.insertOrAssign(F::k_InputMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
   args.insertOrAssign(F::k_InterpolateArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_FaceAreasPath}));
-  args.insertOrAssign(F::k_CopyArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{k_VoxelIndicesPath}));
+  args.insertOrAssign(F::k_CopyArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   args.insertOrAssign(F::k_FindLength_Key, std::make_any<bool>(findLength));
   args.insertOrAssign(F::k_FindMin_Key, std::make_any<bool>(findMin));
@@ -166,13 +181,6 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Uniform No Spr
   REQUIRE(sumArr[0] == Approx(30.0f));  // 10+20
   REQUIRE(sumArr[5] == Approx(30.0f));  // 30
   REQUIRE(sumArr[10] == Approx(40.0f)); // 40
-
-  // Copy array: VoxelIndices (uint64, weighted average with uniform kernel)
-  auto& copyVI = dataStructure.getDataRefAs<UInt64Array>(k_InterpGroupPath.createChildPath("VoxelIndices"));
-  REQUIRE(copyVI[0] == 0); // (0+0)/2 = 0
-  REQUIRE(copyVI[5] == 5); // 5/1 = 5
-  REQUIRE(copyVI[10] == 10);
-  REQUIRE(copyVI[15] == 15);
 }
 
 TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Uniform With Kernel Spreading", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter]")

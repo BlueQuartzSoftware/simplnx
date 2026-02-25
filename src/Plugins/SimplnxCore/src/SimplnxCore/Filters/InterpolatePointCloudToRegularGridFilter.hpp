@@ -31,7 +31,6 @@ public:
   static constexpr StringLiteral k_GaussianSigmas_Key = "gaussian_sigmas";
   static constexpr StringLiteral k_SelectedVertexGeometryPath_Key = "input_vertex_geometry_path";
   static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_VoxelIndicesPath_Key = "voxel_indices_path";
   static constexpr StringLiteral k_InputMaskPath_Key = "input_mask_path";
   static constexpr StringLiteral k_InterpolateArrays_Key = "interpolate_arrays";
   static constexpr StringLiteral k_CopyArrays_Key = "copy_arrays";
@@ -46,12 +45,12 @@ public:
   static constexpr StringLiteral k_FindSummation_Key = "find_summation";
 
   // Statistics output array name suffixes
-  static constexpr StringLiteral k_LengthSuffix_Key = "length_suffix";
-  static constexpr StringLiteral k_MinSuffix_Key = "min_suffix";
-  static constexpr StringLiteral k_MaxSuffix_Key = "max_suffix";
-  static constexpr StringLiteral k_MeanSuffix_Key = "mean_suffix";
-  static constexpr StringLiteral k_StdDeviationSuffix_Key = "std_deviation_suffix";
-  static constexpr StringLiteral k_SummationSuffix_Key = "summation_suffix";
+  static constexpr StringLiteral k_LengthSuffix_Key = "length_suffix_name";
+  static constexpr StringLiteral k_MinSuffix_Key = "min_suffix_name";
+  static constexpr StringLiteral k_MaxSuffix_Key = "max_suffix_name";
+  static constexpr StringLiteral k_MeanSuffix_Key = "mean_suffix_name";
+  static constexpr StringLiteral k_StdDeviationSuffix_Key = "std_deviation_suffix_name";
+  static constexpr StringLiteral k_SummationSuffix_Key = "summation_suffix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

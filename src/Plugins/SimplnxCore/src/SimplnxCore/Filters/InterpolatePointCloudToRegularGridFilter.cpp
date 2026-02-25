@@ -73,9 +73,6 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry to Interpolate", "DataPath to geometry to interpolate", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_VoxelIndicesPath_Key, "Voxel Indices", "DataPath to voxel indices", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::uint64},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
-
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that vertex as usable.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
@@ -120,7 +117,9 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType InterpolatePointCloudToRegularGridFilter::parametersVersion() const
 {
-  return 3;
+  return 4;
+  // Version 4 Changes
+  // Removed 'voxel_indices_path' key - Voxel indices are now computed on-the-fly from vertex coordinates
   // Version 3 Changes
   // Removed the 'interpolated_group_name' key - The data is all stored in the Cell Data of the target ImageGeom
 }
@@ -145,8 +144,6 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   // Input Vertex Geometry and Data
   auto useMask = filterArgs.value<bool>(k_UseMask_Key);
   auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  // auto interpolatedGroupName = filterArgs.value<std::string>(k_InterpolatedGroupName_Key);
-  auto voxelIndicesPath = filterArgs.value<DataPath>(k_VoxelIndicesPath_Key);
   auto interpolatedDataPaths = filterArgs.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
   auto copyDataPaths = filterArgs.value<std::vector<DataPath>>(k_CopyArrays_Key);
 
@@ -187,7 +184,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   ShapeType tupleDims = {imageDims[2], imageDims[1], imageDims[0]};
 
   auto vertexGeom = dataStructure.getDataAs<VertexGeom>(vertexGeomPath);
-  std::vector<DataPath> dataArrays = {vertexGeomPath.createChildPath(vertexGeom->getVertices()->getName()), voxelIndicesPath};
+  std::vector<DataPath> dataArrays = {vertexGeomPath.createChildPath(vertexGeom->getVertices()->getName())};
 
   // Create flat DataArrays for interpolated arrays (output type = float64)
   for(const auto& interpolatePath : interpolatedDataPaths)
@@ -290,7 +287,6 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
   inputValues.imageGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.interpolatedDataPaths = filterArgs.value<std::vector<DataPath>>(k_InterpolateArrays_Key);
   inputValues.copyDataPaths = filterArgs.value<std::vector<DataPath>>(k_CopyArrays_Key);
-  inputValues.voxelIndicesPath = filterArgs.value<DataPath>(k_VoxelIndicesPath_Key);
   inputValues.kernelSize = filterArgs.value<std::vector<float32>>(k_KernelSize_Key);
   inputValues.sigmas = filterArgs.value<std::vector<float32>>(k_GaussianSigmas_Key);
   inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
@@ -323,7 +319,6 @@ constexpr StringLiteral k_KernelSizeKey = "KernelSize";
 constexpr StringLiteral k_SigmasKey = "Sigmas";
 constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
 constexpr StringLiteral k_InterpolatedDataContainerNameKey = "InterpolatedDataContainerName";
-constexpr StringLiteral k_VoxelIndicesArrayPathKey = "VoxelIndicesArrayPath";
 constexpr StringLiteral k_MaskArrayPathKey = "MaskArrayPath";
 constexpr StringLiteral k_ArraysToInterpolateKey = "ArraysToInterpolate";
 constexpr StringLiteral k_ArraysToCopyKey = "ArraysToCopy";
@@ -344,7 +339,6 @@ Result<Arguments> InterpolatePointCloudToRegularGridFilter::FromSIMPLJson(const 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_SelectedImageGeometryPath_Key));
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_InterpolatedDataContainerNameKey, k_SelectedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_VoxelIndicesArrayPathKey, k_VoxelIndicesPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskArrayPathKey, k_InputMaskPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ArraysToInterpolateKey, k_InterpolateArrays_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ArraysToCopyKey, k_CopyArrays_Key));

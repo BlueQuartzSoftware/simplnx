@@ -5,8 +5,6 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 
 namespace nx::core
 {
@@ -17,10 +15,8 @@ struct SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridInputValues
   uint64 interpolationTechnique;
   DataPath vertexGeomPath;
   DataPath imageGeomPath;
-  std::string interpolatedGroupName;
   std::vector<DataPath> interpolatedDataPaths;
   std::vector<DataPath> copyDataPaths;
-  DataPath voxelIndicesPath;
   std::vector<float32> kernelSize;
   std::vector<float32> sigmas;
   DataPath maskDataPath;

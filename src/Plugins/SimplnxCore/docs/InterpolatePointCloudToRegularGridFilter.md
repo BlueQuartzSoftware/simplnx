@@ -23,7 +23,7 @@ The interpolation proceeds in two passes:
 
 **Pass 1 – Accumulation (one iteration over all vertices):**
 
-1. For each vertex in the **Vertex Geometry**, look up the destination voxel from the pre-computed *Voxel Indices* array.
+1. For each vertex in the **Vertex Geometry**, compute the destination voxel index from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. Vertices that fall outside the grid are silently skipped.
 2. If a mask is enabled and the vertex is masked out, skip it.
 3. Center the kernel on that voxel and determine the kernel bounds, clipped to the grid extents.
 4. For each voxel within the clipped kernel:
@@ -75,9 +75,9 @@ An optional boolean mask array may be provided. Vertices where the mask value is
 
 This filter uses flat arrays rather than variable-length lists, so memory usage is proportional to the number of voxels in the **Image Geometry** (not the number of points times the kernel size). For each interpolated array, the filter temporarily allocates ~56 bytes per voxel for accumulation state. For each copied array, ~16 bytes per voxel is allocated. These temporary variables are freed after the finalization pass.
 
-### Voxel Indices
+### Voxel Index Computation
 
-The *Voxel Indices* array is a pre-computed uint64 array (one entry per vertex) that maps each vertex to its corresponding linear voxel index in the **Image Geometry**. This array must be computed before running this filter (e.g., by using the *Map Point Cloud to Regular Grid* filter). Vertices with a voxel index of `uint64_max` are skipped automatically.
+The destination voxel for each vertex is computed on-the-fly from the vertex coordinates and the **Image Geometry**'s origin, spacing, and dimensions. There is no need to pre-compute a voxel indices array (e.g., via the *Map Point Cloud to Regular Grid* filter). Vertices whose coordinates fall outside the **Image Geometry** bounds are silently skipped.
 
 % Auto generated parameter table will be inserted here
 
