@@ -131,6 +131,8 @@
 #include "SimplnxCore/Filters/WriteStlFileFilter.hpp"
 #include "SimplnxCore/Filters/WriteVtkRectilinearGridFilter.hpp"
 #include "SimplnxCore/Filters/WriteVtkStructuredPointsFilter.hpp"
+#include "SimplnxCore/Filters/ComputeGroupingDensityFilter.hpp"
+
 // @@__HEADER__TOKEN__DO__NOT__DELETE__@@
 
 namespace nx::core
@@ -267,6 +269,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("bcf2f246-610f-5575-a434-241d04114b9f").value(), {nx::core::FilterTraits<WriteSPParksSitesFilter>::uuid, &WriteSPParksSitesFilter::FromSIMPLJson}}, // WriteSPParksSitesFilter
     {nx::core::Uuid::FromString("c0ac6c9d-c130-5055-a69b-2f4011846ff0").value(), {nx::core::FilterTraits<PadImageGeometryFilter>::uuid, &PadImageGeometryFilter::FromSIMPLJson}}, // PadImageGeometry
     {nx::core::Uuid::FromString("33c10889-4cdc-5992-ae00-1795e9bee022").value(), {nx::core::FilterTraits<WriteLAMMPSFileFilter>::uuid, &WriteLAMMPSFileFilter::FromSIMPLJson}}, // ExportLAMMPSFile
+    {nx::core::Uuid::FromString("708be082-8b08-4db2-94be-52781ed4d53d").value(), {nx::core::FilterTraits<ComputeGroupingDensityFilter>::uuid, &ComputeGroupingDensityFilter::FromSIMPLJson}}, // FindGroupingDensity
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 
