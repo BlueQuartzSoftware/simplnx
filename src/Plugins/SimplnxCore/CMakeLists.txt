@@ -87,6 +87,7 @@ set(FilterList
   FeatureFaceCurvatureFilter
   FillBadDataFilter
   FlyingEdges3DFilter
+  HierarchicalSmoothFilter
   IdentifyDuplicateVerticesFilter
   IdentifySampleFilter
   InitializeDataFilter
@@ -248,6 +249,7 @@ set(AlgorithmList
   FillBadData
   FindNRingNeighbors
   FlyingEdges3D
+  HierarchicalSmooth
   IdentifyDuplicateVertices
   IdentifySample
   InitializeData
