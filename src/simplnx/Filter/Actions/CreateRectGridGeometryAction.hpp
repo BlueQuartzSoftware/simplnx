@@ -72,19 +72,19 @@ public:
 
   /**
    * @brief Returns the x bounds dimensions of the RectGridGeometry to be created.
-   * @return
+   * @return const usize& The x dimension
    */
   const usize& xDims() const;
 
   /**
    * @brief Returns the y bounds dimensions of the RectGridGeometry to be created.
-   * @return
+   * @return const usize& The y dimension
    */
   const usize& yDims() const;
 
   /**
    * @brief Returns the z bounds dimensions of the RectGridGeometry to be created.
-   * @return
+   * @return const usize& The z dimension
    */
   const usize& zDims() const;
 

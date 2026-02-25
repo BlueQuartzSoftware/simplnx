@@ -34,6 +34,10 @@ public:
 
   virtual ~IDataIOManager() noexcept;
 
+  /**
+   * @brief Returns the format name for this IO manager as a string.
+   * @return std::string The format name
+   */
   virtual std::string formatName() const = 0;
 
   /**
@@ -72,18 +76,58 @@ public:
     m_FactoryCollection[key] = sharedIO;
   }
 
+  /**
+   * @brief Returns a map of all data store creation functions.
+   * @return DataStoreCreationMap Map of type names to creation functions
+   */
   DataStoreCreationMap getDataStoreCreationFunctions();
 
+  /**
+   * @brief Checks if a data store creation function exists for the specified type.
+   * @param type The data store type name
+   * @return bool True if the creation function exists, false otherwise
+   */
   bool hasDataStoreCreationFnc(const std::string& type) const;
 
+  /**
+   * @brief Returns the data store creation function for the specified type.
+   * @param type The data store type name
+   * @return DataStoreCreateFnc The creation function
+   */
   DataStoreCreateFnc dataStoreCreationFnc(const std::string& type) const;
+
+  /**
+   * @brief Checks if a list store creation function exists for the specified type.
+   * @param type The list store type name
+   * @return bool True if the creation function exists, false otherwise
+   */
   bool hasListStoreCreationFnc(const std::string& type) const;
+
+  /**
+   * @brief Returns the list store creation function for the specified type.
+   * @param type The list store type name
+   * @return ListStoreCreateFnc The creation function
+   */
   ListStoreCreateFnc listStoreCreationFnc(const std::string& type) const;
 
 protected:
+  /**
+   * @brief Default constructor.
+   */
   IDataIOManager();
 
+  /**
+   * @brief Adds a data store creation function for the specified type.
+   * @param type The data store type name
+   * @param creationFnc The creation function to add
+   */
   void addDataStoreCreationFnc(const std::string& type, DataStoreCreateFnc creationFnc);
+
+  /**
+   * @brief Adds a list store creation function for the specified type.
+   * @param type The list store type name
+   * @param creationFnc The creation function to add
+   */
   void addListStoreCreationFnc(const std::string& type, ListStoreCreateFnc creationFnc);
 
 private:

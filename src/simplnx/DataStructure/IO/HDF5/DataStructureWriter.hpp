@@ -33,12 +33,44 @@ class SIMPLNX_EXPORT DataStructureWriter
   using DataMapType = std::map<DataObject::IdType, std::string>;
 
 public:
+  /**
+   * @brief Default constructor.
+   */
   DataStructureWriter();
   ~DataStructureWriter() noexcept;
 
+  /**
+   * @brief Writes a DataStructure to an HDF5 file at the specified path.
+   * @param dataStructure The DataStructure to write
+   * @param filepath The file path to write to
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath);
+
+  /**
+   * @brief Writes a DataStructure to an open HDF5 file.
+   * @param dataStructure The DataStructure to write
+   * @param fileWriter The HDF5 file writer to write to
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> WriteFile(const DataStructure& dataStructure, FileIO& fileWriter);
+
+  /**
+   * @brief Appends a DataObject at the specified path to an existing HDF5 file.
+   * @param filepath The file path to append to
+   * @param dataStructure The DataStructure containing the object to append
+   * @param dataPath The path to the object to append
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath);
+
+  /**
+   * @brief Appends a DataObject at the specified path to an open HDF5 file.
+   * @param file The HDF5 file to append to
+   * @param dataStructure The DataStructure containing the object to append
+   * @param dataPath The path to the object to append
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath);
 
   /**
@@ -61,6 +93,12 @@ public:
    */
   Result<> writeDataMap(const DataMap& dataMap, GroupIO& parentGroup);
 
+  /**
+   * @brief Writes an entire DataStructure to an HDF5 group.
+   * @param dataMap The DataStructure to write
+   * @param parentGroup The HDF5 group to write to
+   * @return Result<> Result with any errors or warnings
+   */
   Result<> writeDataStructure(const DataStructure& dataMap, GroupIO& parentGroup);
 
 protected:

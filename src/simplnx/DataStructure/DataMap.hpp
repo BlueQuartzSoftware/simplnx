@@ -37,13 +37,13 @@ public:
 
   /**
    * @brief Creates a copy of the specified DataMap.
-   * @param other
+   * @param other The DataMap to copy from
    */
   DataMap(const DataMap& other);
 
   /**
    * @brief Constructs a new DataMap and moves the data from the target DataMap.
-   * @param other
+   * @param other The DataMap to move from
    */
   DataMap(DataMap&& other) noexcept;
 
@@ -56,7 +56,8 @@ public:
 
   /**
    * @brief Creates and returns a deep copy of the DataMap.
-   * @return
+   * @param parentCopyPath The path to the parent of the copied DataMap
+   * @return DataMap A deep copy of this DataMap
    */
   DataMap deepCopy(const DataPath& parentCopyPath) const;
 
@@ -68,6 +69,7 @@ public:
 
   /**
    * @brief Returns if the DataMap is empty (true) or has elements (false)
+   * @return bool True if the DataMap is empty, false otherwise
    */
   bool empty() const;
 
@@ -205,8 +207,8 @@ public:
 
   /**
    * @brief Searches the DataMap for the target IdType.
-   * @param identifier
-   * @return Iterator
+   * @param identifier The ID to search for
+   * @return Iterator An iterator to the found DataObject, or end() if not found
    */
   Iterator find(IdType identifier);
 
@@ -214,8 +216,8 @@ public:
    * @brief Searches the DataMap for the target IdType.
    *
    * Children are not expanded in this calculation.
-   * @param identifier
-   * @return ConstIterator
+   * @param identifier The ID to search for
+   * @return ConstIterator A const iterator to the found DataObject, or end() if not found
    */
   ConstIterator find(IdType identifier) const;
 
@@ -223,8 +225,8 @@ public:
    * @brief Searches the DataMap for the target name.
    *
    * Children are not expanded in this calculation.
-   * @param identifier
-   * @return Iterator
+   * @param name The name to search for
+   * @return Iterator An iterator to the found DataObject, or end() if not found
    */
   Iterator find(const std::string& name);
 
@@ -232,14 +234,14 @@ public:
    * @brief Searches the DataMap for the target name.
    *
    * Children are not expanded in this calculation.
-   * @param identifier
-   * @return ConstIterator
+   * @param name The name to search for
+   * @return ConstIterator A const iterator to the found DataObject, or end() if not found
    */
   ConstIterator find(const std::string& name) const;
 
   /**
    * @brief Sets a new DataStructure for all items in the DataMap.
-   * @param dataStr
+   * @param dataStr Pointer to the DataStructure to assign to all items
    */
   void setDataStructure(DataStructure* dataStr);
 
@@ -253,7 +255,7 @@ public:
 
   /**
    * @brief Returns an iterator to the end of the DataMap.
-   * @return Iterator
+   * @return Iterator An iterator to the element following the last element
    */
   Iterator end();
 
@@ -267,7 +269,7 @@ public:
 
   /**
    * @brief Returns a const iterator to the end of the DataMap.
-   * @return ConstIterator
+   * @return ConstIterator A const iterator to the element following the last element
    */
   ConstIterator end() const;
 
@@ -287,7 +289,7 @@ public:
 
   /**
    * @brief Updates the map IDs using an unordered map of IDs and their new values.
-   * @param updatedIdsMap
+   * @param updatedIdsMap Map of old IDs to new IDs for updating
    */
   void updateIds(const std::unordered_map<IdType, IdType>& updatedIdsMap);
 

@@ -67,8 +67,9 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
@@ -175,7 +176,7 @@ public:
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override
   {
@@ -186,8 +187,8 @@ public:
   }
 
   /**
-   * @brief Returns the path of the ImageGeometry to be created.
-   * @return DataPath
+   * @brief Returns the path of the VertexGeometry to be created.
+   * @return DataPath The geometry path
    */
   DataPath geometryPath() const
   {
@@ -195,8 +196,8 @@ public:
   }
 
   /**
-   * @brief Returns the number of vertices (estimated in some circumstances)
-   * @return IGeometry::MeshIndexType
+   * @brief Returns the number of vertices (estimated in some circumstances).
+   * @return IGeometry::MeshIndexType The number of vertices
    */
   IGeometry::MeshIndexType numVertices() const
   {
@@ -204,8 +205,8 @@ public:
   }
 
   /**
-   * @brief Returns the path of the vertex data in the created geometry.
-   * @return
+   * @brief Returns the path of the vertex data AttributeMatrix in the created geometry.
+   * @return DataPath The vertex data path
    */
   DataPath getVertexDataPath() const
   {
@@ -214,7 +215,7 @@ public:
 
   /**
    * @brief Returns the path of the shared vertex list in the created geometry.
-   * @return
+   * @return DataPath The shared vertex list path
    */
   DataPath getSharedVertexListDataPath() const
   {

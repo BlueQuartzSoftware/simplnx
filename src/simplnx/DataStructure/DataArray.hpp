@@ -127,11 +127,12 @@ public:
    * Returns nullptr otherwise.
    *
    * The created DataArray takes ownership of the provided DataStore.
-   * @param dataStructure
-   * @param name
-   * @param store
-   * @param parentId = {}
-   * @return DataArray<T>*
+   * @param dataStructure The parent DataStructure that will own the DataArray
+   * @param name The name of the DataArray
+   * @param importId The import ID to assign to the DataArray
+   * @param store The IDataStore instance to use. The DataArray instance WILL TAKE OWNERSHIP of the DataStore
+   * @param parentId Optional ID of the parent DataObject. Defaults to no parent.
+   * @return DataArray<T>* Pointer to the created DataArray, or nullptr if creation failed
    */
   static DataArray* Import(DataStructure& dataStructure, std::string name, IdType importId, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
   {
@@ -172,7 +173,7 @@ public:
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return
+   * @return DataObject::Type The type enumeration for this DataArray
    */
   DataObject::Type getDataObjectType() const override
   {
@@ -181,7 +182,7 @@ public:
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return
+   * @return ArrayType The array type enumeration for this DataArray
    */
   ArrayType getArrayType() const override
   {
@@ -201,7 +202,8 @@ public:
   /**
    * @brief Returns a deep copy of the DataArray including a deep copy of the
    * data store. The object will be owned by the DataStructure.
-   * @return DataObject*
+   * @param copyPath The DataPath where the copy should be placed in the DataStructure
+   * @return std::shared_ptr<DataObject> Pointer to the deep-copied DataArray, or nullptr if the copy failed
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
@@ -380,6 +382,14 @@ public:
     return m_DataStore->getValue(index);
   }
 
+  /**
+   * @brief Returns the value at the specified index.
+   *
+   * Throws an exception if the DataStore has not been allocated.
+   * @param index The index of the value to retrieve
+   * @return value_type The value at the specified index
+   * @throws std::runtime_error if the DataStore is null
+   */
   value_type getValue(usize index) const
   {
     if(m_DataStore == nullptr)
@@ -429,18 +439,35 @@ public:
    */
   bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) override;
 
+  /**
+   * @brief Returns the value of a specific component within a tuple.
+   * @param tupleIndex The index of the tuple
+   * @param componentIndex The index of the component within the tuple
+   * @return value_type The value at the specified tuple and component index
+   */
   value_type getComponent(usize tupleIndex, usize componentIndex)
   {
     const usize index = tupleIndex * getNumberOfComponents() + componentIndex;
     return m_DataStore->getValue(index);
   }
 
+  /**
+   * @brief Sets the value of a specific component within a tuple.
+   * @param tupleIndex The index of the tuple
+   * @param componentIndex The index of the component within the tuple
+   * @param value The value to set at the specified location
+   */
   void setComponent(usize tupleIndex, usize componentIndex, value_type value)
   {
     const usize index = tupleIndex * getNumberOfComponents() + componentIndex;
     m_DataStore->setValue(index, value);
   }
 
+  /**
+   * @brief Sets the value at the specified index.
+   * @param index The index where the value should be set
+   * @param value The value to set at the specified index
+   */
   void setValue(usize index, value_type value)
   {
     m_DataStore->setValue(index, value);
@@ -666,7 +693,7 @@ public:
 
   /**
    * @brief Static function to get the typename
-   * @return
+   * @return std::string The type name as a string (e.g., "DataArray<int32>")
    */
   static std::string GetTypeName()
   {
@@ -721,8 +748,8 @@ public:
   }
 
   /**
-   * @brief getTypeName
-   * @return
+   * @brief Returns the typename for this DataArray instance.
+   * @return std::string The type name as a string (e.g., "DataArray<int32>")
    */
   std::string getTypeName() const override
   {
@@ -738,6 +765,10 @@ public:
     m_DataStore->flush();
   }
 
+  /**
+   * @brief Returns the amount of memory used by this DataArray.
+   * @return uint64 The memory usage in bytes
+   */
   uint64 memoryUsage() const override
   {
     return m_DataStore->memoryUsage();

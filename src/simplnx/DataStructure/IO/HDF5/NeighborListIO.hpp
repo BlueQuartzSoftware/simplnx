@@ -252,7 +252,10 @@ public:
    * @brief Attempts to write the DataObject to HDF5.
    * Returns an error if the DataObject cannot be cast to a NeighborList<T>.
    * Otherwise, this method returns writeData(...)
-   * Return Result<>
+   * @param dataStructureWriter
+   * @param dataObject
+   * @param parentWriter
+   * @return Result<>
    */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
   {

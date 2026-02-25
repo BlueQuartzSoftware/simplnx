@@ -21,25 +21,31 @@ public:
 
   /**
    * @brief Returns the user defined name.
-   * @return
+   * @return std::string The parameter name
    */
   std::string name() const final;
 
   /**
    * @brief Returns the user defined human readable name.
-   * @return
+   * @return std::string The human-readable parameter name
    */
   std::string humanName() const final;
 
   /**
    * @brief Returns the user defined help text.
-   * @return
+   * @return std::string The help text describing this parameter
    */
   std::string helpText() const final;
 
 protected:
   AbstractParameter() = delete;
 
+  /**
+   * @brief Protected constructor for creating an AbstractParameter with metadata.
+   * @param name The parameter name
+   * @param humanName The human-readable name
+   * @param helpText The help text
+   */
   AbstractParameter(const std::string& name, const std::string& humanName, const std::string& helpText);
 
 private:

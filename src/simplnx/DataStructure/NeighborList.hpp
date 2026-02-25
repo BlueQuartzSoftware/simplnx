@@ -9,8 +9,9 @@ namespace nx::core
 {
 /**
  * @class NeighborList
- * @brief
- * @tparam T
+ * @brief A templated neighbor list class that stores variable-length lists of neighbors for each tuple.
+ * Each tuple can have a different number of neighbors stored in a dynamically sized list.
+ * @tparam T The data type of the neighbor values (e.g., int32, float32)
  */
 template <class T>
 class NeighborList : public INeighborList
@@ -28,46 +29,44 @@ public:
   NeighborList(const NeighborList& other);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param numTuples
-   * @param parentId = {}
-   * @tparam T
-   * @return NeighborList<T>*
+   * @brief Creates a new NeighborList in the specified DataStructure with the given tuple shape.
+   * @param dataStructure The DataStructure to create the NeighborList in
+   * @param name The name for the new NeighborList
+   * @param tupleShape The shape of the tuple dimensions
+   * @param parentId Optional parent object ID to insert the NeighborList under
+   * @return NeighborList<T>* Pointer to the created NeighborList, or nullptr if creation failed
    */
   static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param numTuples
-   * @param parentId = {}
-   * @tparam T
-   * @return NeighborList<T>*
+   * @brief Creates a new NeighborList in the specified DataStructure using an existing list store.
+   * @param dataStructure The DataStructure to create the NeighborList in
+   * @param name The name for the new NeighborList
+   * @param listStore Shared pointer to the AbstractListStore to use for data storage
+   * @param parentId Optional parent object ID to insert the NeighborList under
+   * @return NeighborList<T>* Pointer to the created NeighborList, or nullptr if creation failed
    */
   static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param data
-   * @param parentId
-   * @return NeighborList<T>*
+   * @brief Imports a NeighborList into the specified DataStructure from a vector of shared vector pointers.
+   * @param dataStructure The DataStructure to import the NeighborList into
+   * @param name The name for the imported NeighborList
+   * @param importId The ID to use for the imported object
+   * @param data Vector of shared pointers to vectors containing the neighbor list data
+   * @param parentId Optional parent object ID to insert the NeighborList under
+   * @return NeighborList<T>* Pointer to the imported NeighborList, or nullptr if import failed
    */
   static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::vector<SharedVectorType>& data, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param storeData
-   * @param parentId
-   * @return NeighborList<T>*
+   * @brief Imports a NeighborList into the specified DataStructure from an existing list store.
+   * @param dataStructure The DataStructure to import the NeighborList into
+   * @param name The name for the imported NeighborList
+   * @param importId The ID to use for the imported object
+   * @param storeData Shared pointer to the AbstractListStore containing the data to import
+   * @param parentId Optional parent object ID to insert the NeighborList under
+   * @return NeighborList<T>* Pointer to the imported NeighborList, or nullptr if import failed
    */
   static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<store_type>& storeData, const std::optional<IdType>& parentId = {});
 
@@ -88,8 +87,8 @@ public:
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   * @brief Gives this array a human readable name
-   * @param name The name of this array
+   * @brief Sets the initialization value used for new neighbor list entries.
+   * @param initValue The value to use when initializing new entries
    */
   virtual void setInitValue(value_type initValue);
 
@@ -104,9 +103,9 @@ public:
   int32 eraseTuples(const std::vector<usize>& idxs);
 
   /**
-   * @brief copyTuple
-   * @param currentPos
-   * @param newPos
+   * @brief Copies the neighbor list from one tuple position to another.
+   * @param currentPos The source tuple index to copy from
+   * @param newPos The destination tuple index to copy to
    */
   void copyTuple(usize currentPos, usize newPos) override;
 
@@ -157,9 +156,9 @@ public:
   void initializeWithZeros();
 
   /**
-   * @brief addEntry
-   * @param grainId
-   * @param value
+   * @brief Adds a new entry to the neighbor list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to add the entry to
+   * @param value The neighbor value to add to the list
    */
   void addEntry(int32 grainId, value_type value);
 
@@ -178,16 +177,16 @@ public:
   void clearAllLists();
 
   /**
-   * @brief setList
-   * @param grainId
-   * @param neighborList
+   * @brief Sets the complete neighbor list for the specified grain/tuple index using a shared pointer to a vector.
+   * @param grainId The grain/tuple index to set the list for
+   * @param neighborList Shared pointer to the vector containing the neighbor values
    */
   void setList(int32 grainId, const SharedVectorType& neighborList);
 
   /**
-   * @brief setList
-   * @param grainId
-   * @param neighborList
+   * @brief Sets the complete neighbor list for the specified grain/tuple index using a vector.
+   * @param grainId The grain/tuple index to set the list for
+   * @param neighborList Vector containing the neighbor values
    */
   void setList(int32 grainId, const VectorType& neighborList);
 
@@ -218,11 +217,11 @@ public:
   bool setValueFromString(usize tupleIndex, usize compIndex, const std::string& value) override;
 
   /**
-   * @brief getValue
-   * @param grainId
-   * @param index
-   * @param ok
-   * @return T
+   * @brief Retrieves a specific neighbor value from a grain's neighbor list.
+   * @param grainId The grain/tuple index to retrieve from
+   * @param index The element index within the grain's neighbor list
+   * @param ok Output parameter set to true if the value was successfully retrieved, false otherwise
+   * @return T The neighbor value at the specified position
    */
   T getValue(int32 grainId, int32 index, bool& ok) const;
 
@@ -234,22 +233,22 @@ public:
   void setValue(usize index, const VectorType& value);
 
   /**
-   * @brief getNumberOfLists
-   * @return int32
+   * @brief Returns the total number of neighbor lists (tuples) in this NeighborList.
+   * @return int32 The number of neighbor lists
    */
   int32 getNumberOfLists() const;
 
   /**
-   * @brief getListSize
-   * @param grainId
-   * @return int32
+   * @brief Returns the number of neighbors in the list for the specified grain/tuple.
+   * @param grainId The grain/tuple index to query
+   * @return int32 The number of neighbors in the specified list
    */
   int32 getListSize(int32 grainId) const;
 
   /**
-   * @brief getList
-   * @param grainId
-   * @return VectorType
+   * @brief Returns a copy of the neighbor list for the specified grain/tuple.
+   * @param grainId The grain/tuple index to retrieve
+   * @return VectorType A copy of the neighbor list vector
    */
   VectorType getList(int32 grainId) const;
 
@@ -324,23 +323,23 @@ public:
   }
 
   /**
-   * @brief copyOfList
-   * @param grainId
-   * @return VectorType
+   * @brief Returns a deep copy of the neighbor list for the specified grain/tuple.
+   * @param grainId The grain/tuple index to copy
+   * @return VectorType A deep copy of the neighbor list vector
    */
   VectorType copyOfList(int32 grainId) const;
 
   /**
-   * @brief operator []
-   * @param grainId
-   * @return VectorType
+   * @brief Array subscript operator to access the neighbor list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to access
+   * @return VectorType A copy of the neighbor list at the specified index
    */
   VectorType operator[](int32 grainId);
 
   /**
-   * @brief operator []
-   * @param grainId
-   * @return VectorType
+   * @brief Array subscript operator to access the neighbor list at the specified grain/tuple index.
+   * @param grainId The grain/tuple index to access
+   * @return VectorType A copy of the neighbor list at the specified index
    */
   VectorType operator[](usize grainId);
 
@@ -396,37 +395,92 @@ public:
 
   /**
    * @brief Returns a vector of vectors containing the current values.
+   * @return std::vector<VectorType> Vector of all neighbor lists
    */
   std::vector<VectorType> getVectors() const;
 
+  /**
+   * @brief Returns an iterator to the beginning of the neighbor lists.
+   * @return iterator Iterator to the first neighbor list
+   */
   iterator begin();
+
+  /**
+   * @brief Returns an iterator to the end of the neighbor lists.
+   * @return iterator Iterator past the last neighbor list
+   */
   iterator end();
+
+  /**
+   * @brief Returns a const iterator to the beginning of the neighbor lists.
+   * @return const_iterator Const iterator to the first neighbor list
+   */
   const_iterator begin() const;
+
+  /**
+   * @brief Returns a const iterator to the end of the neighbor lists.
+   * @return const_iterator Const iterator past the last neighbor list
+   */
   const_iterator end() const;
+
+  /**
+   * @brief Returns a const iterator to the beginning of the neighbor lists.
+   * @return const_iterator Const iterator to the first neighbor list
+   */
   const_iterator cbegin() const;
+
+  /**
+   * @brief Returns a const iterator to the end of the neighbor lists.
+   * @return const_iterator Const iterator past the last neighbor list
+   */
   const_iterator cend() const;
 
+  /**
+   * @brief Copy assignment operator.
+   * @param rhs The NeighborList to copy from
+   * @return NeighborList& Reference to this NeighborList
+   */
   NeighborList& operator=(const NeighborList& rhs);
+
+  /**
+   * @brief Move assignment operator.
+   * @param rhs The NeighborList to move from
+   * @return NeighborList& Reference to this NeighborList
+   */
   NeighborList& operator=(NeighborList&& rhs) noexcept;
 
 protected:
   /**
-   * @brief NeighborList
+   * @brief Constructs a NeighborList with the specified tuple shape.
+   * @param dataStructure The DataStructure this NeighborList belongs to
+   * @param name The name for this NeighborList
+   * @param tupleShape The shape of the tuple dimensions
    */
   NeighborList(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape);
 
   /**
-   * @brief NeighborList
+   * @brief Constructs a NeighborList with an existing data store.
+   * @param dataStructure The DataStructure this NeighborList belongs to
+   * @param name The name for this NeighborList
+   * @param dataStore Shared pointer to the AbstractListStore to use for storage
    */
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore);
 
   /**
-   * @brief NeighborList
+   * @brief Constructs a NeighborList from a vector of shared vector pointers with an import ID.
+   * @param dataStructure The DataStructure this NeighborList belongs to
+   * @param name The name for this NeighborList
+   * @param dataVector Vector of shared pointers to vectors containing the neighbor list data
+   * @param importId The ID to use for this imported object
    */
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId);
 
   /**
-   * @brief NeighborList
+   * @brief Constructs a NeighborList from an existing list store with an import ID.
+   * @param dataStructure The DataStructure this NeighborList belongs to
+   * @param name The name for this NeighborList
+   * @param listStore Shared pointer to the AbstractListStore to use for storage
+   * @param importId The ID to use for this imported object
    */
   NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, IdType importId);
 

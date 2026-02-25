@@ -115,61 +115,82 @@ public:
   virtual Result<> findElementSizes(bool recalculate) = 0;
 
   /**
-   * @brief
-   * @return const Float32Array*
+   * @brief Returns a pointer to the array containing element sizes.
+   * @return const Float32Array* Pointer to the element sizes array, or nullptr if not available
    */
   const Float32Array* getElementSizes() const;
 
+  /**
+   * @brief Returns the optional ID of the element sizes array.
+   * @return OptionalId The ID of the element sizes array if it exists
+   */
   OptionalId getElementSizesId() const;
 
+  /**
+   * @brief Sets the ID of the element sizes array.
+   * @param sizesId The ID of the element sizes array
+   */
   void setElementSizesId(const OptionalId& sizesId);
 
   /**
-   * @brief
+   * @brief Deletes the element sizes array from the geometry.
    */
   void deleteElementSizes();
 
   /**
-   * @brief
-   * @return Point3D<float64>
+   * @brief Returns the parametric center of the geometry element.
+   * @return Point3D<float64> The parametric center coordinates
    */
   virtual Point3D<float64> getParametricCenter() const = 0;
 
   /**
-   * @brief
-   * @param pCoords
-   * @param shape
+   * @brief Calculates shape functions at the given parametric coordinates.
+   * @param pCoords The parametric coordinates
+   * @param shape Output array to store the calculated shape function values
    */
   virtual void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const = 0;
 
   /**
-   * @brief
-   * @return uint32
+   * @brief Returns the dimensionality of the units used by the geometry.
+   * @return uint32 The unit dimensionality (typically 1, 2, or 3)
    */
   uint32 getUnitDimensionality() const;
 
   /**
-   * @brief
-   * @param value
+   * @brief Sets the dimensionality of the units used by the geometry.
+   * @param value The unit dimensionality to set
    */
   void setUnitDimensionality(uint32 value);
 
   /**
-   * @brief
-   * @return uint32
+   * @brief Returns the spatial dimensionality of the geometry.
+   * @return uint32 The spatial dimensionality (typically 1, 2, or 3)
    */
   uint32 getSpatialDimensionality() const;
 
   /**
-   * @brief
-   * @param value
+   * @brief Sets the spatial dimensionality of the geometry.
+   * @param value The spatial dimensionality to set
    */
   void setSpatialDimensionality(uint32 value);
 
+  /**
+   * @brief Converts a set of geometry types to a set of their string representations.
+   * @param geomTypes Set of geometry types to convert
+   * @return std::set<std::string> Set of geometry type strings
+   */
   static std::set<std::string> StringListFromGeometryType(const std::set<Type>& geomTypes);
 
+  /**
+   * @brief Returns a set of all available geometry types.
+   * @return const std::set<Type>& Reference to the set of all geometry types
+   */
   static const std::set<Type>& GetAllGeomTypes();
 
+  /**
+   * @brief Returns a vector of all available length unit strings.
+   * @return const std::vector<std::string>& Reference to the vector of length unit strings
+   */
   static const std::vector<std::string>& GetAllLengthUnitStrings();
 
   /**
@@ -185,16 +206,16 @@ public:
   void setUnits(LengthUnit units);
 
   /**
-   * @brief
-   * @param geomType
-   * @return std::string
+   * @brief Converts a geometry type to its string representation.
+   * @param geomType The geometry type to convert
+   * @return std::string The string representation of the geometry type
    */
   static std::string GeomTypeToString(Type geomType);
 
   /**
-   * @brief
-   * @param unit
-   * @return std::string
+   * @brief Converts a length unit enum to its string representation.
+   * @param unit The length unit to convert
+   * @return std::string The string representation of the length unit
    */
   static std::string LengthUnitToString(LengthUnit unit);
 
@@ -205,8 +226,19 @@ public:
   virtual Result<> validate() const = 0;
 
 protected:
+  /**
+   * @brief Constructs an IGeometry with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   */
   IGeometry(DataStructure& dataStructure, std::string name);
 
+  /**
+   * @brief Constructs an IGeometry with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
+   */
   IGeometry(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**

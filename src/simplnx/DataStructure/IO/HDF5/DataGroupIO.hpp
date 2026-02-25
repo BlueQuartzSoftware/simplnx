@@ -16,6 +16,9 @@ class SIMPLNX_EXPORT DataGroupIO : public BaseGroupIO
 public:
   using data_type = DataGroup;
 
+  /**
+   * @brief Default constructor.
+   */
   DataGroupIO();
   ~DataGroupIO() noexcept override;
 
@@ -59,8 +62,16 @@ public:
    */
   Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
 
+  /**
+   * @brief Returns the DataObject::Type for this IO class.
+   * @return DataObject::Type The type identifier
+   */
   DataObject::Type getDataType() const override;
 
+  /**
+   * @brief Returns the DataObject type name as a string for this IO class.
+   * @return std::string The type name
+   */
   std::string getTypeName() const override;
 };
 } // namespace HDF5

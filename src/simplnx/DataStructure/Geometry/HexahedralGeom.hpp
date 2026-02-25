@@ -7,7 +7,7 @@ namespace nx::core
 {
 /**
  * @class HexahedralGeom
- * @brief
+ * @brief Represents a 3D hexahedral geometry consisting of vertices connected by hexahedral elements.
  */
 class SIMPLNX_EXPORT HexahedralGeom : public INodeGeometry3D
 {
@@ -24,33 +24,33 @@ public:
   static inline constexpr StringLiteral k_TypeName = "HexahedralGeom";
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param parentId = {}
-   * @return HexahedralGeom*
+   * @brief Creates a new HexahedralGeom in the specified DataStructure.
+   * @param dataStructure The DataStructure to create the HexahedralGeom in
+   * @param name The name for the new HexahedralGeom
+   * @param parentId Optional parent object ID to insert the HexahedralGeom under
+   * @return HexahedralGeom* Pointer to the created HexahedralGeom, or nullptr if creation failed
    */
   static HexahedralGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param parentId = {}
-   * @return HexahedralGeom*
+   * @brief Imports a HexahedralGeom into the specified DataStructure with a given import ID.
+   * @param dataStructure The DataStructure to import the HexahedralGeom into
+   * @param name The name for the imported HexahedralGeom
+   * @param importId The ID to use for this imported object
+   * @param parentId Optional parent object ID to insert the HexahedralGeom under
+   * @return HexahedralGeom* Pointer to the imported HexahedralGeom, or nullptr if import failed
    */
   static HexahedralGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param other
+   * @brief Copy constructor.
+   * @param other The HexahedralGeom to copy from
    */
   HexahedralGeom(const HexahedralGeom& other) = default;
 
   /**
-   * @brief
-   * @param other
+   * @brief Move constructor.
+   * @param other The HexahedralGeom to move from
    */
   HexahedralGeom(HexahedralGeom&& other) = default;
 
@@ -84,32 +84,33 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a shallow copy of this HexahedralGeom.
+   * @return DataObject* Pointer to the shallow copy
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a deep copy of this HexahedralGeom at the specified path.
+   * @param copyPath The path where the deep copy should be created
+   * @return std::shared_ptr<DataObject> Shared pointer to the deep copy
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   *
-   * @return
+   * @brief Returns the number of vertices per edge (always 2 for HexahedralGeom).
+   * @return usize The number of vertices per edge
    */
   usize getNumberOfVerticesPerEdge() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the number of vertices per face (always 4 for HexahedralGeom).
+   * @return usize The number of vertices per face
    */
   usize getNumberOfVerticesPerFace() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the number of vertices per cell (always 8 for HexahedralGeom).
+   * @return usize The number of vertices per cell
    */
   usize getNumberOfVerticesPerCell() const override;
 
@@ -155,15 +156,15 @@ public:
   Result<> findElementCentroids(bool recalculate) override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the parametric center of a hexahedral element.
+   * @return Point3D<float64> The parametric center coordinates
    */
   Point3D<float64> getParametricCenter() const override;
 
   /**
-   * @brief
-   * @param pCoords
-   * @param shape
+   * @brief Calculates shape functions at the given parametric coordinates.
+   * @param pCoords The parametric coordinates
+   * @param shape Output array to store the calculated shape function values
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
@@ -205,17 +206,17 @@ public:
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Constructs a HexahedralGeom with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
    */
   HexahedralGeom(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Constructs a HexahedralGeom with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
    */
   HexahedralGeom(DataStructure& dataStructure, std::string name, IdType importId);
 };

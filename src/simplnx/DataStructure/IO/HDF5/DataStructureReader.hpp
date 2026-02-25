@@ -18,6 +18,10 @@ class DataIOManager;
 class SIMPLNX_EXPORT DataStructureReader
 {
 public:
+  /**
+   * @brief Constructs a DataStructureReader with an optional IO manager.
+   * @param ioManager Optional pointer to a custom DataIOManager. If nullptr, uses the default manager.
+   */
   DataStructureReader(DataIOManager* ioManager = nullptr);
   ~DataStructureReader() noexcept;
 
@@ -37,8 +41,21 @@ public:
    */
   static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores = false);
 
+  /**
+   * @brief Reads a single DataObject from an HDF5 file at the specified path.
+   * @param fileReader The HDF5 file reader to read from
+   * @param dataPath The path to the DataObject to read
+   * @return Result<std::shared_ptr<DataObject>> The read DataObject or an error
+   */
   static Result<std::shared_ptr<DataObject>> ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
 
+  /**
+   * @brief Finishes importing a DataObject after it has been read and added to the DataStructure.
+   * @param dataStructure The DataStructure containing the imported object
+   * @param fileReader The HDF5 file reader
+   * @param dataPath The path to the imported DataObject
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
 
   /**
@@ -74,8 +91,22 @@ public:
    */
   void clearDataStructure();
 
+  /**
+   * @brief Adds a required DataPath that must be loaded during import.
+   * @param requiredDataPath The DataPath to mark as required
+   */
   void addRequiredPath(const DataPath& requiredDataPath);
+
+  /**
+   * @brief Adds a required DataObject ID that must be loaded during import.
+   * @param requiredDataId The DataObject ID to mark as required
+   */
   void addRequiredId(DataObject::IdType requiredDataId);
+
+  /**
+   * @brief Adds a required DataObject ID (optional) that must be loaded during import if present.
+   * @param requiredDataId The optional DataObject ID to mark as required
+   */
   void addRequiredId(DataObject::OptionalId requiredDataId);
 
 protected:
@@ -88,12 +119,16 @@ protected:
   std::shared_ptr<DataIOManager> getDataReader() const;
 
   /**
-   * Returns a pointer to the appropriate nx::core::HDF5::IDataFactory based on a target
-   * data type.
-   * @return std::shared_ptr<IDataIO>
+   * @brief Returns a pointer to the appropriate nx::core::HDF5::IDataFactory based on a target data type.
+   * @param typeName The type name of the data factory to retrieve
+   * @return std::shared_ptr<IDataIO> Pointer to the data factory
    */
   std::shared_ptr<IDataIO> getDataFactory(typename IDataIOManager::factory_id_type typeName) const;
 
+  /**
+   * @brief Loads all data marked as required from the HDF5 file.
+   * @param fileReader The HDF5 file reader to load data from
+   */
   void loadRequiredData(const nx::core::HDF5::FileIO& fileReader);
 
 private:

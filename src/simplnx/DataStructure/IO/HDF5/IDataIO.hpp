@@ -40,6 +40,13 @@ public:
   virtual Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
                             const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const = 0;
 
+  /**
+   * @brief Finishes importing data after the DataObject has been created and added to the DataStructure.
+   * @param dataStructure The DataStructure containing the imported data
+   * @param dataPath The path to the imported DataObject
+   * @param dataStructureGroup The HDF5 group containing the data
+   * @return Result<> Result with any errors or warnings
+   */
   virtual Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const;
 
   /**
@@ -59,9 +66,36 @@ public:
   IDataIO& operator=(IDataIO&& rhs) = delete;
 
 protected:
+  /**
+   * @brief Reads a DataObject ID from an HDF5 group attribute.
+   * @param groupReader The HDF5 group reader to read from
+   * @param tag The attribute tag name to read
+   * @return DataObject::OptionalId The read ID or std::nullopt if not present
+   */
   static DataObject::OptionalId ReadDataId(const object_reader_type& groupReader, const std::string& tag);
+
+  /**
+   * @brief Writes a DataObject ID to an HDF5 group attribute.
+   * @param groupWriter The HDF5 group writer to write to
+   * @param objectId The ID to write
+   * @param tag The attribute tag name to write
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> WriteDataId(object_writer_type& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag);
+
+  /**
+   * @brief Writes common DataObject attributes (name, ID, etc.) to HDF5.
+   * @param dataStructureWriter The DataStructure writer
+   * @param dataObject The DataObject whose attributes to write
+   * @param objectWriter The HDF5 object writer to write to
+   * @param importable Whether the object is importable
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, object_writer_type& objectWriter, bool importable);
+
+  /**
+   * @brief Protected constructor.
+   */
   IDataIO();
 
   template <class IOClassT>

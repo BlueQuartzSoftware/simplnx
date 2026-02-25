@@ -27,30 +27,33 @@ public:
 
   /**
    * @brief Creates a copy of the target LinkedPath.
-   * @param rhs
+   * @param rhs The LinkedPath to copy from
    */
   LinkedPath(const LinkedPath& rhs);
 
   /**
    * @brief Creates a new LinkedPath and moves values from the target path.
-   * @param rhs
+   * @param rhs The LinkedPath to move from
    */
   LinkedPath(LinkedPath&& rhs) noexcept;
 
   /**
-   * @brief Copy assignment
-   * @param rhs
-   * @return
+   * @brief Copy assignment operator.
+   * @param rhs The LinkedPath to copy from
+   * @return LinkedPath& Reference to this LinkedPath
    */
   LinkedPath& operator=(const LinkedPath& rhs);
 
   /**
-   * @brief Move assingment
-   * @param rhs
-   * @return
+   * @brief Move assignment operator.
+   * @param rhs The LinkedPath to move from
+   * @return LinkedPath& Reference to this LinkedPath
    */
   LinkedPath& operator=(LinkedPath&& rhs) noexcept;
 
+  /**
+   * @brief Destroys the LinkedPath.
+   */
   ~LinkedPath();
 
   /**
@@ -84,8 +87,8 @@ public:
   /**
    * @brief Returns the DataObject ID at the specified position in the path.
    * This method does not perform bounds checking.
-   * @param index
-   * @return DataObject::IdType
+   * @param index The position in the path
+   * @return DataObject::IdType The DataObject ID at the specified position
    */
   DataObject::IdType operator[](usize index) const;
 
@@ -101,8 +104,8 @@ public:
   /**
    * @brief Returns the DataObject ID at the specified position in the path.
    * This method does not perform bounds checking.
-   * @param index
-   * @return DataObject::IdType
+   * @param index The position in the path
+   * @return DataObject::IdType The DataObject ID at the specified position
    */
   DataObject::IdType getIdAt(usize index) const;
 
@@ -114,8 +117,8 @@ public:
 
   /**
    * @brief Returns a pointer to the const DataObject at the specified path index.
-   * @param index
-   * @return const DataObject*
+   * @param index The position in the path
+   * @return const DataObject* Pointer to the DataObject at the specified position, or nullptr if not found
    */
   const DataObject* getDataAt(usize index) const;
 
@@ -129,8 +132,8 @@ public:
   /**
    * @brief Returns the name of the DataObject pointed to by the target position
    * of the path. Returns "[ missing ]" if the DataObject could not be found.
-   * @param index
-   * @return std::string
+   * @param index The position in the path
+   * @return std::string The name of the DataObject at the specified position
    */
   std::string getNameAt(usize index) const;
 
@@ -139,44 +142,44 @@ public:
    * between DataObject names. If no divider is provided, " / " is used instead.
    *
    * Names are provided using getNameAt(usize).
-   * @param div = " / "
-   * @return std::string
+   * @param div The divider string to use between names (default: " / ")
+   * @return std::string String representation of the LinkedPath
    */
   std::string toString(const std::string& div = " / ") const;
 
   /**
    * @brief Checks equality with the specified LinkedPath.
-   * @param rhs
-   * @return bool
+   * @param rhs The LinkedPath to compare with
+   * @return bool True if the paths are equal, false otherwise
    */
   bool operator==(const LinkedPath& rhs) const;
 
   /**
    * @brief Checks equality with the specified DataPath.
-   * @param rhs
-   * @return bool
+   * @param rhs The DataPath to compare with
+   * @return bool True if the paths are equal, false otherwise
    */
   bool operator==(const DataPath& rhs) const;
 
   /**
    * @brief Checks inequality with the specified LinkedPath.
-   * @param rhs
-   * @return bool
+   * @param rhs The LinkedPath to compare with
+   * @return bool True if the paths are not equal, false otherwise
    */
   bool operator!=(const LinkedPath& rhs) const;
 
   /**
    * @brief Checks inequality with the specified DataPath.
-   * @param rhs
-   * @return bool
+   * @param rhs The DataPath to compare with
+   * @return bool True if the paths are not equal, false otherwise
    */
   bool operator!=(const DataPath& rhs) const;
 
 protected:
   /**
    * @brief Constructs a LinkedPath for the target DataStructure and vector of DataObject IDs.
-   * @param dataStructure
-   * @param idPath
+   * @param dataStructure Pointer to the DataStructure this path belongs to
+   * @param idPath Vector of DataObject IDs defining the path
    */
   LinkedPath(const DataStructure* dataStructure, const std::vector<DataObject::IdType>& idPath);
 

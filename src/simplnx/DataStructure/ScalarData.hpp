@@ -31,11 +31,11 @@ public:
    *
    * If the ScalarData cannot be created, this method returns nullptr.
    * Otherwise, a pointer to the created ScalarData will be returned.
-   * @param dataStructure
-   * @param name
-   * @param defaultValue
-   * @param parentId = {}
-   * @return ScalarData*
+   * @param dataStructure The DataStructure to add the ScalarData to
+   * @param name The name for the ScalarData object
+   * @param defaultValue The initial value for the scalar
+   * @param parentId Optional parent ID for hierarchical organization
+   * @return Pointer to the created ScalarData, or nullptr if creation failed
    */
   static ScalarData* Create(DataStructure& dataStructure, const std::string& name, value_type defaultValue, const std::optional<IdType>& parentId = {})
   {
@@ -58,12 +58,12 @@ public:
    *
    * Unlike Create, Import allows setting the DataObject ID for use in
    * importing DataObjects from external sources.
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param defaultValue
-   * @param parentId = {}
-   * @return ScalarData*
+   * @param dataStructure The DataStructure to add the ScalarData to
+   * @param name The name for the ScalarData object
+   * @param importId The ID to assign to the imported ScalarData
+   * @param defaultValue The initial value for the scalar
+   * @param parentId Optional parent ID for hierarchical organization
+   * @return Pointer to the imported ScalarData, or nullptr if import failed
    */
   static ScalarData* Import(DataStructure& dataStructure, const std::string& name, IdType importId, value_type defaultValue, const std::optional<IdType>& parentId = {})
   {
@@ -78,7 +78,7 @@ public:
   /**
    * @brief Creates a copy of the ScalarData that is not added to the
    * DataStructure. It is up to the caller to delete the returned object.
-   * @param other
+   * @param other The ScalarData to copy from
    */
   ScalarData(const ScalarData& other)
   : DataObject(other)
@@ -90,7 +90,7 @@ public:
    * @brief Creates a new ScalarData and moves values data from the target.
    * The returned ScalarData is not added to the DataStructure, and it is up
    * to the caller to delete it.
-   * @param other
+   * @param other The ScalarData to move from
    */
   ScalarData(ScalarData&& other) noexcept
   : DataObject(std::move(other))
@@ -102,7 +102,7 @@ public:
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
-   * @return
+   * @return The DataObject type enumeration value (Type::ScalarData)
    */
   DataObject::Type getDataObjectType() const override
   {
@@ -110,8 +110,8 @@ public:
   }
 
   /**
-   * @brief Static function to get the typename
-   * @return
+   * @brief Static function to get the typename based on the template parameter.
+   * @return String representation of the ScalarData type
    */
   static std::string GetTypeName()
   {
@@ -167,7 +167,7 @@ public:
 
   /**
    * @brief Returns typename of the DataObject as a std::string.
-   * @return std::string
+   * @return String representation of the DataObject type name
    */
   std::string getTypeName() const override
   {
@@ -178,7 +178,7 @@ public:
    * @brief Returns a shallow copy of the ScalarData. The created ScalarData
    * is not added to the DataStructure, and it is up to the caller to delete
    * it.
-   * @return DataObject*
+   * @return Pointer to the shallow copy
    */
   DataObject* shallowCopy() override
   {
@@ -186,9 +186,9 @@ public:
   }
 
   /**
-   * @brief Returns a deep copy of the ScalarData. This copy is not added to
-   * the DataStructure, and it is up to the caller to delete it.
-   * @return DataObject*
+   * @brief Returns a deep copy of the ScalarData at the specified path.
+   * @param copyPath The DataPath where the deep copy will be placed
+   * @return Shared pointer to the deep copy
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
   {
@@ -207,7 +207,7 @@ public:
 
   /**
    * @brief Returns the current scalar value.
-   * @return value_type
+   * @return The current scalar value
    */
   value_type getValue() const
   {
@@ -216,7 +216,7 @@ public:
 
   /**
    * @brief Sets the current scalar value.
-   * @param data
+   * @param data The new value to assign
    */
   void setValue(value_type data)
   {
@@ -225,8 +225,8 @@ public:
 
   /**
    * @brief Assigns a new scalar value.
-   * @param data
-   * @return ScalarData&
+   * @param data The new value to assign
+   * @return Reference to this ScalarData
    */
   ScalarData& operator=(value_type data)
   {
@@ -236,8 +236,8 @@ public:
 
   /**
    * @brief Copies the value from another ScalarData.
-   * @param rhs
-   * @return ScalarData&
+   * @param rhs The ScalarData to copy from
+   * @return Reference to this ScalarData
    */
   ScalarData& operator=(const ScalarData& rhs)
   {
@@ -247,8 +247,8 @@ public:
 
   /**
    * @brief Moves the value from another ScalarData.
-   * @param rhs
-   * @return ScalarData&
+   * @param rhs The ScalarData to move from
+   * @return Reference to this ScalarData
    */
   ScalarData& operator=(ScalarData&& rhs) noexcept
   {
@@ -259,8 +259,8 @@ public:
   /**
    * @brief Checks for value equality. Returns true if the values match.
    * Returns false otherwise.
-   * @param rhs
-   * @return bool
+   * @param rhs The value to compare against
+   * @return True if values are equal, false otherwise
    */
   bool operator==(value_type rhs) const
   {
@@ -270,8 +270,8 @@ public:
   /**
    * @brief Checks for value inequality. Returns true if the values do not
    * match. Returns false otherwise.
-   * @param rhs
-   * @return bool
+   * @param rhs The value to compare against
+   * @return True if values are not equal, false otherwise
    */
   bool operator!=(value_type rhs) const
   {
@@ -280,10 +280,10 @@ public:
 
 protected:
   /**
-   * @brief Constructs a ScalarData object with the target name and value.
-   * @param dataStructure
-   * @param name
-   * @param defaultValue
+   * @brief Protected constructor creates a ScalarData object with the target name and value.
+   * @param dataStructure The DataStructure that will own this ScalarData
+   * @param name The name for the ScalarData object
+   * @param defaultValue The initial value for the scalar
    */
   ScalarData(DataStructure& dataStructure, const std::string& name, value_type defaultValue)
   : DataObject(dataStructure, name)
@@ -292,11 +292,11 @@ protected:
   }
 
   /**
-   * @brief Constructs a ScalarData object with the target name and value.
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param defaultValue
+   * @brief Protected constructor creates a ScalarData object with the target name, import ID, and value.
+   * @param dataStructure The DataStructure that will own this ScalarData
+   * @param name The name for the ScalarData object
+   * @param importId The ID to assign to this ScalarData
+   * @param defaultValue The initial value for the scalar
    */
   ScalarData(DataStructure& dataStructure, const std::string& name, IdType importId, value_type defaultValue)
   : DataObject(dataStructure, name, importId)

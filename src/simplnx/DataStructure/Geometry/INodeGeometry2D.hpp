@@ -62,7 +62,16 @@ public:
    */
   void setFaceList(const SharedFaceList& faces);
 
+  /**
+   * @brief Returns the optional ID of the face list array.
+   * @return OptionalId The face list ID if it exists
+   */
   OptionalId getFaceListId() const;
+
+  /**
+   * @brief Sets the ID of the face list array.
+   * @param facesId The optional ID of the face list array
+   */
   void setFaceListId(const OptionalId& facesId);
 
   /**
@@ -78,28 +87,28 @@ public:
   usize getNumberOfFaces() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the number of vertices that make up each face.
+   * @return usize The number of vertices per face
    */
   virtual usize getNumberOfVerticesPerFace() const = 0;
 
   /**
-   * @brief
-   * @param triId
+   * @brief Sets the vertex IDs making up the specified face.
+   * @param triId The index of the face to modify
    * @param vertexIds The index into the shared vertex list of each vertex
    */
   void setFacePointIds(usize triId, nonstd::span<usize> vertexIds);
 
   /**
-   * @brief
-   * @param faceId
+   * @brief Returns the vertices that make up the specified face.
+   * @param faceId The index of the face to query
    * @param vertexIds The index into the shared vertex list of each vertex
    */
   void getFacePointIds(usize faceId, nonstd::span<usize> vertexIds) const;
 
   /**
-   * @brief
-   * @param faceId
+   * @brief Returns the vertex coordinates for a specified face.
+   * @param faceId The index of the face to query
    * @param coords The coordinates of each vertex
    */
   void getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const;
@@ -119,11 +128,15 @@ public:
   void deleteEdges();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the optional ID of the unshared edges array.
+   * @return const std::optional<IdType>& The unshared edges ID if it exists
    */
   const std::optional<IdType>& getUnsharedEdgesId() const;
 
+  /**
+   * @brief Sets the ID of the unshared edges array.
+   * @param unsharedEdgesId The optional ID of the unshared edges array
+   */
   void setUnsharedEdgesId(const OptionalId& unsharedEdgesId);
 
   /**
@@ -152,49 +165,57 @@ public:
    * stored in the DataStructure
    */
 
+  /**
+   * @brief Returns the DataStructure unique ID of the face list array.
+   * @return const std::optional<IdType>& The face list array ID if it exists
+   */
   const std::optional<IdType>& getFaceListDataArrayId() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the DataStructure unique ID of the face AttributeMatrix.
+   * @return const std::optional<IdType>& The face AttributeMatrix ID if it exists
    */
   const std::optional<IdType>& getFaceAttributeMatrixId() const;
 
+  /**
+   * @brief Sets the ID of the face data AttributeMatrix.
+   * @param faceDataId The optional ID of the face data AttributeMatrix
+   */
   void setFaceDataId(const OptionalId& faceDataId);
 
   /**
-   * @brief
-   * @return
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each face.
+   * @return AttributeMatrix* Pointer to the face AttributeMatrix, or nullptr if not available
    */
   AttributeMatrix* getFaceAttributeMatrix();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each face.
+   * @return const AttributeMatrix* Const pointer to the face AttributeMatrix, or nullptr if not available
    */
   const AttributeMatrix* getFaceAttributeMatrix() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each face.
+   * @return AttributeMatrix& Reference to the face AttributeMatrix
    */
   AttributeMatrix& getFaceAttributeMatrixRef();
 
   /**
-   * @brief
-   * @return
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each face.
+   * @return const AttributeMatrix& Const reference to the face AttributeMatrix
    */
   const AttributeMatrix& getFaceAttributeMatrixRef() const;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the DataPath to the AttributeMatrix for the face data.
+   * @return DataPath The path to the face AttributeMatrix
    */
   DataPath getFaceAttributeMatrixDataPath() const;
 
   /**
-   * @brief
-   * @param attributeMatrix
+   * @brief Sets the Attribute Matrix for the data assigned to the faces.
+   * @param attributeMatrix The AttributeMatrix to use for face data
    */
   void setFaceAttributeMatrix(const AttributeMatrix& attributeMatrix);
 
@@ -205,14 +226,25 @@ public:
   Result<> validate() const override;
 
 protected:
+  /**
+   * @brief Constructs an INodeGeometry2D with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   */
   INodeGeometry2D(DataStructure& dataStructure, std::string name);
 
+  /**
+   * @brief Constructs an INodeGeometry2D with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
+   */
   INodeGeometry2D(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
-   * @brief
-   * @param numEdges
-   * @return SharedEdgeList*
+   * @brief Creates a new shared edge list with the specified number of edges.
+   * @param numEdges The number of edges to allocate space for
+   * @return SharedEdgeList* Pointer to the created shared edge list
    */
   SharedEdgeList* createSharedEdgeList(usize numEdges);
 

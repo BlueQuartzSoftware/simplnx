@@ -51,8 +51,31 @@ public:
    */
   std::vector<std::string> getFormatNames() const;
 
+  /**
+   * @brief Checks if a data store creation function exists for the specified type.
+   * @param type The data store type name
+   * @return bool True if the creation function exists, false otherwise
+   */
   bool hasDataStoreCreationFunction(const std::string& type) const;
+
+  /**
+   * @brief Creates a data store of the specified type and dimensions.
+   * @param type The data store type name
+   * @param numericType The numeric data type
+   * @param tupleShape The shape of the tuple dimensions
+   * @param componentShape The shape of the component dimensions
+   * @return std::unique_ptr<IDataStore> Unique pointer to the created data store
+   */
   std::unique_ptr<IDataStore> createDataStore(const std::string& type, DataType numericType, const ShapeType& tupleShape, const ShapeType& componentShape);
+
+  /**
+   * @brief Creates a typed data store with the specified dimensions.
+   * @tparam T The data type for the store
+   * @param type The data store type name
+   * @param tupleShape The shape of the tuple dimensions
+   * @param componentShape The shape of the component dimensions
+   * @return std::shared_ptr<AbstractDataStore<T>> Shared pointer to the created typed data store
+   */
   template <typename T>
   std::shared_ptr<AbstractDataStore<T>> createDataStoreWithType(const std::string& type, const ShapeType& tupleShape, const ShapeType& componentShape)
   {
@@ -61,7 +84,22 @@ public:
     return std::dynamic_pointer_cast<AbstractDataStore<T>>(dataStore);
   }
 
+  /**
+   * @brief Creates a list store of the specified type and dimensions.
+   * @param type The list store type name
+   * @param numericType The numeric data type
+   * @param tupleShape The shape of the tuple dimensions
+   * @return std::unique_ptr<IListStore> Unique pointer to the created list store
+   */
   std::unique_ptr<IListStore> createListStore(const std::string& type, DataType numericType, const ShapeType& tupleShape) const;
+
+  /**
+   * @brief Creates a typed list store with the specified dimensions.
+   * @tparam T The data type for the store
+   * @param dataFormat The list store format name
+   * @param tupleShape The shape of the tuple dimensions
+   * @return std::shared_ptr<AbstractListStore<T>> Shared pointer to the created typed list store
+   */
   template <typename T>
   std::shared_ptr<AbstractListStore<T>> createListStoreWithType(const std::string& dataFormat, const ShapeType& tupleShape) const
   {
@@ -71,14 +109,34 @@ public:
   }
 
   /**
-   * @brief Checks the
+   * @brief Checks and validates the data format for the given data size.
+   * @param dataSize The size of the data in bytes
+   * @param dataFormat Reference to the data format string to validate/update
    */
   void checkStoreDataFormat(uint64 dataSize, std::string& dataFormat) const;
 
+  /**
+   * @brief Returns an iterator to the beginning of the manager collection.
+   * @return iterator Iterator to the beginning
+   */
   iterator begin();
+
+  /**
+   * @brief Returns an iterator to the end of the manager collection.
+   * @return iterator Iterator to the end
+   */
   iterator end();
 
+  /**
+   * @brief Returns a const iterator to the beginning of the manager collection.
+   * @return const_iterator Const iterator to the beginning
+   */
   const_iterator begin() const;
+
+  /**
+   * @brief Returns a const iterator to the end of the manager collection.
+   * @return const_iterator Const iterator to the end
+   */
   const_iterator end() const;
 
 private:

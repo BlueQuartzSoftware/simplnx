@@ -57,7 +57,16 @@ public:
    */
   void setVertices(const SharedVertexList& vertices);
 
+  /**
+   * @brief Returns the optional ID of the vertex list array.
+   * @return std::optional<IdType> The vertex list ID if it exists
+   */
   std::optional<IdType> getVertexListId() const;
+
+  /**
+   * @brief Sets the ID of the vertex list array.
+   * @param vertices The optional ID of the vertex list array
+   */
   void setVertexListId(const std::optional<IdType>& vertices);
 
   /**
@@ -136,6 +145,10 @@ public:
    */
   const std::optional<IdType>& getVertexAttributeMatrixId() const;
 
+  /**
+   * @brief Sets the ID of the vertex data array.
+   * @param vertexDataId The optional ID of the vertex data array
+   */
   void setVertexDataId(const OptionalId& vertexDataId);
 
   /**
@@ -181,8 +194,19 @@ public:
   Result<> validate() const override;
 
 protected:
+  /**
+   * @brief Constructs an INodeGeometry0D with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   */
   INodeGeometry0D(DataStructure& dataStructure, std::string name);
 
+  /**
+   * @brief Constructs an INodeGeometry0D with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
+   */
   INodeGeometry0D(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**

@@ -47,6 +47,14 @@ public:
     err = (data == nullptr) ? -400 : 0;
   }
 
+  /**
+   * @brief Imports and replaces a DataArray's data store from an HDF5 dataset.
+   * @tparam K The data type to import
+   * @param dataArray The DataArray to update
+   * @param dataPath The path to the DataArray
+   * @param datasetReader The HDF5 dataset reader to read from
+   * @return Result<> Result with any errors or warnings
+   */
   template <typename K>
   static Result<> importDataStore(data_type* dataArray, const DataPath& dataPath, const nx::core::HDF5::DatasetIO& datasetReader)
   {

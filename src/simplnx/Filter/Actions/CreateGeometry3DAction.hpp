@@ -81,8 +81,9 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
@@ -244,7 +245,7 @@ public:
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override
   {
@@ -257,8 +258,8 @@ public:
   }
 
   /**
-   * @brief Returns the path of the ImageGeometry to be created.
-   * @return
+   * @brief Returns the path of the 3D geometry to be created.
+   * @return const DataPath& The geometry path
    */
   const DataPath& geometryPath() const
   {
@@ -266,8 +267,8 @@ public:
   }
 
   /**
-   * @brief Returns the path of the ImageGeometry to be created.
-   * @return
+   * @brief Returns the path of the cell AttributeMatrix.
+   * @return DataPath The cell data path
    */
   DataPath getCellDataPath() const
   {
@@ -275,8 +276,8 @@ public:
   }
 
   /**
-   * @brief Returns the path of the ImageGeometry to be created.
-   * @return
+   * @brief Returns the path of the vertex AttributeMatrix.
+   * @return DataPath The vertex data path
    */
   DataPath getVertexDataPath() const
   {
@@ -284,8 +285,8 @@ public:
   }
 
   /**
-   * @brief Returns the number of cells
-   * @return
+   * @brief Returns the number of cells.
+   * @return IGeometry::MeshIndexType The number of cells
    */
   IGeometry::MeshIndexType numCells() const
   {
@@ -293,8 +294,8 @@ public:
   }
 
   /**
-   * @brief Returns the number of vertices (estimated in some circumstances)
-   * @return
+   * @brief Returns the number of vertices (estimated in some circumstances).
+   * @return IGeometry::MeshIndexType The number of vertices
    */
   IGeometry::MeshIndexType numVertices() const
   {

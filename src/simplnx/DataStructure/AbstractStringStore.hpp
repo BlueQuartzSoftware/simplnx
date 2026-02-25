@@ -325,9 +325,22 @@ public:
 
   ~AbstractStringStore() = default;
 
+  /**
+   * @brief Creates a deep copy of this AbstractStringStore.
+   * @return std::unique_ptr<AbstractStringStore> Unique pointer to the deep copy
+   */
   virtual std::unique_ptr<AbstractStringStore> deepCopy() const = 0;
 
+  /**
+   * @brief Returns the total number of strings in the store.
+   * @return usize The number of strings
+   */
   virtual usize size() const = 0;
+
+  /**
+   * @brief Returns whether the string store is empty.
+   * @return bool True if the store has no strings, false otherwise
+   */
   virtual bool empty() const = 0;
 
   /**
@@ -348,26 +361,102 @@ public:
    */
   virtual void resizeTuples(const ShapeType& tupleShape) = 0;
 
+  /**
+   * @brief Array subscript operator to access the string at the specified index.
+   * @param index The index to access
+   * @return reference Reference to the string at the specified index
+   */
   virtual reference operator[](usize index) = 0;
+
+  /**
+   * @brief Const array subscript operator to access the string at the specified index.
+   * @param index The index to access
+   * @return const_reference Const reference to the string at the specified index
+   */
   virtual const_reference operator[](usize index) const = 0;
+
+  /**
+   * @brief Returns a const reference to the string at the specified index with bounds checking.
+   * @param index The index to access
+   * @return const_reference Const reference to the string at the specified index
+   */
   virtual const_reference at(usize index) const = 0;
 
+  /**
+   * @brief Returns the string value at the specified index.
+   * @param index The index to retrieve
+   * @return const_reference Const reference to the string value
+   */
   virtual const_reference getValue(usize index) const = 0;
+
+  /**
+   * @brief Sets the string value at the specified index.
+   * @param index The index to set
+   * @param value The string value to set
+   */
   virtual void setValue(usize index, const value_type& value) = 0;
 
+  /**
+   * @brief Returns an iterator to the beginning of the strings.
+   * @return iterator Iterator to the first string
+   */
   iterator begin();
+
+  /**
+   * @brief Returns an iterator to the end of the strings.
+   * @return iterator Iterator past the last string
+   */
   iterator end();
+
+  /**
+   * @brief Returns a const iterator to the beginning of the strings.
+   * @return const_iterator Const iterator to the first string
+   */
   const_iterator begin() const;
+
+  /**
+   * @brief Returns a const iterator to the end of the strings.
+   * @return const_iterator Const iterator past the last string
+   */
   const_iterator end() const;
+
+  /**
+   * @brief Returns a const iterator to the beginning of the strings.
+   * @return const_iterator Const iterator to the first string
+   */
   const_iterator cbegin() const;
+
+  /**
+   * @brief Returns a const iterator to the end of the strings.
+   * @return const_iterator Const iterator past the last string
+   */
   const_iterator cend() const;
 
+  /**
+   * @brief Assignment operator to replace all strings with values from a vector.
+   * @param values Vector of strings to assign
+   * @return AbstractStringStore& Reference to this AbstractStringStore
+   */
   virtual AbstractStringStore& operator=(const std::vector<std::string>& values) = 0;
 
+  /**
+   * @brief Equality comparison operator to check if the store contains the same strings as the vector.
+   * @param values Vector of strings to compare against
+   * @return bool True if all strings match, false otherwise
+   */
   bool operator==(const std::vector<std::string>& values) const;
+
+  /**
+   * @brief Inequality comparison operator to check if the store differs from the vector.
+   * @param values Vector of strings to compare against
+   * @return bool True if any strings differ, false otherwise
+   */
   bool operator!=(const std::vector<std::string>& values) const;
 
 protected:
+  /**
+   * @brief Default constructor.
+   */
   AbstractStringStore() = default;
 };
 } // namespace nx::core

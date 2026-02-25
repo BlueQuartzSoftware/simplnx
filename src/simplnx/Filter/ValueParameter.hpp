@@ -21,14 +21,14 @@ public:
 
   /**
    * @brief Returns whether the parameter is a ValueParameter or DataParameter.
-   * @return
+   * @return Type Returns Type::Value
    */
   Type type() const final;
 
   /**
    * @brief Validates the given value. Returns warnings/errors.
-   * @param value
-   * @return
+   * @param value The value to validate
+   * @return Result<> Result with any errors or warnings
    */
   virtual Result<> validate(const std::any& value) const = 0;
 

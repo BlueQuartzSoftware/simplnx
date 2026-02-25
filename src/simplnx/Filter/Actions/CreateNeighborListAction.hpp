@@ -16,6 +16,12 @@ class SIMPLNX_EXPORT CreateNeighborListAction : public IDataCreationAction
 public:
   CreateNeighborListAction() = delete;
 
+  /**
+   * @brief Constructs a CreateNeighborListAction.
+   * @param type The data type of the NeighborList
+   * @param tupleShape The tuple shape of the NeighborList
+   * @param path The path where the NeighborList will be created
+   */
   CreateNeighborListAction(DataType type, const ShapeType& tupleShape, const DataPath& path);
 
   ~CreateNeighborListAction() noexcept override;
@@ -28,14 +34,15 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return Result<>
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override;
 

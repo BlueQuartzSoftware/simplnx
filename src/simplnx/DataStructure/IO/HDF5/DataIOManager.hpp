@@ -11,7 +11,7 @@ class SIMPLNX_EXPORT DataIOManager : public IDataIOManager
 {
 public:
   /**
-   * @brief Constructs a DattaIOManager and adds core IO classes.
+   * @brief Constructs a DataIOManager and adds core IO classes.
    */
   DataIOManager();
   ~DataIOManager() noexcept override;

@@ -6,7 +6,7 @@
 namespace nx::core
 {
 /**
- * @brief Action for creating an ImageGeometry in a DataStructure
+ * @brief Empty action that performs no operation.
  */
 class SIMPLNX_EXPORT EmptyAction : public IDataAction
 {
@@ -23,8 +23,9 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return
+   * @param dataStructure The DataStructure to modify (unused)
+   * @param mode The mode (Preflight or Execute, unused)
+   * @return Result<> Empty result (no changes made)
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
@@ -33,7 +34,7 @@ public:
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override
   {

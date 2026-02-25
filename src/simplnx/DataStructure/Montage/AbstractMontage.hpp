@@ -13,7 +13,7 @@ class IGeometry;
 
 /**
  * @class AbstractMontage
- * @brief
+ * @brief Abstract base class for montage data structures that organize collections of geometries as tiles.
  */
 class SIMPLNX_EXPORT AbstractMontage : public BaseGroup
 {

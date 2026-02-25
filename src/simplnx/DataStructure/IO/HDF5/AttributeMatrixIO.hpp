@@ -16,6 +16,9 @@ class SIMPLNX_EXPORT AttributeMatrixIO : public BaseGroupIO
 public:
   using data_type = AttributeMatrix;
 
+  /**
+   * @brief Default constructor.
+   */
   AttributeMatrixIO();
   ~AttributeMatrixIO() noexcept override;
 

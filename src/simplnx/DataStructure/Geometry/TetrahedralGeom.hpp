@@ -7,7 +7,7 @@ namespace nx::core
 {
 /**
  * @class TetrahedralGeom
- * @brief
+ * @brief Represents a 3D tetrahedral geometry consisting of vertices connected by tetrahedral elements.
  */
 class SIMPLNX_EXPORT TetrahedralGeom : public INodeGeometry3D
 {
@@ -24,33 +24,33 @@ public:
   static inline constexpr StringLiteral k_TypeName = "TetrahedralGeom";
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param parentId = {}
-   * @return TetrahedralGeom*
+   * @brief Creates a new TetrahedralGeom in the specified DataStructure.
+   * @param dataStructure The DataStructure to create the TetrahedralGeom in
+   * @param name The name for the new TetrahedralGeom
+   * @param parentId Optional parent object ID to insert the TetrahedralGeom under
+   * @return TetrahedralGeom* Pointer to the created TetrahedralGeom, or nullptr if creation failed
    */
   static TetrahedralGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param parentId = {}
-   * @return TetrahedralGeom*
+   * @brief Imports a TetrahedralGeom into the specified DataStructure with a given import ID.
+   * @param dataStructure The DataStructure to import the TetrahedralGeom into
+   * @param name The name for the imported TetrahedralGeom
+   * @param importId The ID to use for this imported object
+   * @param parentId Optional parent object ID to insert the TetrahedralGeom under
+   * @return TetrahedralGeom* Pointer to the imported TetrahedralGeom, or nullptr if import failed
    */
   static TetrahedralGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param other
+   * @brief Copy constructor.
+   * @param other The TetrahedralGeom to copy from
    */
   TetrahedralGeom(const TetrahedralGeom& other) = default;
 
   /**
-   * @brief
-   * @param other
+   * @brief Move constructor.
+   * @param other The TetrahedralGeom to move from
    */
   TetrahedralGeom(TetrahedralGeom&& other) = default;
 
@@ -84,32 +84,33 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a shallow copy of this TetrahedralGeom.
+   * @return DataObject* Pointer to the shallow copy
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a deep copy of this TetrahedralGeom at the specified path.
+   * @param copyPath The path where the deep copy should be created
+   * @return std::shared_ptr<DataObject> Shared pointer to the deep copy
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
-   *
-   * @return
+   * @brief Returns the number of vertices per edge (always 2 for TetrahedralGeom).
+   * @return usize The number of vertices per edge
    */
   usize getNumberOfVerticesPerEdge() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the number of vertices per face (always 3 for TetrahedralGeom).
+   * @return usize The number of vertices per face
    */
   usize getNumberOfVerticesPerFace() const override;
 
   /**
-   * @brief
-   * @return
+   * @brief Returns the number of vertices per cell (always 4 for TetrahedralGeom).
+   * @return usize The number of vertices per cell
    */
   usize getNumberOfVerticesPerCell() const override;
 
@@ -155,15 +156,15 @@ public:
   Result<> findElementCentroids(bool recalculate) override;
 
   /**
-   * @brief
-   * @param pCoords
+   * @brief Returns the parametric center of a tetrahedral element.
+   * @return Point3D<float64> The parametric center coordinates
    */
   Point3D<float64> getParametricCenter() const override;
 
   /**
-   * @brief
-   * @param pCoords
-   * @param shape
+   * @brief Calculates shape functions at the given parametric coordinates.
+   * @param pCoords The parametric coordinates
+   * @param shape Output array to store the calculated shape function values
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
@@ -205,17 +206,17 @@ public:
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Constructs a TetrahedralGeom with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
    */
   TetrahedralGeom(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Constructs a TetrahedralGeom with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
    */
   TetrahedralGeom(DataStructure& dataStructure, std::string name, IdType importId);
 };

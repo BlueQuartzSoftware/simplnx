@@ -18,7 +18,7 @@ public:
 
   /**
    * @brief Returns the tuple shape.
-   * @return
+   * @return ShapeType The shape of the tuples in the array
    */
   ShapeType getTupleShape() const override
   {
@@ -27,7 +27,7 @@ public:
 
   /**
    * @brief Returns the component shape.
-   * @return
+   * @return ShapeType The shape of the components in the array
    */
   ShapeType getComponentShape() const override
   {
@@ -36,8 +36,8 @@ public:
 
   /**
    * @brief Copies values from one tuple to another.
-   * @param from
-   * @param to
+   * @param from The index of the source tuple to copy from
+   * @param to The index of the destination tuple to copy to
    */
   virtual void copyTuple(usize from, usize to) = 0;
 
@@ -83,7 +83,8 @@ public:
 
   /**
    * @brief Returns a pointer to the DataStore cast as type StoreT.
-   * @return const StoreT*
+   * @tparam StoreT The target IDataStore-derived type to cast to
+   * @return const StoreT* Pointer to the DataStore cast to the specified type, or nullptr if the cast fails
    */
   template <class StoreT>
   const StoreT* getIDataStoreAs() const
@@ -94,7 +95,8 @@ public:
 
   /**
    * @brief Returns a pointer to the DataStore cast as type StoreT.
-   * @return StoreT*
+   * @tparam StoreT The target IDataStore-derived type to cast to
+   * @return StoreT* Pointer to the DataStore cast to the specified type, or nullptr if the cast fails
    */
   template <class StoreT>
   StoreT* getIDataStoreAs()
@@ -105,7 +107,9 @@ public:
 
   /**
    * @brief Returns a reference to the DataStore cast as type StoreT.
-   * @return const StoreT&
+   * @tparam StoreT The target IDataStore-derived type to cast to
+   * @return const StoreT& Reference to the DataStore cast to the specified type
+   * @throws std::bad_cast if the cast fails
    */
   template <class StoreT>
   const StoreT& getIDataStoreRefAs() const
@@ -116,7 +120,9 @@ public:
 
   /**
    * @brief Returns a reference to the DataStore cast as type StoreT.
-   * @return StoreT&
+   * @tparam StoreT The target IDataStore-derived type to cast to
+   * @return StoreT& Reference to the DataStore cast to the specified type
+   * @throws std::bad_cast if the cast fails
    */
   template <class StoreT>
   StoreT& getIDataStoreRefAs()
@@ -135,7 +141,8 @@ public:
   }
 
   /**
-   * @brief Resizes the internal array to accomondate
+   * @brief Resizes the internal array to accommodate the specified tuple shape.
+   * @param tupleShape The new shape for the tuples
    */
   void resizeTuples(const ShapeType& tupleShape) override
   {
@@ -159,10 +166,22 @@ public:
   virtual std::string getDataFormat() const = 0;
 
 protected:
+  /**
+   * @brief Constructs an IDataArray with the given name.
+   * @param dataStructure The DataStructure that owns this array
+   * @param name The name of the array
+   */
   IDataArray(DataStructure& dataStructure, std::string name)
   : IArray(dataStructure, std::move(name))
   {
   }
+
+  /**
+   * @brief Constructs an IDataArray with the given name and import ID.
+   * @param dataStructure The DataStructure that owns this array
+   * @param name The name of the array
+   * @param importId The import ID for tracking imported objects
+   */
   IDataArray(DataStructure& dataStructure, std::string name, IdType importId)
   : IArray(dataStructure, std::move(name), importId)
   {

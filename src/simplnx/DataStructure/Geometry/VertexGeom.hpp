@@ -7,7 +7,7 @@ namespace nx::core
 {
 /**
  * @class VertexGeom
- * @brief
+ * @brief Represents a 0D vertex (point cloud) geometry consisting of individual vertices.
  */
 class SIMPLNX_EXPORT VertexGeom : public INodeGeometry0D
 {
@@ -19,33 +19,33 @@ public:
   static inline constexpr StringLiteral k_TypeName = "VertexGeom";
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param parentId = {}
-   * @return VertexGeom*
+   * @brief Creates a new VertexGeom in the specified DataStructure.
+   * @param dataStructure The DataStructure to create the VertexGeom in
+   * @param name The name for the new VertexGeom
+   * @param parentId Optional parent object ID to insert the VertexGeom under
+   * @return VertexGeom* Pointer to the created VertexGeom, or nullptr if creation failed
    */
   static VertexGeom* Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
-   * @param parentId = {}
-   * @return VertexGeom*
+   * @brief Imports a VertexGeom into the specified DataStructure with a given import ID.
+   * @param dataStructure The DataStructure to import the VertexGeom into
+   * @param name The name for the imported VertexGeom
+   * @param importId The ID to use for this imported object
+   * @param parentId Optional parent object ID to insert the VertexGeom under
+   * @return VertexGeom* Pointer to the imported VertexGeom, or nullptr if import failed
    */
   static VertexGeom* Import(DataStructure& dataStructure, std::string name, IdType importId, const std::optional<IdType>& parentId = {});
 
   /**
-   * @brief
-   * @param other
+   * @brief Copy constructor.
+   * @param other The VertexGeom to copy from
    */
   VertexGeom(const VertexGeom& other);
 
   /**
-   * @brief
-   * @param other
+   * @brief Move constructor.
+   * @param other The VertexGeom to move from
    */
   VertexGeom(VertexGeom&& other);
 
@@ -79,14 +79,15 @@ public:
   std::string getTypeName() const override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a shallow copy of this VertexGeom.
+   * @return DataObject* Pointer to the shallow copy
    */
   DataObject* shallowCopy() override;
 
   /**
-   * @brief
-   * @return DataObject*
+   * @brief Creates a deep copy of this VertexGeom at the specified path.
+   * @param copyPath The path where the deep copy should be created
+   * @return std::shared_ptr<DataObject> Shared pointer to the deep copy
    */
   std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
 
@@ -100,31 +101,31 @@ public:
   Result<> findElementSizes(bool recalculate) override;
 
   /**
-   * @brief
-   * @return nx::core::Point3D<float64>
+   * @brief Returns the parametric center of a vertex element (always at the vertex position).
+   * @return Point3D<float64> The parametric center coordinates
    */
   Point3D<float64> getParametricCenter() const override;
 
   /**
-   * @brief
-   * @param pCoords
-   * @param shape
+   * @brief Calculates shape functions at the given parametric coordinates.
+   * @param pCoords The parametric coordinates
+   * @param shape Output array to store the calculated shape function values
    */
   void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
 
 protected:
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
+   * @brief Constructs a VertexGeom with the specified name.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
    */
   VertexGeom(DataStructure& dataStructure, std::string name);
 
   /**
-   * @brief
-   * @param dataStructure
-   * @param name
-   * @param importId
+   * @brief Constructs a VertexGeom with the specified name and import ID.
+   * @param dataStructure The DataStructure this geometry belongs to
+   * @param name The name for this geometry
+   * @param importId The ID to use for this imported object
    */
   VertexGeom(DataStructure& dataStructure, std::string name, IdType importId);
 };

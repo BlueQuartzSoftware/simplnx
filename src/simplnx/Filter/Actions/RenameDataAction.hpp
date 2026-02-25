@@ -13,6 +13,12 @@ class SIMPLNX_EXPORT RenameDataAction : public IDataAction
 public:
   RenameDataAction() = delete;
 
+  /**
+   * @brief Constructs a RenameDataAction.
+   * @param path The path to the DataObject to rename
+   * @param newName The new name for the object
+   * @param overwrite Whether to overwrite an existing object with the new name
+   */
   RenameDataAction(const DataPath& path, const std::string& newName, bool overwrite = false);
 
   ~RenameDataAction() noexcept override;
@@ -25,14 +31,15 @@ public:
   /**
    * @brief Applies this action's change to the given DataStructure in the given mode.
    * Returns any warnings/errors. On error, DataStructure is not guaranteed to be consistent.
-   * @param dataStructure
-   * @return
+   * @param dataStructure The DataStructure to modify
+   * @param mode The mode (Preflight or Execute)
+   * @return Result<> Result with any errors or warnings
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
   /**
    * @brief Returns a copy of the action.
-   * @return
+   * @return UniquePointer A unique pointer to the cloned action
    */
   UniquePointer clone() const override;
 
@@ -49,8 +56,8 @@ public:
   const DataPath& path() const;
 
   /**
-   * @brief Returns the overwrite value
-   * @return
+   * @brief Returns the overwrite value.
+   * @return bool True if overwrite is enabled
    */
   bool overwrite() const;
 

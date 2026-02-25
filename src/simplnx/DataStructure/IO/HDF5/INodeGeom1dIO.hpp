@@ -12,6 +12,9 @@ namespace HDF5
 class SIMPLNX_EXPORT INodeGeom1dIO : public INodeGeom0dIO
 {
 public:
+  /**
+   * @brief Protected constructor.
+   */
   INodeGeom1dIO();
   ~INodeGeom1dIO() noexcept override;
 
@@ -46,6 +49,13 @@ protected:
    */
   static Result<> WriteNodeGeom1dData(DataStructureWriter& dataStructureWriter, const INodeGeometry1D& geometry, group_writer_type& parentGroup, bool importable);
 
+  /**
+   * @brief Finishes importing 1D node geometry data after the geometry has been created.
+   * @param dataStructure The DataStructure containing the imported geometry
+   * @param dataPath The path to the imported geometry
+   * @param dataStructureGroup The HDF5 group containing the geometry data
+   * @return Result<> Result with any errors or warnings
+   */
   static Result<> FinishImportingNodeGeom1dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup);
 };
 } // namespace HDF5
