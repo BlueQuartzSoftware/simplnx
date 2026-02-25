@@ -26,7 +26,6 @@ public:
 
   // Parameter Keys
   static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_StoreKernelDistances_Key = "store_kernel_distances";
   static constexpr StringLiteral k_InterpolationTechnique_Key = "interpolation_index";
   static constexpr StringLiteral k_KernelSize_Key = "kernel_size";
   static constexpr StringLiteral k_GaussianSigmas_Key = "gaussian_sigmas";
@@ -36,8 +35,23 @@ public:
   static constexpr StringLiteral k_InputMaskPath_Key = "input_mask_path";
   static constexpr StringLiteral k_InterpolateArrays_Key = "interpolate_arrays";
   static constexpr StringLiteral k_CopyArrays_Key = "copy_arrays";
-  static constexpr StringLiteral k_InterpolatedGroupName_Key = "interpolated_group_name";
-  static constexpr StringLiteral k_KernelDistancesArrayName_Key = "kernel_distances_array_name";
+  // static constexpr StringLiteral k_InterpolatedGroupName_Key = "interpolated_group_name";
+
+  // Statistics toggles
+  static constexpr StringLiteral k_FindLength_Key = "find_length";
+  static constexpr StringLiteral k_FindMin_Key = "find_min";
+  static constexpr StringLiteral k_FindMax_Key = "find_max";
+  static constexpr StringLiteral k_FindMean_Key = "find_mean";
+  static constexpr StringLiteral k_FindStdDeviation_Key = "find_std_deviation";
+  static constexpr StringLiteral k_FindSummation_Key = "find_summation";
+
+  // Statistics output array name suffixes
+  static constexpr StringLiteral k_LengthSuffix_Key = "length_suffix";
+  static constexpr StringLiteral k_MinSuffix_Key = "min_suffix";
+  static constexpr StringLiteral k_MaxSuffix_Key = "max_suffix";
+  static constexpr StringLiteral k_MeanSuffix_Key = "mean_suffix";
+  static constexpr StringLiteral k_StdDeviationSuffix_Key = "std_deviation_suffix";
+  static constexpr StringLiteral k_SummationSuffix_Key = "summation_suffix";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

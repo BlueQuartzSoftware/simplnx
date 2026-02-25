@@ -3,60 +3,63 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
-#include "simplnx/DataStructure/NeighborList.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-#include <tuple>
+#include <algorithm>
+#include <cmath>
+#include <limits>
 
 using namespace nx::core;
 
 namespace
 {
-struct MapPointCloudDataByKernelFunctor
+struct VoxelAccumulator
+{
+  float64 weightedSum = 0.0;
+  float64 weightSum = 0.0;
+  uint64 count = 0;
+  float64 min = std::numeric_limits<float64>::max();
+  float64 max = std::numeric_limits<float64>::lowest();
+  float64 welfordMean = 0.0;
+  float64 welfordM2 = 0.0;
+};
+
+struct ExtractAsFloat64Functor
 {
   template <typename T>
-  void operator()(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, const int64 kernel[3], const usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
+  std::vector<float64> operator()(IDataArray* sourceArray)
   {
-    auto& inputData = source->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
-
-    usize index = 0;
-    int64 startKernel[3] = {0, 0, 0};
-    int64 endKernel[3] = {0, 0, 0};
-    usize counter = 0;
-
-    kernel[0] > static_cast<int64>(curX) ? startKernel[0] = 0 : startKernel[0] = static_cast<int64>(curX) - kernel[0];
-    kernel[1] > static_cast<int64>(curY) ? startKernel[1] = 0 : startKernel[1] = static_cast<int64>(curY) - kernel[1];
-    kernel[2] > static_cast<int64>(curZ) ? startKernel[2] = 0 : startKernel[2] = static_cast<int64>(curZ) - kernel[2];
-
-    static_cast<int64>(curX) + kernel[0] >= static_cast<int64>(dims[0]) ? endKernel[0] = static_cast<int64>(dims[0]) - 1 : endKernel[0] = static_cast<int64>(curX) + kernel[0];
-    static_cast<int64>(curY) + kernel[1] >= static_cast<int64>(dims[1]) ? endKernel[1] = static_cast<int64>(dims[1]) - 1 : endKernel[1] = static_cast<int64>(curY) + kernel[1];
-    endKernel[2] = static_cast<int64>(curZ);
-
-    for(int64 z = startKernel[2]; z <= endKernel[2]; z++)
+    auto& store = sourceArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    usize numTuples = store.getNumberOfTuples();
+    std::vector<float64> result(numTuples);
+    for(usize i = 0; i < numTuples; i++)
     {
-      for(int64 y = startKernel[1]; y <= endKernel[1]; y++)
+      result[i] = static_cast<float64>(store[i]);
+    }
+    return result;
+  }
+};
+
+struct WriteWeightedAverageFunctor
+{
+  template <typename T>
+  void operator()(IDataArray* outputArray, const std::vector<float64>& weightedSums, const std::vector<float64>& weightSums, usize numVoxels)
+  {
+    auto& store = outputArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    for(usize i = 0; i < numVoxels; i++)
+    {
+      if(weightSums[i] > 0.0)
       {
-        for(int64 x = startKernel[0]; x <= endKernel[0]; x++)
-        {
-          if(kernelVals[counter] == 0.0f)
-          {
-            continue;
-          }
-          index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
-          interpolatedDataPtr->addEntry(index, kernelVals[counter] * inputData.at(vertIdx));
-          counter++;
-        }
+        store[i] = static_cast<T>(weightedSums[i] / weightSums[i]);
       }
     }
   }
 };
 
-void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std::vector<float32>& kernel, const int64 kernelNumVoxels[3])
+void computeKernel(uint64 interpolationTechnique, const std::vector<float32>& sigmas, std::vector<float32>& kernel, const int64 kernelNumVoxels[3])
 {
-  usize counter = 0;
+  usize kDimX = static_cast<usize>(2 * kernelNumVoxels[0] + 1);
+  usize kDimY = static_cast<usize>(2 * kernelNumVoxels[1] + 1);
 
   for(int64 z = -kernelNumVoxels[2]; z <= kernelNumVoxels[2]; z++)
   {
@@ -64,66 +67,20 @@ void determineKernel(uint64 interpolationTechnique, const FloatVec3& sigmas, std
     {
       for(int64 x = -kernelNumVoxels[0]; x <= kernelNumVoxels[0]; x++)
       {
+        usize kx = static_cast<usize>(x + kernelNumVoxels[0]);
+        usize ky = static_cast<usize>(y + kernelNumVoxels[1]);
+        usize kz = static_cast<usize>(z + kernelNumVoxels[2]);
+        usize idx = kz * kDimY * kDimX + ky * kDimX + kx;
+
         if(interpolationTechnique == InterpolatePointCloudToRegularGrid::k_Uniform)
         {
-          kernel[counter] = 1.0f;
+          kernel[idx] = 1.0f;
         }
         else if(interpolationTechnique == InterpolatePointCloudToRegularGrid::k_Gaussian)
         {
-          kernel[counter] = std::exp(-((x * x) / (2 * sigmas[0] * sigmas[0]) + (y * y) / (2 * sigmas[1] * sigmas[1]) + (z * z) / (2 * sigmas[2] * sigmas[2])));
+          kernel[idx] = std::exp(-((static_cast<float32>(x * x) / (2.0f * sigmas[0] * sigmas[0])) + (static_cast<float32>(y * y) / (2.0f * sigmas[1] * sigmas[1])) +
+                                   (static_cast<float32>(z * z) / (2.0f * sigmas[2] * sigmas[2]))));
         }
-        counter++;
-      }
-    }
-  }
-}
-
-void determineKernelDistances(std::vector<float32>& kernelValDistances, const int64 kernelNumVoxels[3], FloatVec3 res)
-{
-  usize counter = 0;
-
-  for(int64 z = -kernelNumVoxels[2]; z <= kernelNumVoxels[2]; z++)
-  {
-    for(int64 y = -kernelNumVoxels[1]; y <= kernelNumVoxels[1]; y++)
-    {
-      for(int64 x = -kernelNumVoxels[0]; x <= kernelNumVoxels[0]; x++)
-      {
-        kernelValDistances[counter] = (x * x * res[0] * res[0]) + (y * y * res[1] * res[1]) + (z * z * res[2] * res[2]);
-        kernelValDistances[counter] = std::sqrt(kernelValDistances[counter]);
-        counter++;
-      }
-    }
-  }
-}
-
-void mapKernelDistances(NeighborList<float32>* kernelDistances, const std::vector<float32>& kernelValDistances, const std::vector<float32>& kernel, const int64 kernelNumVoxels[3], const usize dims[3],
-                        usize curX, usize curY, usize curZ)
-{
-  int64 startKernel[3] = {0, 0, 0};
-  int64 endKernel[3] = {0, 0, 0};
-  usize counter = 0;
-
-  kernelNumVoxels[0] > static_cast<int64>(curX) ? startKernel[0] = 0 : startKernel[0] = static_cast<int64>(curX) - kernelNumVoxels[0];
-  kernelNumVoxels[1] > static_cast<int64>(curY) ? startKernel[1] = 0 : startKernel[1] = static_cast<int64>(curY) - kernelNumVoxels[1];
-  kernelNumVoxels[2] > static_cast<int64>(curZ) ? startKernel[2] = 0 : startKernel[2] = static_cast<int64>(curZ) - kernelNumVoxels[2];
-
-  static_cast<int64>(curX) + kernelNumVoxels[0] >= static_cast<int64>(dims[0]) ? endKernel[0] = static_cast<int64>(dims[0]) - 1 : endKernel[0] = static_cast<int64>(curX) + kernelNumVoxels[0];
-  static_cast<int64>(curY) + kernelNumVoxels[1] >= static_cast<int64>(dims[1]) ? endKernel[1] = static_cast<int64>(dims[1]) - 1 : endKernel[1] = static_cast<int64>(curY) + kernelNumVoxels[1];
-  endKernel[2] = static_cast<int64>(curZ);
-
-  for(int64 z = startKernel[2]; z <= endKernel[2]; z++)
-  {
-    for(int64 y = startKernel[1]; y <= endKernel[1]; y++)
-    {
-      for(int64 x = startKernel[0]; x <= endKernel[0]; x++)
-      {
-        if(kernel[counter] == 0.0f)
-        {
-          continue;
-        }
-        usize index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
-        kernelDistances->addEntry(index, kernelValDistances[counter]);
-        counter++;
       }
     }
   }
@@ -154,48 +111,20 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
 {
   const DataPath interpolatedGroupPath = m_InputValues->imageGeomPath.createChildPath(m_InputValues->interpolatedGroupName);
 
-  const DataPath kernelDistPath = interpolatedGroupPath.createChildPath(m_InputValues->kernelDistanceArrayName);
-
-  Float32NeighborList* kernelDistances = nullptr;
-  if(m_InputValues->storeKernelDistances)
-  {
-    kernelDistances = m_DataStructure.getDataAs<Float32NeighborList>(kernelDistPath);
-  }
-
-  auto vertices = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->vertexGeomPath);
-  auto image = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->imageGeomPath);
+  auto* vertices = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->vertexGeomPath);
+  auto* image = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->imageGeomPath);
   SizeVec3 dims = image->getDimensions();
   FloatVec3 res = image->getSpacing();
-  int64 kernelNumVoxels[3] = {0, 0, 0};
+
+  usize dimX = dims[0];
+  usize dimY = dims[1];
+  usize dimZ = dims[2];
+  usize numVoxels = dimX * dimY * dimZ;
 
   auto numVerts = vertices->getNumberOfVertices();
-  usize index = 0;
-  usize x = 0;
-  usize y = 0;
-  usize z = 0;
 
-  std::vector<float32> kernel;
-
-  BoolArray::store_type* mask = nullptr;
-  if(m_InputValues->useMask)
-  {
-    mask = m_DataStructure.getDataAs<BoolArray>(m_InputValues->maskDataPath)->getDataStore();
-  }
-
-  auto& voxelIndices = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->voxelIndicesPath);
-
-  // Make sure the NeighborList's outermost vector is resized to the number of tuples and initialized to non-null values (empty vectors)
-  // for(const auto& interpolatedDataPath : m_InputValues->interpolatedDataPaths)
-  // {
-  //   InitializeNeighborList(m_DataStructure, interpolatedGroupPath.createChildPath(interpolatedDataPath.getTargetName()));
-  // }
-  // for(const auto& copyDataPath : m_InputValues->copyDataPaths)
-  // {
-  //   InitializeNeighborList(m_DataStructure, interpolatedGroupPath.createChildPath(copyDataPath.getTargetName()));
-  // }
-
-  usize maxImageIndex = ((dims[2] - 1) * dims[0] * dims[1]) + ((dims[1] - 1) * dims[0]) + (dims[0] - 1);
-
+  // Kernel dimensions in voxels
+  int64 kernelNumVoxels[3] = {0, 0, 0};
   kernelNumVoxels[0] = static_cast<int64>(std::ceil((m_InputValues->kernelSize[0] / res[0]) * 0.5f));
   kernelNumVoxels[1] = static_cast<int64>(std::ceil((m_InputValues->kernelSize[1] / res[1]) * 0.5f));
   kernelNumVoxels[2] = static_cast<int64>(std::ceil((m_InputValues->kernelSize[2] / res[2]) * 0.5f));
@@ -213,53 +142,67 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
     kernelNumVoxels[2] = 0;
   }
 
-  int64 tmpKernelSize[3] = {1, 1, 1};
-  for(usize i = 0; i < 3; i++)
+  usize kDimX = static_cast<usize>(2 * kernelNumVoxels[0] + 1);
+  usize kDimY = static_cast<usize>(2 * kernelNumVoxels[1] + 1);
+  usize kDimZ = static_cast<usize>(2 * kernelNumVoxels[2] + 1);
+  usize totalKernel = kDimX * kDimY * kDimZ;
+
+  // Compute kernel weights
+  std::vector<float32> kernel(totalKernel, 0.0f);
+  computeKernel(m_InputValues->interpolationTechnique, m_InputValues->sigmas, kernel, kernelNumVoxels);
+
+  // Mask
+  BoolArray::store_type* mask = nullptr;
+  if(m_InputValues->useMask)
   {
-    tmpKernelSize[i] *= (kernelNumVoxels[i] * 2) + 1;
+    mask = m_DataStructure.getDataAs<BoolArray>(m_InputValues->maskDataPath)->getDataStore();
   }
 
-  int64 totalKernel = tmpKernelSize[0] * tmpKernelSize[1] * tmpKernelSize[2];
+  auto& voxelIndices = m_DataStructure.getDataRefAs<UInt64Array>(m_InputValues->voxelIndicesPath);
+  usize maxImageIndex = (dimZ - 1) * dimX * dimY + (dimY - 1) * dimX + (dimX - 1);
 
-  kernel.resize(totalKernel);
-  std::fill(kernel.begin(), kernel.end(), 0.0f);
-  determineKernel(m_InputValues->interpolationTechnique, m_InputValues->sigmas, kernel, kernelNumVoxels);
+  const bool needWelford = m_InputValues->findStdDeviation;
 
-  std::vector<float32> uniformKernel(totalKernel, 1.0f);
-
-  std::vector<float32> kernelValDistances;
-  if(m_InputValues->storeKernelDistances)
+  // Pre-extract interpolated source array data as float64
+  std::vector<std::vector<float64>> interpSourceData;
+  std::vector<IDataArray*> interpSourceArrays;
+  for(const auto& path : m_InputValues->interpolatedDataPaths)
   {
-    kernelValDistances.resize(totalKernel);
-    std::fill(kernelValDistances.begin(), kernelValDistances.end(), 0.0f);
-    determineKernelDistances(kernelValDistances, kernelNumVoxels, res);
+    auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(path);
+    if(sourceArray->getDataType() == DataType::boolean)
+    {
+      continue;
+    }
+    interpSourceArrays.push_back(sourceArray);
+    interpSourceData.push_back(ExecuteDataFunction(ExtractAsFloat64Functor{}, sourceArray->getDataType(), sourceArray));
   }
 
+  // Pre-extract copy source array data as float64
+  std::vector<std::vector<float64>> copySourceData;
+  std::vector<IDataArray*> copySourceArrays;
+  for(const auto& path : m_InputValues->copyDataPaths)
+  {
+    auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(path);
+    if(sourceArray->getDataType() == DataType::boolean)
+    {
+      continue;
+    }
+    copySourceArrays.push_back(sourceArray);
+    copySourceData.push_back(ExecuteDataFunction(ExtractAsFloat64Functor{}, sourceArray->getDataType(), sourceArray));
+  }
+
+  // Allocate accumulators for interpolated arrays
+  usize numInterpArrays = interpSourceArrays.size();
+  std::vector<std::vector<VoxelAccumulator>> interpAccum(numInterpArrays, std::vector<VoxelAccumulator>(numVoxels));
+
+  // Allocate simple accumulators for copy arrays (weighted sum + weight sum)
+  usize numCopyArrays = copySourceArrays.size();
+  std::vector<std::vector<float64>> copyWeightedSum(numCopyArrays, std::vector<float64>(numVoxels, 0.0));
+  std::vector<std::vector<float64>> copyWeightSum(numCopyArrays, std::vector<float64>(numVoxels, 0.0));
+
+  // Main vertex loop
   usize progIncrement = numVerts / 100;
   usize prog = 1;
-  usize progressInt = 0;
-
-  // ***************************************************************************
-  // Prebuild these values outside the loop since they do not change inside the loop
-  using InterpolatedTupleType = std::tuple<DataPath, INeighborList*, IDataArray*>;
-  std::vector<InterpolatedTupleType> interpolatedDataTypes;
-  for(const auto& interpolatedDataPathItem : m_InputValues->interpolatedDataPaths)
-  {
-    const auto dynamicArrayPath = interpolatedGroupPath.createChildPath(interpolatedDataPathItem.getTargetName());
-    auto* dynamicArrayToInterpolate = m_DataStructure.getDataAs<INeighborList>(dynamicArrayPath);
-    auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(interpolatedDataPathItem);
-    interpolatedDataTypes.emplace_back(dynamicArrayPath, dynamicArrayToInterpolate, sourceArray);
-  }
-
-  std::vector<InterpolatedTupleType> copiedDataTypes;
-  for(const auto& copyDataPath : m_InputValues->copyDataPaths)
-  {
-    auto dynamicArrayPath = interpolatedGroupPath.createChildPath(copyDataPath.getTargetName());
-    auto* dynamicArrayToCopy = m_DataStructure.getDataAs<INeighborList>(dynamicArrayPath);
-    auto* sourceArray = m_DataStructure.getDataAs<IDataArray>(copyDataPath);
-    copiedDataTypes.emplace_back(dynamicArrayPath, dynamicArrayToCopy, sourceArray);
-  }
-  // ***************************************************************************
 
   for(usize i = 0; i < numVerts; i++)
   {
@@ -268,65 +211,174 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       return {};
     }
 
-    if(m_InputValues->useMask && nullptr != mask && !mask->getValue(i))
+    if(m_InputValues->useMask && mask != nullptr && !mask->getValue(i))
     {
       continue;
     }
-    index = voxelIndices[i];
+
+    usize index = voxelIndices[i];
+    if(index == std::numeric_limits<uint64>::max())
+    {
+      continue;
+    }
     if(index > maxImageIndex)
     {
       return MakeErrorResult(-11004,
                              fmt::format("Index present in the selected Voxel Indices array that falls outside the selected Image Geometry for interpolation.\n Index = {}\n Max Image Index = {}\n",
                                          index, maxImageIndex));
     }
-    x = index % dims[0];
-    y = (index / dims[0]) % dims[1];
-    z = index / (dims[0] * dims[1]);
 
-    for(const auto& interpolatedDataPathItem : interpolatedDataTypes)
+    usize curX = index % dimX;
+    usize curY = (index / dimX) % dimY;
+    usize curZ = index / (dimX * dimY);
+
+    // Compute clipped kernel bounds in grid space (symmetric in all 3 dimensions)
+    int64 startX = std::max(static_cast<int64>(0), static_cast<int64>(curX) - kernelNumVoxels[0]);
+    int64 startY = std::max(static_cast<int64>(0), static_cast<int64>(curY) - kernelNumVoxels[1]);
+    int64 startZ = std::max(static_cast<int64>(0), static_cast<int64>(curZ) - kernelNumVoxels[2]);
+    int64 endX = std::min(static_cast<int64>(dimX) - 1, static_cast<int64>(curX) + kernelNumVoxels[0]);
+    int64 endY = std::min(static_cast<int64>(dimY) - 1, static_cast<int64>(curY) + kernelNumVoxels[1]);
+    int64 endZ = std::min(static_cast<int64>(dimZ) - 1, static_cast<int64>(curZ) + kernelNumVoxels[2]);
+
+    // Traverse kernel
+    for(int64 gz = startZ; gz <= endZ; gz++)
     {
-      const auto dynamicArrayPath = std::get<0>(interpolatedDataPathItem);
-      auto* dynamicArrayToInterpolate = std::get<1>(interpolatedDataPathItem);
-      auto* sourceArray = std::get<2>(interpolatedDataPathItem);
-
-      const auto& type = sourceArray->getDataType();
-      if(type == DataType::boolean) // Can't be executed will throw error
+      for(int64 gy = startY; gy <= endY; gy++)
       {
-        continue;
+        for(int64 gx = startX; gx <= endX; gx++)
+        {
+          // Compute kernel index using 3D offset
+          usize kx = static_cast<usize>(gx - static_cast<int64>(curX) + kernelNumVoxels[0]);
+          usize ky = static_cast<usize>(gy - static_cast<int64>(curY) + kernelNumVoxels[1]);
+          usize kz = static_cast<usize>(gz - static_cast<int64>(curZ) + kernelNumVoxels[2]);
+          usize kernelIdx = kz * kDimY * kDimX + ky * kDimX + kx;
+
+          float32 weight = kernel[kernelIdx];
+          usize voxelIdx = static_cast<usize>(gz) * dimX * dimY + static_cast<usize>(gy) * dimX + static_cast<usize>(gx);
+
+          // Update interpolated array accumulators (using actual kernel weight)
+          if(weight != 0.0f)
+          {
+            float64 w = static_cast<float64>(weight);
+            for(usize a = 0; a < numInterpArrays; a++)
+            {
+              float64 sourceVal = interpSourceData[a][i];
+              float64 weightedVal = w * sourceVal;
+
+              auto& accum = interpAccum[a][voxelIdx];
+              accum.count++;
+              accum.weightedSum += weightedVal;
+              accum.weightSum += w;
+              accum.min = std::min(accum.min, weightedVal);
+              accum.max = std::max(accum.max, weightedVal);
+
+              if(needWelford)
+              {
+                float64 delta = weightedVal - accum.welfordMean;
+                accum.welfordMean += delta / static_cast<float64>(accum.count);
+                float64 delta2 = weightedVal - accum.welfordMean;
+                accum.welfordM2 += delta * delta2;
+              }
+            }
+          }
+
+          // Update copy array accumulators (always uniform weight = 1.0)
+          for(usize a = 0; a < numCopyArrays; a++)
+          {
+            float64 sourceVal = copySourceData[a][i];
+            copyWeightedSum[a][voxelIdx] += sourceVal;
+            copyWeightSum[a][voxelIdx] += 1.0;
+          }
+        }
       }
-
-      // NO BOOL
-      ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, sourceArray, dynamicArrayToInterpolate, kernel, kernelNumVoxels, dims.data(), x, y, z, i);
-    }
-
-    for(const auto& copyDataPath : copiedDataTypes)
-    {
-      auto dynamicArrayPath = std::get<0>(copyDataPath); // interpolatedGroupPath.createChildPath(copyDataPath.getTargetName());
-      auto* dynamicArrayToCopy = std::get<1>(copyDataPath);
-      auto* sourceArray = std::get<2>(copyDataPath);
-
-      const auto& type = sourceArray->getDataType();
-      if(type == DataType::boolean) // Can't be executed will throw error
-      {
-        continue;
-      }
-
-      // NO BOOL
-      ExecuteNeighborFunction(MapPointCloudDataByKernelFunctor{}, type, sourceArray, dynamicArrayToCopy, uniformKernel, kernelNumVoxels, dims.data(), x, y, z, i);
-    }
-
-    if(m_InputValues->storeKernelDistances && nullptr != kernelDistances)
-    {
-      // InitializeNeighborList(m_DataStructure, kernelDistPath);
-      mapKernelDistances(kernelDistances, kernelValDistances, kernel, kernelNumVoxels, dims.data(), x, y, z);
     }
 
     if(i > prog)
     {
-      progressInt = static_cast<int64>((static_cast<float>(i) / numVerts) * 100.0f);
+      usize progressInt = static_cast<usize>((static_cast<float64>(i) / static_cast<float64>(numVerts)) * 100.0);
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Interpolating Point Cloud || {}% Completed", progressInt));
-      prog = prog + progIncrement;
+      prog += progIncrement;
     }
+  }
+
+  // Finalization pass - write outputs
+  m_MessageHandler(IFilter::Message::Type::Info, "Writing interpolated results...");
+
+  for(usize a = 0; a < numInterpArrays; a++)
+  {
+    const std::string& arrayName = interpSourceArrays[a]->getName();
+
+    // Write interpolated (weighted average) output
+    auto& interpOutput = m_DataStructure.getDataRefAs<Float64Array>(interpolatedGroupPath.createChildPath(arrayName));
+    for(usize v = 0; v < numVoxels; v++)
+    {
+      const auto& accum = interpAccum[a][v];
+      if(accum.weightSum > 0.0)
+      {
+        interpOutput[v] = accum.weightedSum / accum.weightSum;
+      }
+    }
+
+    // Write statistics arrays
+    if(m_InputValues->findLength)
+    {
+      auto& lengthOutput = m_DataStructure.getDataRefAs<UInt64Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->lengthSuffix));
+      for(usize v = 0; v < numVoxels; v++)
+      {
+        lengthOutput[v] = interpAccum[a][v].count;
+      }
+    }
+    if(m_InputValues->findMin)
+    {
+      auto& minOutput = m_DataStructure.getDataRefAs<Float32Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->minSuffix));
+      for(usize v = 0; v < numVoxels; v++)
+      {
+        const auto& accum = interpAccum[a][v];
+        minOutput[v] = accum.count > 0 ? static_cast<float32>(accum.min) : 0.0f;
+      }
+    }
+    if(m_InputValues->findMax)
+    {
+      auto& maxOutput = m_DataStructure.getDataRefAs<Float32Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->maxSuffix));
+      for(usize v = 0; v < numVoxels; v++)
+      {
+        const auto& accum = interpAccum[a][v];
+        maxOutput[v] = accum.count > 0 ? static_cast<float32>(accum.max) : 0.0f;
+      }
+    }
+    if(m_InputValues->findMean)
+    {
+      auto& meanOutput = m_DataStructure.getDataRefAs<Float32Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->meanSuffix));
+      for(usize v = 0; v < numVoxels; v++)
+      {
+        const auto& accum = interpAccum[a][v];
+        meanOutput[v] = accum.count > 0 ? static_cast<float32>(accum.weightedSum / static_cast<float64>(accum.count)) : 0.0f;
+      }
+    }
+    if(m_InputValues->findStdDeviation)
+    {
+      auto& stdDevOutput = m_DataStructure.getDataRefAs<Float32Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->stdDeviationSuffix));
+      for(usize v = 0; v < numVoxels; v++)
+      {
+        const auto& accum = interpAccum[a][v];
+        stdDevOutput[v] = accum.count > 0 ? static_cast<float32>(std::sqrt(accum.welfordM2 / static_cast<float64>(accum.count))) : 0.0f;
+      }
+    }
+    if(m_InputValues->findSummation)
+    {
+      auto& sumOutput = m_DataStructure.getDataRefAs<Float32Array>(interpolatedGroupPath.createChildPath(arrayName + m_InputValues->summationSuffix));
+      for(usize v = 0; v < numVoxels; v++)
+      {
+        sumOutput[v] = static_cast<float32>(interpAccum[a][v].weightedSum);
+      }
+    }
+  }
+
+  // Write copy array outputs
+  for(usize a = 0; a < numCopyArrays; a++)
+  {
+    auto* outputArray = m_DataStructure.getDataAs<IDataArray>(interpolatedGroupPath.createChildPath(copySourceArrays[a]->getName()));
+    ExecuteDataFunction(WriteWeightedAverageFunctor{}, outputArray->getDataType(), outputArray, copyWeightedSum[a], copyWeightSum[a], numVoxels);
   }
 
   return {};

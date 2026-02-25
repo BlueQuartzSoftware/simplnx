@@ -13,7 +13,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridInputValues
 {
-  bool storeKernelDistances;
+  bool useMask;
   uint64 interpolationTechnique;
   DataPath vertexGeomPath;
   DataPath imageGeomPath;
@@ -23,9 +23,23 @@ struct SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridInputValues
   DataPath voxelIndicesPath;
   std::vector<float32> kernelSize;
   std::vector<float32> sigmas;
-  std::string kernelDistanceArrayName;
-  bool useMask;
   DataPath maskDataPath;
+
+  // Statistics flags
+  bool findLength;
+  bool findMin;
+  bool findMax;
+  bool findMean;
+  bool findStdDeviation;
+  bool findSummation;
+
+  // Output suffix names (appended to source array name)
+  std::string lengthSuffix;
+  std::string minSuffix;
+  std::string maxSuffix;
+  std::string meanSuffix;
+  std::string stdDeviationSuffix;
+  std::string summationSuffix;
 };
 
 /**
