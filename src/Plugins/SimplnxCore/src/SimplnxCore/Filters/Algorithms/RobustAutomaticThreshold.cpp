@@ -27,14 +27,7 @@ struct FindThresholdFunctor
 
     for(usize i = 0; i < numTuples; i++)
     {
-      if(inputData.getValue(i) < threshold)
-      {
-        maskStore.setValue(i, false);
-      }
-      else
-      {
-        maskStore.setValue(i, true);
-      }
+      maskStore.setValue(i, inputData.getValue(i) >= threshold);
     }
   }
 };
