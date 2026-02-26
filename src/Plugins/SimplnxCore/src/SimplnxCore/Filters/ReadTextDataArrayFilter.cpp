@@ -1,4 +1,5 @@
 #include "ReadTextDataArrayFilter.hpp"
+#include "SimplnxCore/Filters/Algorithms/ReadTextDataArray.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
@@ -12,27 +13,10 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include <filesystem>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-
-namespace
-{
-struct CSVReadFileFunctor
-{
-  template <typename T>
-  Result<> operator()(IDataArray* inputIDataArray, const fs::path& inputFilePath, uint64 skipLines, char delimiter)
-  {
-    auto& store = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    return CsvParser::ReadFile<T>(inputFilePath, store, skipLines, delimiter);
-  }
-};
-} // namespace
 
 namespace nx::core
 {
@@ -166,15 +150,13 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto inputFilePath = filterArgs.value<fs::path>(k_InputFile_Key);
-  auto skipLines = filterArgs.value<uint64>(k_NSkipLines_Key);
-  auto choiceIndex = filterArgs.value<uint64>(k_DelimiterChoice_Key);
-  auto path = filterArgs.value<DataPath>(k_DataArrayPath_Key);
+  ReadTextDataArrayInputValues inputValues;
+  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.SkipLineCount = filterArgs.value<uint64>(k_NSkipLines_Key);
+  inputValues.DelimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoice_Key);
+  inputValues.OutputDataArrayPath = filterArgs.value<DataPath>(k_DataArrayPath_Key);
 
-  char delimiter = nx::core::CsvParser::IndexToDelimiter(choiceIndex);
-
-  auto* iDataArray = dataStructure.getDataAs<IDataArray>(path);
-  return ExecuteDataFunction(CSVReadFileFunctor{}, iDataArray->getDataType(), iDataArray, inputFilePath, skipLines, delimiter);
+  return ReadTextDataArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

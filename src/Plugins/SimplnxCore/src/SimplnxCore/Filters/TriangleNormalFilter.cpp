@@ -1,13 +1,13 @@
 #include "TriangleNormalFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/TriangleNormal.hpp"
+
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -110,21 +110,11 @@ IFilter::PreflightResult TriangleNormalFilter::preflightImpl(const DataStructure
 Result<> TriangleNormalFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  auto pNormalsName = filterArgs.value<std::string>(k_SurfaceMeshTriangleNormalsArrayName_Key);
+  TriangleNormalInputValues inputValues;
+  inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TriGeometryDataPath_Key);
+  inputValues.OutputNormalsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceMeshTriangleNormalsArrayName_Key);
 
-  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
-
-  DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pNormalsName);
-  auto& normals = dataStructure.getDataAs<Float64Array>(pNormalsArrayPath)->getDataStoreRef();
-
-  // Parallel algorithm to calculate normals
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
-  dataAlg.execute(MeshingUtilities::CalculateNormalsImpl(triangleGeom->getFaces()->getDataStoreRef(), triangleGeom->getVertices()->getDataStoreRef(), normals, shouldCancel));
-
-  return {};
+  return TriangleNormal(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

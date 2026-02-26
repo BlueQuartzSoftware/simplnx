@@ -1,5 +1,7 @@
 #include "CreateFeatureArrayFromElementArrayFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/CreateFeatureArrayFromElementArray.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -8,64 +10,7 @@
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Utilities/DataObjectUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-using namespace nx::core;
-
-namespace
-{
-struct CopyCellDataFunctor
-{
-  template <typename T>
-  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIds, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
-  {
-    const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
-
-    usize totalCellArrayComponents = selectedCellStore.getNumberOfComponents();
-
-    std::map<int32, usize> featureMap;
-    Result<> result;
-
-    usize totalCellArrayTuples = selectedCellStore.getNumberOfTuples();
-    for(usize cellTupleIdx = 0; cellTupleIdx < totalCellArrayTuples; cellTupleIdx++)
-    {
-      if(shouldCancel)
-      {
-        return {};
-      }
-
-      // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
-      int32 featureIdx = featureIds[cellTupleIdx];
-
-      // Store the index of the first tuple with this feature identifier in the map
-      if(featureMap.find(featureIdx) == featureMap.end())
-      {
-        featureMap[featureIdx] = totalCellArrayComponents * cellTupleIdx;
-      }
-
-      // Check that the values at the current index match the value at the first index
-      usize firstInstanceCellTupleIdx = featureMap[featureIdx];
-      for(usize cellCompIdx = 0; cellCompIdx < totalCellArrayComponents; cellCompIdx++)
-      {
-        T firstInstanceCellVal = selectedCellStore[firstInstanceCellTupleIdx + cellCompIdx];
-        T currentCellVal = selectedCellStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
-        if(currentCellVal != firstInstanceCellVal && result.warnings().empty())
-        {
-          // The values are inconsistent with the first values for this feature identifier, so throw a warning
-          result.warnings().push_back(
-              Warning{-1000, fmt::format("Elements from Feature {} do not all have the same value. The last value copied into Feature {} will be used", featureIdx, featureIdx)});
-        }
-
-        createdDataStore[totalCellArrayComponents * featureIdx + cellCompIdx] = selectedCellStore[totalCellArrayComponents * cellTupleIdx + cellCompIdx];
-      }
-    }
-
-    return result;
-  }
-};
-} // namespace
 
 namespace nx::core
 {
@@ -171,26 +116,13 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
 Result<> CreateFeatureArrayFromElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pSelectedCellArrayPathValue = filterArgs.value<DataPath>(k_SelectedCellArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
-  auto pCreatedArrayNameValue = filterArgs.value<std::string>(k_CreatedArrayName_Key);
+  CreateFeatureArrayFromElementArrayInputValues inputValues;
+  inputValues.SelectedCellArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SelectedCellArrayPath_Key);
+  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.CellFeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAttributeMatrixPath_Key);
+  inputValues.CreatedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedArrayName_Key);
 
-  const DataPath createdArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue);
-  const auto* selectedCellArray = dataStructure.getDataAs<IDataArray>(pSelectedCellArrayPathValue);
-  const auto& featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue)->getDataStoreRef();
-  auto* createdArray = dataStructure.getDataAs<IDataArray>(createdArrayPath);
-
-  // Resize the created array to the proper size
-  usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));
-  usize maxValue = featureIds[featureIdsMaxIdx];
-  auto& cellFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAttributeMatrixPathValue);
-
-  auto* createdArrayStore = createdArray->template getIDataStoreAs<IDataStore>();
-  createdArrayStore->resizeTuples(std::vector<usize>{maxValue + 1});
-  cellFeatureAttrMat.resizeTuples(std::vector<usize>{maxValue + 1});
-
-  return ExecuteDataFunction(CopyCellDataFunctor{}, selectedCellArray->getDataType(), selectedCellArray, featureIds, createdArray, shouldCancel);
+  return CreateFeatureArrayFromElementArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

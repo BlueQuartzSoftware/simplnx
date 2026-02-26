@@ -1,5 +1,7 @@
 #include "CropVertexGeometryFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/CropVertexGeometry.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -10,35 +12,10 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {
-namespace
-{
-struct CopyDataToCroppedGeometryFunctor
-{
-  template <typename T>
-  void operator()(const IDataArray* inDataRef, IDataArray* outDataRef, const std::vector<int64>& croppedPoints)
-  {
-    const auto& inputData = inDataRef->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& croppedData = outDataRef->template getIDataStoreRefAs<AbstractDataStore<T>>();
-
-    usize nComps = inDataRef->getNumberOfComponents();
-
-    for(std::vector<int64>::size_type i = 0; i < croppedPoints.size(); i++)
-    {
-      for(usize d = 0; d < nComps; d++)
-      {
-        usize tmpIndex = nComps * i + d;
-        usize ptrIndex = nComps * croppedPoints[i] + d;
-        croppedData[tmpIndex] = inputData[ptrIndex];
-      }
-    }
-  }
-};
-} // namespace
 
 //------------------------------------------------------------------------------
 std::string CropVertexGeometryFilter::name() const
@@ -203,71 +180,15 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto croppedGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
-  auto posMin = filterArgs.value<std::vector<float32>>(k_MinPos_Key);
-  auto posMax = filterArgs.value<std::vector<float32>>(k_MaxPos_Key);
-  auto targetArrays = filterArgs.value<std::vector<DataPath>>(k_TargetArrayPaths_Key);
-  auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
+  CropVertexGeometryInputValues inputValues;
+  inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
+  inputValues.OutputVertexGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
+  inputValues.MinPos = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinPos_Key);
+  inputValues.MaxPos = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxPos_Key);
+  inputValues.TargetArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_TargetArrayPaths_Key);
+  inputValues.VertexAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
 
-  auto xMin = posMin[0];
-  auto yMin = posMin[1];
-  auto zMin = posMin[2];
-  auto xMax = posMax[0];
-  auto yMax = posMax[1];
-  auto zMax = posMax[2];
-
-  auto& vertices = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-  auto numVerts = static_cast<int64>(vertices.getNumberOfVertices());
-  auto* verticesPtr = vertices.getVertices();
-  auto& allVerts = verticesPtr->getDataStoreRef();
-  std::vector<int64> croppedPoints;
-  croppedPoints.reserve(numVerts);
-
-  for(int64 i = 0; i < numVerts; i++)
-  {
-    if(shouldCancel)
-    {
-      return {};
-    }
-    if(allVerts[3 * i + 0] >= xMin && allVerts[3 * i + 0] <= xMax && allVerts[3 * i + 1] >= yMin && allVerts[3 * i + 1] <= yMax && allVerts[3 * i + 2] >= zMin && allVerts[3 * i + 2] <= zMax)
-    {
-      croppedPoints.push_back(i);
-    }
-  }
-
-  croppedPoints.shrink_to_fit();
-
-  auto& crop = dataStructure.getDataRefAs<VertexGeom>(croppedGeomPath);
-  usize numTuples = croppedPoints.size();
-  crop.resizeVertexList(numTuples);
-  ShapeType tDims = {numTuples};
-
-  DataPath croppedVertexDataPath = croppedGeomPath.createChildPath(vertexDataName);
-  auto& vertedDataAttMatrix = dataStructure.getDataRefAs<AttributeMatrix>(croppedVertexDataPath);
-  vertedDataAttMatrix.resizeTuples(tDims);
-
-  for(usize i = 0; i < numTuples; i++)
-  {
-    if(shouldCancel)
-    {
-      return {};
-    }
-    auto coords = vertices.getVertexCoordinate(croppedPoints[i]);
-    crop.setVertexCoordinate(i, coords);
-  }
-
-  for(auto&& targetArrayPath : targetArrays)
-  {
-    DataPath destArrayPath(croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
-
-    const auto* srcArray = dataStructure.getDataAs<IDataArray>(targetArrayPath);
-    auto* destArray = dataStructure.getDataAs<IDataArray>(destArrayPath);
-
-    ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArray->getDataType(), srcArray, destArray, croppedPoints);
-  }
-
-  return {};
+  return CropVertexGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

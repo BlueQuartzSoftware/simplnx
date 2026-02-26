@@ -1,6 +1,7 @@
 #include "WriteASCIIDataFilter.hpp"
 
-#include "simplnx/Common/AtomicFile.hpp"
+#include "SimplnxCore/Filters/Algorithms/WriteASCIIData.hpp"
+
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -8,12 +9,10 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
-#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -134,102 +133,17 @@ IFilter::PreflightResult WriteASCIIDataFilter::preflightImpl(const DataStructure
 Result<> WriteASCIIDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto includes = static_cast<WriteASCIIDataFilter::Includes>(filterArgs.value<ChoicesParameter::ValueType>(k_Includes_Key));
-  bool includeHeaders;
-  bool includeIndex;
-  switch(includes)
-  {
-  case WriteASCIIDataFilter::Includes::Neither: // 0
-  {
-    includeHeaders = false;
-    includeIndex = false;
-    break;
-  }
-  case WriteASCIIDataFilter::Includes::Headers: // 1
-  {
-    includeHeaders = true;
-    includeIndex = false;
-    break;
-  }
-  case WriteASCIIDataFilter::Includes::ColumnIndex: // 2
-  {
-    includeHeaders = false;
-    includeIndex = true;
-    break;
-  }
-  case WriteASCIIDataFilter::Includes::Both: // 3
-  {
-    includeHeaders = true;
-    includeIndex = true;
-    break;
-  }
-  default: {
-    includeHeaders = false;
-    includeIndex = false;
-  }
-  }
+  WriteASCIIDataInputValues inputValues;
+  inputValues.OutputStyleIndex = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
+  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.OutputDir = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputDir_Key);
+  inputValues.FileExtension = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
+  inputValues.MaxValPerLine = filterArgs.value<Int32Parameter::ValueType>(k_MaxTuplePerLine_Key);
+  inputValues.DelimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key);
+  inputValues.HeaderOptionIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Includes_Key);
+  inputValues.InputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  const std::string delimiter = OStreamUtilities::DelimiterToString(filterArgs.value<ChoicesParameter::ValueType>(k_Delimiter_Key));
-  auto selectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  auto fileType = filterArgs.value<ChoicesParameter::ValueType>(k_OutputStyle_Key);
-
-  if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::SingleFile)
-  {
-    auto atomicFileResult = AtomicFile::Create(filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key));
-    if(atomicFileResult.invalid())
-    {
-      return ConvertResult(std::move(atomicFileResult));
-    }
-    AtomicFile atomicFile = std::move(atomicFileResult.value());
-
-    auto outputPath = atomicFile.tempFilePath();
-    // Make sure any directory path is also available as the user may have just typed
-    // in a path without actually creating the full path
-    Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(outputPath.parent_path());
-    if(createDirectoriesResult.invalid())
-    {
-      return createDirectoriesResult;
-    }
-
-    // Scope file writer in code block to get around file lock on windows (enforce destructor order)
-    {
-      // Create the output file
-      std::ofstream outStrm(outputPath, std::ios_base::out | std::ios_base::binary);
-      if(!outStrm.is_open())
-      {
-        return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
-      }
-
-      OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, dataStructure, messageHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
-    }
-
-    Result<> commitResult = atomicFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
-    }
-  }
-
-  if(static_cast<WriteASCIIDataFilter::OutputStyle>(fileType) == WriteASCIIDataFilter::OutputStyle::MultipleFiles)
-  {
-    auto directoryPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputDir_Key);
-    auto fileExtension = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
-    auto maxTuplePerLine = filterArgs.value<int32>(k_MaxTuplePerLine_Key);
-
-    if(!fs::exists(directoryPath))
-    {
-      std::error_code err;
-      if(!fs::create_directories(directoryPath, err))
-      {
-        return MakeErrorResult(-11022,
-                               fmt::format("Unable to create output directory '{}'. Operating system returned error '{}' with message\n    '{}'", directoryPath.string(), err.value(), err.message()));
-      }
-    }
-    return OStreamUtilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, dataStructure, directoryPath.string(), messageHandler, shouldCancel, fileExtension, false, delimiter, includeIndex,
-                                                          includeHeaders, maxTuplePerLine);
-  }
-
-  return {};
+  return WriteASCIIData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

@@ -1,7 +1,7 @@
 #include "TriangleDihedralAngleFilter.hpp"
 
-#include "simplnx/Common/Constants.hpp"
-#include "simplnx/Common/Range.hpp"
+#include "SimplnxCore/Filters/Algorithms/TriangleDihedralAngle.hpp"
+
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -18,84 +18,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr float64 k_radToDeg = Constants::k_180OverPiD; // used for translating radians to degrees
 constexpr nx::core::int32 k_MissingFeatureAttributeMatrix = -76970;
-
-/**
- * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
- * triangle for a set of triangles
- */
-class CalculateDihedralAnglesImpl
-{
-public:
-  CalculateDihedralAnglesImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& dihedralAngles, const std::atomic_bool& shouldCancel)
-  : m_TriangleGeom(triangleGeom)
-  , m_DihedralAngles(dihedralAngles)
-  , m_ShouldCancel(shouldCancel)
-  {
-  }
-  virtual ~CalculateDihedralAnglesImpl() = default;
-
-  void generate(size_t start, size_t end) const
-  {
-    // std::array<float64, 3> vectorEx = {x, y, z};  // coordinate example
-    nx::core::Vec3<float64> vecAB = {0.0f, 0.0f, 0.0f};
-    nx::core::Vec3<float64> vecAC = {0.0f, 0.0f, 0.0f};
-    nx::core::Vec3<float64> vecBC = {0.0f, 0.0f, 0.0f};
-
-    for(size_t triangleIndex = start; triangleIndex < end; triangleIndex++)
-    {
-      if(m_ShouldCancel)
-      {
-        break;
-      }
-      std::array<Point3Df, 3> vertCoords;
-      m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
-
-      for(usize i = 0; i < 3; i++)
-      {
-        vecAB[i] = vertCoords[0][i] - vertCoords[1][i];
-        vecAC[i] = vertCoords[0][i] - vertCoords[2][i];
-        vecBC[i] = vertCoords[1][i] - vertCoords[2][i];
-      }
-
-      float64 magAB = vecAB.magnitude();
-      float64 magAC = vecAC.magnitude();
-      float64 magBC = vecBC.magnitude();
-
-      if(magAB == 0.0f || magAC == 0.0f || magBC == 0.0f)
-      {
-        m_DihedralAngles[triangleIndex] = std::nan("0");
-      }
-      else
-      {
-        std::vector<float64> dihedralAnglesVec;
-        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecAB.dot(vecAC)) / (magAB * magAC))));
-
-        // 180 - angle because AB points out of vertex and BC points into vertex, so angle is actually angle outside of triangle
-        dihedralAnglesVec.push_back(180.0 - (k_radToDeg * acos((std::fabs(vecAB.dot(vecBC)) / (magAB * magBC)))));
-        dihedralAnglesVec.push_back(k_radToDeg * acos((std::fabs(vecBC.dot(vecAC)) / (magBC * magAC))));
-
-        m_DihedralAngles[triangleIndex] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
-      }
-
-      if(m_ShouldCancel)
-      {
-        return;
-      }
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    generate(range.min(), range.max());
-  }
-
-private:
-  const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64AbstractDataStore& m_DihedralAngles;
-  const std::atomic_bool& m_ShouldCancel;
-};
 } // namespace
 
 namespace nx::core
@@ -191,19 +114,11 @@ IFilter::PreflightResult TriangleDihedralAngleFilter::preflightImpl(const DataSt
 Result<> TriangleDihedralAngleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TGeometryDataPath_Key);
-  auto pMinDihedralAnglesName = filterArgs.value<std::string>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
+  TriangleDihedralAngleInputValues inputValues;
+  inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TGeometryDataPath_Key);
+  inputValues.SurfaceMeshTriangleDihedralAnglesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceMeshTriangleDihedralAnglesArrayName_Key);
 
-  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
-  const DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pMinDihedralAnglesName);
-  auto& dihedralAngles = dataStructure.getDataAs<Float64Array>(dihedralAnglesArrayPath)->getDataStoreRef();
-
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom->getNumberOfFaces()));
-  dataAlg.execute(CalculateDihedralAnglesImpl(triangleGeom, dihedralAngles, shouldCancel));
-
-  return {};
+  return TriangleDihedralAngle(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

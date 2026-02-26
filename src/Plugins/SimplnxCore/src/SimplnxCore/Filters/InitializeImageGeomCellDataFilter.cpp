@@ -1,7 +1,8 @@
 #include "InitializeImageGeomCellDataFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/InitializeImageGeomCellData.hpp"
+
 #include "simplnx/Common/TypeTraits.hpp"
-#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -17,33 +18,28 @@
 
 #include <fmt/core.h>
 
-#include <array>
-#include <chrono>
-#include <limits>
-#include <random>
-#include <thread>
-
 using namespace nx::core;
 
 namespace
 {
 using RangeType = std::pair<float64, float64>;
+using InitType = InitializeImageGeomCellDataFilter::InitType;
 
-InitializeImageGeomCellDataFilter::InitType ConvertIndexToInitType(uint64 index)
+InitType ConvertIndexToInitType(uint64 index)
 {
   switch(index)
   {
-  case to_underlying(InitializeImageGeomCellDataFilter::InitType::Manual): {
-    return InitializeImageGeomCellDataFilter::InitType::Manual;
+  case static_cast<uint64>(InitType::Manual): {
+    return InitType::Manual;
   }
-  case to_underlying(InitializeImageGeomCellDataFilter::InitType::Random): {
-    return InitializeImageGeomCellDataFilter::InitType::Random;
+  case static_cast<uint64>(InitType::Random): {
+    return InitType::Random;
   }
-  case to_underlying(InitializeImageGeomCellDataFilter::InitType::RandomWithRange): {
-    return InitializeImageGeomCellDataFilter::InitType::RandomWithRange;
+  case static_cast<uint64>(InitType::RandomWithRange): {
+    return InitType::RandomWithRange;
   }
   default: {
-    throw std::runtime_error("InitializeImageGeomCellDataFilter: Invalid value for InitType");
+    throw std::runtime_error("InitializeImageGeomCellData: Invalid value for InitType");
   }
   }
 }
@@ -79,72 +75,6 @@ struct CheckInitializationFunctor
     }
 
     return {};
-  }
-};
-
-template <class T>
-auto CreateRandomGenerator(T rangeMin, T rangeMax, uint64 seed)
-{
-  std::random_device randomDevice;           // Will be used to obtain a seed for the random number engine
-  std::mt19937_64 generator(randomDevice()); // Standard mersenne_twister_engine seeded with rd()
-  generator.seed(seed);
-
-  if constexpr(std::is_integral_v<T>)
-  {
-    std::uniform_int_distribution<> distribution(rangeMin, rangeMax);
-    return std::make_pair(distribution, generator);
-  }
-  else if constexpr(std::is_floating_point_v<T>)
-  {
-    std::uniform_real_distribution<T> distribution(rangeMin, rangeMax);
-    return std::make_pair(distribution, generator);
-  }
-}
-
-struct InitializeArrayFunctor
-{
-  template <class T>
-  void operator()(IDataArray& dataArray, const std::array<usize, 3>& dims, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax,
-                  InitializeImageGeomCellDataFilter::InitType initType, float64 initValue, const RangeType& initRange, uint64 seed)
-  {
-    T rangeMin;
-    T rangeMax;
-    if(initType == InitializeImageGeomCellDataFilter::InitType::RandomWithRange)
-    {
-      rangeMin = static_cast<T>(initRange.first);
-      rangeMax = static_cast<T>(initRange.second);
-    }
-    else
-    {
-      rangeMin = std::numeric_limits<T>().min();
-      rangeMax = std::numeric_limits<T>().max();
-    }
-
-    auto& dataStore = dataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
-
-    auto&& [distribution, generator] = CreateRandomGenerator(rangeMin, rangeMax, seed);
-
-    for(uint64 k = zMin; k < zMax + 1; k++)
-    {
-      for(uint64 j = yMin; j < yMax + 1; j++)
-      {
-        for(uint64 i = xMin; i < xMax + 1; i++)
-        {
-          usize index = (k * dims[0] * dims[1]) + (j * dims[0]) + i;
-
-          if(initType == InitializeImageGeomCellDataFilter::InitType::Manual)
-          {
-            T num = static_cast<T>(initValue);
-            dataStore.fillTuple(index, num);
-          }
-          else
-          {
-            T randNum = distribution(generator);
-            dataStore.fillTuple(index, randNum);
-          }
-        }
-      }
-    }
   }
 };
 } // namespace
@@ -335,49 +265,19 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto cellArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
-  auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  auto minPoint = filterArgs.value<std::vector<uint64>>(k_MinPoint_Key);
-  auto maxPoint = filterArgs.value<std::vector<uint64>>(k_MaxPoint_Key);
-  auto initTypeIndex = filterArgs.value<uint64>(k_InitType_Key);
-  auto initValue = filterArgs.value<float64>(k_InitValue_Key);
-  auto initRangeVec = filterArgs.value<std::vector<float64>>(k_InitRange_Key);
+  InitializeImageGeomCellDataInputValues inputValues;
+  inputValues.CellArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
+  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_ImageGeometryPath_Key);
+  inputValues.MinPoint = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MinPoint_Key);
+  inputValues.MaxPoint = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MaxPoint_Key);
+  inputValues.InitTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_InitType_Key);
+  inputValues.InitValue = filterArgs.value<Float64Parameter::ValueType>(k_InitValue_Key);
+  inputValues.InitRange = filterArgs.value<VectorFloat64Parameter::ValueType>(k_InitRange_Key);
+  inputValues.SeedValue = filterArgs.value<UInt64Parameter::ValueType>(k_SeedValue_Key);
+  inputValues.UseSeed = filterArgs.value<BoolParameter::ValueType>(k_UseSeed_Key);
+  inputValues.SeedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SeedArrayName_Key);
 
-  auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
-  if(!filterArgs.value<bool>(k_UseSeed_Key))
-  {
-    seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
-  }
-
-  // Store Seed Value in Top Level Array
-  dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
-
-  uint64 xMin = minPoint.at(0);
-  uint64 yMin = minPoint.at(1);
-  uint64 zMin = minPoint.at(2);
-
-  uint64 xMax = maxPoint.at(0);
-  uint64 yMax = maxPoint.at(1);
-  uint64 zMax = maxPoint.at(2);
-
-  InitType initType = ConvertIndexToInitType(initTypeIndex);
-  RangeType initRange = {initRangeVec.at(0), initRangeVec.at(1)};
-
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-
-  std::array<usize, 3> dims = imageGeom.getDimensions().toArray();
-
-  for(const DataPath& path : cellArrayPaths)
-  {
-    auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(path);
-
-    ExecuteNeighborFunction(InitializeArrayFunctor{}, iDataArray.getDataType(), iDataArray, dims, xMin, xMax, yMin, yMax, zMin, zMax, initType, initValue, initRange, seed); // NO BOOL
-
-    // Avoid the exact same seeding for each array
-    seed++;
-  }
-
-  return {};
+  return InitializeImageGeomCellData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

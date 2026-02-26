@@ -1,5 +1,7 @@
 #include "CreateGeometryFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/CreateGeometry.hpp"
+
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -29,51 +31,6 @@ using namespace nx::core;
 
 namespace nx::core
 {
-namespace
-{
-Result<> checkGeometryArraysCompatible(const Float32AbstractDataStore& vertices, const UInt64AbstractDataStore& cells, bool treatWarningsAsErrors, const std::string& cellType)
-{
-  Result<> warningResults;
-  usize numVertices = vertices.getNumberOfTuples();
-  uint64 idx = 0;
-  for(usize i = 0; i < cells.getSize(); i++)
-  {
-    idx = std::max(cells[i], idx);
-  }
-  if((idx + 1) > numVertices)
-  {
-    std::string msg =
-        fmt::format("Supplied {} list contains a vertex index larger than the total length of the supplied shared vertex list\nIndex Value: {}\nNumber of Vertices: {}", cellType, idx, numVertices);
-    if(treatWarningsAsErrors)
-    {
-      return MakeErrorResult(-8340, msg);
-    }
-    warningResults.warnings().push_back(Warning{-9841, msg});
-  }
-  return warningResults;
-}
-
-Result<> checkGridBoundsResolution(const Float32AbstractDataStore& bounds, bool treatWarningsAsErrors, const std::string& boundType)
-{
-  Result<> warningResults;
-  float32 val = bounds[0];
-  for(usize i = 1; i < bounds.getNumberOfTuples(); i++)
-  {
-    if(val > bounds[i])
-    {
-      std::string msg =
-          fmt::format("Supplied {} Bounds array is not strictly increasing; this results in negative resolutions\nIndex {} Value: {}\nIndex {} Value: {}", boundType, (i - 1), val, i, bounds[i]);
-      if(treatWarningsAsErrors)
-      {
-        return MakeErrorResult(-8342, msg);
-      }
-      warningResults.warnings().push_back(Warning{-8343, msg});
-    }
-    val = bounds[i];
-  }
-  return warningResults;
-}
-} // namespace
 
 //------------------------------------------------------------------------------
 std::string CreateGeometryFilter::name() const
@@ -341,98 +298,30 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
 Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto geometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
-  auto geometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
-  auto treatWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
+  CreateGeometryInputValues inputValues;
+  inputValues.GeometryTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
+  inputValues.LengthUnitIndex = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key);
+  inputValues.OutputGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
+  inputValues.WarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
+  inputValues.ArrayHandlingIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ArrayHandling_Key);
+  inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
+  inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
+  inputValues.XBoundsPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
+  inputValues.YBoundsPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
+  inputValues.ZBoundsPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
+  inputValues.VertexListPath = filterArgs.value<DataPath>(k_VertexListPath_Key);
+  inputValues.EdgeListPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
+  inputValues.TriangleListPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
+  inputValues.QuadrilateralListPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
+  inputValues.TetrahedralListPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
+  inputValues.HexahedralListPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
+  inputValues.VertexAttributeMatrixName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
+  inputValues.EdgeAttributeMatrixName = filterArgs.value<std::string>(k_EdgeAttributeMatrixName_Key);
+  inputValues.FaceAttributeMatrixName = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
+  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
 
-  auto* iGeometry = dataStructure.getDataAs<IGeometry>(geometryPath);
-  auto lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key));
-  iGeometry->setUnits(lengthUnit);
-
-  DataPath sharedVertexListArrayPath;
-  DataPath sharedFaceListArrayPath;
-  DataPath sharedCellListArrayPath;
-
-  if(geometryType == k_VertexGeometry || geometryType == k_EdgeGeometry || geometryType == k_TriangleGeometry || geometryType == k_QuadGeometry || geometryType == k_TetGeometry || geometryType == 7)
-  {
-    sharedVertexListArrayPath = filterArgs.value<DataPath>(k_VertexListPath_Key);
-  }
-  if(geometryType == k_TriangleGeometry)
-  {
-    sharedFaceListArrayPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
-  }
-  if(geometryType == k_QuadGeometry)
-  {
-    sharedFaceListArrayPath = filterArgs.value<DataPath>(k_QuadrilateralListPath_Key);
-  }
-  if(geometryType == k_TetGeometry)
-  {
-    sharedCellListArrayPath = filterArgs.value<DataPath>(k_TetrahedralListPath_Key);
-  }
-  if(geometryType == k_HexGeometry)
-  {
-    sharedCellListArrayPath = filterArgs.value<DataPath>(k_HexahedralListPath_Key);
-  }
-
-  Result<> warningResults;
-
-  // These checks must be done in execute since we are accessing the array values!
-  if(geometryType == k_EdgeGeometry)
-  {
-    auto sharedEdgeListArrayPath = filterArgs.value<DataPath>(k_EdgeListPath_Key);
-    const DataPath destEdgeListPath = geometryPath.createChildPath(sharedEdgeListArrayPath.getTargetName());
-    const auto& edgesList = dataStructure.getDataAs<UInt64Array>(destEdgeListPath)->getDataStoreRef();
-    const auto& vertexList = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
-    auto results = checkGeometryArraysCompatible(vertexList, edgesList, treatWarningsAsErrors, "edge");
-    if(results.invalid())
-    {
-      return results;
-    }
-    warningResults.warnings().insert(warningResults.warnings().end(), results.warnings().begin(), results.warnings().end());
-  }
-  if(geometryType == k_TriangleGeometry || geometryType == k_QuadGeometry)
-  {
-    const DataPath destFaceListPath = geometryPath.createChildPath(sharedFaceListArrayPath.getTargetName());
-    const auto& faceList = dataStructure.getDataAs<UInt64Array>(destFaceListPath)->getDataStoreRef();
-    const auto& vertexList = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
-    auto results = checkGeometryArraysCompatible(vertexList, faceList, treatWarningsAsErrors, (geometryType == 4 ? "triangle" : "quadrilateral"));
-    if(results.invalid())
-    {
-      return results;
-    }
-    warningResults.warnings().insert(warningResults.warnings().end(), results.warnings().begin(), results.warnings().end());
-  }
-  if(geometryType == k_TetGeometry || geometryType == k_HexGeometry)
-  {
-    const DataPath destCellListPath = geometryPath.createChildPath(sharedCellListArrayPath.getTargetName());
-    const auto& cellList = dataStructure.getDataAs<UInt64Array>(destCellListPath)->getDataStoreRef();
-    const auto& vertexList = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(sharedVertexListArrayPath.getTargetName()))->getDataStoreRef();
-    auto results = checkGeometryArraysCompatible(vertexList, cellList, treatWarningsAsErrors, (geometryType == 6 ? "tetrahedral" : "hexahedral"));
-    if(results.invalid())
-    {
-      return results;
-    }
-    warningResults.warnings().insert(warningResults.warnings().end(), results.warnings().begin(), results.warnings().end());
-  }
-  if(geometryType == k_RectGridGeometry)
-  {
-    auto xBoundsArrayPath = filterArgs.value<DataPath>(k_XBoundsPath_Key);
-    auto yBoundsArrayPath = filterArgs.value<DataPath>(k_YBoundsPath_Key);
-    auto zBoundsArrayPath = filterArgs.value<DataPath>(k_ZBoundsPath_Key);
-    const auto& srcXBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(xBoundsArrayPath.getTargetName()))->getDataStoreRef();
-    const auto& srcYBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(yBoundsArrayPath.getTargetName()))->getDataStoreRef();
-    const auto& srcZBounds = dataStructure.getDataAs<Float32Array>(geometryPath.createChildPath(zBoundsArrayPath.getTargetName()))->getDataStoreRef();
-    auto xResults = checkGridBoundsResolution(srcXBounds, treatWarningsAsErrors, "X");
-    auto yResults = checkGridBoundsResolution(srcYBounds, treatWarningsAsErrors, "Y");
-    auto zResults = checkGridBoundsResolution(srcZBounds, treatWarningsAsErrors, "Z");
-    auto results = MergeResults(MergeResults(xResults, yResults), zResults);
-    if(results.invalid())
-    {
-      return results;
-    }
-    warningResults.warnings().insert(warningResults.warnings().end(), results.warnings().begin(), results.warnings().end());
-  }
-  return warningResults;
+  return CreateGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

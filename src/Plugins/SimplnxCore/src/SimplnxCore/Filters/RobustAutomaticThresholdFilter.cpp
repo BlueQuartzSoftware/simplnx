@@ -1,12 +1,13 @@
 #include "RobustAutomaticThresholdFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/RobustAutomaticThreshold.hpp"
+
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace fs = std::filesystem;
@@ -15,38 +16,6 @@ using namespace nx::core;
 namespace
 {
 constexpr int32 k_InconsistentTupleCount = -2364;
-
-struct FindThresholdFunctor
-{
-  template <class T>
-  void operator()(const IDataArray* inputObject, const Float32AbstractDataStore& gradMag, BoolAbstractDataStore& maskStore)
-  {
-    const auto& inputData = inputObject->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    usize numTuples = inputData.getNumberOfTuples();
-    float numerator = 0;
-    float denominator = 0;
-
-    for(usize i = 0; i < numTuples; i++)
-    {
-      numerator += (inputData.getValue(i) * gradMag.getValue(i));
-      denominator += gradMag.getValue(i);
-    }
-
-    float threshold = numerator / denominator;
-
-    for(usize i = 0; i < numTuples; i++)
-    {
-      if(inputData.getValue(i) < threshold)
-      {
-        maskStore.setValue(i, false);
-      }
-      else
-      {
-        maskStore.setValue(i, true);
-      }
-    }
-  }
-};
 } // namespace
 
 namespace nx::core
@@ -138,17 +107,12 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
 Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto inputArrayPath = filterArgs.value<DataPath>(k_InputArrayPath_Key);
-  auto gradientArrayPath = filterArgs.value<DataPath>(k_GradientMagnitudePath_Key);
-  auto createdMaskName = filterArgs.value<std::string>(k_ArrayCreationName_Key);
+  RobustAutomaticThresholdInputValues inputValues;
+  inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputArrayPath_Key);
+  inputValues.GradientArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_GradientMagnitudePath_Key);
+  inputValues.CreatedMaskName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ArrayCreationName_Key);
 
-  const auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
-  const auto& gradientStore = dataStructure.getDataAs<Float32Array>(gradientArrayPath)->getDataStoreRef();
-  auto& maskStore = dataStructure.getDataAs<BoolArray>(inputArrayPath.replaceName(createdMaskName))->getDataStoreRef();
-
-  ExecuteNeighborFunction(FindThresholdFunctor{}, inputArray->getDataType(), inputArray, gradientStore, maskStore);
-
-  return {};
+  return RobustAutomaticThreshold(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

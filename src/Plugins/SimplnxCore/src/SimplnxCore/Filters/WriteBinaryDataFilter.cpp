@@ -1,38 +1,18 @@
 #include "WriteBinaryDataFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/WriteBinaryData.hpp"
+
 #include "simplnx/Common/TypeTraits.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
 
 #include <filesystem>
 
 namespace fs = std::filesystem;
-
-using namespace nx::core;
-
-namespace
-{
-struct ByteSwapArray
-{
-  template <typename ScalarType>
-  Result<> operator()(IDataArray* inputDataArray)
-  {
-    if constexpr(std::is_same_v<ScalarType, bool> || std::is_same_v<ScalarType, uint8> || std::is_same_v<ScalarType, int8>) // byte-swap unnecessary bail early
-    {
-      return {};
-    }
-    auto* dataArray = dynamic_cast<DataArray<ScalarType>*>(inputDataArray);
-    dataArray->byteSwapElements();
-    return {};
-  }
-};
-} // namespace
 
 namespace nx::core
 {
@@ -109,36 +89,12 @@ IFilter::PreflightResult WriteBinaryDataFilter::preflightImpl(const DataStructur
 Result<> WriteBinaryDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto endianess = static_cast<endian>(filterArgs.value<ChoicesParameter::ValueType>(k_Endianess_Key));
-  auto selectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
-  for(const auto& selectedArrayPath : selectedDataArrayPaths)
-  {
-    if(shouldCancel)
-    {
-      return {};
-    }
-    if(endian::native != endianess) // if requested endianess is not native then byteswap
-    {
-      auto* oldSelectedArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
-      ExecuteDataFunction(ByteSwapArray{}, oldSelectedArray->getDataType(), oldSelectedArray);
-    }
-  }
+  WriteBinaryDataInputValues inputValues;
+  inputValues.EndianIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Endianess_Key);
+  inputValues.InputDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.FileExtension = filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key);
 
-  auto dirPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  // Make sure any directory path is also available as the user may have just typed
-  // in a path without actually creating the full path
-  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(dirPath);
-  if(createDirectoriesResult.invalid())
-  {
-    return createDirectoriesResult;
-  }
-
-  if(!fs::is_directory(dirPath))
-  {
-    return MakeErrorResult(-23430, fmt::format("{}({}): Function {}: Error. OutputPath must be a directory. '{}'", "WriteBinaryDataFilter::executeImpl", __FILE__, __LINE__, dirPath.string()));
-  }
-  OStreamUtilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, dataStructure, dirPath.string(), messageHandler, shouldCancel,
-                                                 filterArgs.value<StringParameter::ValueType>(k_FileExtension_Key), true);
-  return {};
+  return WriteBinaryData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

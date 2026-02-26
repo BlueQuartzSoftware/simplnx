@@ -1,5 +1,7 @@
 #include "CopyFeatureArrayToElementArrayFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/CopyFeatureArrayToElementArray.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -8,55 +10,7 @@
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiPathSelectionParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-using namespace nx::core;
-
-namespace
-{
-template <typename T>
-class CopyFeatureArrayToElementArrayImpl
-{
-public:
-  using StoreType = AbstractDataStore<T>;
-
-  CopyFeatureArrayToElementArrayImpl(const IDataArray* selectedFeatureArray, const Int32AbstractDataStore& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
-  : m_SelectedFeature(selectedFeatureArray->template getIDataStoreRefAs<StoreType>())
-  , m_FeatureIdsStore(featureIdsStore)
-  , m_CreatedStore(createdArray->template getIDataStoreRefAs<StoreType>())
-  , m_ShouldCancel(shouldCancel)
-  {
-  }
-
-  void operator()(const Range& range) const
-  {
-    const usize totalFeatureArrayComponents = m_SelectedFeature.getNumberOfComponents();
-
-    for(usize i = range.min(); i < range.max(); ++i)
-    {
-      if(m_ShouldCancel)
-      {
-        return;
-      }
-
-      for(usize faComp = 0; faComp < totalFeatureArrayComponents; faComp++)
-      {
-        // Get the feature identifier (or what ever the user has selected as their "Feature" identifier
-        m_CreatedStore[totalFeatureArrayComponents * i + faComp] = m_SelectedFeature[totalFeatureArrayComponents * m_FeatureIdsStore[i] + faComp];
-      }
-    }
-  }
-
-private:
-  const StoreType& m_SelectedFeature;
-  const Int32AbstractDataStore& m_FeatureIdsStore;
-  StoreType& m_CreatedStore;
-  const std::atomic_bool& m_ShouldCancel;
-};
-} // namespace
 
 namespace nx::core
 {
@@ -165,31 +119,12 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
 Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  const auto pSelectedFeatureArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPath_Key);
-  const auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  const auto createdArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
+  CopyFeatureArrayToElementArrayInputValues inputValues;
+  inputValues.SelectedFeatureArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPath_Key);
+  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.CreatedArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
 
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-
-  for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
-  {
-    DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
-    const auto* selectedFeatureArray = dataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
-
-    auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, selectedFeatureArrayPath, featureIds, false, messageHandler);
-    if(validateNumFeatResult.invalid())
-    {
-      return validateNumFeatResult;
-    }
-
-    messageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0, featureIds.getNumberOfTuples());
-    ExecuteParallelFunction<::CopyFeatureArrayToElementArrayImpl>(selectedFeatureArray->getDataType(), dataAlg, selectedFeatureArray, featureIds.getDataStoreRef(),
-                                                                  dataStructure.getDataAs<IDataArray>(createdArrayPath), shouldCancel);
-  }
-
-  return {};
+  return CopyFeatureArrayToElementArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

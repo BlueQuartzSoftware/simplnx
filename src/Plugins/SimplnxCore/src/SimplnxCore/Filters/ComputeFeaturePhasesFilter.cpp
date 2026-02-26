@@ -1,13 +1,13 @@
 #include "ComputeFeaturePhasesFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/ComputeFeaturePhases.hpp"
+
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
@@ -104,62 +104,13 @@ IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStr
 Result<> ComputeFeaturePhasesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  auto pCellFeatureAMPathValue = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
-  auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key));
+  ComputeFeaturePhasesInputValues inputValues;
+  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.CellFeaturesAttributeMatrixPath = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
+  inputValues.FeaturePhasesArrayName = filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key);
 
-  const auto& cellPhases = dataStructure.getDataAs<Int32Array>(pCellPhasesArrayPathValue)->getDataStoreRef();
-  const auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
-  const auto& featureIds = featureIdsArray.getDataStoreRef();
-  auto& featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
-
-  // Validate the featurePhases array is the proper size
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, pCellFeatureAMPathValue, featureIdsArray, false, messageHandler);
-  if(validateNumFeatResult.invalid())
-  {
-    return validateNumFeatResult;
-  }
-
-  usize totalPoints = featureIds.getNumberOfTuples();
-  std::map<int32, int32> featureMap;
-  std::set<int32> warnFeatures;
-
-  for(usize i = 0; i < totalPoints; i++)
-  {
-    if(shouldCancel)
-    {
-      return {};
-    }
-
-    int32 gnum = featureIds[i];
-    featureMap.insert({gnum, cellPhases[i]});
-
-    int32 curPhaseVal = featureMap[gnum];
-    if(curPhaseVal != cellPhases[i])
-    {
-      warnFeatures.insert(gnum);
-    }
-    featurePhases[gnum] = cellPhases[i];
-  }
-
-  Result<> result;
-  if(!warnFeatures.empty())
-  {
-    std::string warnStr = "Elements from some features did not all have the same phase ID. The last phase ID copied into each feature will be used. Effected Phase Features: ";
-    usize position = 0;
-    for(auto value : warnFeatures)
-    {
-      warnStr.append(std::to_string(value));
-      if(++position != warnFeatures.size())
-      {
-        warnStr.append(", ");
-      }
-    }
-    result.warnings().push_back(Warning{-500, std::move(warnStr)});
-  }
-
-  return result;
+  return ComputeFeaturePhases(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

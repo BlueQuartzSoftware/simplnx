@@ -1,5 +1,7 @@
 #include "RemoveFlaggedVerticesFilter.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/RemoveFlaggedVertices.hpp"
+
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -11,10 +13,7 @@
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
@@ -22,40 +21,6 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <string>
-
-using namespace nx::core;
-
-namespace
-{
-struct RemoveFlaggedVerticesFunctor
-{
-  // copy data to masked geometry
-  template <class T>
-  void operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, size_t numVerticesToKeep) const
-  {
-    const auto& sourceDataStore = sourceIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& destinationDataStore = destIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
-    destinationDataStore.resizeTuples({numVerticesToKeep});
-
-    const usize numInputTuples = sourceDataStore.getNumberOfTuples();
-    const usize nComps = sourceDataStore.getNumberOfComponents();
-    usize destTupleIndex = 0;
-    for(usize inputIndex = 0; inputIndex < numInputTuples; inputIndex++)
-    {
-      if(!maskCompare->isTrue(inputIndex))
-      {
-        for(usize compIdx = 0; compIdx < nComps; compIdx++)
-        {
-          const usize sourceIndex = (nComps * inputIndex) + compIdx;
-          const usize destinationIndex = (nComps * destTupleIndex) + compIdx;
-          destinationDataStore[destinationIndex] = sourceDataStore[sourceIndex];
-        }
-        destTupleIndex++;
-      }
-    }
-  }
-};
-} // namespace
 
 namespace nx::core
 {
@@ -218,68 +183,12 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
 Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  auto maskArrayPath = filterArgs.value<DataPath>(k_InputMaskPath_Key);
-  auto reducedVertexPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  RemoveFlaggedVerticesInputValues inputValues;
+  inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
+  inputValues.MaskPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputMaskPath_Key);
+  inputValues.OutputVertexGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
 
-  const VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
-  const std::string vertexDataName = vertexGeom.getVertexAttributeMatrixDataPath().getTargetName();
-
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
-  try
-  {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, maskArrayPath);
-  } catch(const std::out_of_range& exception)
-  {
-    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", maskArrayPath.toString());
-    return MakeErrorResult(-54070, message);
-  }
-
-  const size_t numVerticesToKeep = maskCompare->getNumberOfTuples() - maskCompare->countTrueValues(); // We don't need component size since it must be 1
-  const size_t numberOfVertices = vertexGeom.getNumberOfVertices();
-
-  const ShapeType tDims = {numVerticesToKeep};
-
-  // Resize the reduced vertex geometry object
-  auto& reducedVertexGeom = dataStructure.getDataRefAs<VertexGeom>(reducedVertexPath);
-  reducedVertexGeom.resizeVertexList(numVerticesToKeep);
-  reducedVertexGeom.getVertexAttributeMatrix()->resizeTuples(tDims);
-
-  messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying vertices to reduced geometry")});
-
-  size_t keepIndex = 0;
-  // Loop over each vertex and only copy the vertices that were *NOT* flagged for removal
-  for(size_t inputVertexIndex = 0; inputVertexIndex < numberOfVertices; inputVertexIndex++)
-  {
-    // If the mask value == FALSE we are keeping that vertex.
-    if(!maskCompare->isTrue(inputVertexIndex))
-    {
-      reducedVertexGeom.setVertexCoordinate(keepIndex, vertexGeom.getVertexCoordinate(inputVertexIndex));
-      keepIndex++;
-    }
-  }
-  if(shouldCancel)
-  {
-    return {};
-  }
-
-  // Now copy the vertex data from the source arrays to the reduced vertex attribute matrix arrays
-  const AttributeMatrix* sourceVertexAttrMatPtr = vertexGeom.getVertexAttributeMatrix();
-  for(const auto& [identifier, object] : *sourceVertexAttrMatPtr)
-  {
-    const auto& src = dynamic_cast<const IDataArray&>(*object);
-
-    const DataPath destinationPath = reducedVertexGeom.getVertexAttributeMatrixDataPath().createChildPath(src.getName());
-
-    auto& dest = dataStructure.getDataRefAs<IDataArray>(destinationPath);
-    messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName())});
-
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, maskCompare, numVerticesToKeep);
-  }
-
-  return {};
+  return RemoveFlaggedVertices(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
