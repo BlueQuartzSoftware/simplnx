@@ -718,6 +718,10 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     // ComputeFeatureReferenceMisorientationsFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("24b54daf-3bf5-4331-93f6-03a49f719bf1").value(), std::vector<std::string>{"feature_euclidean_center_array_name"}},
 
+    // InterpolatePointCloudToRegularGridFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("996c4464-08f0-4268-a8a6-f9796c88cf58").value(),
+                                              std::vector<std::string>{"find_length", "find_max", "find_mean", "find_min", "find_std_deviation", "find_summation", "length_suffix_name",
+                                                                       "max_suffix_name", "mean_suffix_name", "min_suffix_name", "std_deviation_suffix_name", "summation_suffix_name"}},
     // ExtractVertexGeometryFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("621a71ca-124b-4471-ad1a-02f05ffba099").value(),
                                               std::vector<std::string>{"output_shared_vertex_list_name", "output_vertex_attr_matrix_name"}}};
