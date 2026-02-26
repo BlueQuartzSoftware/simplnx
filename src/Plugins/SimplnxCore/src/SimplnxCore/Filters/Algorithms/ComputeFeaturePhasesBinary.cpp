@@ -40,14 +40,7 @@ Result<> ComputeFeaturePhasesBinary::operator()()
 
   for(usize i = 0; i < totalPoints; i++)
   {
-    if(goodVoxelsMask->isTrue(i))
-    {
-      featurePhasesStoreRef[featureIdsStoreRef[i]] = 1;
-    }
-    else
-    {
-      featurePhasesStoreRef[featureIdsStoreRef[i]] = 0;
-    }
+    featurePhasesStoreRef[featureIdsStoreRef[i]] = goodVoxelsMask->isTrue(i);
   }
 
   return {};
