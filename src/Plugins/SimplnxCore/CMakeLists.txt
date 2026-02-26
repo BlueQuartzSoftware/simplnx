@@ -39,6 +39,7 @@ set(FilterList
   ComputeFeaturePhasesFilter
   ComputeFeatureRectFilter
   ComputeFeatureSizesFilter
+  ComputeGroupingDensityFilter
   ComputeKMeansFilter
   ComputeKMedoidsFilter
   ComputeLargestCrossSectionsFilter
@@ -198,6 +199,7 @@ set(AlgorithmList
  # ComputeFeaturePhasesBinary
   ComputeFeatureRect
   ComputeFeatureSizes
+  ComputeGroupingDensity
   ComputeKMeans
   ComputeKMedoids
   ComputeLargestCrossSections

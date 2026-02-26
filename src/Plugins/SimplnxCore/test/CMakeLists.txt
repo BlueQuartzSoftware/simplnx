@@ -39,6 +39,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ComputeFeaturePhasesFilterTest.cpp
   ComputeFeatureRectTest.cpp
   ComputeFeatureSizesTest.cpp
+  ComputeGroupingDensityTest.cpp
   ComputeKMeansTest.cpp
   ComputeKMedoidsTest.cpp
   ComputeLargestCrossSectionsTest.cpp
@@ -278,6 +279,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME winding_surface_nets.tar.gz SHA512 b45567fd89ea8ebac4764b37491041afa04516fee4b11b5c22d9d3a03c988e335f97395539438d008a7d0f006375a6ec0c62df2b3929ac59671f2e066bc2123f)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_lammps_test.tar.gz SHA512 82bb5360b76e857f3233d37733c602f67fd2ac667e49b24741a70ab649e8046fb7905493df37d142808b740c2771fe7cdccd71c9d70679afafe398529ee5771e)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stl_overflow_test.tar.gz SHA512 d8f8eac901479100ffb5813b3ac72c86da496d3620d406f8691adc0d95eb4670bf4e887f57ccc702bac7e6eeaffdf61db9b4c06157423845dd198722870b0c0b)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME compute_grouping_densities.tar.gz SHA512 96066196d6aa5f87cc7b717f959848c2f3025b7129589abe1eded2a8d725c539a89b0a6290a388a56b5a401e0bd3041698fbd8e8cf37a1f18fdd937debd21531)
 
 endif()
 
