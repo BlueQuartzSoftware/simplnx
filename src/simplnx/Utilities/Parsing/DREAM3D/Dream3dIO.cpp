@@ -1548,8 +1548,13 @@ Result<> readLegacyStatsDataArrayChild(DataStructure& dataStructure, const nx::c
   return MakeErrorResult(-769634, fmt::format("StatsReader: Unsupported object type for \"{}\"", name));
 }
 
-Result<> readLegacyStatsDataArray(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& statsReader, DataObject::IdType parentId, bool preflight)
+Result<> readLegacyStatsDataArray(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& statsReader, DataObject::IdType parentId, bool /*preflight*/)
 {
+  // Always fully import Statistics data (ignoring the preflight parameter) because
+  // the Statistics hierarchy produces DataPaths of depth > 3 (up to depth 6) which
+  // FinishImportingLegacyDataObject cannot handle. Since StatsDataArray data is
+  // relatively small, fully importing during the initial read is safe and avoids
+  // the need for a separate finish-importing step.
   std::string statsGroupName = "Statistics";
   DataGroup* dataGroup = DataGroup::Create(dataStructure, statsGroupName, parentId);
   if(dataGroup == nullptr)
@@ -1559,7 +1564,7 @@ Result<> readLegacyStatsDataArray(DataStructure& dataStructure, const nx::core::
   std::vector<std::string> childNames = statsReader.getChildNames();
   for(const auto& name : childNames)
   {
-    Result<> result = readLegacyStatsDataArrayChild(dataStructure, statsReader, name, dataGroup->getId(), preflight);
+    Result<> result = readLegacyStatsDataArrayChild(dataStructure, statsReader, name, dataGroup->getId(), false);
     if(result.invalid())
     {
       return result;
@@ -2126,6 +2131,15 @@ Result<std::vector<std::shared_ptr<DataObject>>> ImportLegacyDataObjectFromFile(
 
 Result<> FinishImportingLegacyDataObject(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const DataPath& dataPath)
 {
+  // Statistics data is fully imported during the initial read (readLegacyStatsDataArray
+  // always imports with preflight=false), so skip the finish-importing step for all
+  // Statistics paths. The Statistics group is placed as a sibling of the AttributeMatrix
+  // under the DataContainer, so any path with "Statistics" at index 1 is part of this hierarchy.
+  if(dataPath.getLength() >= 2 && dataPath[1] == "Statistics")
+  {
+    return {};
+  }
+
   switch(dataPath.getLength())
   {
   case 1:
