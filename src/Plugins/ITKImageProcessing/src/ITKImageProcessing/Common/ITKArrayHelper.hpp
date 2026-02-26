@@ -451,7 +451,6 @@ Result<> ConvertImageToDataStore(DataStore<NewStoreT>& dataStore, itk::Image<Pix
 
   // ITK use the global new allocator
   auto* rawBufferPtr = reinterpret_cast<T*>(pixelContainer->GetBufferPointer());
-  pixelContainer->ContainerManageMemoryOff();
   if constexpr(std::is_same_v<NewStoreT, T>)
   {
     std::copy(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), dataStore.data());

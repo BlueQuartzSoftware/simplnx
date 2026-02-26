@@ -200,7 +200,9 @@ struct ReadImageIntoArrayFunctor
     roi->SetRegionOfInterest(region);
     roi->Update();
 
-    return {roi->GetOutput()};
+    typename ImageType::Pointer output = roi->GetOutput();
+    output->DisconnectPipeline();
+    return {output};
   }
 
   //------------------------------------------------------------------------------
@@ -298,6 +300,7 @@ struct ReadImageIntoArrayFunctor
 
     reader->Update();
     typename ImageType::Pointer outputImage = reader->GetOutput();
+    outputImage->DisconnectPipeline();
     Result<typename ImageType::Pointer> result = CropImage<ImageType>(outputImage, croppingOptions, spacing, origin);
     if(result.invalid())
     {
@@ -329,6 +332,7 @@ struct ReadImageIntoArrayFunctor
 
     reader->Update();
     typename ImageType::Pointer outputImage = reader->GetOutput();
+    outputImage->DisconnectPipeline();
     Result<typename ImageType::Pointer> result = CropImage<ImageType>(outputImage, croppingOptions, spacing, origin);
     if(result.invalid())
     {
