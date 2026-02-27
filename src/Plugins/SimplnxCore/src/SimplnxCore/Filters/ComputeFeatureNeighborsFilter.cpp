@@ -157,7 +157,7 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   // Create the SurfaceFeatures Output Data Array in the Feature Attribute Matrix
   if(storeSurfaceFeatures)
   {
-    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleShape, cDims, surfaceFeaturesPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::boolean, tupleShape, cDims, surfaceFeaturesPath, CreateArrayAction::k_DefaultDataFormat, "false");
     actions.appendAction(std::move(action));
   }
 

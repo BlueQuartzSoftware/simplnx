@@ -8,7 +8,69 @@
 namespace fs = std::filesystem;
 using namespace nx::core;
 
-TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+namespace
+{
+// Geometry Level
+const std::string k_ImageGeomName = "Image";
+const DataPath k_ImageGeomPath = DataPath({k_ImageGeomName});
+
+// Cell Level
+const std::string k_CellAMName = "CellData";
+const DataPath k_CellAMPath = k_ImageGeomPath.createChildPath(k_CellAMName);
+const std::string k_FeatureIdsName = "FeatureIds";
+const DataPath k_FeatureIdsPath = k_CellAMPath.createChildPath(k_FeatureIdsName);
+
+// Feature Level
+const std::string k_FeatureAMName = "FeatureData";
+const DataPath k_FeatureAMPath = k_ImageGeomPath.createChildPath(k_FeatureAMName);
+
+// Created Array Names and Paths
+const std::string k_NumElementsName = "NumElements";
+const DataPath k_NumElementsPath = k_FeatureAMPath.createChildPath(k_NumElementsName);
+const std::string k_VolumesName = "Volumes";
+const DataPath k_VolumesPath = k_FeatureAMPath.createChildPath(k_VolumesName);
+const std::string k_EquivalentDiametersName = "EquivalentDiameters";
+const DataPath k_EquivalentDiametersPath = k_FeatureAMPath.createChildPath(k_EquivalentDiametersName);
+
+DataStructure Create2DImageDataStructure()
+{
+  // Create an ImageGeom
+  DataStructure dataStructure = {};
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.2f, 1.2f, 67777.1f}});
+  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 3, 1}});
+
+  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{3, 3, 1}, imageGeom->getId());
+  imageGeom->setCellData(*cellData);
+
+  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+
+  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{4}, imageGeom->getId());
+
+  // clang-format off
+  const std::array<uint8, 25> featureIdsArray = {
+    1, 2, 3,
+    3, 3, 1,
+    3, 3, 3
+  };
+  // clang-format on
+
+  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  {
+    featureIds->setValue(i, featureIdsArray[i]);
+  }
+
+  return dataStructure;
+}
+}
+
+// TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Base Case", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+// {
+//
+// }
+
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: SmallIn100 ", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
   UnitTest::LoadPlugins();
 

@@ -111,4 +111,19 @@ inline std::array<bool, 6> computeValidFaceNeighbors(int64 xIdx, int64 yIdx, int
   return {zIdx > 0, yIdx > 0, xIdx > 0, xIdx < dims[0] - 1, yIdx < dims[1] - 1, zIdx < dims[2] - 1};
 }
 
+/**
+ * @brief Returns the surface area of each face of the voxel corresponding to the
+ * initializeFaceNeighborInternalIdx() ordering
+ * @param spacing The spacing of each voxel
+ * @return
+ */
+inline std::array<float64, 6> computeFaceSurfaceAreas(const std::array<float64, 3>& spacing)
+{
+  const auto zFace = static_cast<float32>(spacing[0] * spacing[1]);
+  const auto yFace = static_cast<float32>(spacing[0] * spacing[2]);
+  const auto xFace = static_cast<float32>(spacing[1] * spacing[2]);
+
+  return {zFace, yFace, xFace, xFace, yFace, zFace};
+}
+
 } // namespace nx::core
