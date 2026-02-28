@@ -168,6 +168,8 @@ set(filter_algorithms
   AlignSectionsMisorientation
   AlignSectionsMutualInformation
   BadDataNeighborOrientationCheck
+  BadDataNeighborOrientationCheckScanline
+  BadDataNeighborOrientationCheckWorklist
   CAxisSegmentFeatures
   ComputeAvgCAxes
   ComputeAvgOrientations
