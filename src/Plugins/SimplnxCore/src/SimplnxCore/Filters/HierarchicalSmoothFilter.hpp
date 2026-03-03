@@ -1,0 +1,123 @@
+#pragma once
+
+#include "SimplnxCore/SimplnxCore_export.hpp"
+
+#include "simplnx/Filter/FilterTraits.hpp"
+#include "simplnx/Filter/IFilter.hpp"
+
+namespace nx::core
+{
+/**
+ * @class HierarchicalSmoothFilter
+ * @brief This filter applies hierarchical smoothing to a triangle surface mesh.
+ * The algorithm preserves quad points (immobile), smooths triple lines as 1D curves,
+ * then smooths interior surfaces with fixed boundaries using a Dirichlet BVP solved
+ * via conjugate gradient.
+ */
+class SIMPLNXCORE_EXPORT HierarchicalSmoothFilter : public IFilter
+{
+public:
+  HierarchicalSmoothFilter() = default;
+  ~HierarchicalSmoothFilter() noexcept override = default;
+
+  HierarchicalSmoothFilter(const HierarchicalSmoothFilter&) = delete;
+  HierarchicalSmoothFilter(HierarchicalSmoothFilter&&) noexcept = delete;
+
+  HierarchicalSmoothFilter& operator=(const HierarchicalSmoothFilter&) = delete;
+  HierarchicalSmoothFilter& operator=(HierarchicalSmoothFilter&&) noexcept = delete;
+
+  // Parameter Keys
+  static constexpr StringLiteral k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteral k_SurfaceMeshNodeTypeArrayPath_Key = "surface_mesh_node_type_array_path";
+  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteral k_MaxIterations_Key = "max_iterations";
+  static constexpr StringLiteral k_ErrorThreshold_Key = "error_threshold";
+
+  /**
+   * @brief Reads SIMPL json and converts it simplnx Arguments.
+   * @param json
+   * @return Result<Arguments>
+   */
+  static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
+   * @brief Returns the name of the filter.
+   * @return
+   */
+  std::string name() const override;
+
+  /**
+   * @brief Returns the C++ classname of this filter.
+   * @return
+   */
+  std::string className() const override;
+
+  /**
+   * @brief Returns the uuid of the filter.
+   * @return
+   */
+  Uuid uuid() const override;
+
+  /**
+   * @brief Returns the human readable name of the filter.
+   * @return
+   */
+  std::string humanName() const override;
+
+  /**
+   * @brief Returns the default tags for this filter.
+   * @return
+   */
+  std::vector<std::string> defaultTags() const override;
+
+  /**
+   * @brief Returns the parameters of the filter (i.e. its inputs)
+   * @return
+   */
+  Parameters parameters() const override;
+
+  /**
+   * @brief Returns parameters version integer.
+   * Initial version should always be 1.
+   * Should be incremented everytime the parameters change.
+   * @return VersionType
+   */
+  VersionType parametersVersion() const override;
+
+  /**
+   * @brief Returns a copy of the filter.
+   * @return
+   */
+  UniquePointer clone() const override;
+
+protected:
+  /**
+   * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
+   * Returns any warnings/errors. Also returns the changes that would be applied to the DataStructure.
+   * @param dataStructure The input DataStructure instance
+   * @param filterArgs These are the input values for each parameter that is required for the filter
+   * @param messageHandler The MessageHandler object
+   * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
+   * @param executionContext The ExecutionContext that can be used to determine the correct absolute path from a relative path
+   * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
+   */
+  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                                const ExecutionContext& executionContext) const override;
+
+  /**
+   * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
+   * On failure, there is no guarantee that the DataStructure is in a correct state.
+   * @param dataStructure The input DataStructure instance
+   * @param filterArgs These are the input values for each parameter that is required for the filter
+   * @param pipelineNode The node in the pipeline that is being executed
+   * @param messageHandler The MessageHandler object
+   * @param shouldCancel Atomic boolean value that can be checked to cancel the filter
+   * @param executionContext The ExecutionContext that can be used to determine the correct absolute path from a relative path
+   * @return Returns a Result object with error or warning values if any of those occurred during execution of this function
+   */
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& executionContext) const override;
+};
+} // namespace nx::core
+
+SIMPLNX_DEF_FILTER_TRAITS(nx::core, HierarchicalSmoothFilter, "a92546f7-4e1e-4441-b510-75b0d7834886");

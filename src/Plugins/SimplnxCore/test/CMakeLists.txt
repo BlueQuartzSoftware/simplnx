@@ -88,6 +88,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   FeatureFaceCurvatureTest.cpp
   FillBadDataTest.cpp
   FlyingEdges3DTest.cpp
+  HierarchicalSmoothTest.cpp
   IdentifyDuplicateVerticesTest.cpp
   IdentifySampleTest.cpp
   ImageGeomTest.cpp
@@ -280,6 +281,7 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_lammps_test.tar.gz SHA512 82bb5360b76e857f3233d37733c602f67fd2ac667e49b24741a70ab649e8046fb7905493df37d142808b740c2771fe7cdccd71c9d70679afafe398529ee5771e)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stl_overflow_test.tar.gz SHA512 d8f8eac901479100ffb5813b3ac72c86da496d3620d406f8691adc0d95eb4670bf4e887f57ccc702bac7e6eeaffdf61db9b4c06157423845dd198722870b0c0b)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME compute_grouping_densities.tar.gz SHA512 96066196d6aa5f87cc7b717f959848c2f3025b7129589abe1eded2a8d725c539a89b0a6290a388a56b5a401e0bd3041698fbd8e8cf37a1f18fdd937debd21531)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME hierarchical_smoothing.tar.gz SHA512 47217ee420d9438c3d36a195c06ae060917f5fb7ee295feffdabf05741bec87bf29c3b44016b744930cda7383cd05e0d58df7e7776a7732dc46c12b780e51398)
 
 endif()
 
