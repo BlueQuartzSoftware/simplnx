@@ -3,6 +3,7 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
@@ -66,14 +67,13 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 
   std::vector<int32> neighborCount(totalPoints, 0);
 
-  MessageHelper messageHelper(m_MessageHandler);
-  auto throttledMessenger =
-      messageHelper.createThrottledMessenger([totalPoints](usize voxelIdx) { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
+  FilterMessenger filterMessenger(m_MessageHandler);
+  filterMessenger.setThrottledFormatter([totalPoints](usize voxelIdx) { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
   // Loop over every point finding the number of neighbors that fall within the
   // user defined angle tolerance.
   for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
-    throttledMessenger.sendMessage(static_cast<usize>(voxelIndex));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(voxelIndex));
     // If the mask was set to false, then we check this voxel
     if(!maskCompare->isTrue(voxelIndex))
     {
@@ -127,9 +127,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   // Now we loop over all the points again, but this time we do it as many times
   // as the user has requested to iteratively flip voxels
   int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors;
-  auto levelMessenger = messageHelper.createThrottledMessenger([totalLevels, totalPoints](int32 levelNum, int32 loopNum, usize voxelIdx) {
-    return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed", levelNum, totalLevels, loopNum, CalculatePercentComplete(voxelIdx, totalPoints));
-  });
+  filterMessenger.setThrottledFormatter([totalPoints](usize voxelIdx) { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
   while(currentLevel >= m_InputValues->NumberOfNeighbors)
   {
     counter = 1;
@@ -139,7 +137,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       counter = 0; // Set this while control variable to zero
       for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
       {
-        levelMessenger.sendMessage((startLevel - currentLevel) + 1, loopNumber, voxelIndex);
+        filterMessenger.sendThrottledMessage(voxelIndex);
 
         // We are comparing the number-of-neighbors of the current voxel, and if it
         // is > the current level and the mask is FALSE, then we drop into this

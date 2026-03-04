@@ -4,6 +4,7 @@
 #include "SimplnxCore/Filters/Algorithms/FindNRingNeighbors.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -90,7 +91,7 @@ Result<> FeatureFaceCurvature::operator()()
     sharedFeatureFaces[surfaceMeshFeatureFaceIds[t]].push_back(t);
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
 
 /*********************************
  * We are going to specifically invoke TBB directly instead of using ParallelTaskAlgorithm since we can just queue up all
@@ -101,10 +102,10 @@ Result<> FeatureFaceCurvature::operator()()
  */
 #ifdef SIMPLNX_ENABLE_MULTICORE
   std::shared_ptr<tbb::task_group> g(new tbb::task_group);
-  messageHelper.sendMessage(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
+  filterMessenger.sendInfo(fmt::format("Adding {} Feature Faces to the work queue....", maxFaceId));
 #endif
 
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+  ProgressHelper progressHelper = filterMessenger.createProgressHelper(
       sharedFeatureFaces.size(), [](usize currentProgress, usize maxProgress) { return fmt::format("Feature Face Curvature: {}/{}", currentProgress, maxProgress); });
 
   for(auto& sharedFeatureFace : sharedFeatureFaces)
@@ -121,7 +122,7 @@ Result<> FeatureFaceCurvature::operator()()
       g->run(func);
     }
 #else
-    messageHelper.sendMessage(fmt::format("Working on Face Id {}/{}", std::to_string((sharedFeatureFace).first), std::to_string(maxFaceId)));
+    filterMessenger.sendInfo(fmt::format("Working on Face Id {}/{}", std::to_string((sharedFeatureFace).first), std::to_string(maxFaceId)));
     {
       func();
     }
@@ -129,7 +130,7 @@ Result<> FeatureFaceCurvature::operator()()
   }
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  messageHelper.sendMessage("Waiting on computations to complete.");
+  filterMessenger.sendInfo("Waiting on computations to complete.");
   g->wait(); // Wait for all the threads to complete before moving on.
 #endif
 

@@ -39,8 +39,8 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/FeatureFaceCurvature.hpp"
 #include "SimplnxCore/SimplnxCore_export.hpp"

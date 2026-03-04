@@ -5,6 +5,7 @@
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
@@ -383,7 +384,10 @@ public:
 
     m_MessageHandler(fmt::format("{}: Transform Starting", sourceArray.getName()));
 
-    ThrottledMessenger<std::string> messenger([](const std::string& msg) { return msg; }, m_MessageHandler, std::chrono::milliseconds(1000));
+    FilterMessenger filterMessenger(m_MessageHandler);
+    const auto arrayName = m_SourceArray->getName();
+    const int64_t totalSlices = m_Params.outputDims[2];
+    filterMessenger.setThrottledFormatter([arrayName, totalSlices](usize slice) { return fmt::format("{}: Interpolating values for slice '{}/{}'", arrayName, slice, totalSlices); });
 
     auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
@@ -408,7 +412,7 @@ public:
       {
         break;
       }
-      messenger.sendMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
+      filterMessenger.sendThrottledMessage(static_cast<usize>(k));
       int64_t ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
 
       for(int64_t j = 0; j < m_Params.outputDims[1]; j++)
@@ -493,7 +497,10 @@ public:
 
   void convert() const
   {
-    ThrottledMessenger<std::string> messenger([](const std::string& msg) { return msg; }, m_MessageHandler, std::chrono::milliseconds(1000));
+    FilterMessenger filterMessenger(m_MessageHandler);
+    const auto arrayName = m_SourceArray->getName();
+    const int64 totalSlices = m_Params.outputDims[2];
+    filterMessenger.setThrottledFormatter([arrayName, totalSlices](usize slice) { return fmt::format("{}: Interpolating values for slice '{}/{}'", arrayName, slice, totalSlices); });
 
     DataStructure tempDataStructure;
     ImageGeom* srcImageGeomPtr = ImageGeom::Create(tempDataStructure, "source image geom");
@@ -516,7 +523,7 @@ public:
       {
         break;
       }
-      messenger.sendMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
+      filterMessenger.sendThrottledMessage(static_cast<usize>(k));
 
       int64 const ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
       for(int64 j = 0; j < m_Params.outputDims[1]; j++)

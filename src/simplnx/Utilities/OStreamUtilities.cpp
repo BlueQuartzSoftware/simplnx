@@ -1,6 +1,7 @@
 #include "OStreamUtilities.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
@@ -35,9 +36,9 @@ struct PrintNeighborList
     auto& neighborList = *dynamic_cast<NeighborList<ScalarType>*>(inputNeighborList);
     auto numLists = neighborList.getNumberOfLists();
 
-    MessageHelper messageHelper(mesgHandler);
+    FilterMessenger filterMessenger(mesgHandler);
     std::string listName = neighborList.getName();
-    auto throttledMessenger = messageHelper.createThrottledMessenger([listName, numLists](usize currentList) {
+    filterMessenger.setThrottledFormatter([listName, numLists](usize currentList) {
       return fmt::format("Processing {}: {}% completed", listName, static_cast<int32>(100 * static_cast<float>(currentList) / static_cast<float>(numLists)));
     });
 
@@ -53,7 +54,7 @@ struct PrintNeighborList
     {
       for(size_t list = 0; list < numLists; list++)
       {
-        throttledMessenger.sendMessage(static_cast<usize>(list));
+        filterMessenger.sendThrottledMessage(static_cast<usize>(list));
         if(shouldCancel)
         {
           return {};
@@ -86,7 +87,7 @@ struct PrintNeighborList
     {
       for(size_t list = 0; list < neighborList.getNumberOfLists(); list++)
       {
-        throttledMessenger.sendMessage(static_cast<usize>(list));
+        filterMessenger.sendThrottledMessage(static_cast<usize>(list));
         if(shouldCancel)
         {
           return {};
@@ -142,9 +143,9 @@ struct PrintDataArray
       tuplesPerLine = 1;
     }
 
-    MessageHelper messageHelper(mesgHandler);
+    FilterMessenger filterMessenger(mesgHandler);
     std::string arrayName = inputDataArray.getName();
-    auto throttledMessenger = messageHelper.createThrottledMessenger([arrayName, numTuples](usize currentTuple) {
+    filterMessenger.setThrottledFormatter([arrayName, numTuples](usize currentTuple) {
       return fmt::format("Processing {}: {}% completed", arrayName, static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples)));
     });
 
@@ -152,7 +153,7 @@ struct PrintDataArray
     int32 tuplesWritten = 0;
     for(size_t tuple = 0; tuple < numTuples; tuple++)
     {
-      throttledMessenger.sendMessage(static_cast<usize>(tuple));
+      filterMessenger.sendThrottledMessage(static_cast<usize>(tuple));
       if(shouldCancel)
       {
         return {};
@@ -208,15 +209,15 @@ Result<> PrintStringArray(std::ostream& outputStrm, const StringArray& inputStri
 {
   auto numTuples = inputStringArray.getNumberOfTuples();
 
-  MessageHelper messageHelper(mesgHandler);
+  FilterMessenger filterMessenger(mesgHandler);
   std::string arrayName = inputStringArray.getName();
-  auto throttledMessenger = messageHelper.createThrottledMessenger([arrayName, numTuples](usize currentTuple) {
+  filterMessenger.setThrottledFormatter([arrayName, numTuples](usize currentTuple) {
     return fmt::format("Processing {}: {}% completed", arrayName, static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples)));
   });
 
   for(size_t tuple = 0; tuple < numTuples; tuple++)
   {
-    throttledMessenger.sendMessage(static_cast<usize>(tuple));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(tuple));
     if(shouldCancel)
     {
       return {};
@@ -503,8 +504,8 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   const auto& firstDataArray = dataStructure.getDataRefAs<IArray>(objectPaths[0]);
   usize numTuples = firstDataArray.getNumberOfTuples();
 
-  MessageHelper messageHelper(mesgHandler);
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
+  FilterMessenger filterMessenger(mesgHandler);
+  filterMessenger.setThrottledFormatter(
       [numTuples](usize currentTuple) { return fmt::format("Printing tuples: {}% completed", static_cast<int32>(100 * static_cast<float>(currentTuple) / static_cast<float>(numTuples))); });
 
   // Create our wrapper classes for each DataArray
@@ -574,7 +575,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   }
   for(usize tupleIndex = writerIndexStart; tupleIndex < numTuples; tupleIndex++)
   {
-    throttledMessenger.sendMessage(tupleIndex);
+    filterMessenger.sendThrottledMessage(tupleIndex);
     if(shouldCancel)
     {
       return;

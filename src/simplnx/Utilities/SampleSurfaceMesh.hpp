@@ -6,9 +6,9 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 namespace nx::core
@@ -45,6 +45,6 @@ private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  MessageHelper m_MessageHelper;
+  FilterMessenger m_FilterMessenger;
 };
 } // namespace nx::core

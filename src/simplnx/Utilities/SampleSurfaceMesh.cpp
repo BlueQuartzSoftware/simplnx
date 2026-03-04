@@ -159,7 +159,7 @@ SampleSurfaceMesh::SampleSurfaceMesh(DataStructure& dataStructure, const std::at
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_MessageHelper(m_MessageHandler)
+, m_FilterMessenger(m_MessageHandler)
 {
 }
 
@@ -175,7 +175,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   // pull down faces
   usize numFaces = faceLabelsSM.getNumberOfTuples();
 
-  m_MessageHelper.sendMessage("Counting number of Features...");
+  m_FilterMessenger.sendInfo("Counting number of Features...");
 
   // walk through faces to see how many features there are
   int32 g1 = 0, g2 = 0;
@@ -204,7 +204,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   usize numFeatures = maxFeatureId + 1;
 
   std::vector<std::vector<int32>> faceLists(numFeatures);
-  m_MessageHelper.sendMessage("Counting number of triangle faces per feature ...");
+  m_FilterMessenger.sendInfo("Counting number of triangle faces per feature ...");
 
   // traverse data to determine number of faces belonging to each feature
   for(usize i = 0; i < numFaces; i++)
@@ -227,7 +227,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
     return {};
   }
 
-  m_MessageHelper.sendMessage("Allocating triangle faces per feature ...");
+  m_FilterMessenger.sendInfo("Allocating triangle faces per feature ...");
 
   // fill out lists with number of references to cells
   std::vector<int32> linkLoc(numFaces, 0);
@@ -265,7 +265,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
     return {};
   }
 
-  m_MessageHelper.sendMessage("Vertex Geometry generating sampling points");
+  m_FilterMessenger.sendInfo("Vertex Geometry generating sampling points");
 
   // generate the list of sampling points from subclass
   std::vector<Point3Df> points = {};
@@ -274,10 +274,10 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   // create array to hold which polyhedron (feature) each point falls in
   auto& polyIds = m_DataStructure.getDataAs<Int32Array>(inputValues.FeatureIdsArrayPath)->getDataStoreRef();
 
-  m_MessageHelper.sendMessage("Sampling triangle geometry ...");
+  m_FilterMessenger.sendInfo("Sampling triangle geometry ...");
 
   ProgressHelper progressHelper =
-      m_MessageHelper.createProgressHelper(points.size(), [](usize currentProgress, usize maxProgress) { return fmt::format("Points Completed: {} of {}", currentProgress, maxProgress); });
+      m_FilterMessenger.createProgressHelper(points.size(), [](usize currentProgress, usize maxProgress) { return fmt::format("Points Completed: {} of {}", currentProgress, maxProgress); });
 
   // C++11 RIGHT HERE....
   auto nthreads = static_cast<int32>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
@@ -299,7 +299,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
     }
   }
 
-  m_MessageHelper.sendMessage("Complete");
+  m_FilterMessenger.sendInfo("Complete");
 
   return {};
 }

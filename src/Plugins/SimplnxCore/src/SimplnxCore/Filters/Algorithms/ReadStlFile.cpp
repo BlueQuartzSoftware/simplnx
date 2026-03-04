@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
@@ -138,15 +139,14 @@ Result<> ReadStlFile::operator()()
   uint16_t attr = 0;
   std::vector<uint8_t> triangleAttributeBuffer(std::numeric_limits<uint16_t>::max()); // Just allocate a buffer of max UINT16 elements
 
-  MessageHelper messageHelper(m_MessageHandler);
-  auto throttledMessenger =
-      messageHelper.createThrottledMessenger([total = static_cast<usize>(triCount)](usize current) { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(current, total)); });
+  FilterMessenger filterMessenger(m_MessageHandler);
+  filterMessenger.setThrottledFormatter([total = static_cast<usize>(triCount)](usize current) { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(current, total)); });
 
   fpos_t pos;
 
   for(int32_t t = 0; t < triCount; ++t)
   {
-    throttledMessenger.sendMessage(static_cast<usize>(t));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(t));
     if(m_ShouldCancel)
     {
       return {};

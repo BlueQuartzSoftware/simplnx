@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
@@ -55,9 +56,9 @@ Result<> WriteLAMMPSFile::operator()()
 
   const Int32AbstractDataStore& atomLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->AtomLabelsPath)->getDataStoreRef();
 
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
 
-  messageHelper.sendMessage("Finding Max Atom Label...");
+  filterMessenger.sendInfo("Finding Max Atom Label...");
   int32 atomTypes = 0;
   for(usize i = 0; i < atomLabels.getNumberOfTuples(); i++)
   {
@@ -80,7 +81,7 @@ Result<> WriteLAMMPSFile::operator()()
   float zMax = 0.0;
   int dummy = 0;
 
-  messageHelper.sendMessage("Finding Min/Max Vertices...");
+  filterMessenger.sendInfo("Finding Min/Max Vertices...");
   for(usize i = 0; i < verts.getNumberOfTuples(); i++)
   {
     if(m_ShouldCancel)
@@ -114,7 +115,7 @@ Result<> WriteLAMMPSFile::operator()()
     }
   }
 
-  messageHelper.sendMessage("Writing File Metadata...");
+  filterMessenger.sendInfo("Writing File Metadata...");
   file << "LAMMPS data file\n";
   file << "\n";
   file << fmt::format("{} atoms\n", static_cast<long long int>(verts.getNumberOfTuples()));
@@ -128,17 +129,17 @@ Result<> WriteLAMMPSFile::operator()()
   file << "Atoms\n";
   file << "\n";
 
-  messageHelper.sendMessage("Exporting Data...");
+  filterMessenger.sendInfo("Exporting Data...");
   // Write the Atom positions (Vertices)
   usize numVerts = verts.getNumberOfTuples();
-  auto throttledMessenger = messageHelper.createThrottledMessenger([numVerts](usize current) { return fmt::format("Exporting Data {:.2f}% completed", CalculatePercentComplete(current, numVerts)); });
+  filterMessenger.setThrottledFormatter([numVerts](usize current) { return fmt::format("Exporting Data {:.2f}% completed", CalculatePercentComplete(current, numVerts)); });
   for(usize i = 0; i < numVerts; i++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    throttledMessenger.sendMessage(i);
+    filterMessenger.sendThrottledMessage(i);
     // Write the positions to the output file
     file << fmt::format("{} {:d} {:f} {:f} {:f} {:d} {:d} {:d}\n", i + 1LL, atomLabels.getValue(i), verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1), verts.getValue((i * 3) + 2), dummy, dummy,
                         dummy);

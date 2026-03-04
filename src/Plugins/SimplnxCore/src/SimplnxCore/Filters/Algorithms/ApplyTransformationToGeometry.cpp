@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
@@ -132,10 +133,10 @@ Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 
   IGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
 
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
   usize totalVertices = vertexList.getNumberOfTuples();
   ProgressHelper progressHelper =
-      messageHelper.createProgressHelper(totalVertices, [](usize current, usize max) { return fmt::format("Transforming Nodes: {:.0f}% Complete", CalculatePercentComplete(current, max)); });
+      filterMessenger.createProgressHelper(totalVertices, [](usize current, usize max) { return fmt::format("Transforming Nodes: {:.0f}% Complete", CalculatePercentComplete(current, max)); });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;

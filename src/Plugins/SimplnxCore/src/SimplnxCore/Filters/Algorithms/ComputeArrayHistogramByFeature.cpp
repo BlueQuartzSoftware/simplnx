@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
@@ -285,7 +286,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
 
   usize numFeatures = *std::max_element(featureIdsStore.begin(), featureIdsStore.end()) + 1;
 
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
 
   for(int32 i = 0; i < selectedArrayPaths.size(); i++)
   {
@@ -315,7 +316,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
     bool histFullRange = !m_InputValues->UserDefinedRange;
 
     ProgressHelper progressHelper =
-        messageHelper.createProgressHelper(numFeatures, [](usize currentProgress, usize maxProgress) { return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress); });
+        filterMessenger.createProgressHelper(numFeatures, [](usize currentProgress, usize maxProgress) { return fmt::format("Calculating feature histograms {}/{}", currentProgress, maxProgress); });
 
     if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
     {
@@ -332,11 +333,11 @@ Result<> ComputeArrayHistogramByFeature::operator()()
                              histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, progressHelper);
     }
 
-    messageHelper.sendMessage(fmt::format("Calculated {} feature histograms!", numFeatures));
+    filterMessenger.sendInfo(fmt::format("Calculated {} feature histograms!", numFeatures));
 
     if(overflow > 0)
     {
-      messageHelper.sendMessage(fmt::format("{} values not categorized into bin for array {}", overflow.load(), inputData->getName()));
+      filterMessenger.sendInfo(fmt::format("{} values not categorized into bin for array {}", overflow.load(), inputData->getName()));
     }
   }
 

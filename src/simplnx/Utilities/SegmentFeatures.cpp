@@ -1,6 +1,7 @@
 #include "SegmentFeatures.hpp"
 
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
@@ -127,7 +128,7 @@ std::vector<int64> getAllNeighbors(const int64 currentPoint, const int64 width, 
 SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHelper(mesgHandler)
+, m_FilterMessenger(mesgHandler)
 {
 }
 
@@ -137,11 +138,11 @@ SegmentFeatures::~SegmentFeatures() = default;
 // -----------------------------------------------------------------------------
 Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
-  auto throttledMessenger = m_MessageHelper.createThrottledMessenger([](float percentComplete, int32 gnum) { return fmt::format("{:.2f}% - Current Feature Count: {}", percentComplete, gnum); });
-
   SizeVec3 udims = gridGeom->getDimensions();
 
   usize totalVoxels = udims[0] * udims[1] * udims[2];
+
+  m_FilterMessenger.setThrottledFormatter([totalVoxels](usize voxelsSegmented) { return fmt::format("{:.2f}% - Segmenting Features", CalculatePercentComplete(voxelsSegmented, totalVoxels)); });
 
   int64 dims[3] = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
 
@@ -206,8 +207,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     }
 
     // Send a progress message
-    float percentComplete = static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels) * 100.0f;
-    throttledMessenger.sendMessage(percentComplete, gnum);
+    m_FilterMessenger.sendThrottledMessage(totalVoxelsSegmented);
     // Increment or set values for the next iteration
     voxelsList.assign(size + 1, -1);
     gnum++;
@@ -217,7 +217,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   }
 
   m_FoundFeatures = gnum - 1; // Decrement the gnum because it will end up 1 larger than it should have been.
-  m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
+  m_FilterMessenger.sendInfo(fmt::format("Total Features Found: {}", m_FoundFeatures));
   return {};
 }
 
@@ -240,6 +240,6 @@ SegmentFeatures::SeedGenerator SegmentFeatures::initializeStaticVoxelSeedGenerat
 // -----------------------------------------------------------------------------
 void SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures)
 {
-  m_MessageHelper.sendMessage("Randomizing Feature Ids");
+  m_FilterMessenger.sendInfo("Randomizing Feature Ids");
   ClusterUtilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
 }

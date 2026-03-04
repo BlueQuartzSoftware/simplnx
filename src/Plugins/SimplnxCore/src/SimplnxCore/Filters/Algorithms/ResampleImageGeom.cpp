@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
@@ -97,7 +98,7 @@ const std::atomic_bool& ResampleImageGeom::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ResampleImageGeom::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
@@ -110,7 +111,7 @@ Result<> ResampleImageGeom::operator()()
   usize totalProgress = numVoxels * totalArrays;
 
   ProgressHelper progressHelper =
-      messageHelper.createProgressHelper(totalProgress, [](usize current, usize max) { return fmt::format("Resampling: {:.0f}% Complete", CalculatePercentComplete(current, max)); });
+      filterMessenger.createProgressHelper(totalProgress, [](usize current, usize max) { return fmt::format("Resampling: {:.0f}% Complete", CalculatePercentComplete(current, max)); });
 
   usize arrayIndex = 0;
 
@@ -128,7 +129,7 @@ Result<> ResampleImageGeom::operator()()
     const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    messageHelper.sendMessage(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    filterMessenger.sendInfo(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
 
     ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), taskRunner, progressHelper.createWorkerHandle(), oldDataArray, newDataArray, selectedImageGeom, destImageGeom,
                                                         m_ShouldCancel);

@@ -5,6 +5,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -113,9 +114,9 @@ Result<> RotateEulerRefFrame::operator()()
   nx::core::FloatVec3 axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
   axis = axis.normalize();
 
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
   ProgressHelper progressHelper =
-      messageHelper.createProgressHelper(totalElements, [](usize current, usize max) { return fmt::format("RotateEulerRefFrame: {:.2f}% complete", CalculatePercentComplete(current, max)); });
+      filterMessenger.createProgressHelper(totalElements, [](usize current, usize max) { return fmt::format("RotateEulerRefFrame: {:.2f}% complete", CalculatePercentComplete(current, max)); });
 
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;

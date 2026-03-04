@@ -6,7 +6,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 
 #include <Eigen/Dense>
 #include <Eigen/IterativeLinearSolvers>
@@ -672,9 +672,8 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
   int boundaryCount = 1;
   int totalBoundaries = static_cast<int>(vs.boundaryDict.size());
 
-  MessageHelper messageHelper(messageHandler);
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
-      [boundaryCount, totalBoundaries]() { return fmt::format("Processing boundary {} of {}", boundaryCount, totalBoundaries); });
+  FilterMessenger filterMessenger(messageHandler);
+  filterMessenger.setThrottledFormatter([&boundaryCount, totalBoundaries](usize) { return fmt::format("Processing boundary {} of {}", boundaryCount, totalBoundaries); });
 
   for(auto it = vs.boundaryDict.begin(); it != vs.boundaryDict.end(); ++it)
   {
@@ -683,7 +682,7 @@ Result<> runHierarchicalSmooth(VolumeSolverData& vs, const std::atomic_bool& sho
       return {};
     }
 
-    throttledMessenger.sendMessage();
+    filterMessenger.sendThrottledMessage(0);
 
     trimesh triSub = sliceMesh(vs, it->second);
     Triangulation tri(triSub);

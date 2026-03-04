@@ -6,9 +6,9 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <random>
 #include <vector>
@@ -112,7 +112,7 @@ protected:
   DataStructure& m_DataStructure;
   bool m_IsPeriodic = false;
   const std::atomic_bool& m_ShouldCancel;
-  MessageHelper m_MessageHelper;
+  FilterMessenger m_FilterMessenger;
   int32 m_FoundFeatures = 0;
   NeighborScheme m_NeighborScheme = NeighborScheme::Face;
 };

@@ -1,86 +1,98 @@
 # Sending Filter Updates
 
 This document explains how to send progress and status messages from filter
-algorithms using the `MessageHelper` system defined in
-`src/simplnx/Utilities/MessageHelper.hpp`.
+algorithms using the `FilterMessenger` class defined in
+`src/simplnx/Filter/FilterMessenger.hpp`.
 
 ## Overview
 
 The messaging system provides three mechanisms for sending messages from filters:
 
-1. **Synchronous messages** -- guaranteed delivery, used for infrequent events
+1. **Synchronous messages** — guaranteed delivery, used for infrequent events
    (algorithm start, phase transitions, completion)
-2. **Throttled messages** -- rate-limited to avoid performance overhead in tight
+2. **Throttled messages** — rate-limited to avoid performance overhead in tight
    loops. A background timer thread handles clock checks and string formatting.
-3. **Progress tracking** -- atomic counter for multi-threaded progress
+3. **Progress tracking** — atomic counter for multi-threaded progress
    accumulation with throttled output.
 
 ## Architecture
 
-A singleton `MessageDispatcher` owns a background timer thread that wakes
-every 100ms and flushes any registered throttled channels. When you create
-a `ThrottledMessenger` or `ProgressHelper`, an internal channel is registered
-with the dispatcher. Your filter's hot loop only stores raw values -- the
-expensive clock checking and `fmt::format()` string construction happen on
-the background thread.
+Each `FilterMessenger` instance owns a background timer thread (started
+lazily on the first throttled call). The thread wakes every 100ms and flushes
+any registered channels. Your filter's hot loop only stores a raw `usize`
+value atomically — the expensive clock check and `fmt::format()` string
+construction happen on the background thread.
 
 ```
 Filter Thread (hot loop)           Background Timer Thread (100ms tick)
   |                                   |
-  |  sendMessage(args...)             |
-  |    -> storeArgs()  [~10-25ns]     |
+  |  sendThrottledMessage(i)          |
+  |    -> atomic store  [~10ns]       |
   |                                   |  tryFlush()
   |                                   |    -> check atomic flag
   |                                   |    -> check interval
-  |                                   |    -> format string
+  |                                   |    -> formatter(value)
   |                                   |    -> call MessageHandler
 ```
 
+The timer thread is destroyed (and a final flush is performed) when the
+`FilterMessenger` goes out of scope — no singleton, no shared state between
+filters.
+
 ## Quick Start
 
-Include the header and create a `MessageHelper` from the filter's message
+Include the header and construct a `FilterMessenger` from the filter's message
 handler:
 
 ```cpp
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 
 // In your algorithm's operator()():
-MessageHelper messageHelper(m_MessageHandler);
+FilterMessenger filterMessenger(m_MessageHandler);
 ```
 
 ## Synchronous Messages
 
-Use `sendMessage()` for guaranteed delivery of infrequent messages. This calls
-the `MessageHandler` directly on the calling thread:
+Use the typed send methods for guaranteed delivery of infrequent messages.
+These call the `MessageHandler` directly on the calling thread:
 
 ```cpp
-MessageHelper messageHelper(m_MessageHandler);
-messageHelper.sendMessage("Starting Phase 1: Initialization");
+FilterMessenger filterMessenger(m_MessageHandler);
+
+filterMessenger.sendInfo("Starting Phase 1: Initialization");
 // ... do work ...
-messageHelper.sendMessage("Phase 1 complete. Starting Phase 2.");
+filterMessenger.sendInfo("Phase 1 complete. Starting Phase 2.");
+filterMessenger.sendWarning("Optional mask array not found; skipping masking.");
+filterMessenger.sendError("Geometry dimensions do not match.");
+filterMessenger.sendProgress("Loading data...", 25);  // 25% complete
 ```
 
-Use this for messages that must not be dropped -- algorithm start/end markers,
-phase transitions, or per-array status lines before dispatching parallel work.
+| Method | `Message::Type` | Use when |
+|--------|-----------------|----------|
+| `sendInfo(msg)` | `Info` | Normal status lines |
+| `sendDebug(msg)` | `Debug` | Verbose diagnostic output |
+| `sendWarning(msg)` | `Warning` | Non-fatal issues |
+| `sendError(msg)` | `Error` | Fatal errors (also return a Result error) |
+| `sendProgress(msg, pct)` | `Progress` | Explicit percentage updates |
+
+Use synchronous sends for messages that must not be dropped — algorithm
+start/end markers, phase transitions, or per-array status lines before
+dispatching parallel work.
 
 ## Throttled Messages (Single-Threaded Loops)
 
-Use `createThrottledMessenger()` for messages inside tight loops. The formatter
-lambda defines both the message format and the argument types. Only the latest
-values are kept; the background thread formats and sends at most once per
-interval.
+For messages inside tight loops, set the formatter once with
+`setThrottledFormatter()` and then call `sendThrottledMessage(i)` on every
+iteration. The hot path is a single atomic store (~10ns). The background
+thread calls the formatter and delivers the message at most once per interval.
 
-### Single Argument (Atomic Specialization)
-
-When the formatter takes a single `usize` argument, the system uses an
-optimized lock-free atomic path (~10ns per call):
+### Basic Pattern
 
 ```cpp
-// From BadDataNeighborOrientationCheck
-MessageHelper messageHelper(m_MessageHandler);
+FilterMessenger filterMessenger(m_MessageHandler);
 usize totalPoints = imageGeom.getNumberOfCells();
 
-auto throttledMessenger = messageHelper.createThrottledMessenger(
+filterMessenger.setThrottledFormatter(
     [totalPoints](usize voxelIdx)
     {
       return fmt::format("Processing Data {:.2f}% completed",
@@ -90,49 +102,23 @@ auto throttledMessenger = messageHelper.createThrottledMessenger(
 for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
 {
   // ... do work ...
-  throttledMessenger.sendMessage(static_cast<usize>(voxelIndex));  // ~10ns
+  filterMessenger.sendThrottledMessage(voxelIndex);  // ~10ns
 }
-// On destruction, finalFlush() sends the last pending message automatically.
+// On destruction, FilterMessenger sends the last pending value automatically.
 ```
 
-### Multiple Arguments
-
-When the formatter takes multiple arguments, the system uses a mutex-guarded
-tuple to store the latest values (~15-25ns per call):
-
-```cpp
-// From FillBadData -- two arguments
-auto throttledMessenger = messageHelper.createThrottledMessenger(
-    [](usize iteration, usize count)
-    {
-      return fmt::format("  Iteration {}: {} voxels remaining to fill",
-                         iteration, count);
-    });
-
-for(usize iter = 0; iter < maxIterations; iter++)
-{
-  // ... fill pass ...
-  throttledMessenger.sendMessage(iter, remainingCount);
-}
-```
-
-```cpp
-// From NeighborOrientationCorrelation -- three arguments with captures
-auto levelMessenger = messageHelper.createThrottledMessenger(
-    [totalLevels, totalPoints](int32 levelNum, int32 loopNum, usize voxelIdx)
-    {
-      return fmt::format("Level '{}' of '{}' || Processing Data ('{}') {:.2f}% completed",
-                         levelNum, totalLevels, loopNum,
-                         CalculatePercentComplete(voxelIdx, totalPoints));
-    });
-```
+`setThrottledFormatter` must be called before the first `sendThrottledMessage`
+call. If you need different messages for different phases of the same algorithm,
+call `setThrottledFormatter` again before each phase's loop — it replaces the
+previous formatter and channel.
 
 ### Custom Interval
 
-The default throttle interval is 1000ms (1 second). You can customize it:
+The default throttle interval is 1000ms (1 second). Pass a second argument
+to `setThrottledFormatter` to change it:
 
 ```cpp
-auto messenger = messageHelper.createThrottledMessenger(
+filterMessenger.setThrottledFormatter(
     [total](usize current)
     {
       return fmt::format("{}/{}", current, total);
@@ -140,26 +126,56 @@ auto messenger = messageHelper.createThrottledMessenger(
     std::chrono::milliseconds(500));  // Send at most every 500ms
 ```
 
-### Per-Task String Messages
+### Multi-Value Messages (Capturing Secondary Values)
 
-For task-parallel workers that send descriptive per-slice or per-step messages,
-create a local `ThrottledMessenger<std::string>` inside `operator()`:
+`sendThrottledMessage` takes a single `usize`. If your message logically
+depends on a second value that changes each iteration, capture a shared
+atomic or reformulate the message around the primary progress value:
+
+```cpp
+// Option A: show percentage only (simplest)
+filterMessenger.setThrottledFormatter(
+    [maxIterations](usize iter)
+    {
+      return fmt::format("{:.2f}% Complete", CalculatePercentComplete(iter, maxIterations));
+    });
+
+// Option B: capture a loop-constant secondary value in the closure
+usize chunkSize = computeChunkSize();
+filterMessenger.setThrottledFormatter(
+    [chunkSize, total](usize processed)
+    {
+      return fmt::format("Processed {} of {} (chunk size {})", processed, total, chunkSize);
+    });
+```
+
+### Per-Slice String Messages (Image Transform Workers)
+
+For worker classes that compute individual slices, construct a local
+`FilterMessenger` inside `operator()` or `convert()` and capture the
+loop-constant values (array name, total slices) in the formatter lambda:
 
 ```cpp
 // From RotateImageGeometryWithNearestNeighbor
 void convert() const
 {
-  ThrottledMessenger<std::string> messenger(
-      [](const std::string& msg) { return msg; },
-      m_MessageHandler, std::chrono::milliseconds(1000));
+  FilterMessenger filterMessenger(m_MessageHandler);
+  const auto arrayName = m_SourceArray->getName();
+  const int64 totalSlices = m_Params.outputDims[2];
+
+  filterMessenger.setThrottledFormatter(
+      [arrayName, totalSlices](usize slice)
+      {
+        return fmt::format("{}: Interpolating values for slice '{}/{}'",
+                           arrayName, slice, totalSlices);
+      });
 
   for(int64 k = 0; k < m_Params.outputDims[2]; k++)
   {
-    messenger.sendMessage(fmt::format("{}: Interpolating values for slice '{}/{}'",
-                                      m_SourceArray->getName(), k, m_Params.outputDims[2]));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(k));
     // ... process slice ...
   }
-  // Use direct handler for guaranteed-delivery messages
+  // Use the direct handler for guaranteed-delivery messages
   m_MessageHandler(fmt::format("{}: Transform Ending", m_SourceArray->getName()));
 }
 ```
@@ -170,9 +186,10 @@ Use `createProgressHelper()` when multiple worker threads need to contribute
 to a shared progress counter. This is the recommended pattern for
 `ParallelTaskAlgorithm` and `ParallelDataAlgorithm` workloads.
 
-The `ProgressHelper` owns an atomic counter and registers it with the
-background timer thread. Each `ProgressWorker` handle shares the same counter
-and can safely call `incrementProgress()` from any thread.
+`createProgressHelper` registers a `ProgressChannel` with the
+`FilterMessenger`'s background timer thread — no second thread is created.
+Each `ProgressWorker` handle shares the same atomic counter and can safely
+call `incrementProgress()` from any thread.
 
 ### With ParallelTaskAlgorithm (Task-Parallel)
 
@@ -181,13 +198,13 @@ All workers atomically contribute to one shared counter:
 
 ```cpp
 // From ResampleImageGeom -- multiple arrays processed in parallel
-MessageHelper messageHelper(m_MessageHandler);
+FilterMessenger filterMessenger(m_MessageHandler);
 
 usize totalArrays = srcCellDataAM.getSize();
 usize numVoxels = destImageGeom.getNumberOfCells();
 usize totalProgress = numVoxels * totalArrays;
 
-ProgressHelper progressHelper = messageHelper.createProgressHelper(
+ProgressHelper progressHelper = filterMessenger.createProgressHelper(
     totalProgress,
     [](usize current, usize max)
     {
@@ -206,7 +223,7 @@ for(const auto& [dataId, oldDataObject] : srcCellDataAM)
   // Each task gets its own ProgressWorker handle
   ExecuteParallelFunction<ResampleImageGeomArrayImpl>(
       oldDataArray.getDataType(), taskRunner,
-      progressHelper.createWorkerHandle(),
+      progressHelper.createWorkerHandle(),  // copyable
       oldDataArray, newDataArray, selectedImageGeom, destImageGeom, m_ShouldCancel);
 }
 
@@ -244,14 +261,14 @@ private:
 
 ### With ParallelDataAlgorithm (Range-Parallel)
 
-For range-split parallelism, each range chunk shares the same `ProgressWorker`:
+For range-split parallelism, pass a `ProgressWorker` into the range functor.
+Because `ProgressWorker` is **copyable**, TBB can copy the functor freely:
 
 ```cpp
-// From InterpolateValuesToUnstructuredGrid
-MessageHelper messageHelper(m_MessageHandler);
+FilterMessenger filterMessenger(m_MessageHandler);
 usize totalVertices = destGeometry.getNumberOfVertices();
 
-ProgressHelper progressHelper = messageHelper.createProgressHelper(
+ProgressHelper progressHelper = filterMessenger.createProgressHelper(
     totalVertices,
     [](usize current, usize max)
     {
@@ -264,8 +281,6 @@ dataAlg.setRange(0ULL, totalVertices);
 dataAlg.execute(CalculateClosestVerticesImpl(
     progressHelper.createWorkerHandle(),
     srcGeometry, destGeometry, closestSrcIds, m_ShouldCancel));
-
-messageHelper.sendMessage("Calculating Closest Vertices || 100%");
 ```
 
 Inside the range worker:
@@ -304,61 +319,94 @@ you can reset the counter. Only call this when no workers are active:
 progressHelper.resetProgress();
 ```
 
+## Member Variable Pattern
+
+For algorithm classes where the `FilterMessenger` must outlive a single
+function (e.g. `SegmentFeatures`, `AlignSections`), store it as a member:
+
+```cpp
+// In the header:
+#include "simplnx/Filter/FilterMessenger.hpp"
+
+class MyAlgorithm
+{
+public:
+  MyAlgorithm(DataStructure& ds, const std::atomic_bool& cancel,
+              const IFilter::MessageHandler& msgHandler)
+  : m_DataStructure(ds)
+  , m_ShouldCancel(cancel)
+  , m_FilterMessenger(msgHandler)  // construct from handler
+  {}
+
+protected:
+  FilterMessenger m_FilterMessenger;
+  // ...
+};
+
+// In execute():
+m_FilterMessenger.sendInfo("Starting segmentation...");
+m_FilterMessenger.setThrottledFormatter([total](usize i) {
+  return fmt::format("{:.2f}% complete", CalculatePercentComplete(i, total));
+});
+for(usize i = 0; i < total; i++)
+{
+  m_FilterMessenger.sendThrottledMessage(i);
+  // ...
+}
+```
+
 ## Choosing the Right Pattern
 
 | Scenario | Mechanism | Hot-path cost |
 |----------|-----------|---------------|
-| Infrequent messages (start/end) | `messageHelper.sendMessage()` | N/A (not in hot loop) |
-| Single-threaded tight loop | `ThrottledMessenger<usize>` | ~10ns (atomic store) |
-| Single-threaded loop, multiple values | `ThrottledMessenger<Args...>` | ~15-25ns (mutex + store) |
-| Multi-threaded, shared counter | `ProgressHelper` + `ProgressWorker` | ~10ns (atomic fetch_add) |
-| Task-parallel, descriptive strings | Local `ThrottledMessenger<std::string>` | ~15-25ns (mutex + store) |
+| Infrequent messages (start/end/phase) | `sendInfo()` / `sendWarning()` etc. | N/A (not in hot loop) |
+| Single-threaded tight loop | `setThrottledFormatter()` + `sendThrottledMessage()` | ~10ns (atomic store) |
+| Multi-threaded, shared counter | `createProgressHelper()` + `ProgressWorker` | ~10ns (atomic fetch_add) |
+| Per-task descriptive string (image transforms) | Local `FilterMessenger` in `operator()` | ~10ns (atomic store) |
 
-**Key design principle**: `ThrottledMessenger` is for single-threaded (or
-single-owner) use where one thread stores values and the background thread
+**Key design principle**: `sendThrottledMessage` is for single-threaded (or
+single-owner) use where one thread stores the value and the background thread
 sends. `ProgressHelper`/`ProgressWorker` is for multi-threaded use where
 many threads atomically increment a shared counter.
 
 ## Utility: CalculatePercentComplete
 
-A convenience template for computing percentage values:
+A convenience template for computing percentage values, available from
+`MessageHelper.hpp` (transitively included via `FilterMessenger.hpp`):
 
 ```cpp
-#include "simplnx/Utilities/MessageHelper.hpp"
-
 // Returns float32 by default
 float32 pct = CalculatePercentComplete(current, total);
 
-// Or specify a different type
+// Or specify a different return type
 int32 pctInt = CalculatePercentComplete<int32>(current, total);
 ```
 
 ## API Reference
 
-### MessageHelper
+### FilterMessenger
 
 | Method | Description |
 |--------|-------------|
-| `MessageHelper(const IFilter::MessageHandler& handler)` | Constructor |
-| `void sendMessage(std::string message)` | Synchronous send (guaranteed delivery) |
-| `auto createThrottledMessenger(formatter, interval)` | Create a throttled messenger (default 1000ms) |
-| `ProgressHelper createProgressHelper(max, formatter, interval)` | Create a progress helper (default 1000ms) |
-
-### ThrottledMessenger\<Args...\>
-
-| Method | Description |
-|--------|-------------|
-| `void sendMessage(Args... args)` | Store latest values (hot path) |
+| `FilterMessenger(const MessageHandler& handler)` | Constructor — stores reference to handler |
+| `void sendInfo(std::string message)` | Synchronous Info send (guaranteed delivery) |
+| `void sendDebug(std::string message)` | Synchronous Debug send |
+| `void sendWarning(std::string message)` | Synchronous Warning send |
+| `void sendError(std::string message)` | Synchronous Error send |
+| `void sendProgress(std::string message, int32 progress = 0)` | Synchronous Progress send |
+| `void setThrottledFormatter(formatter, interval = 1000ms)` | Set formatter for `sendThrottledMessage` |
+| `void sendThrottledMessage(usize current)` | Store latest loop index (hot path, ~10ns) |
+| `ProgressHelper createProgressHelper(max, formatter, interval = 1000ms)` | Create multi-threaded progress helper |
 
 - Move-only (non-copyable)
-- `finalFlush()` is called automatically on destruction
-- Argument types are deduced from the formatter lambda
+- Background thread starts lazily on first `sendThrottledMessage` or `createProgressHelper` call
+- On destruction: joins the timer thread and calls `finalFlush()` on all channels
 
 ### ProgressHelper
 
 | Method | Description |
 |--------|-------------|
-| `ProgressWorker createWorkerHandle()` | Create a per-thread worker (copyable) |
+| `ProgressWorker createWorkerHandle()` | Create a per-thread worker handle |
 | `void resetProgress()` | Reset counter to zero (no active workers) |
 
 - Move-only (non-copyable)
@@ -368,103 +416,85 @@ int32 pctInt = CalculatePercentComplete<int32>(current, total);
 
 | Method | Description |
 |--------|-------------|
-| `void incrementProgress(usize amount = 1)` | Atomic increment (hot path) |
+| `void incrementProgress(usize amount = 1)` | Atomic increment (hot path, ~10ns) |
 
-- Copyable (shares the underlying channel via `shared_ptr`)
+- **Copyable** — shares the underlying channel via `shared_ptr`; safe to copy into TBB/parallel-for functors
 - Mark as `mutable` when stored in a class with a `const operator()`
 
-## Migration from Old API
+## Migration from MessageHelper
 
-### Old ThrottledMessenger (lambda-per-call)
+The `MessageHelper` class has been replaced by `FilterMessenger`. The
+`MessageDispatcher` singleton is gone — each `FilterMessenger` owns its own
+timer thread.
+
+### Synchronous send
 
 ```cpp
-// OLD:
-auto messenger = messageHelper.createThrottledMessenger();
-messenger.sendThrottledMessage([&]() {
-  return fmt::format("{}/{}", current, total);
-});
+// OLD
+MessageHelper messageHelper(m_MessageHandler);
+messageHelper.sendMessage("Starting Phase 1");
 
-// NEW:
+// NEW
+FilterMessenger filterMessenger(m_MessageHandler);
+filterMessenger.sendInfo("Starting Phase 1");
+```
+
+### Single-argument throttled loop
+
+```cpp
+// OLD
 auto messenger = messageHelper.createThrottledMessenger(
-    [total](usize current) {
-      return fmt::format("{}/{}", current, total);
-    });
-messenger.sendMessage(current);
+    [total](usize i) { return fmt::format("{:.2f}%", CalculatePercentComplete(i, total)); });
+for(usize i = 0; i < total; i++) messenger.sendMessage(i);
+
+// NEW
+filterMessenger.setThrottledFormatter(
+    [total](usize i) { return fmt::format("{:.2f}%", CalculatePercentComplete(i, total)); });
+for(usize i = 0; i < total; i++) filterMessenger.sendThrottledMessage(i);
 ```
 
-### Old sendThreadSafeProgressMessage Pattern
+### Multi-argument throttled loop
+
+The multi-argument `ThrottledMessenger<Args...>` is removed. Refactor to a
+single `usize` primary value by capturing secondary values in the closure, or
+by simplifying the message to show only percentage:
 
 ```cpp
-// OLD: Algorithm class with manual mutex + clock checks
-class MyAlgorithm {
-  std::mutex m_Mutex;
-  std::chrono::steady_clock::time_point m_InitialPoint;
-  size_t m_ProgressCounter = 0;
-  size_t m_TotalElements = 0;
+// OLD (two args)
+auto messenger = messageHelper.createThrottledMessenger(
+    [](usize iter, usize count) { return fmt::format("Iter {}: {} remaining", iter, count); });
+messenger.sendMessage(iter, remainingCount);
 
-  void sendThreadSafeProgressMessage(usize counter) {
-    std::lock_guard<std::mutex> guard(m_Mutex);
-    m_ProgressCounter += counter;
-    auto now = std::chrono::steady_clock::now();
-    // ... time check, format, send ...
-  }
-};
-
-// Workers stored algorithm pointer:
-class MyWorker {
-  MyAlgorithm* m_Algorithm;
-  void operator()(const Range& range) const {
-    for(usize i = range.min(); i < range.max(); i++) {
-      // ... work ...
-      m_Algorithm->sendThreadSafeProgressMessage(1);
-    }
-  }
-};
-
-// NEW: Workers store ProgressWorker directly
-class MyWorker {
-  mutable ProgressWorker m_ProgressWorker;
-  void operator()(const Range& range) const {
-    for(usize i = range.min(); i < range.max(); i++) {
-      // ... work ...
-      m_ProgressWorker.incrementProgress(1);
-    }
-  }
-};
-
-// Algorithm creates ProgressHelper, passes worker handles:
-ProgressHelper progressHelper = messageHelper.createProgressHelper(
-    totalElements,
-    [](usize current, usize max) {
-      return fmt::format("Processing: {:.0f}%", CalculatePercentComplete(current, max));
+// NEW — simplify to percentage, or capture secondary if it's loop-constant
+filterMessenger.setThrottledFormatter(
+    [maxIterations](usize iter)
+    {
+      return fmt::format("{:.2f}% Complete", CalculatePercentComplete(iter, maxIterations));
     });
-dataAlg.execute(MyWorker(progressHelper.createWorkerHandle(), ...));
+filterMessenger.sendThrottledMessage(iter);
 ```
 
-### Old FilterProgressCallback Pattern
+### ProgressHelper (unchanged user API)
 
 ```cpp
-// OLD: Shared callback object with static mutexes
-ImageRotationUtilities::FilterProgressCallback callback(m_MessageHandler, m_ShouldCancel);
-ExecuteParallelFunction<MyWorker>(..., &callback);
+// OLD
+MessageHelper messageHelper(m_MessageHandler);
+auto progressHelper = messageHelper.createProgressHelper(total, formatter);
+auto worker = progressHelper.createWorkerHandle();
 
-// NEW (image geometry transforms): Pass handler + cancel directly
-ExecuteParallelFunction<MyWorker>(..., m_MessageHandler, m_ShouldCancel);
-// Worker creates a local ThrottledMessenger<std::string> in operator()
-
-// NEW (node geometry transforms): Use ProgressHelper
-ProgressHelper progressHelper = messageHelper.createProgressHelper(totalVertices, formatter);
-dataAlg.execute(MyWorker(vertexList, matrix, progressHelper.createWorkerHandle(), m_ShouldCancel));
+// NEW
+FilterMessenger filterMessenger(m_MessageHandler);
+auto progressHelper = filterMessenger.createProgressHelper(total, formatter);
+auto worker = progressHelper.createWorkerHandle();
+// worker.incrementProgress(1) — unchanged
 ```
 
-### Key Migration Points
+### Member variable
 
-1. `MessageHelper` constructor no longer takes a `throttleRate` parameter
-2. The formatter lambda is passed to `createThrottledMessenger()`, not to `sendMessage()`
-3. `sendThrottledMessage(lambda)` becomes `sendMessage(values...)`
-4. String construction is deferred -- the formatter is only called by the
-   background thread when a message is actually sent
-5. `sendThreadSafeProgressMessage()` methods on algorithm classes are replaced
-   by `ProgressWorker` handles passed directly to worker classes
-6. `FilterProgressCallback` is removed -- use `ThrottledMessenger<std::string>`
-   for string messages or `ProgressHelper`/`ProgressWorker` for counters
+```cpp
+// OLD header:  MessageHelper m_MessageHelper;
+// NEW header:  FilterMessenger m_FilterMessenger;
+
+// OLD constructor: , m_MessageHelper(mesgHandler)
+// NEW constructor: , m_FilterMessenger(mesgHandler)
+```

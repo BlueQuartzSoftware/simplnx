@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <unordered_set>
@@ -65,14 +66,14 @@ public:
       // Default value-initialized to zeroes: https://en.cppreference.com/w/cpp/named_req/DefaultInsertable
       checkedFeatureVolumes.resize(numFeatures);
     }
-    MessageHelper messageHelper(m_MessageHandler);
-    auto throttledMessenger = messageHelper.createThrottledMessenger(
-        [numParents](usize currentParentId) { return fmt::format("{}/{} {}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); }, std::chrono::milliseconds(1000));
+    FilterMessenger filterMessenger(m_MessageHandler);
+    filterMessenger.setThrottledFormatter([numParents](usize currentParentId) { return fmt::format("{}/{} {}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); },
+                                          std::chrono::milliseconds(1000));
 
     // Start the Parent Outer Loop
     for(usize currentParentId = 1; currentParentId < numParents; currentParentId++)
     {
-      throttledMessenger.sendMessage(currentParentId);
+      filterMessenger.sendThrottledMessage(currentParentId);
 
       if(m_ShouldCancel)
       {

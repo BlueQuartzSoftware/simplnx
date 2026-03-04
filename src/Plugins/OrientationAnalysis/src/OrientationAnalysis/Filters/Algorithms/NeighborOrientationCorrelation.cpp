@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
@@ -25,8 +26,8 @@ public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
-  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
-  : m_MessageHelper(messageHelper)
+  NeighborOrientationCorrelationTransferDataImpl(FilterMessenger& filterMessenger, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
+  : m_FilterMessenger(filterMessenger)
   , m_TotalPoints(totalPoints)
   , m_BestNeighbor(bestNeighbor)
   , m_DataArrayPtr(dataArrayPtr)
@@ -42,11 +43,11 @@ public:
   {
     std::string arrayName = m_DataArrayPtr->getName();
     usize totalPoints = m_TotalPoints;
-    auto throttledMessenger = m_MessageHelper.createThrottledMessenger(
+    m_FilterMessenger.setThrottledFormatter(
         [arrayName, totalPoints](usize current) { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(current, totalPoints)); });
     for(size_t i = 0; i < m_TotalPoints; i++)
     {
-      throttledMessenger.sendMessage(i);
+      m_FilterMessenger.sendThrottledMessage(i);
       int64 neighbor = m_BestNeighbor[i];
       if(neighbor != -1)
       {
@@ -56,7 +57,7 @@ public:
   }
 
 private:
-  MessageHelper& m_MessageHelper;
+  FilterMessenger& m_FilterMessenger;
   size_t m_TotalPoints = 0;
   std::vector<int64> m_BestNeighbor;
   std::shared_ptr<IDataArray> m_DataArrayPtr;
@@ -111,18 +112,17 @@ Result<> NeighborOrientationCorrelation::operator()()
   std::vector<int64> bestNeighbor(totalPoints, -1);
   const int32 startLevel = 6;
 
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
 
   int32 totalLevels = startLevel - m_InputValues->Level;
-  auto throttledMessenger = messageHelper.createThrottledMessenger([totalLevels, totalPoints](int32 levelNum, usize voxelIdx) {
-    return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", levelNum, totalLevels, CalculatePercentComplete(voxelIdx, totalPoints));
-  });
+  filterMessenger.setThrottledFormatter(
+      [totalLevels, totalPoints](usize voxelIdx) { return fmt::format("Level || Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIdx, totalPoints)); });
 
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
     for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
-      throttledMessenger.sendMessage((startLevel - currentLevel) + 1, static_cast<usize>(voxelIndex));
+      filterMessenger.sendThrottledMessage(static_cast<usize>(voxelIndex));
 
       if(m_ShouldCancel)
       {
@@ -217,7 +217,7 @@ Result<> NeighborOrientationCorrelation::operator()()
     ParallelTaskAlgorithm parallelTask;
     for(const auto& dataArrayPtr : voxelArrays)
     {
-      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(messageHelper, totalPoints, bestNeighbor, dataArrayPtr));
+      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(filterMessenger, totalPoints, bestNeighbor, dataArrayPtr));
     }
 
     currentLevel = currentLevel - 1;

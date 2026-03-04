@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
@@ -18,14 +19,14 @@ public:
   ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
 
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
-                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
+                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, FilterMessenger& filterMessenger)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_Operation(operation)
   , m_Neighbors(neighbors)
   , m_DataArrayPtr(dataArrayPtr)
   , m_FeatureIds(featureIds)
-  , m_MessageHelper(messageHelper)
+  , m_FilterMessenger(filterMessenger)
   {
   }
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadDataTransferDataImpl&&) = default;                // Move Constructor Not Implemented
@@ -37,11 +38,11 @@ public:
   void operator()() const
   {
     std::string arrayName = m_DataArrayPtr->getName();
-    auto throttledMessenger = m_MessageHelper.createThrottledMessenger(
+    m_FilterMessenger.setThrottledFormatter(
         [arrayName, totalPoints = m_TotalPoints](usize current) { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(current, totalPoints)); });
     for(usize i = 0; i < m_TotalPoints; i++)
     {
-      throttledMessenger.sendMessage(i);
+      m_FilterMessenger.sendThrottledMessage(i);
 
       const int32 featureName = m_FeatureIds[i];
       const int64 neighbor = m_Neighbors[i];
@@ -62,7 +63,7 @@ private:
   std::vector<int64> m_Neighbors;
   const std::shared_ptr<IDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
-  MessageHelper& m_MessageHelper;
+  FilterMessenger& m_FilterMessenger;
 };
 } // namespace
 
@@ -182,7 +183,7 @@ Result<> ErodeDilateBadData::operator()()
     // Build up a list of the DataArrays that we are going to operate on.
     const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
-    MessageHelper messageHelper(m_MessageHandler);
+    FilterMessenger filterMessenger(m_MessageHandler);
 
     ParallelTaskAlgorithm taskRunner;
     taskRunner.setParallelizationEnabled(true);
@@ -195,14 +196,14 @@ Result<> ErodeDilateBadData::operator()()
         continue;
       }
 
-      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray, messageHelper));
+      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray, filterMessenger));
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
     // Now update the feature Ids
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
+    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, filterMessenger));
   }
 
   return {};

@@ -1,10 +1,11 @@
-#include "simplnx/Utilities/MessageHelper.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
 
 #include <chrono>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
@@ -16,24 +17,24 @@ namespace
 /**
  * @brief Creates a MessageHandler that appends messages to a vector.
  */
-IFilter::MessageHandler createCollector(std::vector<std::string>& messages, std::mutex& mutex)
+nx::core::MessageHandler createCollector(std::vector<std::string>& messages, std::mutex& mutex)
 {
-  return IFilter::MessageHandler{[&messages, &mutex](const IFilter::Message& msg) {
+  return nx::core::MessageHandler{[&messages, &mutex](const nx::core::Message& msg) {
     std::lock_guard lock(mutex);
     messages.push_back(msg.message);
   }};
 }
 } // namespace
 
-TEST_CASE("MessageHelper: Guaranteed synchronous send", "[MessageHelper]")
+TEST_CASE("FilterMessenger: Guaranteed synchronous send", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
-  MessageHelper messageHelper(handler);
-  messageHelper.sendMessage("Hello");
-  messageHelper.sendMessage("World");
+  FilterMessenger filterMessenger(handler);
+  filterMessenger.sendInfo("Hello");
+  filterMessenger.sendInfo("World");
 
   // Synchronous - messages should be immediately available
   REQUIRE(messages.size() == 2);
@@ -41,20 +42,20 @@ TEST_CASE("MessageHelper: Guaranteed synchronous send", "[MessageHelper]")
   REQUIRE(messages[1] == "World");
 }
 
-TEST_CASE("MessageHelper: ThrottledMessenger single usize argument (atomic specialization)", "[MessageHelper]")
+TEST_CASE("FilterMessenger: ThrottledMessenger single usize argument", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
   {
-    MessageHelper messageHelper(handler);
-    auto messenger = messageHelper.createThrottledMessenger([](usize current) { return fmt::format("Progress: {}", current); }, std::chrono::milliseconds(50));
+    FilterMessenger filterMessenger(handler);
+    filterMessenger.setThrottledFormatter([](usize current) { return fmt::format("Progress: {}", current); }, std::chrono::milliseconds(50));
 
     // Send multiple values rapidly
     for(usize i = 0; i < 1000; i++)
     {
-      messenger.sendMessage(i);
+      filterMessenger.sendThrottledMessage(i);
     }
 
     // Wait for at least one dispatch cycle
@@ -73,18 +74,21 @@ TEST_CASE("MessageHelper: ThrottledMessenger single usize argument (atomic speci
   }
 }
 
-TEST_CASE("MessageHelper: ThrottledMessenger multi-argument", "[MessageHelper]")
+TEST_CASE("FilterMessenger: ThrottledMessenger single-usize with captured secondary values", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
   {
-    MessageHelper messageHelper(handler);
-    auto messenger = messageHelper.createThrottledMessenger([](usize iteration, usize voxel, float32 error) { return fmt::format("Iter {}: voxel {} err {:.2f}", iteration, voxel, error); },
-                                                            std::chrono::milliseconds(50));
+    FilterMessenger filterMessenger(handler);
+    // Secondary values (iteration, error) are captured in the closure; only primary usize is passed
+    usize capturedIteration = 5;
+    float32 capturedError = 0.42f;
+    filterMessenger.setThrottledFormatter([capturedIteration, capturedError](usize voxel) { return fmt::format("Iter {}: voxel {} err {:.2f}", capturedIteration, voxel, capturedError); },
+                                          std::chrono::milliseconds(50));
 
-    messenger.sendMessage(static_cast<usize>(5), static_cast<usize>(100), 0.42f);
+    filterMessenger.sendThrottledMessage(static_cast<usize>(100));
 
     // Wait for dispatch
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -105,17 +109,17 @@ TEST_CASE("MessageHelper: ThrottledMessenger multi-argument", "[MessageHelper]")
   REQUIRE(foundExpected);
 }
 
-TEST_CASE("MessageHelper: ThrottledMessenger no messages if sendMessage never called", "[MessageHelper]")
+TEST_CASE("FilterMessenger: ThrottledMessenger no messages if sendThrottledMessage never called", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
   {
-    MessageHelper messageHelper(handler);
-    auto messenger = messageHelper.createThrottledMessenger([](usize current) { return fmt::format("{}", current); }, std::chrono::milliseconds(50));
+    FilterMessenger filterMessenger(handler);
+    filterMessenger.setThrottledFormatter([](usize current) { return fmt::format("{}", current); }, std::chrono::milliseconds(50));
 
-    // Don't call sendMessage at all
+    // Don't call sendThrottledMessage at all
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
 
@@ -123,18 +127,18 @@ TEST_CASE("MessageHelper: ThrottledMessenger no messages if sendMessage never ca
   REQUIRE(messages.empty());
 }
 
-TEST_CASE("MessageHelper: ThrottledMessenger finalFlush sends last value on destruction", "[MessageHelper]")
+TEST_CASE("FilterMessenger: ThrottledMessenger finalFlush sends last value on destruction", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
   {
-    MessageHelper messageHelper(handler);
+    FilterMessenger filterMessenger(handler);
     // Use a very long interval so the dispatcher won't fire during the test
-    auto messenger = messageHelper.createThrottledMessenger([](usize current) { return fmt::format("Final: {}", current); }, std::chrono::milliseconds(60000));
+    filterMessenger.setThrottledFormatter([](usize current) { return fmt::format("Final: {}", current); }, std::chrono::milliseconds(60000));
 
-    messenger.sendMessage(static_cast<usize>(999));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(999));
     // Don't wait -- destroy immediately
   }
   // finalFlush should have sent the last value
@@ -144,22 +148,22 @@ TEST_CASE("MessageHelper: ThrottledMessenger finalFlush sends last value on dest
   REQUIRE(messages[0] == "Final: 999");
 }
 
-TEST_CASE("MessageHelper: ThrottledMessenger throttles to interval", "[MessageHelper]")
+TEST_CASE("FilterMessenger: ThrottledMessenger throttles to interval", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
   {
-    MessageHelper messageHelper(handler);
-    auto messenger = messageHelper.createThrottledMessenger([](usize current) { return fmt::format("{}", current); }, std::chrono::milliseconds(200));
+    FilterMessenger filterMessenger(handler);
+    filterMessenger.setThrottledFormatter([](usize current) { return fmt::format("{}", current); }, std::chrono::milliseconds(200));
 
     // Send continuously for ~600ms
     auto start = std::chrono::steady_clock::now();
     usize counter = 0;
     while(std::chrono::steady_clock::now() - start < std::chrono::milliseconds(600))
     {
-      messenger.sendMessage(counter);
+      filterMessenger.sendThrottledMessage(counter);
       counter++;
       std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
@@ -172,16 +176,16 @@ TEST_CASE("MessageHelper: ThrottledMessenger throttles to interval", "[MessageHe
   REQUIRE(messages.size() <= 6);
 }
 
-TEST_CASE("MessageHelper: ProgressHelper single worker", "[MessageHelper]")
+TEST_CASE("FilterMessenger: ProgressHelper single worker", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
   {
-    MessageHelper messageHelper(handler);
+    FilterMessenger filterMessenger(handler);
     usize maxProgress = 1000;
-    auto progressHelper = messageHelper.createProgressHelper(
+    auto progressHelper = filterMessenger.createProgressHelper(
         maxProgress, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
 
     auto worker = progressHelper.createWorkerHandle();
@@ -202,16 +206,16 @@ TEST_CASE("MessageHelper: ProgressHelper single worker", "[MessageHelper]")
   REQUIRE(messages.back() == "1000/1000");
 }
 
-TEST_CASE("MessageHelper: ProgressHelper multiple workers", "[MessageHelper]")
+TEST_CASE("FilterMessenger: ProgressHelper multiple workers", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
   {
-    MessageHelper messageHelper(handler);
+    FilterMessenger filterMessenger(handler);
     usize maxProgress = 4000;
-    auto progressHelper = messageHelper.createProgressHelper(
+    auto progressHelper = filterMessenger.createProgressHelper(
         maxProgress, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
 
     // Spawn 4 worker threads each incrementing 1000 times
@@ -242,15 +246,15 @@ TEST_CASE("MessageHelper: ProgressHelper multiple workers", "[MessageHelper]")
   REQUIRE(messages.back() == "4000/4000");
 }
 
-TEST_CASE("MessageHelper: ProgressHelper resetProgress", "[MessageHelper]")
+TEST_CASE("FilterMessenger: ProgressHelper resetProgress", "[FilterMessenger]")
 {
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
   {
-    MessageHelper messageHelper(handler);
-    auto progressHelper = messageHelper.createProgressHelper(
+    FilterMessenger filterMessenger(handler);
+    auto progressHelper = filterMessenger.createProgressHelper(
         100, [](usize current, usize max) { return fmt::format("{}/{}", current, max); }, std::chrono::milliseconds(50));
 
     auto worker = progressHelper.createWorkerHandle();
@@ -275,27 +279,30 @@ TEST_CASE("MessageHelper: ProgressHelper resetProgress", "[MessageHelper]")
   REQUIRE(messages.back() == "30/100");
 }
 
-TEST_CASE("MessageHelper: callable_traits deduction", "[MessageHelper]")
+TEST_CASE("FilterMessenger: setThrottledFormatter with different interval values", "[FilterMessenger]")
 {
-  // This test verifies compile-time type deduction works correctly
+  // This test verifies that setThrottledFormatter works correctly with different interval values
   std::vector<std::string> messages;
   std::mutex mutex;
   auto handler = createCollector(messages, mutex);
 
-  MessageHelper messageHelper(handler);
+  {
+    FilterMessenger filterMessenger(handler);
 
-  // Lambda with usize -> should deduce ThrottledMessenger<usize>
-  auto m1 = messageHelper.createThrottledMessenger([](usize v) { return fmt::format("{}", v); });
-  m1.sendMessage(static_cast<usize>(42));
+    // Set formatter with a short interval
+    filterMessenger.setThrottledFormatter([](usize v) { return fmt::format("short: {}", v); }, std::chrono::milliseconds(50));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  // Lambda with two args -> should deduce ThrottledMessenger<usize, float32>
-  auto m2 = messageHelper.createThrottledMessenger([](usize a, float32 b) { return fmt::format("{} {}", a, b); });
-  m2.sendMessage(static_cast<usize>(1), 2.5f);
+    // Re-set formatter with a long interval before sending the next value
+    filterMessenger.setThrottledFormatter([](usize v) { return fmt::format("long: {}", v); }, std::chrono::milliseconds(60000));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(42));
+    // finalFlush fires on destruction
+  }
 
-  // Lambda with string arg -> should deduce ThrottledMessenger<std::string>
-  auto m3 = messageHelper.createThrottledMessenger([](std::string s) { return fmt::format("msg: {}", s); });
-  m3.sendMessage(std::string("hello"));
-
-  // If this compiles, the deduction is working
-  REQUIRE(true);
+  std::lock_guard lock(mutex);
+  // Should have received at least one message from each formatter phase
+  REQUIRE(messages.size() >= 1);
+  // Last message should come from the long-interval formatter (finalFlush)
+  REQUIRE(messages.back() == "long: 42");
 }

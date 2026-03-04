@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
@@ -16,7 +17,7 @@ using namespace nx::core;
 
 namespace
 {
-bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel, FilterMessenger& filterMessenger)
 {
   SizeVec3 uDims = imageGeom.getDimensions();
 
@@ -26,7 +27,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
       static_cast<int64>(uDims[2]),
   };
 
-  auto throttledMessenger = messageHelper.createThrottledMessenger(
+  filterMessenger.setThrottledFormatter(
       [totalSlices = static_cast<usize>(dims[2])](usize currentSlice) { return fmt::format("Processing Image... {:.2f}%", CalculatePercentComplete(currentSlice, totalSlices)); });
 
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
@@ -43,7 +44,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
       return false;
     }
 
-    throttledMessenger.sendMessage(static_cast<usize>(zIdx));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(zIdx));
 
     kStride = dims[0] * dims[1] * zIdx;
     for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
@@ -273,7 +274,7 @@ Result<> RemoveFlaggedFeatures::operator()()
     return {};
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
 
   // Valid values Functionality::Extract and Functionality::ExtractThenRemove
   if(function != Functionality::Remove)
@@ -376,7 +377,7 @@ Result<> RemoveFlaggedFeatures::operator()()
         count++;
         m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
         std::fill(neighbors.begin(), neighbors.end(), -1);
-        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, getCancel(), messageHelper);
+        shouldLoop = IdentifyNeighbors(imageGeom, featureIds, neighbors, getCancel(), filterMessenger);
 
         if(getCancel())
         {

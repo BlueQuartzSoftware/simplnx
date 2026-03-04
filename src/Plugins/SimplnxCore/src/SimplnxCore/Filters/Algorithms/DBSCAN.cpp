@@ -3,6 +3,7 @@
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
@@ -106,16 +107,16 @@ public:
   HyperGridBitMap3D() = delete;
 
   template <typename T>
-  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, MessageHelper& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon,
+  HyperGridBitMap3D(const std::atomic_bool& shouldCancel, FilterMessenger& filterMessenger, const AbstractDataStore<T>& inputArray, float32 epsilon,
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
-    messageHelper.sendMessage(" - Determining bounds...");
+    filterMessenger.sendInfo(" - Determining bounds...");
     // Load array bounds
     std::array<float32, 6> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
     {
-      auto boundsMessenger = messageHelper.createThrottledMessenger(
+      filterMessenger.setThrottledFormatter(
           [numTuples = inputArray.getNumberOfTuples()](usize current) { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(current, numTuples)); });
       for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
       {
@@ -124,7 +125,7 @@ public:
           return;
         }
 
-        boundsMessenger.sendMessage(i);
+        filterMessenger.sendThrottledMessage(i);
 
         if(!mask->isTrue(i))
         {
@@ -160,15 +161,14 @@ public:
     dims[1] = static_cast<usize>(((bounds[4] + buffer) - origin[1]) / spacing[1]) + 2;
     dims[2] = static_cast<usize>(((bounds[5] + buffer) - origin[2]) / spacing[2]) + 2;
 
-    messageHelper.sendMessage(" - Binning values into a regular grid...");
+    filterMessenger.sendInfo(" - Binning values into a regular grid...");
     // Fill the BitMap
     {
       std::vector<std::array<usize, 3>> positions = {};
       // Build a set of non-empty grids and temporarily store their positions
       {
         usize numTup = inputArray.getNumberOfTuples();
-        auto binningMessenger =
-            messageHelper.createThrottledMessenger([total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
+        filterMessenger.setThrottledFormatter([total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -178,7 +178,7 @@ public:
             return;
           }
 
-          binningMessenger.sendMessage(tup);
+          filterMessenger.sendThrottledMessage(tup);
 
           if(!mask->isTrue(tup))
           {
@@ -195,7 +195,7 @@ public:
           grids[bin] = true;
         }
 
-        messageHelper.sendMessage(" - Compressing regular grid...");
+        filterMessenger.sendInfo(" - Compressing regular grid...");
         usize zSize = dims[1] * dims[0];
         usize ySize = dims[0];
         usize activeGridCount = 0;
@@ -225,7 +225,7 @@ public:
             return;
           }
 
-          binningMessenger.sendMessage(numTup + tup);
+          filterMessenger.sendThrottledMessage(numTup + tup);
 
           if(!mask->isTrue(tup))
           {
@@ -249,7 +249,7 @@ public:
         grid.shrink_to_fit();
       }
 
-      messageHelper.sendMessage(" - Generating adjacency matrix for search...");
+      filterMessenger.sendInfo(" - Generating adjacency matrix for search...");
       /**
        * This could be modified to 3 passes on the positions vector with custom predicates and ths std::sort function,
        * but we are sacrificing space for speed, because its a subset of a known predefined grid
@@ -322,7 +322,7 @@ public:
   HyperGridBitMap2D() = delete;
 
   template <typename T>
-  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, MessageHelper& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon,
+  HyperGridBitMap2D(const std::atomic_bool& shouldCancel, FilterMessenger& filterMessenger, const AbstractDataStore<T>& inputArray, float32 epsilon,
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
@@ -330,7 +330,7 @@ public:
     std::array<float32, 4> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN()};
     {
-      auto boundsMessenger = messageHelper.createThrottledMessenger(
+      filterMessenger.setThrottledFormatter(
           [numTuples = inputArray.getNumberOfTuples()](usize current) { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(current, numTuples)); });
       for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
       {
@@ -339,7 +339,7 @@ public:
           return;
         }
 
-        boundsMessenger.sendMessage(i);
+        filterMessenger.sendThrottledMessage(i);
 
         if(!mask->isTrue(i))
         {
@@ -371,15 +371,14 @@ public:
     dims[0] = static_cast<usize>(((bounds[2] + buffer) - origin[0]) / spacing[0]) + 2;
     dims[1] = static_cast<usize>(((bounds[3] + buffer) - origin[1]) / spacing[1]) + 2;
 
-    messageHelper.sendMessage(" - Binning values into a regular grid...");
+    filterMessenger.sendInfo(" - Binning values into a regular grid...");
     // Fill the BitMap
     {
       std::vector<std::array<usize, 2>> positions = {};
       // Build a set of non-empty grids and temporarily store their positions
       {
         usize numTup = inputArray.getNumberOfTuples();
-        auto binningMessenger =
-            messageHelper.createThrottledMessenger([total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
+        filterMessenger.setThrottledFormatter([total = numTup * 2](usize current) { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(current, total)); });
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
         // Find num grid cells
         for(usize tup = 0; tup < numTup; tup++)
@@ -389,7 +388,7 @@ public:
             return;
           }
 
-          binningMessenger.sendMessage(tup);
+          filterMessenger.sendThrottledMessage(tup);
 
           if(!mask->isTrue(tup))
           {
@@ -406,7 +405,7 @@ public:
           grids[bin] = true;
         }
 
-        messageHelper.sendMessage(" - Compressing regular grid...");
+        filterMessenger.sendInfo(" - Compressing regular grid...");
 
         usize ySize = dims[0];
         usize activeGridCount = 0;
@@ -434,7 +433,7 @@ public:
             return;
           }
 
-          binningMessenger.sendMessage(numTup + tup);
+          filterMessenger.sendThrottledMessage(numTup + tup);
 
           if(!mask->isTrue(tup))
           {
@@ -457,7 +456,7 @@ public:
         grid.shrink_to_fit();
       }
 
-      messageHelper.sendMessage(" - Generating adjacency matrix for search...");
+      filterMessenger.sendInfo(" - Generating adjacency matrix for search...");
       /**
        * This could be modified to 2 passes on the positions vector with custom predicates and ths std::sort function,
        * but we are sacrificing space for speed, because its a subset of a known predefined grid
@@ -713,20 +712,20 @@ class GDCF
 {
 public:
   GDCF() = delete;
-  GDCF(const std::atomic_bool& shouldCancel, MessageHelper& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+  GDCF(const std::atomic_bool& shouldCancel, FilterMessenger& filterMessenger, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
        ClusterUtilities::DistanceMetric distMetric)
-  : hyperGridBitMap(HGBPT(shouldCancel, messageHelper, inputArray, epsilon, mask))
+  : hyperGridBitMap(HGBPT(shouldCancel, filterMessenger, inputArray, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)
   , m_DistMetric(distMetric)
   , m_ShouldCancel(shouldCancel)
-  , m_MessageHelper(messageHelper)
+  , m_FilterMessenger(filterMessenger)
   {
   }
 
   Result<> cluster(usize minPoints, DBSCAN::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
   {
-    m_MessageHelper.sendMessage(" - Identifying core grids...");
+    m_FilterMessenger.sendInfo(" - Identifying core grids...");
     // Identify Core Grids
     std::vector<usize> coreGridIds = {};
     for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
@@ -747,7 +746,7 @@ public:
     }
 
     // Sort Grids to reduce bias
-    m_MessageHelper.sendMessage(" - Sorting grids according to supplied parse order...");
+    m_FilterMessenger.sendInfo(" - Sorting grids according to supplied parse order...");
     switch(parseOrder)
     {
     case DBSCAN::ParseOrder::LowDensityFirst: {
@@ -793,10 +792,10 @@ public:
       return {};
     }
 
-    m_MessageHelper.sendMessage("Identifying Qualifying Independent Clusters:");
+    m_FilterMessenger.sendInfo("Identifying Qualifying Independent Clusters:");
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
     {
-      auto identifyMessenger = m_MessageHelper.createThrottledMessenger(
+      m_FilterMessenger.setThrottledFormatter(
           [totalCoreGrids = coreGridIds.size()](usize current) { return fmt::format(" - Identifying clusters || {:.2f}% Complete", CalculatePercentComplete(current, totalCoreGrids)); });
       for(usize i = 0; i < coreGridIds.size(); i++)
       {
@@ -805,7 +804,7 @@ public:
           return {};
         }
 
-        identifyMessenger.sendMessage(i);
+        m_FilterMessenger.sendThrottledMessage(i);
 
         std::vector<usize> neighborGrids = NeighborGridQuery(coreGridIds[i], hyperGridBitMap);
 
@@ -846,18 +845,18 @@ public:
     } // identifyMessenger scope
 
     // Now determine if non-core grids are close enough to a cluster to be border else noise
-    m_MessageHelper.sendMessage("Expanding and Merging Applicable Clusters:");
-    auto expandMessenger = m_MessageHelper.createThrottledMessenger(
+    m_FilterMessenger.sendInfo("Expanding and Merging Applicable Clusters:");
+    m_FilterMessenger.setThrottledFormatter(
         [totalGrids = hyperGridBitMap.gridVoxels.size()](usize current) { return fmt::format(" - Expanding clusters || {:.2f}% Complete", CalculatePercentComplete(current, totalGrids)); });
     usize loop = 1;
     usize operations = 0;
     do
     {
-      m_MessageHelper.sendMessage(fmt::format(" - Beginning cluster expansion pass: {}...", loop++));
+      m_FilterMessenger.sendInfo(fmt::format(" - Beginning cluster expansion pass: {}...", loop++));
       operations = 0;
       for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
       {
-        expandMessenger.sendMessage(i);
+        m_FilterMessenger.sendThrottledMessage(i);
         if(m_ShouldCancel)
         {
           return {};
@@ -915,7 +914,7 @@ public:
       }
     } while(operations > 0);
 
-    m_MessageHelper.sendMessage(" - Cleaning up cluster identifiers...");
+    m_FilterMessenger.sendInfo(" - Cleaning up cluster identifiers...");
     // clean up cluster forest
     std::vector<usize> clusters = {};
     for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
@@ -950,7 +949,7 @@ public:
       return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
     }
 
-    auto labelMessenger = m_MessageHelper.createThrottledMessenger(
+    m_FilterMessenger.setThrottledFormatter(
         [totalGrids = hyperGridBitMap.gridVoxels.size()](usize current) { return fmt::format(" - Labeling || {:.2f}% Complete", CalculatePercentComplete(current, totalGrids)); });
     // label
     fIdsDataStore.fill(0);
@@ -961,7 +960,7 @@ public:
         return {};
       }
 
-      labelMessenger.sendMessage(gridIdx);
+      m_FilterMessenger.sendThrottledMessage(gridIdx);
 
       int32 featureId = clusterForest.clusterForestNodes[clusterForest.findClusterRoot(gridIdx)].clusterId;
       for(usize pointIdx : hyperGridBitMap.gridVoxels[gridIdx])
@@ -982,7 +981,7 @@ private:
   const AbstractDataStore<T>& m_InputDataStore;
   ClusterUtilities::DistanceMetric m_DistMetric;
   const std::atomic_bool& m_ShouldCancel;
-  MessageHelper& m_MessageHelper;
+  FilterMessenger& m_FilterMessenger;
 
   // Uses Hoare's method for speed
   usize ProcessSection(std::vector<usize>& sorted, usize begin, usize end) const
@@ -1049,17 +1048,17 @@ private:
 
 template <class AlgorithmT, typename T>
 Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
-                      MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
+                      FilterMessenger& filterMessenger, const std::atomic_bool& shouldCancel)
 {
-  messageHelper.sendMessage("Partitioning Input Data:");
-  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHelper, inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+  filterMessenger.sendInfo("Partitioning Input Data:");
+  AlgorithmT algorithm = AlgorithmT(shouldCancel, filterMessenger, inputArray, inputValues->Epsilon, mask, inputValues->DistanceMetric);
 
   if(shouldCancel)
   {
     return {};
   }
 
-  messageHelper.sendMessage("Clustering:");
+  filterMessenger.sendInfo("Clustering:");
   Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
   if(result.invalid() || !result.warnings().empty())
   {
@@ -1073,7 +1072,7 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
     return {};
   }
 
-  messageHelper.sendMessage("Labeling:");
+  filterMessenger.sendInfo("Labeling:");
   return algorithm.label(featureIds.getDataStoreRef());
 }
 
@@ -1081,16 +1080,16 @@ struct DBSCANFunctor
 {
   template <typename T>
   Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
-                      MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
+                      FilterMessenger& filterMessenger, const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
     if(inputArray.getNumberOfComponents() == 2)
     {
-      return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, messageHelper, shouldCancel);
+      return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, filterMessenger, shouldCancel);
     }
     else if(inputArray.getNumberOfComponents() == 3)
     {
-      return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, messageHelper, shouldCancel);
+      return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, filterMessenger, shouldCancel);
     }
     else
     {
@@ -1117,7 +1116,7 @@ DBSCAN::~DBSCAN() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> DBSCAN::operator()()
 {
-  MessageHelper messageHelper(m_MessageHandler);
+  FilterMessenger filterMessenger(m_MessageHandler);
 
   auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
@@ -1134,7 +1133,7 @@ Result<> DBSCAN::operator()()
     return MakeErrorResult(-54060, message);
   }
 
-  Result<> result = ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds, messageHelper, m_ShouldCancel);
+  Result<> result = ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds, filterMessenger, m_ShouldCancel);
   if(result.invalid())
   {
     return result;
@@ -1145,7 +1144,7 @@ Result<> DBSCAN::operator()()
     return {};
   }
 
-  messageHelper.sendMessage("Resizing clustering Attribute Matrix:");
+  filterMessenger.sendInfo("Resizing clustering Attribute Matrix:");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
   m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});

@@ -1,5 +1,6 @@
 #include "ComputeNeighborListStatistics.hpp"
 
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
@@ -214,8 +215,8 @@ Result<> ComputeNeighborListStatistics::operator()()
     arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationPath);
   }
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+  FilterMessenger filterMessenger(m_MessageHandler);
+  ProgressHelper progressHelper = filterMessenger.createProgressHelper(
       numTuples, [](usize currentProgress, usize maxProgress) { return fmt::format("Finding Statistics || {:.2f}% Completed", CalculatePercentComplete(currentProgress, maxProgress)); });
 
   // Allow data-based parallelization

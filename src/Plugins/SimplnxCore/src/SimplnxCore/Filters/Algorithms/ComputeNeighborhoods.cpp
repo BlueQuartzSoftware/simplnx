@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -219,8 +220,8 @@ Result<> ComputeNeighborhoods::operator()()
 
   const usize totalFeatures = equivalentDiameters.getNumberOfTuples();
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+  FilterMessenger filterMessenger(m_MessageHandler);
+  ProgressHelper progressHelper = filterMessenger.createProgressHelper(
       totalFeatures, [](usize currentProgress, usize maxProgress) { return fmt::format("Finding Feature Neighborhoods: {:.2f}%", CalculatePercentComplete(currentProgress, maxProgress)); });
 
   m_LocalNeighborhoodList.resize(totalFeatures);

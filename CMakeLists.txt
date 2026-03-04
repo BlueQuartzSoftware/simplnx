@@ -475,6 +475,8 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Filter/ExecutionContext.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/FilterTraits.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/IFilter.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/MessageHandler.hpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/FilterMessenger.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/IParameter.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/MutableDataParameter.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Output.hpp
@@ -690,6 +692,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Filter/Arguments.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/ConstDataParameter.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/DataParameter.cpp
+  ${SIMPLNX_SOURCE_DIR}/Filter/FilterMessenger.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/IFilter.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/IParameter.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/MutableDataParameter.cpp
@@ -751,7 +754,6 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp

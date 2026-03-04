@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -36,19 +37,19 @@ public:
 
   void operator()() const
   {
-    MessageHelper& messageHelper = m_Filter->getMessageHelper();
+    FilterMessenger& filterMessenger = m_Filter->getFilterMessenger();
 
     T var = static_cast<T>(0);
 
     std::string arrayName = m_DataArray.getName();
     usize totalSlices = m_Dims[2];
 
-    auto progressMessenger = messageHelper.createThrottledMessenger(
+    filterMessenger.setThrottledFormatter(
         [arrayName, totalSlices](usize currentSlice) { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(currentSlice, totalSlices)); });
 
     for(size_t i = 1; i < m_Dims[2]; i++)
     {
-      progressMessenger.sendMessage(i);
+      filterMessenger.sendThrottledMessage(i);
       if(m_Filter->getCancel())
       {
         return;
@@ -105,8 +106,7 @@ private:
 AlignSections::AlignSections(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_ShouldCancel(shouldCancel)
-, m_MessageHandler(mesgHandler)
-, m_MessageHelper(mesgHandler)
+, m_FilterMessenger(mesgHandler)
 {
 }
 
@@ -120,9 +120,9 @@ const std::atomic_bool& AlignSections::getCancel()
 }
 
 // -----------------------------------------------------------------------------
-MessageHelper& AlignSections::getMessageHelper()
+FilterMessenger& AlignSections::getFilterMessenger()
 {
-  return m_MessageHelper;
+  return m_FilterMessenger;
 }
 
 // -----------------------------------------------------------------------------
@@ -156,7 +156,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
       return {};
     }
 
-    m_MessageHelper.sendMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
+    m_FilterMessenger.sendInfo(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
     ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
   }

@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
@@ -177,8 +178,8 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
   SizeVec3 udims = gridGeom->getDimensions();
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+  FilterMessenger filterMessenger(m_MessageHandler);
+  ProgressHelper progressHelper = filterMessenger.createProgressHelper(
       udims[2] * udims[1] * udims[0], [](usize current, usize max) { return fmt::format("Finding Kernel Average Misorientations || {:.2f}%", CalculatePercentComplete(current, max)); });
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;

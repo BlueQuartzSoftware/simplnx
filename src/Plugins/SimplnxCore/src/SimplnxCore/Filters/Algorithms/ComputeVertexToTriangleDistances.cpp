@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/RTree.hpp"
@@ -298,8 +299,8 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   auto& closestTriangleIdsArray = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ClosestTriangleIdArrayPath)->getDataStoreRef();
   closestTriangleIdsArray.fill(-1); // -1 means it never found the closest triangle?
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressHelper progressHelper = messageHelper.createProgressHelper(
+  FilterMessenger filterMessenger(m_MessageHandler);
+  ProgressHelper progressHelper = filterMessenger.createProgressHelper(
       totalElements, [](usize currentProgress, usize maxProgress) { return fmt::format("Finding Distances || {:.2f}% Completed", CalculatePercentComplete(currentProgress, maxProgress)); });
 
   // Allow data-based parallelization

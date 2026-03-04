@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
@@ -88,18 +89,14 @@ Result<> ComputeFeatureNeighbors::operator()()
 
   int32 nListSize = 100;
 
-  MessageHelper messageHelper(m_MessageHandler);
-  auto initMessenger = messageHelper.createThrottledMessenger(
+  FilterMessenger filterMessenger(m_MessageHandler);
+  filterMessenger.setThrottledFormatter(
       [totalFeatures](usize featureIdx) { return fmt::format("Initializing Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(featureIdx, totalFeatures)); },
       std::chrono::milliseconds(1000));
-  auto determineMessenger = messageHelper.createThrottledMessenger(
-      [totalPoints](usize voxelIndex) { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIndex, totalPoints)); }, std::chrono::milliseconds(1000));
-  auto surfaceMessenger = messageHelper.createThrottledMessenger(
-      [totalFeatures](usize i) { return fmt::format("Calculating Surface Areas || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); }, std::chrono::milliseconds(1000));
   // Initialize the neighbor lists
   for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
-    initMessenger.sendMessage(featureIdx);
+    filterMessenger.sendThrottledMessage(featureIdx);
 
     if(m_ShouldCancel)
     {
@@ -115,10 +112,12 @@ Result<> ComputeFeatureNeighbors::operator()()
     }
   }
 
+  filterMessenger.setThrottledFormatter([totalPoints](usize voxelIndex) { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(voxelIndex, totalPoints)); },
+                                        std::chrono::milliseconds(1000));
   // Loop over all points to generate the neighbor lists
   for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
   {
-    determineMessenger.sendMessage(static_cast<usize>(voxelIndex));
+    filterMessenger.sendThrottledMessage(static_cast<usize>(voxelIndex));
 
     if(m_ShouldCancel)
     {
@@ -174,10 +173,12 @@ Result<> ComputeFeatureNeighbors::operator()()
 
   FloatVec3 spacing = imageGeom.getSpacing();
 
+  filterMessenger.setThrottledFormatter([totalFeatures](usize i) { return fmt::format("Calculating Surface Areas || {:.2f}% Complete", CalculatePercentComplete(i, totalFeatures)); },
+                                        std::chrono::milliseconds(1000));
   // We do this to create new set of NeighborList objects
   for(usize i = 1; i < totalFeatures; i++)
   {
-    surfaceMessenger.sendMessage(i);
+    filterMessenger.sendThrottledMessage(i);
 
     if(m_ShouldCancel)
     {

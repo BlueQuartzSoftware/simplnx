@@ -6,8 +6,8 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <mutex>
 

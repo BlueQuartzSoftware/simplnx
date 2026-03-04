@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/FilterMessenger.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
@@ -572,10 +573,9 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
     voxelArrayNames = allChildArrays.value();
   }
 
-  // Create a message helper for throttled progress updates (1 update per second)
-  MessageHelper messageHelper(m_MessageHandler);
-  auto throttledMessenger = messageHelper.createThrottledMessenger([](usize iteration, usize count) { return fmt::format("  Iteration {}: {} voxels remaining to fill", iteration, count); },
-                                                                   std::chrono::milliseconds(1000));
+  // Create a filter messenger for throttled progress updates (1 update per second)
+  FilterMessenger filterMessenger(m_MessageHandler);
+  filterMessenger.setThrottledFormatter([](usize iteration) { return fmt::format("  Iteration {}: voxels remaining to fill", iteration); }, std::chrono::milliseconds(1000));
 
   usize count = 1;     // Number of voxels with -1 value that remain
   usize iteration = 0; // Current iteration number
@@ -675,7 +675,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
     FillBadDataUpdateTuples<int32>(featureIdsStore, featureIdsStore, neighbors);
 
     // Send throttled progress update (max 1 per second)
-    throttledMessenger.sendMessage(iteration, count);
+    filterMessenger.sendThrottledMessage(iteration);
   }
 
   // Send final completion summary
