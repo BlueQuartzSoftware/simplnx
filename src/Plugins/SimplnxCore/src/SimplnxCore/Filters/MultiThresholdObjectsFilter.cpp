@@ -33,7 +33,7 @@ Result<> CheckComponentIndicesInThresholds(const ArrayThresholdSet& thresholds, 
     else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
       DataPath dataPath = comparisonValue->getArrayPath();
-      const auto& currentDataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+      const auto& currentDataArray = dataStructure.getDataRefAs<AbstractDataArray>(dataPath);
       usize index = comparisonValue->getComponentIndex();
       usize numComponents = currentDataArray.getNumberOfComponents();
       if(index >= currentDataArray.getNumberOfComponents())
@@ -108,7 +108,7 @@ private:
 struct ExecuteThresholdHelper
 {
   template <typename Type, typename MaskType>
-  void operator()(ThresholdFilterHelper<MaskType>& helper, const IDataArray& iDataArray, Type trueValue, Type falseValue)
+  void operator()(ThresholdFilterHelper<MaskType>& helper, const AbstractDataArray& iDataArray, Type trueValue, Type falseValue)
   {
     const auto& dataStore = iDataArray.template getIDataStoreRefAs<AbstractDataStore<Type>>();
     helper.template filterData<Type>(dataStore, trueValue, falseValue);
@@ -163,7 +163,7 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
 
   ThresholdFilterHelper<T> helper(compOperator, compValue, componentIndex, tempResultVector);
 
-  const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
+  const auto& iDataArray = dataStructure.getDataRefAs<AbstractDataArray>(inputDataArrayPath);
 
   ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray, trueValue, falseValue);
 
@@ -189,7 +189,8 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
 struct ThresholdValueFunctor
 {
   template <typename T>
-  void operator()(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, IDataArray& outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue, T falseValue)
+  void operator()(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, AbstractDataArray& outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
+                  T falseValue)
   {
     // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
     // was essentially done in the preflight part.
@@ -245,7 +246,7 @@ void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructu
 struct ThresholdSetFunctor
 {
   template <typename T>
-  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, IDataArray& outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
+  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, AbstractDataArray& outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
                   T falseValue)
   {
     // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
@@ -367,14 +368,14 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
   }
 
   DataPath firstDataPath = *(thresholdPaths.begin());
-  const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(firstDataPath);
+  const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(firstDataPath);
 
   // Check for same number of tuples and components
   usize numTuples = dataArray.getNumberOfTuples();
   usize numComponents = dataArray.getNumberOfComponents();
   for(const auto& dataPath : thresholdPaths)
   {
-    const auto& currentDataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+    const auto& currentDataArray = dataStructure.getDataRefAs<AbstractDataArray>(dataPath);
     usize currentNumTuples = currentDataArray.getNumberOfTuples();
     if(currentNumTuples != numTuples)
     {
@@ -463,13 +464,13 @@ Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, 
     const IArrayThreshold* thresholdPtr = threshold.get();
     if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {
-      ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, *comparisonSet, dataStructure, dataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
+      ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, *comparisonSet, dataStructure, dataStructure.getDataRefAs<AbstractDataArray>(maskArrayPath), err, !firstValueFound,
                           thresholdsObject.isInverted(), trueValue, falseValue);
       firstValueFound = true;
     }
     else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
-      ExecuteDataFunction(ThresholdValueFunctor{}, maskArrayType, *comparisonValue, dataStructure, dataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
+      ExecuteDataFunction(ThresholdValueFunctor{}, maskArrayType, *comparisonValue, dataStructure, dataStructure.getDataRefAs<AbstractDataArray>(maskArrayPath), err, !firstValueFound,
                           thresholdsObject.isInverted(), trueValue, falseValue);
       firstValueFound = true;
     }

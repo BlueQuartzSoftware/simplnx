@@ -1,11 +1,11 @@
 #include "DataStructure.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/LinkedPath.hpp"
 #include "simplnx/DataStructure/Messaging/DataAddedMessage.hpp"
 #include "simplnx/DataStructure/Messaging/DataRemovedMessage.hpp"
@@ -41,13 +41,13 @@ DataStructure::DataStructure(const DataStructure& dataStructure)
 {
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
-  std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
+  std::map<AbstractDataObject::IdType, std::shared_ptr<AbstractDataObject>> sharedData;
   for(const auto& [identifier, dataWkPtr] : dataStructure.m_DataObjects)
   {
     auto dataPtr = dataWkPtr.lock();
     if(dataPtr != nullptr)
     {
-      auto copy = std::shared_ptr<DataObject>(dataPtr->shallowCopy());
+      auto copy = std::shared_ptr<AbstractDataObject>(dataPtr->shallowCopy());
       sharedData[identifier] = copy;
       m_DataObjects[identifier] = copy;
     }
@@ -81,12 +81,12 @@ DataStructure::~DataStructure()
   }
 }
 
-DataObject::IdType DataStructure::generateId()
+AbstractDataObject::IdType DataStructure::generateId()
 {
   return m_NextId++;
 }
 
-void DataStructure::setNextId(DataObject::IdType nextDataId)
+void DataStructure::setNextId(AbstractDataObject::IdType nextDataId)
 {
   m_NextId = nextDataId;
 }
@@ -106,13 +106,13 @@ void DataStructure::clear()
   m_DataObjects.clear();
 }
 
-std::optional<DataObject::IdType> DataStructure::getId(const DataPath& path) const
+std::optional<AbstractDataObject::IdType> DataStructure::getId(const DataPath& path) const
 {
   if(path.empty())
   {
     return {0};
   }
-  const DataObject* dataObject = getData(path);
+  const AbstractDataObject* dataObject = getData(path);
   if(nullptr == dataObject)
   {
     return std::nullopt;
@@ -124,8 +124,8 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
 {
   try
   {
-    std::vector<DataObject::IdType> pathIds;
-    const DataObject* data = m_RootGroup[path[0]];
+    std::vector<AbstractDataObject::IdType> pathIds;
+    const AbstractDataObject* data = m_RootGroup[path[0]];
     const BaseGroup* parent = dynamic_cast<const BaseGroup*>(data);
     pathIds.push_back(data->getId());
 
@@ -145,7 +145,7 @@ LinkedPath DataStructure::getLinkedPath(const DataPath& path) const
   }
 }
 
-bool DataStructure::containsData(DataObject::IdType identifier) const
+bool DataStructure::containsData(AbstractDataObject::IdType identifier) const
 {
   return getData(identifier) != nullptr;
 }
@@ -157,13 +157,13 @@ bool DataStructure::containsData(const DataPath& path) const
 
 Result<LinkedPath> DataStructure::makePath(const DataPath& path)
 {
-  std::vector<DataObject::IdType> createdIds;
+  std::vector<AbstractDataObject::IdType> createdIds;
 
   try
   {
-    std::vector<DataObject::IdType> pathIds;
+    std::vector<AbstractDataObject::IdType> pathIds;
     std::string name = path[0];
-    const DataObject* data = m_RootGroup[name];
+    const AbstractDataObject* data = m_RootGroup[name];
     if(data == nullptr)
     {
       data = nx::core::DataGroup::Create(*this, name);
@@ -203,7 +203,7 @@ Result<LinkedPath> DataStructure::makePath(const DataPath& path)
   }
 }
 
-std::vector<DataPath> DataStructure::getDataPathsForId(DataObject::IdType identifier) const
+std::vector<DataPath> DataStructure::getDataPathsForId(AbstractDataObject::IdType identifier) const
 {
   auto* dataObject = getData(identifier);
   if(dataObject == nullptr)
@@ -230,9 +230,9 @@ std::vector<DataPath> DataStructure::getAllDataPaths() const
   return dataPaths;
 }
 
-std::vector<DataObject::IdType> DataStructure::getAllDataObjectIds() const
+std::vector<AbstractDataObject::IdType> DataStructure::getAllDataObjectIds() const
 {
-  std::vector<DataObject::IdType> dataIds;
+  std::vector<AbstractDataObject::IdType> dataIds;
   dataIds.reserve(m_DataObjects.size());
   for(const auto& [identifier, weakPtr] : m_DataObjects)
   {
@@ -241,7 +241,7 @@ std::vector<DataObject::IdType> DataStructure::getAllDataObjectIds() const
   return dataIds;
 }
 
-DataObject* DataStructure::getData(DataObject::IdType identifier)
+AbstractDataObject* DataStructure::getData(AbstractDataObject::IdType identifier)
 {
   auto iter = m_DataObjects.find(identifier);
   if(m_DataObjects.end() == iter)
@@ -251,7 +251,7 @@ DataObject* DataStructure::getData(DataObject::IdType identifier)
   return iter->second.lock().get();
 }
 
-DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& identifier)
+AbstractDataObject* DataStructure::getData(const std::optional<AbstractDataObject::IdType>& identifier)
 {
   if(!identifier)
   {
@@ -266,13 +266,13 @@ DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& iden
   return iter->second.lock().get();
 }
 
-DataObject* DataStructure::getData(const DataPath& path)
+AbstractDataObject* DataStructure::getData(const DataPath& path)
 {
   if(path.empty())
   {
     return nullptr;
   }
-  DataObject* targetObject = m_RootGroup[path[0]];
+  AbstractDataObject* targetObject = m_RootGroup[path[0]];
   for(usize index = 1; index < path.getLength(); index++)
   {
     if(targetObject == nullptr)
@@ -284,7 +284,7 @@ DataObject* DataStructure::getData(const DataPath& path)
       return nullptr;
     }
     auto* groupObject = static_cast<BaseGroup*>(targetObject);
-    DataObject* childObject = (*groupObject)[path[index]];
+    AbstractDataObject* childObject = (*groupObject)[path[index]];
     if(childObject == nullptr)
     {
       return nullptr;
@@ -295,9 +295,9 @@ DataObject* DataStructure::getData(const DataPath& path)
   return targetObject;
 }
 
-DataObject& DataStructure::getDataRef(const DataPath& path)
+AbstractDataObject& DataStructure::getDataRef(const DataPath& path)
 {
-  DataObject* object = getData(path);
+  AbstractDataObject* object = getData(path);
   if(object == nullptr)
   {
     throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path '{}' does not exist", path.toString()));
@@ -305,9 +305,9 @@ DataObject& DataStructure::getDataRef(const DataPath& path)
   return *object;
 }
 
-DataObject& DataStructure::getDataRef(DataObject::IdType identifier)
+AbstractDataObject& DataStructure::getDataRef(AbstractDataObject::IdType identifier)
 {
-  DataObject* object = getData(identifier);
+  AbstractDataObject* object = getData(identifier);
   if(object == nullptr)
   {
     throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Id '{}' does not exist", identifier));
@@ -315,12 +315,12 @@ DataObject& DataStructure::getDataRef(DataObject::IdType identifier)
   return *object;
 }
 
-DataObject* DataStructure::getData(const LinkedPath& path)
+AbstractDataObject* DataStructure::getData(const LinkedPath& path)
 {
   return getData(path.getId());
 }
 
-const DataObject* DataStructure::getData(DataObject::IdType identifier) const
+const AbstractDataObject* DataStructure::getData(AbstractDataObject::IdType identifier) const
 {
   auto iter = m_DataObjects.find(identifier);
   if(m_DataObjects.end() == iter)
@@ -330,7 +330,7 @@ const DataObject* DataStructure::getData(DataObject::IdType identifier) const
   return iter->second.lock().get();
 }
 
-const DataObject* DataStructure::getData(const std::optional<DataObject::IdType>& identifier) const
+const AbstractDataObject* DataStructure::getData(const std::optional<AbstractDataObject::IdType>& identifier) const
 {
   if(!identifier)
   {
@@ -345,13 +345,13 @@ const DataObject* DataStructure::getData(const std::optional<DataObject::IdType>
   return iter->second.lock().get();
 }
 
-const DataObject* DataStructure::getData(const DataPath& path) const
+const AbstractDataObject* DataStructure::getData(const DataPath& path) const
 {
   if(path.empty())
   {
     return nullptr;
   }
-  const DataObject* targetObject = m_RootGroup[path[0]];
+  const AbstractDataObject* targetObject = m_RootGroup[path[0]];
   for(usize index = 1; index < path.getLength(); index++)
   {
     if(targetObject == nullptr)
@@ -363,7 +363,7 @@ const DataObject* DataStructure::getData(const DataPath& path) const
       return nullptr;
     }
     const auto* groupObject = static_cast<const BaseGroup*>(targetObject);
-    const DataObject* childObject = (*groupObject)[path[index]];
+    const AbstractDataObject* childObject = (*groupObject)[path[index]];
     if(childObject == nullptr)
     {
       return nullptr;
@@ -374,9 +374,9 @@ const DataObject* DataStructure::getData(const DataPath& path) const
   return targetObject;
 }
 
-const DataObject& DataStructure::getDataRef(const DataPath& path) const
+const AbstractDataObject& DataStructure::getDataRef(const DataPath& path) const
 {
-  const DataObject* object = getData(path);
+  const AbstractDataObject* object = getData(path);
   if(object == nullptr)
   {
     throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Input Path '{}' does not exist", path.toString()));
@@ -384,9 +384,9 @@ const DataObject& DataStructure::getDataRef(const DataPath& path) const
   return *object;
 }
 
-const DataObject& DataStructure::getDataRef(DataObject::IdType identifier) const
+const AbstractDataObject& DataStructure::getDataRef(AbstractDataObject::IdType identifier) const
 {
-  const DataObject* object = getData(identifier);
+  const AbstractDataObject* object = getData(identifier);
   if(object == nullptr)
   {
     throw std::out_of_range(fmt::format("DataStructure::getDataRef(): Id '{}' does not exist", identifier));
@@ -394,12 +394,12 @@ const DataObject& DataStructure::getDataRef(DataObject::IdType identifier) const
   return *object;
 }
 
-const DataObject* DataStructure::getData(const LinkedPath& path) const
+const AbstractDataObject* DataStructure::getData(const LinkedPath& path) const
 {
   return path.getData();
 }
 
-std::shared_ptr<DataObject> DataStructure::getSharedData(DataObject::IdType id)
+std::shared_ptr<AbstractDataObject> DataStructure::getSharedData(AbstractDataObject::IdType id)
 {
   if(m_DataObjects.find(id) == m_DataObjects.end())
   {
@@ -408,7 +408,7 @@ std::shared_ptr<DataObject> DataStructure::getSharedData(DataObject::IdType id)
   return m_DataObjects.at(id).lock();
 }
 
-std::shared_ptr<const DataObject> DataStructure::getSharedData(DataObject::IdType id) const
+std::shared_ptr<const AbstractDataObject> DataStructure::getSharedData(AbstractDataObject::IdType id) const
 {
   if(m_DataObjects.find(id) == m_DataObjects.end())
   {
@@ -417,7 +417,7 @@ std::shared_ptr<const DataObject> DataStructure::getSharedData(DataObject::IdTyp
   return m_DataObjects.at(id).lock();
 }
 
-std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path)
+std::shared_ptr<AbstractDataObject> DataStructure::getSharedData(const DataPath& path)
 {
   auto dataObject = getData(path);
   if(dataObject == nullptr)
@@ -427,7 +427,7 @@ std::shared_ptr<DataObject> DataStructure::getSharedData(const DataPath& path)
   return m_DataObjects.at(dataObject->getId()).lock();
 }
 
-std::shared_ptr<const DataObject> DataStructure::getSharedData(const DataPath& path) const
+std::shared_ptr<const AbstractDataObject> DataStructure::getSharedData(const DataPath& path) const
 {
   auto dataObject = getData(path);
   if(dataObject == nullptr)
@@ -437,13 +437,13 @@ std::shared_ptr<const DataObject> DataStructure::getSharedData(const DataPath& p
   return m_DataObjects.at(dataObject->getId()).lock();
 }
 
-bool DataStructure::removeData(DataObject::IdType identifier)
+bool DataStructure::removeData(AbstractDataObject::IdType identifier)
 {
-  DataObject* data = getData(identifier);
+  AbstractDataObject* data = getData(identifier);
   return removeData(data);
 }
 
-void DataStructure::setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject)
+void DataStructure::setData(AbstractDataObject::IdType identifier, std::shared_ptr<AbstractDataObject> dataObject)
 {
   if(dataObject == nullptr)
   {
@@ -454,7 +454,7 @@ void DataStructure::setData(DataObject::IdType identifier, std::shared_ptr<DataO
   m_DataObjects[identifier] = dataObject;
 }
 
-bool DataStructure::removeData(const std::optional<DataObject::IdType>& identifier)
+bool DataStructure::removeData(const std::optional<AbstractDataObject::IdType>& identifier)
 {
   if(!identifier)
   {
@@ -468,11 +468,11 @@ bool DataStructure::removeData(const std::optional<DataObject::IdType>& identifi
 
 bool DataStructure::removeData(const DataPath& path)
 {
-  DataObject* data = getData(path);
+  AbstractDataObject* data = getData(path);
   return removeData(data);
 }
 
-bool DataStructure::removeData(DataObject* data)
+bool DataStructure::removeData(AbstractDataObject* data)
 {
   if(data == nullptr)
   {
@@ -485,7 +485,7 @@ bool DataStructure::removeData(DataObject* data)
   {
     return removeTopLevel(data);
   }
-  for(DataObject::IdType parentId : parentIds)
+  for(AbstractDataObject::IdType parentId : parentIds)
   {
     auto parent = getDataAs<BaseGroup>(parentId);
     if(!parent->remove(data))
@@ -497,7 +497,7 @@ bool DataStructure::removeData(DataObject* data)
   return true;
 }
 
-void DataStructure::dataDeleted(DataObject::IdType identifier, const std::string& name)
+void DataStructure::dataDeleted(AbstractDataObject::IdType identifier, const std::string& name)
 {
   if(!m_IsValid)
   {
@@ -508,9 +508,9 @@ void DataStructure::dataDeleted(DataObject::IdType identifier, const std::string
   notify(msg);
 }
 
-std::vector<DataObject*> DataStructure::getTopLevelData() const
+std::vector<AbstractDataObject*> DataStructure::getTopLevelData() const
 {
-  std::vector<DataObject*> topLevel(m_RootGroup.getSize(), nullptr);
+  std::vector<AbstractDataObject*> topLevel(m_RootGroup.getSize(), nullptr);
   usize index = 0;
   for(auto& iter : m_RootGroup)
   {
@@ -530,7 +530,7 @@ DataMap& DataStructure::getRootGroup()
   return m_RootGroup;
 }
 
-bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
+bool DataStructure::insertTopLevel(const std::shared_ptr<AbstractDataObject>& obj)
 {
   if(obj == nullptr)
   {
@@ -545,7 +545,7 @@ bool DataStructure::insertTopLevel(const std::shared_ptr<DataObject>& obj)
   return m_RootGroup.insert(obj);
 }
 
-bool DataStructure::removeTopLevel(DataObject* data)
+bool DataStructure::removeTopLevel(AbstractDataObject* data)
 {
   std::string name = data->getName();
   if(!m_RootGroup.remove(data))
@@ -558,7 +558,7 @@ bool DataStructure::removeTopLevel(DataObject* data)
   return true;
 }
 
-bool DataStructure::finishAddingObject(const std::shared_ptr<DataObject>& dataObject, const std::optional<DataObject::IdType>& parent)
+bool DataStructure::finishAddingObject(const std::shared_ptr<AbstractDataObject>& dataObject, const std::optional<AbstractDataObject::IdType>& parent)
 {
   if(parent.has_value() && containsData(*parent))
   {
@@ -603,7 +603,7 @@ DataStructure::ConstIterator DataStructure::end() const
   return m_RootGroup.end();
 }
 
-bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath)
+bool DataStructure::insert(const std::shared_ptr<AbstractDataObject>& dataObject, const DataPath& dataPath)
 {
   if(dataObject == nullptr)
   {
@@ -620,7 +620,7 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
     dataObject->setId(generateId());
   }
 
-  // Clears the DataObject's parent IDs to avoid clashes.
+  // Clears the AbstractDataObject's parent IDs to avoid clashes.
   dataObject->clearParents();
 
   if(dataPath.empty())
@@ -632,12 +632,12 @@ bool DataStructure::insert(const std::shared_ptr<DataObject>& dataObject, const 
   return insertIntoParent(dataObject, parentGroup);
 }
 
-DataObject::IdType DataStructure::getNextId() const
+AbstractDataObject::IdType DataStructure::getNextId() const
 {
   return m_NextId;
 }
 
-bool DataStructure::insertIntoRoot(const std::shared_ptr<DataObject>& dataObject)
+bool DataStructure::insertIntoRoot(const std::shared_ptr<AbstractDataObject>& dataObject)
 {
   if(dataObject == nullptr)
   {
@@ -651,7 +651,7 @@ bool DataStructure::insertIntoRoot(const std::shared_ptr<DataObject>& dataObject
   trackDataObject(dataObject);
   return true;
 }
-bool DataStructure::insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup)
+bool DataStructure::insertIntoParent(const std::shared_ptr<AbstractDataObject>& dataObject, BaseGroup* parentGroup)
 {
   if(parentGroup == nullptr)
   {
@@ -666,7 +666,7 @@ bool DataStructure::insertIntoParent(const std::shared_ptr<DataObject>& dataObje
   return true;
 }
 
-void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObject)
+void DataStructure::trackDataObject(const std::shared_ptr<AbstractDataObject>& dataObject)
 {
   if(dataObject == nullptr)
   {
@@ -683,7 +683,7 @@ void DataStructure::trackDataObject(const std::shared_ptr<DataObject>& dataObjec
   dataObject->setDataStructure(this);
 }
 
-bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParentId)
+bool DataStructure::setAdditionalParent(AbstractDataObject::IdType targetId, AbstractDataObject::IdType newParentId)
 {
   auto& target = m_DataObjects[targetId];
   auto newParent = dynamic_cast<BaseGroup*>(getData(newParentId));
@@ -701,7 +701,7 @@ bool DataStructure::setAdditionalParent(DataObject::IdType targetId, DataObject:
   return true;
 }
 
-bool DataStructure::removeParent(DataObject::IdType targetId, DataObject::IdType parentId)
+bool DataStructure::removeParent(AbstractDataObject::IdType targetId, AbstractDataObject::IdType parentId)
 {
   const auto& target = m_DataObjects[targetId];
   const auto parent = dynamic_cast<BaseGroup*>(getData(parentId));
@@ -740,13 +740,13 @@ DataStructure& DataStructure::operator=(const DataStructure& rhs)
 
   // Hold a shared_ptr copy of the DataObjects long enough for
   // m_RootGroup.setDataStructure(this) to operate.
-  std::map<DataObject::IdType, std::shared_ptr<DataObject>> sharedData;
+  std::map<AbstractDataObject::IdType, std::shared_ptr<AbstractDataObject>> sharedData;
   for(auto& [identifier, dataWkPtr] : rhs.m_DataObjects)
   {
     auto dataPtr = dataWkPtr.lock();
     if(dataPtr != nullptr)
     {
-      auto copy = std::shared_ptr<DataObject>(dataPtr->shallowCopy());
+      auto copy = std::shared_ptr<AbstractDataObject>(dataPtr->shallowCopy());
       sharedData[identifier] = copy;
       m_DataObjects[identifier] = copy;
     }
@@ -787,14 +787,14 @@ nonstd::expected<void, std::string> DataStructure::validateNumberOfTuples(const 
   {
     auto* dataObject = getData(dataPath);
 
-    const DataObject::Type dataObjectType = dataObject->getDataObjectType();
+    const AbstractDataObject::Type dataObjectType = dataObject->getDataObjectType();
     size_t numTuples = 0;
-    if(dataObjectType == DataObject::Type::NeighborList || dataObjectType == DataObject::Type::StringArray || dataObjectType == DataObject::Type::DataArray)
+    if(dataObjectType == IDataObject::Type::NeighborList || dataObjectType == IDataObject::Type::StringArray || dataObjectType == IDataObject::Type::DataArray)
     {
-      const auto* dataArrayPtr = getDataAs<IArray>(dataPath);
+      const auto* dataArrayPtr = getDataAs<AbstractArray>(dataPath);
       numTuples = dataArrayPtr->getNumberOfTuples();
     }
-    else // We can only check DataObject subclasses that hold items that can be expressed as getNumberOfTuples();
+    else // We can only check AbstractDataObject subclasses that hold items that can be expressed as getNumberOfTuples();
     {
       message << "Only NeighborList, StringArray and DataArray can be validated for tuple counts\n";
       return {nonstd::make_unexpected(message.str())};
@@ -819,7 +819,7 @@ nonstd::expected<void, std::string> DataStructure::validateNumberOfTuples(const 
   return {};
 }
 
-void DataStructure::resetIds(DataObject::IdType startingId)
+void DataStructure::resetIds(AbstractDataObject::IdType startingId)
 {
   // 0 is reserved
   if(startingId == 0)
@@ -829,9 +829,9 @@ void DataStructure::resetIds(DataObject::IdType startingId)
 
   m_NextId = startingId;
 
-  // Update DataObject IDs and track changes
+  // Update AbstractDataObject IDs and track changes
   WeakCollectionType newCollection;
-  std::unordered_map<DataObject::IdType, DataObject::IdType> updatedIdsMap;
+  std::unordered_map<AbstractDataObject::IdType, AbstractDataObject::IdType> updatedIdsMap;
   for(auto& dataObjectIter : m_DataObjects)
   {
     auto dataObjectPtr = dataObjectIter.second.lock();
@@ -957,7 +957,7 @@ void DataStructure::flush() const
 {
   for(const auto& weakPtr : m_DataObjects)
   {
-    std::shared_ptr<DataObject> sharedObj = weakPtr.second.lock();
+    std::shared_ptr<AbstractDataObject> sharedObj = weakPtr.second.lock();
     if(sharedObj == nullptr)
     {
       continue;
@@ -994,7 +994,7 @@ Result<> DataStructure::transferDataArraysOoc()
   for(const auto& dataIter : m_DataObjects)
   {
     auto dataPtr = dataIter.second.lock();
-    auto dataArrayPtr = std::dynamic_pointer_cast<IDataArray>(dataPtr);
+    auto dataArrayPtr = std::dynamic_pointer_cast<AbstractDataArray>(dataPtr);
     if(dataArrayPtr == nullptr)
     {
       continue;
@@ -1010,7 +1010,7 @@ Result<> DataStructure::transferDataArraysOoc()
 
 Result<> DataStructure::validateGeometries() const
 {
-  /** There is an assumption about the range of the DataObject::Type enumeration. That assumption
+  /** There is an assumption about the range of the AbstractDataObject::Type enumeration. That assumption
    * is backed up by a static_assert test case for the unit tests. If the enumeration is changed
    * the compile will fail if the unit tests are enabled. Which they are on all the CI machines.
    */
@@ -1018,9 +1018,9 @@ Result<> DataStructure::validateGeometries() const
   for(const auto& dataObject : m_RootGroup)
   {
     auto dataObjectType = dataObject.second->getDataObjectType();
-    if(dataObjectType >= DataObject::Type::IGeometry && dataObjectType <= DataObject::Type::TetrahedralGeom)
+    if(dataObjectType >= IDataObject::Type::AbstractGeometry && dataObjectType <= IDataObject::Type::TetrahedralGeom)
     {
-      auto* geomPtr = dynamic_cast<IGeometry*>(dataObject.second.get());
+      auto* geomPtr = dynamic_cast<AbstractGeometry*>(dataObject.second.get());
       result = MergeResults(geomPtr->validate(), result);
     }
   }
@@ -1036,7 +1036,7 @@ Result<> DataStructure::validateAttributeMatrices() const
     if(dataObjectSharedPtr.get() != nullptr)
     {
       auto dataObjectType = dataObjectSharedPtr->getDataObjectType();
-      if(dataObjectType == DataObject::Type::AttributeMatrix)
+      if(dataObjectType == IDataObject::Type::AttributeMatrix)
       {
         auto* attrMatPtr = dynamic_cast<AttributeMatrix*>(dataObject.second.lock().get());
         if(nullptr != attrMatPtr)

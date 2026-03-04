@@ -4,7 +4,7 @@
 #include "simplnx/Common/EulerAngle.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
 
@@ -28,7 +28,7 @@ namespace Description
  * @param units The units of the geometry
  * @return
  */
-SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core::FloatVec3& spacing, const nx::core::FloatVec3& origin, IGeometry::LengthUnit units);
+SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core::FloatVec3& spacing, const nx::core::FloatVec3& origin, AbstractGeometry::LengthUnit units);
 
 } // namespace Description
 
@@ -169,7 +169,7 @@ SIMPLNX_EXPORT std::vector<int32> FindEulerCharacteristicValues(const TriangleGe
 template <typename T>
 usize FindNumEdges(const AbstractDataStore<T>& faceStore, usize numVertices = (detail::k_MaxOptimizedValue + 1))
 {
-  // This case may seem niche, but it is designed with Indexing types in mind specifically IGeometry::MeshIndexType
+  // This case may seem niche, but it is designed with Indexing types in mind specifically AbstractGeometry::MeshIndexType
   if constexpr(!std::is_signed_v<T>)
   {
     if(numVertices < detail::k_MaxOptimizedValue)
@@ -238,7 +238,7 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
  * @return int32
  */
 template <typename T, typename K>
-ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, IGeometry::Type geometryType)
+ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, AbstractGeometry::Type geometryType)
 {
   auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
@@ -958,7 +958,7 @@ using BoundingBoxFaces = std::unordered_set<BoundingBox3Df::faces_enum>;
  * @param vertexSet
  * @return BoundingBoxFaces
  */
-BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet);
+BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<AbstractGeometry::MeshIndexType>& vertexSet);
 
 /**
  * @brief Adjusts centroids for periodic edge cases. The data is assumed to
@@ -970,7 +970,7 @@ BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& b
  * @param centroids
  * @param featureId
  */
-bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId);
+bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, Float32AbstractDataStore& centroids, AbstractGeometry::MeshIndexType featureId);
 
 bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const ImageGeom& imageGeom, const UInt64AbstractDataStore& xRanges, const UInt64AbstractDataStore& yRanges, const UInt64AbstractDataStore& zRanges,
                                                     Float32AbstractDataStore& centroids);

@@ -10,7 +10,7 @@ namespace nx::core
 {
 //------------------------------------------------------------------------------
 CreateDataGroupAction::CreateDataGroupAction(const DataPath& path)
-: IDataCreationAction(path)
+: AbstractDataCreationAction(path)
 {
 }
 

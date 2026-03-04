@@ -23,7 +23,7 @@ TEST_CASE("SimplnxCore::ComputeTriangleAreasFilter", "[SimplnxCore][ComputeTrian
   UnitTest::LoadPlugins();
 
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceAttributeMatrixName;
+  std::string triangleFaceDataGroupName = AbstractNodeGeometry2D::k_FaceAttributeMatrixName;
   std::string normalsDataArrayName = "FaceNormals";
 
   DataStructure dataStructure;

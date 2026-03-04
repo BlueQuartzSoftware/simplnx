@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/SimplnxConstants.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 
 #include <memory>
 #include <vector>
@@ -134,7 +134,7 @@
  * @brief This macro includes the 'bool' type.
  */
 #define EXECUTE_FUNCTION_TEMPLATE2(observableObj, templateName, inputDataPath, ...)                                                                                                                    \
-  auto* inputData = m_DataStructure.getDataAs<IDataArray>(inputDataPath);                                                                                                                              \
+  auto* inputData = m_DataStructure.getDataAs<AbstractDataArray>(inputDataPath);                                                                                                                       \
   if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputData))                                                                                                                                       \
   {                                                                                                                                                                                                    \
     templateName<float>(__VA_ARGS__);                                                                                                                                                                  \
@@ -193,13 +193,13 @@ namespace nx::core
 namespace TemplateHelpers
 {
 /**
- * @brief This class (functor) simply returns true or false if the IDataArray can be downcast to a certain DataArray type
+ * @brief This class (functor) simply returns true or false if the AbstractDataArray can be downcast to a certain DataArray type
  * parameterized by the template parameter T.
  */
 template <class T>
 struct CanDynamicCast
 {
-  bool operator()(const DataObject* p) const
+  bool operator()(const AbstractDataObject* p) const
   {
     return dynamic_cast<const T*>(p) != nullptr;
   }

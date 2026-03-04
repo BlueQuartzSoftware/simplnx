@@ -1,7 +1,7 @@
 #include "ComputeShapesTriangleGeom.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
@@ -18,8 +18,8 @@ using namespace nx::core;
 
 namespace
 {
-using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+using TriStore = AbstractDataStore<AbstractNodeGeometry2D::SharedFaceList::value_type>;
+using VertsStore = AbstractDataStore<AbstractNodeGeometry0D::SharedVertexList::value_type>;
 
 // usize FindEulerCharacteristic(usize numVertices, usize numFaces, usize numRegions)
 // {
@@ -37,16 +37,16 @@ using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_ty
 
 struct AxialLengths
 {
-  IGeometry::SharedVertexList::value_type xLength = 0.0;
-  IGeometry::SharedVertexList::value_type yLength = 0.0;
-  IGeometry::SharedVertexList::value_type zLength = 0.0;
+  AbstractGeometry::SharedVertexList::value_type xLength = 0.0;
+  AbstractGeometry::SharedVertexList::value_type yLength = 0.0;
+  AbstractGeometry::SharedVertexList::value_type zLength = 0.0;
 };
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance
-template <typename T = IGeometry::SharedVertexList::value_type>
+template <typename T = AbstractGeometry::SharedVertexList::value_type>
 AxialLengths FindIntersections(const Eigen::Matrix<T, 3, 3, Eigen::RowMajor>& orientationMatrix, const AbstractDataStore<int32>& faceLabelsStore,
-                               const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertexStore,
-                               const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId, const std::atomic_bool& shouldCancel)
+                               const AbstractDataStore<AbstractGeometry::MeshIndexType>& triStore, const AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>& vertexStore,
+                               const AbstractDataStore<float32>& centroidsStore, AbstractGeometry::MeshIndexType featureId, const std::atomic_bool& shouldCancel)
 {
   constexpr T epsilon = std::numeric_limits<T>::epsilon();
 

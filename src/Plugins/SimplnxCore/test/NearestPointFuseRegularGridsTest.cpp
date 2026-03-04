@@ -33,7 +33,7 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
   const CreateImageGeometryAction::DimensionType attrMatrixDims = {dims.rbegin(), dims.rend()};
 
-  auto sampleAction = CreateImageGeometryAction(sampleImageGeomPath, dims, origin, spacing, sampleCellDataName, IGeometry::LengthUnit::Micrometer);
+  auto sampleAction = CreateImageGeometryAction(sampleImageGeomPath, dims, origin, spacing, sampleCellDataName, AbstractGeometry::LengthUnit::Micrometer);
   Result<> sampleActionResult = sampleAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(sampleActionResult);
 
@@ -44,7 +44,7 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   auto* sampleDataStore = dataStructure.getDataAs<Float64Array>(sampleDataArrayPath)->getDataStore();
   std::iota(sampleDataStore->begin(), sampleDataStore->end(), 1.0);
 
-  auto refAction = CreateImageGeometryAction(refImageGeomPath, refDims, refOrigin, refSpacing, refCellDataName, IGeometry::LengthUnit::Micrometer);
+  auto refAction = CreateImageGeometryAction(refImageGeomPath, refDims, refOrigin, refSpacing, refCellDataName, AbstractGeometry::LengthUnit::Micrometer);
   Result<> refActionResult = refAction.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(refActionResult);
 

@@ -3,8 +3,8 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
@@ -413,13 +413,13 @@ inline void CompareImageGeometry(const DataStructure& dataStructure, const DataP
  * @param geom2
  * @returns bool true if equivalent
  */
-inline bool CompareIGeometry(const IGeometry* geom1, const IGeometry* geom2)
+inline bool CompareIGeometry(const AbstractGeometry* geom1, const AbstractGeometry* geom2)
 {
   REQUIRE(geom1->getGeomType() == geom2->getGeomType());
   REQUIRE(geom1->getSpatialDimensionality() == geom2->getSpatialDimensionality());
   REQUIRE(geom1->getUnitDimensionality() == geom2->getUnitDimensionality());
   REQUIRE(geom1->getNumberOfCells() == geom2->getNumberOfCells());
-  REQUIRE(geom1->findAllChildrenOfType<IArray>().size() == geom2->findAllChildrenOfType<IArray>().size());
+  REQUIRE(geom1->findAllChildrenOfType<AbstractArray>().size() == geom2->findAllChildrenOfType<AbstractArray>().size());
   REQUIRE(geom1->getParametricCenter() == geom2->getParametricCenter());
 
   return true;
@@ -456,13 +456,13 @@ inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontag
 }
 
 /**
- * @brief Compares IDataArray
+ * @brief Compares AbstractDataArray
  * @tparam T
  * @param left
  * @param right
  */
 template <typename T>
-void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize start = 0)
+void CompareDataArrays(const AbstractDataArray& left, const AbstractDataArray& right, usize start = 0)
 {
   const auto& oldDataStore = left.template getIDataStoreRefAs<AbstractDataStore<T>>();
   const auto& newDataStore = right.template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -504,7 +504,7 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
 struct CompareArraysFunctor
 {
   template <typename T>
-  void operator()(const IDataArray& left, const IDataArray& right) const
+  void operator()(const AbstractDataArray& left, const AbstractDataArray& right) const
   {
     CompareDataArrays<T>(left, right);
   }
@@ -519,7 +519,7 @@ struct CompareArraysFunctor
  * @param component
  */
 template <typename T>
-void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& right, const usize startTuple = 0, const usize component = 0)
+void CompareDataArraysByComponent(const AbstractDataArray& left, const AbstractDataArray& right, const usize startTuple = 0, const usize component = 0)
 {
   const auto& oldDataStore = left.template getIDataStoreRefAs<AbstractDataStore<T>>();
   const auto& newDataStore = right.template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -698,7 +698,7 @@ void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, 
  * @param computedData
  */
 template <typename T>
-void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborList* computedData)
+void CompareNeighborLists(const AbstractNeighborList* exemplaryData, const AbstractNeighborList* computedData)
 {
   if constexpr(std::is_same_v<T, bool>)
   {
@@ -794,7 +794,7 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
 struct CompareNeighborListsFunctor
 {
   template <typename T>
-  void operator()(const INeighborList* left, const INeighborList* right) const
+  void operator()(const AbstractNeighborList* left, const AbstractNeighborList* right) const
   {
     CompareNeighborLists<T>(left, right);
   }
@@ -893,10 +893,10 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
 }
 
 template <typename T>
-void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
+void CompareArrays(const AbstractArray* generatedArray, const AbstractArray* exemplarArray)
 {
-  const IArray::ArrayType arrayType = generatedArray->getArrayType();
-  const IArray::ArrayType exemplarArrayType = exemplarArray->getArrayType();
+  const AbstractArray::ArrayType arrayType = generatedArray->getArrayType();
+  const AbstractArray::ArrayType exemplarArrayType = exemplarArray->getArrayType();
   if(arrayType != exemplarArrayType)
   {
     std::cout << fmt::format("Generated array {} and exemplar array {} do not have the same array type: {} vs {}. Data Will not be compared.", generatedArray->getName(), exemplarArray->getName(),
@@ -906,10 +906,10 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
   }
 
   DataType type;
-  if(arrayType == IArray::ArrayType::DataArray)
+  if(arrayType == AbstractArray::ArrayType::DataArray)
   {
-    const auto* generatedDataArray = dynamic_cast<const IDataArray*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const IDataArray*>(exemplarArray);
+    const auto* generatedDataArray = dynamic_cast<const AbstractDataArray*>(generatedArray);
+    const auto* exemplarDataArray = dynamic_cast<const AbstractDataArray*>(exemplarArray);
     type = generatedDataArray->getDataType();
     DataType exemplarType = exemplarDataArray->getDataType();
 
@@ -922,10 +922,10 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
     }
     CompareDataArrays<T>(*exemplarDataArray, *generatedDataArray);
   }
-  if(arrayType == IArray::ArrayType::NeighborListArray)
+  if(arrayType == AbstractArray::ArrayType::NeighborListArray)
   {
-    const auto* generatedDataArray = dynamic_cast<const INeighborList*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const INeighborList*>(exemplarArray);
+    const auto* generatedDataArray = dynamic_cast<const AbstractNeighborList*>(generatedArray);
+    const auto* exemplarDataArray = dynamic_cast<const AbstractNeighborList*>(exemplarArray);
     type = generatedDataArray->getDataType();
     DataType exemplarType = exemplarDataArray->getDataType();
     if(type != exemplarType)
@@ -937,7 +937,7 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
     }
     CompareNeighborLists<T>(exemplarDataArray, generatedDataArray);
   }
-  if(arrayType == IArray::ArrayType::StringArray)
+  if(arrayType == AbstractArray::ArrayType::StringArray)
   {
     const auto* generatedDataArray = dynamic_cast<const StringArray*>(generatedArray);
     const auto* exemplarDataArray = dynamic_cast<const StringArray*>(exemplarArray);
@@ -1018,8 +1018,8 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
       }
       case nx::core::BaseGroup::GroupType::HexahedralGeom:
       case nx::core::BaseGroup::GroupType::TetrahedralGeom: {
-        const auto* geomA = dynamic_cast<const INodeGeometry3D*>(parentA);
-        const auto* geomB = dynamic_cast<const INodeGeometry3D*>(parentB);
+        const auto* geomA = dynamic_cast<const AbstractNodeGeometry3D*>(parentA);
+        const auto* geomB = dynamic_cast<const AbstractNodeGeometry3D*>(parentB);
         REQUIRE(geomA != nullptr);
         REQUIRE(geomB != nullptr);
         REQUIRE(geomA->getVertices() != nullptr);
@@ -1041,8 +1041,8 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
       }
       case nx::core::BaseGroup::GroupType::QuadGeom:
       case nx::core::BaseGroup::GroupType::TriangleGeom: {
-        const auto* geomA = dynamic_cast<const INodeGeometry2D*>(parentA);
-        const auto* geomB = dynamic_cast<const INodeGeometry2D*>(parentB);
+        const auto* geomA = dynamic_cast<const AbstractNodeGeometry2D*>(parentA);
+        const auto* geomB = dynamic_cast<const AbstractNodeGeometry2D*>(parentB);
         REQUIRE(geomA != nullptr);
         REQUIRE(geomB != nullptr);
         REQUIRE(geomA->getVertices() != nullptr);
@@ -1105,33 +1105,33 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
         REQUIRE(childrenNamesA[i] == childrenNamesB[i]);
 
         DataPath childPath = parentGroup.createChildPath(childrenNamesA[i]);
-        const DataObject* objectA = dataStructureA.getData(childPath);
-        const DataObject* objectB = dataStructureB.getData(childPath);
+        const AbstractDataObject* objectA = dataStructureA.getData(childPath);
+        const AbstractDataObject* objectB = dataStructureB.getData(childPath);
         REQUIRE(objectA != nullptr);
         REQUIRE(objectB != nullptr);
 
-        const DataObject::Type objectADataObjectType = objectA->getDataObjectType();
+        const AbstractDataObject::Type objectADataObjectType = objectA->getDataObjectType();
         REQUIRE(objectADataObjectType == objectB->getDataObjectType());
 
         switch(objectADataObjectType)
         {
-        case nx::core::DataObject::Type::DynamicListArray: {
+        case nx::core::IDataObject::Type::DynamicListArray: {
           // TODO: ??
           break;
         }
-        case nx::core::DataObject::Type::ScalarData: {
+        case nx::core::IDataObject::Type::ScalarData: {
           // TODO: ??
           std::cout << objectA->getTypeName() << ": " << objectA->getName() << std::endl;
           break;
         }
-        case nx::core::DataObject::Type::AbstractMontage: {
+        case nx::core::IDataObject::Type::AbstractMontage: {
           // TODO: ??
           break;
         }
-        case nx::core::DataObject::Type::IDataArray:
-        case nx::core::DataObject::Type::DataArray: {
-          const auto* dataArrayA = dynamic_cast<const IDataArray*>(objectA);
-          const auto* dataArrayB = dynamic_cast<const IDataArray*>(objectB);
+        case nx::core::IDataObject::Type::AbstractDataArray:
+        case nx::core::IDataObject::Type::DataArray: {
+          const auto* dataArrayA = dynamic_cast<const AbstractDataArray*>(objectA);
+          const auto* dataArrayB = dynamic_cast<const AbstractDataArray*>(objectB);
           REQUIRE(dataArrayA != nullptr);
           REQUIRE(dataArrayB != nullptr);
           REQUIRE(dataArrayA->getDataType() == dataArrayB->getDataType());
@@ -1142,7 +1142,7 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
 
           break;
         }
-        case nx::core::DataObject::Type::StringArray: {
+        case nx::core::IDataObject::Type::StringArray: {
           const auto* stringArrayA = dynamic_cast<const StringArray*>(objectA);
           const auto* stringArrayB = dynamic_cast<const StringArray*>(objectB);
           REQUIRE(stringArrayA != nullptr);
@@ -1150,10 +1150,10 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
           CompareStringArrays(*stringArrayA, *stringArrayB);
           break;
         }
-        case nx::core::DataObject::Type::INeighborList:
-        case nx::core::DataObject::Type::NeighborList: {
-          const auto* neighborlistA = dynamic_cast<const INeighborList*>(objectA);
-          const auto* neighborlistB = dynamic_cast<const INeighborList*>(objectB);
+        case nx::core::IDataObject::Type::AbstractNeighborList:
+        case nx::core::IDataObject::Type::NeighborList: {
+          const auto* neighborlistA = dynamic_cast<const AbstractNeighborList*>(objectA);
+          const auto* neighborlistB = dynamic_cast<const AbstractNeighborList*>(objectB);
           REQUIRE(neighborlistA != nullptr);
           REQUIRE(neighborlistB != nullptr);
           // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
@@ -1165,19 +1165,19 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
 
           break;
         }
-        case nx::core::DataObject::Type::VertexGeom:
-        case nx::core::DataObject::Type::EdgeGeom:
-        case nx::core::DataObject::Type::RectGridGeom:
-        case nx::core::DataObject::Type::ImageGeom:
-        case nx::core::DataObject::Type::INodeGeometry2D:
-        case nx::core::DataObject::Type::QuadGeom:
-        case nx::core::DataObject::Type::TriangleGeom:
-        case nx::core::DataObject::Type::INodeGeometry3D:
-        case nx::core::DataObject::Type::HexahedralGeom:
-        case nx::core::DataObject::Type::TetrahedralGeom:
-        case nx::core::DataObject::Type::AttributeMatrix:
-        case nx::core::DataObject::Type::DataGroup:
-        case nx::core::DataObject::Type::BaseGroup: {
+        case nx::core::IDataObject::Type::VertexGeom:
+        case nx::core::IDataObject::Type::EdgeGeom:
+        case nx::core::IDataObject::Type::RectGridGeom:
+        case nx::core::IDataObject::Type::ImageGeom:
+        case nx::core::IDataObject::Type::AbstractNodeGeometry2D:
+        case nx::core::IDataObject::Type::QuadGeom:
+        case nx::core::IDataObject::Type::TriangleGeom:
+        case nx::core::IDataObject::Type::AbstractNodeGeometry3D:
+        case nx::core::IDataObject::Type::HexahedralGeom:
+        case nx::core::IDataObject::Type::TetrahedralGeom:
+        case nx::core::IDataObject::Type::AttributeMatrix:
+        case nx::core::IDataObject::Type::DataGroup:
+        case nx::core::IDataObject::Type::BaseGroup: {
           CompareDataStructures(dataStructureA, dataStructureB, childPath);
           break;
         }
@@ -1206,11 +1206,11 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
  * @param tupleShape  The tuple dimensions of the data. If you want to mimic an image then your shape should be {height, width} slowest to fastest dimension
  * @param componentShape The component dimensions of the data. If you want to mimic an RGB image then your component would be {3},
  * if you want to store a 3Rx4C matrix then it would be {3, 4}.
- * @param parentId The DataObject that will own the DataArray instance.
+ * @param parentId The AbstractDataObject that will own the DataArray instance.
  * @return
  */
 template <typename T>
-DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, DataObject::IdType parentId = {})
+DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, AbstractDataObject::IdType parentId = {})
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
@@ -1221,7 +1221,7 @@ DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::strin
 }
 
 template <typename T>
-NeighborList<T>* CreateTestNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, DataObject::IdType parentId)
+NeighborList<T>* CreateTestNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, AbstractDataObject::IdType parentId)
 {
   using NeighborListType = NeighborList<T>;
   auto* neighborList = NeighborListType::Create(dataStructure, name, {numTuples}, parentId);
@@ -1368,8 +1368,8 @@ inline void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exempl
     DataPath computedDataArrayPath = computedAttributeMatrix.createChildPath(exemplarArrayPath.second->getName());
     INFO(fmt::format("Exemplar Array:'{}'  Computed Array: '{}'", exemplarDataArrayPath.toString(), computedDataArrayPath.toString()));
 
-    const auto* exemplarArrayPtr = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
-    const auto* computedArrayPtr = computedDataStructure.getDataAs<IArray>(computedDataArrayPath);
+    const auto* exemplarArrayPtr = exemplarDataStructure.getDataAs<AbstractArray>(exemplarDataArrayPath);
+    const auto* computedArrayPtr = computedDataStructure.getDataAs<AbstractArray>(computedDataArrayPath);
 
     // Check to see if there is something to compare against in the exemplar file.
     if(nullptr == exemplarArrayPtr && !allMustMatch)
@@ -1388,14 +1388,14 @@ inline void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exempl
     }
 
     DataType type = DataType::int8;
-    const IArray::ArrayType arrayType = computedArrayPtr->getArrayType();
-    if(arrayType == IArray::ArrayType::DataArray)
+    const AbstractArray::ArrayType arrayType = computedArrayPtr->getArrayType();
+    if(arrayType == AbstractArray::ArrayType::DataArray)
     {
-      type = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath).getDataType();
+      type = exemplarDataStructure.getDataRefAs<AbstractDataArray>(exemplarDataArrayPath).getDataType();
     }
-    if(arrayType == IArray::ArrayType::NeighborListArray)
+    if(arrayType == AbstractArray::ArrayType::NeighborListArray)
     {
-      type = exemplarDataStructure.getDataRefAs<INeighborList>(exemplarDataArrayPath).getDataType();
+      type = exemplarDataStructure.getDataRefAs<AbstractNeighborList>(exemplarDataArrayPath).getDataType();
     }
 
     switch(type)
@@ -1465,12 +1465,12 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
 
   for(const auto& cellArrayPath : selectedCellArrays)
   {
-    const auto* generatedArray = dataStructure.getDataAs<IArray>(cellArrayPath);
+    const auto* generatedArray = dataStructure.getDataAs<AbstractArray>(cellArrayPath);
     // Now generate the path to the exemplar data set in the exemplar data structure.
     std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
     generatedPathVector[0] = exemplarDataContainerName;
     DataPath exemplarDataArrayPath(generatedPathVector);
-    const auto* exemplarArray = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
+    const auto* exemplarArray = exemplarDataStructure.getDataAs<AbstractArray>(exemplarDataArrayPath);
 
     // Check to see if there is something to compare against in the exemplar file.
     if(nullptr == exemplarArray)
@@ -1479,14 +1479,14 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
     }
 
     DataType type = DataType::int8;
-    const IArray::ArrayType arrayType = generatedArray->getArrayType();
-    if(arrayType == IArray::ArrayType::DataArray)
+    const AbstractArray::ArrayType arrayType = generatedArray->getArrayType();
+    if(arrayType == AbstractArray::ArrayType::DataArray)
     {
-      type = dataStructure.getDataRefAs<IDataArray>(cellArrayPath).getDataType();
+      type = dataStructure.getDataRefAs<AbstractDataArray>(cellArrayPath).getDataType();
     }
-    if(arrayType == IArray::ArrayType::NeighborListArray)
+    if(arrayType == AbstractArray::ArrayType::NeighborListArray)
     {
-      type = dataStructure.getDataRefAs<INeighborList>(cellArrayPath).getDataType();
+      type = dataStructure.getDataRefAs<AbstractNeighborList>(cellArrayPath).getDataType();
     }
 
     switch(type)
@@ -1654,7 +1654,7 @@ inline DataStructure CreateComplexMultiLevelDataGraph()
 
 inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, const std::vector<DataPath>& ignoredPaths = {})
 {
-  std::optional<std::vector<DataPath>> amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, DataObject::Type::AttributeMatrix);
+  std::optional<std::vector<DataPath>> amPathsOpt = GetAllChildDataPathsRecursive(dataStructure, {}, IDataObject::Type::AttributeMatrix);
   REQUIRE(amPathsOpt.has_value());
   for(const auto& amPath : amPathsOpt.value())
   {
@@ -1663,7 +1663,7 @@ inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, cons
     REQUIRE(daPathsOpt.has_value());
     for(const auto& daPath : daPathsOpt.value())
     {
-      const auto& arr = dataStructure.getDataAs<IArray>(daPath);
+      const auto& arr = dataStructure.getDataAs<AbstractArray>(daPath);
       REQUIRE(attrMatrix.getShape() == arr->getTupleShape());
     }
   }

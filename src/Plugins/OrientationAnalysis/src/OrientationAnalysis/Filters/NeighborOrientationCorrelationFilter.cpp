@@ -76,7 +76,7 @@ Parameters NeighborOrientationCorrelationFilter::parameters() const
                                                           DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypes{}));
 
   return params;
 }
@@ -122,7 +122,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   // collect the rest of the geometry's arrays that aren't ignored to check the tuple count
   DataPath parentPath = pConfidenceIndexArrayPathValue.getParent();
   const auto& parent = dataStructure.getDataRefAs<BaseGroup>(parentPath);
-  auto childArrays = parent.findAllChildrenOfType<IDataArray>();
+  auto childArrays = parent.findAllChildrenOfType<AbstractDataArray>();
   for(const auto& childArray : childArrays)
   {
     bool ignore = false;

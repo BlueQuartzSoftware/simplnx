@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry3D.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 namespace nx::core
@@ -9,19 +9,19 @@ namespace nx::core
  * @class HexahedralGeom
  * @brief
  */
-class SIMPLNX_EXPORT HexahedralGeom : public INodeGeometry3D
+class SIMPLNX_EXPORT HexahedralGeom : public AbstractNodeGeometry3D
 {
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 4;
-  static inline constexpr usize k_NumVerts = 8;
-  static inline constexpr StringLiteral k_VoxelSizes = "Hex Volumes";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Hex Containing Vertices";
-  static inline constexpr StringLiteral k_EltNeighbors = "Hex Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Hex Centroids";
-  static inline constexpr StringLiteral k_TypeName = "HexahedralGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 4;
+  static constexpr usize k_NumVerts = 8;
+  static constexpr StringLiteral k_VoxelSizes = "Hex Volumes";
+  static constexpr StringLiteral k_EltsContainingVert = "Hex Containing Vertices";
+  static constexpr StringLiteral k_EltNeighbors = "Hex Neighbors";
+  static constexpr StringLiteral k_EltCentroids = "Hex Centroids";
+  static constexpr StringLiteral k_TypeName = "HexahedralGeom";
 
   /**
    * @brief
@@ -63,13 +63,13 @@ public:
    * @brief Returns the type of geometry.
    * @return
    */
-  IGeometry::Type getGeomType() const override;
+  AbstractGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override;
+  AbstractDataObject::Type getDataObjectType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
@@ -78,22 +78,22 @@ public:
   GroupType getGroupType() const override;
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
+   * @brief Returns typename of the AbstractDataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override;
 
   /**
    * @brief
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* shallowCopy() override;
+  AbstractDataObject* shallowCopy() override;
 
   /**
    * @brief
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    *

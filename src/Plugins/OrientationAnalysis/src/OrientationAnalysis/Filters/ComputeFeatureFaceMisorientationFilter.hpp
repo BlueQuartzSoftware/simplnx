@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @brief This filter will generate a 3 component vector for each Triangle in a Triangle Geometry that is the axis-angle of the misorientation associated with the Features that lie on either side of
  * the Triangle. The axis is normalized, so if the magnitude of the vector is viewed, it will be the misorientation angle in degrees.
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeFeatureFaceMisorientationFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeFeatureFaceMisorientationFilter : public AbstractFilter
 {
 public:
   ComputeFeatureFaceMisorientationFilter() = default;

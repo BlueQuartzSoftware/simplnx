@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeFeatureReferenceCAxisMisorientationsFilter
  * @brief This filter calculates the misorientation angle between the C-axis of each Cell within a Feature and the average C-axis for that Feature and stores that value for each Cell.
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceCAxisMisorientationsFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeFeatureReferenceCAxisMisorientationsFilter : public AbstractFilter
 {
 public:
   ComputeFeatureReferenceCAxisMisorientationsFilter() = default;

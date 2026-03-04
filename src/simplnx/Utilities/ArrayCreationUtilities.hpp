@@ -38,9 +38,9 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
 {
   auto parentPath = path.getParent();
 
-  std::optional<DataObject::IdType> dataObjectId;
+  std::optional<AbstractDataObject::IdType> dataObjectId;
 
-  DataObject* parentObjectPtr = nullptr;
+  AbstractDataObject* parentObjectPtr = nullptr;
   if(parentPath.getLength() != 0)
   {
     parentObjectPtr = dataStructure.getData(parentPath);
@@ -121,7 +121,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     {
       return MakeErrorResult(-267, fmt::format("CreateArray: Parent object '{}' does not exist", parentPath.toString()));
     }
-    if(parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    if(parentObjectPtr->getDataObjectType() == IDataObject::Type::AttributeMatrix)
     {
       auto* attrMatrixPtr = dynamic_cast<AttributeMatrix*>(parentObjectPtr);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrixPtr->getShape(), " x "));

@@ -1,7 +1,7 @@
 #include "TriangleCentroid.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/Math/MatrixMath.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"

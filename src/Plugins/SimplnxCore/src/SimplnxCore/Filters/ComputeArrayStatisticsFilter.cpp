@@ -50,7 +50,7 @@ OutputActions CreateCompatibleArrays(const DataStructure& dataStructure, const A
   auto computeByIndexValue = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key);
   auto standardizeDataValue = filterArgs.value<bool>(ComputeArrayStatisticsFilter::k_StandardizeData_Key);
   auto inputArrayPath = filterArgs.value<DataPath>(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key);
-  auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
+  auto* inputArray = dataStructure.getDataAs<AbstractDataArray>(inputArrayPath);
   auto destinationAttributeMatrixValue = filterArgs.value<DataPath>(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key);
   DataType dataType = inputArray->getDataType();
 
@@ -344,7 +344,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   std::vector<DataPath> inputDataArrayPaths;
 
-  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  const auto* inputArrayPtr = dataStructure.getDataAs<AbstractDataArray>(pSelectedArrayPathValue);
 
   if(inputArrayPtr == nullptr)
   {
@@ -413,7 +413,7 @@ IFilter::PreflightResult ComputeArrayStatisticsFilter::preflightImpl(const DataS
 
   if(pUseMaskValue)
   {
-    const auto* maskPtr = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
+    const auto* maskPtr = dataStructure.getDataAs<AbstractDataArray>(pMaskArrayPathValue);
     if(maskPtr == nullptr)
     {
       return MakePreflightErrorResult(-57205, fmt::format("Could not find mask array at path '{}' ", pMaskArrayPathValue.toString()));

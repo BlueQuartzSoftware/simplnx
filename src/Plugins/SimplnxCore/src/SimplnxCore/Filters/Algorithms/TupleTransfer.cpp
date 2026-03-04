@@ -5,7 +5,7 @@ namespace nx::core
 void AddTupleTransferInstance(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& createdDataPath,
                               std::vector<std::shared_ptr<AbstractTupleTransfer>>& tupleTransferFunctions)
 {
-  auto* inputDataArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
+  auto* inputDataArray = dataStructure.getDataAs<AbstractDataArray>(selectedDataPath);
 
   switch(inputDataArray->getDataType())
   {
@@ -59,7 +59,7 @@ void AddTupleTransferInstance(DataStructure& dataStructure, const DataPath& sele
 void AddFeatureTupleTransferInstance(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& createdDataPath, const DataPath& featureIdsArrayPath,
                                      std::vector<std::shared_ptr<AbstractTupleTransfer>>& tupleTransferFunctions)
 {
-  auto* inputDataArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
+  auto* inputDataArray = dataStructure.getDataAs<AbstractDataArray>(selectedDataPath);
 
   switch(inputDataArray->getDataType())
   {

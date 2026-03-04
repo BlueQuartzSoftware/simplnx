@@ -2,7 +2,7 @@
 
 using namespace nx::core;
 
-DataRemovedMessage::DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& name)
+DataRemovedMessage::DataRemovedMessage(const DataStructure* dataStructure, AbstractDataObject::IdType identifier, const std::string& name)
 : AbstractDataStructureMessage(dataStructure)
 , m_Name(name)
 , m_Id(identifier)
@@ -30,7 +30,7 @@ AbstractDataStructureMessage::MessageType DataRemovedMessage::getMsgType() const
   return MsgType;
 }
 
-DataObject::IdType DataRemovedMessage::getId() const
+AbstractDataObject::IdType DataRemovedMessage::getId() const
 {
   return m_Id;
 }

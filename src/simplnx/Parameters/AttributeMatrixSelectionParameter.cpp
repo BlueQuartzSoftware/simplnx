@@ -87,7 +87,7 @@ Result<> AttributeMatrixSelectionParameter::validatePath(const DataStructure& da
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
 
-  const DataObject* dataObject = dataStructure.getData(value);
+  const AbstractDataObject* dataObject = dataStructure.getData(value);
   if(dataObject == nullptr)
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
@@ -105,7 +105,7 @@ Result<> AttributeMatrixSelectionParameter::validatePath(const DataStructure& da
 Result<std::any> AttributeMatrixSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
+  AbstractDataObject* object = dataStructure.getData(path);
   return {{object}};
 }
 

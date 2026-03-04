@@ -25,7 +25,7 @@ public:
   Mutability mutability() const final;
 
   /**
-   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
+   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived AbstractDataObject in the std::any.
    * Returns any warnings/errors.
    * @param dataStructure
    * @param value

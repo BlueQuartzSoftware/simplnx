@@ -10,7 +10,7 @@ namespace
 struct RemoveComponentsFunctor
 {
   template <class ScalarType>
-  void operator()(IDataArray* originalArray, IDataArray* resizedArray, usize componentIndexToRemove) // Due to logic structure originalArray cannot be const
+  void operator()(AbstractDataArray* originalArray, AbstractDataArray* resizedArray, usize componentIndexToRemove) // Due to logic structure originalArray cannot be const
   {
     const auto& originalStoreRef = originalArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
     auto& resizedStoreRef = resizedArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
@@ -40,7 +40,7 @@ struct RemoveComponentsFunctor
 struct ExtractComponentsFunctor
 {
   template <class ScalarType>
-  void operator()(IDataArray* inputArray, IDataArray* extractedCompArray, usize componentIndexToExtract) // Due to logic structure inputArray cannot be const
+  void operator()(AbstractDataArray* inputArray, AbstractDataArray* extractedCompArray, usize componentIndexToExtract) // Due to logic structure inputArray cannot be const
   {
     const auto& inputStoreRef = inputArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
     auto& extractedStoreRef = extractedCompArray->template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
@@ -90,21 +90,21 @@ Result<> ExtractComponentAsArray::operator()()
   const bool removeComponentsFromArrayBool = m_InputValues->RemoveComponentsFromArray;
   const auto compToRemoveNum = static_cast<usize>(abs(m_InputValues->CompNumber));
   // this will be the original array if components are not being removed, else it is resized array
-  auto* baseArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath);
+  auto* baseArrayPtr = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->BaseArrayPath);
   m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Extracting Component"));
 
   if((!removeComponentsFromArrayBool) && moveComponentsToNewArrayBool)
   {
-    ExecuteDataFunction(ExtractComponentsFunctor{}, baseArrayPtr->getDataType(), baseArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath), compToRemoveNum);
+    ExecuteDataFunction(ExtractComponentsFunctor{}, baseArrayPtr->getDataType(), baseArrayPtr, m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->NewArrayPath), compToRemoveNum);
     return {};
   }
   // will not exist if remove components is not occurring, hence the early bailout ^
-  auto* tempArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->TempArrayPath); // will not exist if remove components is not true, hence the early bailout ^
+  auto* tempArrayPtr = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->TempArrayPath); // will not exist if remove components is not true, hence the early bailout ^
 
   if(moveComponentsToNewArrayBool)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Moving Component"));
-    auto* extractedCompArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath);
+    auto* extractedCompArrayPtr = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->NewArrayPath);
     ExecuteDataFunction(ExtractComponentsFunctor{}, tempArrayPtr->getDataType(), tempArrayPtr, extractedCompArrayPtr, compToRemoveNum);
   }
 

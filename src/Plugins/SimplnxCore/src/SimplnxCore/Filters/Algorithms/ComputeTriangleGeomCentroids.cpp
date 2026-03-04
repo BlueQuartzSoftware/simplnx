@@ -2,7 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 
@@ -30,14 +30,14 @@ const std::atomic_bool& ComputeTriangleGeomCentroids::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeTriangleGeomCentroids::operator()()
 {
-  using MeshIndexType = IGeometry::MeshIndexType;
-  using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
-  using SharedFaceListType = AbstractDataStore<IGeometry::SharedFaceList::value_type>;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  using SharedVertexListType = AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>;
+  using SharedFaceListType = AbstractDataStore<AbstractGeometry::SharedFaceList::value_type>;
 
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
   const SharedFaceListType& triangles = triangleGeom.getFaces()->getDataStoreRef();
-  IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
+  AbstractGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
   const BoundingBox3Df boundingBox = triangleGeom.getBoundingBox();
 
   // Get the faceLabels array and then get the min and max values

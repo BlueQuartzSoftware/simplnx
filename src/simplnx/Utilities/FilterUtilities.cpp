@@ -64,7 +64,7 @@ IFilter::PreflightResult NeighborListRemovalPreflightCode(const DataStructure& d
   std::string ss =
       fmt::format("This filter will REMOVE all arrays of type NeighborList from the feature Attribute Matrix '{}'.  These arrays are:\n", featureIdsPath.toString(), featureGroupDataPath.toString());
 
-  auto result = nx::core::GetAllChildDataPaths(dataStructure, featureGroupDataPath, DataObject::Type::NeighborList);
+  auto result = nx::core::GetAllChildDataPaths(dataStructure, featureGroupDataPath, IDataObject::Type::NeighborList);
   if(!result.has_value())
   {
     return {nonstd::make_unexpected(

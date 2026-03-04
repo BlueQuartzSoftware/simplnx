@@ -91,8 +91,8 @@ void CompareImageGeometries(const DataStructure& dataStructure, const ImageGeom&
 
   const DataPath exemplarPath({exemplaryGeom.getName(), k_Cell_Data, exemplaryDataName});
   const DataPath calculatedPath({calculatedGeom.getName(), k_Cell_Data, "Data"});
-  const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-  const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+  const auto& exemplarData = dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath);
+  const auto& calculatedData = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath);
   UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
 }
 
@@ -132,8 +132,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Node", "
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_TranslationNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+    const auto& exemplarData = dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath);
+    const auto& calculatedData = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
   nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_translation.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -191,8 +191,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Node", "[Si
   {
     const DataPath exemplarPath({exemplaryGeomName, apply_transformation_to_geometry::k_SharedVertexListName});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+    const auto& exemplarData = dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath);
+    const auto& calculatedData = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
   nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_rotation.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -239,8 +239,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Node", "[Simpl
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_ScaleNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+    const auto& exemplarData = dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath);
+    const auto& calculatedData = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
   nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_scale.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -344,8 +344,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Node", "[Simp
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_ManualNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+    const auto& exemplarData = dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath);
+    const auto& calculatedData = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
   nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_manual.dream3d", unit_test::k_BinaryTestOutputDir));
@@ -394,8 +394,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Node", "
   {
     const DataPath exemplarPath({apply_transformation_to_geometry::k_PrecomputedNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
     const DataPath calculatedPath({apply_transformation_to_geometry::k_InputNodeGeometryName, apply_transformation_to_geometry::k_SharedVertexListName});
-    const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-    const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+    const auto& exemplarData = dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath);
+    const auto& calculatedData = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath);
     UnitTest::CompareDataArrays<float32>(exemplarData, calculatedData);
   }
   nx::core::HDF5::FileIO fileWriter = nx::core::HDF5::FileIO::WriteFile(fmt::format("{}/ApplyTransformationToGeometryFilter_precomputed.dream3d", unit_test::k_BinaryTestOutputDir));

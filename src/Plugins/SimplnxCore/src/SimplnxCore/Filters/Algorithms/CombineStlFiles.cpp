@@ -164,8 +164,8 @@ Result<> CombineStlFiles::operator()()
   usize vertexOffset = 0;
   usize triCounter = 0;
   usize faceNormalsOffset = 0;
-  INodeGeometry2D::SharedFaceList& triangles = combinedGeom.getFacesRef();
-  INodeGeometry0D::SharedVertexList& vertices = combinedGeom.getVerticesRef();
+  AbstractNodeGeometry2D::SharedFaceList& triangles = combinedGeom.getFacesRef();
+  AbstractNodeGeometry0D::SharedVertexList& vertices = combinedGeom.getVerticesRef();
   ParallelTaskAlgorithm taskRunner;
   int32 fileIndex = 1;
   usize faceLabelOffset = 0;
@@ -181,7 +181,7 @@ Result<> CombineStlFiles::operator()()
       return {};
     }
 
-    INodeGeometry2D::SharedFaceList& currentSharedFaceList = currentGeometry->getFacesRef();
+    AbstractNodeGeometry2D::SharedFaceList& currentSharedFaceList = currentGeometry->getFacesRef();
     usize currentGeomNumTriangles = currentGeometry->getNumberOfFaces();
     usize currentGeomNumVertices = currentGeometry->getNumberOfVertices();
     {
@@ -212,7 +212,7 @@ Result<> CombineStlFiles::operator()()
     }
     vertexLabelOffset += currentGeomNumVertices;
 
-    INodeGeometry0D::SharedVertexList& curVertices = currentGeometry->getVerticesRef();
+    AbstractNodeGeometry0D::SharedVertexList& curVertices = currentGeometry->getVerticesRef();
     auto& curFaceNormals = tempDataStructure.getDataRefAs<Float64Array>(currentGeometry->getFaceAttributeMatrixDataPath().createChildPath("Face Normals"));
 
     taskRunner.execute(CombineStlImpl{triangles, vertices, combinedFaceNormals, currentSharedFaceList, curVertices, curFaceNormals, triOffset, vertexOffset, faceNormalsOffset});

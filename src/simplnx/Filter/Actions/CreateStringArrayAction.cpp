@@ -11,7 +11,7 @@ using namespace nx::core;
 namespace nx::core
 {
 CreateStringArrayAction::CreateStringArrayAction(const std::vector<usize>& tDims, const DataPath& path, const std::string& initializeValue)
-: IDataCreationAction(path)
+: AbstractDataCreationAction(path)
 , m_Dims(tDims)
 , m_InitializeValue(initializeValue)
 {
@@ -24,9 +24,9 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
   static constexpr StringLiteral prefix = "CreateStringArrayAction: ";
   auto parentPath = path().getParent();
 
-  std::optional<DataObject::IdType> dataObjectId;
+  std::optional<AbstractDataObject::IdType> dataObjectId;
 
-  DataObject* parentObject = nullptr;
+  AbstractDataObject* parentObject = nullptr;
   if(parentPath.getLength() != 0)
   {
     parentObject = dataStructure.getData(parentPath);
@@ -51,7 +51,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
   StringArray* array = StringArray::CreateWithValues(dataStructure, name, m_Dims, values, dataObjectId);
   if(array == nullptr)
   {
-    if(parentObject != nullptr && parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
+    if(parentObject != nullptr && parentObject->getDataObjectType() == IDataObject::Type::AttributeMatrix)
     {
       auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
       std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));

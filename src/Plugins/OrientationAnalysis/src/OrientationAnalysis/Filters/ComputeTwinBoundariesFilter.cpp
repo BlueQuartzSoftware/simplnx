@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ComputeTwinBoundaries.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -117,7 +117,7 @@ IFilter::PreflightResult ComputeTwinBoundariesFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto* faceLabels = dataStructure.getDataAs<IDataArray>(pFaceLabelsArrayPath);
+  const auto* faceLabels = dataStructure.getDataAs<AbstractDataArray>(pFaceLabelsArrayPath);
   if(faceLabels == nullptr)
   {
     return MakePreflightErrorResult(-94730, "Input Face Labels Array must be valid.");

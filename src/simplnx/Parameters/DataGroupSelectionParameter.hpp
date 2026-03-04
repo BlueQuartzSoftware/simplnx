@@ -67,7 +67,7 @@ public:
   ValueType defaultPath() const;
 
   /**
-   * @brief Returns the list of allowed DataObject types.
+   * @brief Returns the list of allowed AbstractDataObject types.
    * @return
    */
   const AllowedTypes& allowedTypes() const;
@@ -89,7 +89,7 @@ public:
   Result<> validatePath(const DataStructure& dataStructure, const DataPath& value) const;
 
   /**
-   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
+   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived AbstractDataObject in the std::any.
    * Returns any warnings/errors.
    * @param dataStructure
    * @param value

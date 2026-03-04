@@ -77,7 +77,7 @@ IFilter::PreflightResult IdentifyDuplicateVerticesFilter::preflightImpl(const Da
                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pGeomPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_InputGeomPath_Key);
-  const auto* geom = dataStructure.getDataAs<INodeGeometry0D>(pGeomPath);
+  const auto* geom = dataStructure.getDataAs<AbstractNodeGeometry0D>(pGeomPath);
   if(geom == nullptr || geom->getVertices() == nullptr)
   {
     return MakePreflightErrorResult(-62910, "Input Geometry must contain a SharedVertexList.");

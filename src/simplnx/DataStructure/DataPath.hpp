@@ -13,8 +13,8 @@ namespace nx::core
 /**
  * @class DataPath
  * @brief The DataPath class is designed to store a path through the
- * DataStructure to reach a specific DataObject. There may be multiple paths
- * to a DataObject, but by providing a path, it is possible to extrapolate
+ * DataStructure to reach a specific AbstractDataObject. There may be multiple paths
+ * to a AbstractDataObject, but by providing a path, it is possible to extrapolate
  * which set of siblings a user may be interested in or iterate over a data
  * group with common children names.
  */
@@ -35,7 +35,7 @@ public:
   DataPath();
 
   /**
-   * @brief Creates a DataPath using a vector of DataObject names.
+   * @brief Creates a DataPath using a vector of AbstractDataObject names.
    * @param path
    */
   DataPath(std::vector<std::string> path);

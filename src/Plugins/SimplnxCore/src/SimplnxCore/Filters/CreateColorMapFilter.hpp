@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -13,7 +13,7 @@ namespace nx::core
  * Each element of the input array is normalized and converted to a color based on where
  * the value falls in the spectrum of the selected color preset.
  */
-class SIMPLNXCORE_EXPORT CreateColorMapFilter : public IFilter
+class SIMPLNXCORE_EXPORT CreateColorMapFilter : public AbstractFilter
 {
 public:
   CreateColorMapFilter() = default;

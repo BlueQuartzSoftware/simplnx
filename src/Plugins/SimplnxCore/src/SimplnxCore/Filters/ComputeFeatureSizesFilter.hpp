@@ -4,8 +4,8 @@
 
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -13,7 +13,7 @@ namespace nx::core
  * @class ComputeFeatureSizesFilter
  * @brief
  */
-class SIMPLNXCORE_EXPORT ComputeFeatureSizesFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeFeatureSizesFilter : public AbstractFilter
 {
 public:
   ComputeFeatureSizesFilter() = default;

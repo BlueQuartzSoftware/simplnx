@@ -25,7 +25,7 @@ DataGroup::DataGroup(DataGroup&& other)
 
 DataGroup::~DataGroup() = default;
 
-DataObject::Type DataGroup::getDataObjectType() const
+AbstractDataObject::Type DataGroup::getDataObjectType() const
 {
   return Type::DataGroup;
 }
@@ -55,7 +55,7 @@ DataGroup* DataGroup::Import(DataStructure& dataStructure, std::string name, IdT
   return data.get();
 }
 
-std::shared_ptr<DataObject> DataGroup::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> DataGroup::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure
@@ -69,7 +69,7 @@ std::shared_ptr<DataObject> DataGroup::deepCopy(const DataPath& copyPath)
   return nullptr;
 }
 
-DataObject* DataGroup::shallowCopy()
+AbstractDataObject* DataGroup::shallowCopy()
 {
   return new DataGroup(*this);
 }
@@ -79,7 +79,7 @@ std::string DataGroup::getTypeName() const
   return k_TypeName;
 }
 
-bool DataGroup::canInsert(const DataObject* obj) const
+bool DataGroup::canInsert(const AbstractDataObject* obj) const
 {
   return BaseGroup::canInsert(obj);
 }

@@ -19,7 +19,7 @@ constexpr int32 k_InconsistentTupleCount = -2364;
 struct FindThresholdFunctor
 {
   template <class T>
-  void operator()(const IDataArray* inputObject, const Float32AbstractDataStore& gradMag, BoolAbstractDataStore& maskStore)
+  void operator()(const AbstractDataArray* inputObject, const Float32AbstractDataStore& gradMag, BoolAbstractDataStore& maskStore)
   {
     const auto& inputData = inputObject->template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize numTuples = inputData.getNumberOfTuples();
@@ -113,7 +113,7 @@ IFilter::PreflightResult RobustAutomaticThresholdFilter::preflightImpl(const Dat
 
   std::vector<DataPath> dataPaths;
 
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+  const auto& inputArray = dataStructure.getDataRefAs<AbstractDataArray>(inputArrayPath);
   dataPaths.push_back(inputArrayPath);
   dataPaths.push_back(gradientArrayPath);
 
@@ -142,7 +142,7 @@ Result<> RobustAutomaticThresholdFilter::executeImpl(DataStructure& dataStructur
   auto gradientArrayPath = filterArgs.value<DataPath>(k_GradientMagnitudePath_Key);
   auto createdMaskName = filterArgs.value<std::string>(k_ArrayCreationName_Key);
 
-  const auto* inputArray = dataStructure.getDataAs<IDataArray>(inputArrayPath);
+  const auto* inputArray = dataStructure.getDataAs<AbstractDataArray>(inputArrayPath);
   const auto& gradientStore = dataStructure.getDataAs<Float32Array>(gradientArrayPath)->getDataStoreRef();
   auto& maskStore = dataStructure.getDataAs<BoolArray>(inputArrayPath.replaceName(createdMaskName))->getDataStoreRef();
 

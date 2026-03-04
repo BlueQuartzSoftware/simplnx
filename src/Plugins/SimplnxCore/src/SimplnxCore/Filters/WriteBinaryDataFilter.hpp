@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class WriteBinaryDataFilter
  * @brief This filter will export data as binary (either big or little endian).
  */
-class SIMPLNXCORE_EXPORT WriteBinaryDataFilter : public IFilter
+class SIMPLNXCORE_EXPORT WriteBinaryDataFilter : public AbstractFilter
 {
 public:
   WriteBinaryDataFilter() = default;

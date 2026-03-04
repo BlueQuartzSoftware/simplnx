@@ -107,7 +107,7 @@ public:
 
   template <typename T>
   HyperGridBitMap3D(const std::atomic_bool& shouldCancel, MessageHelper& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon,
-                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+                    const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask)
   : HyperGridBitMap()
   {
     ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
@@ -319,7 +319,7 @@ public:
 
   template <typename T>
   HyperGridBitMap2D(const std::atomic_bool& shouldCancel, MessageHelper& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon,
-                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+                    const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask)
   : HyperGridBitMap()
   {
     ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
@@ -705,7 +705,7 @@ class GDCF
 {
 public:
   GDCF() = delete;
-  GDCF(const std::atomic_bool& shouldCancel, MessageHelper& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+  GDCF(const std::atomic_bool& shouldCancel, MessageHelper& messageHelper, const AbstractDataStore<T>& inputArray, float32 epsilon, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask,
        ClusterUtilities::DistanceMetric distMetric)
   : hyperGridBitMap(HGBPT(shouldCancel, messageHelper, inputArray, epsilon, mask))
   , m_Epsilon(epsilon)
@@ -1034,7 +1034,7 @@ private:
 };
 
 template <class AlgorithmT, typename T>
-Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, Int32Array& featureIds,
                       MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
 {
   messageHelper.sendMessage("Partitioning Input Data:");
@@ -1066,7 +1066,7 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
 struct DBSCANFunctor
 {
   template <typename T>
-  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+  Result<> operator()(const DBSCANInputValues* inputValues, const AbstractDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, Int32Array& featureIds,
                       MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
@@ -1105,10 +1105,10 @@ Result<> DBSCAN::operator()()
 {
   MessageHelper messageHelper(m_MessageHandler);
 
-  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
+  auto& clusteringArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->ClusteringArrayPath);
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);

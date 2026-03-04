@@ -24,7 +24,7 @@ void sortImportPaths(std::vector<DataPath>& importPaths)
 namespace nx::core
 {
 ImportH5ObjectPathsAction::ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths)
-: IDataCreationAction(DataPath{})
+: AbstractDataCreationAction(DataPath{})
 , m_H5FilePath(importFile)
 , m_Paths(paths)
 {
@@ -45,7 +45,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
     return ConvertResult(std::move(dataStructureResult));
   }
 
-  // Ensure there are no conflicting DataObject ID values
+  // Ensure there are no conflicting AbstractDataObject ID values
   DataStructure importStructure = std::move(dataStructureResult.value());
   importStructure.resetIds(dataStructure.getNextId());
 
@@ -53,7 +53,7 @@ Result<> ImportH5ObjectPathsAction::apply(DataStructure& dataStructure, Mode mod
   std::stringstream errorMessages;
   for(const auto& targetPath : m_Paths)
   {
-    if(dataStructure.getDataAs<DataObject>(targetPath) != nullptr)
+    if(dataStructure.getDataAs<AbstractDataObject>(targetPath) != nullptr)
     {
       return MakeErrorResult(-6203, fmt::format("{}Unable to import DataObject at '{}' because an object already exists there. Consider a rename of existing object.", prefix, targetPath.toString()));
     }

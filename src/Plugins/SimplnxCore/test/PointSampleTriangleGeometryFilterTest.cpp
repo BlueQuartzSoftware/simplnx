@@ -24,7 +24,7 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 
-std::array<float, 6> FindMinMaxCoord(IGeometry::SharedVertexList* vertices, usize numVerts)
+std::array<float, 6> FindMinMaxCoord(AbstractGeometry::SharedVertexList* vertices, usize numVerts)
 {
   std::array<float, 6> minMaxVerts = {std::numeric_limits<float>::max(), std::numeric_limits<float>::min(), std::numeric_limits<float>::max(),
                                       std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), std::numeric_limits<float>::min()};
@@ -73,7 +73,7 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
   UnitTest::LoadPlugins();
 
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceAttributeMatrixName;
+  std::string triangleFaceDataGroupName = AbstractNodeGeometry2D::k_FaceAttributeMatrixName;
   std::string normalsDataArrayName = "FaceNormals";
   std::string triangleAreasName = "Triangle Areas";
   std::string vertexGeometryName = "[Vertex Geometry]";
@@ -179,17 +179,17 @@ TEST_CASE("SimplnxCore::PointSampleTriangleGeometryFilter", "[DREAM3DReview][Poi
 
     VertexGeom& vertGeom = dataStructure.getDataRefAs<VertexGeom>(vertGeometryDataPath);
     usize numVerts = vertGeom.getNumberOfVertices();
-    IGeometry::SharedVertexList* vertices = vertGeom.getVertices();
+    AbstractGeometry::SharedVertexList* vertices = vertGeom.getVertices();
     std::array<float, 6> minMaxVerts = FindMinMaxCoord(vertices, numVerts);
 
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(triangleGeometryPath);
-    IGeometry::SharedVertexList* triVerts = triangleGeom.getVertices();
+    AbstractGeometry::SharedVertexList* triVerts = triangleGeom.getVertices();
     usize triNumVerts = triangleGeom.getNumberOfVertices();
     std::array<float, 6> minMaxTriVerts = FindMinMaxCoord(triVerts, triNumVerts);
 
     // We need to insert this small data set for the XDMF to work correctly.
     DataPath xdmfVertsDataPath = vertGeometryDataPath.createChildPath("Verts");
-    DataObject::IdType parentId = dataStructure.getId(vertGeometryDataPath).value();
+    AbstractDataObject::IdType parentId = dataStructure.getId(vertGeometryDataPath).value();
     ShapeType tupleShape = {vertGeom.getNumberOfVertices()};
     ShapeType componentShape = {1};
     DataArray<int64_t>* vertsArray = DataArray<int64_t>::CreateWithStore<DataStore<int64_t>>(dataStructure, "Verts", tupleShape, componentShape, parentId);

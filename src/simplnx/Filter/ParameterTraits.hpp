@@ -21,8 +21,8 @@ struct ParameterTraits
   template <>                                                                                                                                                                                          \
   struct nx::core::ParameterTraits<type>                                                                                                                                                               \
   {                                                                                                                                                                                                    \
-    static inline constexpr nx::core::StringLiteral name = nameString;                                                                                                                                 \
-    static inline constexpr nx::core::Uuid uuid = *nx::core::Uuid::FromString(uuidString);                                                                                                             \
+    static constexpr nx::core::StringLiteral name = nameString;                                                                                                                                        \
+    static constexpr nx::core::Uuid uuid = *nx::core::Uuid::FromString(uuidString);                                                                                                                    \
   }
 
 #define SIMPLNX_DEF_PARAMETER_TRAITS(type, uuidString) SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(type, #type, uuidString)

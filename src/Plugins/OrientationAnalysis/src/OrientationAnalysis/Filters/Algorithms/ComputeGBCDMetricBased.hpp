@@ -53,9 +53,9 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  static inline constexpr int k_NumberResolutionChoices = 7;
-  static inline constexpr float k_ResolutionChoices[k_NumberResolutionChoices][2] = {{3.0f, 7.0f}, {5.0f, 5.0f}, {5.0f, 7.0f}, {5.0f, 8.0f},
-                                                                                     {6.0f, 7.0f}, {7.0f, 7.0f}, {8.0f, 8.0f}}; // { for misorient., for planes }
+  static constexpr int k_NumberResolutionChoices = 7;
+  static constexpr float k_ResolutionChoices[k_NumberResolutionChoices][2] = {{3.0f, 7.0f}, {5.0f, 5.0f}, {5.0f, 7.0f}, {5.0f, 8.0f},
+                                                                              {6.0f, 7.0f}, {7.0f, 7.0f}, {8.0f, 8.0f}}; // { for misorient., for planes }
 
 private:
   DataStructure& m_DataStructure;

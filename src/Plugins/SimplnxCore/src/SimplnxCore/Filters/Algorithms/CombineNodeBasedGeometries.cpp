@@ -140,37 +140,38 @@ Result<> CombineGeometryElements(DataStructure& ds, NodeGeomType* outputGeomPtr,
 Result<> CombineVertexElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
                                const std::atomic_bool& shouldCancel)
 {
-  auto getVerticesArrayFunc = [](INodeGeometry0D * ptr) -> auto
+  auto getVerticesArrayFunc = [](AbstractNodeGeometry0D * ptr) -> auto
   {
     return ptr->getVertices();
   };
-  auto getVertexAttrMatrixFunc = [](INodeGeometry0D * ptr) -> auto
+  auto getVertexAttrMatrixFunc = [](AbstractNodeGeometry0D * ptr) -> auto
   {
     return ptr->getVertexAttributeMatrix();
   };
 
-  auto* outputGeom0d = ds.getDataAs<INodeGeometry0D>(outputGeomPath);
+  auto* outputGeom0d = ds.getDataAs<AbstractNodeGeometry0D>(outputGeomPath);
 
   // Combine the data
   msgHandler({IFilter::Message::Type::Info, fmt::format("Combining vertex data...")});
-  std::vector<INodeGeometry0D*> inputGeoms(inputGeometryPaths.size());
-  std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&ds](const DataPath& path) { return ds.getDataAs<INodeGeometry0D>(path); });
-  return CombineGeometryElements<INodeGeometry0D>(ds, outputGeom0d, inputGeoms, getVerticesArrayFunc, INodeGeometry0D::k_SharedVertexListName, getVertexAttrMatrixFunc, msgHandler, shouldCancel);
+  std::vector<AbstractNodeGeometry0D*> inputGeoms(inputGeometryPaths.size());
+  std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&ds](const DataPath& path) { return ds.getDataAs<AbstractNodeGeometry0D>(path); });
+  return CombineGeometryElements<AbstractNodeGeometry0D>(ds, outputGeom0d, inputGeoms, getVerticesArrayFunc, AbstractNodeGeometry0D::k_SharedVertexListName, getVertexAttrMatrixFunc, msgHandler,
+                                                         shouldCancel);
 }
 
 Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
                              const std::atomic_bool& shouldCancel)
 {
-  auto getEdgesArrayFunc = [](INodeGeometry1D * ptr) -> auto
+  auto getEdgesArrayFunc = [](AbstractNodeGeometry1D * ptr) -> auto
   {
     return ptr->getEdges();
   };
-  auto getEdgeAttrMatrixFunc = [](INodeGeometry1D * ptr) -> auto
+  auto getEdgeAttrMatrixFunc = [](AbstractNodeGeometry1D * ptr) -> auto
   {
     return ptr->getEdgeAttributeMatrix();
   };
 
-  auto* outputGeom1d = ds.getDataAs<INodeGeometry1D>(outputGeomPath);
+  auto* outputGeom1d = ds.getDataAs<AbstractNodeGeometry1D>(outputGeomPath);
   if(outputGeom1d == nullptr)
   {
     // This geometry is not at least a 1D geometry, so just return
@@ -180,7 +181,7 @@ Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, 
   auto* outputEdgesArray = getEdgesArrayFunc(outputGeom1d);
   if(outputEdgesArray == nullptr)
   {
-    auto* edgesArray = ds.getDataAs<DataArray<INodeGeometry1D::MeshIndexType>>(outputGeomPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName));
+    auto* edgesArray = ds.getDataAs<DataArray<AbstractNodeGeometry1D::MeshIndexType>>(outputGeomPath.createChildPath(AbstractNodeGeometry1D::k_SharedEdgeListName));
     if(edgesArray == nullptr)
     {
       // There are no edges, so just return
@@ -194,7 +195,7 @@ Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, 
   auto* outputEdgeAttrMatrix = getEdgeAttrMatrixFunc(outputGeom1d);
   if(outputEdgeAttrMatrix == nullptr)
   {
-    auto* edgeAttrMatrix = ds.getDataAs<AttributeMatrix>(outputGeomPath.createChildPath(INodeGeometry1D::k_EdgeAttributeMatrixName));
+    auto* edgeAttrMatrix = ds.getDataAs<AttributeMatrix>(outputGeomPath.createChildPath(AbstractNodeGeometry1D::k_EdgeAttributeMatrixName));
     if(edgeAttrMatrix != nullptr)
     {
       // Set the edge attribute matrix into the geometry (it may have been created via an action in preflight)
@@ -202,12 +203,13 @@ Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, 
     }
   }
 
-  std::vector<INodeGeometry1D*> inputGeoms(inputGeometryPaths.size());
-  std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&ds](const DataPath& path) { return ds.getDataAs<INodeGeometry1D>(path); });
+  std::vector<AbstractNodeGeometry1D*> inputGeoms(inputGeometryPaths.size());
+  std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&ds](const DataPath& path) { return ds.getDataAs<AbstractNodeGeometry1D>(path); });
 
   // Combine the data
   msgHandler({IFilter::Message::Type::Info, fmt::format("Combining edge data...")});
-  auto result = CombineGeometryElements<INodeGeometry1D>(ds, outputGeom1d, inputGeoms, getEdgesArrayFunc, INodeGeometry1D::k_SharedEdgeListName, getEdgeAttrMatrixFunc, msgHandler, shouldCancel);
+  auto result =
+      CombineGeometryElements<AbstractNodeGeometry1D>(ds, outputGeom1d, inputGeoms, getEdgesArrayFunc, AbstractNodeGeometry1D::k_SharedEdgeListName, getEdgeAttrMatrixFunc, msgHandler, shouldCancel);
   if(result.invalid())
   {
     return result;
@@ -216,7 +218,7 @@ Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, 
   // Update the edges array values.  For example, an edge geometry will need its edges
   // array updated since all the vertex indices will be different after concatenation
   msgHandler({IFilter::Message::Type::Info, fmt::format("Updating edge values to use new vertex indices...")});
-  auto getVerticesArrayFunc = [](INodeGeometry1D * ptr) -> auto
+  auto getVerticesArrayFunc = [](AbstractNodeGeometry1D * ptr) -> auto
   {
     return ptr->getVertices();
   };
@@ -227,16 +229,16 @@ Result<> CombineEdgeElements(DataStructure& ds, const DataPath& outputGeomPath, 
 Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
                              const std::atomic_bool& shouldCancel)
 {
-  auto getFacesArrayFunc = [](INodeGeometry2D * ptr) -> auto
+  auto getFacesArrayFunc = [](AbstractNodeGeometry2D * ptr) -> auto
   {
     return ptr->getFaces();
   };
-  auto getFaceAttrMatrixFunc = [](INodeGeometry2D * ptr) -> auto
+  auto getFaceAttrMatrixFunc = [](AbstractNodeGeometry2D * ptr) -> auto
   {
     return ptr->getFaceAttributeMatrix();
   };
 
-  auto* outputGeom2d = ds.getDataAs<INodeGeometry2D>(outputGeomPath);
+  auto* outputGeom2d = ds.getDataAs<AbstractNodeGeometry2D>(outputGeomPath);
   if(outputGeom2d == nullptr)
   {
     // This geometry is not at least a 2D geometry, so just return
@@ -246,7 +248,7 @@ Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, 
   auto* outputFacesArray = getFacesArrayFunc(outputGeom2d);
   if(outputFacesArray == nullptr)
   {
-    auto* facesArray = ds.getDataAs<DataArray<INodeGeometry2D::MeshIndexType>>(outputGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName));
+    auto* facesArray = ds.getDataAs<DataArray<AbstractNodeGeometry2D::MeshIndexType>>(outputGeomPath.createChildPath(AbstractNodeGeometry2D::k_SharedFacesListName));
     if(facesArray == nullptr)
     {
       // There are no faces, so just return
@@ -260,7 +262,7 @@ Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, 
   auto* outputFacesAttrMatrix = getFaceAttrMatrixFunc(outputGeom2d);
   if(outputFacesAttrMatrix == nullptr)
   {
-    auto* facesAttrMatrix = ds.getDataAs<AttributeMatrix>(outputGeomPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName));
+    auto* facesAttrMatrix = ds.getDataAs<AttributeMatrix>(outputGeomPath.createChildPath(AbstractNodeGeometry2D::k_FaceAttributeMatrixName));
     if(facesAttrMatrix != nullptr)
     {
       // Set the face attribute matrix into the geometry (it may have been created via an action in preflight)
@@ -270,9 +272,10 @@ Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, 
 
   // Combine the data
   msgHandler({IFilter::Message::Type::Info, fmt::format("Combining face data...")});
-  std::vector<INodeGeometry2D*> inputGeoms(inputGeometryPaths.size());
-  std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&ds](const DataPath& path) { return ds.getDataAs<INodeGeometry2D>(path); });
-  auto result = CombineGeometryElements<INodeGeometry2D>(ds, outputGeom2d, inputGeoms, getFacesArrayFunc, INodeGeometry2D::k_SharedFacesListName, getFaceAttrMatrixFunc, msgHandler, shouldCancel);
+  std::vector<AbstractNodeGeometry2D*> inputGeoms(inputGeometryPaths.size());
+  std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&ds](const DataPath& path) { return ds.getDataAs<AbstractNodeGeometry2D>(path); });
+  auto result =
+      CombineGeometryElements<AbstractNodeGeometry2D>(ds, outputGeom2d, inputGeoms, getFacesArrayFunc, AbstractNodeGeometry2D::k_SharedFacesListName, getFaceAttrMatrixFunc, msgHandler, shouldCancel);
   if(result.invalid())
   {
     return result;
@@ -281,7 +284,7 @@ Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, 
   // Update the faces array values.  For example, a triangle geometry will need its faces
   // array updated since all the vertex indices will be different after concatenation
   msgHandler({IFilter::Message::Type::Info, fmt::format("Updating face values to use new vertex indices...")});
-  auto getVerticesArrayFunc = [](INodeGeometry2D * ptr) -> auto
+  auto getVerticesArrayFunc = [](AbstractNodeGeometry2D * ptr) -> auto
   {
     return ptr->getVertices();
   };
@@ -292,16 +295,16 @@ Result<> CombineFaceElements(DataStructure& ds, const DataPath& outputGeomPath, 
 Result<> CombinePolyElements(DataStructure& ds, const DataPath& outputGeomPath, const std::vector<DataPath>& inputGeometryPaths, const IFilter::MessageHandler& msgHandler,
                              const std::atomic_bool& shouldCancel)
 {
-  auto getPolyArrayFunc = [](INodeGeometry3D * ptr) -> auto
+  auto getPolyArrayFunc = [](AbstractNodeGeometry3D * ptr) -> auto
   {
     return ptr->getPolyhedra();
   };
-  auto getPolyAttrMatrixFunc = [](INodeGeometry3D * ptr) -> auto
+  auto getPolyAttrMatrixFunc = [](AbstractNodeGeometry3D * ptr) -> auto
   {
     return ptr->getPolyhedraAttributeMatrix();
   };
 
-  auto* outputGeom3d = ds.getDataAs<INodeGeometry3D>(outputGeomPath);
+  auto* outputGeom3d = ds.getDataAs<AbstractNodeGeometry3D>(outputGeomPath);
   if(outputGeom3d == nullptr)
   {
     // This geometry is not at least a 3D geometry, so just return
@@ -311,7 +314,7 @@ Result<> CombinePolyElements(DataStructure& ds, const DataPath& outputGeomPath, 
   auto* outputPolyhedraArray = getPolyArrayFunc(outputGeom3d);
   if(outputPolyhedraArray == nullptr)
   {
-    auto* polyArray = ds.getDataAs<DataArray<INodeGeometry3D::MeshIndexType>>(outputGeomPath.createChildPath(INodeGeometry3D::k_SharedPolyhedronListName));
+    auto* polyArray = ds.getDataAs<DataArray<AbstractNodeGeometry3D::MeshIndexType>>(outputGeomPath.createChildPath(AbstractNodeGeometry3D::k_SharedPolyhedronListName));
     if(polyArray == nullptr)
     {
       // There are no polyhedra, so just return
@@ -325,7 +328,7 @@ Result<> CombinePolyElements(DataStructure& ds, const DataPath& outputGeomPath, 
   auto* outputPolyAttrMatrix = getPolyAttrMatrixFunc(outputGeom3d);
   if(outputPolyAttrMatrix == nullptr)
   {
-    auto* polyAttrMatrix = ds.getDataAs<AttributeMatrix>(outputGeomPath.createChildPath(INodeGeometry3D::k_PolyhedronDataName));
+    auto* polyAttrMatrix = ds.getDataAs<AttributeMatrix>(outputGeomPath.createChildPath(AbstractNodeGeometry3D::k_PolyhedronDataName));
     if(polyAttrMatrix != nullptr)
     {
       // Set the polyhedra attribute matrix into the geometry (it may have been created via an action in preflight)
@@ -335,9 +338,10 @@ Result<> CombinePolyElements(DataStructure& ds, const DataPath& outputGeomPath, 
 
   // Combine the data
   msgHandler({IFilter::Message::Type::Info, fmt::format("Combining polyhedron data...")});
-  std::vector<INodeGeometry3D*> inputGeoms(inputGeometryPaths.size());
-  std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&ds](const DataPath& path) { return ds.getDataAs<INodeGeometry3D>(path); });
-  auto result = CombineGeometryElements<INodeGeometry3D>(ds, outputGeom3d, inputGeoms, getPolyArrayFunc, INodeGeometry3D::k_SharedPolyhedronListName, getPolyAttrMatrixFunc, msgHandler, shouldCancel);
+  std::vector<AbstractNodeGeometry3D*> inputGeoms(inputGeometryPaths.size());
+  std::transform(inputGeometryPaths.begin(), inputGeometryPaths.end(), inputGeoms.begin(), [&ds](const DataPath& path) { return ds.getDataAs<AbstractNodeGeometry3D>(path); });
+  auto result = CombineGeometryElements<AbstractNodeGeometry3D>(ds, outputGeom3d, inputGeoms, getPolyArrayFunc, AbstractNodeGeometry3D::k_SharedPolyhedronListName, getPolyAttrMatrixFunc, msgHandler,
+                                                                shouldCancel);
   if(result.invalid())
   {
     return result;
@@ -346,7 +350,7 @@ Result<> CombinePolyElements(DataStructure& ds, const DataPath& outputGeomPath, 
   // Update the polyhedra array values.  For example, a tetrahedral geometry will need its
   // polyhedra array updated since all the vertex indices will be different after concatenation
   msgHandler({IFilter::Message::Type::Info, fmt::format("Updating polyhedron values to use new vertex indices...")});
-  auto getVerticesArrayFunc = [](INodeGeometry3D * ptr) -> auto
+  auto getVerticesArrayFunc = [](AbstractNodeGeometry3D * ptr) -> auto
   {
     return ptr->getVertices();
   };

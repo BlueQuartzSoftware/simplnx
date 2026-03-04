@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ReadGrainMapper3DFilter
  * @brief This filter determines the average C-axis location of each Feature
  */
-class ORIENTATIONANALYSIS_EXPORT ReadGrainMapper3DFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ReadGrainMapper3DFilter : public AbstractFilter
 {
 public:
   ReadGrainMapper3DFilter() = default;

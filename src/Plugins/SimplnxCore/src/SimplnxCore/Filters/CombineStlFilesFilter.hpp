@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class CombineStlFilesFilter
  * @brief This filter will combine all of the STL files from a given directory into a single triangle geometry
  */
-class SIMPLNXCORE_EXPORT CombineStlFilesFilter : public IFilter
+class SIMPLNXCORE_EXPORT CombineStlFilesFilter : public AbstractFilter
 {
 public:
   CombineStlFilesFilter() = default;

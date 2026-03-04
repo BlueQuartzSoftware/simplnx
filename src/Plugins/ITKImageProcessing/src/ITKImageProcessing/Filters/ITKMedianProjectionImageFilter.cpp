@@ -1,7 +1,7 @@
 #include "ITKMedianProjectionImageFilter.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"

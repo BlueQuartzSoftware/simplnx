@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -14,7 +14,7 @@ namespace nx::core
  * so if the user wants to display a spatial map of a Feature level attribute,
  * this Filter will transfer that information down to the Element level.
  */
-class SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArrayFilter : public IFilter
+class SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArrayFilter : public AbstractFilter
 {
 public:
   CopyFeatureArrayToElementArrayFilter() = default;

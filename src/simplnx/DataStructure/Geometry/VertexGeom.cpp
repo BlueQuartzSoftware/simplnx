@@ -10,13 +10,13 @@
 using namespace nx::core;
 
 VertexGeom::VertexGeom(DataStructure& dataStructure, std::string name)
-: INodeGeometry0D(dataStructure, std::move(name))
+: AbstractNodeGeometry0D(dataStructure, std::move(name))
 {
   m_UnitDimensionality = 0;
 }
 
 VertexGeom::VertexGeom(DataStructure& dataStructure, std::string name, IdType importId)
-: INodeGeometry0D(dataStructure, std::move(name), importId)
+: AbstractNodeGeometry0D(dataStructure, std::move(name), importId)
 {
   m_UnitDimensionality = 0;
 }
@@ -27,9 +27,9 @@ VertexGeom::VertexGeom(VertexGeom&&) = default;
 
 VertexGeom::~VertexGeom() noexcept = default;
 
-DataObject::Type VertexGeom::getDataObjectType() const
+AbstractDataObject::Type VertexGeom::getDataObjectType() const
 {
-  return DataObject::Type::VertexGeom;
+  return IDataObject::Type::VertexGeom;
 }
 
 BaseGroup::GroupType VertexGeom::getGroupType() const
@@ -67,12 +67,12 @@ std::string VertexGeom::getTypeName() const
   return k_TypeName;
 }
 
-DataObject* VertexGeom::shallowCopy()
+AbstractDataObject* VertexGeom::shallowCopy()
 {
   return new VertexGeom(*this);
 }
 
-std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure

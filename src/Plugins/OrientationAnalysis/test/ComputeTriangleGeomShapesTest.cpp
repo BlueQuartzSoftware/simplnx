@@ -78,8 +78,8 @@ TEST_CASE("OrientationAnalysis::ComputeTriangleGeomShapes", "[OrientationAnalysi
     const DataPath kExemplarArrayPath = k_FaceFeatureAttributeMatrixPath.createChildPath(exemplarArrayNames[i]);
     const DataPath kNxArrayPath = k_FaceFeatureAttributeMatrixPath.createChildPath(outputArrayNames[i]);
 
-    const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
-    const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
+    const auto& kExemplarsArray = dataStructure.getDataRefAs<AbstractDataArray>(kExemplarArrayPath);
+    const auto& kNxArray = dataStructure.getDataRefAs<AbstractDataArray>(kNxArrayPath);
 
     UnitTest::CompareDataArrays<float32>(kExemplarsArray, kNxArray);
   }

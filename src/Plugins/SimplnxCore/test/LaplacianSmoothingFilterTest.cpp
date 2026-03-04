@@ -22,9 +22,9 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
   UnitTest::LoadPlugins();
 
   std::string triangleGeometryName = "[Triangle Geometry]";
-  std::string triangleFaceDataGroupName = INodeGeometry2D::k_FaceAttributeMatrixName;
+  std::string triangleFaceDataGroupName = AbstractNodeGeometry2D::k_FaceAttributeMatrixName;
   std::string normalsDataArrayName = "FaceNormals";
-  std::string triangleVertexDataGroupName = INodeGeometry0D::k_VertexAttributeMatrixName;
+  std::string triangleVertexDataGroupName = AbstractNodeGeometry0D::k_VertexAttributeMatrixName;
   std::string nodeTypeArrayName = "Node Type";
 
   DataStructure dataStructure;
@@ -59,9 +59,9 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter", "[SurfaceMeshing][LaplacianSm
   {
     DataPath triangleGeometryPath({triangleGeometryName});
 
-    DataObject::IdType triangleGeometryId = dataStructure.getId(triangleGeometryPath).value();
+    AbstractDataObject::IdType triangleGeometryId = dataStructure.getId(triangleGeometryPath).value();
     DataPath vertexDataGroupPath = triangleGeometryPath.createChildPath(triangleVertexDataGroupName);
-    DataObject::IdType vertexDataGroupId = dataStructure.getId(vertexDataGroupPath).value();
+    AbstractDataObject::IdType vertexDataGroupId = dataStructure.getId(vertexDataGroupPath).value();
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     LaplacianSmoothingFilter filter;

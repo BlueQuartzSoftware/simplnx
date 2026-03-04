@@ -3,8 +3,8 @@
 #include "SimplnxCore/Filters/Algorithms/ConvertData.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
@@ -104,7 +104,7 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
 
   Result<OutputActions> resultOutputActions;
 
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(pInputArrayPath);
+  const auto& inputArray = dataStructure.getDataRefAs<AbstractDataArray>(pInputArrayPath);
 
   resultOutputActions.value().appendAction(
       std::make_unique<CreateArrayAction>(pScalarType, inputArray.getIDataStoreRef().getTupleShape(), inputArray.getIDataStoreRef().getComponentShape(), convertedArrayPath));

@@ -86,7 +86,7 @@ IFilter::PreflightResult WriteLAMMPSFileFilter::preflightImpl(const DataStructur
   auto pAtomLabelsPathValue = filterArgs.value<DataPath>(k_AtomLabelsPath_Key);
 
   std::vector<usize> vertsCount = dataStructure.getDataAs<VertexGeom>(pVertexGeomPathValue)->getVertices()->getTupleShape();
-  std::vector<usize> atomLabelsCount = dataStructure.getDataAs<IDataArray>(pAtomLabelsPathValue)->getTupleShape();
+  std::vector<usize> atomLabelsCount = dataStructure.getDataAs<AbstractDataArray>(pAtomLabelsPathValue)->getTupleShape();
 
   if(vertsCount != atomLabelsCount)
   {

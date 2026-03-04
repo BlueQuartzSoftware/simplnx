@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -22,7 +22,7 @@ namespace nx::core
  *  "Stereographic" = 7
  *
  */
-class ORIENTATIONANALYSIS_EXPORT ConvertOrientationsFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ConvertOrientationsFilter : public AbstractFilter
 {
 public:
   ConvertOrientationsFilter() = default;

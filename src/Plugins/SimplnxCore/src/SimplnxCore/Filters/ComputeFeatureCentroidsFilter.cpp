@@ -102,7 +102,7 @@ IFilter::PreflightResult ComputeFeatureCentroidsFilter::preflightImpl(const Data
 
   // Feature Data:
   // Validating the Feature Attribute Matrix and trying to find a child of the Group
-  // that is an IDataArray subclass, so we can get the proper tuple shape
+  // that is an AbstractDataArray subclass, so we can get the proper tuple shape
   const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {

@@ -7,7 +7,7 @@
 
 namespace nx::core
 {
-class DataObject;
+class AbstractDataObject;
 class DataStructure;
 class BaseGroup;
 class DataAddedMessage;

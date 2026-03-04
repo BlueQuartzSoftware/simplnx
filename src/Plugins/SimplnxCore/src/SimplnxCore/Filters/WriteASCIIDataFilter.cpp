@@ -78,9 +78,9 @@ Parameters WriteASCIIDataFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_Includes_Key, "Header and Index Options", "Default Include is Headers only", to_underlying(Includes::Headers),
                                                    ChoicesParameter::Choices{"Neither", "Headers", "Index", "Both"})); // sequence dependent DO NOT REORDER
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "Data Arrays to be written to disk",
-                                                               MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray}, nx::core::GetAllDataTypes()));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(
+      k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "Data Arrays to be written to disk", MultiArraySelectionParameter::ValueType{},
+      MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray, AbstractArray::ArrayType::StringArray}, nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_OutputStyle_Key, k_MaxTuplePerLine_Key, std::make_any<uint64>(to_underlying(OutputStyle::MultipleFiles)));

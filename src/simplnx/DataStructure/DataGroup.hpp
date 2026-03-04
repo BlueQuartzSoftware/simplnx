@@ -9,7 +9,7 @@ namespace nx::core
  * @class DataGroup
  * @brief The DataGroup class is an instantiable implementation of BaseGroup.
  * The DataGroup class does not impose restrictions on which types of
- * DataObject can be inserted.
+ * AbstractDataObject can be inserted.
  */
 class SIMPLNX_EXPORT DataGroup : public BaseGroup
 {
@@ -39,7 +39,7 @@ public:
    * used as the parent object. In either case, the DataStructure will take
    * ownership of the DataGroup.
    *
-   * Unlike Create, Import allows setting the DataObject ID for use in
+   * Unlike Create, Import allows setting the AbstractDataObject ID for use in
    * importing data.
    *
    * Returns a pointer to the DataGroup if the process succeeds. Returns
@@ -71,7 +71,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override;
+  AbstractDataObject::Type getDataObjectType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
@@ -82,21 +82,21 @@ public:
   /**
    * @brief Creates and returns a deep copy of the DataGroup. The caller is
    * responsible for deleting the returned pointer when it is no longer needed.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief Creates and returns a shallow copy of the DataGroup. The caller is
    * responsible for deleting the returned pointer when it is no longer needed
    * as a copy cannot be added to the DataStructure anywhere the original
    * exists without changing its name.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* shallowCopy() override;
+  AbstractDataObject* shallowCopy() override;
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
+   * @brief Returns typename of the AbstractDataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override;
@@ -120,12 +120,12 @@ protected:
   DataGroup(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
-   * @brief Checks if the provided DataObject can be added to the container.
-   * Returns true if the DataObject can be added to the container. Otherwise,
+   * @brief Checks if the provided AbstractDataObject can be added to the container.
+   * Returns true if the AbstractDataObject can be added to the container. Otherwise,
    * returns false.
    * @param obj
    * @return bool
    */
-  bool canInsert(const DataObject* obj) const override;
+  bool canInsert(const AbstractDataObject* obj) const override;
 };
 } // namespace nx::core

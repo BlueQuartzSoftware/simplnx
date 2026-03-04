@@ -1,9 +1,9 @@
 #pragma once
 
 #include "simplnx/Common/Array.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
@@ -12,7 +12,7 @@
 namespace nx::core
 {
 
-class IGridGeometry;
+class AbstractGridGeometry;
 
 class SIMPLNX_EXPORT AlignSections
 {

@@ -45,7 +45,7 @@ bool DataMap::empty() const
   return m_Map.empty();
 }
 
-bool DataMap::insert(const std::shared_ptr<DataObject>& obj)
+bool DataMap::insert(const std::shared_ptr<AbstractDataObject>& obj)
 {
   if(obj == nullptr)
   {
@@ -56,7 +56,7 @@ bool DataMap::insert(const std::shared_ptr<DataObject>& obj)
   return true;
 }
 
-bool DataMap::remove(DataObject* obj)
+bool DataMap::remove(AbstractDataObject* obj)
 {
   if(obj == nullptr)
   {
@@ -114,9 +114,9 @@ std::vector<DataMap::IdType> DataMap::getAllKeys() const
   return keys;
 }
 
-std::map<DataMap::IdType, std::weak_ptr<DataObject>> DataMap::getAllItems() const
+std::map<DataMap::IdType, std::weak_ptr<AbstractDataObject>> DataMap::getAllItems() const
 {
-  std::map<IdType, std::weak_ptr<DataObject>> map;
+  std::map<IdType, std::weak_ptr<AbstractDataObject>> map;
   for(auto& pair : m_Map)
   {
     map[pair.first] = pair.second;
@@ -155,7 +155,7 @@ bool DataMap::contains(const std::string& name) const
   return false;
 }
 
-bool DataMap::contains(const DataObject* obj) const
+bool DataMap::contains(const AbstractDataObject* obj) const
 {
   if(obj == nullptr)
   {
@@ -169,7 +169,7 @@ bool DataMap::contains(IdType identifier) const
   return m_Map.find(identifier) != m_Map.end();
 }
 
-DataObject* DataMap::operator[](IdType key)
+AbstractDataObject* DataMap::operator[](IdType key)
 {
   if(contains(key))
   {
@@ -178,7 +178,7 @@ DataObject* DataMap::operator[](IdType key)
   return nullptr;
 }
 
-const DataObject* DataMap::operator[](IdType key) const
+const AbstractDataObject* DataMap::operator[](IdType key) const
 {
   if(contains(key))
   {
@@ -187,7 +187,7 @@ const DataObject* DataMap::operator[](IdType key) const
   return nullptr;
 }
 
-DataObject* DataMap::operator[](const std::string& name)
+AbstractDataObject* DataMap::operator[](const std::string& name)
 {
   for(auto& iter : m_Map)
   {
@@ -199,7 +199,7 @@ DataObject* DataMap::operator[](const std::string& name)
   return nullptr;
 }
 
-const DataObject* DataMap::operator[](const std::string& name) const
+const AbstractDataObject* DataMap::operator[](const std::string& name) const
 {
   for(auto& iter : m_Map)
   {
@@ -211,9 +211,9 @@ const DataObject* DataMap::operator[](const std::string& name) const
   return nullptr;
 }
 
-DataObject& DataMap::at(const std::string& name)
+AbstractDataObject& DataMap::at(const std::string& name)
 {
-  DataObject* object = (*this)[name];
+  AbstractDataObject* object = (*this)[name];
   if(object == nullptr)
   {
     throw std::invalid_argument(fmt::format("DataMap::at: unable to find object with name '{}'", name));
@@ -221,9 +221,9 @@ DataObject& DataMap::at(const std::string& name)
   return *object;
 }
 
-const DataObject& DataMap::at(const std::string& name) const
+const AbstractDataObject& DataMap::at(const std::string& name) const
 {
-  const DataObject* object = (*this)[name];
+  const AbstractDataObject* object = (*this)[name];
   if(object == nullptr)
   {
     throw std::invalid_argument(fmt::format("DataMap::at: unable to find object with name '{}'", name));
@@ -309,8 +309,8 @@ DataMap& DataMap::operator=(const DataMap& rhs)
   auto keys = rhs.getKeys();
   for(auto& key : keys)
   {
-    DataObject* copy = rhs.m_Map.at(key)->shallowCopy();
-    m_Map[key] = std::shared_ptr<DataObject>(copy);
+    AbstractDataObject* copy = rhs.m_Map.at(key)->shallowCopy();
+    m_Map[key] = std::shared_ptr<AbstractDataObject>(copy);
   }
 
   return *this;
@@ -322,9 +322,9 @@ DataMap& DataMap::operator=(DataMap&& rhs) noexcept
   return *this;
 }
 
-void DataMap::updateIds(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIds)
+void DataMap::updateIds(const std::unordered_map<AbstractDataObject::IdType, AbstractDataObject::IdType>& updatedIds)
 {
-  using UpdatedValueType = std::pair<IdType, std::shared_ptr<DataObject>>;
+  using UpdatedValueType = std::pair<IdType, std::shared_ptr<AbstractDataObject>>;
   std::list<UpdatedValueType> movedValues;
 
   for(const auto& updatedId : updatedIds)

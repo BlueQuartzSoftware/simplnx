@@ -3,10 +3,10 @@
 #include "SimplnxCore/Filters/Algorithms/SurfaceNets.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry1D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
@@ -73,12 +73,12 @@ Parameters SurfaceNetsFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedDataArrayPaths_Key, "Cell Attribute Arrays to Transfer", "The paths to the Arrays specifying which Cell Attribute Arrays to transfer to the created Triangle Geometry",
-      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedFeatureDataArrayPaths_Key, "Feature Attribute Arrays to Transfer", "The paths to the Arrays specifying which feature Attribute Arrays to transfer to the created Triangle Geometry",
-      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Triangle Geometry"});
   params.insert(
@@ -87,13 +87,13 @@ Parameters SurfaceNetsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Vertex Data of the Triangle Geometry will be created",
-                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
+                                                          AbstractNodeGeometry0D::k_VertexAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_NodeTypesArrayName_Key, "Node Type", "The complete path to the Array specifying the type of node in the Triangle Geometry", "NodeTypes"));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceDataGroupName_Key, "Face Data [AttributeMatrix]",
                                                           "The complete path to the DataGroup where the Face Data of the Triangle Geometry will be created",
-                                                          INodeGeometry2D::k_FaceAttributeMatrixName));
+                                                          AbstractNodeGeometry2D::k_FaceAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceLabelsArrayName_Key, "Face Labels",
                                                           "The complete path to the Array specifying which Features are on either side of each Face in the Triangle Geometry", "FaceLabels"));
 
@@ -137,11 +137,11 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto& gridGeom = dataStructure.getDataRefAs<IGridGeometry>(pGridGeomDataPath);
+  const auto& gridGeom = dataStructure.getDataRefAs<AbstractGridGeometry>(pGridGeomDataPath);
   constexpr usize numElements = 0;
 
   // Use FeatureIds DataStore format for created DataArrays
-  const auto* featureIdsArrayPtr = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
+  const auto* featureIdsArrayPtr = dataStructure.getDataAs<AbstractDataArray>(pFeatureIdsArrayPathValue);
   const std::string dataStoreFormat = featureIdsArrayPtr->getDataFormat();
 
   // Create the Triangle Geometry action and store it
@@ -166,7 +166,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
     DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
-    const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+    const auto& iDataArray = dataStructure.getDataRefAs<AbstractDataArray>(selectedDataPath);
     auto compShape = iDataArray.getComponentShape();
     // Double the size of the DataArray because we need the value from both sides of the triangle.
     compShape.insert(compShape.begin(), 2);
@@ -179,9 +179,9 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
     for(const DataPath& selectedDataPath : pFeatureDataPaths)
     {
       // Check that the feature array has the correct tuple count to avoid crashing in execute.
-      const IDataArray* featureArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
+      const AbstractDataArray* featureArray = dataStructure.getDataAs<AbstractDataArray>(selectedDataPath);
       DataPath createdDataPath = pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName());
-      const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+      const auto& iDataArray = dataStructure.getDataRefAs<AbstractDataArray>(selectedDataPath);
       auto compShape = iDataArray.getComponentShape();
       // Double the size of the DataArray because we need the value from both sides of the triangle.
       compShape.insert(compShape.begin(), 2);

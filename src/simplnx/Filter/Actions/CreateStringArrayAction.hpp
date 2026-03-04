@@ -8,7 +8,7 @@ namespace nx::core
 /**
  * @brief Action for creating DataArrays in a DataStructure
  */
-class SIMPLNX_EXPORT CreateStringArrayAction : public IDataCreationAction
+class SIMPLNX_EXPORT CreateStringArrayAction : public AbstractDataCreationAction
 {
 public:
   CreateStringArrayAction() = delete;

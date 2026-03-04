@@ -55,7 +55,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
   auto& biasedFeaturesStore = m_DataStructure.getDataAsUnsafe<BoolArray>(m_InputValues->BiasedFeaturesArrayName)->getDataStoreRef();
   biasedFeaturesStore.fill(false);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> surfaceFeatures = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> surfaceFeatures = nullptr;
   try
   {
     surfaceFeatures = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
@@ -196,7 +196,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
   auto& biasedFeaturesStore = m_DataStructure.getDataAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName)->getDataStoreRef();
   biasedFeaturesStore.fill(false);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare = nullptr;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);

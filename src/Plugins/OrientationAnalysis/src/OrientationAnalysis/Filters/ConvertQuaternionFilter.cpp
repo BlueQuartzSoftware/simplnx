@@ -95,7 +95,7 @@ IFilter::PreflightResult ConvertQuaternionFilter::preflightImpl(const DataStruct
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& quats = dataStructure.getDataRefAs<IDataArray>(pQuaternionDataArrayPathValue);
+  const auto& quats = dataStructure.getDataRefAs<AbstractDataArray>(pQuaternionDataArrayPathValue);
 
   {
     auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(quats.getDataType(), quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);

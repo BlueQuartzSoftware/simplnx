@@ -108,7 +108,7 @@ void WriteNodesAndElementsFiles::sendMessage(const std::string& message)
 // -----------------------------------------------------------------------------
 Result<> WriteNodesAndElementsFiles::operator()()
 {
-  auto& iNodeGeometry = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  auto& iNodeGeometry = m_DataStructure.getDataRefAs<AbstractNodeGeometry0D>(m_InputValues->SelectedGeometryPath);
   auto geomType = iNodeGeometry.getGeomType();
   UInt64Array* cellsArray = nullptr;
 

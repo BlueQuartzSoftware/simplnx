@@ -2,9 +2,9 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @class ReadZeissTxmFileFilter
  * @brief This filter will read a .txm or .txrm file that is generated from a Zeiss x-ray computed tomography machine
  */
-class SIMPLNXCORE_EXPORT ReadZeissTxmFileFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReadZeissTxmFileFilter : public AbstractFilter
 {
 public:
   ReadZeissTxmFileFilter();

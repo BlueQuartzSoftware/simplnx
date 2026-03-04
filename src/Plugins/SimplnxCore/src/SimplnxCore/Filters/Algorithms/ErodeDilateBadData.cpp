@@ -18,7 +18,7 @@ public:
   ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
 
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
-                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
+                                     const std::vector<int64>& neighbors, const std::shared_ptr<AbstractDataArray>& dataArrayPtr, MessageHelper& messageHelper)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_Operation(operation)
@@ -59,7 +59,7 @@ private:
   usize m_TotalPoints = 0;
   ChoicesParameter::ValueType m_Operation = 0;
   std::vector<int64> m_Neighbors;
-  const std::shared_ptr<IDataArray> m_DataArrayPtr;
+  const std::shared_ptr<AbstractDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
   MessageHelper& m_MessageHelper;
 };
@@ -179,7 +179,7 @@ Result<> ErodeDilateBadData::operator()()
     }
 
     // Build up a list of the DataArrays that we are going to operate on.
-    const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
+    const std::vector<std::shared_ptr<AbstractDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
     MessageHelper messageHelper(m_MessageHandler);
 
@@ -199,7 +199,7 @@ Result<> ErodeDilateBadData::operator()()
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
     // Now update the feature Ids
-    auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
+    auto featureIDataArray = m_DataStructure.getSharedDataAs<AbstractDataArray>(m_InputValues->FeatureIdsArrayPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
     taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
   }

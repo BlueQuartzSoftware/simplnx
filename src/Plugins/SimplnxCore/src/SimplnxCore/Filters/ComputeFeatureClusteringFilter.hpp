@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeFeatureClusteringFilter
  * @brief This filter determines the radial distribution function (RDF), as a histogram, of a given set of Features.
  */
-class SIMPLNXCORE_EXPORT ComputeFeatureClusteringFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeFeatureClusteringFilter : public AbstractFilter
 {
 public:
   ComputeFeatureClusteringFilter() = default;

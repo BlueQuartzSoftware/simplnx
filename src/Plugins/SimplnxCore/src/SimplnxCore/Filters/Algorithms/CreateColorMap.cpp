@@ -41,7 +41,7 @@ class CreateColorMapImpl
 {
 public:
   CreateColorMapImpl(const AbstractDataStore<T>& arrayStore, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, int numControlColors, UInt8AbstractDataStore& colorStore,
-                     const nx::core::IDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
+                     const nx::core::AbstractDataArray* goodVoxels, const std::vector<uint8>& invalidColor)
   : m_ArrayStore(arrayStore)
   , m_BinPoints(binPoints)
   , m_ArrayMin(arrayStore[0])
@@ -160,7 +160,7 @@ private:
   int m_NumControlColors;
   const std::vector<float32>& m_ControlPoints;
   UInt8AbstractDataStore& m_ColorStore;
-  const nx::core::IDataArray* m_GoodVoxels = nullptr;
+  const nx::core::AbstractDataArray* m_GoodVoxels = nullptr;
   const std::vector<uint8>& m_InvalidColor;
 };
 
@@ -190,10 +190,10 @@ struct GenerateColorArrayFunctor
 
     auto& colorArray = dataStructure.getDataAs<UInt8Array>(inputValues->RgbArrayPath)->getDataStoreRef();
 
-    nx::core::IDataArray* goodVoxelsArray = nullptr;
+    nx::core::AbstractDataArray* goodVoxelsArray = nullptr;
     if(inputValues->UseMask)
     {
-      goodVoxelsArray = dataStructure.getDataAs<IDataArray>(inputValues->MaskArrayPath);
+      goodVoxelsArray = dataStructure.getDataAs<AbstractDataArray>(inputValues->MaskArrayPath);
     }
 
     const AbstractDataStore<ScalarType>& arrayRef = dataStructure.getDataAs<DataArray<ScalarType>>(inputValues->SelectedDataArrayPath)->getDataStoreRef();
@@ -231,7 +231,7 @@ const std::atomic_bool& CreateColorMap::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CreateColorMap::operator()()
 {
-  const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
+  const AbstractDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->SelectedDataArrayPath);
 
   auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(m_InputValues->PresetName);
   if(controlPointsResult.invalid())

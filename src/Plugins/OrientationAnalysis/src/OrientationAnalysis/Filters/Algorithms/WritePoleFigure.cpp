@@ -115,7 +115,7 @@ public:
     using RTreeType = RTree<size_t, float, 2, float>;
 
     // filter->notifyStatusMessage(QString("Starting Interpolation...."));
-    nx::core::IGeometry::SharedFaceList& delTriangles = delaunayGeom->getFacesRef();
+    nx::core::AbstractGeometry::SharedFaceList& delTriangles = delaunayGeom->getFacesRef();
     size_t numTriangles = delaunayGeom->getNumberOfFaces();
     // int percent = 0;
     int counter = xPositionsPtr.size() / 100;
@@ -274,13 +274,13 @@ public:
     using DimensionType = std::vector<size_t>;
 
     DimensionType faceTupleShape = {0};
-    Result result = ArrayCreationUtilities::CreateArray<IGeometry::MeshIndexType>(dataStructure, faceTupleShape, {3ULL}, sharedFaceListPath, IDataAction::Mode::Execute);
+    Result result = ArrayCreationUtilities::CreateArray<AbstractGeometry::MeshIndexType>(dataStructure, faceTupleShape, {3ULL}, sharedFaceListPath, IDataAction::Mode::Execute);
     if(result.invalid())
     {
       return -1;
       // return MergeResults(result, MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString())));
     }
-    auto& sharedFaceListRef = dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(sharedFaceListPath);
+    auto& sharedFaceListRef = dataStructure.getDataRefAs<AbstractGeometry::MeshIndexArrayType>(sharedFaceListPath);
     triangleGeom.setFaceList(sharedFaceListRef);
 
     // Create the Vertex Array with a component size of 3
@@ -680,7 +680,7 @@ Result<> WritePoleFigure::operator()()
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare = nullptr;
   if(m_InputValues->UseMask)
   {
     try

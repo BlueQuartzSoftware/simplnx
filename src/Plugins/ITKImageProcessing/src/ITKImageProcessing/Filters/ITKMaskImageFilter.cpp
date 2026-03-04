@@ -211,7 +211,7 @@ Result<> ITKMaskImageFilter::executeImpl(DataStructure& dataStructure, const Arg
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskImageDataPath_Key);
 
   ImageGeom& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  IDataArray& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
+  AbstractDataArray& maskArray = dataStructure.getDataRefAs<AbstractDataArray>(maskArrayPath);
   IDataStore& maskStore = maskArray.getIDataStoreRef();
 
   cxITKMaskImageFilter::ITKMaskImageFilterFunctor itkFunctor = {outsideValue, imageGeom, maskStore};

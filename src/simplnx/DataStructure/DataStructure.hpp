@@ -1,8 +1,9 @@
 #pragma once
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/DataMap.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/IDataStructure.hpp"
 #include "simplnx/DataStructure/LinkedPath.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -40,20 +41,20 @@ inline const std::string k_ImportableTag = "Importable";
  * geometries, and scalars are added to the structure. The DataStructure allows
  * parents to be added to or removed from DataObjects.
  */
-class SIMPLNX_EXPORT DataStructure
+class SIMPLNX_EXPORT DataStructure : public IDataStructure
 {
-  using WeakCollectionType = std::map<DataObject::IdType, std::weak_ptr<DataObject>>;
+  using WeakCollectionType = std::map<AbstractDataObject::IdType, std::weak_ptr<AbstractDataObject>>;
 
 protected:
   /**
-   * @brief Finalizes adding a DataObject to the DataStructure. This should
+   * @brief Finalizes adding a AbstractDataObject to the DataStructure. This should
    * be called by the create* methods to prevent duplicating code. Returns
    * true if the data was successfully added. Returns false otherwise.
    * @param obj
    * @param parent = {}
    * @return bool
    */
-  bool finishAddingObject(const std::shared_ptr<DataObject>& obj, const std::optional<DataObject::IdType>& parent = {});
+  bool finishAddingObject(const std::shared_ptr<AbstractDataObject>& obj, const std::optional<AbstractDataObject::IdType>& parent = {});
 
 public:
   using SignalType = nod::signal<void(DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&)>;
@@ -61,7 +62,7 @@ public:
   using ConstIterator = DataMap::ConstIterator;
 
   friend class DataMap;
-  friend class DataObject;
+  friend class AbstractDataObject;
 
   /**
    * @brief Default constructor
@@ -83,69 +84,69 @@ public:
   /**
    * @brief
    */
-  ~DataStructure();
+  ~DataStructure() override;
 
   /**
    * @brief Returns the number of unique DataObjects in the DataStructure.
    * @return usize
    */
-  usize getSize() const;
+  usize getSize() const override;
 
   /**
    * @brief Clears the DataStructure by removing all DataObjects. The next
-   * DataObject ID remains unchanged after the operation.
+   * AbstractDataObject ID remains unchanged after the operation.
    */
-  void clear();
+  void clear() override;
 
   /**
-   * @brief Returns the IdType for the DataObject found at the specified DataPath. The
+   * @brief Returns the IdType for the AbstractDataObject found at the specified DataPath. The
    * return type is optional<IdType> for cases where the DataPath does not point to a
-   * DataObject. If no DataObject is found at the path, an empty optional object is
+   * AbstractDataObject. If no AbstractDataObject is found at the path, an empty optional object is
    * returned.
    * @param path
    * @return std::optional<IdType>
    */
-  std::optional<DataObject::IdType> getId(const DataPath& path) const;
+  std::optional<AbstractDataObject::IdType> getId(const DataPath& path) const override;
 
   /**
-   * @brief Returns true if the DataStructure contains a DataObject with the
+   * @brief Returns true if the DataStructure contains a AbstractDataObject with the
    * given key. Returns false otherwise.
    * @param identifier
    * @return bool
    */
-  bool containsData(DataObject::IdType identifier) const;
+  bool containsData(AbstractDataObject::IdType identifier) const override;
 
   /**
-   * @brief Returns true if the DataStructure contains a DataObject with the
+   * @brief Returns true if the DataStructure contains a AbstractDataObject with the
    * given path. Returns false otherwise.
-   * @param path The DataPath to the DataObject
+   * @param path The DataPath to the AbstractDataObject
    * @return bool
    */
-  bool containsData(const DataPath& path) const;
+  bool containsData(const DataPath& path) const override;
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
    * @param identifier
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* getData(DataObject::IdType identifier);
+  AbstractDataObject* getData(AbstractDataObject::IdType identifier) override;
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
    * @param identifier
    * @return T*
    */
   template <class T>
-  inline T* getDataAs(DataObject::IdType identifier)
+  inline T* getDataAs(AbstractDataObject::IdType identifier)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<T*>(getData(identifier));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
@@ -153,36 +154,36 @@ public:
    * @return T*
    */
   template <class T>
-  T* getDataAsUnsafe(DataObject::IdType identifier)
+  T* getDataAsUnsafe(AbstractDataObject::IdType identifier)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<T*>(getData(identifier));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * @param identifier
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* getData(const std::optional<DataObject::IdType>& identifier);
+  AbstractDataObject* getData(const std::optional<AbstractDataObject::IdType>& identifier) override;
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * @param identifier
    * @return T*
    */
   template <class T>
-  inline T* getDataAs(const std::optional<DataObject::IdType>& identifier)
+  inline T* getDataAs(const std::optional<AbstractDataObject::IdType>& identifier)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     auto* object = getData(identifier);
     return dynamic_cast<T*>(object);
   }
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
@@ -190,53 +191,53 @@ public:
    * @return T*
    */
   template <class T>
-  T* getDataAsUnsafe(const std::optional<DataObject::IdType>& identifier)
+  T* getDataAsUnsafe(const std::optional<AbstractDataObject::IdType>& identifier)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     auto* object = getData(identifier);
     return static_cast<T*>(object);
   }
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath. If no
-   * DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject at the given DataPath. If no
+   * AbstractDataObject is found, this method returns nullptr.
    * @param path
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* getData(const DataPath& path);
+  AbstractDataObject* getData(const DataPath& path) override;
 
   /**
-   * @brief Returns a reference to the DataObject at the given DataPath. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject at the given DataPath. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * @param path
-   * @return DataObject&
+   * @return AbstractDataObject&
    */
-  DataObject& getDataRef(const DataPath& path);
+  AbstractDataObject& getDataRef(const DataPath& path) override;
 
   /**
-   * @brief Returns a reference to the DataObject with the given identifier. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject with the given identifier. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * @param identifier
-   * @return DataObject&
+   * @return AbstractDataObject&
    */
-  DataObject& getDataRef(DataObject::IdType identifier);
+  AbstractDataObject& getDataRef(AbstractDataObject::IdType identifier) override;
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath. If no
-   * DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject at the given DataPath. If no
+   * AbstractDataObject is found, this method returns nullptr.
    * @param path
    * @return T*
    */
   template <class T>
   inline T* getDataAs(const DataPath& path)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<T*>(getData(path));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath. If no
-   * DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject at the given DataPath. If no
+   * AbstractDataObject is found, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
    * @param path
@@ -245,26 +246,26 @@ public:
   template <class T>
   T* getDataAsUnsafe(const DataPath& path)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<T*>(getData(path));
   }
 
   /**
-   * @brief Returns a reference to the DataObject at the given DataPath. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject at the given DataPath. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * @param path
    * @return T&
    */
   template <class T>
   inline T& getDataRefAs(const DataPath& path)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<T&>(getDataRef(path));
   }
 
   /**
-   * @brief Returns a reference to the DataObject at the given DataPath. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject at the given DataPath. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
    * @param path
@@ -273,62 +274,62 @@ public:
   template <class T>
   T& getDataRefAsUnsafe(const DataPath& path)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<T&>(getDataRef(path));
   }
 
   /**
-   * @brief Returns a reference to the DataObject with the given identifier. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject with the given identifier. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * @param identifier
    * @return T&
    */
   template <class T>
-  T& getDataRefAs(DataObject::IdType identifier)
+  T& getDataRefAs(AbstractDataObject::IdType identifier)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<T&>(getDataRef(identifier));
   }
 
   /**
-   * @brief Returns a reference to the DataObject with the given identifier. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject with the given identifier. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
    * @param identifier
    * @return T&
    */
   template <class T>
-  T& getDataRefAsUnsafe(DataObject::IdType identifier)
+  T& getDataRefAsUnsafe(AbstractDataObject::IdType identifier)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<T&>(getDataRef(identifier));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject found at the specified
-   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject found at the specified
+   * LinkedPath. If no such AbstractDataObject is found, this method returns nullptr.
    * @param path
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* getData(const LinkedPath& path);
+  AbstractDataObject* getData(const LinkedPath& path) override;
 
   /**
-   * @brief Returns a pointer to the DataObject found at the specified
-   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject found at the specified
+   * LinkedPath. If no such AbstractDataObject is found, this method returns nullptr.
    * @param path
    * @return T*
    */
   template <class T>
   inline T* getDataAs(const LinkedPath& path)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<T*>(getData(path));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject found at the specified
-   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject found at the specified
+   * LinkedPath. If no such AbstractDataObject is found, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
    * @param path
@@ -337,33 +338,33 @@ public:
   template <class T>
   T* getDataAsUnsafe(const LinkedPath& path)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<T*>(getData(path));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
    * @param identifier
-   * @return const DataObject*
+   * @return const AbstractDataObject*
    */
-  const DataObject* getData(DataObject::IdType identifier) const;
+  const AbstractDataObject* getData(AbstractDataObject::IdType identifier) const override;
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
    * @param identifier
    * @return const T*
    */
   template <class T>
-  inline const T* getDataAs(DataObject::IdType identifier) const
+  inline const T* getDataAs(AbstractDataObject::IdType identifier) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<const T*>(getData(identifier));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
@@ -371,35 +372,35 @@ public:
    * @return const T*
    */
   template <class T>
-  const T* getDataAsUnsafe(DataObject::IdType identifier) const
+  const T* getDataAsUnsafe(AbstractDataObject::IdType identifier) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<const T*>(getData(identifier));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * @param identifier
-   * @return const DataObject*
+   * @return const AbstractDataObject*
    */
-  const DataObject* getData(const std::optional<DataObject::IdType>& identifier) const;
+  const AbstractDataObject* getData(const std::optional<AbstractDataObject::IdType>& identifier) const override;
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * @param identifier
    * @return const T*
    */
   template <class T>
-  inline const T* getDataAs(const std::optional<DataObject::IdType>& identifier) const
+  inline const T* getDataAs(const std::optional<AbstractDataObject::IdType>& identifier) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<const T*>(getData(identifier));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
    * If no such object exists, or no ID is provided, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
@@ -407,38 +408,38 @@ public:
    * @return const T*
    */
   template <class T>
-  const T* getDataAsUnsafe(const std::optional<DataObject::IdType>& identifier) const
+  const T* getDataAsUnsafe(const std::optional<AbstractDataObject::IdType>& identifier) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<const T*>(getData(identifier));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath. If no
-   * DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject at the given DataPath. If no
+   * AbstractDataObject is found, this method returns nullptr.
    * @param path
-   * @return const DataObject*
+   * @return const AbstractDataObject*
    */
-  const DataObject* getData(const DataPath& path) const;
+  const AbstractDataObject* getData(const DataPath& path) const override;
 
   /**
-   * @brief Returns a reference to the DataObject at the given DataPath. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject at the given DataPath. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * @param path
-   * @return const DataObject&
+   * @return const AbstractDataObject&
    */
-  const DataObject& getDataRef(const DataPath& path) const;
+  const AbstractDataObject& getDataRef(const DataPath& path) const override;
 
   /**
-   * @brief Returns a reference to the DataObject with the given identifier. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject with the given identifier. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * @param identifier
-   * @return const DataObject&
+   * @return const AbstractDataObject&
    */
-  const DataObject& getDataRef(DataObject::IdType identifier) const;
+  const AbstractDataObject& getDataRef(AbstractDataObject::IdType identifier) const override;
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath.
+   * @brief Returns a pointer to the AbstractDataObject at the given DataPath.
    *
    * @throws std::out_of_range if path does not exist
    * @throws std::bad_cast If the object at path cannnot be dynamic_cast<> to the input type
@@ -449,12 +450,12 @@ public:
   template <class T>
   inline const T* getDataAs(const DataPath& path) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<const T*>(getData(path));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject at the given DataPath.
+   * @brief Returns a pointer to the AbstractDataObject at the given DataPath.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
    * @param path
@@ -463,12 +464,12 @@ public:
   template <class T>
   const T* getDataAsUnsafe(const DataPath& path) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<const T*>(getData(path));
   }
 
   /**
-   * @brief Returns a reference to the DataObject at the given DataPath.
+   * @brief Returns a reference to the AbstractDataObject at the given DataPath.
    *
    * @throws std::out_of_range if path does not exist
    * @throws std::bad_cast If the object at path cannnot be dynamic_cast<> to the input type
@@ -479,12 +480,12 @@ public:
   template <class T>
   inline const T& getDataRefAs(const DataPath& path) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<const T&>(getDataRef(path));
   }
 
   /**
-   * @brief Returns a reference to the DataObject at the given DataPath.
+   * @brief Returns a reference to the AbstractDataObject at the given DataPath.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
    * @throws std::out_of_range if path does not exist
@@ -494,62 +495,62 @@ public:
   template <class T>
   const T& getDataRefAsUnsafe(const DataPath& path) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<const T&>(getDataRef(path));
   }
 
   /**
-   * @brief Returns a reference to the DataObject with the given identifier. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject with the given identifier. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * @param identifier
    * @return T&
    */
   template <class T>
-  const T& getDataRefAs(DataObject::IdType identifier) const
+  const T& getDataRefAs(AbstractDataObject::IdType identifier) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<const T&>(getDataRef(identifier));
   }
 
   /**
-   * @brief Returns a reference to the DataObject with the given identifier. If no
-   * DataObject is found, this method throws std::out_of_range.
+   * @brief Returns a reference to the AbstractDataObject with the given identifier. If no
+   * AbstractDataObject is found, this method throws std::out_of_range.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
    * @param identifier
    * @return T&
    */
   template <class T>
-  const T& getDataRefAsUnsafe(DataObject::IdType identifier) const
+  const T& getDataRefAsUnsafe(AbstractDataObject::IdType identifier) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<const T&>(getDataRef(identifier));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject found at the specified
-   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject found at the specified
+   * LinkedPath. If no such AbstractDataObject is found, this method returns nullptr.
    * @param path
-   * @return const DataObject*
+   * @return const AbstractDataObject*
    */
-  const DataObject* getData(const LinkedPath& path) const;
+  const AbstractDataObject* getData(const LinkedPath& path) const override;
 
   /**
-   * @brief Returns a pointer to the DataObject found at the specified
-   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject found at the specified
+   * LinkedPath. If no such AbstractDataObject is found, this method returns nullptr.
    * @param path
    * @return const T*
    */
   template <class T>
   inline const T* getDataAs(const LinkedPath& path) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return dynamic_cast<const T*>(getData(path));
   }
 
   /**
-   * @brief Returns a pointer to the DataObject found at the specified
-   * LinkedPath. If no such DataObject is found, this method returns nullptr.
+   * @brief Returns a pointer to the AbstractDataObject found at the specified
+   * LinkedPath. If no such AbstractDataObject is found, this method returns nullptr.
    * PERFORMS NO CHECKS ON THE TYPE OF DATAOBJECT RETURNED
    * ONLY USE WHEN THE TYPE IS ALREADY GUARENTEED TO BE T
    * @param path
@@ -558,158 +559,158 @@ public:
   template <class T>
   const T* getDataAsUnsafe(const LinkedPath& path) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return static_cast<const T*>(getData(path));
   }
 
   /**
-   * @brief Returns the shared pointer for the specified DataObject.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns the shared pointer for the specified AbstractDataObject.
+   * Returns nullptr if no AbstractDataObject is found.
    *
-   * Use getData(DataObject::IdType) instead. This was only made public for
+   * Use getData(AbstractDataObject::IdType) instead. This was only made public for
    * use in visualization where select data might need to be preserved beyond
    * the rest of the DataStructure.
    * @param identifier
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
-  std::shared_ptr<DataObject> getSharedData(DataObject::IdType id);
+  std::shared_ptr<AbstractDataObject> getSharedData(AbstractDataObject::IdType id) override;
 
   /**
-   * @brief Returns the shared pointer for the specified DataObject.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns the shared pointer for the specified AbstractDataObject.
+   * Returns nullptr if no AbstractDataObject is found.
    *
-   * Use getData(DataObject::IdType) instead. This was only made public for
+   * Use getData(AbstractDataObject::IdType) instead. This was only made public for
    * use in visualization where select data might need to be preserved beyond
    * the rest of the DataStructure.
    * @param id
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
-  std::shared_ptr<const DataObject> getSharedData(DataObject::IdType id) const;
+  std::shared_ptr<const AbstractDataObject> getSharedData(AbstractDataObject::IdType id) const override;
 
   /**
-   * @brief Returns the shared pointer for the specified DataObject.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns the shared pointer for the specified AbstractDataObject.
+   * Returns nullptr if no AbstractDataObject is found.
    *
-   * Use getData(DataObject::IdType) instead. This was only made public for
+   * Use getData(AbstractDataObject::IdType) instead. This was only made public for
    * use in visualization where select data might need to be preserved beyond
    * the rest of the DataStructure.
    * @param id
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
   template <class T>
-  std::shared_ptr<T> getSharedDataAs(DataObject::IdType id)
+  std::shared_ptr<T> getSharedDataAs(AbstractDataObject::IdType id)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return std::dynamic_pointer_cast<T>(getSharedData(id));
   }
 
   /**
-   * @brief Returns the shared pointer for the specified DataObject.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns the shared pointer for the specified AbstractDataObject.
+   * Returns nullptr if no AbstractDataObject is found.
    *
-   * Use getData(DataObject::IdType) instead. This was only made public for
+   * Use getData(AbstractDataObject::IdType) instead. This was only made public for
    * use in visualization where select data might need to be preserved beyond
    * the rest of the DataStructure.
    * @param id
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
   template <class T>
-  std::shared_ptr<const T> getSharedDataAs(DataObject::IdType id) const
+  std::shared_ptr<const T> getSharedDataAs(AbstractDataObject::IdType id) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return std::dynamic_pointer_cast<const T>(getSharedData(id));
   }
 
   /**
-   * @brief Returns the shared pointer for the DataObject at the target path.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns the shared pointer for the AbstractDataObject at the target path.
+   * Returns nullptr if no AbstractDataObject is found.
    *
    * Use getData(const DataPath&) instead. This was only made public for
-   * use in importing a DataObject from another DataStructure when select data
+   * use in importing a AbstractDataObject from another DataStructure when select data
    * needs to be preserved beyond the imported DataStructure.
    * @param path
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
-  std::shared_ptr<DataObject> getSharedData(const DataPath& path);
+  std::shared_ptr<AbstractDataObject> getSharedData(const DataPath& path) override;
 
   /**
-   * @brief Returns the shared pointer for the DataObject at the target path.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns the shared pointer for the AbstractDataObject at the target path.
+   * Returns nullptr if no AbstractDataObject is found.
    *
    * Use getData(const DataPath&) instead. This was only made public for
-   * use in importing a DataObject from another DataStructure when select data
+   * use in importing a AbstractDataObject from another DataStructure when select data
    * needs to be preserved beyond the imported DataStructure.
    * @param path
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
-  std::shared_ptr<const DataObject> getSharedData(const DataPath& path) const;
+  std::shared_ptr<const AbstractDataObject> getSharedData(const DataPath& path) const override;
 
   /**
-   * @brief Returns the shared pointer for the DataObject at the target path.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns the shared pointer for the AbstractDataObject at the target path.
+   * Returns nullptr if no AbstractDataObject is found.
    *
    * Use getData(const DataPath&) instead. This was only made public for
-   * use in importing a DataObject from another DataStructure when select data
+   * use in importing a AbstractDataObject from another DataStructure when select data
    * needs to be preserved beyond the imported DataStructure.
    * @param path
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
   template <class T>
   std::shared_ptr<T> getSharedDataAs(const DataPath& path)
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return std::dynamic_pointer_cast<T>(getSharedData(path));
   }
 
   /**
-   * @brief Returns the shared pointer for the DataObject at the target path.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns the shared pointer for the AbstractDataObject at the target path.
+   * Returns nullptr if no AbstractDataObject is found.
    *
    * Use getData(const DataPath&) instead. This was only made public for
-   * use in importing a DataObject from another DataStructure when select data
+   * use in importing a AbstractDataObject from another DataStructure when select data
    * needs to be preserved beyond the imported DataStructure.
    * @param path
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
   template <class T>
   std::shared_ptr<const T> getSharedDataAs(const DataPath& path) const
   {
-    static_assert(std::is_base_of_v<DataObject, T>);
+    static_assert(std::is_base_of_v<AbstractDataObject, T>);
     return std::dynamic_pointer_cast<const T>(getSharedData(path));
   }
 
   /**
-   * @brief Removes the DataObject using the specified IdType. Returns true
+   * @brief Removes the AbstractDataObject using the specified IdType. Returns true
    * if an object was found. Otherwise, returns false.
    * @param identifier
    * @return bool
    */
-  bool removeData(DataObject::IdType identifier);
+  bool removeData(AbstractDataObject::IdType identifier) override;
 
   /**
-   * @brief Removes the DataObject using the specified IdType. Returns true
+   * @brief Removes the AbstractDataObject using the specified IdType. Returns true
    * if an object was found. Otherwise, returns false. If no ID is provided,
    * this returns false.
    * @param identifier
    * @return bool
    */
-  bool removeData(const std::optional<DataObject::IdType>& identifier);
+  bool removeData(const std::optional<AbstractDataObject::IdType>& identifier) override;
 
   /**
-   * @brief Removes the DataObject using the specified DataPath. Returns true
+   * @brief Removes the AbstractDataObject using the specified DataPath. Returns true
    * if an object
    * was found. Otherwise, returns false.
    * @param path
    * @return bool
    */
-  bool removeData(const DataPath& path);
+  bool removeData(const DataPath& path) override;
 
   /**
    * @brief Returns a LinkedPath based on the specified DataPath.
    * @param path
    * @return LinkedPath
    */
-  LinkedPath getLinkedPath(const DataPath& path) const;
+  LinkedPath getLinkedPath(const DataPath& path) const override;
 
   /**
    * @brief Creates the path in the data structure as a series of DataObjects. This method will
@@ -717,53 +718,53 @@ public:
    * @param path The path to create.
    * @return Result<LinkedPath> object.
    */
-  Result<LinkedPath> makePath(const DataPath& path);
+  Result<LinkedPath> makePath(const DataPath& path) override;
 
   /**
-   * @brief Returns a vector of DataPaths for the DataObject with the specified ID.
-   * If no DataObject is found with the given ID, an empty vector is returned.
+   * @brief Returns a vector of DataPaths for the AbstractDataObject with the specified ID.
+   * If no AbstractDataObject is found with the given ID, an empty vector is returned.
    * @param identifier
    * @return std::vector<DataPath>
    */
-  std::vector<DataPath> getDataPathsForId(DataObject::IdType identifier) const;
+  std::vector<DataPath> getDataPathsForId(AbstractDataObject::IdType identifier) const override;
 
   /**
    * @brief Returns a collection of all DataPaths within the structure.
    * @return std::vector<DataPath>
    */
-  std::vector<DataPath> getAllDataPaths() const;
+  std::vector<DataPath> getAllDataPaths() const override;
 
   /**
-   * @brief Returns a collection of all DataObject ids within the structure.
-   * @return std::vector<DataObject::IdType>
+   * @brief Returns a collection of all AbstractDataObject ids within the structure.
+   * @return std::vector<AbstractDataObject::IdType>
    */
-  std::vector<DataObject::IdType> getAllDataObjectIds() const;
+  std::vector<AbstractDataObject::IdType> getAllDataObjectIds() const override;
 
   /**
    * @brief Returns the top-level of the DataStructure.
-   * @return std::vector<DataObject*>
+   * @return std::vector<AbstractDataObject*>
    */
-  std::vector<DataObject*> getTopLevelData() const;
+  std::vector<AbstractDataObject*> getTopLevelData() const override;
 
   /**
    * @brief Returns a reference to the DataMap backing the top level of the DataStructure.
    * @return const DataMap&
    */
-  const DataMap& getDataMap() const;
+  const DataMap& getDataMap() const override;
 
   /**
-   * @brief Inserts a new DataObject into the DataStructure nested under the given
-   * DataPath. If the DataPath is empty, the DataObject is added directly to
-   * the DataStructure. The provided DataObject can exist outside of the DataStructure,
-   * but calling this method with a DataObject already contained within the DataStructure
+   * @brief Inserts a new AbstractDataObject into the DataStructure nested under the given
+   * DataPath. If the DataPath is empty, the AbstractDataObject is added directly to
+   * the DataStructure. The provided AbstractDataObject can exist outside of the DataStructure,
+   * but calling this method with a AbstractDataObject already contained within the DataStructure
    * is undefined behavior.
    *
    * This method is a purely for inserting DataObjects new to the DataStructure.
    *
-   * This method is not meant to add additional parents to a DataObject already
+   * This method is not meant to add additional parents to a AbstractDataObject already
    * existing in the DataStructure. Use addAdditionalParent for that purpose.
    *
-   * This method is not meant to replace the DataObject at a given DataPath.
+   * This method is not meant to replace the AbstractDataObject at a given DataPath.
    * Using it as such is undefined behavior within the DataStructure.
    *
    * Returns true if the process succeeds. Returns false otherwise. Returns false if dataObject is null.
@@ -771,53 +772,53 @@ public:
    * @param dataPath
    * @return bool
    */
-  bool insert(const std::shared_ptr<DataObject>& dataObject, const DataPath& dataPath);
+  bool insert(const std::shared_ptr<AbstractDataObject>& dataObject, const DataPath& dataPath) override;
 
   /**
    * @brief Returns the next ID value to use in the DataStructure
-   * @return DataObject::IdType
+   * @return AbstractDataObject::IdType
    */
-  DataObject::IdType getNextId() const;
+  AbstractDataObject::IdType getNextId() const override;
 
   /**
-   * @brief Adds an additional parent to the target DataObject.
+   * @brief Adds an additional parent to the target AbstractDataObject.
    * @param targetId
    * @param newParent
    * @return bool
    */
-  bool setAdditionalParent(DataObject::IdType targetId, DataObject::IdType newParent);
+  bool setAdditionalParent(AbstractDataObject::IdType targetId, AbstractDataObject::IdType newParent) override;
 
   /**
-   * @brief Removes a parent from the target DataObject.
+   * @brief Removes a parent from the target AbstractDataObject.
    * @param targetId
    * @param parent
    * @return bool
    */
-  bool removeParent(DataObject::IdType targetId, DataObject::IdType parent);
+  bool removeParent(AbstractDataObject::IdType targetId, AbstractDataObject::IdType parent) override;
 
   /**
    * @brief Returns an iterator for the the beginning of the top-level DataMap.
    * @return iterator
    */
-  Iterator begin();
+  Iterator begin() override;
 
   /**
    * @brief Returns an iterator for the the end of the top-level DataMap.
    * @return iterator
    */
-  Iterator end();
+  Iterator end() override;
 
   /**
    * @brief Returns an iterator for the the beginning of the top-level DataMap.
    * @return
    */
-  ConstIterator begin() const;
+  ConstIterator begin() const override;
 
   /**
    * @brief Returns an iterator for the the end of the top-level DataMap.
    * @return
    */
-  ConstIterator end() const;
+  ConstIterator end() const override;
 
   /**
    * @brief Returns a reference the nod signal used to notify observers.
@@ -827,32 +828,32 @@ public:
 
   /**
    * @brief Checks if all IDataArrays at the target paths have the same tuple count.
-   * Returns false if any of the paths are not derived from IDataArray.
+   * Returns false if any of the paths are not derived from AbstractDataArray.
    * @param dataPaths
    * @return bool
    */
-  nonstd::expected<void, std::string> validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const;
+  nonstd::expected<void, std::string> validateNumberOfTuples(const std::vector<DataPath>& dataPaths) const override;
 
   /**
-   * @brief Resets DataObject IDs starting at the provided value.
+   * @brief Resets AbstractDataObject IDs starting at the provided value.
    * Because 0 is a reserved value, if the starting value is set to 0, this method will use 1 instead.
    * @param startingId
    */
-  void resetIds(DataObject::IdType startingId);
+  void resetIds(AbstractDataObject::IdType startingId) override;
 
   /**
    * @brief Outputs data graph in .dot file format
    * @param outputStream the child class of ostream to output dot syntax to
    * @return
    */
-  void exportHierarchyAsGraphViz(std::ostream& outputStream) const;
+  void exportHierarchyAsGraphViz(std::ostream& outputStream) const override;
 
   /**
    * @brief Outputs data graph in console readable format
    * @param outputStream the child class of ostream to output to
    * @return
    */
-  void exportHierarchyAsText(std::ostream& outputStream) const;
+  void exportHierarchyAsText(std::ostream& outputStream) const override;
 
   /**
    * @brief Copy assignment operator. The copied DataStructure's observers are not retained.
@@ -869,33 +870,33 @@ public:
   DataStructure& operator=(DataStructure&& rhs) noexcept;
 
   /**
-   * @brief Sets the next ID to use when constructing a DataObject.
+   * @brief Sets the next ID to use when constructing a AbstractDataObject.
    * Because IDs are created to be unique, this should only be called when
    * importing data instead of on an existing DataStructure to avoid
    * overlapping values.
    * @param nextDataId
    */
-  void setNextId(DataObject::IdType nextDataId);
+  void setNextId(AbstractDataObject::IdType nextDataId) override;
 
   /**
    * @brief Returns a reference to the root DataMap.
    * @return DataMap&
    */
-  DataMap& getRootGroup();
+  DataMap& getRootGroup() override;
 
   /**
    * @brief Flushes all DataObjects to their respective target by calling their respective flush() method.
    * In-memory DataObjects are not affected.
    */
-  void flush() const;
+  void flush() const override;
 
-  uint64 memoryUsage() const;
+  uint64 memoryUsage() const override;
 
   /**
    * @brief Transfers array data to OOC if available.
    * @return Result with Warnings and errors
    */
-  Result<> transferDataArraysOoc();
+  Result<> transferDataArraysOoc() override;
 
   /**
    * @brief This method will validate that each Geometry is valid based on a specific set of criteria
@@ -907,87 +908,87 @@ public:
    *
    * @return Result<> object
    */
-  Result<> validateGeometries() const;
+  Result<> validateGeometries() const override;
 
   /**
    * @brief This method will validate that each AttributeMatrix is valid.
    *
-   * The validation criteria is that for the Attribute Matrix itself: Every contained IArray
-   * object must have the same number of Tuples as every other IArray object and the
+   * The validation criteria is that for the Attribute Matrix itself: Every contained AbstractArray
+   * object must have the same number of Tuples as every other AbstractArray object and the
    * AttributeMatrix itself must also have the same total number of tuples.
    *
    * @return Result<> object
    */
-  Result<> validateAttributeMatrices() const;
+  Result<> validateAttributeMatrices() const override;
 
 protected:
   /**
-   * @brief Returns a new ID for use constructing a DataObject.
-   * IDs created are unique to the DataStructure, not the DataObject. Creating
+   * @brief Returns a new ID for use constructing a AbstractDataObject.
+   * IDs created are unique to the DataStructure, not the AbstractDataObject. Creating
    * a copy of the DataStructure will result in the same ID being used for the
-   * next added DataObject to both structures.
-   * @return DataObject::IdType
+   * next added AbstractDataObject to both structures.
+   * @return AbstractDataObject::IdType
    */
-  DataObject::IdType generateId();
+  AbstractDataObject::IdType generateId();
 
   /**
-   * @brief Adds the DataObject to the list of known DataObjects if it is missing.
+   * @brief Adds the AbstractDataObject to the list of known DataObjects if it is missing.
    * @param dataObject
    */
-  void trackDataObject(const std::shared_ptr<DataObject>& dataObject);
+  void trackDataObject(const std::shared_ptr<AbstractDataObject>& dataObject);
 
   /**
-   * @brief Inserts the provided DataObject into the root DataMap.
+   * @brief Inserts the provided AbstractDataObject into the root DataMap.
    * @param dataObject
    * @return bool
    */
-  bool insertIntoRoot(const std::shared_ptr<DataObject>& dataObject);
+  bool insertIntoRoot(const std::shared_ptr<AbstractDataObject>& dataObject);
 
   /**
-   * @brief Inserts the provided DataObject under the target parent group.
+   * @brief Inserts the provided AbstractDataObject under the target parent group.
    * @param dataObject
    * @param parentGroup
    * @return bool
    */
-  bool insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup);
+  bool insertIntoParent(const std::shared_ptr<AbstractDataObject>& dataObject, BaseGroup* parentGroup);
 
   /**
-   * @brief Applies a new pointer to the DataObject at a specified ID. Removes
-   * the data from the DataMap if no DataObject was provided.
+   * @brief Applies a new pointer to the AbstractDataObject at a specified ID. Removes
+   * the data from the DataMap if no AbstractDataObject was provided.
    * @param identifier
    * @param dataObject
    */
-  void setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject);
+  void setData(AbstractDataObject::IdType identifier, std::shared_ptr<AbstractDataObject> dataObject);
 
 private:
   /**
-   * @brief Inserts the target DataObject to the top of the DataStructure.
+   * @brief Inserts the target AbstractDataObject to the top of the DataStructure.
    * @param obj
    * @return
    */
-  bool insertTopLevel(const std::shared_ptr<DataObject>& obj);
+  bool insertTopLevel(const std::shared_ptr<AbstractDataObject>& obj);
 
   /**
-   * @brief Removes the specified DataObject from the top of the DataStructure.
+   * @brief Removes the specified AbstractDataObject from the top of the DataStructure.
    * @param data
    * @return
    */
-  bool removeTopLevel(DataObject* data);
+  bool removeTopLevel(AbstractDataObject* data);
 
   /**
-   * @brief Removes the specified DataObject from the entire DataStructure.
+   * @brief Removes the specified AbstractDataObject from the entire DataStructure.
    * @param data
    * @return bool
    */
-  bool removeData(DataObject* data);
+  bool removeData(AbstractDataObject* data);
 
   /**
-   * @brief Called when a DataObject is deleted from the DataStructure. This
+   * @brief Called when a AbstractDataObject is deleted from the DataStructure. This
    * notifies observers to the change.
    * @param identifier
    * @param name
    */
-  void dataDeleted(DataObject::IdType identifier, const std::string& name);
+  void dataDeleted(AbstractDataObject::IdType identifier, const std::string& name);
 
   /**
    * @brief Resets the DataStructure for all known DataObjecs in the DataStructure.
@@ -1027,6 +1028,6 @@ private:
   WeakCollectionType m_DataObjects;
   DataMap m_RootGroup;
   bool m_IsValid = false;
-  DataObject::IdType m_NextId = 1;
+  AbstractDataObject::IdType m_NextId = 1;
 };
 } // namespace nx::core

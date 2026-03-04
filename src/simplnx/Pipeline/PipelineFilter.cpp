@@ -198,7 +198,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
   std::vector<DataPath> newModifiedPaths;
   for(const auto& action : result.outputActions.value().actions)
   {
-    if(const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get()); creationActionPtr != nullptr)
+    if(const auto* creationActionPtr = dynamic_cast<const AbstractDataCreationAction*>(action.get()); creationActionPtr != nullptr)
     {
       auto allCreatedPaths = creationActionPtr->getAllCreatedPaths();
       newCreatedPaths.insert(newCreatedPaths.end(), allCreatedPaths.begin(), allCreatedPaths.end());
@@ -207,7 +207,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
 
   for(const auto& action : result.outputActions.value().deferredActions)
   {
-    if(const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get()); creationActionPtr != nullptr)
+    if(const auto* creationActionPtr = dynamic_cast<const AbstractDataCreationAction*>(action.get()); creationActionPtr != nullptr)
     {
       auto allCreatedPaths = creationActionPtr->getAllCreatedPaths();
       newCreatedPaths.insert(newCreatedPaths.end(), allCreatedPaths.begin(), allCreatedPaths.end());

@@ -111,7 +111,7 @@ IFilter::PreflightResult ComputeBiasedFeaturesFilter::preflightImpl(const DataSt
     return {MakeErrorResult<OutputActions>(-7460, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto& surfaceFeaturesMaskArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceFeaturesArrayPathValue);
+  const auto& surfaceFeaturesMaskArray = dataStructure.getDataRefAs<AbstractDataArray>(pSurfaceFeaturesArrayPathValue);
   auto action =
       std::make_unique<CreateArrayAction>(DataType::boolean, surfaceFeaturesMaskArray.getTupleShape(), std::vector<usize>{1}, pCentroidsArrayPathValue.replaceName(pBiasedFeaturesArrayNameValue));
   resultOutputActions.value().appendAction(std::move(action));

@@ -11,9 +11,9 @@ namespace nx::core::HDF5
 EdgeGeomIO::EdgeGeomIO() = default;
 EdgeGeomIO::~EdgeGeomIO() noexcept = default;
 
-DataObject::Type EdgeGeomIO::getDataType() const
+AbstractDataObject::Type EdgeGeomIO::getDataType() const
 {
-  return DataObject::Type::EdgeGeom;
+  return IDataObject::Type::EdgeGeom;
 }
 
 std::string EdgeGeomIO::getTypeName() const
@@ -21,11 +21,11 @@ std::string EdgeGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                              const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, AbstractDataObject::IdType importId,
+                              const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* geometry = EdgeGeom::Import(structureReader.getDataStructure(), objectName, importId, parentId);
-  Result<> result = INodeGeom1dIO::ReadNodeGeom1dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  Result<> result = AbstractNodeGeom1dIO::ReadNodeGeom1dData(structureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {
     return result;
@@ -67,7 +67,7 @@ Result<> EdgeGeomIO::finishImportingData(DataStructure& dataStructure, const Dat
 Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
 {
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
-  INodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);
+  AbstractNodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);
 
   Result<> result = WriteDataId(groupWriter, geometry.getVertexListId(), IOConstants::k_VertexListTag);
   if(result.invalid())
@@ -108,7 +108,7 @@ Result<> EdgeGeomIO::writeData(DataStructureWriter& dataStructureWriter, const E
   return {};
 }
 
-Result<> EdgeGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> EdgeGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }

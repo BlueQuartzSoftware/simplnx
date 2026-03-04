@@ -1,12 +1,12 @@
 #pragma once
 
-#include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/AbstractDataIO.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 
 namespace nx::core::HDF5
 {
 template <typename T>
-class ScalarDataIO : public IDataIO
+class ScalarDataIO : public AbstractDataIO
 {
 public:
   using data_type = ScalarData<T>;
@@ -25,8 +25,8 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& scalarName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& scalarName, AbstractDataObject::IdType importId,
+                    const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(scalarName);
 
@@ -71,19 +71,19 @@ public:
   }
 
   /**
-   * @brief Attempts to write the DataObject to HDF5.
-   * Returns an error if the DataObject cannot be cast to a ScalarData.
+   * @brief Attempts to write the AbstractDataObject to HDF5.
+   * Returns an error if the AbstractDataObject cannot be cast to a ScalarData.
    * Otherwise, this method returns writeData(...)
    * Return Result<>
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const override
   {
     return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
   }
 
-  DataObject::Type getDataType() const override
+  AbstractDataObject::Type getDataType() const override
   {
-    return DataObject::Type::ScalarData;
+    return IDataObject::Type::ScalarData;
   }
 
   std::string getTypeName() const override

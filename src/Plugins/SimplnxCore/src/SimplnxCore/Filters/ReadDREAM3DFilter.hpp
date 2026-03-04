@@ -2,9 +2,9 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Parameters.hpp"
 
 namespace nx::core
@@ -14,7 +14,7 @@ namespace nx::core
  * @brief The ReadDREAM3DFilter is an IFilter class designed to import data
  * from a target DREAM3D-NX file.
  */
-class SIMPLNXCORE_EXPORT ReadDREAM3DFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReadDREAM3DFilter : public AbstractFilter
 {
 public:
   ReadDREAM3DFilter() = default;

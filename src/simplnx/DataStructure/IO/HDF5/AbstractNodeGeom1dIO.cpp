@@ -1,0 +1,94 @@
+#include "AbstractNodeGeom1dIO.hpp"
+
+#include "DataStructureReader.hpp"
+#include "DataStructureWriter.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry1D.hpp"
+#include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
+
+namespace nx::core::HDF5
+{
+AbstractNodeGeom1dIO::AbstractNodeGeom1dIO() = default;
+AbstractNodeGeom1dIO::~AbstractNodeGeom1dIO() noexcept = default;
+
+Result<> AbstractNodeGeom1dIO::ReadNodeGeom1dData(DataStructureReader& dataStructureReader, AbstractNodeGeometry1D& geometry, const group_reader_type& parentGroup, const std::string& objectName,
+                                                  AbstractDataObject::IdType importId, const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore)
+{
+  Result<> result = AbstractNodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  auto groupReader = parentGroup.openGroup(objectName);
+  geometry.setEdgeListId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
+  geometry.setEdgeDataId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
+  geometry.setElementContainingVertId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
+  geometry.setElementNeighborsId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
+  geometry.setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+
+  // Required data
+  if(useEmptyDataStore)
+  {
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeDataTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
+    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
+  }
+
+  return {};
+}
+
+Result<> AbstractNodeGeom1dIO::FinishImportingNodeGeom1dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+{
+  auto* geom = dataStructure.getDataAs<AbstractNodeGeometry1D>(dataPath);
+  if(geom == nullptr)
+  {
+    return MakeErrorResult(-50590, fmt::format("Failed to finish importing AbstractNodeGeometry1D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
+  }
+
+  return AbstractNodeGeom0dIO::FinishImportingNodeGeom0dData(dataStructure, dataPath, dataStructureGroup);
+}
+
+Result<> AbstractNodeGeom1dIO::WriteNodeGeom1dData(DataStructureWriter& dataStructureWriter, const AbstractNodeGeometry1D& geometry, group_writer_type& parentGroupWriter, bool importable)
+{
+  Result<> result = AbstractNodeGeom0dIO::WriteNodeGeom0dData(dataStructureWriter, geometry, parentGroupWriter, importable);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
+  result = WriteDataId(groupWriter, geometry.getEdgeListId(), IOConstants::k_EdgeListTag);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  result = WriteDataId(groupWriter, geometry.getEdgeAttributeMatrixId(), IOConstants::k_EdgeDataTag);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  result = WriteDataId(groupWriter, geometry.getElementContainingVertId(), IOConstants::k_ElementContainingVertTag);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  result = WriteDataId(groupWriter, geometry.getElementNeighborsId(), IOConstants::k_ElementNeighborsTag);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  result = WriteDataId(groupWriter, geometry.getElementCentroidsId(), IOConstants::k_ElementCentroidTag);
+  if(result.invalid())
+  {
+    return result;
+  }
+
+  return {};
+}
+} // namespace nx::core::HDF5

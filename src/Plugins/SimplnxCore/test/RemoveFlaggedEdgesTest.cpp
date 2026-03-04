@@ -60,28 +60,28 @@ TEST_CASE("SimplnxCore::RemoveFlaggedEdgesFilter: Test Algorithm", "[SimplnxCore
     DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(::k_RegionIdsName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(::k_RegionIdsName);
 
-    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<AbstractDataArray>(generated), dataStructure.getDataRefAs<AbstractDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(::k_SliceIdsName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Edge_Data).createChildPath(::k_SliceIdsName);
 
-    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<AbstractDataArray>(generated), dataStructure.getDataRefAs<AbstractDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(::k_VertexListName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_VertexListName);
 
-    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<AbstractDataArray>(generated), dataStructure.getDataRefAs<AbstractDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(::k_EdgeListName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_EdgeListName);
 
-    UnitTest::CompareDataArrays<uint64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    UnitTest::CompareDataArrays<uint64>(dataStructure.getDataRefAs<AbstractDataArray>(generated), dataStructure.getDataRefAs<AbstractDataArray>(exemplar));
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

@@ -1,0 +1,282 @@
+digraph simplnx_hierarchy {
+  rankdir=BT;
+  fontname="Helvetica";
+  node [fontname="Helvetica", fontsize=10, shape=record];
+  edge [arrowhead=empty];
+
+  // ===== Color Legend =====
+  subgraph cluster_legend {
+    label="Legend";
+    style=rounded;
+    fontsize=12;
+    fontname="Helvetica-Bold";
+    legend_interface [label="Pure Interface", style=filled, fillcolor="#A8D8EA"];
+    legend_nearpure [label="Near-Pure Interface", style=filled, fillcolor="#B8E6C8"];
+    legend_abstract [label="Abstract Base Class", style=filled, fillcolor="#FFD580"];
+    legend_concrete [label="Concrete Class", style=filled, fillcolor="#E8E8E8"];
+    legend_concretebase [label="Concrete Base (protected ctor)", style=filled, fillcolor="#D4B8E0"];
+  }
+
+  // ===== Pure Interfaces (blue) =====
+  IFilter [label="{IFilter|13 pure virtual methods|Phase 3}", style=filled, fillcolor="#A8D8EA"];
+  IPlugin [label="{IPlugin|11 pure virtual methods|Phase 5}", style=filled, fillcolor="#A8D8EA"];
+  IPipelineNode [label="{IPipelineNode|24 pure virtual methods|Phase 4}", style=filled, fillcolor="#A8D8EA"];
+  IDataStructure [label="{IDataStructure|39+ pure virtual methods|Phase 7}", style=filled, fillcolor="#A8D8EA"];
+  IGeometry [label="{IGeometry|6 pure virtual methods|Phase 6}", style=filled, fillcolor="#A8D8EA"];
+  IGridGeometry [label="{IGridGeometry|19 pure virtual methods|Phase 6}", style=filled, fillcolor="#A8D8EA"];
+  INodeGeometry0D [label="{INodeGeometry0D|marker interface|Phase 6}", style=filled, fillcolor="#A8D8EA"];
+  INodeGeometry1D [label="{INodeGeometry1D|4 pure virtual methods|Phase 6}", style=filled, fillcolor="#A8D8EA"];
+  INodeGeometry2D [label="{INodeGeometry2D|3 pure virtual methods|Phase 6}", style=filled, fillcolor="#A8D8EA"];
+  INodeGeometry3D [label="{INodeGeometry3D|3 pure virtual methods|Phase 6}", style=filled, fillcolor="#A8D8EA"];
+  ISegmentFeatures [label="{ISegmentFeatures|5 pure virtual methods|Phase 2}", style=filled, fillcolor="#A8D8EA"];
+  IMaskCompare [label="{IMaskCompare|7 pure virtual methods|pre-existing}", style=filled, fillcolor="#A8D8EA"];
+  IJsonFilterParser [label="{IJsonFilterParser|2 pure virtual methods|pre-existing}", style=filled, fillcolor="#A8D8EA"];
+  IPluginLoader [label="{IPluginLoader|3 pure virtual methods|pre-existing}", style=filled, fillcolor="#A8D8EA"];
+  IDataAction [label="{IDataAction|2 pure virtual methods}", style=filled, fillcolor="#A8D8EA"];
+
+  IDataStore [label="{IDataStore|17 pure virtual methods|Phase 9}", style=filled, fillcolor="#A8D8EA"];
+  IListStore [label="{IListStore|10 pure virtual methods|Phase 9}", style=filled, fillcolor="#A8D8EA"];
+  IDataFactory [label="{IDataFactory|1 pure virtual method|Phase 9}", style=filled, fillcolor="#A8D8EA"];
+
+  // ===== Near-Pure Interfaces (green) =====
+  // (none remaining — all promoted to Pure Interface)
+
+  IParameter [label="{IParameter|14 pure virtual methods|Phase 10}", style=filled, fillcolor="#A8D8EA"];
+
+  // ===== Abstract Base Classes (orange) =====
+  AbstractFilter [label="{AbstractFilter|Template Method pattern}", style=filled, fillcolor="#FFD580"];
+  AbstractPlugin [label="{AbstractPlugin|1 pure virtual remains}", style=filled, fillcolor="#FFD580"];
+  AbstractPipelineNode [label="{AbstractPipelineNode|7 pure virtual|18 concrete}", style=filled, fillcolor="#FFD580"];
+  AbstractPipelineFilter [label="{AbstractPipelineFilter|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  AbstractGeometry [label="{AbstractGeometry|k_TypeName = \"IGeometry\"}", style=filled, fillcolor="#FFD580"];
+  AbstractGridGeometry [label="{AbstractGridGeometry|k_TypeName = \"IGridGeometry\"}", style=filled, fillcolor="#FFD580"];
+  AbstractNodeGeometry0D [label="{AbstractNodeGeometry0D|k_TypeName = \"INodeGeometry0D\"}", style=filled, fillcolor="#FFD580"];
+  AbstractNodeGeometry1D [label="{AbstractNodeGeometry1D|k_TypeName = \"INodeGeometry1D\"}", style=filled, fillcolor="#FFD580"];
+  AbstractNodeGeometry2D [label="{AbstractNodeGeometry2D|k_TypeName = \"INodeGeometry2D\"}", style=filled, fillcolor="#FFD580"];
+  AbstractNodeGeometry3D [label="{AbstractNodeGeometry3D|k_TypeName = \"INodeGeometry3D\"}", style=filled, fillcolor="#FFD580"];
+  AbstractSegmentFeatures [label="{AbstractSegmentFeatures}", style=filled, fillcolor="#FFD580"];
+  IDataObject [label="{IDataObject|21 pure virtual methods|Phase 14}", style=filled, fillcolor="#A8D8EA"];
+  AbstractDataObject [label="{AbstractDataObject|3 pure virtual|renamed from DataObject Phase 14}", style=filled, fillcolor="#FFD580"];
+  BaseGroup [label="{BaseGroup}", style=filled, fillcolor="#FFD580"];
+  AbstractArray [label="{AbstractArray|12 pure virtual|renamed from IArray Phase 11}", style=filled, fillcolor="#FFD580"];
+  AbstractDataArray [label="{AbstractDataArray|4 pure virtual|renamed from IDataArray Phase 11}", style=filled, fillcolor="#FFD580"];
+  AbstractNeighborList [label="{AbstractNeighborList|4 pure virtual|renamed from INeighborList Phase 11}", style=filled, fillcolor="#FFD580"];
+  AbstractDataStore [label="{AbstractDataStore\<T\>|20 pure virtual}", style=filled, fillcolor="#FFD580"];
+  AbstractListStore [label="{AbstractListStore\<T\>|14 pure virtual}", style=filled, fillcolor="#FFD580"];
+  IStringStore [label="{IStringStore|12 pure virtual|promoted Phase 15}", style=filled, fillcolor="#A8D8EA"];
+  AbstractMontage [label="{AbstractMontage|5 pure virtual}", style=filled, fillcolor="#FFD580"];
+  AbstractTileIndex [label="{AbstractTileIndex|3 pure virtual}", style=filled, fillcolor="#FFD580"];
+  AbstractParameter [label="{AbstractParameter}", style=filled, fillcolor="#FFD580"];
+  ValueParameter [label="{ValueParameter|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  DataParameter [label="{DataParameter|2 pure virtual}", style=filled, fillcolor="#FFD580"];
+  MutableDataParameter [label="{MutableDataParameter|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  ConstDataParameter [label="{ConstDataParameter|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  AbstractDataCreationAction [label="{AbstractDataCreationAction|1 pure virtual|renamed Phase 15}", style=filled, fillcolor="#FFD580"];
+  AbstractDataIOManager [label="{AbstractDataIOManager|1 pure virtual|renamed Phase 12}", style=filled, fillcolor="#FFD580"];
+  HDF5_AbstractDataIO [label="{HDF5::AbstractDataIO|3 pure virtual|renamed Phase 15}", style=filled, fillcolor="#FFD580"];
+  HDF5_ObjectIO [label="{HDF5::ObjectIO|2 pure virtual}", style=filled, fillcolor="#FFD580"];
+  AlignSections [label="{AlignSections|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  SampleSurfaceMesh [label="{SampleSurfaceMesh|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  IArrayThreshold_iface [label="{IArrayThreshold|6 pure virtual|Phase 11}", style=filled, fillcolor="#A8D8EA"];
+  AbstractArrayThreshold [label="{AbstractArrayThreshold|Phase 11}", style=filled, fillcolor="#FFD580"];
+  IJsonPipelineParser_iface [label="{IJsonPipelineParser|2 pure virtual|Phase 11}", style=filled, fillcolor="#A8D8EA"];
+  AbstractJsonPipelineParser [label="{AbstractJsonPipelineParser|Phase 11}", style=filled, fillcolor="#FFD580"];
+  AbstractDataParser [label="{CSV::AbstractDataParser|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  AbstractDataStructureMessage [label="{AbstractDataStructureMessage|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  AbstractPipelineMessage [label="{AbstractPipelineMessage|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+  PipelineNodeObserver [label="{PipelineNodeObserver|1 pure virtual}", style=filled, fillcolor="#FFD580"];
+
+  // ===== Concrete Base Class (purple) =====
+  ParallelAlgorithm [label="{ParallelAlgorithm|protected ctor}", style=filled, fillcolor="#D4B8E0"];
+
+  // ===== Concrete Classes (gray) =====
+  DataStructure [label="{DataStructure}", style=filled, fillcolor="#E8E8E8"];
+  ConcreteFilters [label="{Concrete Filters|hundreds in Plugins/}", style=filled, fillcolor="#E8E8E8"];
+  ConcretePlugins [label="{Concrete Plugins|in Plugins/}", style=filled, fillcolor="#E8E8E8"];
+  Pipeline [label="{Pipeline}", style=filled, fillcolor="#E8E8E8"];
+  PipelineFilter [label="{PipelineFilter}", style=filled, fillcolor="#E8E8E8"];
+  PlaceholderFilter [label="{PlaceholderFilter}", style=filled, fillcolor="#E8E8E8"];
+  ImageGeom [label="{ImageGeom}", style=filled, fillcolor="#E8E8E8"];
+  RectGridGeom [label="{RectGridGeom}", style=filled, fillcolor="#E8E8E8"];
+  VertexGeom [label="{VertexGeom}", style=filled, fillcolor="#E8E8E8"];
+  EdgeGeom [label="{EdgeGeom}", style=filled, fillcolor="#E8E8E8"];
+  TriangleGeom [label="{TriangleGeom}", style=filled, fillcolor="#E8E8E8"];
+  QuadGeom [label="{QuadGeom}", style=filled, fillcolor="#E8E8E8"];
+  TetrahedralGeom [label="{TetrahedralGeom}", style=filled, fillcolor="#E8E8E8"];
+  HexahedralGeom [label="{HexahedralGeom}", style=filled, fillcolor="#E8E8E8"];
+  DataGroup [label="{DataGroup}", style=filled, fillcolor="#E8E8E8"];
+  AttributeMatrix [label="{AttributeMatrix}", style=filled, fillcolor="#E8E8E8"];
+  DataArray [label="{DataArray\<T\>}", style=filled, fillcolor="#E8E8E8"];
+  NeighborList [label="{NeighborList\<T\>}", style=filled, fillcolor="#E8E8E8"];
+  StringArray [label="{StringArray}", style=filled, fillcolor="#E8E8E8"];
+  DataStore [label="{DataStore\<T\>}", style=filled, fillcolor="#E8E8E8"];
+  EmptyDataStore [label="{EmptyDataStore\<T\>}", style=filled, fillcolor="#E8E8E8"];
+  ListStore [label="{ListStore\<T\>}", style=filled, fillcolor="#E8E8E8"];
+  StringStore [label="{StringStore}", style=filled, fillcolor="#E8E8E8"];
+  GridMontage [label="{GridMontage}", style=filled, fillcolor="#E8E8E8"];
+  GridTileIndex [label="{GridTileIndex}", style=filled, fillcolor="#E8E8E8"];
+  BoolMaskCompare [label="{BoolMaskCompare}", style=filled, fillcolor="#E8E8E8"];
+  UInt8MaskCompare [label="{UInt8MaskCompare}", style=filled, fillcolor="#E8E8E8"];
+  InMemoryPluginLoader [label="{InMemoryPluginLoader}", style=filled, fillcolor="#E8E8E8"];
+  PluginLoader [label="{PluginLoader}", style=filled, fillcolor="#E8E8E8"];
+  JsonFilterParserV6 [label="{JsonFilterParserV6}", style=filled, fillcolor="#E8E8E8"];
+  JsonFilterParserV7 [label="{JsonFilterParserV7}", style=filled, fillcolor="#E8E8E8"];
+  JsonPipelineParserV6 [label="{JsonPipelineParserV6}", style=filled, fillcolor="#E8E8E8"];
+  JsonPipelineParserV7 [label="{JsonPipelineParserV7}", style=filled, fillcolor="#E8E8E8"];
+  ArrayThreshold [label="{ArrayThreshold}", style=filled, fillcolor="#E8E8E8"];
+  ArrayThresholdSet [label="{ArrayThresholdSet}", style=filled, fillcolor="#E8E8E8"];
+  ConcreteValueParams [label="{17 ValueParameter subclasses}", style=filled, fillcolor="#E8E8E8"];
+  ConcreteMutableParams [label="{12 MutableDataParameter subclasses}", style=filled, fillcolor="#E8E8E8"];
+  ConcreteCreationActions [label="{16 creation actions}", style=filled, fillcolor="#E8E8E8"];
+  ConcreteDirectActions [label="{5 direct actions}", style=filled, fillcolor="#E8E8E8"];
+  ConcreteSegmentFeatures [label="{Concrete SegmentFeatures|in Plugins/}", style=filled, fillcolor="#E8E8E8"];
+  ParallelDataAlgorithm [label="{ParallelDataAlgorithm}", style=filled, fillcolor="#E8E8E8"];
+  ParallelData2DAlgorithm [label="{ParallelData2DAlgorithm}", style=filled, fillcolor="#E8E8E8"];
+  ParallelData3DAlgorithm [label="{ParallelData3DAlgorithm}", style=filled, fillcolor="#E8E8E8"];
+  ParallelTaskAlgorithm [label="{ParallelTaskAlgorithm}", style=filled, fillcolor="#E8E8E8"];
+  HDF5_GroupIO [label="{HDF5::GroupIO}", style=filled, fillcolor="#E8E8E8"];
+  HDF5_FileIO [label="{HDF5::FileIO}", style=filled, fillcolor="#E8E8E8"];
+  HDF5_DatasetIO [label="{HDF5::DatasetIO}", style=filled, fillcolor="#E8E8E8"];
+  CSVDataParser [label="{CSVDataParser\<T\>}", style=filled, fillcolor="#E8E8E8"];
+  ConcreteDataStructureMessages [label="{4 DataStructure messages}", style=filled, fillcolor="#E8E8E8"];
+  ConcretePipelineMessages [label="{9 Pipeline messages}", style=filled, fillcolor="#E8E8E8"];
+
+  // ========================================
+  // EDGES: Inheritance (child -> parent)
+  // ========================================
+
+  // --- IDataStructure hierarchy ---
+  DataStructure -> IDataStructure;
+
+  // --- Filter hierarchy ---
+  AbstractFilter -> IFilter;
+  ConcreteFilters -> AbstractFilter;
+
+  // --- Plugin hierarchy ---
+  AbstractPlugin -> IPlugin;
+  ConcretePlugins -> AbstractPlugin;
+
+  // --- Pipeline hierarchy ---
+  AbstractPipelineNode -> IPipelineNode;
+  Pipeline -> AbstractPipelineNode;
+  Pipeline -> PipelineNodeObserver [style=dashed, label="protected"];
+  AbstractPipelineFilter -> AbstractPipelineNode;
+  PipelineFilter -> AbstractPipelineFilter;
+  PlaceholderFilter -> AbstractPipelineFilter;
+
+  // --- Geometry hierarchy (dual inheritance) ---
+  AbstractGeometry -> BaseGroup;
+  AbstractGeometry -> IGeometry;
+
+  AbstractGridGeometry -> AbstractGeometry;
+  AbstractGridGeometry -> IGridGeometry;
+  ImageGeom -> AbstractGridGeometry;
+  RectGridGeom -> AbstractGridGeometry;
+
+  AbstractNodeGeometry0D -> AbstractGeometry;
+  AbstractNodeGeometry0D -> INodeGeometry0D;
+  VertexGeom -> AbstractNodeGeometry0D;
+
+  AbstractNodeGeometry1D -> AbstractNodeGeometry0D;
+  AbstractNodeGeometry1D -> INodeGeometry1D;
+  EdgeGeom -> AbstractNodeGeometry1D;
+
+  AbstractNodeGeometry2D -> AbstractNodeGeometry1D;
+  AbstractNodeGeometry2D -> INodeGeometry2D;
+  TriangleGeom -> AbstractNodeGeometry2D;
+  QuadGeom -> AbstractNodeGeometry2D;
+
+  AbstractNodeGeometry3D -> AbstractNodeGeometry2D;
+  AbstractNodeGeometry3D -> INodeGeometry3D;
+  TetrahedralGeom -> AbstractNodeGeometry3D;
+  HexahedralGeom -> AbstractNodeGeometry3D;
+
+  // --- DataObject hierarchy ---
+  AbstractDataObject -> IDataObject;
+  BaseGroup -> AbstractDataObject;
+  DataGroup -> BaseGroup;
+  AttributeMatrix -> BaseGroup;
+  AbstractMontage -> BaseGroup;
+  GridMontage -> AbstractMontage;
+
+  AbstractArray -> AbstractDataObject;
+  AbstractDataArray -> AbstractArray;
+  DataArray -> AbstractDataArray;
+  AbstractNeighborList -> AbstractArray;
+  NeighborList -> AbstractNeighborList;
+  StringArray -> AbstractArray;
+
+  // --- DataStore hierarchy ---
+  AbstractDataStore -> IDataStore;
+  DataStore -> AbstractDataStore;
+  EmptyDataStore -> AbstractDataStore;
+
+  // --- ListStore hierarchy ---
+  AbstractListStore -> IListStore;
+  ListStore -> AbstractListStore;
+
+  // --- StringStore hierarchy ---
+  StringStore -> IStringStore;
+
+  // --- Montage hierarchy ---
+  GridTileIndex -> AbstractTileIndex;
+
+  // --- Parameter hierarchy ---
+  AbstractParameter -> IParameter;
+  ValueParameter -> AbstractParameter;
+  DataParameter -> AbstractParameter;
+  MutableDataParameter -> DataParameter;
+  ConstDataParameter -> DataParameter;
+  ConcreteValueParams -> ValueParameter;
+  ConcreteMutableParams -> MutableDataParameter;
+
+  // --- DataAction hierarchy ---
+  AbstractDataCreationAction -> IDataAction;
+  ConcreteCreationActions -> AbstractDataCreationAction;
+  ConcreteDirectActions -> IDataAction;
+
+  // --- SegmentFeatures hierarchy ---
+  AbstractSegmentFeatures -> ISegmentFeatures;
+  ConcreteSegmentFeatures -> AbstractSegmentFeatures;
+
+  // --- MaskCompare hierarchy ---
+  BoolMaskCompare -> IMaskCompare;
+  UInt8MaskCompare -> IMaskCompare;
+
+  // --- PluginLoader hierarchy ---
+  InMemoryPluginLoader -> IPluginLoader;
+  PluginLoader -> IPluginLoader;
+
+  // --- JsonFilterParser hierarchy ---
+  JsonFilterParserV6 -> IJsonFilterParser;
+  JsonFilterParserV7 -> IJsonFilterParser;
+
+  // --- JsonPipelineParser hierarchy ---
+  AbstractJsonPipelineParser -> IJsonPipelineParser_iface;
+  JsonPipelineParserV6 -> AbstractJsonPipelineParser;
+  JsonPipelineParserV7 -> AbstractJsonPipelineParser;
+
+  // --- ArrayThreshold hierarchy ---
+  AbstractArrayThreshold -> IArrayThreshold_iface;
+  ArrayThreshold -> AbstractArrayThreshold;
+  ArrayThresholdSet -> AbstractArrayThreshold;
+
+  // --- IO hierarchy ---
+  HDF5_AbstractDataIO -> IDataFactory;
+  HDF5_GroupIO -> HDF5_ObjectIO;
+  HDF5_FileIO -> HDF5_GroupIO;
+  HDF5_DatasetIO -> HDF5_ObjectIO;
+
+  // --- ParallelAlgorithm hierarchy ---
+  ParallelDataAlgorithm -> ParallelAlgorithm;
+  ParallelData2DAlgorithm -> ParallelAlgorithm;
+  ParallelData3DAlgorithm -> ParallelAlgorithm;
+  ParallelTaskAlgorithm -> ParallelAlgorithm;
+
+  // --- CSV parser hierarchy ---
+  CSVDataParser -> AbstractDataParser;
+
+  // --- Messaging hierarchies ---
+  ConcreteDataStructureMessages -> AbstractDataStructureMessage;
+  ConcretePipelineMessages -> AbstractPipelineMessage;
+}

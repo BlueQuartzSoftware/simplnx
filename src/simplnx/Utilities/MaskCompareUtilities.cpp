@@ -5,15 +5,15 @@
 using namespace nx::core;
 
 //-----------------------------------------------------------------------------
-std::unique_ptr<MaskCompareUtilities::MaskCompare> MaskCompareUtilities::InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath)
+std::unique_ptr<MaskCompareUtilities::IMaskCompare> MaskCompareUtilities::InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath)
 {
-  auto& maskArray = dataStructure.getDataRefAs<IDataArray>(maskArrayPath);
+  auto& maskArray = dataStructure.getDataRefAs<AbstractDataArray>(maskArrayPath);
 
   return MaskCompareUtilities::InstantiateMaskCompare(maskArray);
 }
 
 //-----------------------------------------------------------------------------
-std::unique_ptr<MaskCompareUtilities::MaskCompare> MaskCompareUtilities::InstantiateMaskCompare(IDataArray& maskArray)
+std::unique_ptr<MaskCompareUtilities::IMaskCompare> MaskCompareUtilities::InstantiateMaskCompare(AbstractDataArray& maskArray)
 {
   switch(maskArray.getDataType())
   {

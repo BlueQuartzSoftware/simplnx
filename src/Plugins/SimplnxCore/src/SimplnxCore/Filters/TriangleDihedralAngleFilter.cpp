@@ -3,7 +3,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"

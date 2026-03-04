@@ -537,6 +537,11 @@ public:
 
   ~AbstractListStore() override = default;
 
+  uint64 size() const override
+  {
+    return getNumberOfLists();
+  }
+
   virtual std::unique_ptr<AbstractListStore> deepCopy() const = 0;
 
   /**

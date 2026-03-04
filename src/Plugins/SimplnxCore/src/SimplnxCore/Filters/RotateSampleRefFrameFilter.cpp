@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/Filters/Algorithms/RotateSampleRefFrame.hpp"
 
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -201,7 +201,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
 
     for(const auto& [id, object] : selectedCellData)
     {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      const auto& srcArray = dynamic_cast<const AbstractDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
       ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
@@ -220,7 +220,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   }
 
   // copy over the rest of the data
-  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, IDataObject::Type::AbstractDataObject, ignorePaths);
   if(childPaths.has_value())
   {
     for(const auto& childPath : childPaths.value())

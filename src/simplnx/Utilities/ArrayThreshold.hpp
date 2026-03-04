@@ -3,6 +3,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Utilities/IArrayThreshold.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <nlohmann/json.hpp>
@@ -15,31 +16,25 @@ namespace nx::core
 {
 
 /**
- * @brief
+ * @brief Abstract base class for array thresholds. Provides data storage for
+ * inversion state and union operator, with concrete implementations of the
+ * IArrayThreshold interface methods.
  */
-class SIMPLNX_EXPORT IArrayThreshold
+class SIMPLNX_EXPORT AbstractArrayThreshold : public IArrayThreshold
 {
 public:
-  enum class UnionOperator : uint8
-  {
-    And,
-    Or
-  };
+  AbstractArrayThreshold();
+  AbstractArrayThreshold(const AbstractArrayThreshold& other);
+  AbstractArrayThreshold(AbstractArrayThreshold&& other) noexcept;
+  ~AbstractArrayThreshold() override;
 
-  IArrayThreshold();
-  IArrayThreshold(const IArrayThreshold& other);
-  IArrayThreshold(IArrayThreshold&& other) noexcept;
-  virtual ~IArrayThreshold();
+  [[nodiscard]] bool isInverted() const override;
+  void setInverted(bool inverted) override;
 
-  [[nodiscard]] bool isInverted() const;
-  void setInverted(bool inverted);
+  [[nodiscard]] UnionOperator getUnionOperator() const override;
+  void setUnionOperator(UnionOperator unionType) override;
 
-  [[nodiscard]] UnionOperator getUnionOperator() const;
-  void setUnionOperator(UnionOperator unionType);
-
-  [[nodiscard]] virtual std::set<DataPath> getRequiredPaths() const = 0;
-
-  [[nodiscard]] virtual nlohmann::json toJson() const;
+  [[nodiscard]] nlohmann::json toJson() const override;
 
 private:
   bool m_IsInverted{false};
@@ -49,7 +44,7 @@ private:
 /**
  * @brief
  */
-class SIMPLNX_EXPORT ArrayThreshold : public IArrayThreshold
+class SIMPLNX_EXPORT ArrayThreshold : public AbstractArrayThreshold
 {
 public:
   using ComparisonValue = float64;
@@ -96,7 +91,7 @@ private:
 /**
  * @brief
  */
-class SIMPLNX_EXPORT ArrayThresholdSet : public IArrayThreshold
+class SIMPLNX_EXPORT ArrayThresholdSet : public AbstractArrayThreshold
 {
 public:
   using CollectionType = std::vector<std::shared_ptr<IArrayThreshold>>;

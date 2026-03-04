@@ -3,8 +3,8 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @class MapPointCloudToRegularGridFilter
  * @brief
  */
-class SIMPLNXCORE_EXPORT MapPointCloudToRegularGridFilter : public IFilter
+class SIMPLNXCORE_EXPORT MapPointCloudToRegularGridFilter : public AbstractFilter
 {
 public:
   MapPointCloudToRegularGridFilter() = default;

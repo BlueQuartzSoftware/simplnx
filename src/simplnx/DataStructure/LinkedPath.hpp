@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -10,10 +10,10 @@ namespace nx::core
 /**
  * @class LinkedPath
  * @brief The LinkedPath class is an alternate way to store a path through the
- * DataStructure. Instead of storing DataObject names like DataPath does, the
- * LinkedPath class stores DataObject IDs and the DataStructure it belongs to.
+ * DataStructure. Instead of storing AbstractDataObject names like DataPath does, the
+ * LinkedPath class stores AbstractDataObject IDs and the DataStructure it belongs to.
  * LinkedPath objects can be used to directly create a corresponding DataPath
- * or find the DataObject at any point along the path.
+ * or find the AbstractDataObject at any point along the path.
  */
 class SIMPLNX_EXPORT LinkedPath
 {
@@ -82,53 +82,53 @@ public:
   usize getLength() const;
 
   /**
-   * @brief Returns the DataObject ID at the specified position in the path.
+   * @brief Returns the AbstractDataObject ID at the specified position in the path.
    * This method does not perform bounds checking.
    * @param index
-   * @return DataObject::IdType
+   * @return AbstractDataObject::IdType
    */
-  DataObject::IdType operator[](usize index) const;
+  AbstractDataObject::IdType operator[](usize index) const;
 
   /**
-   * @brief Returns the ID for the target DataObject.
+   * @brief Returns the ID for the target AbstractDataObject.
    *
    * Throws an exception if the path is empty. Otherwise, this will operate
    * even if the path is otherwise invalid.
-   * @return DataObject::IdType
+   * @return AbstractDataObject::IdType
    */
-  DataObject::IdType getId() const;
+  AbstractDataObject::IdType getId() const;
 
   /**
-   * @brief Returns the DataObject ID at the specified position in the path.
+   * @brief Returns the AbstractDataObject ID at the specified position in the path.
    * This method does not perform bounds checking.
    * @param index
-   * @return DataObject::IdType
+   * @return AbstractDataObject::IdType
    */
-  DataObject::IdType getIdAt(usize index) const;
+  AbstractDataObject::IdType getIdAt(usize index) const;
 
   /**
-   * @brief Returns a pointer to the const DataObject targetted by the path.
-   * @return const DataObject*
+   * @brief Returns a pointer to the const AbstractDataObject targetted by the path.
+   * @return const AbstractDataObject*
    */
-  const DataObject* getData() const;
+  const AbstractDataObject* getData() const;
 
   /**
-   * @brief Returns a pointer to the const DataObject at the specified path index.
+   * @brief Returns a pointer to the const AbstractDataObject at the specified path index.
    * @param index
-   * @return const DataObject*
+   * @return const AbstractDataObject*
    */
-  const DataObject* getDataAt(usize index) const;
+  const AbstractDataObject* getDataAt(usize index) const;
 
   /**
-   * @brief Returns the name of the target DataObject. Throws an exception if
-   * the DataObject does not exist.
+   * @brief Returns the name of the target AbstractDataObject. Throws an exception if
+   * the AbstractDataObject does not exist.
    * @return std::string
    */
   std::string getName() const;
 
   /**
-   * @brief Returns the name of the DataObject pointed to by the target position
-   * of the path. Returns "[ missing ]" if the DataObject could not be found.
+   * @brief Returns the name of the AbstractDataObject pointed to by the target position
+   * of the path. Returns "[ missing ]" if the AbstractDataObject could not be found.
    * @param index
    * @return std::string
    */
@@ -136,7 +136,7 @@ public:
 
   /**
    * @brief Returns a string representation of the path using the provided divider
-   * between DataObject names. If no divider is provided, " / " is used instead.
+   * between AbstractDataObject names. If no divider is provided, " / " is used instead.
    *
    * Names are provided using getNameAt(usize).
    * @param div = " / "
@@ -174,14 +174,14 @@ public:
 
 protected:
   /**
-   * @brief Constructs a LinkedPath for the target DataStructure and vector of DataObject IDs.
+   * @brief Constructs a LinkedPath for the target DataStructure and vector of AbstractDataObject IDs.
    * @param dataStructure
    * @param idPath
    */
-  LinkedPath(const DataStructure* dataStructure, const std::vector<DataObject::IdType>& idPath);
+  LinkedPath(const DataStructure* dataStructure, const std::vector<AbstractDataObject::IdType>& idPath);
 
 private:
   const DataStructure* m_DataStructure = nullptr;
-  std::vector<DataObject::IdType> m_IdPath;
+  std::vector<AbstractDataObject::IdType> m_IdPath;
 };
 } // namespace nx::core

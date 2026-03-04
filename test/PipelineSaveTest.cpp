@@ -1,4 +1,5 @@
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PlaceholderFilter.hpp"
 
@@ -12,7 +13,7 @@ using namespace nx::core;
 
 namespace
 {
-class TestFilter : public IFilter
+class TestFilter : public AbstractFilter
 {
 public:
   static constexpr Uuid k_ID = *Uuid::FromString("d01ad5c2-6897-4380-89f1-6d0760b78a22");

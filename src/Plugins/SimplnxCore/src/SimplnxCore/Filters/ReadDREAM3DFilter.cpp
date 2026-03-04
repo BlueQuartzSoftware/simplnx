@@ -162,7 +162,7 @@ Result<> ReadDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Argu
 
 nlohmann::json ReadDREAM3DFilter::toJson(const Arguments& args) const
 {
-  auto json = IFilter::toJson(args);
+  auto json = AbstractFilter::toJson(args);
   // Disabled writing pipeline json from DREAM3D file to prevent infinite recursive loop
   // when the pipeline reads and writes to the same file
   // See https://github.com/BlueQuartzSoftware/simplnx/pull/1033

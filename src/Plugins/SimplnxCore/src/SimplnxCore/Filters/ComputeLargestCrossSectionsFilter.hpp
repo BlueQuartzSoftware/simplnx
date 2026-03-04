@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeLargestCrossSectionsFilter
  * @brief This filter will find the largest cross sections of an image geometry.
  */
-class SIMPLNXCORE_EXPORT ComputeLargestCrossSectionsFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeLargestCrossSectionsFilter : public AbstractFilter
 {
 public:
   ComputeLargestCrossSectionsFilter() = default;

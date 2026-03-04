@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @brief This filter will replace values based on neighbor values. More information can
  * be found in the help file located in docs/ReplaceElementAttributesWithNeighborValuesFilter.md
  */
-class SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesFilter : public AbstractFilter
 {
 public:
   ReplaceElementAttributesWithNeighborValuesFilter() = default;

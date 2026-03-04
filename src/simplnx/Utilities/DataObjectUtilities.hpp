@@ -3,26 +3,26 @@
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractArray.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DynamicListArray.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry1D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
-#include "simplnx/DataStructure/IArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/Montage/AbstractMontage.hpp"
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
@@ -44,8 +44,9 @@ namespace nx::core
  * @param visitedIndex The index into the visited array
  * @return Either the original 'id' if this was already visited or the new 'id' if it was not visited already.
  */
-inline constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::optional<DataObject::IdType>& originalId, const std::pair<DataObject::IdType, DataObject::IdType>& updatedId,
-                                                                        std::vector<bool>& visited, usize visitedIndex)
+inline constexpr std::optional<AbstractDataObject::IdType> VisitDataStructureId(std::optional<AbstractDataObject::IdType>& originalId,
+                                                                                const std::pair<AbstractDataObject::IdType, AbstractDataObject::IdType>& updatedId, std::vector<bool>& visited,
+                                                                                usize visitedIndex)
 {
   if(originalId == updatedId.first && !visited[visitedIndex])
   {
@@ -56,7 +57,7 @@ inline constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::opt
 }
 
 /**
- * @brief Returns a string representation of the passed in IGeometry::Type
+ * @brief Returns a string representation of the passed in AbstractGeometry::Type
  * @param dataType
  * @return
  */
@@ -89,7 +90,7 @@ inline constexpr StringLiteral GeometryTypeToString(IGeometry::Type geomType)
     return "Hexahedral";
   }
   default:
-    throw std::runtime_error("nx::core::GeometryTypeToString: Unknown IGeometry::Type");
+    throw std::runtime_error("nx::core::GeometryTypeToString: Unknown AbstractGeometry::Type");
   }
 }
 
@@ -107,11 +108,11 @@ inline const std::vector<std::string>& GetAllGeometryTypesAsStrings()
 }
 
 /**
- * @brief Returns a IGeometry::Type for the passed in string representation
+ * @brief Returns a AbstractGeometry::Type for the passed in string representation
  * @param geomTypeString
  * @return
  */
-inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeString)
+inline constexpr AbstractGeometry::Type StringToGeometryType(std::string_view geomTypeString)
 {
   if(geomTypeString == GeometryTypeToString(IGeometry::Type::Image).view())
   {
@@ -147,93 +148,93 @@ inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeS
   }
   else
   {
-    throw std::runtime_error("nx::core::StringToGeometryType: No known IGeometry::Type matches the given string value.");
+    throw std::runtime_error("nx::core::StringToGeometryType: No known AbstractGeometry::Type matches the given string value.");
   }
 }
 
-inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjType)
+inline constexpr StringLiteral DataObjectTypeToString(AbstractDataObject::Type dataObjType)
 {
   switch(dataObjType)
   {
-  case nx::core::DataObject::Type::BaseGroup: {
+  case nx::core::IDataObject::Type::BaseGroup: {
     return nx::core::BaseGroup::k_TypeName;
   }
-  case nx::core::DataObject::Type::DataGroup: {
+  case nx::core::IDataObject::Type::DataGroup: {
     return nx::core::DataGroup::k_TypeName;
   }
-  case nx::core::DataObject::Type::AttributeMatrix: {
+  case nx::core::IDataObject::Type::AttributeMatrix: {
     return nx::core::AttributeMatrix::k_TypeName;
   }
-  case nx::core::DataObject::Type::IGeometry: {
-    return nx::core::IGeometry::k_TypeName;
+  case nx::core::IDataObject::Type::AbstractGeometry: {
+    return nx::core::AbstractGeometry::k_TypeName;
   }
-  case nx::core::DataObject::Type::IGridGeometry: {
-    return nx::core::IGridGeometry::k_TypeName;
+  case nx::core::IDataObject::Type::AbstractGridGeometry: {
+    return nx::core::AbstractGridGeometry::k_TypeName;
   }
-  case nx::core::DataObject::Type::INodeGeometry0D: {
-    return nx::core::INodeGeometry0D::k_TypeName;
+  case nx::core::IDataObject::Type::AbstractNodeGeometry0D: {
+    return nx::core::AbstractNodeGeometry0D::k_TypeName;
   }
-  case nx::core::DataObject::Type::INodeGeometry1D: {
-    return nx::core::INodeGeometry1D::k_TypeName;
+  case nx::core::IDataObject::Type::AbstractNodeGeometry1D: {
+    return nx::core::AbstractNodeGeometry1D::k_TypeName;
   }
-  case nx::core::DataObject::Type::INodeGeometry2D: {
-    return nx::core::INodeGeometry2D::k_TypeName;
+  case nx::core::IDataObject::Type::AbstractNodeGeometry2D: {
+    return nx::core::AbstractNodeGeometry2D::k_TypeName;
   }
-  case nx::core::DataObject::Type::INodeGeometry3D: {
-    return nx::core::INodeGeometry3D::k_TypeName;
+  case nx::core::IDataObject::Type::AbstractNodeGeometry3D: {
+    return nx::core::AbstractNodeGeometry3D::k_TypeName;
   }
-  case nx::core::DataObject::Type::ImageGeom: {
+  case nx::core::IDataObject::Type::ImageGeom: {
     return nx::core::ImageGeom::k_TypeName;
   }
-  case nx::core::DataObject::Type::RectGridGeom: {
+  case nx::core::IDataObject::Type::RectGridGeom: {
     return nx::core::RectGridGeom::k_TypeName;
   }
-  case nx::core::DataObject::Type::VertexGeom: {
+  case nx::core::IDataObject::Type::VertexGeom: {
     return nx::core::VertexGeom::k_TypeName;
   }
-  case nx::core::DataObject::Type::EdgeGeom: {
+  case nx::core::IDataObject::Type::EdgeGeom: {
     return nx::core::EdgeGeom::k_TypeName;
   }
-  case nx::core::DataObject::Type::TriangleGeom: {
+  case nx::core::IDataObject::Type::TriangleGeom: {
     return nx::core::TriangleGeom::k_TypeName;
   }
-  case nx::core::DataObject::Type::QuadGeom: {
+  case nx::core::IDataObject::Type::QuadGeom: {
     return nx::core::QuadGeom::k_TypeName;
   }
-  case nx::core::DataObject::Type::TetrahedralGeom: {
+  case nx::core::IDataObject::Type::TetrahedralGeom: {
     return nx::core::TetrahedralGeom::k_TypeName;
   }
-  case nx::core::DataObject::Type::HexahedralGeom: {
+  case nx::core::IDataObject::Type::HexahedralGeom: {
     return nx::core::HexahedralGeom::k_TypeName;
   }
-  case nx::core::DataObject::Type::IDataArray: {
-    return nx::core::IDataArray::k_TypeName;
+  case nx::core::IDataObject::Type::AbstractDataArray: {
+    return nx::core::AbstractDataArray::k_TypeName;
   }
-  case nx::core::DataObject::Type::DataArray: {
+  case nx::core::IDataObject::Type::DataArray: {
     return nx::core::DataArrayConstants::k_TypeName;
   }
-  case nx::core::DataObject::Type::INeighborList: {
-    return nx::core::INeighborList::k_TypeName;
+  case nx::core::IDataObject::Type::AbstractNeighborList: {
+    return nx::core::AbstractNeighborList::k_TypeName;
   }
-  case nx::core::DataObject::Type::NeighborList: {
+  case nx::core::IDataObject::Type::NeighborList: {
     return nx::core::NeighborListConstants::k_TypeName;
   }
-  case nx::core::DataObject::Type::ScalarData: {
+  case nx::core::IDataObject::Type::ScalarData: {
     return nx::core::ScalarDataConstants::k_TypeName;
   }
-  case nx::core::DataObject::Type::StringArray: {
+  case nx::core::IDataObject::Type::StringArray: {
     return nx::core::StringArray::k_TypeName;
   }
-  case nx::core::DataObject::Type::DynamicListArray: {
+  case nx::core::IDataObject::Type::DynamicListArray: {
     return nx::core::DynamicListArrayConstants::k_TypeName;
   }
-  case nx::core::DataObject::Type::AbstractMontage: {
+  case nx::core::IDataObject::Type::AbstractMontage: {
     return nx::core::AbstractMontage::k_TypeName;
   }
-  case nx::core::DataObject::Type::GridMontage: {
+  case nx::core::IDataObject::Type::GridMontage: {
     return nx::core::GridMontage::k_TypeName;
   }
-  case nx::core::DataObject::Type::Any: {
+  case nx::core::IDataObject::Type::Any: {
     return {"Any"};
   }
   default: {
@@ -243,25 +244,25 @@ inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjTy
 }
 
 /**
- * @brief Converts IArray::ArrayType to DataObject::Type. ArrayType is a subset of DataObject::Type so this function cannot fail.
+ * @brief Converts AbstractArray::ArrayType to AbstractDataObject::Type. ArrayType is a subset of AbstractDataObject::Type so this function cannot fail.
  * @param arrayType
  * @return
  */
-inline constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::ArrayType arrayType)
+inline constexpr AbstractDataObject::Type ConvertArrayTypeToDataObjectType(AbstractArray::ArrayType arrayType)
 {
   switch(arrayType)
   {
-  case IArray::ArrayType::DataArray: {
-    return DataObject::Type::DataArray;
+  case AbstractArray::ArrayType::DataArray: {
+    return IDataObject::Type::DataArray;
   }
-  case IArray::ArrayType::NeighborListArray: {
-    return DataObject::Type::NeighborList;
+  case AbstractArray::ArrayType::NeighborListArray: {
+    return IDataObject::Type::NeighborList;
   }
-  case IArray::ArrayType::StringArray: {
-    return DataObject::Type::StringArray;
+  case AbstractArray::ArrayType::StringArray: {
+    return IDataObject::Type::StringArray;
   }
-  case IArray::ArrayType::Any: {
-    return DataObject::Type::Any;
+  case AbstractArray::ArrayType::Any: {
+    return IDataObject::Type::Any;
   }
   default: {
     throw std::runtime_error("nx::core::ConvertArrayTypeToDataObjectType: Invalid ArrayType");
@@ -270,27 +271,27 @@ inline constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::Array
 }
 
 /**
- * @brief Converts DataObject::Type to IArray::ArrayType.
+ * @brief Converts AbstractDataObject::Type to AbstractArray::ArrayType.
  * @param dataObjectType
  * @return
  */
-inline constexpr std::optional<IArray::ArrayType> ConvertDataObjectTypeToArrayType(DataObject::Type dataObjectType) noexcept
+inline constexpr std::optional<AbstractArray::ArrayType> ConvertDataObjectTypeToArrayType(AbstractDataObject::Type dataObjectType) noexcept
 {
   switch(dataObjectType)
   {
-  case DataObject::Type::IDataArray:
-  case DataObject::Type::DataArray: {
-    return IArray::ArrayType::DataArray;
+  case IDataObject::Type::AbstractDataArray:
+  case IDataObject::Type::DataArray: {
+    return AbstractArray::ArrayType::DataArray;
   }
-  case DataObject::Type::INeighborList:
-  case DataObject::Type::NeighborList: {
-    return IArray::ArrayType::NeighborListArray;
+  case IDataObject::Type::AbstractNeighborList:
+  case IDataObject::Type::NeighborList: {
+    return AbstractArray::ArrayType::NeighborListArray;
   }
-  case DataObject::Type::StringArray: {
-    return IArray::ArrayType::StringArray;
+  case IDataObject::Type::StringArray: {
+    return AbstractArray::ArrayType::StringArray;
   }
-  case DataObject::Type::Any: {
-    return IArray::ArrayType::Any;
+  case IDataObject::Type::Any: {
+    return AbstractArray::ArrayType::Any;
   }
   default: {
     return {};

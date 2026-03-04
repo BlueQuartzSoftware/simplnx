@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <fmt/core.h>
@@ -80,7 +80,7 @@ Result<> DataObjectNameParameter::validateName(const std::string& value) const
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataObjectName cannot be empty", prefix));
   }
 
-  if(!DataObject::IsValidName(value))
+  if(!AbstractDataObject::IsValidName(value))
   {
     return MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_InvalidDataObjectName, fmt::format("{}'{}' is not a valid DataObject name", prefix, value));
   }

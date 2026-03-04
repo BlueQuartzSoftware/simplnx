@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class WriteFeatureDataCSVFilter
  * @brief This filter will export feature data as ASCII to a single file using choice delimiter_index
  */
-class SIMPLNXCORE_EXPORT WriteFeatureDataCSVFilter : public IFilter
+class SIMPLNXCORE_EXPORT WriteFeatureDataCSVFilter : public AbstractFilter
 {
 public:
   WriteFeatureDataCSVFilter() = default;

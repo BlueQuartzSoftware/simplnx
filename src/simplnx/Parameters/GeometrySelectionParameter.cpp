@@ -94,16 +94,16 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}Geometry Path cannot be empty", prefix));
   }
 
-  const DataObject* object = dataStructure.getData(value);
+  const AbstractDataObject* object = dataStructure.getData(value);
   if(object == nullptr)
   {
     return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const IGeometry* geometry = dynamic_cast<const IGeometry*>(object);
+  const AbstractGeometry* geometry = dynamic_cast<const AbstractGeometry*>(object);
   if(geometry == nullptr)
   {
-    return MakeErrorResult(-3, fmt::format("Object at path '{}' is not a subclass of IGeometry.", value.toString()));
+    return MakeErrorResult(-3, fmt::format("Object at path '{}' is not a subclass of AbstractGeometry.", value.toString()));
   }
 
   // Look for the actual geometry type that the user selected in the allowed set
@@ -112,15 +112,15 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
     return {};
   }
 
-  return nx::core::MakeErrorResult(
-      nx::core::FilterParameter::Constants::k_Validate_AllowedType_Error,
-      fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), geometry->getTypeName(), IGeometry::StringListFromGeometryType(m_AllowedTypes)));
+  return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_AllowedType_Error,
+                                   fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), geometry->getTypeName(),
+                                               AbstractGeometry::StringListFromGeometryType(m_AllowedTypes)));
 }
 
 Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  IGeometry* object = dataStructure.getDataAs<IGeometry>(path);
+  AbstractGeometry* object = dataStructure.getDataAs<AbstractGeometry>(path);
   return {{object}};
 }
 

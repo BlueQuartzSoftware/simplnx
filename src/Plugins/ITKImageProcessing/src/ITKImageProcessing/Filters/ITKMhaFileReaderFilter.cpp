@@ -440,8 +440,8 @@ Result<> ITKMhaFileReaderFilter::executeImpl(DataStructure& dataStructure, const
       return executeResult.result;
     }
 
-    const auto& srcDataArray = importedDataStructure.getDataRefAs<IDataArray>(imageDataArrayPath);
-    const auto& destDataArray = dataStructure.getDataRefAs<IDataArray>(imageDataArrayPath);
+    const auto& srcDataArray = importedDataStructure.getDataRefAs<AbstractDataArray>(imageDataArrayPath);
+    const auto& destDataArray = dataStructure.getDataRefAs<AbstractDataArray>(imageDataArrayPath);
     messageHandler(fmt::format("Copying image data to destination array '{}'...", destDataArray.getName()));
 
     Result<> copyResult = ExecuteDataFunction(CopyImageDataFunctor{}, srcDataArray.getDataType(), importedDataStructure, dataStructure, imageDataArrayPath, fileNamePath);

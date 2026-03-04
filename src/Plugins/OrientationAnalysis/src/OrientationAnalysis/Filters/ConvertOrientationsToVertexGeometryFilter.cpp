@@ -67,7 +67,7 @@ Parameters ConvertOrientationsToVertexGeometryFilter::parameters() const
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays",
                                                                "Paths to vertex-related DataArrays that should be copied to the output rodrigues vertex geometry", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, MultiArraySelectionParameter::AllowedDataTypes{}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ConvertToFundamentalZone_Key, "Convert To Fundamental Zone", "Convert the orientations to the fundamental zone.", false));
 
@@ -151,7 +151,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
   DataPath vertexAttrMatrixPath = outputVertexGeometryPath.createChildPath(outputVertexAttrMatrixName);
   for(const auto& vertexPathToCopy : vertexPathsToCopy)
   {
-    auto& vertexDataArray = dataStructure.getDataRefAs<IDataArray>(vertexPathToCopy);
+    auto& vertexDataArray = dataStructure.getDataRefAs<AbstractDataArray>(vertexPathToCopy);
     DataType type = vertexDataArray.getDataType();
     DataPath copyPath = vertexAttrMatrixPath.createChildPath(vertexDataArray.getName());
     auto numTuples = vertexDataArray.getNumberOfTuples();

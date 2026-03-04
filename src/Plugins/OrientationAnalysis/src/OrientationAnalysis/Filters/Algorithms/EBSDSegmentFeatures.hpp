@@ -2,13 +2,13 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/AbstractSegmentFeatures.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/SegmentFeatures.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -25,7 +25,7 @@ struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
   float32 MisorientationTolerance;
   bool UseMask;
   bool RandomizeFeatureIds;
-  SegmentFeatures::NeighborScheme NeighborScheme;
+  ISegmentFeatures::NeighborScheme NeighborScheme;
   DataPath ImageGeometryPath;
   DataPath QuatsArrayPath;
   DataPath CellPhasesArrayPath;
@@ -40,7 +40,7 @@ struct ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeaturesInputValues
 /**
  * @brief
  */
-class ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeatures : public SegmentFeatures
+class ORIENTATIONANALYSIS_EXPORT EBSDSegmentFeatures : public AbstractSegmentFeatures
 {
 public:
   using FeatureIdsArrayType = Int32Array;
@@ -81,7 +81,7 @@ private:
   const EBSDSegmentFeaturesInputValues* m_InputValues = nullptr;
   Float32Array* m_QuatsArray = nullptr;
   FeatureIdsArrayType* m_CellPhases = nullptr;
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxelsArray = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> m_GoodVoxelsArray = nullptr;
   DataArray<uint32>* m_CrystalStructures = nullptr;
 
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;

@@ -92,9 +92,9 @@ IFilter::PreflightResult WriteLosAlamosFFTFilter::preflightImpl(const DataStruct
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
-  usize fIdsTupCount = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue)->getNumberOfTuples();
-  usize eulersTupCount = dataStructure.getDataAs<IDataArray>(pCellEulerAnglesArrayPathValue)->getNumberOfTuples();
-  usize phasesTupCount = dataStructure.getDataAs<IDataArray>(pCellPhasesArrayPathValue)->getNumberOfTuples();
+  usize fIdsTupCount = dataStructure.getDataAs<AbstractDataArray>(pFeatureIdsArrayPathValue)->getNumberOfTuples();
+  usize eulersTupCount = dataStructure.getDataAs<AbstractDataArray>(pCellEulerAnglesArrayPathValue)->getNumberOfTuples();
+  usize phasesTupCount = dataStructure.getDataAs<AbstractDataArray>(pCellPhasesArrayPathValue)->getNumberOfTuples();
 
   if(fIdsTupCount != eulersTupCount || fIdsTupCount != phasesTupCount)
   {

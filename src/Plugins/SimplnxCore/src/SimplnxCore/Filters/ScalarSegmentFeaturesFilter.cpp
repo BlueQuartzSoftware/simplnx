@@ -2,7 +2,7 @@
 
 #include "SimplnxCore/Filters/Algorithms/ScalarSegmentFeatures.hpp"
 
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -112,13 +112,13 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   DataPath cellFeaturesPath = gridGeomPath.createChildPath(cellFeaturesName);
   DataPath activeArrayPath = cellFeaturesPath.createChildPath(activeArrayName);
 
-  const auto& gridGeometry = dataStructure.getDataRefAs<IGridGeometry>(gridGeomPath);
+  const auto& gridGeometry = dataStructure.getDataRefAs<AbstractGridGeometry>(gridGeomPath);
   auto gridDims = gridGeometry.getDimensions();
   const std::vector<usize> cellTupleDims = {gridDims[2], gridDims[1], gridDims[0]};
   std::vector<DataPath> dataPaths;
 
   // Input Array
-  const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataPath);
+  const auto& inputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(inputDataPath);
   std::string createdArrayFormat = inputDataArray.getDataFormat();
   dataPaths.push_back(inputDataPath);
 
@@ -168,7 +168,7 @@ Result<> ScalarSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
-  inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
+  inputValues.NeighborScheme = static_cast<ISegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
 
   return ScalarSegmentFeatures(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }

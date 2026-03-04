@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/IO/HDF5/INodeGeom0dIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/AbstractNodeGeom0dIO.hpp"
 
 namespace nx::core
 {
@@ -8,7 +8,7 @@ class VertexGeom;
 
 namespace HDF5
 {
-class SIMPLNX_EXPORT VertexGeomIO : public INodeGeom0dIO
+class SIMPLNX_EXPORT VertexGeomIO : public AbstractNodeGeom0dIO
 {
 public:
   using data_type = VertexGeom;
@@ -27,8 +27,8 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& geomName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& geomName, AbstractDataObject::IdType importId,
+                    const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
   Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override;
 
@@ -43,14 +43,14 @@ public:
   Result<> writeData(DataStructureWriter& dataStructureWriter, const VertexGeom& geometry, group_writer_type& parentGroup, bool importable) const;
 
   /**
-   * @brief Attempts to write the DataObject to HDF5.
-   * Returns an error if the DataObject cannot be cast to a VertexGeom.
+   * @brief Attempts to write the AbstractDataObject to HDF5.
+   * Returns an error if the AbstractDataObject cannot be cast to a VertexGeom.
    * Otherwise, this method returns writeData(...)
    * Return Result<>
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const override;
 
-  DataObject::Type getDataType() const override;
+  AbstractDataObject::Type getDataType() const override;
 
   std::string getTypeName() const override;
 

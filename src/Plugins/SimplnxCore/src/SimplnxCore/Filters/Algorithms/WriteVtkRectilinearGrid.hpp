@@ -11,7 +11,7 @@
 namespace nx::core
 {
 class ImageGeom;
-class IDataArray;
+class AbstractDataArray;
 
 struct SIMPLNXCORE_EXPORT WriteVtkRectilinearGridInputValues
 {

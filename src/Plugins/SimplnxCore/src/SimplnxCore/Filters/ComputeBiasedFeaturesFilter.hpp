@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeBiasedFeaturesFilter
  * @brief This filter determines which Features are biased by the outer surfaces of the sample.
  */
-class SIMPLNXCORE_EXPORT ComputeBiasedFeaturesFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeBiasedFeaturesFilter : public AbstractFilter
 {
 public:
   ComputeBiasedFeaturesFilter() = default;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/DataTypeUtilities.hpp"
-#include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/AbstractArray.hpp"
 #include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
 
@@ -14,7 +14,7 @@ class SIMPLNX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = std::vector<DataPath>;
-  using AllowedTypes = std::set<IArray::ArrayType>;
+  using AllowedTypes = std::set<AbstractArray::ArrayType>;
   using AllowedDataTypes = nx::core::DataTypeSetType;
   using AllowedComponentShapes = std::vector<ShapeType>;
 
@@ -68,7 +68,7 @@ public:
   ValueType defaultPath() const;
 
   /**
-   * @brief Returns the set of allowed IArray types. An empty set means all are allowed.
+   * @brief Returns the set of allowed AbstractArray types. An empty set means all are allowed.
    * @return
    */
   AllowedTypes allowedTypes() const;
@@ -102,7 +102,7 @@ public:
   Result<> validatePaths(const DataStructure& dataStructure, const ValueType& value) const;
 
   /**
-   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
+   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived AbstractDataObject in the std::any.
    * Returns any warnings/errors.
    * @param dataStructure
    * @param value

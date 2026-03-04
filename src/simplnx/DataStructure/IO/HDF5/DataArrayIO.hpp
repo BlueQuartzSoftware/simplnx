@@ -4,11 +4,11 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
+#include "simplnx/DataStructure/IO/HDF5/AbstractDataIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/DataStructure/IO/HDF5/EmptyDataStoreIO.hpp"
-#include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 
 #include <vector>
 
@@ -18,7 +18,7 @@ namespace nx::core::HDF5
  * @brief The DataArrayIO class serves as the basis for reading and writing DataArrays from HDF5
  */
 template <typename T>
-class DataArrayIO : public IDataIO
+class DataArrayIO : public AbstractDataIO
 {
 public:
   using data_type = DataArray<T>;
@@ -38,8 +38,8 @@ public:
    * @param preflight
    */
   template <typename K>
-  static void importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetReader, const std::string dataArrayName, DataObject::IdType importId,
-                              nx::core::HDF5::ErrorType& err, const std::optional<DataObject::IdType>& parentId, bool preflight)
+  static void importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetReader, const std::string dataArrayName, AbstractDataObject::IdType importId,
+                              nx::core::HDF5::ErrorType& err, const std::optional<AbstractDataObject::IdType>& parentId, bool preflight)
   {
     std::shared_ptr<AbstractDataStore<K>> dataStore =
         preflight ? std::shared_ptr<AbstractDataStore<K>>(EmptyDataStoreIO::ReadDataStore<K>(datasetReader)) : (DataStoreIO::ReadDataStore<K>(datasetReader));
@@ -133,8 +133,8 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataArrayName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataArrayName, AbstractDataObject::IdType importId,
+                    const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(dataArrayName);
 
@@ -236,16 +236,16 @@ public:
   }
 
   /**
-   * @brief Returns the target DataObject::Type for this IO class.
-   * @return DataObject::Type
+   * @brief Returns the target AbstractDataObject::Type for this IO class.
+   * @return AbstractDataObject::Type
    */
-  DataObject::Type getDataType() const override
+  AbstractDataObject::Type getDataType() const override
   {
-    return DataObject::Type::DataArray;
+    return IDataObject::Type::DataArray;
   }
 
   /**
-   * @brief Returns the target DataObject type name for this IO class.
+   * @brief Returns the target AbstractDataObject type name for this IO class.
    * @return std::string
    */
   std::string getTypeName() const override
@@ -255,14 +255,14 @@ public:
 
   /**
    * @brief Attempts to write the DataArray to HDF5.
-   * Returns an error if the provided DataObject could not be cast to the corresponding DataArray type.
+   * Returns an error if the provided AbstractDataObject could not be cast to the corresponding DataArray type.
    * Otherwise, this method returns writeData(...)
    * @param dataStructructureWriter
    * @param dataObject
    * @param parentWriter
    * @return Result<>
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const override
   {
     return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
   }

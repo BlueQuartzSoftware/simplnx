@@ -51,9 +51,9 @@ public:
     std::string componentDimensions;
     std::string tupleDimensions;
 
-    static inline constexpr StringLiteral k_DatasetPath_Key = "dataset_path";
-    static inline constexpr StringLiteral k_ComponentDimensions_Key = "component_dimensions";
-    static inline constexpr StringLiteral k_TupleDimensions_Key = "tuple_dimensions";
+    static constexpr StringLiteral k_DatasetPath_Key = "dataset_path";
+    static constexpr StringLiteral k_ComponentDimensions_Key = "component_dimensions";
+    static constexpr StringLiteral k_TupleDimensions_Key = "tuple_dimensions";
 
     static Result<DatasetImportInfo> ReadJson(const nlohmann::json& json);
 

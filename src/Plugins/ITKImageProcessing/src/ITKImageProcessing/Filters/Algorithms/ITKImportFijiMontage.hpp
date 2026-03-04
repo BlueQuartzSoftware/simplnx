@@ -3,7 +3,7 @@
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
 #include "simplnx/Common/Array.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
@@ -21,7 +21,7 @@ struct ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageInputValues
   bool changeDataType = false;
   DataType destType = DataType::uint8;
   fs::path inputFilePath = {};
-  IGeometry::LengthUnit lengthUnit = IGeometry::LengthUnit::Micrometer;
+  AbstractGeometry::LengthUnit lengthUnit = AbstractGeometry::LengthUnit::Micrometer;
   std::vector<float32> origin = {};
   std::vector<float32> colorWeights = {};
   std::string DataGroupName = "";

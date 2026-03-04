@@ -4,7 +4,7 @@
 
 using namespace nx::core;
 
-DataRenamedMessage::DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& oldName, const std::string& newName)
+DataRenamedMessage::DataRenamedMessage(const DataStructure* dataStructure, AbstractDataObject::IdType identifier, const std::string& oldName, const std::string& newName)
 : AbstractDataStructureMessage(dataStructure)
 , m_Id(identifier)
 , m_OldName(oldName)
@@ -35,12 +35,12 @@ AbstractDataStructureMessage::MessageType DataRenamedMessage::getMsgType() const
   return MsgType;
 }
 
-DataObject::IdType DataRenamedMessage::getDataId() const
+AbstractDataObject::IdType DataRenamedMessage::getDataId() const
 {
   return m_Id;
 }
 
-const DataObject* DataRenamedMessage::getData() const
+const AbstractDataObject* DataRenamedMessage::getData() const
 {
   return getDataStructure()->getData(m_Id);
 }

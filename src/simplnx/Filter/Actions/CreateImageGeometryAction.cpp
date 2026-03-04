@@ -8,8 +8,8 @@ using namespace nx::core;
 namespace nx::core
 {
 CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName,
-                                                     IGeometry::LengthUnit units)
-: IDataCreationAction(path)
+                                                     AbstractGeometry::LengthUnit units)
+: AbstractDataCreationAction(path)
 , m_Dims(dims)
 , m_Origin(origin)
 , m_Spacing(spacing)
@@ -102,7 +102,7 @@ std::string CreateImageGeometryAction::cellAttributeMatrixName() const
   return m_CellDataName;
 }
 
-IGeometry::LengthUnit CreateImageGeometryAction::units() const
+AbstractGeometry::LengthUnit CreateImageGeometryAction::units() const
 {
   return m_Units;
 }

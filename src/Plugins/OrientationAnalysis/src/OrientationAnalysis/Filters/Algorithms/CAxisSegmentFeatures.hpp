@@ -5,8 +5,8 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/AbstractSegmentFeatures.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/SegmentFeatures.hpp"
 
 namespace nx::core
 {
@@ -16,7 +16,7 @@ struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
   float32 MisorientationTolerance;
   bool UseMask;
   bool RandomizeFeatureIds;
-  SegmentFeatures::NeighborScheme NeighborScheme;
+  ISegmentFeatures::NeighborScheme NeighborScheme;
   DataPath ImageGeometryPath;
   DataPath QuatsArrayPath;
   DataPath CellPhasesArrayPath;
@@ -32,7 +32,7 @@ struct ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesInputValues
  * @brief This filter segments the Features by grouping neighboring Cells that satisfy the C-axis misalignment tolerance, i.e., have misalignment angle less than the value set by the user.
  */
 
-class ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeatures : public SegmentFeatures
+class ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeatures : public AbstractSegmentFeatures
 {
 public:
   CAxisSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CAxisSegmentFeaturesInputValues* inputValues);
@@ -54,7 +54,7 @@ private:
 
   Float32Array* m_QuatsArray = nullptr;
   Int32Array* m_CellPhases = nullptr;
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxelsArray = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> m_GoodVoxelsArray = nullptr;
   Int32Array* m_FeatureIdsArray = nullptr;
 };
 

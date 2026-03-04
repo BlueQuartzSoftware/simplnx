@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include <filesystem>
 
@@ -15,7 +15,7 @@ namespace nx::core
  * @class ReadDeformKeyFileV12Filter
  * @brief This filter will...
  */
-class SIMPLNXCORE_EXPORT ReadDeformKeyFileV12Filter : public IFilter
+class SIMPLNXCORE_EXPORT ReadDeformKeyFileV12Filter : public AbstractFilter
 {
 public:
   ReadDeformKeyFileV12Filter();

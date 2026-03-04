@@ -56,26 +56,26 @@ protected:
 using AnyDataAction = AnyCloneable<IDataAction>;
 
 /**
- * @brief The IDataCreationAction class is a subclass of IDataAction used for
- * inserting a DataObject to a target DataStructure.
+ * @brief The AbstractDataCreationAction class is a subclass of IDataAction used for
+ * inserting a AbstractDataObject to a target DataStructure.
  */
-class SIMPLNX_EXPORT IDataCreationAction : public IDataAction
+class SIMPLNX_EXPORT AbstractDataCreationAction : public IDataAction
 {
 public:
   /**
-   * @brief Constructs an IDataCreationAction that takes a DataPath specifying the path to be created.
+   * @brief Constructs an AbstractDataCreationAction that takes a DataPath specifying the path to be created.
    * @param createdPath
    */
-  IDataCreationAction(const DataPath& createdPath)
+  AbstractDataCreationAction(const DataPath& createdPath)
   : m_CreatedPath(createdPath)
   {
   }
-  ~IDataCreationAction() noexcept override = default;
+  ~AbstractDataCreationAction() noexcept override = default;
 
-  IDataCreationAction(const IDataCreationAction&) = delete;
-  IDataCreationAction(IDataCreationAction&&) noexcept = delete;
-  IDataCreationAction& operator=(const IDataCreationAction&) = delete;
-  IDataCreationAction& operator=(IDataCreationAction&&) noexcept = delete;
+  AbstractDataCreationAction(const AbstractDataCreationAction&) = delete;
+  AbstractDataCreationAction(AbstractDataCreationAction&&) noexcept = delete;
+  AbstractDataCreationAction& operator=(const AbstractDataCreationAction&) = delete;
+  AbstractDataCreationAction& operator=(AbstractDataCreationAction&&) noexcept = delete;
 
   /**
    * @brief Returns the DataPath of the top level object to be created.
@@ -93,7 +93,7 @@ public:
   virtual std::vector<DataPath> getAllCreatedPaths() const = 0;
 
 protected:
-  IDataCreationAction() = default;
+  AbstractDataCreationAction() = default;
 
 private:
   DataPath m_CreatedPath;
@@ -114,7 +114,7 @@ struct SIMPLNX_EXPORT DataObjectModification
 
   DataPath modifiedPath;
   ModifiedType modifiedType = ModifiedType::Unknown;
-  DataObject::Type dataObjectType = DataObject::Type::Unknown;
+  AbstractDataObject::Type dataObjectType = IDataObject::Type::Unknown;
 };
 
 /**

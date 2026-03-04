@@ -3,14 +3,14 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Parameters.hpp"
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT CreateAttributeMatrixFilter : public IFilter
+class SIMPLNXCORE_EXPORT CreateAttributeMatrixFilter : public AbstractFilter
 {
 public:
   CreateAttributeMatrixFilter() = default;

@@ -21,7 +21,7 @@ inline constexpr StringLiteral k_DataContainer("DataContainer2");
 struct CompareDataArrayFunctor
 {
   template <typename T>
-  void operator()(const IDataArray& left, const IDataArray& right, usize start = 0)
+  void operator()(const AbstractDataArray& left, const AbstractDataArray& right, usize start = 0)
   {
     UnitTest::CompareDataArrays<T>(left, right, start);
   }
@@ -235,8 +235,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter)", "[SimplnxCore]
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -244,8 +244,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter)", "[SimplnxCore]
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -321,8 +321,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XY", "[Simplnx
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -330,8 +330,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XY", "[Simplnx
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -405,8 +405,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XZ", "[Simplnx
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -414,8 +414,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - XZ", "[Simplnx
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -489,8 +489,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - YZ", "[Simplnx
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -498,8 +498,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - YZ", "[Simplnx
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -574,8 +574,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - X", "[SimplnxC
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -583,8 +583,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - X", "[SimplnxC
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -659,8 +659,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Y", "[SimplnxC
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -668,8 +668,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Y", "[SimplnxC
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -744,8 +744,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Z", "[SimplnxC
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -753,8 +753,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter(Execute_Filter) - Z", "[SimplnxC
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -826,8 +826,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Physical Bounds", "[Simpln
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -835,8 +835,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Physical Bounds", "[Simpln
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -910,8 +910,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XY Physical Bounds", "[Sim
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -919,8 +919,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XY Physical Bounds", "[Sim
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -998,8 +998,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XZ Physical Bounds", "[Sim
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1007,8 +1007,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop XZ Physical Bounds", "[Sim
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1082,8 +1082,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop YZ Physical Bounds", "[Sim
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1091,8 +1091,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop YZ Physical Bounds", "[Sim
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1167,8 +1167,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop X Physical Bounds", "[Simp
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1176,8 +1176,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop X Physical Bounds", "[Simp
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1252,8 +1252,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Y Physical Bounds", "[Simp
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1261,8 +1261,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Y Physical Bounds", "[Simp
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1337,8 +1337,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Z Physical Bounds", "[Simp
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ::ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -1346,8 +1346,8 @@ TEST_CASE("SimplnxCore::CropImageGeometryFilter: Crop Z Physical Bounds", "[Simp
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, k_DestCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 

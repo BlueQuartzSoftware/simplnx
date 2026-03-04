@@ -3,16 +3,16 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
 /**
  * @class RenameDataObjectFilter
- * @brief RenameDataObjectFilter class is used to rename any DataObject.
+ * @brief RenameDataObjectFilter class is used to rename any AbstractDataObject.
  */
-class SIMPLNXCORE_EXPORT RenameDataObjectFilter : public IFilter
+class SIMPLNXCORE_EXPORT RenameDataObjectFilter : public AbstractFilter
 {
 public:
   RenameDataObjectFilter() = default;

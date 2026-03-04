@@ -4,7 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
@@ -56,8 +56,8 @@ public:
   const std::atomic_bool& getCancel();
 
 protected:
-  using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-  using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+  using TriStore = AbstractDataStore<AbstractNodeGeometry2D::SharedFaceList::value_type>;
+  using VertsStore = AbstractDataStore<AbstractNodeGeometry0D::SharedVertexList::value_type>;
 
 private:
   DataStructure& m_DataStructure;

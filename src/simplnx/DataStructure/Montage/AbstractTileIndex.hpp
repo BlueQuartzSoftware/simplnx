@@ -5,7 +5,7 @@
 
 namespace nx::core
 {
-class IGeometry;
+class AbstractGeometry;
 class AbstractMontage;
 
 /**
@@ -46,9 +46,9 @@ public:
 
   /**
    * @brief Returns the geometry specified by the tile index.
-   * @return IGeometry*
+   * @return AbstractGeometry*
    */
-  virtual const IGeometry* getGeometry() const = 0;
+  virtual const AbstractGeometry* getGeometry() const = 0;
 
   /**
    * @brief Checks if the index contains matches the conditions to be

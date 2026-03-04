@@ -10,7 +10,7 @@ namespace nx::core
 {
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const ShapeType& tupleShape)
-: INeighborList(dataStructure, name)
+: AbstractNeighborList(dataStructure, name)
 , m_Store(std::make_shared<ListStore<T>>(tupleShape))
 , m_IsAllocated(false)
 , m_InitValue(static_cast<T>(0.0))
@@ -19,7 +19,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::vector<SharedVectorType>& dataVector, IdType importId)
-: INeighborList(dataStructure, name, importId)
+: AbstractNeighborList(dataStructure, name, importId)
 , m_Store(std::make_shared<ListStore<T>>(dataVector))
 , m_IsAllocated(true)
 , m_InitValue(static_cast<T>(0.0))
@@ -28,7 +28,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore, IdType importId)
-: INeighborList(dataStructure, name, importId)
+: AbstractNeighborList(dataStructure, name, importId)
 , m_Store(dataStore)
 , m_IsAllocated(true)
 , m_InitValue(static_cast<T>(0.0))
@@ -37,7 +37,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 
 template <typename T>
 NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore)
-: INeighborList(dataStructure, name)
+: AbstractNeighborList(dataStructure, name)
 , m_Store(dataStore)
 , m_IsAllocated(true)
 , m_InitValue(static_cast<T>(0.0))
@@ -95,7 +95,7 @@ NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std
 
 template <typename T>
 NeighborList<T>::NeighborList(const NeighborList<T>& other)
-: INeighborList(other)
+: AbstractNeighborList(other)
 , m_Store(other.m_Store)
 , m_IsAllocated(other.m_IsAllocated)
 , m_InitValue(other.m_InitValue)
@@ -128,13 +128,13 @@ NeighborList<T>& NeighborList<T>::operator=(NeighborList<T>&& rhs) noexcept
 }
 
 template <typename T>
-DataObject* NeighborList<T>::shallowCopy()
+AbstractDataObject* NeighborList<T>::shallowCopy()
 {
   return new NeighborList(*this);
 }
 
 template <typename T>
-std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   if(dataStruct.containsData(copyPath))
@@ -397,7 +397,7 @@ typename NeighborList<T>::VectorType NeighborList<T>::at(usize grainId) const
 }
 
 template <typename T>
-DataObject::Type NeighborList<T>::getDataObjectType() const
+AbstractDataObject::Type NeighborList<T>::getDataObjectType() const
 {
   return Type::NeighborList;
 }

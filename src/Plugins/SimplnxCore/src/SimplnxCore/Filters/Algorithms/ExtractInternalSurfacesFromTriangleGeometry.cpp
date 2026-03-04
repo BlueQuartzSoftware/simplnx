@@ -16,16 +16,16 @@ struct RemoveFlaggedVerticesFunctor
 {
   // copy data to masked geometry
   template <class T>
-  void operator()(IDataArray* inputDataPtr, IDataArray* outputDataArray, const std::vector<IGeometry::MeshIndexType>& indexMapping) const
+  void operator()(AbstractDataArray* inputDataPtr, AbstractDataArray* outputDataArray, const std::vector<AbstractGeometry::MeshIndexType>& indexMapping) const
   {
     auto& inputData = inputDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& outputData = outputDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize nComps = inputData.getNumberOfComponents();
-    IGeometry::MeshIndexType notSeen = std::numeric_limits<IGeometry::MeshIndexType>::max();
+    AbstractGeometry::MeshIndexType notSeen = std::numeric_limits<AbstractGeometry::MeshIndexType>::max();
 
     for(usize i = 0; i < indexMapping.size(); i++)
     {
-      IGeometry::MeshIndexType newIndex = indexMapping[i];
+      AbstractGeometry::MeshIndexType newIndex = indexMapping[i];
       if(newIndex != notSeen)
       {
         for(usize compIdx = 0; compIdx < nComps; compIdx++)
@@ -85,7 +85,7 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   // int64 prog = 1;
   // int64 progressInt = 0;
   // int64 counter = 0;
-  using MeshIndexType = IGeometry::MeshIndexType;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
 
   const MeshIndexType notSeen = std::numeric_limits<MeshIndexType>::max();
 
@@ -137,8 +137,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   internalTriangleGeom.getVertexAttributeMatrix()->resizeTuples({currentNewVertIndex});
   internalTriangleGeom.getFaceAttributeMatrix()->resizeTuples({currentNewTriIndex});
 
-  IGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
-  IGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
+  AbstractGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
+  AbstractGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
 
   // Transfer the data from the old SharedVertexList to the new VertexList
   for(MeshIndexType vertIndex = 0; vertIndex < numVerts; vertIndex++)
@@ -182,8 +182,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   for(const auto& targetArrayPath : m_InputValues->CopyVertexArrayPaths)
   {
     DataPath destinationPath = internalTrianglesPath.createChildPath(m_InputValues->VertexAttributeMatrixName).createChildPath(targetArrayPath.getTargetName());
-    auto* src = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
-    auto* dest = m_DataStructure.getDataAs<IDataArray>(destinationPath);
+    auto* src = m_DataStructure.getDataAs<AbstractDataArray>(targetArrayPath);
+    auto* dest = m_DataStructure.getDataAs<AbstractDataArray>(destinationPath);
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src->getDataType(), src, dest, vertNewIndex);
   }
@@ -191,8 +191,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   for(const auto& targetArrayPath : m_InputValues->CopyTriangleArrayPaths)
   {
     DataPath destinationPath = internalTrianglesPath.createChildPath(m_InputValues->TriangleAttributeMatrixName).createChildPath(targetArrayPath.getTargetName());
-    auto* src = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
-    auto* dest = m_DataStructure.getDataAs<IDataArray>(destinationPath);
+    auto* src = m_DataStructure.getDataAs<AbstractDataArray>(targetArrayPath);
+    auto* dest = m_DataStructure.getDataAs<AbstractDataArray>(destinationPath);
     dest->resizeTuples({currentNewTriIndex});
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src->getDataType(), src, dest, triNewIndex);

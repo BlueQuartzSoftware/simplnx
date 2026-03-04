@@ -4,7 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
@@ -35,9 +35,9 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
 class SIMPLNXCORE_EXPORT QuickSurfaceMesh
 {
 public:
-  using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
-  using TriStore = AbstractDataStore<IGeometry::SharedTriList::value_type>;
-  using MeshIndexType = IGeometry::MeshIndexType;
+  using VertexStore = AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>;
+  using TriStore = AbstractDataStore<AbstractGeometry::SharedTriList::value_type>;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
 
   QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
   ~QuickSurfaceMesh() noexcept;

@@ -11,7 +11,7 @@ namespace nx::core
 /**
  * @brief Action for importing DataObjects from an HDF5 file.
  */
-class SIMPLNX_EXPORT ImportH5ObjectPathsAction : public IDataCreationAction
+class SIMPLNX_EXPORT ImportH5ObjectPathsAction : public AbstractDataCreationAction
 {
 public:
   using PathsType = std::vector<DataPath>;

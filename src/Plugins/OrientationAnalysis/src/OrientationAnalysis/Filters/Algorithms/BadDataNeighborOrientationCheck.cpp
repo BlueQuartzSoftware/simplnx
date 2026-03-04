@@ -42,7 +42,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   const usize totalPoints = quats.getNumberOfTuples();
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);

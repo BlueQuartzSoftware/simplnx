@@ -4,7 +4,7 @@
 namespace nx::core
 {
 CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing)
-: IDataCreationAction(path)
+: AbstractDataCreationAction(path)
 , m_Dims(dims)
 , m_Origin(origin)
 , m_Spacing(spacing)

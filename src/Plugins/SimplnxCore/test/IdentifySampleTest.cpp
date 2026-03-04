@@ -2,8 +2,8 @@
 #include "SimplnxCore/Filters/IdentifySampleFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -66,8 +66,8 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
       WriteTestDataStructure(dataStructure, fmt::format("{}/identify_sample_output_{}_{}_{}.dream3d", unit_test::k_BinaryTestOutputDir, fillHoles, sliceBySlice, sliceBySlicePlane));
 #endif
 
-      const IDataArray& computedArray = dataStructure.getDataRefAs<IDataArray>(Constants::k_MaskArrayPath);
-      const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(k_ExemplarArrayPath);
+      const AbstractDataArray& computedArray = dataStructure.getDataRefAs<AbstractDataArray>(Constants::k_MaskArrayPath);
+      const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(k_ExemplarArrayPath);
       CompareDataArrays<uint8>(computedArray, exemplarArray);
 
       UnitTest::CheckArraysInheritTupleDims(dataStructure);

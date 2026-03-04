@@ -1,7 +1,7 @@
 #include "AppendImageGeometry.hpp"
 
+#include "simplnx/DataStructure/AbstractArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -73,8 +73,8 @@ Result<> AppendImageGeometry::operator()()
 
     auto newDataArrayPath = newCellDataPath.createChildPath(name);
     auto destDataArrayPath = destCellDataPath.createChildPath(name);
-    auto* newDataArray = m_DataStructure.getDataAs<IArray>(newDataArrayPath);
-    auto* destDataArray = m_DataStructure.getDataAs<IArray>(destDataArrayPath);
+    auto* newDataArray = m_DataStructure.getDataAs<AbstractArray>(newDataArrayPath);
+    auto* destDataArray = m_DataStructure.getDataAs<AbstractArray>(destDataArrayPath);
     //    if(destDataArray == nullptr && newDataArray == nullptr)
     //    {
     //      // One of these has to be valid, something has gone horribly wrong
@@ -100,7 +100,7 @@ Result<> AppendImageGeometry::operator()()
       destDataArray = result.value();
     }
 
-    std::vector<const IArray*> inputDataArrays;
+    std::vector<const AbstractArray*> inputDataArrays;
     std::vector<std::vector<usize>> inputTupleShapes;
     if(m_InputValues->SaveAsNewGeometry)
     {
@@ -138,7 +138,7 @@ Result<> AppendImageGeometry::operator()()
       }
       else
       {
-        auto* inputDataArray = m_DataStructure.getDataAs<IArray>(inputCellDataPath.createChildPath(name));
+        auto* inputDataArray = m_DataStructure.getDataAs<AbstractArray>(inputCellDataPath.createChildPath(name));
         if(inputDataArray == nullptr)
         {
           continue;

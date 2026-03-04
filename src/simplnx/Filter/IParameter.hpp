@@ -12,7 +12,6 @@
 
 #include <any>
 #include <memory>
-#include <optional>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
@@ -125,14 +124,14 @@ public:
    * Throws if value is not an accepted type.
    * @param value
    */
-  nlohmann::json toJson(const std::any& value) const;
+  virtual nlohmann::json toJson(const std::any& value) const = 0;
 
   /**
    * @brief Converts the given JSON to a std::any containing the appropriate input type.
    * Returns any warnings/errors.
    * @return
    */
-  Result<std::any> fromJson(const nlohmann::json& json) const;
+  virtual Result<std::any> fromJson(const nlohmann::json& json) const = 0;
 
   /**
    * @brief Creates a copy of the parameter.
@@ -148,24 +147,10 @@ public:
    * @param executionContext
    * @return
    */
-  virtual std::any construct(const Arguments& args, const ExecutionContext& executionContext) const;
+  virtual std::any construct(const Arguments& args, const ExecutionContext& executionContext) const = 0;
 
 protected:
   IParameter() = default;
-
-  /**
-   * @brief Converts the given value to JSON.
-   * Throws if value is not an accepted type.
-   * @param value
-   */
-  virtual nlohmann::json toJsonImpl(const std::any& value) const = 0;
-
-  /**
-   * @brief Converts the given JSON to a std::any containing the appropriate input type.
-   * Returns any warnings/errors.
-   * @return
-   */
-  virtual Result<std::any> fromJsonImpl(const nlohmann::json& json, uint64 version) const = 0;
 };
 
 using AnyParameter = AnyCloneable<IParameter>;

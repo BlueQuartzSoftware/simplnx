@@ -70,8 +70,8 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
 
   // Compare the exemplar and the computed outputs
   {
-    auto exemplarGeom = dataStructure.getDataAs<IGeometry>(k_ExemplarScanVectorsPath);
-    auto computedGeom = dataStructure.getDataAs<IGeometry>(k_ComputedScanVectorsPath);
+    auto exemplarGeom = dataStructure.getDataAs<AbstractGeometry>(k_ExemplarScanVectorsPath);
+    auto computedGeom = dataStructure.getDataAs<AbstractGeometry>(k_ComputedScanVectorsPath);
     REQUIRE(UnitTest::CompareIGeometry(exemplarGeom, computedGeom));
   }
 

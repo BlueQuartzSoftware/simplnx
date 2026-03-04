@@ -1,9 +1,9 @@
 #include "ComputeArrayHistogramByFeature.hpp"
 
 #include "SimplnxCore/Filters/ComputeArrayHistogramByFeatureFilter.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
@@ -37,7 +37,7 @@ public:
    */
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, NeighborList<Type>* modalBinRangesList,
                                const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax, bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins,
-                               AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                               AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask,
                                std::atomic<usize>& overflow, ProgressMessageHelper& progressMessageHelper)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
@@ -58,7 +58,7 @@ public:
 
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax,
                                bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<SizeType>& histogramStore,
-                               AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow,
+                               AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, std::atomic<usize>& overflow,
                                ProgressMessageHelper& progressMessageHelper)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
@@ -229,7 +229,7 @@ private:
   float64 m_HistMax;
   bool m_HistFullRange;
   int32 m_NumBins;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& m_Mask;
   const AbstractDataStore<Type>& m_InputStore;
   const AbstractDataStore<int32>& m_FeatureIdsStore;
   AbstractDataStore<SizeType>& m_HistogramStore;
@@ -248,13 +248,13 @@ private:
 struct InstantiateHistogramByFeatureImplFunctor
 {
   template <typename T, class... ArgsT>
-  auto operator()(INeighborList* modalBinRangesNL, const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args)
+  auto operator()(AbstractNeighborList* modalBinRangesNL, const AbstractDataArray* inputArray, AbstractDataArray* binRangesArray, ArgsT&&... args)
   {
     return GenerateFeatureHistogramImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(),
                                         dynamic_cast<NeighborList<T>*>(modalBinRangesNL), std::forward<ArgsT>(args)...);
   }
   template <typename T, class... ArgsT>
-  auto operator()(const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args)
+  auto operator()(const AbstractDataArray* inputArray, AbstractDataArray* binRangesArray, ArgsT&&... args)
   {
     return GenerateFeatureHistogramImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(),
                                         std::forward<ArgsT>(args)...);
@@ -295,8 +295,8 @@ Result<> ComputeArrayHistogramByFeature::operator()()
       return {};
     }
 
-    const auto* inputData = m_DataStructure.getDataAs<IDataArray>(selectedArrayPaths[i]);
-    auto* binRanges = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
+    const auto* inputData = m_DataStructure.getDataAs<AbstractDataArray>(selectedArrayPaths[i]);
+    auto* binRanges = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
     auto& counts = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(i))->getDataStoreRef();
     auto& mostPopulated = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedBinMostPopulatedDataPaths.at(i))->getDataStoreRef();
 
@@ -304,7 +304,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
     counts.resizeTuples({numFeatures});
     mostPopulated.resizeTuples({numFeatures});
 
-    std::unique_ptr<MaskCompareUtilities::MaskCompare> mask = nullptr;
+    std::unique_ptr<MaskCompareUtilities::IMaskCompare> mask = nullptr;
     if(m_InputValues->UseMask)
     {
       mask = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
@@ -321,7 +321,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
     if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
     {
       std::vector<DataPath> modalBinRangesPaths = m_InputValues->CreatedBinModalRangesDataPaths.value();
-      auto* modalBinRanges = m_DataStructure.getDataAs<INeighborList>(modalBinRangesPaths.at(i));
+      auto* modalBinRanges = m_DataStructure.getDataAs<AbstractNeighborList>(modalBinRangesPaths.at(i));
       modalBinRanges->resizeTuples({numFeatures});
       ExecuteParallelFunctor<InstantiateHistogramByFeatureImplFunctor, NoBooleanType>(InstantiateHistogramByFeatureImplFunctor{}, inputData->getDataType(), dataAlg, modalBinRanges, inputData,
                                                                                       binRanges, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange, histFullRange, m_ShouldCancel,

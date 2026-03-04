@@ -54,7 +54,7 @@ void CreateEdgeGeometry(DataStructure& ds)
   std::vector<float32> verticesVec = {1.0f, 1.5f, 1.75f, 2.0f, 3.0f, 4.0f};
   std::copy(verticesVec.begin(), verticesVec.end(), vertices->begin());
   geom->setVertices(*vertices);
-  DataArray<IGeometry::MeshIndexType>* cells = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, "Cells Store", {1}, {2}, geom->getId());
+  DataArray<AbstractGeometry::MeshIndexType>* cells = UnitTest::CreateTestDataArray<AbstractGeometry::MeshIndexType>(ds, "Cells Store", {1}, {2}, geom->getId());
   cells->setValue(0, 0ULL);
   cells->setValue(1, 1ULL);
   geom->setEdgeList(*cells);

@@ -55,10 +55,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Read_Basic", "[ITKImageProc
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Read_Basic", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -101,10 +101,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Origin", "[ITKImag
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Override_Origin", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -145,10 +145,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Centering_Origin", "[ITKIma
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Centering_Origin", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -221,10 +221,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Cropping", "[ITKImageProces
 
     DataPath generatedDataPath = DataPath({computedGeomName, Constants::k_Cell_Data, k_ImageDataName});
     DataPath exemplarDataPath = DataPath({sectionName, Constants::k_Cell_Data, k_ImageDataName});
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-    const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-    const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+    const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+    const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
     UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
   }
 
@@ -268,10 +268,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Spacing", "[ITKIma
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Override_Spacing", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -326,10 +326,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Preprocessed"
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -385,10 +385,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Postprocessed
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -432,10 +432,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: DataType_Conversion", "[ITK
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"DataType_Conversion", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -488,10 +488,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_Crop_DataType",
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Interaction_Crop_DataType", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint32>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -542,10 +542,10 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_All", "[ITKImag
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
   DataPath generatedDataPath = inputGeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
   DataPath exemplarDataPath = DataPath({"Interaction_Crop_OriginSpacing_Preprocessed_DataType", Constants::k_Cell_Data, k_ImageDataName});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
-  const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
-  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
-  const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath));
+  const auto& generatedArray = dataStructure.getDataRefAs<AbstractDataArray>(generatedDataPath);
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath));
+  const auto& exemplarArray = exemplarDS.getDataRefAs<AbstractDataArray>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

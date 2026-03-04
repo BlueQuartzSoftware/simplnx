@@ -2,11 +2,11 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry1D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -19,7 +19,7 @@ using namespace nx::core;
 namespace
 {
 template <typename T>
-concept GeometryType = std::is_base_of_v<IGeometry, T>;
+concept GeometryType = std::is_base_of_v<AbstractGeometry, T>;
 
 template <GeometryType GeomT>
 class ComputeMaskImpl
@@ -37,7 +37,8 @@ public:
   // -----------------------------------------------------------------------------
   void compute(usize start, usize end) const
   {
-    static_assert(std::is_same_v<ImageGeom, GeomT> || std::is_base_of_v<INodeGeometry0D, GeomT> || std::is_base_of_v<INodeGeometry1D, GeomT> || std::is_base_of_v<INodeGeometry2D, GeomT>);
+    static_assert(std::is_same_v<ImageGeom, GeomT> || std::is_base_of_v<AbstractNodeGeometry0D, GeomT> || std::is_base_of_v<AbstractNodeGeometry1D, GeomT> ||
+                  std::is_base_of_v<AbstractNodeGeometry2D, GeomT>);
 
     uint8 trueValue = (m_Invert) ? 0 : 1;
     uint8 falseValue = (m_Invert) ? 1 : 0;
@@ -93,7 +94,7 @@ public:
     }
     if constexpr(std::is_same_v<VertexGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const AbstractGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
       for(usize i = start; i < end; i++)
       {
         float32 xVal = verts[(i * 3) + 0];
@@ -112,15 +113,15 @@ public:
     }
     if constexpr(std::is_same_v<EdgeGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-      const IGeometry::SharedEdgeList::store_type& edges = m_Geom.getEdgesRef().getDataStoreRef();
+      const AbstractGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const AbstractGeometry::SharedEdgeList::store_type& edges = m_Geom.getEdgesRef().getDataStoreRef();
       usize numComp = edges.getNumberOfComponents();
       for(usize i = start; i < end; i++)
       {
         uint8 hits = 0;
         for(usize comp = 0; comp < numComp; comp++)
         {
-          const IGeometry::SharedFaceList::value_type activeVertIndex = edges.getValue((i * numComp) + comp);
+          const AbstractGeometry::SharedFaceList::value_type activeVertIndex = edges.getValue((i * numComp) + comp);
           float32 xVal = verts.getValue((activeVertIndex * 3) + 0);
           float32 yVal = verts.getValue((activeVertIndex * 3) + 1);
           float32 zVal = verts.getValue((activeVertIndex * 3) + 2);
@@ -139,15 +140,15 @@ public:
     }
     if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
     {
-      const IGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
-      const IGeometry::SharedFaceList::store_type& faces = m_Geom.getFacesRef().getDataStoreRef();
+      const AbstractGeometry::SharedVertexList::store_type& verts = m_Geom.getVerticesRef().getDataStoreRef();
+      const AbstractGeometry::SharedFaceList::store_type& faces = m_Geom.getFacesRef().getDataStoreRef();
       usize numComp = faces.getNumberOfComponents();
       for(usize i = start; i < end; i++)
       {
         uint8 hits = 0;
         for(usize comp = 0; comp < numComp; comp++)
         {
-          const IGeometry::SharedFaceList::value_type activeVertIndex = faces.getValue((i * numComp) + comp);
+          const AbstractGeometry::SharedFaceList::value_type activeVertIndex = faces.getValue((i * numComp) + comp);
           float32 xVal = verts.getValue((activeVertIndex * 3) + 0);
           float32 yVal = verts.getValue((activeVertIndex * 3) + 1);
           float32 zVal = verts.getValue((activeVertIndex * 3) + 2);
@@ -179,7 +180,7 @@ private:
   const std::function<uint8(float32, float32, float32)>& m_IsInBoundsFunct;
 };
 
-Result<> ExecuteComputeMask(const IGeometry& geom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
+Result<> ExecuteComputeMask(const AbstractGeometry& geom, UInt8AbstractDataStore& mask, bool shouldInvert, const std::function<uint8(float32, float32, float32)>& isInBoundsFunct)
 {
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(false);
@@ -218,14 +219,14 @@ Result<> ExecuteComputeMask(const IGeometry& geom, UInt8AbstractDataStore& mask,
   return {};
 }
 
-bool PrecheckRuntimeGeom(const IGeometry& geom, const ComputeCoordinateThresholdInputValues* inputValues)
+bool PrecheckRuntimeGeom(const AbstractGeometry& geom, const ComputeCoordinateThresholdInputValues* inputValues)
 {
   if(geom.getGeomType() == IGeometry::Type::Image)
   {
     return true;
   }
 
-  const auto& iNodeGeom = dynamic_cast<const INodeGeometry0D&>(geom);
+  const auto& iNodeGeom = dynamic_cast<const AbstractNodeGeometry0D&>(geom);
 
   BoundingBox3Df bounds = iNodeGeom.getBoundingBox();
   std::array<float32, 3> minPoint = bounds.getMinPoint().toArray();
@@ -321,7 +322,7 @@ Result<> ComputeCoordinateThreshold::operator()()
   }
   }
 
-  const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
+  const auto& geom = m_DataStructure.getDataRefAs<AbstractGeometry>(m_InputValues->GeometryPath);
   auto& mask = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->MaskArrayPath).getDataStoreRef();
 
   if(!PrecheckRuntimeGeom(geom, m_InputValues))

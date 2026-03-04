@@ -62,7 +62,7 @@ Result<> AddBadData::operator()()
       {
         for(const auto& voxelArrayPath : voxelArrayPaths)
         {
-          ExecuteDataFunction(InitializeTupleToZeroFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(voxelArrayPath)->getDataType(), m_DataStructure, voxelArrayPath, i);
+          ExecuteDataFunction(InitializeTupleToZeroFunctor{}, m_DataStructure.getDataAsUnsafe<AbstractDataArray>(voxelArrayPath)->getDataType(), m_DataStructure, voxelArrayPath, i);
         }
       }
     }
@@ -73,7 +73,7 @@ Result<> AddBadData::operator()()
       {
         for(const auto& voxelArrayPath : voxelArrayPaths)
         {
-          ExecuteDataFunction(InitializeTupleToZeroFunctor{}, m_DataStructure.getDataAs<IDataArray>(voxelArrayPath)->getDataType(), m_DataStructure, voxelArrayPath, i);
+          ExecuteDataFunction(InitializeTupleToZeroFunctor{}, m_DataStructure.getDataAs<AbstractDataArray>(voxelArrayPath)->getDataType(), m_DataStructure, voxelArrayPath, i);
         }
       }
     }

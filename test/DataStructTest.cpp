@@ -50,20 +50,20 @@ TEST_CASE("SimplnxCore::DataObjectType Check")
 {
   UnitTest::LoadPlugins();
 
-  static_assert(DataObject::Type::IGeometry == static_cast<DataObject::Type>(8));
-  static_assert(DataObject::Type::IGridGeometry == static_cast<DataObject::Type>(9));
-  static_assert(DataObject::Type::RectGridGeom == static_cast<DataObject::Type>(10));
-  static_assert(DataObject::Type::ImageGeom == static_cast<DataObject::Type>(11));
-  static_assert(DataObject::Type::INodeGeometry0D == static_cast<DataObject::Type>(12));
-  static_assert(DataObject::Type::VertexGeom == static_cast<DataObject::Type>(13));
-  static_assert(DataObject::Type::INodeGeometry1D == static_cast<DataObject::Type>(14));
-  static_assert(DataObject::Type::EdgeGeom == static_cast<DataObject::Type>(15));
-  static_assert(DataObject::Type::INodeGeometry2D == static_cast<DataObject::Type>(16));
-  static_assert(DataObject::Type::QuadGeom == static_cast<DataObject::Type>(17));
-  static_assert(DataObject::Type::TriangleGeom == static_cast<DataObject::Type>(18));
-  static_assert(DataObject::Type::INodeGeometry3D == static_cast<DataObject::Type>(19));
-  static_assert(DataObject::Type::HexahedralGeom == static_cast<DataObject::Type>(20));
-  static_assert(DataObject::Type::TetrahedralGeom == static_cast<DataObject::Type>(21));
+  static_assert(IDataObject::Type::AbstractGeometry == static_cast<AbstractDataObject::Type>(8));
+  static_assert(IDataObject::Type::AbstractGridGeometry == static_cast<AbstractDataObject::Type>(9));
+  static_assert(IDataObject::Type::RectGridGeom == static_cast<AbstractDataObject::Type>(10));
+  static_assert(IDataObject::Type::ImageGeom == static_cast<AbstractDataObject::Type>(11));
+  static_assert(IDataObject::Type::AbstractNodeGeometry0D == static_cast<AbstractDataObject::Type>(12));
+  static_assert(IDataObject::Type::VertexGeom == static_cast<AbstractDataObject::Type>(13));
+  static_assert(IDataObject::Type::AbstractNodeGeometry1D == static_cast<AbstractDataObject::Type>(14));
+  static_assert(IDataObject::Type::EdgeGeom == static_cast<AbstractDataObject::Type>(15));
+  static_assert(IDataObject::Type::AbstractNodeGeometry2D == static_cast<AbstractDataObject::Type>(16));
+  static_assert(IDataObject::Type::QuadGeom == static_cast<AbstractDataObject::Type>(17));
+  static_assert(IDataObject::Type::TriangleGeom == static_cast<AbstractDataObject::Type>(18));
+  static_assert(IDataObject::Type::AbstractNodeGeometry3D == static_cast<AbstractDataObject::Type>(19));
+  static_assert(IDataObject::Type::HexahedralGeom == static_cast<AbstractDataObject::Type>(20));
+  static_assert(IDataObject::Type::TetrahedralGeom == static_cast<AbstractDataObject::Type>(21));
 }
 
 // This test will ensure we don't run into runtime exceptions trying to run the functions
@@ -716,8 +716,8 @@ TEST_CASE("DataStructureCopyTest")
   REQUIRE(dataStrCopy.getData(child2Id));
   REQUIRE(dataStrCopy.getData(grandchildId));
 
-  DataObject* data = dataStr.getData(groupId);
-  DataObject* dataCopy = dataStrCopy.getData(groupId);
+  AbstractDataObject* data = dataStr.getData(groupId);
+  AbstractDataObject* dataCopy = dataStrCopy.getData(groupId);
   REQUIRE(dataStrCopy.getData(groupId) != dataStr.getData(groupId));
   REQUIRE(dataStrCopy.getData(child1Id) != dataStr.getData(child1Id));
   REQUIRE(dataStrCopy.getData(child2Id) != dataStr.getData(child2Id));
@@ -895,7 +895,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcImageGeoPath({Constants::k_ImageGeometry});
     const DataPath destImageGeoPath({Constants::k_ImageGeometry.str() + "_COPY"});
     auto* data = dataStruct.getData(srcImageGeoPath);
-    std::shared_ptr<DataObject> imageGeoCopy = data->deepCopy(destImageGeoPath);
+    std::shared_ptr<AbstractDataObject> imageGeoCopy = data->deepCopy(destImageGeoPath);
 
     auto allSrcImageGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcImageGeoPath).value();
     auto destImageGeoResults = GetAllChildDataPathsRecursive(dataStruct, destImageGeoPath);
@@ -948,7 +948,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcRectGeoPath({k_RectGridGeo});
     const DataPath destRectGeoPath({k_RectGridGeo.str() + "_COPY"});
     auto* data = dataStruct.getData(srcRectGeoPath);
-    std::shared_ptr<DataObject> rectGeoCopy = data->deepCopy(destRectGeoPath);
+    std::shared_ptr<AbstractDataObject> rectGeoCopy = data->deepCopy(destRectGeoPath);
 
     auto allSrcRectGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcRectGeoPath).value();
     auto destRectGeoResults = GetAllChildDataPathsRecursive(dataStruct, destRectGeoPath);
@@ -987,7 +987,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcGeoPath({Constants::k_VertexGeometry});
     const DataPath destGeoPath({Constants::k_VertexGeometry.str() + "_COPY"});
     auto* data = dataStruct.getData(srcGeoPath);
-    std::shared_ptr<DataObject> geoCopy = data->deepCopy(destGeoPath);
+    std::shared_ptr<AbstractDataObject> geoCopy = data->deepCopy(destGeoPath);
 
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
@@ -1023,7 +1023,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcGeoPath({k_EdgeGeo});
     const DataPath destGeoPath({k_EdgeGeo.str() + "_COPY"});
     auto* data = dataStruct.getData(srcGeoPath);
-    std::shared_ptr<DataObject> geoCopy = data->deepCopy(destGeoPath);
+    std::shared_ptr<AbstractDataObject> geoCopy = data->deepCopy(destGeoPath);
 
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
@@ -1090,7 +1090,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcGeoPath({Constants::k_TriangleGeometryName});
     const DataPath destGeoPath({Constants::k_TriangleGeometryName.str() + "_COPY"});
     auto* data = dataStruct.getData(srcGeoPath);
-    std::shared_ptr<DataObject> geoCopy = data->deepCopy(destGeoPath);
+    std::shared_ptr<AbstractDataObject> geoCopy = data->deepCopy(destGeoPath);
 
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
@@ -1155,7 +1155,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcGeoPath({k_QuadGeo});
     const DataPath destGeoPath({k_QuadGeo.str() + "_COPY"});
     auto* data = dataStruct.getData(srcGeoPath);
-    std::shared_ptr<DataObject> geoCopy = data->deepCopy(destGeoPath);
+    std::shared_ptr<AbstractDataObject> geoCopy = data->deepCopy(destGeoPath);
 
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
@@ -1220,7 +1220,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcGeoPath({k_TetGeo});
     const DataPath destGeoPath({k_TetGeo.str() + "_COPY"});
     auto* data = dataStruct.getData(srcGeoPath);
-    std::shared_ptr<DataObject> geoCopy = data->deepCopy(destGeoPath);
+    std::shared_ptr<AbstractDataObject> geoCopy = data->deepCopy(destGeoPath);
 
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
@@ -1295,7 +1295,7 @@ TEST_CASE("DataObjectsDeepCopyTest")
     const DataPath srcGeoPath({k_HexGeo});
     const DataPath destGeoPath({k_HexGeo.str() + "_COPY"});
     auto* data = dataStruct.getData(srcGeoPath);
-    std::shared_ptr<DataObject> geoCopy = data->deepCopy(destGeoPath);
+    std::shared_ptr<AbstractDataObject> geoCopy = data->deepCopy(destGeoPath);
 
     auto allSrcGeoDataPaths = GetAllChildDataPathsRecursive(dataStruct, srcGeoPath).value();
     auto destGeoResults = GetAllChildDataPathsRecursive(dataStruct, destGeoPath);
@@ -1375,14 +1375,14 @@ TEST_CASE("DataObjectsDeepCopyTest")
     auto* dataGroup = dataStruct.getData(srcGroupPath);
     auto* nlArray = dataStruct.getData(srcArrayPath);
 
-    std::shared_ptr<DataObject> copyToChildGeo = imageGeo->deepCopy(srcGroupPath);
+    std::shared_ptr<AbstractDataObject> copyToChildGeo = imageGeo->deepCopy(srcGroupPath);
     REQUIRE(copyToChildGeo == nullptr);
     REQUIRE(badCopyDataStruct.getDataAs<VertexGeom>(srcGroupPath) == nullptr);
 
-    std::shared_ptr<DataObject> copyGroupToSelfGeo = dataGroup->deepCopy(srcGroupPath);
+    std::shared_ptr<AbstractDataObject> copyGroupToSelfGeo = dataGroup->deepCopy(srcGroupPath);
     REQUIRE(copyGroupToSelfGeo == nullptr);
 
-    std::shared_ptr<DataObject> copyArrayToSelfGeo = nlArray->deepCopy(srcArrayPath);
+    std::shared_ptr<AbstractDataObject> copyArrayToSelfGeo = nlArray->deepCopy(srcArrayPath);
     REQUIRE(copyArrayToSelfGeo == nullptr);
   }
 }

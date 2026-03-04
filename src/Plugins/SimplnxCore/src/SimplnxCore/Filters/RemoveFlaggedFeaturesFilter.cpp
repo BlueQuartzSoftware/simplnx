@@ -2,10 +2,10 @@
 #include "Algorithms/RemoveFlaggedFeatures.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -83,7 +83,7 @@ Parameters RemoveFlaggedFeaturesFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FlaggedFeaturesArrayPath_Key, "Flagged Features", "Specifies whether the Feature will remain in the structure or not", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when removing flagged features",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -134,7 +134,7 @@ IFilter::PreflightResult RemoveFlaggedFeaturesFilter::preflightImpl(const DataSt
   std::string warningMsg;
   for(const auto& [identifier, object] : *cellFeatureAmPtr)
   {
-    if(const auto* srcNeighborListArrayPtr = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArrayPtr != nullptr)
+    if(const auto* srcNeighborListArrayPtr = dynamic_cast<const AbstractNeighborList*>(object.get()); srcNeighborListArrayPtr != nullptr)
     {
       warningMsg += "\n" + cellFeatureAttributeMatrixPath.toString() + "/" + srcNeighborListArrayPtr->getName();
     }

@@ -12,7 +12,7 @@ namespace
 struct IdentifySampleFunctor
 {
   template <typename T>
-  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+  void operator()(const ImageGeom* imageGeom, AbstractDataArray* goodVoxelsPtr, bool fillHoles, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     ShapeType cDims = {1};
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -187,7 +187,7 @@ struct IdentifySampleSliceBySliceFunctor
   };
 
   template <typename T>
-  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, Plane plane, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+  void operator()(const ImageGeom* imageGeom, AbstractDataArray* goodVoxelsPtr, bool fillHoles, Plane plane, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
@@ -400,7 +400,7 @@ IdentifySample::~IdentifySample() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> IdentifySample::operator()()
 {
-  auto* inputData = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
+  auto* inputData = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MaskArrayPath);
   const auto* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
 
   if(m_InputValues->SliceBySlice)

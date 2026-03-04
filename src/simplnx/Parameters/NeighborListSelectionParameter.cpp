@@ -3,7 +3,7 @@
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -122,13 +122,13 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
+  const AbstractDataObject* object = dataStructure.getData(value);
   if(object == nullptr)
   {
     return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto* neighborList = dynamic_cast<const INeighborList*>(object);
+  const auto* neighborList = dynamic_cast<const AbstractNeighborList*>(object);
   if(neighborList == nullptr)
   {
     return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not a neighbor list.", prefix, value.toString()));
@@ -150,7 +150,7 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
 Result<std::any> NeighborListSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
+  AbstractDataObject* object = dataStructure.getData(path);
   return {{object}};
 }
 } // namespace nx::core

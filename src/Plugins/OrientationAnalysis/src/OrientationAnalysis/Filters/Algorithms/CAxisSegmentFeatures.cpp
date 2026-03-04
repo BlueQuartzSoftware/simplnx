@@ -19,7 +19,7 @@ using namespace nx::core::OrientationUtilities;
 
 // -----------------------------------------------------------------------------
 CAxisSegmentFeatures::CAxisSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CAxisSegmentFeaturesInputValues* inputValues)
-: SegmentFeatures(dataStructure, shouldCancel, mesgHandler)
+: AbstractSegmentFeatures(dataStructure, shouldCancel, mesgHandler)
 , m_InputValues(inputValues)
 {
 }

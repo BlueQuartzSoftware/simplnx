@@ -435,7 +435,7 @@ Result<> SurfaceNets::operator()()
     {
       return MakeErrorResult(-56331, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
     }
-    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+    const auto& connectivity = m_DataStructure.getDataRefAs<AbstractGeometry::ElementDynamicList>(optionalId.value());
 
     m_MessageHandler("Repairing Windings...");
 

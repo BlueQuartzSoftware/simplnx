@@ -1,8 +1,8 @@
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
@@ -104,7 +104,7 @@ DataStructure GetTestDataStructure()
 }
 
 template <typename T>
-DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataStructure, ShapeType tupleShape, ShapeType componentShape, DataObject::IdType parentId)
+DataArray<T>* CreateTestDataArray(const std::string& name, DataStructure& dataStructure, ShapeType tupleShape, ShapeType componentShape, AbstractDataObject::IdType parentId)
 {
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
@@ -209,7 +209,7 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
 {
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_TriangleGroupName);
-  using MeshIndexType = IGeometry::MeshIndexType;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
   auto triangleGeom = TriangleGeom::Create(dataStructure, "[Geometry] Triangle", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
@@ -223,7 +223,7 @@ void CreateTriangleGeometry(DataStructure& dataStructure)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {3}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedFaceList>(path);
+  auto* dataArray = dataStructure.getDataAs<AbstractGeometry::SharedFaceList>(path);
   if(dataArray == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
@@ -251,7 +251,7 @@ void CreateQuadGeometry(DataStructure& dataStructure)
 {
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_QuadGroupName);
-  using MeshIndexType = IGeometry::MeshIndexType;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
   auto geometry = QuadGeom::Create(dataStructure, "[Geometry] Quad", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
@@ -265,7 +265,7 @@ void CreateQuadGeometry(DataStructure& dataStructure)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedFaceList>(path);
+  auto* dataArray = dataStructure.getDataAs<AbstractGeometry::SharedFaceList>(path);
   if(dataArray == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
@@ -293,7 +293,7 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
 {
   // Create a Triangle Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_EdgeGroupName);
-  using MeshIndexType = IGeometry::MeshIndexType;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
   auto geometry = EdgeGeom::Create(dataStructure, "[Geometry] Edge", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
@@ -307,7 +307,7 @@ void CreateEdgeGeometry(DataStructure& dataStructure)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {2}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedEdgeList>(path);
+  auto* dataArray = dataStructure.getDataAs<AbstractGeometry::SharedEdgeList>(path);
   if(dataArray == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
@@ -335,7 +335,7 @@ void CreateTetrahedralGeometry(DataStructure& dataStructure)
 {
   // Create a Tetrahedral Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_TetraGroupName);
-  using MeshIndexType = IGeometry::MeshIndexType;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
   auto geometry = TetrahedralGeom::Create(dataStructure, "[Geometry] Tetrahedral", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
@@ -349,7 +349,7 @@ void CreateTetrahedralGeometry(DataStructure& dataStructure)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {4}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedTetList>(path);
+  auto* dataArray = dataStructure.getDataAs<AbstractGeometry::SharedTetList>(path);
   if(dataArray == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
@@ -377,7 +377,7 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
 {
   // Create a Hexahedral Geometry
   DataGroup* geometryGroup = DataGroup::Create(dataStructure, k_HexaGroupName);
-  using MeshIndexType = IGeometry::MeshIndexType;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
   auto geometry = TetrahedralGeom::Create(dataStructure, "[Geometry] Hexahedral", geometryGroup->getId());
 
   // Create a Path in the DataStructure to place the geometry
@@ -391,7 +391,7 @@ void CreateHexahedralGeometry(DataStructure& dataStructure)
   // size these to 1 because the Csv parser will resize them to the appropriate number of typles
   nx::core::Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, {faceCount}, {8}, path, IDataAction::Mode::Execute);
   REQUIRE(result.valid());
-  auto* dataArray = dataStructure.getDataAs<IGeometry::SharedHexList>(path);
+  auto* dataArray = dataStructure.getDataAs<AbstractGeometry::SharedHexList>(path);
   if(dataArray == nullptr)
   {
     throw std::runtime_error(fmt::format("DataPath does not point to a DataArray. DataPath: '{}'", path.toString()));
@@ -476,7 +476,7 @@ DataStructure CreateNodeBasedGeometries()
 
 struct VertexGeomData
 {
-  std::optional<DataObject::IdType> verticesId;
+  std::optional<AbstractDataObject::IdType> verticesId;
 
   bool operator==(const VertexGeomData& rhs) const
   {
@@ -486,8 +486,8 @@ struct VertexGeomData
 
 struct EdgeGeomData
 {
-  std::optional<DataObject::IdType> verticesId;
-  std::optional<DataObject::IdType> edgesId;
+  std::optional<AbstractDataObject::IdType> verticesId;
+  std::optional<AbstractDataObject::IdType> edgesId;
 
   bool operator==(const EdgeGeomData& rhs) const
   {
@@ -497,9 +497,9 @@ struct EdgeGeomData
 
 struct TriangleGeomData
 {
-  std::optional<DataObject::IdType> verticesId;
-  std::optional<DataObject::IdType> edgesId;
-  std::optional<DataObject::IdType> trianglesId;
+  std::optional<AbstractDataObject::IdType> verticesId;
+  std::optional<AbstractDataObject::IdType> edgesId;
+  std::optional<AbstractDataObject::IdType> trianglesId;
 
   bool operator==(const TriangleGeomData& rhs) const
   {
@@ -509,9 +509,9 @@ struct TriangleGeomData
 
 struct QuadGeomData
 {
-  std::optional<DataObject::IdType> verticesId;
-  std::optional<DataObject::IdType> edgesId;
-  std::optional<DataObject::IdType> quadsId;
+  std::optional<AbstractDataObject::IdType> verticesId;
+  std::optional<AbstractDataObject::IdType> edgesId;
+  std::optional<AbstractDataObject::IdType> quadsId;
 
   bool operator==(const QuadGeomData& rhs) const
   {
@@ -685,7 +685,7 @@ TEST_CASE("ImageGeometryIO")
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
 
   DataStructure originalDataStructure;
-  auto action = CreateImageGeometryAction(imageGeomPath, dims, origin, spacing, cellDataName, IGeometry::LengthUnit::Micrometer);
+  auto action = CreateImageGeometryAction(imageGeomPath, dims, origin, spacing, cellDataName, AbstractGeometry::LengthUnit::Micrometer);
   Result<> actionResult = action.apply(originalDataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
 
@@ -896,7 +896,7 @@ TEST_CASE("xdmf")
 {
   DataStructure dataStructure;
   auto* vertexGeom = VertexGeom::Create(dataStructure, "VertexGeom");
-  DataObject::IdType geomId = vertexGeom->getId();
+  AbstractDataObject::IdType geomId = vertexGeom->getId();
   constexpr usize numVerts = 100;
   std::random_device randomDevice;
   std::mt19937 generator(randomDevice());
@@ -1043,7 +1043,7 @@ TEST_CASE("DataStructureAppend")
   DataStructure exemplarDataStructure = std::move(readResult.value());
 
   usize currentTopLevelSize = baseDataStructure.getTopLevelData().size();
-  for(const DataObject* object : exemplarDataStructure.getTopLevelData())
+  for(const AbstractDataObject* object : exemplarDataStructure.getTopLevelData())
   {
     REQUIRE(object != nullptr);
     DataPath path({object->getName()});
@@ -1062,11 +1062,11 @@ TEST_CASE("DataStructureAppend")
     REQUIRE(appendedDataStructure.containsData(originalArrayPath));
     REQUIRE(appendedDataStructure.containsData(path));
 
-    const DataObject& appendedOriginalArray = appendedDataStructure.getDataRef(originalArrayPath);
+    const AbstractDataObject& appendedOriginalArray = appendedDataStructure.getDataRef(originalArrayPath);
     REQUIRE(UnitTest::Comparison::CompareDataObject(originalArray, appendedOriginalArray));
 
-    const DataObject& appendedObject = appendedDataStructure.getDataRef(path);
-    const DataObject& exemplarObject = exemplarDataStructure.getDataRef(path);
+    const AbstractDataObject& appendedObject = appendedDataStructure.getDataRef(path);
+    const AbstractDataObject& exemplarObject = exemplarDataStructure.getDataRef(path);
 
     REQUIRE(UnitTest::Comparison::CompareDataObject(exemplarObject, appendedObject));
 

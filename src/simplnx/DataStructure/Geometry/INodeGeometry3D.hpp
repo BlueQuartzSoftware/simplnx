@@ -1,70 +1,26 @@
 #pragma once
 
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 namespace nx::core
 {
-class SIMPLNX_EXPORT INodeGeometry3D : public INodeGeometry2D
+/**
+ * @class INodeGeometry3D
+ * @brief Pure virtual interface for node-based geometries with polyhedra.
+ *
+ * Contains the string constants and pure virtual methods that form the
+ * public contract for 3D node geometries.
+ */
+class SIMPLNX_EXPORT INodeGeometry3D
 {
 public:
   static inline constexpr StringLiteral k_PolyhedronDataName = "Polyhedron Data";
   static inline constexpr StringLiteral k_SharedPolyhedronListName = "Shared Polyhedron List";
-  static inline constexpr StringLiteral k_TypeName = "INodeGeometry3D";
 
-  INodeGeometry3D() = delete;
-  INodeGeometry3D(const INodeGeometry3D&) = default;
-  INodeGeometry3D(INodeGeometry3D&&) = default;
-
-  INodeGeometry3D& operator=(const INodeGeometry3D&) = delete;
-  INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = delete;
-
-  ~INodeGeometry3D() noexcept override = default;
-
-  void setPolyhedronListId(const OptionalId& polyListId);
-
-  /**
-   * @brief
-   * @return
-   */
-  SharedFaceList* getPolyhedra();
-
-  /**
-   * @brief
-   * @return
-   */
-  const SharedFaceList* getPolyhedra() const;
-
-  /**
-   * @brief
-   * @return
-   */
-  SharedFaceList& getPolyhedraRef();
-
-  /**
-   * @brief
-   * @return
-   */
-  const SharedFaceList& getPolyhedraRef() const;
-
-  /**
-   * @brief
-   * @param polyhedra
-   */
-  void setPolyhedraList(const SharedFaceList& polyhedra);
-
-  /**
-   * @brief Resizes the polyhedra list to the target size.
-   * @param size
-   */
-  void resizePolyhedraList(usize size);
-
-  OptionalId getPolyhedraDataId() const;
-
-  /**
-   * @brief Returns the number of polyhedra in the geometry.
-   * @return usize
-   */
-  usize getNumberOfPolyhedra() const;
+  virtual ~INodeGeometry3D() noexcept = default;
 
   /**
    * @brief Pure-Virtual intended to find the shared faces of each element
@@ -76,41 +32,9 @@ public:
   virtual Result<> findFaces(bool recalculate) = 0;
 
   /**
-   * @brief Deletes the current face list array.
-   */
-  void deleteFaces();
-
-  /**
-   * @brief
-   * @return
-   */
-  const std::optional<IdType>& getUnsharedFacesId() const;
-
-  /**
-   * @brief
-   * @return
-   */
-  void setUnsharedFacedId(const OptionalId& id);
-
-  /**
-   * @brief Pure-Virtual intended to find the unshared faces of each element
-   * in the geometry and store it in a new or existing array in the DataStructure
-   * @param recalculate This will allow for skipping execution when an Unshared Faces
-   * Array exists and recalculate is `false`
-   * @return Result<>
+   * @brief Creates and assigns the unshared face list array for the current values.
    */
   virtual Result<> findUnsharedFaces(bool recalculate) = 0;
-
-  /**
-   * @brief Returns a pointer to the unshared face list array.
-   * @return
-   */
-  const SharedFaceList* getUnsharedFaces() const;
-
-  /**
-   * @brief Deletes the current unshared face list array.
-   */
-  void deleteUnsharedFaces();
 
   /**
    * @brief Returns the number of vertices in the cell.
@@ -118,108 +42,11 @@ public:
    */
   virtual usize getNumberOfVerticesPerCell() const = 0;
 
-  /**
-   * @brief
-   * @param tetId
-   * @param vertexIds The index into the shared vertex list of each vertex
-   */
-  void setCellPointIds(usize tetId, nonstd::span<usize> vertexIds);
-
-  /**
-   * @brief
-   * @param tetId
-   * @param vertexIds The index into the shared vertex list of each vertex
-   */
-  void getCellPointIds(usize tetId, nonstd::span<usize> vertexIds) const;
-
-  /**
-   * @brief
-   * @param tetId
-   * @param coords The coordinates of each vertex
-   */
-  void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const;
-
-  /****************************************************************************
-   * These functions get values related to where the Vertex Coordinates are
-   * stored in the DataStructure
-   */
-
-  /**
-   * @brief
-   * @return
-   */
-  const std::optional<IdType>& getPolyhedronListId() const;
-
-  void setPolyhedraDataId(const OptionalId& polyDataId);
-
-  /**
-   * @brief
-   * @return
-   */
-  const std::optional<IdType>& getPolyhedraAttributeMatrixId() const;
-
-  /**
-   * @brief
-   * @return
-   */
-  AttributeMatrix* getPolyhedraAttributeMatrix();
-
-  /**
-   * @brief
-   * @return
-   */
-  const AttributeMatrix* getPolyhedraAttributeMatrix() const;
-
-  /**
-   * @brief
-   * @return
-   */
-  AttributeMatrix& getPolyhedraAttributeMatrixRef();
-
-  /**
-   * @brief
-   * @return
-   */
-  const AttributeMatrix& getPolyhedraAttributeMatrixRef() const;
-
-  /**
-   * @brief
-   * @return
-   */
-  DataPath getPolyhedronAttributeMatrixDataPath() const;
-
-  /**
-   * @brief
-   * @param attributeMatrix
-   */
-  void setPolyhedraAttributeMatrix(const AttributeMatrix& attributeMatrix);
-
-  /**
-   * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.
-   * @return A Result<> object possibly with error code and message.
-   */
-  Result<> validate() const override;
-
 protected:
-  INodeGeometry3D(DataStructure& dataStructure, std::string name);
-
-  INodeGeometry3D(DataStructure& dataStructure, std::string name, IdType importId);
-
-  SharedQuadList* createSharedQuadList(usize numQuads);
-
-  SharedTriList* createSharedTriList(usize numTris);
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIdsMap
-   */
-  void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap) override;
-
-  /* ***************************************************************************
-   * These variables are the Ids of the arrays from the DataStructure object.
-   */
-  std::optional<IdType> m_PolyhedronListId;
-  std::optional<IdType> m_PolyhedronAttributeMatrixId;
-  std::optional<IdType> m_UnsharedFaceListId;
+  INodeGeometry3D() = default;
+  INodeGeometry3D(const INodeGeometry3D&) = default;
+  INodeGeometry3D(INodeGeometry3D&&) = default;
+  INodeGeometry3D& operator=(const INodeGeometry3D&) = default;
+  INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = default;
 };
 } // namespace nx::core

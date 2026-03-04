@@ -70,7 +70,7 @@ Parameters RemoveFlaggedTrianglesFilter::parameters() const
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_VertexDataSelectedAttributeMatrix_Key, "Vertex Data", "Vertex Attribute Matrix that will be copied to the reduced geometry", DataPath{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_VertexDataSelectedArrays_Key, "Vertex Attribute Arrays to Copy", "Vertex DataPaths to copy", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, GetAllNumericTypes()));
 
   params.linkParameters(k_VertexDataHandling_Key, k_VertexDataSelectedAttributeMatrix_Key, detail::k_CopyAllVertexArraysIdx);
   params.linkParameters(k_VertexDataHandling_Key, k_VertexDataSelectedArrays_Key, detail::k_CopySelectedVertexArraysIdx);
@@ -82,7 +82,7 @@ Parameters RemoveFlaggedTrianglesFilter::parameters() const
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_TriangleDataSelectedAttributeMatrix_Key, "Triangle Data", "Triangle Attribute Matrix that will be copied to the reduced geometry",
                                                                     DataPath{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TriangleDataSelectedArrays_Key, "Triangle Attribute Arrays to Copy", "Triangle DataPaths to copy", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, GetAllNumericTypes()));
 
   params.linkParameters(k_TriangleDataHandling_Key, k_TriangleDataSelectedArrays_Key, detail::k_CopySelectedTriangleArraysIdx);
   params.linkParameters(k_TriangleDataHandling_Key, k_TriangleDataSelectedAttributeMatrix_Key, detail::k_CopyAllTriangleArraysIdx);
@@ -118,7 +118,7 @@ IFilter::PreflightResult RemoveFlaggedTrianglesFilter::preflightImpl(const DataS
 
   Result<OutputActions> resultOutputActions;
 
-  const auto* initialGeomPtr = dataStructure.getDataAs<INodeGeometry2D>(pInitialGeometryPathValue);
+  const auto* initialGeomPtr = dataStructure.getDataAs<AbstractNodeGeometry2D>(pInitialGeometryPathValue);
 
   std::string reducedVertexAttributeMatrixName = (initialGeomPtr->getVertexAttributeMatrix() == nullptr ? "Vertex Data" : initialGeomPtr->getVertexAttributeMatrix()->getName());
   std::string reducedFaceAttributeMatrixName = (initialGeomPtr->getEdgeAttributeMatrix() == nullptr ? "Face Data" : initialGeomPtr->getEdgeAttributeMatrix()->getName());

@@ -47,7 +47,7 @@ Result<> WriteStatsGenOdfAngleFile::operator()()
   }
 
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskPtr = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskPtr = nullptr;
   if(m_InputValues->UseMask)
   {
     maskPtr = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
@@ -100,7 +100,7 @@ Result<> WriteStatsGenOdfAngleFile::operator()()
 }
 
 // -----------------------------------------------------------------------------
-int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, usize totalPoints, int32 phase) const
+int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, usize totalPoints, int32 phase) const
 {
   int32 lineCount = 0;
   for(usize i = 0; i < totalPoints; i++)
@@ -118,7 +118,7 @@ int WriteStatsGenOdfAngleFile::determineOutputLineCount(const Int32Array& cellPh
 }
 
 // -----------------------------------------------------------------------------
-Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, int32 lineCount,
+Result<> WriteStatsGenOdfAngleFile::writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, int32 lineCount,
                                                     usize totalPoints, int32 phase) const
 {
   const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);

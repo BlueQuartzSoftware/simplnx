@@ -3,8 +3,8 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @class InterpolatePointCloudToRegularGridFilter
  * @brief This Filter interpolates the values of arrays stored in a Vertex Geometry onto a user-selected Image Geometry.
  */
-class SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridFilter : public IFilter
+class SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridFilter : public AbstractFilter
 {
 public:
   InterpolatePointCloudToRegularGridFilter() = default;

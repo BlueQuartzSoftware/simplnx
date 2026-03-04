@@ -63,7 +63,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OinaDataFilter: Valid Filter Execution", "
   REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
   REQUIRE(imageGeom.getSpacing() == exemplarImageGeom.getSpacing());
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
-  REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
+  REQUIRE(imageGeom.getUnits() == AbstractGeometry::LengthUnit::Micrometer);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, DataPath({ImageGeom::k_TypeName, k_CellData}), k_ExemplarDataContainer);
 

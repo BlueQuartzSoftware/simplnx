@@ -16,7 +16,7 @@ namespace
 
 // ----------------------------------------------------------------------------
 //
-inline std::array<nx::core::Point3Df, 2> GetEdgeCoordinates(usize edgeId, const INodeGeometry0D::SharedVertexList& verts, const INodeGeometry1D::SharedEdgeList& edges)
+inline std::array<nx::core::Point3Df, 2> GetEdgeCoordinates(usize edgeId, const AbstractNodeGeometry0D::SharedVertexList& verts, const AbstractNodeGeometry1D::SharedEdgeList& edges)
 {
   usize v0Idx = edges[edgeId * 2];
   usize v1Idx = edges[edgeId * 2 + 1];
@@ -25,8 +25,8 @@ inline std::array<nx::core::Point3Df, 2> GetEdgeCoordinates(usize edgeId, const 
 
 // ----------------------------------------------------------------------------
 // Helper function to check if a point lies inside a polygon using ray-casting
-bool pointInPolygon(const EdgeGeom& edgeGeom, const std::vector<usize>& edgeIndices, const Point3Df& point, const INodeGeometry0D::SharedVertexList& verts,
-                    const INodeGeometry1D::SharedEdgeList& edges)
+bool pointInPolygon(const EdgeGeom& edgeGeom, const std::vector<usize>& edgeIndices, const Point3Df& point, const AbstractNodeGeometry0D::SharedVertexList& verts,
+                    const AbstractNodeGeometry1D::SharedEdgeList& edges)
 {
   size_t intersections = 0;
   size_t numEdges = edgeIndices.size();
@@ -94,8 +94,8 @@ public:
     edgeIndices.reserve(1024); // Reserve some space in the vector. This is just a guess.
     SizeVec3 dimensions = m_ImageGeom.getDimensions();
     size_t cellsPerSlice = dimensions[0] * dimensions[1];
-    const INodeGeometry0D::SharedVertexList& verts = m_EdgeGeom.getVerticesRef();
-    const INodeGeometry1D::SharedEdgeList& edges = m_EdgeGeom.getEdgesRef();
+    const AbstractNodeGeometry0D::SharedVertexList& verts = m_EdgeGeom.getVerticesRef();
+    const AbstractNodeGeometry1D::SharedEdgeList& edges = m_EdgeGeom.getEdgesRef();
 
     // Loop over all edges and find the edges that are just for the current Slice Id
     for(usize edgeIdx = 0; edgeIdx < numEdges; edgeIdx++)

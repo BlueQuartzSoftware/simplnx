@@ -10,7 +10,7 @@ BaseGroupIO::BaseGroupIO() = default;
 BaseGroupIO::~BaseGroupIO() noexcept = default;
 
 Result<> BaseGroupIO::ReadBaseGroupData(DataStructureReader& dataStructureReader, BaseGroup& baseGroup, const group_reader_type& parentGroupReader, const std::string& objectName,
-                                        DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
+                                        AbstractDataObject::IdType importId, const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore)
 {
   auto groupReader = parentGroupReader.openGroup(objectName);
   return ReadDataMap(dataStructureReader, baseGroup.getDataMap(), groupReader, baseGroup.getId(), useEmptyDataStore);

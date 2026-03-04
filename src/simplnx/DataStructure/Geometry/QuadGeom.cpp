@@ -9,13 +9,13 @@
 using namespace nx::core;
 
 QuadGeom::QuadGeom(DataStructure& dataStructure, std::string name)
-: INodeGeometry2D(dataStructure, std::move(name))
+: AbstractNodeGeometry2D(dataStructure, std::move(name))
 {
   m_UnitDimensionality = 2;
 }
 
 QuadGeom::QuadGeom(DataStructure& dataStructure, std::string name, IdType importId)
-: INodeGeometry2D(dataStructure, std::move(name), importId)
+: AbstractNodeGeometry2D(dataStructure, std::move(name), importId)
 {
   m_UnitDimensionality = 2;
 }
@@ -25,9 +25,9 @@ IGeometry::Type QuadGeom::getGeomType() const
   return IGeometry::Type::Quad;
 }
 
-DataObject::Type QuadGeom::getDataObjectType() const
+AbstractDataObject::Type QuadGeom::getDataObjectType() const
 {
-  return DataObject::Type::QuadGeom;
+  return IDataObject::Type::QuadGeom;
 }
 
 BaseGroup::GroupType QuadGeom::getGroupType() const
@@ -60,12 +60,12 @@ std::string QuadGeom::getTypeName() const
   return k_TypeName;
 }
 
-DataObject* QuadGeom::shallowCopy()
+AbstractDataObject* QuadGeom::shallowCopy()
 {
   return new QuadGeom(*this);
 }
 
-std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> QuadGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure
@@ -149,7 +149,7 @@ std::shared_ptr<DataObject> QuadGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_UnsharedEdgeListId = unsharedEdgesCopy->getId();
     }
-    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_SharedEdgeListName)); edgesCopy != nullptr)
+    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName)); edgesCopy != nullptr)
     {
       copy->m_EdgeDataArrayId = edgesCopy->getId();
     }

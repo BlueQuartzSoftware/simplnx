@@ -15,7 +15,7 @@ class SIMPLNX_EXPORT AttributeMatrixSelectionParameter : public MutableDataParam
 public:
   using ValueType = DataPath;
 
-  using AllowedTypes = std::set<DataObject::Type>;
+  using AllowedTypes = std::set<AbstractDataObject::Type>;
 
   AttributeMatrixSelectionParameter() = delete;
   AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
@@ -82,7 +82,7 @@ public:
   Result<> validatePath(const DataStructure& dataStructure, const DataPath& value) const;
 
   /**
-   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
+   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived AbstractDataObject in the std::any.
    * Returns any warnings/errors.
    * @param dataStructure
    * @param value

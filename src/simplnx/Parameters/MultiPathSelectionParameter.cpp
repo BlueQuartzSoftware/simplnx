@@ -114,7 +114,7 @@ Result<> MultiPathSelectionParameter::validatePaths(const DataStructure& dataStr
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
     }
-    const DataObject* object = dataStructure.getData(path);
+    const AbstractDataObject* object = dataStructure.getData(path);
     if(object == nullptr)
     {
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
@@ -133,7 +133,7 @@ Result<> MultiPathSelectionParameter::validatePaths(const DataStructure& dataStr
 Result<std::any> MultiPathSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& paths = GetAnyRef<ValueType>(value);
-  std::vector<DataObject*> objects;
+  std::vector<AbstractDataObject*> objects;
   for(const auto& path : paths)
   {
     objects.push_back(dataStructure.getData(path));

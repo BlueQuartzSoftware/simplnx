@@ -16,9 +16,9 @@
 #include <simplnx/DataStructure/DataGroup.hpp>
 #include <simplnx/DataStructure/DataStore.hpp>
 #include <simplnx/DataStructure/DataStructure.hpp>
+#include <simplnx/DataStructure/Geometry/AbstractGeometry.hpp>
 #include <simplnx/DataStructure/Geometry/EdgeGeom.hpp>
 #include <simplnx/DataStructure/Geometry/HexahedralGeom.hpp>
-#include <simplnx/DataStructure/Geometry/IGeometry.hpp>
 #include <simplnx/DataStructure/Geometry/ImageGeom.hpp>
 #include <simplnx/DataStructure/Geometry/QuadGeom.hpp>
 #include <simplnx/DataStructure/Geometry/RectGridGeom.hpp>
@@ -27,6 +27,7 @@
 #include <simplnx/DataStructure/Geometry/VertexGeom.hpp>
 #include <simplnx/DataStructure/NeighborList.hpp>
 #include <simplnx/DataStructure/StringArray.hpp>
+#include <simplnx/Filter/AbstractFilter.hpp>
 #include <simplnx/Filter/Actions/CopyArrayInstanceAction.hpp>
 #include <simplnx/Filter/Actions/CopyDataObjectAction.hpp>
 #include <simplnx/Filter/Actions/CreateArrayAction.hpp>
@@ -82,8 +83,10 @@
 #include <simplnx/Parameters/VectorParameter.hpp>
 #include <simplnx/Parameters/util/ReadCSVData.hpp>
 #include <simplnx/Pipeline/AbstractPipelineNode.hpp>
+#include <simplnx/Pipeline/IPipelineNode.hpp>
 #include <simplnx/Pipeline/Pipeline.hpp>
 #include <simplnx/Pipeline/PipelineFilter.hpp>
+#include <simplnx/Plugin/IPlugin.hpp>
 #include <simplnx/Utilities/DataGroupUtilities.hpp>
 #include <simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp>
 
@@ -225,7 +228,7 @@ auto BindDataStore(py::handle scope, const char* name)
 template <class T>
 auto BindDataArray(py::handle scope, const char* name)
 {
-  py::class_<DataArray<T>, IDataArray, std::shared_ptr<DataArray<T>>> dataArray(scope, name);
+  py::class_<DataArray<T>, AbstractDataArray, std::shared_ptr<DataArray<T>>> dataArray(scope, name);
   dataArray.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
   dataArray.def(
       "npview",
@@ -252,7 +255,7 @@ auto BindNeighborList(py::handle scope, const char* name)
 {
   using NeighborListType = NeighborList<T>;
 
-  auto neighborList = py::class_<NeighborListType, INeighborList, std::shared_ptr<NeighborListType>>(scope, name);
+  auto neighborList = py::class_<NeighborListType, AbstractNeighborList, std::shared_ptr<NeighborListType>>(scope, name);
   neighborList.def_property_readonly_static("dtype", []([[maybe_unused]] py::object self) { return py::dtype::of<T>(); });
   neighborList.def("get_list", &NeighborListType::getList, "grain_id"_a);
   neighborList.def("set_list", py::overload_cast<int32, const typename NeighborListType::VectorType&>(&NeighborListType::setList), "grain_id"_a, "neighbor_list"_a);
@@ -279,7 +282,7 @@ auto BindNeighborList(py::handle scope, const char* name)
 template <class GeomT>
 auto BindCreateGeometry2DAction(py::handle scope, const char* name)
 {
-  auto createGeometry2DAction = py::class_<GeomT, IDataCreationAction>(scope, name);
+  auto createGeometry2DAction = py::class_<GeomT, AbstractDataCreationAction>(scope, name);
   createGeometry2DAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_faces"_a,
                              "num_vertices"_a, "vertex_attribute_matrix_name"_a, "face_attribute_matrix_name"_a, "shared_vertices_name"_a, "shared_faces_name"_a);
   createGeometry2DAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a,
@@ -290,7 +293,7 @@ auto BindCreateGeometry2DAction(py::handle scope, const char* name)
 template <class GeomT>
 auto BindCreateGeometry3DAction(py::handle scope, const char* name)
 {
-  auto createGeometry3DAction = py::class_<GeomT, IDataCreationAction>(scope, name);
+  auto createGeometry3DAction = py::class_<GeomT, AbstractDataCreationAction>(scope, name);
   createGeometry3DAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_cells"_a,
                              "num_vertices"_a, "vertex_data_name"_a, "cell_data_name"_a, "shared_vertices_name"_a, "shared_cells_name"_a);
   createGeometry3DAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a,
@@ -701,7 +704,8 @@ PYBIND11_MODULE(simplnx, mod)
     return DataPath(pathVector);
   });
 
-  py::class_<AbstractPipelineNode, std::shared_ptr<AbstractPipelineNode>> abstractPipelineNode(mod, "AbstractPipelineNode");
+  py::class_<IPipelineNode, std::shared_ptr<IPipelineNode>> iPipelineNode(mod, "IPipelineNode");
+  py::class_<AbstractPipelineNode, IPipelineNode, std::shared_ptr<AbstractPipelineNode>> abstractPipelineNode(mod, "AbstractPipelineNode");
   abstractPipelineNode.def("to_json_str", [](const AbstractPipelineNode& self) { return self.toJson().dump(); });
   py::class_<PipelineFilter, AbstractPipelineNode, std::shared_ptr<PipelineFilter>> pipelineFilter(mod, "PipelineFilter");
 
@@ -783,7 +787,8 @@ PYBIND11_MODULE(simplnx, mod)
   readCSVData.def_readwrite("consecutive_delimiters", &ReadCSVData::consecutiveDelimiters);
   readCSVData.def("__repr__", [](const ReadCSVData& self) { return "ReadCSVDataParameter()"; });
 
-  py::class_<AbstractPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
+  py::class_<IPlugin, std::shared_ptr<IPlugin>> iPlugin(mod, "IPlugin");
+  py::class_<AbstractPlugin, IPlugin, std::shared_ptr<AbstractPlugin>> abstractPlugin(mod, "AbstractPlugin");
   py::class_<PythonPlugin, AbstractPlugin, std::shared_ptr<PythonPlugin>> pythonPlugin(mod, "PythonPlugin");
 
   py::class_<IDataStore, std::shared_ptr<IDataStore>> iDataStore(mod, "IDataStore");
@@ -816,11 +821,11 @@ PYBIND11_MODULE(simplnx, mod)
   auto dataStoreBool = SIMPLNX_PY_BIND_DATA_STORE(mod, BoolDataStore);
 
   py::class_<DataStructure> dataStructure(mod, "DataStructure");
-  py::class_<DataObject, std::shared_ptr<DataObject>> dataObject(mod, "DataObject");
+  py::class_<AbstractDataObject, std::shared_ptr<AbstractDataObject>> dataObject(mod, "AbstractDataObject");
 
-  dataObject.def_property_readonly("id", &DataObject::getId);
-  dataObject.def_property_readonly("name", &DataObject::getName);
-  dataObject.def_property_readonly("type", &DataObject::getDataObjectType);
+  dataObject.def_property_readonly("id", &AbstractDataObject::getId);
+  dataObject.def_property_readonly("name", &AbstractDataObject::getName);
+  dataObject.def_property_readonly("type", &AbstractDataObject::getDataObjectType);
 
   dataStructure.def(py::init<>());
   dataStructure.def("__getitem__", py::overload_cast<const DataPath&>(&DataStructure::getSharedData));
@@ -828,7 +833,7 @@ PYBIND11_MODULE(simplnx, mod)
     auto pathConversionResult = DataPath::FromString(path);
     if(!pathConversionResult)
     {
-      return std::shared_ptr<DataObject>(nullptr);
+      return std::shared_ptr<AbstractDataObject>(nullptr);
     }
     return self.getSharedData(pathConversionResult.value());
   });
@@ -922,38 +927,38 @@ PYBIND11_MODULE(simplnx, mod)
     }
   });
 
-  auto dataObjectType = py::enum_<DataObject::Type>(dataObject, "DataObjectType");
-  dataObjectType.value("DataObject", DataObject::Type::DataObject);
-  dataObjectType.value("DynamicListArray", DataObject::Type::DynamicListArray);
-  dataObjectType.value("ScalarData", DataObject::Type::ScalarData);
-  dataObjectType.value("BaseGroup", DataObject::Type::BaseGroup);
-  dataObjectType.value("AttributeMatrix", DataObject::Type::AttributeMatrix);
-  dataObjectType.value("DataGroup", DataObject::Type::DataGroup);
-  dataObjectType.value("IDataArray", DataObject::Type::IDataArray);
-  dataObjectType.value("DataArray", DataObject::Type::DataArray);
-  dataObjectType.value("IGeometry", DataObject::Type::IGeometry);
-  dataObjectType.value("IGridGeometry", DataObject::Type::IGridGeometry);
-  dataObjectType.value("RectGridGeom", DataObject::Type::RectGridGeom);
-  dataObjectType.value("ImageGeom", DataObject::Type::ImageGeom);
-  dataObjectType.value("INodeGeometry0D", DataObject::Type::INodeGeometry0D);
-  dataObjectType.value("VertexGeom", DataObject::Type::VertexGeom);
-  dataObjectType.value("INodeGeometry1D", DataObject::Type::INodeGeometry1D);
-  dataObjectType.value("EdgeGeom", DataObject::Type::EdgeGeom);
-  dataObjectType.value("INodeGeometry2D", DataObject::Type::INodeGeometry2D);
-  dataObjectType.value("QuadGeom", DataObject::Type::QuadGeom);
-  dataObjectType.value("TriangleGeom", DataObject::Type::TriangleGeom);
-  dataObjectType.value("INodeGeometry3D", DataObject::Type::INodeGeometry3D);
-  dataObjectType.value("HexahedralGeom", DataObject::Type::HexahedralGeom);
-  dataObjectType.value("TetrahedralGeom", DataObject::Type::TetrahedralGeom);
-  dataObjectType.value("INeighborList", DataObject::Type::INeighborList);
-  dataObjectType.value("NeighborList", DataObject::Type::NeighborList);
-  dataObjectType.value("StringArray", DataObject::Type::StringArray);
-  dataObjectType.value("AbstractMontage", DataObject::Type::AbstractMontage);
-  dataObjectType.value("GridMontage", DataObject::Type::GridMontage);
-  dataObjectType.value("Unknown", DataObject::Type::Unknown);
-  dataObjectType.value("Any", DataObject::Type::Any);
+  auto dataObjectType = py::enum_<AbstractDataObject::Type>(dataObject, "DataObjectType");
+  dataObjectType.value("AbstractDataObject", IDataObject::Type::AbstractDataObject);
+  dataObjectType.value("DynamicListArray", IDataObject::Type::DynamicListArray);
+  dataObjectType.value("ScalarData", IDataObject::Type::ScalarData);
+  dataObjectType.value("BaseGroup", IDataObject::Type::BaseGroup);
+  dataObjectType.value("AttributeMatrix", IDataObject::Type::AttributeMatrix);
+  dataObjectType.value("DataGroup", IDataObject::Type::DataGroup);
+  dataObjectType.value("AbstractDataArray", IDataObject::Type::AbstractDataArray);
+  dataObjectType.value("DataArray", IDataObject::Type::DataArray);
+  dataObjectType.value("AbstractGeometry", IDataObject::Type::AbstractGeometry);
+  dataObjectType.value("AbstractGridGeometry", IDataObject::Type::AbstractGridGeometry);
+  dataObjectType.value("RectGridGeom", IDataObject::Type::RectGridGeom);
+  dataObjectType.value("ImageGeom", IDataObject::Type::ImageGeom);
+  dataObjectType.value("AbstractNodeGeometry0D", IDataObject::Type::AbstractNodeGeometry0D);
+  dataObjectType.value("VertexGeom", IDataObject::Type::VertexGeom);
+  dataObjectType.value("AbstractNodeGeometry1D", IDataObject::Type::AbstractNodeGeometry1D);
+  dataObjectType.value("EdgeGeom", IDataObject::Type::EdgeGeom);
+  dataObjectType.value("AbstractNodeGeometry2D", IDataObject::Type::AbstractNodeGeometry2D);
+  dataObjectType.value("QuadGeom", IDataObject::Type::QuadGeom);
+  dataObjectType.value("TriangleGeom", IDataObject::Type::TriangleGeom);
+  dataObjectType.value("AbstractNodeGeometry3D", IDataObject::Type::AbstractNodeGeometry3D);
+  dataObjectType.value("HexahedralGeom", IDataObject::Type::HexahedralGeom);
+  dataObjectType.value("TetrahedralGeom", IDataObject::Type::TetrahedralGeom);
+  dataObjectType.value("AbstractNeighborList", IDataObject::Type::AbstractNeighborList);
+  dataObjectType.value("NeighborList", IDataObject::Type::NeighborList);
+  dataObjectType.value("StringArray", IDataObject::Type::StringArray);
+  dataObjectType.value("AbstractMontage", IDataObject::Type::AbstractMontage);
+  dataObjectType.value("GridMontage", IDataObject::Type::GridMontage);
+  dataObjectType.value("Unknown", IDataObject::Type::Unknown);
+  dataObjectType.value("Any", IDataObject::Type::Any);
 
-  py::class_<BaseGroup, DataObject, std::shared_ptr<BaseGroup>> baseGroup(mod, "BaseGroup");
+  py::class_<BaseGroup, AbstractDataObject, std::shared_ptr<BaseGroup>> baseGroup(mod, "BaseGroup");
   baseGroup.def("contains", py::overload_cast<const std::string&>(&BaseGroup::contains, py::const_));
   baseGroup.def("__getitem__", py::overload_cast<const std::string&>(&BaseGroup::at), py::return_value_policy::reference_internal);
   baseGroup.def("__len__", &BaseGroup::getSize);
@@ -964,25 +969,25 @@ PYBIND11_MODULE(simplnx, mod)
   baseGroupType.value("BaseGroup", BaseGroup::GroupType::BaseGroup);
   baseGroupType.value("DataGroup", BaseGroup::GroupType::DataGroup);
   baseGroupType.value("AttributeMatrix", BaseGroup::GroupType::AttributeMatrix);
-  baseGroupType.value("IGeometry", BaseGroup::GroupType::IGeometry);
-  baseGroupType.value("IGridGeometry", BaseGroup::GroupType::IGridGeometry);
+  baseGroupType.value("AbstractGeometry", BaseGroup::GroupType::AbstractGeometry);
+  baseGroupType.value("AbstractGridGeometry", BaseGroup::GroupType::AbstractGridGeometry);
   baseGroupType.value("RectGridGeom", BaseGroup::GroupType::RectGridGeom);
   baseGroupType.value("ImageGeom", BaseGroup::GroupType::ImageGeom);
-  baseGroupType.value("INodeGeometry0D", BaseGroup::GroupType::INodeGeometry0D);
+  baseGroupType.value("AbstractNodeGeometry0D", BaseGroup::GroupType::AbstractNodeGeometry0D);
   baseGroupType.value("VertexGeom", BaseGroup::GroupType::VertexGeom);
-  baseGroupType.value("INodeGeometry1D", BaseGroup::GroupType::INodeGeometry1D);
+  baseGroupType.value("AbstractNodeGeometry1D", BaseGroup::GroupType::AbstractNodeGeometry1D);
   baseGroupType.value("EdgeGeom", BaseGroup::GroupType::EdgeGeom);
-  baseGroupType.value("INodeGeometry2D", BaseGroup::GroupType::INodeGeometry2D);
+  baseGroupType.value("AbstractNodeGeometry2D", BaseGroup::GroupType::AbstractNodeGeometry2D);
   baseGroupType.value("QuadGeom", BaseGroup::GroupType::QuadGeom);
   baseGroupType.value("TriangleGeom", BaseGroup::GroupType::TriangleGeom);
-  baseGroupType.value("INodeGeometry3D", BaseGroup::GroupType::INodeGeometry3D);
+  baseGroupType.value("AbstractNodeGeometry3D", BaseGroup::GroupType::AbstractNodeGeometry3D);
   baseGroupType.value("HexahedralGeom", BaseGroup::GroupType::HexahedralGeom);
   baseGroupType.value("TetrahedralGeom", BaseGroup::GroupType::TetrahedralGeom);
   baseGroupType.value("Unknown", BaseGroup::GroupType::Unknown);
 
-  py::class_<IGeometry, BaseGroup, std::shared_ptr<IGeometry>> iGeometry(mod, "IGeometry");
+  py::class_<AbstractGeometry, BaseGroup, std::shared_ptr<AbstractGeometry>> iGeometry(mod, "AbstractGeometry");
 
-  py::enum_<IGeometry::Type> geomType(iGeometry, "Type");
+  py::enum_<AbstractGeometry::Type> geomType(iGeometry, "Type");
   geomType.value("Image", IGeometry::Type::Image);
   geomType.value("RectGrid", IGeometry::Type::RectGrid);
   geomType.value("Vertex", IGeometry::Type::Vertex);
@@ -992,59 +997,59 @@ PYBIND11_MODULE(simplnx, mod)
   geomType.value("Tetrahedral", IGeometry::Type::Tetrahedral);
   geomType.value("Hexahedral", IGeometry::Type::Hexahedral);
 
-  py::class_<IGridGeometry, IGeometry, std::shared_ptr<IGridGeometry>> iGridGeometry(mod, "IGridGeometry");
-  iGridGeometry.def_property_readonly("dimensions", [](const IGridGeometry& self) { return self.getDimensions().toTuple(); });
-  iGridGeometry.def_property_readonly("num_x_cells", &IGridGeometry::getNumXCells);
-  iGridGeometry.def_property_readonly("num_y_cells", &IGridGeometry::getNumYCells);
-  iGridGeometry.def_property_readonly("num_z_cells", &IGridGeometry::getNumZCells);
+  py::class_<AbstractGridGeometry, AbstractGeometry, std::shared_ptr<AbstractGridGeometry>> iGridGeometry(mod, "AbstractGridGeometry");
+  iGridGeometry.def_property_readonly("dimensions", [](const AbstractGridGeometry& self) { return self.getDimensions().toTuple(); });
+  iGridGeometry.def_property_readonly("num_x_cells", &AbstractGridGeometry::getNumXCells);
+  iGridGeometry.def_property_readonly("num_y_cells", &AbstractGridGeometry::getNumYCells);
+  iGridGeometry.def_property_readonly("num_z_cells", &AbstractGridGeometry::getNumZCells);
 
-  py::class_<ImageGeom, IGridGeometry, std::shared_ptr<ImageGeom>> imageGeom(mod, "ImageGeom");
+  py::class_<ImageGeom, AbstractGridGeometry, std::shared_ptr<ImageGeom>> imageGeom(mod, "ImageGeom");
   imageGeom.def_property_readonly("spacing", [](const ImageGeom& self) { return self.getSpacing().toTuple(); });
   imageGeom.def_property_readonly("origin", [](const ImageGeom& self) { return self.getOrigin().toTuple(); });
 
-  py::class_<RectGridGeom, IGridGeometry, std::shared_ptr<RectGridGeom>> rectGridGeom(mod, "RectGridGeom");
+  py::class_<RectGridGeom, AbstractGridGeometry, std::shared_ptr<RectGridGeom>> rectGridGeom(mod, "RectGridGeom");
 
-  py::class_<INodeGeometry0D, IGeometry, std::shared_ptr<INodeGeometry0D>> iNodeGeometry0D(mod, "INodeGeometry0D");
+  py::class_<AbstractNodeGeometry0D, AbstractGeometry, std::shared_ptr<AbstractNodeGeometry0D>> iNodeGeometry0D(mod, "AbstractNodeGeometry0D");
   iNodeGeometry0D.def(
       "resize_vertices",
-      [](INodeGeometry0D& nodeGeometry0D, usize size) {
+      [](AbstractNodeGeometry0D& nodeGeometry0D, usize size) {
         nodeGeometry0D.resizeVertexList(size);
         nodeGeometry0D.getVertexAttributeMatrix()->resizeTuples({size});
       },
       "This will resize the shared vertex list and also resize the associated attribute matrix");
-  py::class_<VertexGeom, INodeGeometry0D, std::shared_ptr<VertexGeom>> vertexGeom(mod, "VertexGeom");
+  py::class_<VertexGeom, AbstractNodeGeometry0D, std::shared_ptr<VertexGeom>> vertexGeom(mod, "VertexGeom");
 
-  py::class_<INodeGeometry1D, INodeGeometry0D, std::shared_ptr<INodeGeometry1D>> iNodeGeometry1D(mod, "INodeGeometry1D");
+  py::class_<AbstractNodeGeometry1D, AbstractNodeGeometry0D, std::shared_ptr<AbstractNodeGeometry1D>> iNodeGeometry1D(mod, "AbstractNodeGeometry1D");
   iNodeGeometry1D.def(
       "resize_edges",
-      [](INodeGeometry1D& nodeGeometry1D, usize size) {
+      [](AbstractNodeGeometry1D& nodeGeometry1D, usize size) {
         nodeGeometry1D.resizeEdgeList(size);
         nodeGeometry1D.getEdgeAttributeMatrix()->resizeTuples({size});
       },
       "This will resize the shared edge list and also resize the associated attribute matrix");
-  py::class_<EdgeGeom, INodeGeometry1D, std::shared_ptr<EdgeGeom>> edgeGeom(mod, "EdgeGeom");
+  py::class_<EdgeGeom, AbstractNodeGeometry1D, std::shared_ptr<EdgeGeom>> edgeGeom(mod, "EdgeGeom");
 
-  py::class_<INodeGeometry2D, INodeGeometry1D, std::shared_ptr<INodeGeometry2D>> iNodeGeometry2D(mod, "INodeGeometry2D");
+  py::class_<AbstractNodeGeometry2D, AbstractNodeGeometry1D, std::shared_ptr<AbstractNodeGeometry2D>> iNodeGeometry2D(mod, "AbstractNodeGeometry2D");
   iNodeGeometry2D.def(
       "resize_faces",
-      [](INodeGeometry2D& nodeGeometry2D, usize size) {
+      [](AbstractNodeGeometry2D& nodeGeometry2D, usize size) {
         nodeGeometry2D.resizeFaceList(size);
         nodeGeometry2D.getEdgeAttributeMatrix()->resizeTuples({size});
       },
       "This will resize the shared triangle list and also resize the associated attribute matrix");
-  py::class_<TriangleGeom, INodeGeometry2D, std::shared_ptr<TriangleGeom>> triangleGeom(mod, "TriangleGeom");
-  py::class_<QuadGeom, INodeGeometry2D, std::shared_ptr<QuadGeom>> quadGeom(mod, "QuadGeom");
+  py::class_<TriangleGeom, AbstractNodeGeometry2D, std::shared_ptr<TriangleGeom>> triangleGeom(mod, "TriangleGeom");
+  py::class_<QuadGeom, AbstractNodeGeometry2D, std::shared_ptr<QuadGeom>> quadGeom(mod, "QuadGeom");
 
-  py::class_<INodeGeometry3D, INodeGeometry2D, std::shared_ptr<INodeGeometry3D>> iNodeGeometry3D(mod, "INodeGeometry3D");
+  py::class_<AbstractNodeGeometry3D, AbstractNodeGeometry2D, std::shared_ptr<AbstractNodeGeometry3D>> iNodeGeometry3D(mod, "AbstractNodeGeometry3D");
   iNodeGeometry3D.def(
       "resize_polyhedra",
-      [](INodeGeometry3D& nodeGeometry3D, usize size) {
+      [](AbstractNodeGeometry3D& nodeGeometry3D, usize size) {
         nodeGeometry3D.resizePolyhedraList(size);
         nodeGeometry3D.getPolyhedraAttributeMatrix()->resizeTuples({size});
       },
       "This will resize the shared polyhedra list and also resize the associated attribute matrix");
-  py::class_<TetrahedralGeom, INodeGeometry3D, std::shared_ptr<TetrahedralGeom>> tetrahedralGeom(mod, "TetrahedralGeom");
-  py::class_<HexahedralGeom, INodeGeometry3D, std::shared_ptr<HexahedralGeom>> hexahedralGeom(mod, "HexahedralGeom");
+  py::class_<TetrahedralGeom, AbstractNodeGeometry3D, std::shared_ptr<TetrahedralGeom>> tetrahedralGeom(mod, "TetrahedralGeom");
+  py::class_<HexahedralGeom, AbstractNodeGeometry3D, std::shared_ptr<HexahedralGeom>> hexahedralGeom(mod, "HexahedralGeom");
 
   py::class_<DataGroup, BaseGroup, std::shared_ptr<DataGroup>> dataGroup(mod, "DataGroup");
 
@@ -1053,24 +1058,24 @@ PYBIND11_MODULE(simplnx, mod)
   attributeMatrix.def_property_readonly("tuple_shape", &AttributeMatrix::getShape, "Returns the Tuple dimensions of the AttributeMatrix");
   attributeMatrix.def_property_readonly("size", &AttributeMatrix::getNumberOfTuples, "Returns the total number of tuples");
 
-  py::class_<IArray, DataObject, std::shared_ptr<IArray>> iArray(mod, "IArray");
-  iArray.def_property_readonly("tuple_shape", &IArray::getTupleShape);
-  iArray.def_property_readonly("component_shape", &IArray::getComponentShape);
+  py::class_<AbstractArray, AbstractDataObject, std::shared_ptr<AbstractArray>> iArray(mod, "AbstractArray");
+  iArray.def_property_readonly("tuple_shape", &AbstractArray::getTupleShape);
+  iArray.def_property_readonly("component_shape", &AbstractArray::getComponentShape);
 
-  py::enum_<IArray::ArrayType> iArrayArrayType(iArray, "ArrayType");
-  iArrayArrayType.value("StringArray", IArray::ArrayType::StringArray);
-  iArrayArrayType.value("DataArray", IArray::ArrayType::DataArray);
-  iArrayArrayType.value("NeighborListArray", IArray::ArrayType::NeighborListArray);
-  iArrayArrayType.value("Any", IArray::ArrayType::Any);
+  py::enum_<AbstractArray::ArrayType> iArrayArrayType(iArray, "ArrayType");
+  iArrayArrayType.value("StringArray", AbstractArray::ArrayType::StringArray);
+  iArrayArrayType.value("DataArray", AbstractArray::ArrayType::DataArray);
+  iArrayArrayType.value("NeighborListArray", AbstractArray::ArrayType::NeighborListArray);
+  iArrayArrayType.value("Any", AbstractArray::ArrayType::Any);
 
-  py::class_<IDataArray, IArray, std::shared_ptr<IDataArray>> iDataArray(mod, "IDataArray");
-  iDataArray.def_property_readonly("store", py::overload_cast<>(&IDataArray::getIDataStore));
-  iDataArray.def_property_readonly("tdims", &IDataArray::getTupleShape);
-  iDataArray.def_property_readonly("cdims", &IDataArray::getComponentShape);
-  iDataArray.def_property_readonly("data_type", &IDataArray::getDataType);
-  iDataArray.def("resize_tuples", &IDataArray::resizeTuples, "Resize the tuples with the given shape");
+  py::class_<AbstractDataArray, AbstractArray, std::shared_ptr<AbstractDataArray>> iDataArray(mod, "AbstractDataArray");
+  iDataArray.def_property_readonly("store", py::overload_cast<>(&AbstractDataArray::getIDataStore));
+  iDataArray.def_property_readonly("tdims", &AbstractDataArray::getTupleShape);
+  iDataArray.def_property_readonly("cdims", &AbstractDataArray::getComponentShape);
+  iDataArray.def_property_readonly("data_type", &AbstractDataArray::getDataType);
+  iDataArray.def("resize_tuples", &AbstractDataArray::resizeTuples, "Resize the tuples with the given shape");
 
-  py::class_<StringArray, IArray, std::shared_ptr<StringArray>> stringArray(mod, "StringArray");
+  py::class_<StringArray, AbstractArray, std::shared_ptr<StringArray>> stringArray(mod, "StringArray");
   stringArray.def(
       "initialize_with_list",
       [](StringArray& strArr, const py::list& pyList) {
@@ -1110,7 +1115,7 @@ PYBIND11_MODULE(simplnx, mod)
   stringArray.def_property_readonly("values", &StringArray::values);
   stringArray.def("resize_tuples", &StringArray::resizeTuples, "Resize the tuples with the given shape");
 
-  auto iNeighborList = py::class_<INeighborList, IArray, std::shared_ptr<INeighborList>>(mod, "INeighborList");
+  auto iNeighborList = py::class_<AbstractNeighborList, AbstractArray, std::shared_ptr<AbstractNeighborList>>(mod, "AbstractNeighborList");
 
   auto neighborListInt8 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, Int8NeighborList);
   auto neighborListUInt8 = SIMPLNX_PY_BIND_NEIGHBOR_LIST(mod, UInt8NeighborList);
@@ -1139,17 +1144,17 @@ PYBIND11_MODULE(simplnx, mod)
   rectGridGeom.def_property_readonly("y_bounds", py::overload_cast<>(&RectGridGeom::getYBoundsRef), py::return_value_policy::reference_internal);
   rectGridGeom.def_property_readonly("z_bounds", py::overload_cast<>(&RectGridGeom::getZBoundsRef), py::return_value_policy::reference_internal);
 
-  iNodeGeometry0D.def_property_readonly("vertices", py::overload_cast<>(&INodeGeometry0D::getVerticesRef), py::return_value_policy::reference_internal);
-  iNodeGeometry0D.def_property_readonly("vertex_data", py::overload_cast<>(&INodeGeometry0D::getVertexAttributeMatrixRef), py::return_value_policy::reference_internal);
+  iNodeGeometry0D.def_property_readonly("vertices", py::overload_cast<>(&AbstractNodeGeometry0D::getVerticesRef), py::return_value_policy::reference_internal);
+  iNodeGeometry0D.def_property_readonly("vertex_data", py::overload_cast<>(&AbstractNodeGeometry0D::getVertexAttributeMatrixRef), py::return_value_policy::reference_internal);
 
-  iNodeGeometry1D.def_property_readonly("edges", py::overload_cast<>(&INodeGeometry1D::getEdgesRef), py::return_value_policy::reference_internal);
-  iNodeGeometry1D.def_property_readonly("edge_data", py::overload_cast<>(&INodeGeometry1D::getEdgeAttributeMatrixRef), py::return_value_policy::reference_internal);
+  iNodeGeometry1D.def_property_readonly("edges", py::overload_cast<>(&AbstractNodeGeometry1D::getEdgesRef), py::return_value_policy::reference_internal);
+  iNodeGeometry1D.def_property_readonly("edge_data", py::overload_cast<>(&AbstractNodeGeometry1D::getEdgeAttributeMatrixRef), py::return_value_policy::reference_internal);
 
-  iNodeGeometry2D.def_property_readonly("faces", py::overload_cast<>(&INodeGeometry2D::getFacesRef), py::return_value_policy::reference_internal);
-  iNodeGeometry2D.def_property_readonly("face_data", py::overload_cast<>(&INodeGeometry2D::getFaceAttributeMatrixRef), py::return_value_policy::reference_internal);
+  iNodeGeometry2D.def_property_readonly("faces", py::overload_cast<>(&AbstractNodeGeometry2D::getFacesRef), py::return_value_policy::reference_internal);
+  iNodeGeometry2D.def_property_readonly("face_data", py::overload_cast<>(&AbstractNodeGeometry2D::getFaceAttributeMatrixRef), py::return_value_policy::reference_internal);
 
-  iNodeGeometry3D.def_property_readonly("polyhedra", py::overload_cast<>(&INodeGeometry3D::getPolyhedraRef), py::return_value_policy::reference_internal);
-  iNodeGeometry3D.def_property_readonly("polyhedra_data", py::overload_cast<>(&INodeGeometry3D::getPolyhedraAttributeMatrixRef), py::return_value_policy::reference_internal);
+  iNodeGeometry3D.def_property_readonly("polyhedra", py::overload_cast<>(&AbstractNodeGeometry3D::getPolyhedraRef), py::return_value_policy::reference_internal);
+  iNodeGeometry3D.def_property_readonly("polyhedra_data", py::overload_cast<>(&AbstractNodeGeometry3D::getPolyhedraAttributeMatrixRef), py::return_value_policy::reference_internal);
 
   auto iDataAction = py::class_<IDataAction>(mod, "IDataAction");
 
@@ -1159,7 +1164,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   iDataAction.def("apply", &IDataAction::apply);
 
-  auto iDataCreationAction = py::class_<IDataCreationAction, IDataAction>(mod, "IDataCreationAction");
+  auto iDataCreationAction = py::class_<AbstractDataCreationAction, IDataAction>(mod, "AbstractDataCreationAction");
 
   //  auto iDataCreationActionArrayHandlingType = py::enum_<ArrayHandlingType>(iDataCreationAction, "ArrayHandlingType");
   //  iDataCreationActionArrayHandlingType.value("Copy", ArrayHandlingType::Copy);
@@ -1167,23 +1172,23 @@ PYBIND11_MODULE(simplnx, mod)
   //  iDataCreationActionArrayHandlingType.value("Reference", ArrayHandlingType::Reference);
   //  iDataCreationActionArrayHandlingType.value("Create", ArrayHandlingType::Create);
 
-  auto copyArrayInstanceAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CopyArrayInstanceAction, IDataCreationAction);
+  auto copyArrayInstanceAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CopyArrayInstanceAction, AbstractDataCreationAction);
   copyArrayInstanceAction.def(py::init<const DataPath&, const DataPath&>(), "input_data_array_path"_a, "output_data_array_path"_a);
 
-  auto copyDataObjectAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CopyDataObjectAction, IDataCreationAction);
+  auto copyDataObjectAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CopyDataObjectAction, AbstractDataCreationAction);
   copyDataObjectAction.def(py::init<const DataPath&, const DataPath&, const std::vector<DataPath>>(), "path"_a, "new_path"_a, "all_created_paths"_a);
 
-  auto createArrayAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateArrayAction, IDataCreationAction);
+  auto createArrayAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateArrayAction, AbstractDataCreationAction);
   createArrayAction.def(py::init<DataType, const std::vector<usize>&, const std::vector<usize>&, const DataPath&, std::string>(), "type"_a, "t_dims"_a, "c_dims"_a, "path"_a,
                         "data_format"_a = std::string(""));
 
-  auto createAttributeMatrixAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateAttributeMatrixAction, IDataCreationAction);
+  auto createAttributeMatrixAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateAttributeMatrixAction, AbstractDataCreationAction);
   createAttributeMatrixAction.def(py::init<const DataPath&, const ShapeType&>(), "path"_a, "shape"_a);
 
-  auto createDataGroupAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateDataGroupAction, IDataCreationAction);
+  auto createDataGroupAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateDataGroupAction, AbstractDataCreationAction);
   createDataGroupAction.def(py::init<const DataPath&>(), "path"_a);
 
-  auto createEdgeGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateEdgeGeometryAction, IDataCreationAction);
+  auto createEdgeGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateEdgeGeometryAction, AbstractDataCreationAction);
   createEdgeGeometryAction.def(py::init<const DataPath&, size_t, size_t, const std::string&, const std::string&, const std::string&, const std::string&>(), "geometry_path"_a, "num_edges"_a,
                                "num_vertices"_a, "vertex_attribute_matrix_name"_a, "edge_attribute_matrix_name"_a, "shared_vertices_name"_a, "shared_edges_name"_a);
   createEdgeGeometryAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const std::string&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a,
@@ -1195,26 +1200,26 @@ PYBIND11_MODULE(simplnx, mod)
   auto createTetrahedralGeometryAction = SIMPLNX_PY_BIND_CREATE_GEOMETRY_3D_ACTION(mod, CreateTetrahedralGeometryAction);
   auto createHexahedralGeometryAction = SIMPLNX_PY_BIND_CREATE_GEOMETRY_3D_ACTION(mod, CreateHexahedralGeometryAction);
 
-  auto createImageGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateImageGeometryAction, IDataCreationAction);
+  auto createImageGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateImageGeometryAction, AbstractDataCreationAction);
   createImageGeometryAction.def(
       py::init<const DataPath&, const CreateImageGeometryAction::DimensionType&, const CreateImageGeometryAction::OriginType&, const CreateImageGeometryAction::SpacingType&, const std::string&>(),
       "path"_a, "dims"_a, "origin"_a, "spacing"_a, "cell_attribute_matrix_name"_a);
 
-  auto createNeighborListAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateNeighborListAction, IDataCreationAction);
+  auto createNeighborListAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateNeighborListAction, AbstractDataCreationAction);
   createNeighborListAction.def(py::init<DataType, const ShapeType&, const DataPath&>(), "type"_a, "tuple_count"_a, "path"_a);
 
-  auto createRectGridGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateRectGridGeometryAction, IDataCreationAction);
+  auto createRectGridGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateRectGridGeometryAction, AbstractDataCreationAction);
   createRectGridGeometryAction.def(py::init<const DataPath&, usize, usize, usize, const std::string&, const std::string&, const std::string&, const std::string&>(), "path"_a, "x_bounds_dim"_a,
                                    "y_bounds_dim"_a, "z_bounds_dim"_a, "cell_attribute_matrix_name"_a, "x_bounds_name"_a, "y_bounds_name"_a, "z_bounds_name"_a);
   createRectGridGeometryAction.def(py::init<const DataPath&, const DataPath&, const DataPath&, const DataPath&, const std::string&, const ArrayHandlingType&>(), "path"_a, "input_x_bounds_path"_a,
                                    "input_y_bounds_path"_a, "input_z_bounds_path"_a, "cell_attribute_matrix_name"_a, "array_type"_a);
 
-  auto createStringArrayAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateStringArrayAction, IDataCreationAction);
+  auto createStringArrayAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateStringArrayAction, AbstractDataCreationAction);
   createStringArrayAction.def(py::init<const ShapeType&, const DataPath&, const std::string&>(), "t_dims"_a, "path"_a, "initialize_value"_a = std::string(""));
 
-  auto createVertexGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateVertexGeometryAction, IDataCreationAction);
-  createVertexGeometryAction.def(py::init<const DataPath&, IGeometry::MeshIndexType, const std::string&, const std::string&>(), "geometry_path"_a, "num_vertices"_a, "vertex_attribute_matrix_name"_a,
-                                 "shared_vertex_list_name"_a);
+  auto createVertexGeometryAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateVertexGeometryAction, AbstractDataCreationAction);
+  createVertexGeometryAction.def(py::init<const DataPath&, AbstractGeometry::MeshIndexType, const std::string&, const std::string&>(), "geometry_path"_a, "num_vertices"_a,
+                                 "vertex_attribute_matrix_name"_a, "shared_vertex_list_name"_a);
   createVertexGeometryAction.def(py::init<const DataPath&, const DataPath&, const std::string&, const ArrayHandlingType&>(), "geometry_path"_a, "input_vertices_array_path"_a,
                                  "vertex_attribute_matrix_name"_a, "array_type"_a);
 
@@ -1225,7 +1230,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   deleteDataAction.def(py::init<const DataPath&, DeleteDataAction::DeleteType>(), "path"_a, "type"_a);
 
-  auto importH5ObjectPathsAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, ImportH5ObjectPathsAction, IDataCreationAction);
+  auto importH5ObjectPathsAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, ImportH5ObjectPathsAction, AbstractDataCreationAction);
   importH5ObjectPathsAction.def(py::init<const std::filesystem::path&, const ImportH5ObjectPathsAction::PathsType&>(), "import_file"_a, "paths"_a);
 
   auto moveDataAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, MoveDataAction, IDataAction);
@@ -1583,6 +1588,8 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "data_structure"_a, "Executes the filter");
 
+  py::class_<AbstractFilter, IFilter> abstractFilter(mod, "AbstractFilter");
+
   py::class_<Pipeline, AbstractPipelineNode, std::shared_ptr<Pipeline>> pipeline(mod, "Pipeline");
   pipeline.def(py::init<const std::string&>(), "name"_a = std::string("Untitled Pipeline"));
   pipeline.def_static(
@@ -1662,7 +1669,7 @@ PYBIND11_MODULE(simplnx, mod)
       "Returns the human facing name of the filter");
   pipelineFilter.def_property("comments", &PipelineFilter::getComments, &PipelineFilter::setComments);
 
-  py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
+  py::class_<PyFilter, AbstractFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
 
   // Parameter value types conversions must be registered after the value types are bound
@@ -1936,4 +1943,11 @@ PYBIND11_MODULE(simplnx, mod)
       "array_handling"_a = ArrayHandlingType::Copy);
 
   mod.def("append_to_dream3d_file", &DREAM3D::AppendFile, "path"_a, "data_structure"_a, "data_path"_a);
+
+  // Backwards-compatible aliases for classes renamed in Phases 6-15
+  mod.attr("DataObject") = mod.attr("AbstractDataObject");
+  mod.attr("IArray") = mod.attr("AbstractArray");
+  mod.attr("IDataArray") = mod.attr("AbstractDataArray");
+  mod.attr("INeighborList") = mod.attr("AbstractNeighborList");
+  mod.attr("IDataCreationAction") = mod.attr("AbstractDataCreationAction");
 }

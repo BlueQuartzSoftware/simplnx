@@ -14,9 +14,9 @@ namespace nx::core::HDF5
 RectGridGeomIO::RectGridGeomIO() = default;
 RectGridGeomIO::~RectGridGeomIO() noexcept = default;
 
-DataObject::Type RectGridGeomIO::getDataType() const
+AbstractDataObject::Type RectGridGeomIO::getDataType() const
 {
-  return DataObject::Type::RectGridGeom;
+  return IDataObject::Type::RectGridGeom;
 }
 
 std::string RectGridGeomIO::getTypeName() const
@@ -24,12 +24,12 @@ std::string RectGridGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                                  const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, AbstractDataObject::IdType importId,
+                                  const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* geometry = RectGridGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
 
-  Result<> result = IGridGeometryIO::ReadGridGeometryData(dataStructureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  Result<> result = AbstractGridGeometryIO::ReadGridGeometryData(dataStructureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
   if(result.invalid())
   {
     return result;
@@ -40,7 +40,7 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
   if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
   {
     auto value = unitsAttr.value();
-    geometry->setUnits(static_cast<IGeometry::LengthUnit>(value));
+    geometry->setUnits(static_cast<AbstractGeometry::LengthUnit>(value));
   }
 
   // Read Dimensions
@@ -53,7 +53,7 @@ Result<> RectGridGeomIO::readData(DataStructureReader& dataStructureReader, cons
 
   geometry->setDimensions(volumeDimensions);
 
-  // Read DataObject IDs
+  // Read AbstractDataObject IDs
   geometry->setXBoundsId(ReadDataId(groupReader, IOConstants::k_XBoundsTag));
   geometry->setYBoundsId(ReadDataId(groupReader, IOConstants::k_YBoundsTag));
   geometry->setZBoundsId(ReadDataId(groupReader, IOConstants::k_ZBoundsTag));
@@ -83,7 +83,7 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
     if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
     {
       auto value = unitsAttr.value();
-      geom->setUnits(static_cast<IGeometry::LengthUnit>(value));
+      geom->setUnits(static_cast<AbstractGeometry::LengthUnit>(value));
     }
 
     // Read Dimensions
@@ -97,12 +97,12 @@ Result<> RectGridGeomIO::finishImportingData(DataStructure& dataStructure, const
     geom->setDimensions(volumeDimensions);
   }
 
-  return IGridGeometryIO::FinishImportingGridGeometryData(dataStructure, dataPath, dataStructureGroup);
+  return AbstractGridGeometryIO::FinishImportingGridGeometryData(dataStructure, dataPath, dataStructureGroup);
 }
 
 Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, const RectGridGeom& geometry, group_writer_type& parentGroup, bool importable) const
 {
-  Result<> result = IGridGeometryIO::WriteGridGeometryData(dataStructureWriter, geometry, parentGroup, importable);
+  Result<> result = AbstractGridGeometryIO::WriteGridGeometryData(dataStructureWriter, geometry, parentGroup, importable);
   if(result.invalid())
   {
     return result;
@@ -123,7 +123,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
   {
     return result;
   }
-  // Write DataObject IDs
+  // Write AbstractDataObject IDs
   result = WriteDataId(groupWriter, geometry.getXBoundsId(), IOConstants::k_XBoundsTag);
   if(result.invalid())
   {
@@ -151,7 +151,7 @@ Result<> RectGridGeomIO::writeData(DataStructureWriter& dataStructureWriter, con
   return {};
 }
 
-Result<> RectGridGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> RectGridGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }

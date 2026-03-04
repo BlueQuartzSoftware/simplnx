@@ -9,10 +9,10 @@ using namespace nx::core;
 
 namespace
 {
-Result<> TerminateNodesRecursively(DataStructure& dataStructure, DataObject::IdType id, IDataAction::Mode mode, const bool checkDependence)
+Result<> TerminateNodesRecursively(DataStructure& dataStructure, AbstractDataObject::IdType id, IDataAction::Mode mode, const bool checkDependence)
 {
   Result<> result = {};
-  DataObject* node = dataStructure.getData(id);
+  AbstractDataObject* node = dataStructure.getData(id);
 
   if(checkDependence)
   {
@@ -82,7 +82,7 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       }
     }
 
-    DataObject::IdType targetId = std::numeric_limits<DataObject::IdType>::max();
+    AbstractDataObject::IdType targetId = std::numeric_limits<AbstractDataObject::IdType>::max();
     for(auto dataObjectID : dataStructure.getAllDataObjectIds())
     {
       if(dataStructure.getData(dataObjectID)->getName() == m_NewName)
@@ -92,7 +92,7 @@ Result<> RenameDataAction::apply(DataStructure& dataStructure, Mode mode) const
       }
     }
 
-    if(targetId != std::numeric_limits<DataObject::IdType>::max())
+    if(targetId != std::numeric_limits<AbstractDataObject::IdType>::max())
     {
       if(mode == Mode::Preflight)
       {

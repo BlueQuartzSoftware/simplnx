@@ -104,7 +104,7 @@ IFilter::PreflightResult ComputeFeatureSizesFilter::preflightImpl(const DataStru
   DataPath equivalentDiametersPath = featureAttributeMatrixPath.createChildPath(equivalentDiametersName);
   DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(numElementsName);
 
-  const auto& geomRef = dataStructure.getDataRefAs<IGeometry>(geometryPath);
+  const auto& geomRef = dataStructure.getDataRefAs<AbstractGeometry>(geometryPath);
   IGeometry::Type geomType = geomRef.getGeomType();
   if(geomType == IGeometry::Type::Image)
   {

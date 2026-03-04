@@ -12,7 +12,7 @@ namespace nx::core
 /**
  * @class Metadata
  * @brief The Metadata class stores additional information related to a
- * DataObject. Information is stored using key value pairs such that many
+ * AbstractDataObject. Information is stored using key value pairs such that many
  * pieces of information can be quickly inserted or retrieved. The Metadata
  * class is designed such that any type of information can be included from
  * color formats, descriptions, data source, etc.

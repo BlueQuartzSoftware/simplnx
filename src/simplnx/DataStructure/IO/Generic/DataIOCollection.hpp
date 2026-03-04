@@ -15,15 +15,15 @@ namespace nx::core
 {
 template <typename T>
 class AbstractDataStore;
-class IDataIOManager;
+class AbstractDataIOManager;
 
 /**
- * @brief The DataIOCollection class contains all known IDataIOManagers for the current Application instance.
+ * @brief The DataIOCollection class contains all known AbstractDataIOManagers for the current Application instance.
  */
 class SIMPLNX_EXPORT DataIOCollection
 {
 public:
-  using map_type = std::map<std::string, std::shared_ptr<IDataIOManager>>;
+  using map_type = std::map<std::string, std::shared_ptr<AbstractDataIOManager>>;
   using iterator = typename map_type::iterator;
   using const_iterator = typename map_type::const_iterator;
 
@@ -34,16 +34,16 @@ public:
    * Adds a specified data IO manager for reading and writing to the target format.
    * @param manager
    */
-  void addIOManager(std::shared_ptr<IDataIOManager> manager);
+  void addIOManager(std::shared_ptr<AbstractDataIOManager> manager);
 
   /**
-   * @brief Returns the IDataIOManager for the specified format name.
+   * @brief Returns the AbstractDataIOManager for the specified format name.
    * Simplnx comes with HDF5 IO Manager.
-   * Additional IDataIOManagers are added through plugins.
+   * Additional AbstractDataIOManagers are added through plugins.
    * @param formatName
-   * @return std::shared_ptr<IDataIOManager>
+   * @return std::shared_ptr<AbstractDataIOManager>
    */
-  std::shared_ptr<IDataIOManager> getManager(const std::string& formatName) const;
+  std::shared_ptr<AbstractDataIOManager> getManager(const std::string& formatName) const;
 
   /**
    * @brief Returns a vector of names used to reference available DataStructure IO formats.

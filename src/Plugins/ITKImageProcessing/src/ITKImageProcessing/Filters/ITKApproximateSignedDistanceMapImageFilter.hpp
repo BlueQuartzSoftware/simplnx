@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -49,7 +49,7 @@ namespace nx::core
  * ITK Module: ITKDistanceMap
  * ITK Group: DistanceMap
  */
-class ITKIMAGEPROCESSING_EXPORT ITKApproximateSignedDistanceMapImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKApproximateSignedDistanceMapImageFilter : public AbstractFilter
 {
 public:
   ITKApproximateSignedDistanceMapImageFilter() = default;

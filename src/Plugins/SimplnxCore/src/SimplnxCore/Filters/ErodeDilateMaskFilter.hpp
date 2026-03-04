@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -13,7 +13,7 @@ namespace nx::core
  * If the mask is _dilated_, the **Filter** grows the *true* regions by one **Cell** in an iterative sequence for a user
 defined number of iterations.
  */
-class SIMPLNXCORE_EXPORT ErodeDilateMaskFilter : public IFilter
+class SIMPLNXCORE_EXPORT ErodeDilateMaskFilter : public AbstractFilter
 {
 public:
   ErodeDilateMaskFilter() = default;

@@ -2,10 +2,10 @@
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
@@ -51,8 +51,8 @@ Result<OutputActions> validateExistingGroup(const DataPath& groupPath, const Dat
   }
 
   const auto& selectedGroup = dataStructure.getDataRefAs<BaseGroup>(groupPath);
-  const auto arrays = selectedGroup.findAllChildrenOfType<IDataArray>();
-  for(const std::shared_ptr<IDataArray>& array : arrays)
+  const auto arrays = selectedGroup.findAllChildrenOfType<AbstractDataArray>();
+  for(const std::shared_ptr<AbstractDataArray>& array : arrays)
   {
     std::string arrayName = array->getName();
     for(const std::string& headerName : headers)

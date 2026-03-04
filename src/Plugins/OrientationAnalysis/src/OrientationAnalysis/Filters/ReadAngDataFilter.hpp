@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include <memory>
 
@@ -17,7 +17,7 @@ class ReadAngDataPrivate;
  * @brief This filter will read a single .ang file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the intermediate
  * .h5ebsd file.
  */
-class ORIENTATIONANALYSIS_EXPORT ReadAngDataFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ReadAngDataFilter : public AbstractFilter
 {
 public:
   ReadAngDataFilter() = default;

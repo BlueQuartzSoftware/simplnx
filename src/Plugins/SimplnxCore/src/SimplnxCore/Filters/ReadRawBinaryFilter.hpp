@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -16,7 +16,7 @@ namespace nx::core
  * this filter is simply reading the data into a pre-allocated array
  * interpreted as the user defines.
  */
-class SIMPLNXCORE_EXPORT ReadRawBinaryFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReadRawBinaryFilter : public AbstractFilter
 {
 public:
   ReadRawBinaryFilter() = default;

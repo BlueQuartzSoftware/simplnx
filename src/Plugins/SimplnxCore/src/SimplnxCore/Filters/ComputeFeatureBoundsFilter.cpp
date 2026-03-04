@@ -3,15 +3,15 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeFeatureBounds.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
@@ -133,7 +133,7 @@ IFilter::PreflightResult ComputeFeatureBoundsFilter::preflightImpl(const DataStr
   auto pEdgeAttributeMatrixNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_EdgeAttributeMatrixName_Key);
   auto pFeatureIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CreatedFeatureIdsArrayName_Key);
 
-  const auto& geom = dataStructure.getDataRefAs<IGeometry>(pSelectedGeomPathValue);
+  const auto& geom = dataStructure.getDataRefAs<AbstractGeometry>(pSelectedGeomPathValue);
 
   usize expectedFeatureSize = geom.getNumberOfCells();
 
@@ -175,7 +175,7 @@ IFilter::PreflightResult ComputeFeatureBoundsFilter::preflightImpl(const DataStr
   // optionally create the edge geometry
   if(pCreateEdgeGeometry)
   {
-    auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pSliceDataContainerNameValue, 1, 2, INodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
+    auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pSliceDataContainerNameValue, 1, 2, AbstractNodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
                                                                            EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
 

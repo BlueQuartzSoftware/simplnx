@@ -68,7 +68,7 @@ Parameters FillBadDataFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when performing the algorithm",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_StoreAsNewPhase_Key, k_CellPhasesArrayPath_Key, true);

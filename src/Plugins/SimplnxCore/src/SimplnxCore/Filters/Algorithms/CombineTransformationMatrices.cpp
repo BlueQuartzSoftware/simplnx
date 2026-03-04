@@ -25,7 +25,7 @@ Eigen::Matrix<U, 4, 4, Eigen::RowMajor> CreateEigenMatrix(const AbstractDataStor
 struct MatrixOperationFunctor
 {
   template <typename ScalarType>
-  Result<> operator()(const IDataArray& array1, const IDataArray& array2, IDataArray& outputArray)
+  Result<> operator()(const AbstractDataArray& array1, const AbstractDataArray& array2, AbstractDataArray& outputArray)
   {
     using MatrixType = Eigen::Matrix<ScalarType, 4, 4, Eigen::RowMajor>;
     using StoreType = AbstractDataStore<ScalarType>;
@@ -82,11 +82,11 @@ const std::atomic_bool& CombineTransformationMatrices::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CombineTransformationMatrices::operator()()
 {
-  auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->OutputPath);
+  auto& outputArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->OutputPath);
   auto pathsIter = m_InputValues->SelectedPaths.begin();
 
-  const auto& array1 = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter++);
-  const auto& array2 = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter++);
+  const auto& array1 = m_DataStructure.getDataRefAs<AbstractDataArray>(*pathsIter++);
+  const auto& array2 = m_DataStructure.getDataRefAs<AbstractDataArray>(*pathsIter++);
   if(array1.getDataType() != array2.getDataType())
   {
     return MakeErrorResult(-89750, "DataType mismatch");
@@ -96,7 +96,7 @@ Result<> CombineTransformationMatrices::operator()()
 
   for(; pathsIter != m_InputValues->SelectedPaths.end(); ++pathsIter)
   {
-    const auto& arrayRef = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter);
+    const auto& arrayRef = m_DataStructure.getDataRefAs<AbstractDataArray>(*pathsIter);
     ExecuteDataFunction(MatrixOperationFunctor{}, outputArray.getDataType(), arrayRef, outputArray, outputArray);
   }
 

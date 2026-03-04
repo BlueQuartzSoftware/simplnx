@@ -3,11 +3,11 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeBoundingBoxStats.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
@@ -43,7 +43,7 @@ void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const Da
   auto calculateSummation = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateSummation_Key);
   auto calculateNumUniqueValuesValue = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateUniqueValues_Key);
 
-  auto* inputArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
+  auto* inputArray = dataStructure.getDataAs<AbstractDataArray>(filterArgs.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
   DataType dataType = inputArray->getDataType();
 
   {
@@ -259,7 +259,7 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
 
   Result<OutputActions> resultOutputActions;
 
-  const auto* unifiedBoundsPtr = dataStructure.getDataAs<IDataArray>(pUnifiedBoundsPathValue);
+  const auto* unifiedBoundsPtr = dataStructure.getDataAs<AbstractDataArray>(pUnifiedBoundsPathValue);
 
   DataPath outputAMPath = {};
 
@@ -286,7 +286,7 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
     return MakePreflightErrorResult(-59202, "No statistics have been selected, so this filter will perform no operations");
   }
 
-  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pInputArrayPathValue);
+  const auto* inputArrayPtr = dataStructure.getDataAs<AbstractDataArray>(pInputArrayPathValue);
 
   if(pCalculateModeValue && !ExecuteDataFunction(IsIntegerType{}, inputArrayPtr->getDataType()))
   {

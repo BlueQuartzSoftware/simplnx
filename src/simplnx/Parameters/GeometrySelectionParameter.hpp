@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -11,14 +11,14 @@
 namespace nx::core
 {
 /**
- * @brief This Filter Parameter describes a specific DataPath where the last DataObject in
+ * @brief This Filter Parameter describes a specific DataPath where the last AbstractDataObject in
  * the path is a geometry of the specified type.
  */
 class SIMPLNX_EXPORT GeometrySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
-  using AllowedType = IGeometry::Type;
+  using AllowedType = AbstractGeometry::Type;
   using AllowedTypes = std::set<AllowedType>;
 
   GeometrySelectionParameter() = delete;
@@ -70,7 +70,7 @@ public:
   const ValueType& defaultPath() const;
 
   /**
-   * @brief Returns the list of allowed DataObject types.
+   * @brief Returns the list of allowed AbstractDataObject types.
    * @return
    */
   const AllowedTypes& allowedTypes() const;
@@ -92,7 +92,7 @@ public:
   Result<> validatePath(const DataStructure& dataStructure, const DataPath& value) const;
 
   /**
-   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
+   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived AbstractDataObject in the std::any.
    * Returns any warnings/errors.
    * @param dataStructure
    * @param value

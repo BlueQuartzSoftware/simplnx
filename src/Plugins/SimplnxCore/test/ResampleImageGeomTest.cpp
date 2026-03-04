@@ -25,7 +25,7 @@ const ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 struct CompareDataArrayFunctor
 {
   template <typename T>
-  void operator()(const IDataArray& left, const IDataArray& right, usize start = 0)
+  void operator()(const AbstractDataArray& left, const AbstractDataArray& right, usize start = 0)
   {
     UnitTest::CompareDataArrays<T>(left, right, start);
   }
@@ -194,8 +194,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -203,8 +203,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -212,8 +212,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   const auto calculatedNewGrainDataArrays = GetAllChildArrayDataPaths(dataStructure, destNewGrainDataPath).value();
   for(usize i = 0; i < srcNewGrainDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(srcNewGrainDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedNewGrainDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(srcNewGrainDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedNewGrainDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -221,8 +221,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D In Place", "[SimplnxCore][Resample
   const auto calculatedPhaseDataArrays = GetAllChildArrayDataPaths(dataStructure, destPhaseDataPath).value();
   for(usize i = 0; i < srcPhaseDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(srcPhaseDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedPhaseDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(srcPhaseDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPhaseDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -339,8 +339,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -348,8 +348,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
   const auto calculatedFeatureDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellFeatureDataPath).value();
   for(usize i = 0; i < exemplarFeatureDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarFeatureDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedFeatureDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarFeatureDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedFeatureDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -357,8 +357,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
   const auto calculatedNewGrainDataArrays = GetAllChildArrayDataPaths(dataStructure, destNewGrainDataPath).value();
   for(usize i = 0; i < srcNewGrainDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(srcNewGrainDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedNewGrainDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(srcNewGrainDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedNewGrainDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -366,8 +366,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 3D Save Geometry", "[SimplnxCore][Res
   const auto calculatedPhaseDataArrays = GetAllChildArrayDataPaths(dataStructure, destPhaseDataPath).value();
   for(usize i = 0; i < srcPhaseDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(srcPhaseDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedPhaseDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(srcPhaseDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPhaseDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -461,8 +461,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D In Place", "[SimplnxCore][Resample
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 
@@ -555,8 +555,8 @@ TEST_CASE("SimplnxCore::ResampleImageGeom: 2D Save Geometry", "[SimplnxCore][Res
   const auto calculatedCellDataArrays = GetAllChildArrayDataPaths(dataStructure, destCellDataPath).value();
   for(usize i = 0; i < exemplarCellDataArrays.size(); ++i)
   {
-    const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(exemplarCellDataArrays[i]);
-    const IDataArray& calculatedArray = dataStructure.getDataRefAs<IDataArray>(calculatedCellDataArrays[i]);
+    const AbstractDataArray& exemplarArray = dataStructure.getDataRefAs<AbstractDataArray>(exemplarCellDataArrays[i]);
+    const AbstractDataArray& calculatedArray = dataStructure.getDataRefAs<AbstractDataArray>(calculatedCellDataArrays[i]);
     ExecuteDataFunction(CompareDataArrayFunctor{}, exemplarArray.getDataType(), exemplarArray, calculatedArray);
   }
 

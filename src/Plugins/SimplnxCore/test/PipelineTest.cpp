@@ -1,6 +1,7 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
@@ -42,7 +43,7 @@ const FilterHandle k_CreateDataGroupHandle(k_CreateDataGroupId, k_CorePluginId);
 
 const DataPath k_DeferredActionPath({"foo"});
 
-class DeferredActionTestFilter : public IFilter
+class DeferredActionTestFilter : public AbstractFilter
 {
 public:
   DeferredActionTestFilter() = default;
@@ -377,13 +378,13 @@ TEST_CASE("PipelineTest:PipelineDeferredActionTest")
   REQUIRE(pipeline.preflight(dataStructure, false));
 
   // should be deleted in preflight
-  DataObject* preflightObject = dataStructure.getData(k_DeferredActionPath);
+  AbstractDataObject* preflightObject = dataStructure.getData(k_DeferredActionPath);
   REQUIRE(preflightObject == nullptr);
 
   // DeferredActionTestFilter checks the k_DeferredActionPath hasn't been deleted until after execute
   REQUIRE(pipeline.execute(dataStructure, false));
 
   // after execute the object will be deleted
-  DataObject* executeObject = dataStructure.getData(k_DeferredActionPath);
+  AbstractDataObject* executeObject = dataStructure.getData(k_DeferredActionPath);
   REQUIRE(executeObject == nullptr);
 }

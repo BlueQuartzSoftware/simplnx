@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeNumFeaturesFilter
  * @brief This filter will create a new array containing the number of features
  */
-class SIMPLNXCORE_EXPORT ComputeNumFeaturesFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeNumFeaturesFilter : public AbstractFilter
 {
 public:
   ComputeNumFeaturesFilter() = default;

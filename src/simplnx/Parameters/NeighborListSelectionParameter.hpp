@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/AbstractArray.hpp"
 #include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -88,7 +88,7 @@ public:
   Result<> validatePath(const DataStructure& dataStructure, const DataPath& value) const;
 
   /**
-   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
+   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived AbstractDataObject in the std::any.
    * Returns any warnings/errors.
    * @param dataStructure
    * @param value

@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class WriteAvizoRectilinearCoordinateFilter
  * @brief This filter writes out a native Avizo Rectilinear Coordinate data file
  */
-class SIMPLNXCORE_EXPORT WriteAvizoRectilinearCoordinateFilter : public IFilter
+class SIMPLNXCORE_EXPORT WriteAvizoRectilinearCoordinateFilter : public AbstractFilter
 {
 public:
   WriteAvizoRectilinearCoordinateFilter() = default;

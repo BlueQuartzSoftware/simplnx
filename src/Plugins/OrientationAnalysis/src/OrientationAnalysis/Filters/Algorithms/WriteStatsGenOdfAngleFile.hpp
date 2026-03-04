@@ -46,8 +46,8 @@ public:
 
   const std::atomic_bool& getCancel();
 
-  int determineOutputLineCount(const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, usize totalPoints, int32 phase) const;
-  Result<> writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, int32 lineCount, usize totalPoints, int32 phase) const;
+  int determineOutputLineCount(const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, usize totalPoints, int32 phase) const;
+  Result<> writeOutputFile(std::ofstream& out, const Int32Array& cellPhases, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, int32 lineCount, usize totalPoints, int32 phase) const;
 
 private:
   DataStructure& m_DataStructure;

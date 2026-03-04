@@ -183,7 +183,7 @@ struct SplitNeighborListsTemplateImpl
 Result<> SplitArraysByTuple(DataStructure& dataStructure, const DataPath& inputArrayPath, const std::vector<DataPath>& outputArrayPaths, usize splitDimension,
                             const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+  const auto& inputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(inputArrayPath);
   Result<> result;
   ExecuteDataFunction(SplitDataArraysTemplateImpl{}, inputDataArray.getDataType(), dataStructure, inputArrayPath, outputArrayPaths, splitDimension, messageHandler, shouldCancel, result);
   return result;
@@ -192,7 +192,7 @@ Result<> SplitArraysByTuple(DataStructure& dataStructure, const DataPath& inputA
 Result<> SplitNeighborLists(DataStructure& dataStructure, const DataPath& inputArrayPath, const std::vector<DataPath>& outputArrayPaths, const IFilter::MessageHandler& messageHandler,
                             const std::atomic_bool& shouldCancel)
 {
-  const auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
+  const auto& inputNeighborList = dataStructure.getDataRefAs<AbstractNeighborList>(inputArrayPath);
   Result<> result;
   ExecuteNeighborFunction(SplitNeighborListsTemplateImpl{}, inputNeighborList.getDataType(), dataStructure, inputArrayPath, outputArrayPaths, messageHandler, shouldCancel, result);
   return result;
@@ -221,20 +221,20 @@ const std::atomic_bool& SplitDataArrayByTuple::getCancel()
 // -----------------------------------------------------------------------------
 Result<> SplitDataArrayByTuple::operator()()
 {
-  const auto& inputDataArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->InputArrayPath);
+  const auto& inputDataArray = m_DataStructure.getDataRefAs<AbstractArray>(m_InputValues->InputArrayPath);
   std::string arrayTypeName = inputDataArray.getTypeName();
   switch(inputDataArray.getArrayType())
   {
-  case IArray::ArrayType::DataArray: {
+  case AbstractArray::ArrayType::DataArray: {
     return SplitArraysByTuple(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_InputValues->SplitDimension, m_MessageHandler, m_ShouldCancel);
   }
-  case IArray::ArrayType::StringArray: {
+  case AbstractArray::ArrayType::StringArray: {
     return SplitArraysByTupleImpl<StringArray>(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_InputValues->SplitDimension, m_MessageHandler, m_ShouldCancel);
   }
-  case IArray::ArrayType::NeighborListArray: {
+  case AbstractArray::ArrayType::NeighborListArray: {
     return SplitNeighborLists(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_MessageHandler, m_ShouldCancel);
   }
-  case IArray::ArrayType::Any: {
+  case AbstractArray::ArrayType::Any: {
     return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
                            fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", m_InputValues->InputArrayPath.toString()));
   }

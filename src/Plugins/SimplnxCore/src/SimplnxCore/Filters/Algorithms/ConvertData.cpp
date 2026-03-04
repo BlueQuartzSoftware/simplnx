@@ -71,9 +71,9 @@ Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues*
   DataArray<T>& inputArray = dataStructure.getDataRefAs<DataArray<T>>(inputValues->SelectedArrayPath);
   AbstractDataStore<T>& inputStore = inputArray.getDataStoreRef();
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  typename ParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&inputArray);
-  algArrays.push_back(dataStructure.getDataAs<IDataArray>(inputValues->OutputArrayName));
+  algArrays.push_back(dataStructure.getDataAs<AbstractDataArray>(inputValues->OutputArrayName));
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, inputArray.size());
@@ -155,7 +155,7 @@ const std::atomic_bool& ConvertData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertData::operator()()
 {
-  DataType inputArrayType = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath)->getDataType();
+  DataType inputArrayType = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->SelectedArrayPath)->getDataType();
   switch(inputArrayType)
   {
   case DataType::int8: {

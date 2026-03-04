@@ -3,9 +3,9 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeKMedoids.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
@@ -125,7 +125,7 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
+  auto clusterArray = dataStructure.getDataAs<AbstractDataArray>(pSelectedArrayPathValue);
   if(clusterArray == nullptr)
   {
     return MakePreflightErrorResult(-7584, "Array to Cluster MUST be a valid DataPath.");

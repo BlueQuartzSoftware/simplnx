@@ -2,7 +2,7 @@
 
 ## Adding DataObject types
 
-When adding DataObject types, additional IDataFactories need to be created for each IDataIOManager subclass. Simplnx provides the HDF5 version of IDataIOManager and IDataFactory, but plugins providing additional formats will need to be updated to enable reading and writing to the new types.
+When adding DataObject types, additional IDataFactories need to be created for each AbstractDataIOManager subclass. Simplnx provides the HDF5 version of AbstractDataIOManager and IDataFactory, but plugins providing additional formats will need to be updated to enable reading and writing to the new types.
 
 ## Adding IO formats
 
@@ -11,7 +11,7 @@ simplnx comes with HDF5 readers and writers by default. To add additional IO for
 Required subclasses:
 
 - IDataFactory for each concrete DataObject type
-- IDataIOManager for the format
+- AbstractDataIOManager for the format
 
   - Add IDataFactory subclasses to the IO Manager
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
-#include "simplnx/DataStructure/IO/HDF5/INodeGeom1dIO.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry1D.hpp"
+#include "simplnx/DataStructure/IO/HDF5/AbstractNodeGeom1dIO.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace HDF5
 /**
  * @brief The EdgeGeomIO class exists to read and write EdgeGeoms using HDF5.
  */
-class SIMPLNX_EXPORT EdgeGeomIO : public INodeGeom1dIO
+class SIMPLNX_EXPORT EdgeGeomIO : public AbstractNodeGeom1dIO
 {
 public:
   using data_type = EdgeGeom;
@@ -31,8 +31,8 @@ public:
    * @param useEmptyDataStore
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& geomName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& geomName, AbstractDataObject::IdType importId,
+                    const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
   Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const override;
 
@@ -47,14 +47,14 @@ public:
   Result<> writeData(DataStructureWriter& dataStructureWriter, const EdgeGeom& geometry, group_writer_type& parentGroup, bool importable) const;
 
   /**
-   * @brief Attempts to write the DataObject to HDF5.
-   * Returns an error if the DataObject cannot be cast to EdgeGeom.
+   * @brief Attempts to write the AbstractDataObject to HDF5.
+   * Returns an error if the AbstractDataObject cannot be cast to EdgeGeom.
    * Otherwise, this method returns writeData(...)
    * Return Result<>
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const override;
 
-  DataObject::Type getDataType() const override;
+  AbstractDataObject::Type getDataType() const override;
 
   std::string getTypeName() const override;
 

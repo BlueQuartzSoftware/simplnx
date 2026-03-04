@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class AlignSectionsListFilter
  * @brief This filter will apply the cell shifts from a user specified txt file to each section of the Image Geometry
  */
-class SIMPLNXCORE_EXPORT AlignSectionsListFilter : public IFilter
+class SIMPLNXCORE_EXPORT AlignSectionsListFilter : public AbstractFilter
 {
 public:
   AlignSectionsListFilter() = default;

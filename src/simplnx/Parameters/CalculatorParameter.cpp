@@ -117,7 +117,7 @@ Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const
   }
   if(!structValue.m_SelectedGroup.empty()) // if empty then using root group
   {
-    const DataObject* dataObject = dataStructure.getData(structValue.m_SelectedGroup);
+    const AbstractDataObject* dataObject = dataStructure.getData(structValue.m_SelectedGroup);
     if(dataObject == nullptr)
     {
       return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_DuplicateValue,
@@ -136,7 +136,7 @@ Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const
 Result<std::any> CalculatorParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& structValue = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(structValue.m_SelectedGroup);
+  AbstractDataObject* object = dataStructure.getData(structValue.m_SelectedGroup);
   return {{object}};
 }
 

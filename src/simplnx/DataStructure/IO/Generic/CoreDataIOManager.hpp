@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
+#include "simplnx/DataStructure/IO/Generic/AbstractDataIOManager.hpp"
 
 namespace nx::core
 {
@@ -9,7 +9,7 @@ namespace Generic
 /**
  * @brief The HDF5::DataIOManager class stores and returns the corresponding IO class for HDF5.
  */
-class SIMPLNX_EXPORT CoreDataIOManager : public IDataIOManager
+class SIMPLNX_EXPORT CoreDataIOManager : public AbstractDataIOManager
 {
 public:
   /**
@@ -19,14 +19,14 @@ public:
   ~CoreDataIOManager() noexcept override;
 
   /**
-   * @brief Returns the format name for the IDataIOManager as a string.
+   * @brief Returns the format name for the AbstractDataIOManager as a string.
    * @return std::string
    */
   std::string formatName() const override;
 
 private:
   /**
-   * @brief Adds all core simplnx DataObject IO classes.
+   * @brief Adds all core simplnx AbstractDataObject IO classes.
    */
   void addCoreFactories();
 

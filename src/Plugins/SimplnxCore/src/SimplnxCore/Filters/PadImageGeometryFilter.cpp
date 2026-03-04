@@ -224,7 +224,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
     for(const auto& [identifier, object] : *selectedCellData)
     {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      const auto& srcArray = dynamic_cast<const AbstractDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
       ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
@@ -246,7 +246,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
 
   // This section covers copying the other Attribute Matrix objects from the source geometry
   // to the destination geometry
-  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, IDataObject::Type::AbstractDataObject, ignorePaths);
   if(childPaths.has_value())
   {
     for(const auto& childPath : childPaths.value())

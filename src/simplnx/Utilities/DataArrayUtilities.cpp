@@ -17,7 +17,7 @@ using namespace nx::core;
 namespace
 {
 template <class T>
-Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, const ShapeType& tupleShape, IDataAction::Mode mode, const IDataArray& inputDataArray)
+Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, const ShapeType& tupleShape, IDataAction::Mode mode, const AbstractDataArray& inputDataArray)
 {
   auto& castInputArray = dynamic_cast<const DataArray<T>&>(inputDataArray);
   const ShapeType componentShape = castInputArray.getDataStoreRef().getComponentShape();
@@ -28,7 +28,7 @@ Result<> ReplaceArray(DataStructure& dataStructure, const DataPath& dataPath, co
 struct InitializeNeighborListFunctor
 {
   template <typename T>
-  void operator()(INeighborList* iNeighborList)
+  void operator()(AbstractNeighborList* iNeighborList)
   {
     auto* neighborListPtr = dynamic_cast<NeighborList<T>*>(iNeighborList);
     neighborListPtr->setList(neighborListPtr->getNumberOfTuples() - 1, typename NeighborList<T>::SharedVectorType(new typename NeighborList<T>::VectorType));
@@ -41,14 +41,14 @@ struct InitializeNeighborListFunctor
 struct CreateDefaultValueDataArrayFunctor
 {
   template <typename T>
-  Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, const std::string& defaultValue,
-                             const std::optional<DataObject::IdType> parentId)
+  Result<AbstractArray*> operator()(DataStructure& destDataStructure, const std::string& name, const ShapeType& tupleShape, const ShapeType& componentShape, const std::string& defaultValue,
+                                    const std::optional<AbstractDataObject::IdType> parentId)
   {
     auto newDataArray = DataArray<T>::template CreateWithStore<DataStore<T>>(destDataStructure, name, tupleShape, componentShape, parentId);
     auto result = StringInterpretationUtilities::Convert<T>(defaultValue);
     if(result.invalid())
     {
-      return ConvertResultTo<IArray*>(ConvertResult(std::move(result)), {});
+      return ConvertResultTo<AbstractArray*>(ConvertResult(std::move(result)), {});
     }
     std::fill(newDataArray->begin(), newDataArray->end(), result.value());
     return {newDataArray};
@@ -61,7 +61,7 @@ struct CreateDefaultValueDataArrayFunctor
 struct CreateDefaultValueNeighborListFunctor
 {
   template <typename T>
-  Result<IArray*> operator()(DataStructure& destDataStructure, const std::string& name, const ShapeType& tupleShape, const std::optional<DataObject::IdType> parentId)
+  Result<AbstractArray*> operator()(DataStructure& destDataStructure, const std::string& name, const ShapeType& tupleShape, const std::optional<AbstractDataObject::IdType> parentId)
   {
     auto newNeighborList = NeighborList<T>::Create(destDataStructure, name, tupleShape, parentId);
     return {newNeighborList};
@@ -77,7 +77,7 @@ bool CheckArraysAreSameType(const DataStructure& dataStructure, const std::vecto
   std::set<nx::core::DataType> types;
   for(const auto& dataPath : dataArrayPaths)
   {
-    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
+    const auto* dataArrayPtr = dataStructure.getDataAs<AbstractDataArray>(dataPath);
     types.insert(dataArrayPtr->getDataType());
   }
   return types.size() == 1;
@@ -89,16 +89,16 @@ bool CheckArraysHaveSameTupleCount(const DataStructure& dataStructure, const std
   std::set<size_t> types;
   for(const auto& dataPath : dataArrayPaths)
   {
-    const auto* iArrayPtr = dataStructure.getDataAs<IArray>(dataPath);
+    const auto* iArrayPtr = dataStructure.getDataAs<AbstractArray>(dataPath);
     types.insert(iArrayPtr->getNumberOfTuples());
   }
   return types.size() == 1;
 }
 
 //-----------------------------------------------------------------------------
-Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, bool invertMask)
+Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, AbstractDataObject& inputDataObject, const AbstractDataArray& conditionalDataArray, bool invertMask)
 {
-  const IDataArray& iDataArray = dynamic_cast<IDataArray&>(inputDataObject);
+  const AbstractDataArray& iDataArray = dynamic_cast<AbstractDataArray&>(inputDataObject);
   const nx::core::DataType arrayType = iDataArray.getDataType();
   return ExecuteDataFunction(ConditionalReplaceValueInArrayFromString{}, arrayType, valueAsStr, inputDataObject, conditionalDataArray, invertMask);
 }
@@ -106,7 +106,7 @@ Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObjec
 //-----------------------------------------------------------------------------
 Result<> ResizeAndReplaceDataArray(DataStructure& dataStructure, const DataPath& dataPath, ShapeType& tupleShape, IDataAction::Mode mode)
 {
-  auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
+  auto* inputDataArrayPtr = dataStructure.getDataAs<AbstractDataArray>(dataPath);
 
   if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArrayPtr))
   {
@@ -172,7 +172,7 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
     numFeatures = targetAttributeMatrixPtr->getNumberOfTuples();
   }
   // Check if a feature array was passed in
-  auto* targetFeatureArrayPtr = dataStructure.getDataAs<IArray>(sourceDataPath);
+  auto* targetFeatureArrayPtr = dataStructure.getDataAs<AbstractArray>(sourceDataPath);
   if(nullptr != targetFeatureArrayPtr)
   {
     numFeatures = targetFeatureArrayPtr->getNumberOfTuples();
@@ -200,12 +200,12 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
 //-----------------------------------------------------------------------------
 void InitializeNeighborList(DataStructure& dataStructure, const DataPath& neighborListPath)
 {
-  auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(neighborListPath);
+  auto* neighborListPtr = dataStructure.getDataAs<AbstractNeighborList>(neighborListPath);
   ExecuteNeighborFunction(InitializeNeighborListFunctor{}, neighborListPtr->getDataType(), neighborListPtr);
 }
 
 //-----------------------------------------------------------------------------
-bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::string& dataFormat)
+bool ConvertIDataArray(const std::shared_ptr<AbstractDataArray>& dataArray, const std::string& dataFormat)
 {
   auto dataType = dataArray->getDataType();
   switch(dataType)
@@ -237,38 +237,39 @@ bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::
   }
 }
 
-Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const ShapeType& tupleShape, const std::string& defaultValue,
-                                                 const std::optional<DataObject::IdType> parentId)
+Result<AbstractArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, AbstractArray* array, const std::string& newArrayName, const ShapeType& tupleShape,
+                                                        const std::string& defaultValue, const std::optional<AbstractDataObject::IdType> parentId)
 {
   switch(array->getArrayType())
   {
-  case IArray::ArrayType::StringArray: {
+  case AbstractArray::ArrayType::StringArray: {
     auto newStringArray = StringArray::Create(destDataStructure, newArrayName, parentId);
     newStringArray->resizeTuples(tupleShape);
     std::fill(newStringArray->begin(), newStringArray->end(), defaultValue);
     return {newStringArray};
   }
-  case IArray::ArrayType::DataArray: {
-    auto iDataArray = dynamic_cast<IDataArray*>(array);
+  case AbstractArray::ArrayType::DataArray: {
+    auto iDataArray = dynamic_cast<AbstractDataArray*>(array);
     auto result = ExecuteDataFunction(CreateDefaultValueDataArrayFunctor{}, iDataArray->getDataType(), destDataStructure, newArrayName, tupleShape, array->getComponentShape(), defaultValue, parentId);
     if(result.invalid())
     {
-      return MakeErrorResult<IArray*>(-1050, fmt::format("Unable to create default-initialized data array to append to data array '{}': {}", array->getName(), result.errors()[0].message));
+      return MakeErrorResult<AbstractArray*>(-1050, fmt::format("Unable to create default-initialized data array to append to data array '{}': {}", array->getName(), result.errors()[0].message));
     }
     return result;
   }
-  case IArray::ArrayType::NeighborListArray: {
-    auto iNeighborList = dynamic_cast<INeighborList*>(array);
+  case AbstractArray::ArrayType::NeighborListArray: {
+    auto iNeighborList = dynamic_cast<AbstractNeighborList*>(array);
     auto result = ExecuteNeighborFunction(CreateDefaultValueNeighborListFunctor{}, iNeighborList->getDataType(), destDataStructure, newArrayName, tupleShape, parentId);
     if(result.invalid())
     {
-      return MakeErrorResult<IArray*>(-1051, fmt::format("Unable to create default-initialized neighbor list to append to neighbor list '{}': {}", array->getName(), result.errors()[0].message));
+      return MakeErrorResult<AbstractArray*>(-1051,
+                                             fmt::format("Unable to create default-initialized neighbor list to append to neighbor list '{}': {}", array->getName(), result.errors()[0].message));
     }
     return result;
   }
-  case IArray::ArrayType::Any:
+  case AbstractArray::ArrayType::Any:
   default: {
-    return MakeErrorResult<IArray*>(
+    return MakeErrorResult<AbstractArray*>(
         -1052, fmt::format("Unable to create a default-initialized array: array '{}' is not a StringArray, DataArray, or NeighborList, and these are the only array types supported by this filter!",
                            array->getName()));
   }
@@ -290,10 +291,10 @@ void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCe
       return;
     }
 
-    const auto& oldDataArray = m_DataStructure.getDataRefAs<IDataArray>(edgeDataArrayPath);
+    const auto& oldDataArray = m_DataStructure.getDataRefAs<AbstractDataArray>(edgeDataArrayPath);
     const std::string srcName = oldDataArray.getName();
 
-    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+    auto& newDataArray = dynamic_cast<AbstractDataArray&>(destCellDataAM.at(srcName));
     m_MessageHandler(fmt::format("Copying Data Array {}", srcName));
     ExecuteParallelFunction<CopyCellDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, newEdgesIndexList, m_ShouldCancel);
   }
@@ -307,7 +308,7 @@ void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeM
   // in the destination geometry's attribute matrix
   for(const auto& dataPath : selectedArrayPaths)
   {
-    const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+    const auto& srcArray = dataStructure.getDataRefAs<AbstractDataArray>(dataPath);
     DataType dataType = srcArray.getDataType();
     ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
     DataPath dataArrayPath = reducedGeometryPathAttrMatPath.createChildPath(srcArray.getName());

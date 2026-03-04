@@ -5,9 +5,9 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -199,7 +199,7 @@ private:
       }
 
       // Ensure that we are dealing with in-core memory ONLY
-      // const IDataArray* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(imageDataPath);
+      // const AbstractDataArray* inputArrayPtr = m_DataStructure.getDataAs<AbstractDataArray>(imageDataPath);
       // if(inputArrayPtr->getDataFormat() != "")
       //{
       //  return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataPath.toString()));
@@ -249,7 +249,7 @@ private:
           continue;
         }
 
-        if(m_DataStructure.getDataRefAs<IDataArray>(imageDataPath).getDataType() != DataType::uint8)
+        if(m_DataStructure.getDataRefAs<AbstractDataArray>(imageDataPath).getDataType() != DataType::uint8)
         {
           outputResult.warnings().emplace_back(
               Warning{-74320, fmt::format("The array ({}) is not a UIntArray, so it will not be converted to grayscale. Continuing...", imageDataPath.getTargetName())});
@@ -271,16 +271,16 @@ private:
         }
 
         // deletion of non-grayscale array
-        DataObject::IdType id;
+        AbstractDataObject::IdType id;
         { // scoped for safety since this reference will be nonexistent in a moment
-          auto& oldArray = m_DataStructure.getDataRefAs<IDataArray>(imageDataPath);
+          auto& oldArray = m_DataStructure.getDataRefAs<AbstractDataArray>(imageDataPath);
           id = oldArray.getId();
         }
         m_DataStructure.removeData(id);
 
         // rename grayscale array to reflect original
         {
-          auto& gray = m_DataStructure.getDataRefAs<IDataArray>(imageDataPath.replaceName("gray" + imageDataPath.getTargetName()));
+          auto& gray = m_DataStructure.getDataRefAs<AbstractDataArray>(imageDataPath.replaceName("gray" + imageDataPath.getTargetName()));
           if(gray.canRename(imageDataPath.getTargetName()) == false)
           {
             return MakeErrorResult(-18543, fmt::format("Unable to rename the grayscale array to {}", imageDataPath.getTargetName()));

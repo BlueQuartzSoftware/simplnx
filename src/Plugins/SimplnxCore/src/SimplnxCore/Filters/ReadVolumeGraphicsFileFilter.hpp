@@ -3,9 +3,9 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Common/Array.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -16,7 +16,7 @@ namespace nx::core
  * is read to find out the dimensions, spacing and units of the data. The name of the .vol
  * file is also contained in the .vgi file.
  */
-class SIMPLNXCORE_EXPORT ReadVolumeGraphicsFileFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReadVolumeGraphicsFileFilter : public AbstractFilter
 {
 public:
   ReadVolumeGraphicsFileFilter();
@@ -45,7 +45,7 @@ public:
   {
     SizeVec3 Dimensions;
     FloatVec3 Spacing;
-    IGeometry::LengthUnit Units = IGeometry::LengthUnit::Unspecified;
+    AbstractGeometry::LengthUnit Units = AbstractGeometry::LengthUnit::Unspecified;
     std::string DataFilePath;
   };
 

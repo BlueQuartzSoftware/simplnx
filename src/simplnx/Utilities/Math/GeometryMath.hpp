@@ -6,7 +6,7 @@
 #include "simplnx/Common/EulerAngle.hpp"
 #include "simplnx/Common/Ray.hpp"
 #include "simplnx/Common/Types.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -27,7 +27,7 @@ namespace detail
 {
 struct GeometryStoreCache
 {
-  GeometryStoreCache(const AbstractDataStore<float32>& verticesStore, const AbstractDataStore<IGeometry::MeshIndexType>& facesStore, usize numVertsPerFace)
+  GeometryStoreCache(const AbstractDataStore<float32>& verticesStore, const AbstractDataStore<AbstractGeometry::MeshIndexType>& facesStore, usize numVertsPerFace)
   : VerticesStoreRef(verticesStore)
   , FacesStoreRef(facesStore)
   , NumVertsPerFace(numVertsPerFace)
@@ -35,7 +35,7 @@ struct GeometryStoreCache
   }
 
   const AbstractDataStore<float32>& VerticesStoreRef;
-  const AbstractDataStore<IGeometry::MeshIndexType>& FacesStoreRef;
+  const AbstractDataStore<AbstractGeometry::MeshIndexType>& FacesStoreRef;
   usize NumVertsPerFace;
 };
 
@@ -413,7 +413,7 @@ T GetLengthOfRayInBox(const nx::core::Ray<T>& ray, const nx::core::BoundingBox3D
  * @param verts
  * @return nx::core::BoundingBox<float32>
  */
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INodeGeometry0D& geom);
+nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::AbstractNodeGeometry0D& geom);
 
 /**
  * @brief Returns the BoundingBox around the specified face.

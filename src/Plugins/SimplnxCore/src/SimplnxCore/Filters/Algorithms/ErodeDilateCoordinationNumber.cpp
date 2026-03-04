@@ -12,7 +12,7 @@ namespace
 struct DataArrayCopyTupleFunctor
 {
   template <typename T>
-  void operator()(IDataArray& outputIDataArray, size_t sourceIndex, size_t targetIndex)
+  void operator()(AbstractDataArray& outputIDataArray, size_t sourceIndex, size_t targetIndex)
   {
     using DataArrayType = DataArray<T>;
     DataArrayType outputArray = dynamic_cast<DataArrayType&>(outputIDataArray);
@@ -74,7 +74,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
   std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   const std::string attrMatName = m_InputValues->FeatureIdsArrayPath.getTargetName();
-  const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
+  const std::vector<std::shared_ptr<AbstractDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
   std::vector<int32> featureCount(numFeatures + 1, 0);
   std::vector<int32> coordinationNumber(totalPoints, 0);
@@ -129,11 +129,11 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           const int64 neighbor = neighbors[voxelIndex];
           if(coordinationNumber[voxelIndex] >= m_InputValues->CoordinationNumber && coordinationNumber[voxelIndex] > 0)
           {
-            // TODO: update to use IDataArray->copyTuple() function
+            // TODO: update to use AbstractDataArray->copyTuple() function
             /******************************************************************
              * If this section is slow it is because we are having to use the
              * ExecuteDataFunction<T>() in order to call "copyTuple()" because
-             * "copyTuple()" isn't in the IArray API set. Oh well.
+             * "copyTuple()" isn't in the AbstractArray API set. Oh well.
              */
             for(const auto& voxelArray : voxelArrays)
             {

@@ -1,13 +1,13 @@
 #include "EBSDSegmentFeatures.hpp"
 
 #include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 EBSDSegmentFeatures::EBSDSegmentFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EBSDSegmentFeaturesInputValues* inputValues)
-: SegmentFeatures(dataStructure, shouldCancel, mesgHandler)
+: AbstractSegmentFeatures(dataStructure, shouldCancel, mesgHandler)
 , m_InputValues(inputValues)
 {
   m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
@@ -21,7 +21,7 @@ EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 Result<> EBSDSegmentFeatures::operator()()
 {
   this->m_NeighborScheme = m_InputValues->NeighborScheme;
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeom = m_DataStructure.getDataAs<AbstractGridGeometry>(m_InputValues->ImageGeometryPath);
 
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
   m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);

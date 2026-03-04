@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ConvertQuaternionFilter
  * @brief This filter will covert Quaternions between a 'Scalar-Vector' and 'Vector-Scalar' representation
  */
-class ORIENTATIONANALYSIS_EXPORT ConvertQuaternionFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ConvertQuaternionFilter : public AbstractFilter
 {
 public:
   ConvertQuaternionFilter() = default;

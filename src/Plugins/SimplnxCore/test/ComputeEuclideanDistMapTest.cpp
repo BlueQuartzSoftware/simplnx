@@ -21,7 +21,7 @@ const std::string k_QPDistancesArrayName = "QPManhattanDistances";
 bool ArrayExists(const DataStructure& dataStructure, const std::string& name)
 {
   const DataPath calculatedPath({k_DataContainer, k_CellData, std::string(k_CalculatedPrefix) + name});
-  return dataStructure.getDataAs<IDataArray>(calculatedPath) != nullptr;
+  return dataStructure.getDataAs<AbstractDataArray>(calculatedPath) != nullptr;
 };
 } // namespace
 
@@ -91,8 +91,8 @@ TEST_CASE("SimplnxCore::ComputeEuclideanDistMap", "[SimplnxCore][ComputeEuclidea
   // Check that the currently enabled array matches its exemplar
   const DataPath exemplarPath({k_DataContainer, k_CellData, expectedArrayName});
   const DataPath calculatedPath({k_DataContainer, k_CellData, k_CalculatedPrefix + expectedArrayName});
-  const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-  const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+  const auto& exemplarData = dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath);
+  const auto& calculatedData = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath);
   UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

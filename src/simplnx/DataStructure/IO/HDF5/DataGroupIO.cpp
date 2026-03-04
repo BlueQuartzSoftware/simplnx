@@ -10,9 +10,9 @@ namespace nx::core::HDF5
 DataGroupIO::DataGroupIO() = default;
 DataGroupIO::~DataGroupIO() noexcept = default;
 
-DataObject::Type DataGroupIO::getDataType() const
+AbstractDataObject::Type DataGroupIO::getDataType() const
 {
-  return DataObject::Type::DataGroup;
+  return IDataObject::Type::DataGroup;
 }
 
 std::string DataGroupIO::getTypeName() const
@@ -20,8 +20,8 @@ std::string DataGroupIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> DataGroupIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                               const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+Result<> DataGroupIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, AbstractDataObject::IdType importId,
+                               const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* dataGroup = DataGroup::Import(structureReader.getDataStructure(), objectName, importId, parentId);
   return BaseGroupIO::ReadBaseGroupData(structureReader, *dataGroup, parentGroup, objectName, importId, parentId, useEmptyDataStore);
@@ -33,7 +33,7 @@ Result<> DataGroupIO::writeData(DataStructureWriter& dataStructureWriter, const 
   return WriteBaseGroupData(dataStructureWriter, dataGroup, parentGroup, importable);
 }
 
-Result<> DataGroupIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> DataGroupIO::writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }

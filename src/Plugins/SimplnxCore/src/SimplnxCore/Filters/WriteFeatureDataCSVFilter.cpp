@@ -117,14 +117,14 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
   }
 
   // load list of DataPaths
-  std::vector<DataObject::Type> dataTypesToExtract;
+  std::vector<AbstractDataObject::Type> dataTypesToExtract;
   if(filterArgs.value<bool>(k_WriteNeighborListData_Key))
   {
-    dataTypesToExtract = {DataObject::Type::DataArray, DataObject::Type::StringArray, DataObject::Type::NeighborList};
+    dataTypesToExtract = {IDataObject::Type::DataArray, IDataObject::Type::StringArray, IDataObject::Type::NeighborList};
   }
   else
   {
-    dataTypesToExtract = {DataObject::Type::DataArray, DataObject::Type::StringArray};
+    dataTypesToExtract = {IDataObject::Type::DataArray, IDataObject::Type::StringArray};
   }
 
   std::vector<DataPath> arrayPaths;
@@ -132,7 +132,7 @@ Result<> WriteFeatureDataCSVFilter::executeImpl(DataStructure& dataStructure, co
   for(const auto& element : dataTypesToExtract)
   {
     auto requestedPaths = *std::move(GetAllChildDataPaths(dataStructure, pCellFeatureAttributeMatrixPathValue, element));
-    if(element == DataObject::Type::NeighborList)
+    if(element == IDataObject::Type::NeighborList)
     {
       neighborPaths.insert(neighborPaths.end(), std::make_move_iterator(requestedPaths.begin()), std::make_move_iterator(requestedPaths.end()));
     }

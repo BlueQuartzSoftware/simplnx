@@ -176,7 +176,7 @@ Result<> ComputeFaceIPFColoring::operator()()
   auto& secondIpfColors = m_DataStructure.getDataRefAs<UInt8Array>(secondIpfColorsArrayPath);
   int64 numTriangles = faceLabels.getNumberOfTuples();
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  typename ParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&faceLabels);
   algArrays.push_back(&faceNormals);
   algArrays.push_back(&eulerAngles);

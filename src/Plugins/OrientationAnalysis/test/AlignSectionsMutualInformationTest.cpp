@@ -143,13 +143,13 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: output tes
   const DataPath alignmentAMPath = Constants::k_DataContainerPath.createChildPath(Constants::k_AlignmentAMName);
 
   const DataPath slicesPath = alignmentAMPath.createChildPath(Constants::k_SlicesArrayName);
-  UnitTest::CompareDataArrays<uint32>(exemplarDataStructure.getDataRefAs<IDataArray>(slicesPath), dataStructure.getDataRefAs<IDataArray>(slicesPath));
+  UnitTest::CompareDataArrays<uint32>(exemplarDataStructure.getDataRefAs<AbstractDataArray>(slicesPath), dataStructure.getDataRefAs<AbstractDataArray>(slicesPath));
 
   const DataPath relativeShiftsPath = alignmentAMPath.createChildPath(Constants::k_RelativeShiftsArrayName);
-  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(relativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(relativeShiftsPath));
+  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<AbstractDataArray>(relativeShiftsPath), dataStructure.getDataRefAs<AbstractDataArray>(relativeShiftsPath));
 
   const DataPath cumulativeShiftsPath = alignmentAMPath.createChildPath(Constants::k_CumulativeShiftsArrayName);
-  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
+  UnitTest::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<AbstractDataArray>(cumulativeShiftsPath), dataStructure.getDataRefAs<AbstractDataArray>(cumulativeShiftsPath));
 
 // Write out the .dream3d file now
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT

@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class WriteAvizoUniformCoordinateFilter
  * @brief This filter writes out a native Avizo Uniform Coordinate data file
  */
-class SIMPLNXCORE_EXPORT WriteAvizoUniformCoordinateFilter : public IFilter
+class SIMPLNXCORE_EXPORT WriteAvizoUniformCoordinateFilter : public AbstractFilter
 {
 public:
   WriteAvizoUniformCoordinateFilter() = default;

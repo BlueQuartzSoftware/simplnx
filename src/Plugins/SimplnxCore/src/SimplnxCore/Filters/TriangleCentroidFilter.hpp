@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class TriangleCentroidFilter
  * @brief This **Filter** computes the centroid of each **Triangle** in a **Triangle Geometry** by calculating the average position of all 3 **Vertices** that make up the **Triangle**.
  */
-class SIMPLNXCORE_EXPORT TriangleCentroidFilter : public IFilter
+class SIMPLNXCORE_EXPORT TriangleCentroidFilter : public AbstractFilter
 {
 public:
   TriangleCentroidFilter() = default;

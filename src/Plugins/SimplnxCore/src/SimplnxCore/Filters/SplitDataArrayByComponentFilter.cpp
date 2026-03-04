@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/Filters/Algorithms/SplitDataArrayByComponent.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -93,7 +93,7 @@ IFilter::PreflightResult SplitDataArrayByComponentFilter::preflightImpl(const Da
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& inputArrayRef = dataStructure.getDataRefAs<IDataArray>(pInputArrayPath);
+  const auto& inputArrayRef = dataStructure.getDataRefAs<AbstractDataArray>(pInputArrayPath);
   const auto* inputArray = &inputArrayRef;
   usize numComponents = inputArray->getNumberOfComponents();
   if(numComponents <= 1)
@@ -158,7 +158,7 @@ Result<> SplitDataArrayByComponentFilter::executeImpl(DataStructure& dataStructu
   }
   else
   {
-    usize numComponents = dataStructure.getDataAs<IDataArray>(inputValues.InputArrayPath)->getNumberOfComponents();
+    usize numComponents = dataStructure.getDataAs<AbstractDataArray>(inputValues.InputArrayPath)->getNumberOfComponents();
     inputValues.ExtractComponents.reserve(numComponents);
     for(usize i = 0; i < numComponents; ++i)
     {

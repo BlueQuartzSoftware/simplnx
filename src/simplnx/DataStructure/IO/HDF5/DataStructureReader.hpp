@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
+#include "simplnx/DataStructure/IO/Generic/AbstractDataIOManager.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -9,7 +9,7 @@
 
 namespace nx::core::HDF5
 {
-class IDataIO;
+class AbstractDataIO;
 class DataIOManager;
 
 /**
@@ -37,7 +37,7 @@ public:
    */
   static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores = false);
 
-  static Result<std::shared_ptr<DataObject>> ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+  static Result<std::shared_ptr<AbstractDataObject>> ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
 
   static Result<> FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
 
@@ -52,15 +52,16 @@ public:
   Result<DataStructure> readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores = false);
 
   /**
-   * @brief Imports a DataObject with the specified name from the target
+   * @brief Imports a AbstractDataObject with the specified name from the target
    * HDF5 group. Returns any HDF5 error code that occurs. Returns 0 otherwise.
    * @param parentGroup HDF5 group reader for the parent DataMap
-   * @param objectName Target DataObject name
-   * @param parentId = {} DataObject parent ID
+   * @param objectName Target AbstractDataObject name
+   * @param parentId = {} AbstractDataObject parent ID
    * @param useEmptyDataStores = false
    * @return Result<>
    */
-  Result<> readObjectFromGroup(const nx::core::HDF5::GroupIO& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {}, bool useEmptyDataStores = false);
+  Result<> readObjectFromGroup(const nx::core::HDF5::GroupIO& parentGroup, const std::string& objectName, const std::optional<AbstractDataObject::IdType>& parentId = {},
+                               bool useEmptyDataStores = false);
 
   /**
    * @brief Returns a reference to the current DataStructure. Returns an empty
@@ -75,8 +76,8 @@ public:
   void clearDataStructure();
 
   void addRequiredPath(const DataPath& requiredDataPath);
-  void addRequiredId(DataObject::IdType requiredDataId);
-  void addRequiredId(DataObject::OptionalId requiredDataId);
+  void addRequiredId(AbstractDataObject::IdType requiredDataId);
+  void addRequiredId(AbstractDataObject::OptionalId requiredDataId);
 
 protected:
   /**
@@ -90,9 +91,9 @@ protected:
   /**
    * Returns a pointer to the appropriate nx::core::HDF5::IDataFactory based on a target
    * data type.
-   * @return std::shared_ptr<IDataIO>
+   * @return std::shared_ptr<AbstractDataIO>
    */
-  std::shared_ptr<IDataIO> getDataFactory(typename IDataIOManager::factory_id_type typeName) const;
+  std::shared_ptr<AbstractDataIO> getDataFactory(typename AbstractDataIOManager::factory_id_type typeName) const;
 
   void loadRequiredData(const nx::core::HDF5::FileIO& fileReader);
 
@@ -100,6 +101,6 @@ private:
   std::shared_ptr<DataIOManager> m_IOManager = nullptr;
   DataStructure m_CurrentStructure;
   std::vector<DataPath> m_RequiredPaths;
-  std::vector<DataObject::IdType> m_RequiredIds;
+  std::vector<AbstractDataObject::IdType> m_RequiredIds;
 };
 } // namespace nx::core::HDF5

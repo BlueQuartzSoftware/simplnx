@@ -10,7 +10,7 @@ namespace
 struct ExecuteFlyingEdgesFunctor
 {
   template <typename T>
-  void operator()(const ImageGeom& image, const IDataArray* iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals, AttributeMatrix& normAM)
+  void operator()(const ImageGeom& image, const AbstractDataArray* iDataArray, float64 isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals, AttributeMatrix& normAM)
   {
     FlyingEdgesAlgorithm flyingEdges = FlyingEdgesAlgorithm<T>(image, iDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), static_cast<T>(isoVal), triangleGeom, normals);
     flyingEdges.pass1();
@@ -49,7 +49,7 @@ Result<> FlyingEdges3D::operator()()
 {
   const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
   float64 isoVal = m_InputValues->isoVal;
-  const auto* iDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->contouringArrayPath);
+  const auto* iDataArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->contouringArrayPath);
   auto triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangleGeomPath);
   auto& normalsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->normalsArrayPath)->getDataStoreRef();
 

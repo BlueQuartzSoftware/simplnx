@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Array.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -10,7 +10,7 @@ namespace nx::core
 /**
  * @brief Action for creating an ImageGeometry in a DataStructure
  */
-class SIMPLNX_EXPORT CreateImageGeometryAction : public IDataCreationAction
+class SIMPLNX_EXPORT CreateImageGeometryAction : public AbstractDataCreationAction
 {
 public:
   using DimensionType = std::vector<size_t>;
@@ -27,7 +27,7 @@ public:
    * @param cellAttributeMatrixName
    */
   CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName,
-                            IGeometry::LengthUnit units = IGeometry::LengthUnit::Micrometer);
+                            AbstractGeometry::LengthUnit units = AbstractGeometry::LengthUnit::Micrometer);
 
   ~CreateImageGeometryAction() noexcept override;
 
@@ -84,7 +84,7 @@ public:
    * @brief Returns the units of the ImageGeometry to be created.
    * @return
    */
-  IGeometry::LengthUnit units() const;
+  AbstractGeometry::LengthUnit units() const;
 
   /**
    * @brief Returns all of the DataPaths to be created.
@@ -96,7 +96,7 @@ private:
   DimensionType m_Dims;
   OriginType m_Origin;
   SpacingType m_Spacing;
-  IGeometry::LengthUnit m_Units;
+  AbstractGeometry::LengthUnit m_Units;
   std::string m_CellDataName;
 };
 } // namespace nx::core

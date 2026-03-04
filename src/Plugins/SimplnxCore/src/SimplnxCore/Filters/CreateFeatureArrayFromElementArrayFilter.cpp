@@ -18,7 +18,7 @@ namespace
 struct CopyCellDataFunctor
 {
   template <typename T>
-  Result<> operator()(const IDataArray* selectedCellArray, const Int32AbstractDataStore& featureIds, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
+  Result<> operator()(const AbstractDataArray* selectedCellArray, const Int32AbstractDataStore& featureIds, AbstractDataArray* createdArray, const std::atomic_bool& shouldCancel)
   {
     const auto& selectedCellStore = selectedCellArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& createdDataStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -141,7 +141,7 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
   auto pCellFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   auto pCreatedArrayNameValue = filterArgs.value<std::string>(k_CreatedArrayName_Key);
 
-  const auto& selectedCellArray = dataStructure.getDataRefAs<IDataArray>(pSelectedCellArrayPathValue);
+  const auto& selectedCellArray = dataStructure.getDataRefAs<AbstractDataArray>(pSelectedCellArrayPathValue);
   const IDataStore& selectedCellArrayStore = selectedCellArray.getIDataStoreRef();
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -177,9 +177,9 @@ Result<> CreateFeatureArrayFromElementArrayFilter::executeImpl(DataStructure& da
   auto pCreatedArrayNameValue = filterArgs.value<std::string>(k_CreatedArrayName_Key);
 
   const DataPath createdArrayPath = pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue);
-  const auto* selectedCellArray = dataStructure.getDataAs<IDataArray>(pSelectedCellArrayPathValue);
+  const auto* selectedCellArray = dataStructure.getDataAs<AbstractDataArray>(pSelectedCellArrayPathValue);
   const auto& featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue)->getDataStoreRef();
-  auto* createdArray = dataStructure.getDataAs<IDataArray>(createdArrayPath);
+  auto* createdArray = dataStructure.getDataAs<AbstractDataArray>(createdArrayPath);
 
   // Resize the created array to the proper size
   usize featureIdsMaxIdx = std::distance(featureIds.begin(), std::max_element(featureIds.cbegin(), featureIds.cend()));

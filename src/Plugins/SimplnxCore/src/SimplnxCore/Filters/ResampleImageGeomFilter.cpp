@@ -2,9 +2,9 @@
 
 #include "SimplnxCore/Filters/Algorithms/ResampleImageGeom.hpp"
 
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -252,7 +252,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
     for(const auto& [identifier, object] : *selectedCellData)
     {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      const auto& srcArray = dynamic_cast<const AbstractDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
       ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
@@ -282,14 +282,14 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
     for(const auto& [identifier, object] : *srcCellFeatureData)
     {
-      if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
+      if(const auto* srcArray = dynamic_cast<const AbstractDataArray*>(object.get()); srcArray != nullptr)
       {
         DataType dataType = srcArray->getDataType();
         ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
         DataPath dataArrayPath = destCellFeatureAmPath.createChildPath(srcArray->getName());
         resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
       }
-      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
+      else if(const auto* srcNeighborListArray = dynamic_cast<const AbstractNeighborList*>(object.get()); srcNeighborListArray != nullptr)
       {
         warningMsg += "\n" + cellFeatureAmPath.toString() + "/" + srcNeighborListArray->getName();
       }
@@ -307,7 +307,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   // This section copies any remaining data groups or data arrays that are loose
   // in the source image geometry and creates CopyDataObjectAction instances for
   // those objects
-  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, IDataObject::Type::AbstractDataObject, ignorePaths);
   if(childPaths.has_value())
   {
     for(const auto& childPath : childPaths.value())

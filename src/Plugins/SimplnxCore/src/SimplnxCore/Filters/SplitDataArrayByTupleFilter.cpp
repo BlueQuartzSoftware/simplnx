@@ -6,8 +6,8 @@
 
 #include "SimplnxCore/Filters/Algorithms/SplitDataArrayByTuple.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateDataGroupAction.hpp"
@@ -412,7 +412,7 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& inputArray = dataStructure.getDataRefAs<IArray>(pInputArrayPath);
+  const auto& inputArray = dataStructure.getDataRefAs<AbstractArray>(pInputArrayPath);
 
   // Output input array's tuple shape to preflight updated values
   std::vector<std::string> displayPaths = createDisplayPaths({pInputArrayPath.toString()}, {inputArray.getTupleShape()});
@@ -466,22 +466,22 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   {
     switch(inputArray.getArrayType())
     {
-    case IArray::ArrayType::DataArray: {
-      auto iInputDataArray = dynamic_cast<const IDataArray*>(&inputArray);
+    case AbstractArray::ArrayType::DataArray: {
+      auto iInputDataArray = dynamic_cast<const AbstractDataArray*>(&inputArray);
       ShapeType cDims = iInputDataArray->getComponentShape();
       resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(iInputDataArray->getDataType(), tupleShapes[i], cDims, arrayPaths[i]));
       break;
     }
-    case IArray::ArrayType::NeighborListArray: {
-      auto iInputNeighborList = dynamic_cast<const INeighborList*>(&inputArray);
+    case AbstractArray::ArrayType::NeighborListArray: {
+      auto iInputNeighborList = dynamic_cast<const AbstractNeighborList*>(&inputArray);
       resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(iInputNeighborList->getDataType(), tupleShapes[i], arrayPaths[i]));
       break;
     }
-    case IArray::ArrayType::StringArray: {
+    case AbstractArray::ArrayType::StringArray: {
       resultOutputActions.value().appendAction(std::make_unique<CreateStringArrayAction>(tupleShapes[i], arrayPaths[i]));
       break;
     }
-    case IArray::ArrayType::Any: {
+    case AbstractArray::ArrayType::Any: {
       return {MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
                                              fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", pInputArrayPath.toString())),
               preflightUpdatedValues};

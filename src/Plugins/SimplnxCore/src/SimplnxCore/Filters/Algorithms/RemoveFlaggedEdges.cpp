@@ -85,7 +85,7 @@ Result<> RemoveFlaggedEdges::operator()()
 {
   // Remove Edges from reduced according to removeEdgesIndex
   const auto& originalEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->EdgeGeometry);
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);

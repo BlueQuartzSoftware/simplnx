@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeTriangleAreasFilter
  * @brief This filter will compute the area for each triangle within a TriangleGeometry
  */
-class SIMPLNXCORE_EXPORT ComputeTriangleAreasFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeTriangleAreasFilter : public AbstractFilter
 {
 public:
   ComputeTriangleAreasFilter() = default;

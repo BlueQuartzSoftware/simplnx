@@ -135,13 +135,13 @@ private:
 
   static Result<> ReshapeArray(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)
   {
-    const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputArrayPath);
+    const auto& outputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(outputArrayPath);
     return ExecuteDataFunction(ReshapeDataArrayTemplateImpl{}, outputDataArray.getDataType(), dataStructure, inputArrayPath, outputArrayPath, messageHandler);
   }
 
   static Result<> ReshapeNeighborList(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)
   {
-    const auto& outputNeighborList = dataStructure.getDataRefAs<INeighborList>(outputArrayPath);
+    const auto& outputNeighborList = dataStructure.getDataRefAs<AbstractNeighborList>(outputArrayPath);
     return ExecuteNeighborFunction(ReshapeNeighborListTemplateImpl{}, outputNeighborList.getDataType(), dataStructure, inputArrayPath, outputArrayPath, messageHandler);
   }
 };

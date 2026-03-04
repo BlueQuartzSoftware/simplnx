@@ -35,8 +35,8 @@ public:
    * @param useEmptyDataStore
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& attributeMatrixName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& attributeMatrixName, AbstractDataObject::IdType importId,
+                    const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
   /**
    * @brief Attempts to write the AttributeMatrix to HDF5.
@@ -51,22 +51,22 @@ public:
 
   /**
    * @param Attempts to write the AttributeMatrix to HDF5.
-   * This method is returns an error if DataObject cannot be cast to an AttributeMatrix.
+   * This method is returns an error if AbstractDataObject cannot be cast to an AttributeMatrix.
    * Otherwise, this method returns the result of writeData(...)
    * @param dataStructureWriter
    * @param dataObject
    * @param parentWriter
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const override;
 
   /**
-   * @brief Returns the DataObject::Type for this IO class.
-   * @return DataObject::Type
+   * @brief Returns the AbstractDataObject::Type for this IO class.
+   * @return AbstractDataObject::Type
    */
-  DataObject::Type getDataType() const override;
+  AbstractDataObject::Type getDataType() const override;
 
   /**
-   * @brief Returns the DataObject type name as a string for this IO class.
+   * @brief Returns the AbstractDataObject type name as a string for this IO class.
    * @return std::string
    */
   std::string getTypeName() const override;

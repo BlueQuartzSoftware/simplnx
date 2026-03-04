@@ -2,9 +2,9 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
@@ -13,7 +13,7 @@ using namespace nx::core;
 
 namespace
 {
-FloatVec3 extractOrigin(const IGeometry& geometry)
+FloatVec3 extractOrigin(const AbstractGeometry& geometry)
 {
   auto geomType = geometry.getGeomType();
   switch(geomType)
@@ -89,7 +89,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Triangle:
     [[fallthrough]];
   case IGeometry::Type::Quad: {
-    const auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
+    const auto& geometry2d = dynamic_cast<const AbstractNodeGeometry2D&>(geometry);
     const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
@@ -109,7 +109,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Hexahedral:
     [[fallthrough]];
   case IGeometry::Type::Tetrahedral: {
-    const auto& geometry3d = dynamic_cast<const INodeGeometry3D&>(geometry);
+    const auto& geometry3d = dynamic_cast<const AbstractNodeGeometry3D&>(geometry);
     const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
     FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
@@ -133,7 +133,7 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   return origin;
 }
 
-FloatVec3 extractCentroid(const IGeometry& geometry)
+FloatVec3 extractCentroid(const AbstractGeometry& geometry)
 {
   FloatVec3 centroid(0.0f, 0.0f, 0.0f);
   switch(geometry.getGeomType())
@@ -232,7 +232,7 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   case IGeometry::Type::Triangle:
     [[fallthrough]];
   case IGeometry::Type::Quad: {
-    auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
+    auto& geometry2d = dynamic_cast<const AbstractNodeGeometry2D&>(geometry);
     const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
@@ -252,7 +252,7 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   case IGeometry::Type::Hexahedral:
     [[fallthrough]];
   case IGeometry::Type::Tetrahedral: {
-    const auto& geometry3d = dynamic_cast<const INodeGeometry3D&>(geometry);
+    const auto& geometry3d = dynamic_cast<const AbstractNodeGeometry3D&>(geometry);
     const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
@@ -273,7 +273,7 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   return centroid;
 }
 
-void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
+void translateGeometry(AbstractGeometry& geometry, const FloatVec3& translation)
 {
   switch(geometry.getGeomType())
   {
@@ -331,7 +331,7 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
   case IGeometry::Type::Quad:
     [[fallthrough]];
   case IGeometry::Type::Triangle: {
-    auto& geometry2d = dynamic_cast<INodeGeometry2D&>(geometry);
+    auto& geometry2d = dynamic_cast<AbstractNodeGeometry2D&>(geometry);
     auto& vertices = geometry2d.getVertices()->getDataStoreRef();
     for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
     {
@@ -345,7 +345,7 @@ void translateGeometry(IGeometry& geometry, const FloatVec3& translation)
   case IGeometry::Type::Hexahedral:
     [[fallthrough]];
   case IGeometry::Type::Tetrahedral: {
-    auto& geometry3d = dynamic_cast<INodeGeometry3D&>(geometry);
+    auto& geometry3d = dynamic_cast<AbstractNodeGeometry3D&>(geometry);
     auto& vertices = geometry3d.getVertices()->getDataStoreRef();
     for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
     {
@@ -380,8 +380,8 @@ Result<> AlignGeometries::operator()()
   auto targetGeometryPath = m_InputValues->InputTargetGeometryPath;
   auto alignmentType = m_InputValues->AlignmentTypeIndex;
 
-  auto& moving = m_DataStructure.getDataRefAs<IGeometry>(movingGeometryPath);
-  auto& target = m_DataStructure.getDataRefAs<IGeometry>(targetGeometryPath);
+  auto& moving = m_DataStructure.getDataRefAs<AbstractGeometry>(movingGeometryPath);
+  auto& target = m_DataStructure.getDataRefAs<AbstractGeometry>(targetGeometryPath);
 
   if(alignmentType == 0)
   {

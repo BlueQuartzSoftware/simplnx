@@ -16,7 +16,7 @@ struct CombineAttributeArraysImpl
 {
 
   template <typename DataType>
-  Result<> operator()(bool normalize, std::vector<DataObject*>& inputArraysVec, DataObject* outputArrayPtr)
+  Result<> operator()(bool normalize, std::vector<AbstractDataObject*>& inputArraysVec, AbstractDataObject* outputArrayPtr)
   {
     using OutputArrayType = DataArray<DataType>;
     using InputArrayType = DataArray<DataType>;
@@ -151,13 +151,13 @@ Result<> CombineAttributeArrays::operator()()
   {
     return {};
   }
-  std::vector<DataObject*> inputArrays;
+  std::vector<AbstractDataObject*> inputArrays;
   for(const auto& dataPath : m_InputValues->SelectedDataArrayPaths)
   {
     inputArrays.push_back(m_DataStructure.getData(dataPath));
   }
 
-  auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->StackedDataArrayPath);
+  auto& outputArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->StackedDataArrayPath);
 
   return ExecuteDataFunction(CombineAttributeArraysImpl{}, outputArray.getDataType(), m_InputValues->NormalizeData, inputArrays, m_DataStructure.getData(m_InputValues->StackedDataArrayPath));
 }

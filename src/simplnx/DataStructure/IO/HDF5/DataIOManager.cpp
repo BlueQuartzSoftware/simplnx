@@ -18,7 +18,7 @@
 namespace nx::core::HDF5
 {
 DataIOManager::DataIOManager()
-: IDataIOManager()
+: AbstractDataIOManager()
 {
   addCoreFactories();
 }

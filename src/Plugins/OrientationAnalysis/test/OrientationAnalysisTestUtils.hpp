@@ -25,23 +25,23 @@ namespace fs = std::filesystem;
 namespace AlignSectionsFeatureCentroidFilter
 {
 // Parameter Keys
-static inline constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
-static inline constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
-static inline constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+static constexpr StringLiteral k_UseReferenceSlice_Key = "use_reference_slice";
+static constexpr StringLiteral k_ReferenceSlice_Key = "reference_slice";
+static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 } // namespace AlignSectionsFeatureCentroidFilter
 
 namespace ReadTextDataArrayFilter
 {
-static inline constexpr StringLiteral k_InputFile_Key = "input_file";
-static inline constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
-static inline constexpr StringLiteral k_NTuples_Key = "number_tuples";
-static inline constexpr StringLiteral k_NComp_Key = "number_comp";
-static inline constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
-static inline constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_index";
-static inline constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
-static inline constexpr StringLiteral k_DataFormat_Key = "data_format";
-static inline constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
+static constexpr StringLiteral k_InputFile_Key = "input_file";
+static constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
+static constexpr StringLiteral k_NTuples_Key = "number_tuples";
+static constexpr StringLiteral k_NComp_Key = "number_comp";
+static constexpr StringLiteral k_NSkipLines_Key = "skip_line_count";
+static constexpr StringLiteral k_DelimiterChoice_Key = "delimiter_index";
+static constexpr StringLiteral k_DataArrayPath_Key = "output_data_array_path";
+static constexpr StringLiteral k_DataFormat_Key = "data_format";
+static constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
 } // namespace ReadTextDataArrayFilter
 
 namespace nx::core

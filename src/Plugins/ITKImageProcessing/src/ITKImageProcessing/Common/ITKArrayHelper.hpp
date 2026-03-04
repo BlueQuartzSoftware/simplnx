@@ -489,9 +489,9 @@ struct ConvertImageToDatastoreFunctor
 template <bool UseScalarV, bool UseVectorV, bool UseRgbRgbaV>
 struct ArrayComponentOptions
 {
-  static inline constexpr bool UsingScalar = UseScalarV;
-  static inline constexpr bool UsingVector = UseVectorV;
-  static inline constexpr bool UsingRgbRgba = UseRgbRgbaV;
+  static constexpr bool UsingScalar = UseScalarV;
+  static constexpr bool UsingVector = UseVectorV;
+  static constexpr bool UsingRgbRgba = UseRgbRgbaV;
 
   /*
    * The original implementation seemed to short circuit to vector if both were activated, but it's
@@ -503,16 +503,16 @@ struct ArrayComponentOptions
 template <bool UseInt8V, bool UseUInt8V, bool UseInt16V, bool UseUInt16V, bool UseInt32V, bool UseUInt32V, bool UseInt64V, bool UseUInt64V, bool UseFloat32V, bool UseFloat64V>
 struct ArrayTypeOptions
 {
-  static inline constexpr bool UsingInt8 = UseInt8V;
-  static inline constexpr bool UsingUInt8 = UseUInt8V;
-  static inline constexpr bool UsingInt16 = UseInt16V;
-  static inline constexpr bool UsingUInt16 = UseUInt16V;
-  static inline constexpr bool UsingInt32 = UseInt32V;
-  static inline constexpr bool UsingUInt32 = UseUInt32V;
-  static inline constexpr bool UsingInt64 = UseInt64V;
-  static inline constexpr bool UsingUInt64 = UseUInt64V;
-  static inline constexpr bool UsingFloat32 = UseFloat32V;
-  static inline constexpr bool UsingFloat64 = UseFloat64V;
+  static constexpr bool UsingInt8 = UseInt8V;
+  static constexpr bool UsingUInt8 = UseUInt8V;
+  static constexpr bool UsingInt16 = UseInt16V;
+  static constexpr bool UsingUInt16 = UseUInt16V;
+  static constexpr bool UsingInt32 = UseInt32V;
+  static constexpr bool UsingUInt32 = UseUInt32V;
+  static constexpr bool UsingInt64 = UseInt64V;
+  static constexpr bool UsingUInt64 = UseUInt64V;
+  static constexpr bool UsingFloat32 = UseFloat32V;
+  static constexpr bool UsingFloat64 = UseFloat64V;
 };
 
 template <class ComponentOptionsT, class TypeOptionsT>
@@ -930,7 +930,7 @@ template <class ArrayOptionsT, template <class> class OutputT = detail::DefaultO
 Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& imageGeomPath, const DataPath& outputArrayPath)
 {
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+  const auto& inputArray = dataStructure.getDataRefAs<AbstractDataArray>(inputArrayPath);
   const auto& inputDataStore = inputArray.getIDataStoreRef();
 
   return ArraySwitchFunc<detail::DataCheckImplFunctor, ArrayOptionsT, OutputActions, OutputT>(inputDataStore, imageGeom, -1, dataStructure, inputArrayPath, imageGeomPath, outputArrayPath);
@@ -942,8 +942,8 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
                                                                          const itk::ProgressObserver::Pointer progressObserver = nullptr)
 {
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  auto& outputArray = dataStructure.getDataRefAs<IDataArray>(outputArrayPath);
+  auto& inputArray = dataStructure.getDataRefAs<AbstractDataArray>(inputArrayPath);
+  auto& outputArray = dataStructure.getDataRefAs<AbstractDataArray>(outputArrayPath);
   auto& inputDataStore = inputArray.getIDataStoreRef();
   auto& outputDataStore = outputArray.getIDataStoreRef();
 

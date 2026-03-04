@@ -2,7 +2,7 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -18,31 +18,31 @@ T* createGeom(DataStructure& dataStructure)
   return output;
 }
 
-static const IGeometry::SharedVertexList* createVertexList(IGeometry* geom)
+static const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry* geom)
 {
   auto dataStructure = geom->getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{0}, std::vector<usize>{3}, 0.0f);
-  auto dataArr = IGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), geom->getId());
+  auto dataArr = AbstractGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), geom->getId());
   REQUIRE(dataArr != nullptr);
-  return dynamic_cast<const IGeometry::SharedVertexList*>(dataArr);
+  return dynamic_cast<const AbstractGeometry::SharedVertexList*>(dataArr);
 }
 
-static const IGeometry::SharedEdgeList* createEdgeList(IGeometry* geom)
+static const AbstractGeometry::SharedEdgeList* createEdgeList(AbstractGeometry* geom)
 {
   auto dataStructure = geom->getDataStructure();
-  auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  auto dataArr = IGeometry::SharedEdgeList::Create(*dataStructure, "Edges", std::move(dataStore), geom->getId());
+  auto dataStore = std::make_unique<DataStore<AbstractGeometry::MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
+  auto dataArr = AbstractGeometry::SharedEdgeList::Create(*dataStructure, "Edges", std::move(dataStore), geom->getId());
   REQUIRE(dataArr != nullptr);
-  return dynamic_cast<const IGeometry::SharedEdgeList*>(dataArr);
+  return dynamic_cast<const AbstractGeometry::SharedEdgeList*>(dataArr);
 }
 
-static const IGeometry::SharedFaceList* createFaceList(IGeometry* geom)
+static const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry* geom)
 {
   auto dataStructure = geom->getDataStructure();
-  auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4}, 0);
-  auto dataArr = IGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), geom->getId());
+  auto dataStore = std::make_unique<DataStore<AbstractGeometry::MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4}, 0);
+  auto dataArr = AbstractGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), geom->getId());
   REQUIRE(dataArr != nullptr);
-  return dynamic_cast<const IGeometry::SharedFaceList*>(dataArr);
+  return dynamic_cast<const AbstractGeometry::SharedFaceList*>(dataArr);
 }
 
 } // namespace nx::core

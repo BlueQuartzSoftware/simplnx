@@ -64,10 +64,10 @@ TEST_CASE("SimplnxCore::ComputeSurfaceAreaToVolume", "[SimplnxCore][ComputeSurfa
   {
     DataPath exemplarPath({k_DataContainer, k_CellFeatureData, k_SurfaceAreaVolumeRationArrayName});
     DataPath calculatedPath({k_DataContainer, k_CellFeatureData, k_SurfaceAreaVolumeRationArrayNameNX});
-    CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(exemplarPath), dataStructure.getDataRefAs<IDataArray>(calculatedPath));
+    CompareDataArrays<float32>(dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath), dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath));
     exemplarPath = DataPath({k_DataContainer, k_CellFeatureData, k_SphericityArrayName});
     calculatedPath = DataPath({k_DataContainer, k_CellFeatureData, k_SphericityArrayNameNX});
-    CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(exemplarPath), dataStructure.getDataRefAs<IDataArray>(calculatedPath));
+    CompareDataArrays<float32>(dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath), dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath));
   }
 
 // Write the DataStructure out to the file system

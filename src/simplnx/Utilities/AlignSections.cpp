@@ -22,7 +22,7 @@ public:
   AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default;     // Copy Constructor Default Implemented
   AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&) noexcept = default; // Move Constructor Default Implemented
 
-  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
+  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, AbstractDataArray& dataArray)
   : m_Filter(filter)
   , m_Dims(std::move(dims))
   , m_Xshifts(std::move(xShifts))
@@ -157,7 +157,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
     }
 
     m_MessageHelper.sendMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
-    auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
+    auto& cellArray = m_DataStructure.getDataRefAs<AbstractDataArray>(cellArrayPath);
     ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
   }
 

@@ -321,7 +321,7 @@ Result<ReadVolumeGraphicsFileFilter::HeaderMetadata> ReadHeaderMetaData(const st
   metadata.Spacing = geomBlock.Resolution;
   if(geomBlock.Unit == k_Millimeter)
   {
-    metadata.Units = IGeometry::LengthUnit::Millimeter;
+    metadata.Units = AbstractGeometry::LengthUnit::Millimeter;
   }
 
   const fs::path fiHdr = fs::path(vgHeaderFilePath);

@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -15,7 +15,7 @@ namespace nx::core
  * any Element can be used to determine the Ensemble of the Feature that owns
  * that Element.
  */
-class SIMPLNXCORE_EXPORT ComputeFeaturePhasesFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeFeaturePhasesFilter : public AbstractFilter
 {
 public:
   ComputeFeaturePhasesFilter() = default;

@@ -3,7 +3,7 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry3DAction.hpp"
@@ -112,8 +112,8 @@ Parameters CreateGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GeometryType_Key, "Geometry Type", "The type of Geometry to create", 0, GetAllGeometryTypesAsStrings()));
-  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnitType_Key, "Length Unit", "The length unit to be used in the geometry", to_underlying(IGeometry::LengthUnit::Millimeter),
-                                                   IGeometry::GetAllLengthUnitStrings()));
+  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnitType_Key, "Length Unit", "The length unit to be used in the geometry", to_underlying(AbstractGeometry::LengthUnit::Millimeter),
+                                                   AbstractGeometry::GetAllLengthUnitStrings()));
   params.insert(std::make_unique<BoolParameter>(k_WarningsAsErrors_Key, "Treat Geometry Warnings as Errors", "Whether run time warnings for Geometries should be treated as errors", false));
   params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling",
                                                    "Determines if the arrays that make up the geometry primitives should be Moved or Copied to the created Geometry object.",
@@ -149,13 +149,13 @@ Parameters CreateGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryPath_Key, "Geometry Name", "The complete path to the geometry to be created", DataPath({"Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Attribute Matrix", "The name of the vertex attribute matrix to be created with the geometry",
-                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
+                                                          AbstractNodeGeometry0D::k_VertexAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_EdgeAttributeMatrixName_Key, "Edge Attribute Matrix", "The name of the edge attribute matrix to be created with the geometry",
-                                                          INodeGeometry1D::k_EdgeAttributeMatrixName));
+                                                          AbstractNodeGeometry1D::k_EdgeAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FaceAttributeMatrixName_Key, "Face Attribute Matrix", "The name of the face attribute matrix to be created with the geometry",
-                                                          INodeGeometry2D::k_FaceAttributeMatrixName));
+                                                          AbstractNodeGeometry2D::k_FaceAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell attribute matrix to be created with the geometry",
-                                                          IGridGeometry::k_CellAttributeMatrixName));
+                                                          AbstractGridGeometry::k_CellAttributeMatrixName));
 
   // setup linked parameters
   // image
@@ -345,8 +345,8 @@ Result<> CreateGeometryFilter::executeImpl(DataStructure& dataStructure, const A
   auto geometryType = filterArgs.value<ChoicesParameter::ValueType>(k_GeometryType_Key);
   auto treatWarningsAsErrors = filterArgs.value<bool>(k_WarningsAsErrors_Key);
 
-  auto* iGeometry = dataStructure.getDataAs<IGeometry>(geometryPath);
-  auto lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key));
+  auto* iGeometry = dataStructure.getDataAs<AbstractGeometry>(geometryPath);
+  auto lengthUnit = static_cast<AbstractGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnitType_Key));
   iGeometry->setUnits(lengthUnit);
 
   DataPath sharedVertexListArrayPath;
@@ -487,7 +487,7 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
   auto result = SIMPLConversion::ChoiceFilterParameterConverter::convert(json[SIMPL::k_GeometryTypeKey]);
   if(result.valid())
   {
-    auto geometryType = static_cast<IGeometry::Type>(result.value());
+    auto geometryType = static_cast<AbstractGeometry::Type>(result.value());
     switch(geometryType)
     {
     case IGeometry::Type::Vertex: {

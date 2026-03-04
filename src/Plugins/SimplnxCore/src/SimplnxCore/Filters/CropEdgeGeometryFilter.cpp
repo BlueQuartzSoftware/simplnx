@@ -1,8 +1,8 @@
 #include "CropEdgeGeometryFilter.hpp"
 
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
@@ -207,7 +207,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     DataPath newEdgeAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedEdgeData.getName());
     for(const auto& [identifier, object] : selectedEdgeData)
     {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      const auto& srcArray = dynamic_cast<const AbstractDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
       ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newEdgeAttributeMatrixPath.createChildPath(srcArray.getName());
@@ -218,7 +218,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     // in the destination edge geometry's vertex attribute matrix
     DataPath newVertexAttributeMatrixPath = destEdgeGeomPath.createChildPath(selectedVertexData.getName());
 
-    auto vertexArraysResult = selectedVertexData.findAllChildrenOfType<IDataArray>();
+    auto vertexArraysResult = selectedVertexData.findAllChildrenOfType<AbstractDataArray>();
     if(!vertexArraysResult.empty())
     {
       // Detected at least one vertex array, throw a warning
@@ -228,7 +228,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
 
     for(const auto& [identifier, object] : selectedVertexData)
     {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      const auto& srcArray = dynamic_cast<const AbstractDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
       ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newVertexAttributeMatrixPath.createChildPath(srcArray.getName());
@@ -246,7 +246,7 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   // This section covers copying the other Attribute Matrix objects from the source geometry
   // to the destination geometry
 
-  auto childPaths = GetAllChildDataPaths(dataStructure, srcEdgeGeomPath, DataObject::Type::DataObject, ignorePaths);
+  auto childPaths = GetAllChildDataPaths(dataStructure, srcEdgeGeomPath, IDataObject::Type::AbstractDataObject, ignorePaths);
   if(childPaths.has_value())
   {
     for(const auto& childPath : childPaths.value())

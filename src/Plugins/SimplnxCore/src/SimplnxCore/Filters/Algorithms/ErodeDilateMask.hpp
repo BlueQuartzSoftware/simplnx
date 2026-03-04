@@ -14,12 +14,12 @@ namespace nx::core
 {
 namespace detail
 {
-static inline constexpr StringLiteral k_DilateString = "Dilate";
-static inline constexpr StringLiteral k_ErodeString = "Erode";
+static constexpr StringLiteral k_DilateString = "Dilate";
+static constexpr StringLiteral k_ErodeString = "Erode";
 static inline const ChoicesParameter::Choices k_OperationChoices = {k_DilateString, k_ErodeString};
 
-static inline constexpr ChoicesParameter::ValueType k_DilateIndex = 0ULL;
-static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
+static constexpr ChoicesParameter::ValueType k_DilateIndex = 0ULL;
+static constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
 } // namespace detail
 
 struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues

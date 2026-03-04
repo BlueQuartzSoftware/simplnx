@@ -64,9 +64,9 @@ public:
 
   /**
    * @brief Returns a const pointer to the target geometry.
-   * @return IGeometry*
+   * @return AbstractGeometry*
    */
-  const IGeometry* getGeometry() const override;
+  const AbstractGeometry* getGeometry() const override;
 
   /**
    * @brief Returns a TooltipGenerator containing information for generating an

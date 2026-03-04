@@ -10,13 +10,13 @@
 using namespace nx::core;
 
 TriangleGeom::TriangleGeom(DataStructure& dataStructure, std::string name)
-: INodeGeometry2D(dataStructure, std::move(name))
+: AbstractNodeGeometry2D(dataStructure, std::move(name))
 {
   m_UnitDimensionality = 2;
 }
 
 TriangleGeom::TriangleGeom(DataStructure& dataStructure, std::string name, IdType importId)
-: INodeGeometry2D(dataStructure, std::move(name), importId)
+: AbstractNodeGeometry2D(dataStructure, std::move(name), importId)
 {
   m_UnitDimensionality = 2;
 }
@@ -26,9 +26,9 @@ IGeometry::Type TriangleGeom::getGeomType() const
   return IGeometry::Type::Triangle;
 }
 
-DataObject::Type TriangleGeom::getDataObjectType() const
+AbstractDataObject::Type TriangleGeom::getDataObjectType() const
 {
-  return DataObject::Type::TriangleGeom;
+  return IDataObject::Type::TriangleGeom;
 }
 
 BaseGroup::GroupType TriangleGeom::getGroupType() const
@@ -66,12 +66,12 @@ std::string TriangleGeom::getTypeName() const
   return k_TypeName;
 }
 
-DataObject* TriangleGeom::shallowCopy()
+AbstractDataObject* TriangleGeom::shallowCopy()
 {
   return new TriangleGeom(*this);
 }
 
-std::shared_ptr<DataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> TriangleGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure

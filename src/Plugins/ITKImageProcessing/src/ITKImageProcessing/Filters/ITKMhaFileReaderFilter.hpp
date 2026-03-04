@@ -1,13 +1,13 @@
 #pragma once
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
 namespace nx::core
 {
-class ITKIMAGEPROCESSING_EXPORT ITKMhaFileReaderFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKMhaFileReaderFilter : public AbstractFilter
 {
 public:
   ITKMhaFileReaderFilter() = default;

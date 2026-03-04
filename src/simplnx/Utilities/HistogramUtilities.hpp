@@ -4,7 +4,7 @@
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/Math/StatisticsCalculations.hpp"
@@ -238,7 +238,7 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
 struct GenerateHistogramFunctor
 {
   template <typename Type, class... ArgsT>
-  Result<> operator()(const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args) const
+  Result<> operator()(const AbstractDataArray* inputArray, AbstractDataArray* binRangesArray, ArgsT&&... args) const
   {
     const auto& inputStore = inputArray->template getIDataStoreRefAs<AbstractDataStore<Type>>();
 
@@ -249,7 +249,7 @@ struct GenerateHistogramFunctor
   }
 
   template <typename Type, class... ArgsT>
-  Result<> operator()(const IDataArray* inputArray, IDataArray* binRangesArray, std::pair<float64, float64>&& rangeMinMax, ArgsT&&... args) const
+  Result<> operator()(const AbstractDataArray* inputArray, AbstractDataArray* binRangesArray, std::pair<float64, float64>&& rangeMinMax, ArgsT&&... args) const
   {
     const auto& inputStore = inputArray->template getIDataStoreRefAs<AbstractDataStore<Type>>();
 
@@ -291,7 +291,7 @@ public:
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, std::pair<float64, float64>&& rangeMinMax, const std::atomic_bool& shouldCancel,
                         const int32 numBins, AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore,
-                        const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow)
+                        const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -315,7 +315,7 @@ public:
    * @param overflow this is an atomic counter for the number of values that fall outside the bin range
    */
   GenerateHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const std::atomic_bool& shouldCancel, const int32 numBins,
-                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+                        AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask,
                         std::atomic<usize>& overflow)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
@@ -378,7 +378,7 @@ private:
   AbstractDataStore<Type>& m_BinRangesStore;
   AbstractDataStore<SizeType>& m_HistogramStore;
   AbstractDataStore<SizeType>& m_MostPopulatedStore;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& m_Mask;
   std::atomic<usize>& m_Overflow;
 };
 
@@ -387,7 +387,7 @@ using FeatureHasDataStats = std::tuple<std::vector<uint64>, std::vector<T>, std:
 
 template <typename T>
 FeatureHasDataStats<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& inputDataStore, const AbstractDataStore<int32>& featureIdsStore, usize startFeatureId, usize endFeatureId,
-                                                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const std::function<void(const std::string&)>& msgHandler,
+                                                    const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, const std::function<void(const std::string&)>& msgHandler,
                                                     const std::atomic_bool& shouldCancel)
 {
   std::chrono::steady_clock::time_point initialTime = std::chrono::steady_clock::now();
@@ -472,7 +472,7 @@ public:
    * @param shouldCancel this is an atomic value that will determine whether execution ends early
    */
   CalculateModalBinRangesImpl(const AbstractDataStore<Type>& inputStore, const AbstractDataStore<Type>& binRangesStore, NeighborList<Type>& modalBinRanges,
-                              const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const std::atomic_bool& shouldCancel)
+                              const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, const std::atomic_bool& shouldCancel)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_BinRangesStore(binRangesStore)
@@ -526,7 +526,7 @@ private:
   const AbstractDataStore<Type>& m_InputStore;
   const AbstractDataStore<Type>& m_BinRangesStore;
   NeighborList<Type>& m_ModalBinRanges;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& m_Mask;
 };
 
 /**
@@ -537,7 +537,7 @@ private:
 struct CalculateModalBinRangesImplFunctor
 {
   template <typename T, class... ArgsT>
-  auto operator()(const IDataArray* inputArray, const IDataArray* binRangesArray, INeighborList* modalBinRangesNL, ArgsT&&... args)
+  auto operator()(const AbstractDataArray* inputArray, const AbstractDataArray* binRangesArray, AbstractNeighborList* modalBinRangesNL, ArgsT&&... args)
   {
     NeighborList<T>& modalBinRanges = *(dynamic_cast<NeighborList<T>*>(modalBinRangesNL));
     return CalculateModalBinRangesImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), modalBinRanges,
@@ -553,7 +553,7 @@ struct CalculateModalBinRangesImplFunctor
 struct InstantiateHistogramImplFunctor
 {
   template <typename T, class... ArgsT>
-  auto operator()(const IDataArray* inputArray, IDataArray* binRangesArray, ArgsT&&... args)
+  auto operator()(const AbstractDataArray* inputArray, AbstractDataArray* binRangesArray, ArgsT&&... args)
   {
     return GenerateHistogramImpl(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), binRangesArray->template getIDataStoreRefAs<AbstractDataStore<T>>(), std::forward<ArgsT>(args)...);
   }

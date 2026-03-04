@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -31,7 +31,7 @@ namespace nx::core
  * ITK Module: ITKSmoothing
  * ITK Group: Smoothing
  */
-class ITKIMAGEPROCESSING_EXPORT ITKMedianImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKMedianImageFilter : public AbstractFilter
 {
 public:
   ITKMedianImageFilter() = default;

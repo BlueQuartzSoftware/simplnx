@@ -26,7 +26,7 @@ public:
     return Pointer(static_cast<Self*>(nullptr));
   }
 
-  SilhouetteTemplate(const IDataArray& inputIDataArray, Float64AbstractDataStore& outputDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray, usize numClusters,
+  SilhouetteTemplate(const AbstractDataArray& inputIDataArray, Float64AbstractDataStore& outputDataArray, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& maskDataArray, usize numClusters,
                      const Int32AbstractDataStore& featureIds, ClusterUtilities::DistanceMetric distMetric)
   : m_InputData(inputIDataArray.template getIDataStoreRefAs<AbstractDataStoreT>())
   , m_OutputData(outputDataArray)
@@ -125,7 +125,7 @@ private:
   const AbstractDataStoreT& m_InputData;
   Float64AbstractDataStore& m_OutputData;
   const Int32AbstractDataStore& m_FeatureIds;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
+  const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& m_Mask;
   usize m_NumClusters;
   ClusterUtilities::DistanceMetric m_DistMetric;
 };
@@ -167,8 +167,8 @@ Result<> Silhouette::operator()()
     uniqueIds.insert(featureIds[i]);
   }
 
-  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  auto& clusteringArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->ClusteringArrayPath);
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);

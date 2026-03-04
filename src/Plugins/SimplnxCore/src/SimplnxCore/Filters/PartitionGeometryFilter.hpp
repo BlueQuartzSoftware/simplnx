@@ -6,10 +6,10 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -31,7 +31,7 @@ namespace nx::core
  * possible, using this mode, to create a partitioning scheme that does not completely fit the input geometry.
  * In this case, the out-of-bounds value is used to label those particular cells/vertices.
  */
-class SIMPLNXCORE_EXPORT PartitionGeometryFilter : public IFilter
+class SIMPLNXCORE_EXPORT PartitionGeometryFilter : public AbstractFilter
 {
 public:
   PartitionGeometryFilter() = default;
@@ -173,7 +173,7 @@ protected:
    */
   static Result<> DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis);
 
-  static Result<> DataCheckDimensionality(const INodeGeometry0D& geometry);
+  static Result<> DataCheckDimensionality(const AbstractNodeGeometry0D& geometry);
 
   Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
                                                                 const DataPath& attrMatrixPath) const;

@@ -3,7 +3,7 @@
 #include "@PLUGIN_NAME@/@PLUGIN_NAME@_export.hpp"
 
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class @FILTER_NAME@
  * @brief This filter will ....
  */
-class @PLUGIN_NAME_UPPER@_EXPORT @FILTER_NAME@ : public IFilter
+class @PLUGIN_NAME_UPPER@_EXPORT @FILTER_NAME@ : public AbstractFilter
 {
 public:
   @FILTER_NAME@() = default;

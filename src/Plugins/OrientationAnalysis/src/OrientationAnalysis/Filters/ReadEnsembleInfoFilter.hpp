@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ReadEnsembleInfoFilter
  * @brief This filter reads in information about the crystal structure and phase types of all the Features that are contained in a Cell based volume.
  */
-class ORIENTATIONANALYSIS_EXPORT ReadEnsembleInfoFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ReadEnsembleInfoFilter : public AbstractFilter
 {
 public:
   ReadEnsembleInfoFilter() = default;

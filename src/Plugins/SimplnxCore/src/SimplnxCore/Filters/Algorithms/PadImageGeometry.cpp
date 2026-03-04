@@ -14,7 +14,8 @@ template <typename T>
 class PadImageGeomDataArray
 {
 public:
-  PadImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, const PadImageGeometryInputValues* inputValues, const std::atomic_bool& shouldCancel)
+  PadImageGeomDataArray(const AbstractDataArray& oldCellArray, AbstractDataArray& newCellArray, const ImageGeom& srcImageGeom, const PadImageGeometryInputValues* inputValues,
+                        const std::atomic_bool& shouldCancel)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SrcImageGeom(srcImageGeom)
@@ -147,10 +148,10 @@ Result<> PadImageGeometry::operator()()
       return {};
     }
 
-    const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
+    const auto& oldDataArray = dynamic_cast<const AbstractDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
 
-    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+    auto& newDataArray = dynamic_cast<AbstractDataArray&>(destCellDataAM.at(srcName));
 
     m_MessageHandler(fmt::format("Padding Volume || Copying Data Array {}", srcName));
     ExecuteParallelFunction<PadImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, m_InputValues, m_ShouldCancel);

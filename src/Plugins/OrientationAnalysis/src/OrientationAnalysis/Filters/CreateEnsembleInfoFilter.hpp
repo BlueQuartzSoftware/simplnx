@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class CreateEnsembleInfoFilter
  * @brief This filter will ....
  */
-class ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfoFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT CreateEnsembleInfoFilter : public AbstractFilter
 {
 public:
   CreateEnsembleInfoFilter() = default;

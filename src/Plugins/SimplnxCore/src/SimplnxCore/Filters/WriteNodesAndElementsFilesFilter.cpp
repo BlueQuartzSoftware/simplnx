@@ -109,7 +109,7 @@ IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const D
                                            "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
   }
 
-  auto& selectedGeometry = dataStructure.getDataRefAs<IGeometry>(selectedGeometryPath);
+  auto& selectedGeometry = dataStructure.getDataRefAs<AbstractGeometry>(selectedGeometryPath);
   if(selectedGeometry.getGeomType() == IGeometry::Type::Vertex && writeElementFile)
   {
     return {MakeErrorResult<OutputActions>(

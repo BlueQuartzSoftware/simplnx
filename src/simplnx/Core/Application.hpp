@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Core/Preferences.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/Filter/FilterList.hpp"
 #include "simplnx/Plugin/AbstractPlugin.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -15,7 +15,7 @@
 namespace nx::core
 {
 class DataIOCollection;
-class IDataIOManager;
+class AbstractDataIOManager;
 class JsonPipelineBuilder;
 
 /**
@@ -32,7 +32,7 @@ class JsonPipelineBuilder;
 class SIMPLNX_EXPORT Application
 {
 public:
-  using name_type_map = std::map<std::string, DataObject::Type>;
+  using name_type_map = std::map<std::string, AbstractDataObject::Type>;
 
   /**
    * @brief Destroys the Application. If the destroyed Application matches the
@@ -114,7 +114,7 @@ public:
 
   std::shared_ptr<DataIOCollection> getIOCollection() const;
 
-  std::shared_ptr<IDataIOManager> getIOManager(const std::string& formatName) const;
+  std::shared_ptr<AbstractDataIOManager> getIOManager(const std::string& formatName) const;
 
   template <typename T>
   std::shared_ptr<T> getIOManagerAs(const std::string& formatName) const
@@ -146,9 +146,9 @@ public:
    */
   std::vector<Uuid> getSimplUuid(const Uuid& simplnxUuid);
 
-  void addDataType(DataObject::Type type, const std::string& name);
+  void addDataType(AbstractDataObject::Type type, const std::string& name);
 
-  DataObject::Type getDataType(const std::string& name) const;
+  AbstractDataObject::Type getDataType(const std::string& name) const;
 
   std::vector<std::string> getDataStoreFormats() const;
 

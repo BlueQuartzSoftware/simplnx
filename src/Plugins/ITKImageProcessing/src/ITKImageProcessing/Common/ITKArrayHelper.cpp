@@ -53,7 +53,7 @@ bool ITK::DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageG
 
 Result<> ITK::CheckImageType(const std::vector<DataType>& types, const DataStructure& dataStructure, const DataPath& path)
 {
-  const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
+  const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(path);
 
   DataType dataType = dataArray.getDataType();
   auto iter = std::find(types.cbegin(), types.cend(), dataType);

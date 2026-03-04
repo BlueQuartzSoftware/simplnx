@@ -23,22 +23,22 @@ constexpr usize k_VertexCompCount = 3;
 constexpr usize k_FaceTupleCount = 4;
 constexpr usize k_FaceCompCount = 3;
 
-static const IGeometry::SharedVertexList* createVertexList(IGeometry& geom, const DataObject::IdType parentId)
+static const AbstractGeometry::SharedVertexList* createVertexList(AbstractGeometry& geom, const AbstractDataObject::IdType parentId)
 {
   auto dataStructure = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{k_VertexTupleCount}, std::vector<usize>{k_VertexCompCount}, 0.0f);
-  auto* dataArr = IGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), parentId);
+  auto* dataArr = AbstractGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), parentId);
   REQUIRE(dataArr != nullptr);
-  return dynamic_cast<IGeometry::SharedVertexList*>(dataArr);
+  return dynamic_cast<AbstractGeometry::SharedVertexList*>(dataArr);
 }
 
-static const IGeometry::SharedFaceList* createFaceList(IGeometry& geom, const DataObject::IdType parentId)
+static const AbstractGeometry::SharedFaceList* createFaceList(AbstractGeometry& geom, const AbstractDataObject::IdType parentId)
 {
   auto dataStructure = geom.getDataStructure();
-  auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{k_FaceTupleCount}, std::vector<usize>{k_FaceCompCount}, 0);
-  auto* dataArr = IGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), parentId);
+  auto dataStore = std::make_unique<DataStore<AbstractGeometry::MeshIndexType>>(std::vector<usize>{k_FaceTupleCount}, std::vector<usize>{k_FaceCompCount}, 0);
+  auto* dataArr = AbstractGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), parentId);
   REQUIRE(dataArr != nullptr);
-  return dynamic_cast<IGeometry::SharedFaceList*>(dataArr);
+  return dynamic_cast<AbstractGeometry::SharedFaceList*>(dataArr);
 }
 
 } // namespace
@@ -52,9 +52,9 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   std::string dihedralAnglesDataArrayName = "DihedralAngles";
   DataStructure dataStructure;
   TriangleGeom& acuteTriangle = *TriangleGeom::Create(dataStructure, triangleGeometryName);
-  AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceAttributeMatrixName, {k_FaceTupleCount}, acuteTriangle.getId());
+  AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, AbstractNodeGeometry2D::k_FaceAttributeMatrixName, {k_FaceTupleCount}, acuteTriangle.getId());
   acuteTriangle.setFaceAttributeMatrix(*faceData);
-  AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, {k_VertexTupleCount}, acuteTriangle.getId());
+  AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, AbstractNodeGeometry0D::k_VertexAttributeMatrixName, {k_VertexTupleCount}, acuteTriangle.getId());
   acuteTriangle.setVertexAttributeMatrix(*vertData);
   auto vertexList = createVertexList(acuteTriangle, vertData->getId());
   auto facesList = createFaceList(acuteTriangle, faceData->getId());
@@ -70,7 +70,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
     underlyingStoreV->setValue(count++, element);
   }
   // load face list
-  std::vector<IGeometry::MeshIndexType> faces = {0, 1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10};
+  std::vector<AbstractGeometry::MeshIndexType> faces = {0, 1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10};
   count = 0;
   for(auto element : faces)
   {
@@ -84,7 +84,7 @@ TEST_CASE("SimplnxCore::TriangleDihedralAngleFilter[valid results]", "[SimplnxCo
   std::string triangleDihedralAnglesName = "Triangle Dihedral Angles";
 
   DataPath geometryPath = dataStructure.getDataPathsForId(acuteTriangle.getId())[0];
-  DataPath triangleDihedralAnglesDataPath = geometryPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName).createChildPath(triangleDihedralAnglesName);
+  DataPath triangleDihedralAnglesDataPath = geometryPath.createChildPath(AbstractNodeGeometry2D::k_FaceAttributeMatrixName).createChildPath(triangleDihedralAnglesName);
 
   // Create default Parameters for the filter.
   args.insertOrAssign(TriangleDihedralAngleFilter::k_TGeometryDataPath_Key, std::make_any<DataPath>(geometryPath));

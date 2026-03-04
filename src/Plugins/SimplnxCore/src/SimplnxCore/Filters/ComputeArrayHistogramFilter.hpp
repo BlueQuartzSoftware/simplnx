@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeArrayHistogram
  * @brief This filter calculate the frequency histogram of a data structure
  */
-class SIMPLNXCORE_EXPORT ComputeArrayHistogramFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeArrayHistogramFilter : public AbstractFilter
 {
 public:
   ComputeArrayHistogramFilter() = default;

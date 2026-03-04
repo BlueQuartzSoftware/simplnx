@@ -3,8 +3,8 @@
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -143,21 +143,21 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
+  const AbstractDataObject* object = dataStructure.getData(value);
   if(object == nullptr)
   {
     return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto* iArrayPtr = dynamic_cast<const IArray*>(object);
+  const auto* iArrayPtr = dynamic_cast<const AbstractArray*>(object);
   if(iArrayPtr == nullptr)
   {
     return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
   }
 
-  // Only validate IDataArray? Ignore StringData Array because there is only a
+  // Only validate AbstractDataArray? Ignore StringData Array because there is only a
   // single type and component dims do not matter?
-  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
+  const auto* dataArray = dynamic_cast<const AbstractDataArray*>(object);
   if(dataArray != nullptr)
   {
     if(!m_AllowedTypes.empty())
@@ -219,7 +219,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
+  AbstractDataObject* object = dataStructure.getData(path);
   return {{object}};
 }
 

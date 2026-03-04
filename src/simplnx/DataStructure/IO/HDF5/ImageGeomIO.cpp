@@ -31,9 +31,9 @@ namespace nx::core::HDF5
 ImageGeomIO::ImageGeomIO() = default;
 ImageGeomIO::~ImageGeomIO() noexcept = default;
 
-DataObject::Type ImageGeomIO::getDataType() const
+AbstractDataObject::Type ImageGeomIO::getDataType() const
 {
-  return DataObject::Type::ImageGeom;
+  return IDataObject::Type::ImageGeom;
 }
 
 std::string ImageGeomIO::getTypeName() const
@@ -41,8 +41,8 @@ std::string ImageGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                               const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, AbstractDataObject::IdType importId,
+                               const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* imageGeom = ImageGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
 
@@ -59,7 +59,7 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
     if(const auto unitsAttr = groupReader.readScalarAttribute<uint32>(IOConstants::k_H5_UNITS); unitsAttr.valid())
     {
       auto value = unitsAttr.value();
-      imageGeom->setUnits(static_cast<IGeometry::LengthUnit>(value));
+      imageGeom->setUnits(static_cast<AbstractGeometry::LengthUnit>(value));
     }
 
     auto volDimsVectorResult = groupReader.readVectorAttribute<usize>(IOConstants::k_H5_DIMENSIONS);
@@ -98,12 +98,12 @@ Result<> ImageGeomIO::readData(DataStructureReader& dataStructureReader, const g
   imageGeom->setSpacing(spacing);
   imageGeom->setOrigin(origin);
 
-  return IGridGeometryIO::ReadGridGeometryData(dataStructureReader, *imageGeom, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  return AbstractGridGeometryIO::ReadGridGeometryData(dataStructureReader, *imageGeom, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
 Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const ImageGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
 {
-  Result<> result = IGridGeometryIO::WriteGridGeometryData(dataStructureWriter, geometry, parentGroupWriter, importable);
+  Result<> result = AbstractGridGeometryIO::WriteGridGeometryData(dataStructureWriter, geometry, parentGroupWriter, importable);
   if(result.invalid())
   {
     return result;
@@ -136,7 +136,7 @@ Result<> ImageGeomIO::writeData(DataStructureWriter& dataStructureWriter, const 
   return {};
 }
 
-Result<> ImageGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> ImageGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }

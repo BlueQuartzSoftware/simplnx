@@ -19,7 +19,7 @@ template <typename T>
 class ResampleImageGeomArrayImpl
 {
 public:
-  ResampleImageGeomArrayImpl(ResampleImageGeom* algorithm, const IDataArray& srcArray, IDataArray& destArray, const ImageGeom& srcImageGeom, const ImageGeom& destImageGeom,
+  ResampleImageGeomArrayImpl(ResampleImageGeom* algorithm, const AbstractDataArray& srcArray, AbstractDataArray& destArray, const ImageGeom& srcImageGeom, const ImageGeom& destImageGeom,
                              const std::atomic_bool& shouldCancel)
   : m_AlgorithmPtr(algorithm)
   , m_SrcArray(srcArray)
@@ -78,8 +78,8 @@ public:
 
 private:
   ResampleImageGeom* m_AlgorithmPtr = nullptr;
-  const IDataArray& m_SrcArray;
-  IDataArray& m_DestArray;
+  const AbstractDataArray& m_SrcArray;
+  AbstractDataArray& m_DestArray;
   const ImageGeom& m_SrcImageGeom;
   const ImageGeom& m_DestImageGeom;
   const std::atomic_bool& m_ShouldCancel;
@@ -131,10 +131,10 @@ Result<> ResampleImageGeom::operator()()
     }
 
     arrayIndex++;
-    const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
+    const auto& oldDataArray = dynamic_cast<const AbstractDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
-    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Resampling Data Array: '{}' ({}/{})", srcName, arrayIndex, totalArrays));
+    auto& newDataArray = dynamic_cast<AbstractDataArray&>(destCellDataAM.at(srcName));
+    m_MessageHandler(fmt::format("Resample Volume || Copying Data Array {}", srcName));
 
     ExecuteParallelFunction<ResampleImageGeomArrayImpl>(oldDataArray.getDataType(), taskRunner, this, oldDataArray, newDataArray, selectedImageGeom, destImageGeom, m_ShouldCancel);
   }
@@ -183,16 +183,16 @@ Result<> ResampleImageGeom::operator()()
     // created, so we can use the convenience of the DataArray.deepCopy() function.
     for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
     {
-      DataObject* dataObject = m_DataStructure.getData(sourceFeatureDataPaths[index]);
-      if(dataObject->getDataObjectType() == DataObject::Type::DataArray)
+      AbstractDataObject* dataObject = m_DataStructure.getData(sourceFeatureDataPaths[index]);
+      if(dataObject->getDataObjectType() == IDataObject::Type::DataArray)
       {
-        auto result = DeepCopy<IDataArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
+        auto result = DeepCopy<AbstractDataArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
         if(result.invalid())
         {
           return result;
         }
       }
-      else if(dataObject->getDataObjectType() == DataObject::Type::StringArray)
+      else if(dataObject->getDataObjectType() == IDataObject::Type::StringArray)
       {
         auto result = DeepCopy<StringArray>(m_DataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
         if(result.invalid())

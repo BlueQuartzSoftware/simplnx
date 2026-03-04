@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeGBPDMetricBasedFilter
  * @brief This filter computes the grain boundary plane distribution (GBPD)
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeGBPDMetricBasedFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeGBPDMetricBasedFilter : public AbstractFilter
 {
 public:
   ComputeGBPDMetricBasedFilter() = default;

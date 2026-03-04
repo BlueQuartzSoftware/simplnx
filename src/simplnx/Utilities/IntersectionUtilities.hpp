@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Constants.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 #include <Eigen/Dense>
@@ -33,8 +33,8 @@ inline float clamp(float lo, float hi, float v)
 
 inline std::array<float, 6> GetBoundingBoxAtTri(nx::core::TriangleGeom& tri, size_t triId)
 {
-  nx::core::IGeometry::SharedTriList& triList = tri.getFacesRef();
-  // nx::core::IGeometry::SharedVertexList& vertList = tri.getVerticesRef();
+  nx::core::AbstractGeometry::SharedTriList& triList = tri.getFacesRef();
+  // nx::core::AbstractGeometry::SharedVertexList& vertList = tri.getVerticesRef();
 
   // nx::core::uint64* Tri = &triList[triId];
   std::array<nx::core::Point3Df, 3> triCoords;

@@ -23,12 +23,12 @@ float32 nx::core::GeometryMath::AngleBetweenVectors(const nx::core::ZXZEuler& a,
   return std::acos(cosAng);
 }
 
-BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfVertices(INodeGeometry0D& geom)
+BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfVertices(AbstractNodeGeometry0D& geom)
 {
   FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   FloatVec3 ur = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
 
-  const IGeometry::SharedVertexList& vertexList = geom.getVerticesRef();
+  const AbstractGeometry::SharedVertexList& vertexList = geom.getVerticesRef();
   if(vertexList.getDataType() != DataType::float32)
   {
     return {ll, ur}; // will be invalid

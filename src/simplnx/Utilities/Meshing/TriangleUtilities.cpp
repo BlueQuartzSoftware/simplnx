@@ -11,9 +11,9 @@ using namespace nx::core;
 
 namespace
 {
-using EdgeListT = std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>>;
+using EdgeListT = std::set<std::pair<AbstractGeometry::MeshIndexType, AbstractGeometry::MeshIndexType>>;
 
-Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
+Result<> ProcessWindingsWithLabels(AbstractNodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, AbstractGeometry::MeshIndexType>& neighbors,
                                    const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, int32 maxFeature)
 {
   /**
@@ -36,7 +36,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
   std::vector<bool> unmodified(faceLabelsStore.getNumberOfTuples(), false);
   for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
-    std::queue<IGeometry::MeshIndexType> searchTargets = {};
+    std::queue<AbstractGeometry::MeshIndexType> searchTargets = {};
 
     // process base case
     for(usize i = 0; i < numTuples; i++)
@@ -47,7 +47,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
       }
 
       auto numElem = neighbors.getNumberOfElements(i);
-      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
+      const AbstractGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
 
       for(uint16 element = 0; element < numElem; element++)
       {
@@ -72,7 +72,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
       }
 
       // Dequeue a vertex from queue and store it
-      const IGeometry::MeshIndexType triangle = searchTargets.front();
+      const AbstractGeometry::MeshIndexType triangle = searchTargets.front();
       searchTargets.pop();
 
       if(visited[triangle])
@@ -87,7 +87,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
       }
 
       auto numElem = neighbors.getNumberOfElements(triangle);
-      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(triangle);
+      const AbstractGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(triangle);
 
       std::set<usize> localNeighbors = {};
 
@@ -114,9 +114,9 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
           continue;
         }
 
-        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge1 = std::make_pair(triangles[(neighbor * 3) + 0], triangles[(neighbor * 3) + 1]);
-        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge2 = std::make_pair(triangles[(neighbor * 3) + 1], triangles[(neighbor * 3) + 2]);
-        std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType> edge3 = std::make_pair(triangles[(neighbor * 3) + 2], triangles[(neighbor * 3) + 0]);
+        std::pair<AbstractGeometry::MeshIndexType, AbstractGeometry::MeshIndexType> edge1 = std::make_pair(triangles[(neighbor * 3) + 0], triangles[(neighbor * 3) + 1]);
+        std::pair<AbstractGeometry::MeshIndexType, AbstractGeometry::MeshIndexType> edge2 = std::make_pair(triangles[(neighbor * 3) + 1], triangles[(neighbor * 3) + 2]);
+        std::pair<AbstractGeometry::MeshIndexType, AbstractGeometry::MeshIndexType> edge3 = std::make_pair(triangles[(neighbor * 3) + 2], triangles[(neighbor * 3) + 0]);
 
         if(unmodified[neighbor])
         {
@@ -148,7 +148,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
         else
         {
           // Flip it
-          const IGeometry::MeshIndexType tempValue = triangles[(triangle * 3) + 0];
+          const AbstractGeometry::MeshIndexType tempValue = triangles[(triangle * 3) + 0];
           triangles[(triangle * 3) + 0] = triangles[(triangle * 3) + 2];
           triangles[(triangle * 3) + 2] = tempValue;
         }
@@ -164,7 +164,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
   return {};
 }
 
-Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
+Result<> ProcessWindingsWithRegions(AbstractNodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, AbstractGeometry::MeshIndexType>& neighbors,
                                     const Int32AbstractDataStore& regionsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, int32 maxFeature)
 {
   /**
@@ -185,7 +185,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
   std::vector<bool> visited(regionsStore.getNumberOfTuples(), false);
   for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
-    std::queue<IGeometry::MeshIndexType> searchTargets = {};
+    std::queue<AbstractGeometry::MeshIndexType> searchTargets = {};
 
     // process base case
     for(usize i = 0; i < numTuples; i++)
@@ -196,7 +196,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
       }
 
       auto numElem = neighbors.getNumberOfElements(i);
-      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
+      const AbstractGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(i);
 
       for(uint16 element = 0; element < numElem; element++)
       {
@@ -221,7 +221,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
       }
 
       // Dequeue a vertex from queue and store it
-      const IGeometry::MeshIndexType triangle = searchTargets.front();
+      const AbstractGeometry::MeshIndexType triangle = searchTargets.front();
       searchTargets.pop();
 
       if(visited[triangle])
@@ -236,7 +236,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
       }
 
       auto numElem = neighbors.getNumberOfElements(triangle);
-      const IGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(triangle);
+      const AbstractGeometry::MeshIndexType* neighborListPtr = neighbors.getElementListPointer(triangle);
 
       std::set<usize> localNeighbors = {};
 
@@ -275,7 +275,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
          edgeList.find(std::make_pair(triangles[(triangle * 3) + 2], triangles[(triangle * 3) + 0])) != edgeList.end()) // If true it contains a conflicting edge
       {
         // Flip it
-        const IGeometry::MeshIndexType tempValue = triangles[(triangle * 3) + 0];
+        const AbstractGeometry::MeshIndexType tempValue = triangles[(triangle * 3) + 0];
         triangles[(triangle * 3) + 0] = triangles[(triangle * 3) + 2];
         triangles[(triangle * 3) + 2] = tempValue;
       }
@@ -286,19 +286,20 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
 }
 } // namespace
 
-INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices)
+AbstractNodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTriangleVolume(const std::array<usize, 3>& vertIndices,
+                                                                                                  const AbstractNodeGeometry2D::SharedVertexList::store_type& vertices)
 {
   const usize vertAIndex = vertIndices[0] * 3;
   const usize vertBIndex = vertIndices[1] * 3;
   const usize vertCIndex = vertIndices[2] * 3;
 
   // This is a 3x3 matrix laid out in typical "C" order where the columns raster the fastest, then the rows
-  std::array<INodeGeometry2D::SharedVertexList::value_type, 9> volumeMatrix = {
+  std::array<AbstractNodeGeometry2D::SharedVertexList::value_type, 9> volumeMatrix = {
       vertices[vertBIndex + 0] - vertices[vertAIndex + 0], vertices[vertCIndex + 0] - vertices[vertAIndex + 0], 0.0f - vertices[vertAIndex + 0],
       vertices[vertBIndex + 1] - vertices[vertAIndex + 1], vertices[vertCIndex + 1] - vertices[vertAIndex + 1], 0.0f - vertices[vertAIndex + 1],
       vertices[vertBIndex + 2] - vertices[vertAIndex + 2], vertices[vertCIndex + 2] - vertices[vertAIndex + 2], 0.0f - vertices[vertAIndex + 2]};
 
-  const INodeGeometry2D::SharedVertexList::value_type determinant =
+  const AbstractNodeGeometry2D::SharedVertexList::value_type determinant =
       (volumeMatrix[MeshingUtilities::detail::k_00] *
        (volumeMatrix[MeshingUtilities::detail::k_11] * volumeMatrix[MeshingUtilities::detail::k_22] - volumeMatrix[MeshingUtilities::detail::k_12] * volumeMatrix[MeshingUtilities::detail::k_21])) -
       (volumeMatrix[MeshingUtilities::detail::k_01] *
@@ -308,7 +309,7 @@ INodeGeometry2D::SharedVertexList::value_type MeshingUtilities::detail::FindTria
   return determinant / 6.0f;
 }
 
-Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
+Result<> MeshingUtilities::RepairTriangleWinding(AbstractNodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, AbstractGeometry::MeshIndexType>& neighbors,
                                                  const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 {
   usize numComp = idsStore.getNumberOfComponents();
@@ -334,7 +335,7 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
   return ::ProcessWindingsWithRegions(triangles, neighbors, idsStore, shouldCancel, mesgHandler, maxFeature);
 }
 
-MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,
+MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const AbstractNodeGeometry2D::SharedFaceList::store_type& triangles, const AbstractNodeGeometry2D::SharedVertexList::store_type& verts,
                                                              nx::core::Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
 : m_Triangles(triangles)
 , m_Vertices(verts)

@@ -25,7 +25,7 @@ public:
                                                                       "Tetragonal-High 4/mmm", "Trigonal-Low -3", "Trigonal-High -3m"};
   static inline const std::vector<std::string> k_PhaseTypes = {"Primary", "Precipitate", "Transformation", "Matrix", "Boundary"};
 
-  static inline constexpr StringLiteral k_DefaultPhaseName = "_PHASE_NAME_";
+  static constexpr StringLiteral k_DefaultPhaseName = "_PHASE_NAME_";
 
   EnsembleInfoParameter() = delete;
 

@@ -135,7 +135,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Manual)", "[SimplnxCor
 
   for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
+    const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(path);
     const auto& dataStore = dataArray.getIDataStoreRef();
 
     DataType type = dataStore.getDataType();
@@ -173,7 +173,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Random)", "[SimplnxCor
 
   for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
+    const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(path);
     const auto& dataStore = dataArray.getIDataStoreRef();
 
     DataType type = dataStore.getDataType();
@@ -212,7 +212,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[S
 
   for(const auto& path : cellArrayPaths)
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
+    const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(path);
     const auto& dataStore = dataArray.getIDataStoreRef();
 
     DataType type = dataStore.getDataType();

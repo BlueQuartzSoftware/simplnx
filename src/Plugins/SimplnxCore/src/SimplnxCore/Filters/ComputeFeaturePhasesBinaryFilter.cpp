@@ -110,7 +110,7 @@ Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStruct
   auto& featurePhasesArray =
       dataStructure.getDataAs<Int32Array>(filterArgs.value<DataPath>(k_CellDataAMPath_Key).createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key)))->getDataStoreRef();
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> goodVoxelsMask;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> goodVoxelsMask;
   try
   {
     goodVoxelsMask = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, filterArgs.value<DataPath>(k_MaskArrayPath_Key));

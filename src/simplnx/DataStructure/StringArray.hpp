@@ -1,24 +1,24 @@
 #pragma once
 
-#include "simplnx/DataStructure/AbstractStringStore.hpp"
-#include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/AbstractArray.hpp"
+#include "simplnx/DataStructure/IStringStore.hpp"
 
 #include <mutex>
 
 namespace nx::core
 {
-class SIMPLNX_EXPORT StringArray : public IArray
+class SIMPLNX_EXPORT StringArray : public AbstractArray
 {
 public:
   using value_type = std::string;
   using collection_type = std::vector<value_type>;
   using reference = value_type&;
   using const_reference = const value_type&;
-  using store_type = AbstractStringStore;
+  using store_type = IStringStore;
   using iterator = typename store_type::iterator;
   using const_iterator = typename store_type::const_iterator;
 
-  static inline constexpr StringLiteral k_TypeName = "StringArray";
+  static constexpr StringLiteral k_TypeName = "StringArray";
 
   static StringArray* Create(DataStructure& dataStructure, const std::string_view& name, const std::optional<IdType>& parentId = {});
   static StringArray* CreateWithValues(DataStructure& dataStructure, const std::string_view& name, const ShapeType& tupleShape, collection_type strings, const std::optional<IdType>& parentId = {});
@@ -31,7 +31,7 @@ public:
 
   ~StringArray() noexcept override;
 
-  DataObject::Type getDataObjectType() const override;
+  AbstractDataObject::Type getDataObjectType() const override;
   std::string getTypeName() const override;
 
   /**
@@ -40,8 +40,8 @@ public:
    */
   ArrayType getArrayType() const override;
 
-  DataObject* shallowCopy() override;
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
+  AbstractDataObject* shallowCopy() override;
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override;
 
   size_t size() const override;
   collection_type values() const;
@@ -130,7 +130,7 @@ public:
    */
   void resizeTuples(const ShapeType& tupleShape) override;
 
-  void setStore(const std::shared_ptr<AbstractStringStore>& newStore);
+  void setStore(const std::shared_ptr<IStringStore>& newStore);
 
 protected:
   StringArray(DataStructure& dataStructure, std::string name);
@@ -139,6 +139,6 @@ protected:
   StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, collection_type strings);
 
 private:
-  std::shared_ptr<AbstractStringStore> m_Strings = nullptr;
+  std::shared_ptr<IStringStore> m_Strings = nullptr;
 };
 } // namespace nx::core

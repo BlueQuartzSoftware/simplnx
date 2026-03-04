@@ -6,7 +6,7 @@
 namespace nx::core::Generic
 {
 CoreDataIOManager::CoreDataIOManager()
-: IDataIOManager()
+: AbstractDataIOManager()
 {
   addCoreFactories();
   addDataStoreFnc();

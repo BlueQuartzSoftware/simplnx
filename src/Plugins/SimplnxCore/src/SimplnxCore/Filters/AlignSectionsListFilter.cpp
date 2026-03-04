@@ -117,7 +117,7 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
 
   if(!pUseFileValue)
   {
-    const auto* shiftsArray = dataStructure.getDataAs<IDataArray>(pShiftsArrayPathValue);
+    const auto* shiftsArray = dataStructure.getDataAs<AbstractDataArray>(pShiftsArrayPathValue);
     if(shiftsArray == nullptr)
     {
       return MakePreflightErrorResult(-8942, "Shifts array is not valid.");

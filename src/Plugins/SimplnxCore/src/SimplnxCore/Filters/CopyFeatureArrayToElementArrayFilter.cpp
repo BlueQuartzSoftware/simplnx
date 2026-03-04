@@ -23,7 +23,8 @@ class CopyFeatureArrayToElementArrayImpl
 public:
   using StoreType = AbstractDataStore<T>;
 
-  CopyFeatureArrayToElementArrayImpl(const IDataArray* selectedFeatureArray, const Int32AbstractDataStore& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
+  CopyFeatureArrayToElementArrayImpl(const AbstractDataArray* selectedFeatureArray, const Int32AbstractDataStore& featureIdsStore, AbstractDataArray* createdArray,
+                                     const std::atomic_bool& shouldCancel)
   : m_SelectedFeature(selectedFeatureArray->template getIDataStoreRefAs<StoreType>())
   , m_FeatureIdsStore(featureIdsStore)
   , m_CreatedStore(createdArray->template getIDataStoreRefAs<StoreType>())
@@ -100,7 +101,7 @@ Parameters CopyFeatureArrayToElementArrayFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFeatureArrayPath_Key, "Feature Data to Copy to Cell Data",
                                                                "The DataPath to the feature data that should be copied to the cell level", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
@@ -145,14 +146,14 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
     return {MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
-  const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
+  const auto& featureIdsArray = dataStructure.getDataRefAs<AbstractDataArray>(pFeatureIdsArrayPathValue);
   const IDataStore& featureIdsArrayStore = featureIdsArray.getIDataStoreRef();
   const std::vector<usize>& tDims = featureIdsArrayStore.getTupleShape();
 
   for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
   {
     DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
-    const auto& selectedFeatureArray = dataStructure.getDataRefAs<IDataArray>(selectedFeatureArrayPath);
+    const auto& selectedFeatureArray = dataStructure.getDataRefAs<AbstractDataArray>(selectedFeatureArrayPath);
     DataType dataType = selectedFeatureArray.getDataType();
     auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, tDims, selectedFeatureArray.getComponentShape(), createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
@@ -174,7 +175,7 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
   for(const auto& selectedFeatureArrayPath : pSelectedFeatureArrayPathsValue)
   {
     DataPath createdArrayPath = pFeatureIdsArrayPathValue.replaceName(selectedFeatureArrayPath.getTargetName() + createdArraySuffix);
-    const auto* selectedFeatureArray = dataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
+    const auto* selectedFeatureArray = dataStructure.getDataAs<AbstractDataArray>(selectedFeatureArrayPath);
 
     auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, selectedFeatureArrayPath, featureIds, false, messageHandler);
     if(validateNumFeatResult.invalid())
@@ -186,7 +187,7 @@ Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataSt
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, featureIds.getNumberOfTuples());
     ExecuteParallelFunction<::CopyFeatureArrayToElementArrayImpl>(selectedFeatureArray->getDataType(), dataAlg, selectedFeatureArray, featureIds.getDataStoreRef(),
-                                                                  dataStructure.getDataAs<IDataArray>(createdArrayPath), shouldCancel);
+                                                                  dataStructure.getDataAs<AbstractDataArray>(createdArrayPath), shouldCancel);
   }
 
   return {};

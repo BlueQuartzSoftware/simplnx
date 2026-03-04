@@ -1,6 +1,6 @@
 #include "AbstractMontage.hpp"
 
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 
 using namespace nx::core;
 
@@ -28,7 +28,7 @@ AbstractMontage::AbstractMontage(AbstractMontage&& other)
 
 AbstractMontage::~AbstractMontage() = default;
 
-DataObject::Type AbstractMontage::getDataObjectType() const
+AbstractDataObject::Type AbstractMontage::getDataObjectType() const
 {
   return Type::AbstractMontage;
 }
@@ -97,9 +97,9 @@ const AbstractMontage::CollectionType& AbstractMontage::getCollection() const
   return m_Collection;
 }
 
-bool AbstractMontage::canInsert(const DataObject* obj) const
+bool AbstractMontage::canInsert(const AbstractDataObject* obj) const
 {
-  if(!dynamic_cast<const IGeometry*>(obj))
+  if(!dynamic_cast<const AbstractGeometry*>(obj))
   {
     return false;
   }

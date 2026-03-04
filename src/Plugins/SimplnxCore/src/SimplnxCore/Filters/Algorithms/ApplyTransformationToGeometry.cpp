@@ -1,7 +1,7 @@
 #include "ApplyTransformationToGeometry.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -97,8 +97,8 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
       return {};
     }
 
-    const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
-    auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* srcDataArrayPtr = m_DataStructure.getDataAs<AbstractDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    auto* destDataArrayPtr = m_DataStructure.getDataAs<AbstractDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
 
     if(m_InputValues->InterpolationSelection == detail::k_NearestNeighborInterpolationIdx)
     {
@@ -129,9 +129,9 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 // -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 {
-  auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  auto& nodeGeometry0D = m_DataStructure.getDataRefAs<AbstractNodeGeometry0D>(m_InputValues->SelectedGeometryPath);
 
-  IGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
+  AbstractGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
 
   ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
@@ -187,7 +187,7 @@ Result<> ApplyTransformationToGeometry::operator()()
 
   // Apply geometry transformation
   auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
-  auto* nodeGeometry0D = m_DataStructure.getDataAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  auto* nodeGeometry0D = m_DataStructure.getDataAs<AbstractNodeGeometry0D>(m_InputValues->SelectedGeometryPath);
   if(m_InputValues->TranslateGeometryToGlobalOrigin)
   {
     auto boundingBox = (imageGeometryPtr != nullptr) ? imageGeometryPtr->getBoundingBoxf() : nodeGeometry0D->getBoundingBox();

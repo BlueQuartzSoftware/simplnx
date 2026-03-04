@@ -144,7 +144,7 @@ TEST_CASE("CoreFilterTest:CreateDataGroupFilter")
   args.insert(CreateDataGroupFilter::k_DataObjectPath, path);
   auto result = filter.execute(dataStructure, args);
   REQUIRE(result.result.valid());
-  DataObject* object = dataStructure.getData(path);
+  AbstractDataObject* object = dataStructure.getData(path);
   REQUIRE(object != nullptr);
   auto* group = dynamic_cast<DataGroup*>(object);
   REQUIRE(group != nullptr);

@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -26,7 +26,7 @@ namespace nx::core
  * ITK Module: ITKImageLabel
  * ITK Group: ImageLabel
  */
-class ITKIMAGEPROCESSING_EXPORT ITKLabelContourImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKLabelContourImageFilter : public AbstractFilter
 {
 public:
   ITKLabelContourImageFilter() = default;

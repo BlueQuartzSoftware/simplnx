@@ -3,14 +3,14 @@
 using namespace nx::core;
 namespace nx::core::GeometryHelpers::Description
 {
-std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core::FloatVec3& spacing, const nx::core::FloatVec3& origin, IGeometry::LengthUnit units)
+std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core::FloatVec3& spacing, const nx::core::FloatVec3& origin, AbstractGeometry::LengthUnit units)
 {
   std::stringstream description;
 
   std::string unitStr;
-  if(units != IGeometry::LengthUnit::Unknown && units != IGeometry::LengthUnit::Unspecified)
+  if(units != AbstractGeometry::LengthUnit::Unknown && units != AbstractGeometry::LengthUnit::Unspecified)
   {
-    unitStr = IGeometry::LengthUnitToString(units);
+    unitStr = AbstractGeometry::LengthUnitToString(units);
   }
 
   std::array<std::string, 3> label = {"X", "Y", "Z"};
@@ -33,23 +33,23 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
   const auto& faceLabels = faceLabelsRef.getDataStoreRef();
   const usize numRegions = 1 + *std::max_element(faceLabels.begin(), faceLabels.end());
 
-  using EdgePairType = std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>;
+  using EdgePairType = std::pair<AbstractGeometry::MeshIndexType, AbstractGeometry::MeshIndexType>;
   using UniqueEdgesType = std::set<EdgePairType>;
-  using UniqueVertType = std::set<IGeometry::MeshIndexType>;
+  using UniqueVertType = std::set<AbstractGeometry::MeshIndexType>;
 
-  constexpr IGeometry::MeshIndexType numVertsPerElem = 3;
+  constexpr AbstractGeometry::MeshIndexType numVertsPerElem = 3;
   std::vector<int64> regionTriangleCount(numRegions, 0);
   std::vector<UniqueEdgesType> uniqueEdges(numRegions);
   std::vector<UniqueVertType> uniqueVerts(numRegions);
 
-  for(IGeometry::MeshIndexType tIdx = 0; tIdx < triangleList.getNumberOfTuples(); ++tIdx)
+  for(AbstractGeometry::MeshIndexType tIdx = 0; tIdx < triangleList.getNumberOfTuples(); ++tIdx)
   {
     const usize offset = tIdx * numVertsPerElem;
 
-    for(IGeometry::MeshIndexType labelIdx = 0; labelIdx < 2; labelIdx++)
+    for(AbstractGeometry::MeshIndexType labelIdx = 0; labelIdx < 2; labelIdx++)
     {
-      IGeometry::MeshIndexType v0 = 0;
-      IGeometry::MeshIndexType v1 = 0;
+      AbstractGeometry::MeshIndexType v0 = 0;
+      AbstractGeometry::MeshIndexType v1 = 0;
 
       const auto regionIdx = faceLabels[tIdx * 2 + labelIdx];
       if(regionIdx < 0)
@@ -167,7 +167,7 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
 
 namespace nx::core::GeometryHelpers::Topology
 {
-BoundingBoxFaces FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet)
+BoundingBoxFaces FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<AbstractGeometry::MeshIndexType>& vertexSet)
 {
   if(vertexSet.empty())
   {
@@ -217,7 +217,7 @@ BoundingBoxFaces FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, con
   return edgeFaces;
 }
 
-bool AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId)
+bool AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, Float32AbstractDataStore& centroids, AbstractGeometry::MeshIndexType featureId)
 {
   bool isPeriodic = false;
   const auto minPoint = boundingBox.getMinPoint();

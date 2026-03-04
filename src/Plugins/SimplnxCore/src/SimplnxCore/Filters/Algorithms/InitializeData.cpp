@@ -1,8 +1,8 @@
 #include "InitializeData.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
@@ -251,7 +251,7 @@ std::vector<std::string> standardizeMultiComponent(const usize numComps, const s
 struct FillArrayFunctor
 {
   template <typename T>
-  void operator()(IDataArray& iDataArray, const InitializeDataInputValues& inputValues)
+  void operator()(AbstractDataArray& iDataArray, const InitializeDataInputValues& inputValues)
   {
     auto& dataStore = iDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize numComp = dataStore.getNumberOfComponents(); // We checked that the values string is greater than max comps size so proceed check free
@@ -526,7 +526,7 @@ const std::atomic_bool& InitializeData::getCancel()
 Result<> InitializeData::operator()()
 {
 
-  auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
+  auto& iDataArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->InputArrayPath);
 
   ExecuteDataFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, *m_InputValues);
 

@@ -70,7 +70,7 @@ Parameters ComputeArrayHistogramByFeatureFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                nx::core::GetAllNumericTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
@@ -145,15 +145,15 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     parentPath = pDataGroupNameValue;
   }
 
-  const IDataArray* maskArray = nullptr;
+  const AbstractDataArray* maskArray = nullptr;
   if(pUseMaskValue)
   {
-    maskArray = dataStructure.getDataAs<IDataArray>(pMaskArrayPathValue);
+    maskArray = dataStructure.getDataAs<AbstractDataArray>(pMaskArrayPathValue);
   }
 
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    const auto* dataArray = dataStructure.getDataAs<AbstractDataArray>(selectedArrayPath);
     if(maskArray && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
     {
       return {MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}.  These tuple counts MUST match.", maskArray->getName(),
@@ -224,7 +224,7 @@ Result<> ComputeArrayHistogramByFeatureFilter::executeImpl(DataStructure& dataSt
   std::vector<DataPath> createdModalRangesDataPaths;
   for(auto& selectedArrayPath : inputValues.SelectedArrayPaths) // regenerate based on preflight
   {
-    const auto& dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    const auto& dataArray = dataStructure.getDataAs<AbstractDataArray>(selectedArrayPath);
     auto arrayGroupPath = dataGroupPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
     auto countsPath = arrayGroupPath.createChildPath(binCountName);
     createdCountsDataPaths.push_back(countsPath);

@@ -1,3 +1,18 @@
+// ============================================================================
+// IMPORTANT NOTE: The WIN32 includes MUST come first because there is a clash
+// with the name 'IDataObject' inside one of the Win32 includes. Ordering the
+// include directives this way eliminates the issues
+// ============================================================================
+
+#ifdef _WIN32
+#include <accctrl.h>
+#include <direct.h>
+#include <fileapi.h>
+#include <objbase.h>
+#include <shlobj.h>
+#include <winioctl.h>
+#endif
+
 #include "SimplnxCore/Filters/WriteBinaryDataFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
@@ -13,18 +28,8 @@
 #include <filesystem>
 #include <fstream>
 
-#ifdef _WIN32
-#include <accctrl.h>
-#include <direct.h>
-#include <fileapi.h>
-#include <objbase.h>
-#include <shlobj.h>
-#include <winioctl.h>
-#endif
-
 namespace fs = std::filesystem;
 using namespace nx::core;
-
 /**
  * @brief The WriteASCIIDataTest class
  */
@@ -198,7 +203,7 @@ private:
     return {};
   }
 
-  void CompareResults(IDataArray& selectedArray) // compare hash of both file strings
+  void CompareResults(AbstractDataArray& selectedArray) // compare hash of both file strings
   {
     fs::path writtenFilePath = fs::path(k_TestOutput.string() + "/" + selectedArray.getName() + ".bin");
     REQUIRE(fs::exists(writtenFilePath));
@@ -246,7 +251,7 @@ private:
     // read the file(s) back in
     for(int32 i = 0; i < daps1.size(); i++)
     {
-      CompareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[i]));
+      CompareResults(m_DataStructure.getDataRefAs<AbstractDataArray>(daps1[i]));
     }
   }
 };

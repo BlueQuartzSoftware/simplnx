@@ -84,7 +84,7 @@ Result<> RemoveFlaggedTriangles::operator()()
 {
   // Remove Triangles from reduced according to removeTrianglesIndex
   const auto& originalTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometry);
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);

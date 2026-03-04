@@ -64,8 +64,8 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids", "[SimplnxCore][ComputeTri
     const DataPath kExemplarArrayPath = k_FeatureAttributeMatrixPath.createChildPath(kExemplarArrayName);
     const DataPath kNxArrayPath = k_FeatureAttributeMatrixPath.createChildPath(k_CentroidsArrayName);
 
-    const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
-    const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
+    const auto& kExemplarsArray = dataStructure.getDataRefAs<AbstractDataArray>(kExemplarArrayPath);
+    const auto& kNxArray = dataStructure.getDataRefAs<AbstractDataArray>(kNxArrayPath);
 
     CompareDataArrays<float32>(kExemplarsArray, kNxArray);
   }

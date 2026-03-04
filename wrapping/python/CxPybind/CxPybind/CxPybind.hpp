@@ -15,6 +15,7 @@
 
 #include <simplnx/Common/ScopeGuard.hpp>
 #include <simplnx/Core/Application.hpp>
+#include <simplnx/Filter/AbstractFilter.hpp>
 #include <simplnx/Filter/Arguments.hpp>
 #include <simplnx/Filter/FilterTraits.hpp>
 #include <simplnx/Filter/IFilter.hpp>
@@ -146,7 +147,7 @@ class PythonPlugin;
 class Internals
 {
 public:
-  static inline constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
+  static constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
 
   Internals()
   : m_App(Application::GetOrCreateInstance())
@@ -391,7 +392,7 @@ auto BindFilter(py::handle scope, const Internals& internals)
 {
   using namespace pybind11::literals;
 
-  py::class_<FilterT, IFilter> filter(scope, FilterTraits<FilterT>::className.c_str());
+  py::class_<FilterT, AbstractFilter> filter(scope, FilterTraits<FilterT>::className.c_str());
   filter.def(py::init<>());
 
   {
@@ -517,13 +518,13 @@ inline auto MakeAtomicBoolProxyGuard(std::shared_ptr<AtomicBoolProxy>& proxy)
   return MakeScopeGuard([&proxy]() noexcept { proxy->reset(); });
 }
 
-class PyFilter : public IFilter
+class PyFilter : public AbstractFilter
 {
 public:
   PyFilter() = delete;
 
   PyFilter(py::object object)
-  : IFilter()
+  : AbstractFilter()
   , m_Object(std::move(object))
   {
     py::gil_scoped_acquire gil;

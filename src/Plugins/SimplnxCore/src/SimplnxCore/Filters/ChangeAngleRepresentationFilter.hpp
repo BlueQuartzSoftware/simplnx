@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ChangeAngleRepresentationFilter
  * @brief This filter will convert angles from Degrees to Radians or vice-versa
  */
-class SIMPLNXCORE_EXPORT ChangeAngleRepresentationFilter : public IFilter
+class SIMPLNXCORE_EXPORT ChangeAngleRepresentationFilter : public AbstractFilter
 {
 public:
   ChangeAngleRepresentationFilter() = default;

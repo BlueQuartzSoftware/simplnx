@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Pipeline/IPipelineNode.hpp"
+
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/ExecutionContext.hpp"
@@ -23,15 +25,12 @@ class Pipeline;
  * all items that can be contained within a pipeline. Shared API is declared
  * for implementation in derived classes.
  */
-class SIMPLNX_EXPORT AbstractPipelineNode
+class SIMPLNX_EXPORT AbstractPipelineNode : public IPipelineNode
 {
 public:
   // Making Pipeline a friend class allows Pipelines to set flags of the nodes
   // they contain.
   friend class Pipeline;
-
-  using RenamedPath = std::pair<DataPath, DataPath>;
-  using RenamedPaths = std::vector<RenamedPath>;
 
   using SignalType = nod::signal<void(AbstractPipelineNode*, const std::shared_ptr<AbstractPipelineMessage>&)>;
 
@@ -75,47 +74,38 @@ public:
   CancelledSignalType& getCancelledSignal();
   void sendCancelledMessage();
 
-  /**
-   * @brief Specific types of pipeline node for quick type checking.
-   */
-  enum class NodeType
-  {
-    Pipeline,
-    Filter
-  };
-
-  virtual ~AbstractPipelineNode() noexcept;
+  ~AbstractPipelineNode() noexcept override;
 
   /**
    * @brief Returns the node type for quick type checking.
    * @return NodeType
    */
-  virtual NodeType getType() const = 0;
+  NodeType getType() const override = 0;
 
   /**
    * @brief Returns the pipeline node's name.
    * @return std::string
    */
-  virtual std::string getName() const = 0;
+  std::string getName() const override = 0;
 
   /**
    * @brief Returns a pointer to the parent Pipeline. Returns nullptr if no
    * parent could be found.
    * @return Pipeline*
    */
-  Pipeline* getParentPipeline() const;
+  Pipeline* getParentPipeline() const override;
 
   /**
    * @brief Sets the parent Pipeline pointer.
    * @param parent
    */
-  void setParentPipeline(Pipeline* parent);
+  void setParentPipeline(Pipeline* parent) override;
 
   /**
    * @brief Returns true if the node has a parent pipeline. Returns false otherwise.
    * @return bool
    */
-  bool hasParentPipeline() const;
+  bool hasParentPipeline() const override;
 
   /**
    * @brief Attempts to preflight the node using the provided DataStructure.
@@ -123,7 +113,7 @@ public:
    * @param data
    * @return bool
    */
-  virtual bool preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) = 0;
+  bool preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override = 0;
 
   /**
    * @brief Attempts to preflight the node using the provided DataStructure.
@@ -135,7 +125,7 @@ public:
    * @param allowRenaming
    * @return bool
    */
-  virtual bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) = 0;
+  bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override = 0;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -143,90 +133,90 @@ public:
    * @param data
    * @return bool
    */
-  virtual bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) = 0;
+  bool execute(DataStructure& dataStructure, const std::atomic_bool& shouldCancel) override = 0;
 
   /**
    * @brief Creates and returns a unique pointer to a copy of the node.
    * @return std::unique_ptr<AbstractPipelineNode>
    */
-  virtual std::unique_ptr<AbstractPipelineNode> deepCopy() const = 0;
+  std::unique_ptr<AbstractPipelineNode> deepCopy() const override = 0;
 
   /**
    * @brief Returns the fault state of the node.
    * @return bool
    */
-  FaultState getFaultState() const;
+  FaultState getFaultState() const override;
 
   /**
    * @brief Returns true if the node has errors. Otherwise, this method returns
    * false.
    * @return bool
    */
-  bool hasErrors() const;
+  bool hasErrors() const override;
 
   /**
    * @brief Returns true if the node has warnings. Otherwise, this method
    * returns false.
    * @return bool
    */
-  bool hasWarnings() const;
+  bool hasWarnings() const override;
 
   /**
    * @brief Returns true if the node is disabled. Otherwise, this method
    * returns false.
    * @return bool
    */
-  bool isDisabled() const;
+  bool isDisabled() const override;
 
   /**
    * @brief Returns true if the node is enabled. Otherwise, this method
    * returns false.
    * @return bool
    */
-  bool isEnabled() const;
+  bool isEnabled() const override;
 
   /**
    * @brief Sets whether the node is disabled.
    * @param disabled = true
    */
-  void setDisabled(bool disabled = true);
+  void setDisabled(bool disabled = true) override;
 
   /**
    * @brief Sets whether the node is disabled.
    * @param enabled = true
    */
-  void setEnabled(bool enabled = true);
+  void setEnabled(bool enabled = true) override;
 
   /**
    * @brief Returns a const reference to the executed DataStructure.
    * @return const DataStructure&
    */
-  const DataStructure& getDataStructure() const;
+  const DataStructure& getDataStructure() const override;
 
   /**
    * @brief Returns a const reference to the preflight DataStructure.
    * @return const DataStructure&
    */
-  const DataStructure& getPreflightStructure() const;
+  const DataStructure& getPreflightStructure() const override;
 
   /**
    * @brief Clears the stored DataStructure and marks the node as dirty. The
    * dirty status does not propogate to dependent nodes.
    */
-  void clearDataStructure();
+  void clearDataStructure() override;
 
   /**
    * @brief Clears the stored preflight and execute DataStructures, marks the
    * node as dirty, and clears the preflighted flag.
    */
-  void clearPreflightStructure();
+  void clearPreflightStructure() override;
 
   /**
    * @brief Returns true if the node has been preflighted and contains the
    * resulting DataStructure. Returns false otherwise.
    * @return bool
    */
-  bool isPreflighted() const;
+  bool isPreflighted() const override;
 
   /**
    * @brief Returns a reference to the signal used for messaging.
@@ -238,20 +228,20 @@ public:
    * @brief Converts the current node to json.
    * @return
    */
-  nlohmann::json toJson() const;
+  nlohmann::json toJson() const override;
 
   /**
    * @brief Returns a Pipeline containing the entire pipeline up to the current
    * node. This will expand DREAM3D files as their own Pipeline.
    * @return std::unique_ptr<Pipeline>
    */
-  std::unique_ptr<Pipeline> getPrecedingPipeline() const;
+  std::unique_ptr<Pipeline> getPrecedingPipeline() const override;
 
   /**
    * @brief Gets the executionContext for the pipeline.
    * @return
    */
-  ExecutionContext getPipelineExecutionContext() const;
+  ExecutionContext getPipelineExecutionContext() const override;
 
 protected:
   /**

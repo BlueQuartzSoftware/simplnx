@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -26,7 +26,7 @@ namespace nx::core
  * Note: If there are voxels within the volume that have Feature ID=0 then any feature touching
  * those voxels will be considered a Surface feature.
  */
-class SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesFilter : public AbstractFilter
 {
 public:
   ComputeSurfaceFeaturesFilter() = default;

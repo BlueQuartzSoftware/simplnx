@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -28,7 +28,7 @@ namespace nx::core
  * ITK Module: ITKWatersheds
  * ITK Group: Watersheds
  */
-class ITKIMAGEPROCESSING_EXPORT ITKMorphologicalWatershedImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKMorphologicalWatershedImageFilter : public AbstractFilter
 {
 public:
   ITKMorphologicalWatershedImageFilter() = default;

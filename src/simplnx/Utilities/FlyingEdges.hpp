@@ -1148,9 +1148,9 @@ private:
   std::vector<uint8> m_EdgeCases; // size (m_NX-1)*m_NY*m_NZ
   std::vector<uint8> m_CubeCases; // size (m_NX-1)*(m_NY-1)*(m_NZ-1)
 
-  AbstractDataStore<IGeometry::SharedVertexList::value_type>& m_PointsStore; //
-  AbstractDataStore<IGeometry::SharedTriList::value_type>& m_TrisStore;      //
-  Float32AbstractDataStore& m_NormalsStore;                                  // The output
+  AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>& m_PointsStore; //
+  AbstractDataStore<AbstractGeometry::SharedTriList::value_type>& m_TrisStore;      //
+  Float32AbstractDataStore& m_NormalsStore;                                         // The output
 
   /////////////////////////////////////////////////////////////
 

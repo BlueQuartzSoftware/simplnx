@@ -152,7 +152,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     compareSplitArray(inputArray, arr3, {7});
 
     // Original array still present
-    REQUIRE(ds.getDataAs<IDataArray>(k_InputArrayPath) != nullptr);
+    REQUIRE(ds.getDataAs<AbstractDataArray>(k_InputArrayPath) != nullptr);
 
     UnitTest::CheckArraysInheritTupleDims(ds);
   }
@@ -220,7 +220,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::SplitDataArrayByTupleFilter - Valid Execution",
     REQUIRE(arr3[4] == inputArrayVals[18]);
     REQUIRE(arr3[5] == inputArrayVals[19]);
 
-    REQUIRE(ds.getDataAs<IDataArray>(k_InputArrayPath) == nullptr); // deleted
+    REQUIRE(ds.getDataAs<AbstractDataArray>(k_InputArrayPath) == nullptr); // deleted
 
     UnitTest::CheckArraysInheritTupleDims(ds);
   }

@@ -66,7 +66,7 @@ Result<> WriteVtkStructuredPoints::operator()()
   for(const auto& arrayPath : m_InputValues->SelectedDataArrayPaths)
   {
     m_MessageHandler({nx::core::IFilter::Message::Type::Info, fmt::format("Writing {}", arrayPath.toString())});
-    auto& dataArray = m_DataStructure.getDataRefAs<IDataArray>(arrayPath);
+    auto& dataArray = m_DataStructure.getDataRefAs<AbstractDataArray>(arrayPath);
     result = MergeResults(result, ExecuteNeighborFunction(WriteVtkDataFunctor{}, dataArray.getDataType(), outStrm, dataArray, m_InputValues->WriteBinaryFile, m_MessageHandler, m_ShouldCancel));
   }
 

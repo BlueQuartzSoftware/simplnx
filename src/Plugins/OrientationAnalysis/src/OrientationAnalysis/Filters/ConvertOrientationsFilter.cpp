@@ -99,7 +99,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
-  const auto* inputArray = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
+  const auto* inputArray = dataStructure.getDataAs<AbstractDataArray>(pInputArrayPath);
   std::vector<size_t> inputCompShape = inputArray->getIDataStore()->getComponentShape();
 
   if(inputCompShape.size() > 1)

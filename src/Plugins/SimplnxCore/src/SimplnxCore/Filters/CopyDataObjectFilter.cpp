@@ -105,7 +105,7 @@ IFilter::PreflightResult CopyDataObjectFilter::preflightImpl(const DataStructure
         {
           for(const auto& path : dataArrayPaths)
           {
-            const auto* possibleIArray = dataStructure.getDataAs<IArray>(path);
+            const auto* possibleIArray = dataStructure.getDataAs<AbstractArray>(path);
             if(possibleIArray != nullptr)
             {
               if(possibleAM->getShape() != possibleIArray->getTupleShape())

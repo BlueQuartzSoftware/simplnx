@@ -1,7 +1,7 @@
 #include "GridMontage.hpp"
 
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 
 #include <stdexcept>
 
@@ -54,12 +54,12 @@ std::string GridMontage::getTypeName() const
   return k_TypeName;
 }
 
-DataObject* GridMontage::shallowCopy()
+AbstractDataObject* GridMontage::shallowCopy()
 {
   return new GridMontage(*this);
 }
 
-std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> GridMontage::deepCopy(const DataPath& copyPath)
 {
   throw std::runtime_error("GridMontage deepCopy has not been implemented.");
 }
@@ -138,7 +138,7 @@ GridTileIndex GridMontage::getTileIndex(const SizeVec3& pos) const
   return getTileIndex(pos[0], pos[1], pos[2]);
 }
 
-std::optional<SizeVec3> GridMontage::getTilePosOfGeometry(const IGeometry* geom) const
+std::optional<SizeVec3> GridMontage::getTilePosOfGeometry(const AbstractGeometry* geom) const
 {
   for(usize i = 0; i < getTileCount(); i++)
   {
@@ -150,7 +150,7 @@ std::optional<SizeVec3> GridMontage::getTilePosOfGeometry(const IGeometry* geom)
   return {};
 }
 
-std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(IGeometry* geom) const
+std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(AbstractGeometry* geom) const
 {
   auto tilePos = getTilePosOfGeometry(geom);
   if(!tilePos)
@@ -160,7 +160,7 @@ std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(IGeometry* geom) co
   return std::shared_ptr<AbstractTileIndex>(new GridTileIndex(this, tilePos.value()));
 }
 
-IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
+AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
 {
   auto pos = dynamic_cast<const GridTileIndex*>(index);
   if(!pos)
@@ -170,7 +170,7 @@ IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
   return getGeometry(pos->getTilePos());
 }
 
-const IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
+const AbstractGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
 {
   auto pos = dynamic_cast<const GridTileIndex*>(index);
   if(!pos)
@@ -180,19 +180,19 @@ const IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
   return getGeometry(pos->getTilePos());
 }
 
-IGeometry* GridMontage::getGeometry(const SizeVec3& position)
+AbstractGeometry* GridMontage::getGeometry(const SizeVec3& position)
 {
   usize index = getOffsetFromTilePos(position);
   return getCollection()[index];
 }
 
-const IGeometry* GridMontage::getGeometry(const SizeVec3& position) const
+const AbstractGeometry* GridMontage::getGeometry(const SizeVec3& position) const
 {
   usize index = getOffsetFromTilePos(position);
   return getCollection()[index];
 }
 
-void GridMontage::setGeometry(const AbstractTileIndex* index, IGeometry* geom)
+void GridMontage::setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom)
 {
   auto pos = dynamic_cast<const GridTileIndex*>(index);
   if(!pos)
@@ -202,7 +202,7 @@ void GridMontage::setGeometry(const AbstractTileIndex* index, IGeometry* geom)
   setGeometry(pos->getTilePos(), geom);
 }
 
-void GridMontage::setGeometry(const SizeVec3& position, IGeometry* geom)
+void GridMontage::setGeometry(const SizeVec3& position, AbstractGeometry* geom)
 {
   CollectionType& collection = getCollection();
   usize index = getOffsetFromTilePos(position);

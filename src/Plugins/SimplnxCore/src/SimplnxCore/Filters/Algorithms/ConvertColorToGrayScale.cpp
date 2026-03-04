@@ -151,7 +151,7 @@ public:
   ParallelWrapper& operator=(ParallelWrapper&&) = delete;      // Move Assignment Not Implemented
 
   template <typename T>
-  static void Run(T impl, size_t totalPoints, const typename IParallelAlgorithm::AlgorithmStores& algStores)
+  static void Run(T impl, size_t totalPoints, const typename ParallelAlgorithm::AlgorithmStores& algStores)
   {
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, totalPoints);
@@ -205,7 +205,7 @@ Result<> ConvertColorToGrayScale::operator()()
     size_t comp = inputColorData.getNumberOfComponents();
     size_t totalPoints = inputColorData.getNumberOfTuples();
 
-    typename IParallelAlgorithm::AlgorithmStores algStores;
+    typename ParallelAlgorithm::AlgorithmStores algStores;
     algStores.push_back(&inputColorData);
     algStores.push_back(&outputGrayData);
 

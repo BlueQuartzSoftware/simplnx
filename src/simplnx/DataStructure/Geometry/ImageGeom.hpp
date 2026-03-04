@@ -2,9 +2,9 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/BoundingBox.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <map>
@@ -16,7 +16,7 @@ namespace nx::core
  * @class ImageGeom
  * @brief
  */
-class SIMPLNX_EXPORT ImageGeom : public IGridGeometry
+class SIMPLNX_EXPORT ImageGeom : public AbstractGridGeometry
 {
 public:
   friend class DataStructure;
@@ -72,13 +72,13 @@ public:
    * @brief Returns the type of geometry.
    * @return
    */
-  IGeometry::Type getGeomType() const override;
+  AbstractGeometry::Type getGeomType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override;
+  AbstractDataObject::Type getDataObjectType() const override;
 
   /**
    * @brief Returns an enumeration of the class or subclass GroupType. Used for quick comparison or type deduction
@@ -87,22 +87,22 @@ public:
   GroupType getGroupType() const override;
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
+   * @brief Returns typename of the AbstractDataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override;
 
   /**
    * @brief
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* shallowCopy() override;
+  AbstractDataObject* shallowCopy() override;
 
   /**
    * @brief
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief

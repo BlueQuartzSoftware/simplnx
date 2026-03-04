@@ -3,11 +3,11 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry1D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -19,12 +19,13 @@ using namespace nx::core;
 namespace
 {
 template <typename T>
-concept GeometryType = std::is_base_of_v<IGeometry, T>;
+concept GeometryType = std::is_base_of_v<AbstractGeometry, T>;
 
 template <GeometryType GeomT>
 std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataStore& featureIds, usize numFeatures)
 {
-  static_assert(std::is_same_v<ImageGeom, GeomT> || std::is_base_of_v<INodeGeometry0D, GeomT> || std::is_base_of_v<INodeGeometry1D, GeomT> || std::is_base_of_v<INodeGeometry2D, GeomT>);
+  static_assert(std::is_same_v<ImageGeom, GeomT> || std::is_base_of_v<AbstractNodeGeometry0D, GeomT> || std::is_base_of_v<AbstractNodeGeometry1D, GeomT> ||
+                std::is_base_of_v<AbstractNodeGeometry2D, GeomT>);
 
   std::vector<float32> bounds(numFeatures * 6, std::numeric_limits<float32>::quiet_NaN());
   if constexpr(std::is_same_v<ImageGeom, GeomT>)
@@ -72,7 +73,7 @@ std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataSto
   }
   if constexpr(std::is_same_v<VertexGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
+    const AbstractGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
 
     for(usize i = 0; i < verts.getNumberOfTuples(); i++)
     {
@@ -98,8 +99,8 @@ std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataSto
   }
   if constexpr(std::is_same_v<EdgeGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
-    const IGeometry::SharedEdgeList::store_type& edges = geom.getEdgesRef().getDataStoreRef();
+    const AbstractGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
+    const AbstractGeometry::SharedEdgeList::store_type& edges = geom.getEdgesRef().getDataStoreRef();
 
     usize numComp = edges.getNumberOfComponents();
     for(usize i = 0; i < edges.getNumberOfTuples(); i++)
@@ -112,7 +113,7 @@ std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataSto
 
       for(usize comp = 0; comp < numComp; comp++)
       {
-        const IGeometry::SharedFaceList::value_type activeVertIndex = edges[(i * numComp) + comp];
+        const AbstractGeometry::SharedFaceList::value_type activeVertIndex = edges[(i * numComp) + comp];
         float32 xVal = verts[(activeVertIndex * 3) + 0];
         float32 yVal = verts[(activeVertIndex * 3) + 1];
         float32 zVal = verts[(activeVertIndex * 3) + 2];
@@ -130,8 +131,8 @@ std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataSto
   }
   if constexpr(std::is_same_v<TriangleGeom, GeomT> || std::is_same_v<QuadGeom, GeomT>)
   {
-    const IGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
-    const IGeometry::SharedFaceList::store_type& faces = geom.getFacesRef().getDataStoreRef();
+    const AbstractGeometry::SharedVertexList::store_type& verts = geom.getVerticesRef().getDataStoreRef();
+    const AbstractGeometry::SharedFaceList::store_type& faces = geom.getFacesRef().getDataStoreRef();
 
     usize numComp = faces.getNumberOfComponents();
     for(usize i = 0; i < faces.getNumberOfTuples(); i++)
@@ -144,7 +145,7 @@ std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataSto
 
       for(usize comp = 0; comp < numComp; comp++)
       {
-        const IGeometry::SharedFaceList::value_type activeVertIndex = faces[(i * numComp) + comp];
+        const AbstractGeometry::SharedFaceList::value_type activeVertIndex = faces[(i * numComp) + comp];
         float32 xVal = verts[(activeVertIndex * 3) + 0];
         float32 yVal = verts[(activeVertIndex * 3) + 1];
         float32 zVal = verts[(activeVertIndex * 3) + 2];
@@ -165,7 +166,7 @@ std::vector<float32> ComputeBounds(const GeomT& geom, const Int32AbstractDataSto
 }
 
 template <class... ArgsT>
-std::vector<float32> ExecuteComputeBounds(const IGeometry& geom, ArgsT&&... args)
+std::vector<float32> ExecuteComputeBounds(const AbstractGeometry& geom, ArgsT&&... args)
 {
   switch(geom.getGeomType())
   {
@@ -216,7 +217,7 @@ Result<> ComputeFeatureBounds::operator()()
                                                featureAM.getNumberOfTuples(), numFeatures, m_InputValues->FeatureIdsArrayPath.getTargetName()));
   }
 
-  const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
+  const auto& geom = m_DataStructure.getDataRefAs<AbstractGeometry>(m_InputValues->GeometryPath);
 
   std::vector<float32> bounds = ExecuteComputeBounds(geom, featureIds, numFeatures);
   if(bounds.empty())

@@ -21,7 +21,7 @@ namespace
 struct ByteSwapArray
 {
   template <typename ScalarType>
-  Result<> operator()(IDataArray* inputDataArray)
+  Result<> operator()(AbstractDataArray* inputDataArray)
   {
     if constexpr(std::is_same_v<ScalarType, bool> || std::is_same_v<ScalarType, uint8> || std::is_same_v<ScalarType, int8>) // byte-swap unnecessary bail early
     {
@@ -80,7 +80,7 @@ Parameters WriteBinaryDataFilter::parameters() const
   params.insert(std::make_unique<StringParameter>(k_FileExtension_Key, "File Extension", "The file extension for the output file", ".bin"));
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "The arrays to be exported to a binary file",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   return params;
@@ -119,7 +119,7 @@ Result<> WriteBinaryDataFilter::executeImpl(DataStructure& dataStructure, const 
     }
     if(endian::native != endianess) // if requested endianess is not native then byteswap
     {
-      auto* oldSelectedArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+      auto* oldSelectedArray = dataStructure.getDataAs<AbstractDataArray>(selectedArrayPath);
       ExecuteDataFunction(ByteSwapArray{}, oldSelectedArray->getDataType(), oldSelectedArray);
     }
   }

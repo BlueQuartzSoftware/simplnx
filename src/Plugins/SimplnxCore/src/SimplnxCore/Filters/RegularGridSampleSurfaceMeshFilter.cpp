@@ -88,8 +88,8 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
       std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(
       std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Units (For Description Only)", "The units to be displayed below", to_underlying(IGeometry::LengthUnit::Micrometer),
-                                                   IGeometry::GetAllLengthUnitStrings()));
+  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Units (For Description Only)", "The units to be displayed below", to_underlying(AbstractGeometry::LengthUnit::Micrometer),
+                                                   AbstractGeometry::GetAllLengthUnitStrings()));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
@@ -165,7 +165,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
     std::stringstream boxDimensions = std::stringstream();
 
-    std::string lengthUnit = IGeometry::LengthUnitToString(static_cast<IGeometry::LengthUnit>(pLengthUnitValue));
+    std::string lengthUnit = AbstractGeometry::LengthUnitToString(static_cast<AbstractGeometry::LengthUnit>(pLengthUnitValue));
 
     boxDimensions << "X Range: " << std::setprecision(8) << std::noshowpoint << pOriginValue[0] << " to " << std::setprecision(8) << std::noshowpoint
                   << (pOriginValue[0] + (pDimensionsValue[0] * pSpacingValue[0])) << " (Delta: " << std::setprecision(8) << std::noshowpoint << (pDimensionsValue[0] * pSpacingValue[0]) << ") "
@@ -207,7 +207,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
     std::string pSliceAttributeMatrixNameValue("SliceAttributeMatrix");
     // create the edge geometry
     {
-      auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pSliceDataContainerNameValue, 1, 2, INodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
+      auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pSliceDataContainerNameValue, 1, 2, AbstractNodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
                                                                              EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
       resultOutputActions.value().appendAction(std::move(createGeometryAction));
     }

@@ -1,7 +1,7 @@
 #include "ComputeTriangleGeomVolumes.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
@@ -30,11 +30,11 @@ const std::atomic_bool& ComputeTriangleGeomVolumes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeTriangleGeomVolumes::operator()()
 {
-  using MeshIndexType = IGeometry::MeshIndexType;
-  using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
+  using SharedVertexListType = AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>;
 
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  IGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
+  AbstractGeometry::MeshIndexType numTriangles = triangleGeom.getNumberOfFaces();
   const SharedVertexListType& vertexCoords = triangleGeom.getVertices()->getDataStoreRef();
   const auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
 

@@ -77,7 +77,7 @@ void ReplaceValue(DataArray<T>& inputArrayPtr, const DataArray<ConditionalType>*
 struct ConditionalReplaceValueInArrayFromString
 {
   template <class T>
-  Result<> operator()(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, const bool invertMask = false)
+  Result<> operator()(const std::string& valueAsStr, AbstractDataObject& inputDataObject, const AbstractDataArray& conditionalDataArray, const bool invertMask = false)
   {
     using DataArrayType = DataArray<T>;
 
@@ -117,7 +117,7 @@ struct ConditionalReplaceValueInArrayFromString
  * @param conditionalDataArray The mask array as a boolean array
  * @return
  */
-SIMPLNX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, DataObject& inputDataObject, const IDataArray& conditionalDataArray, bool invertmask = false);
+SIMPLNX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueAsStr, AbstractDataObject& inputDataObject, const AbstractDataArray& conditionalDataArray, bool invertmask = false);
 
 template <typename T>
 bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
@@ -137,7 +137,7 @@ bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, co
   return true;
 }
 
-bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArray, const std::string& dataFormat);
+bool ConvertIDataArray(const std::shared_ptr<AbstractDataArray>& dataArray, const std::string& dataFormat);
 
 /**
  * @brief Creates a NeighborList array with the given properties
@@ -154,7 +154,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
   static constexpr StringLiteral prefix = "CreateNeighborListAction: ";
   auto parentPath = path.getParent();
 
-  std::optional<DataObject::IdType> dataObjectId;
+  std::optional<AbstractDataObject::IdType> dataObjectId;
 
   if(parentPath.getLength() != 0)
   {
@@ -199,7 +199,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
 template <class T>
 DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& path)
 {
-  DataObject* objectPtr = dataStructure.getData(path);
+  AbstractDataObject* objectPtr = dataStructure.getData(path);
   auto* dataArrayPtr = dynamic_cast<DataArray<T>*>(objectPtr);
   if(dataArrayPtr == nullptr)
   {
@@ -275,7 +275,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
  */
 template <typename T>
 DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::string& name, DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& componentShape,
-                                   DataObject::IdType parentId = {})
+                                   AbstractDataObject::IdType parentId = {})
 {
   // std::cout << "  Reading file " << filename << std::endl;
   using DataStoreType = DataStore<T>;
@@ -310,9 +310,9 @@ DataArray<T>* ImportFromBinaryFile(const std::string& filename, const std::strin
 /**
  * @brief Creates a deep copy of an array into another location in the DataStructure.
  *
- * WARNING: If there is a DataObject already at the destination path then that data object
+ * WARNING: If there is a AbstractDataObject already at the destination path then that data object
  * is removed from the DataStructure and replaced with the new copy
- * @tparam ArrayType The Type of DataArray to copy. IDataArray and StringArray are supported
+ * @tparam ArrayType The Type of DataArray to copy. AbstractDataArray and StringArray are supported
  * @param dataStructure The DataStructure object
  * @param sourceDataPath The source path to copy from.
  * @param destDataPath The destination path to copy into.
@@ -383,7 +383,7 @@ template <typename T>
 class CopyTupleUsingIndexList
 {
 public:
-  CopyTupleUsingIndexList(const IDataArray& oldCellArray, IDataArray& newCellArray, nonstd::span<const int64> newIndices)
+  CopyTupleUsingIndexList(const AbstractDataArray& oldCellArray, AbstractDataArray& newCellArray, nonstd::span<const int64> newIndices)
   : m_OldCellArray(oldCellArray)
   , m_NewCellArray(newCellArray)
   , m_NewToOldIndices(newIndices)
@@ -427,8 +427,8 @@ public:
   }
 
 private:
-  const IDataArray& m_OldCellArray;
-  IDataArray& m_NewCellArray;
+  const AbstractDataArray& m_OldCellArray;
+  AbstractDataArray& m_NewCellArray;
   nonstd::span<const int64> m_NewToOldIndices;
 };
 
@@ -522,8 +522,8 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
  * can be converted to the proper type needed for the new array, and an error result is returned otherwise.
  * @return
  */
-SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const ShapeType& tupleShape,
-                                                                const std::string& defaultValue, const std::optional<DataObject::IdType> parentId = {});
+SIMPLNX_EXPORT Result<AbstractArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, AbstractArray* array, const std::string& newArrayName, const ShapeType& tupleShape,
+                                                                       const std::string& defaultValue, const std::optional<AbstractDataObject::IdType> parentId = {});
 
 template <typename T>
 std::vector<std::array<T, 2>> GetComponentMinMax(std::shared_ptr<DataArray<T>> dataArray)
@@ -554,16 +554,16 @@ std::vector<std::array<T, 2>> GetComponentMinMax(std::shared_ptr<DataArray<T>> d
 }
 
 /**
- * @brief The following functions and classes are meant to make copying data from one IArray into another easier for the developer.
+ * @brief The following functions and classes are meant to make copying data from one AbstractArray into another easier for the developer.
  *
  * An example use of these functions would be the following (where newCellData is an AttributeMatrix in dataStructure ):
  *   ParallelTaskAlgorithm taskRunner;
  *   for (const auto& [dataId, dataObject] : *newCellData)
  *   {
- *     auto* inputDataArray = dataStructure.getDataAs<IArray>(inputCellDataPath.createChildPath(name));
- *     auto* destDataArray = dataStructure.getDataAs<IArray>(destCellDataPath.createChildPath(name));
- *     auto* newDataArray = dataStructure.getDataAs<IArray>(newCellDataPath.createChildPath(name));
- *     const IArray::ArrayType arrayType = destDataArray->getArrayType();
+ *     auto* inputDataArray = dataStructure.getDataAs<AbstractArray>(inputCellDataPath.createChildPath(name));
+ *     auto* destDataArray = dataStructure.getDataAs<AbstractArray>(destCellDataPath.createChildPath(name));
+ *     auto* newDataArray = dataStructure.getDataAs<AbstractArray>(newCellDataPath.createChildPath(name));
+ *     const AbstractArray::ArrayType arrayType = destDataArray->getArrayType();
  *     CopyFromArray::RunParallel<CopyFromArray::Combine>(arrayType, destDataArray, taskRunner, inputDataArray, newDataArray);
  *   }
  *   taskRunner.wait();
@@ -732,7 +732,7 @@ Result<> CopyDataND(const K& inputArray, K& destArray, const std::vector<usize>&
     {
       destArray[dstLinearIdx] = inputArray[srcLinearIdx];
     }
-    else if constexpr(std::is_base_of_v<INeighborList, K>)
+    else if constexpr(std::is_base_of_v<AbstractNeighborList, K>)
     {
       destArray.setList(static_cast<int32>(dstLinearIdx), inputArray.getList(static_cast<int32>(srcLinearIdx)));
     }
@@ -1047,15 +1047,15 @@ Result<> CombineData(const std::vector<const K*>& inputArrays, const std::vector
 }
 
 /**
- * @brief This class will append all of the data from the input array of any IArray type to the given destination array of the same IArray type starting at the given tupleOffset. This class DOES NOT
- * do any bounds checking and assumes that the destination array has already been properly resized to fit all of the data
+ * @brief This class will append all of the data from the input array of any AbstractArray type to the given destination array of the same AbstractArray type starting at the given tupleOffset. This
+ * class DOES NOT do any bounds checking and assumes that the destination array has already been properly resized to fit all of the data
  */
 template <typename T>
 class AppendArray
 {
 public:
-  AppendArray(IArray& destCellArray, const std::vector<const IArray*>& inputCellArrays, const std::vector<std::vector<usize>>& inputTupleShapes, const std::vector<usize>& originalDestDims,
-              const std::vector<usize>& newDestDims, Direction direction = Direction::Z, bool mirror = false)
+  AppendArray(AbstractArray& destCellArray, const std::vector<const AbstractArray*>& inputCellArrays, const std::vector<std::vector<usize>>& inputTupleShapes,
+              const std::vector<usize>& originalDestDims, const std::vector<usize>& newDestDims, Direction direction = Direction::Z, bool mirror = false)
   : m_ArrayType(destCellArray.getArrayType())
   , m_InputCellArrays(inputCellArrays)
   , m_InputTupleShapes(inputTupleShapes)
@@ -1076,7 +1076,7 @@ public:
 
   void operator()() const
   {
-    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+    if(m_ArrayType == AbstractArray::ArrayType::NeighborListArray)
     {
       using NeighborListType = NeighborList<T>;
       auto* destArrayPtr = dynamic_cast<NeighborListType*>(m_DestCellArray);
@@ -1090,34 +1090,34 @@ public:
       std::vector<const NeighborListType*> castedArrays;
       castedArrays.reserve(m_InputCellArrays.size());
       std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
-                     [](const IArray* elem) -> const NeighborListType* { return dynamic_cast<const NeighborListType*>(elem); });
+                     [](const AbstractArray* elem) -> const NeighborListType* { return dynamic_cast<const NeighborListType*>(elem); });
 
       AppendData<NeighborListType>(castedArrays, m_InputTupleShapes, *destArrayPtr, m_OriginalDestDims, m_NewDestDims, m_Direction, m_Mirror);
     }
-    if(m_ArrayType == IArray::ArrayType::DataArray)
+    if(m_ArrayType == AbstractArray::ArrayType::DataArray)
     {
       using DataArrayType = DataArray<T>;
       std::vector<const DataArrayType*> castedArrays;
       castedArrays.reserve(m_InputCellArrays.size());
       std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
-                     [](const IArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
+                     [](const AbstractArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
       AppendData<DataArrayType>(castedArrays, m_InputTupleShapes, *dynamic_cast<DataArrayType*>(m_DestCellArray), m_OriginalDestDims, m_NewDestDims, m_Direction, m_Mirror);
     }
-    if(m_ArrayType == IArray::ArrayType::StringArray)
+    if(m_ArrayType == AbstractArray::ArrayType::StringArray)
     {
       std::vector<const StringArray*> castedArrays;
       castedArrays.reserve(m_InputCellArrays.size());
       std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
-                     [](const IArray* elem) -> const StringArray* { return dynamic_cast<const StringArray*>(elem); });
+                     [](const AbstractArray* elem) -> const StringArray* { return dynamic_cast<const StringArray*>(elem); });
       AppendData<StringArray>(castedArrays, m_InputTupleShapes, *dynamic_cast<StringArray*>(m_DestCellArray), m_OriginalDestDims, m_NewDestDims, m_Direction, m_Mirror);
     }
   }
 
 private:
-  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
-  std::vector<const IArray*> m_InputCellArrays;
+  AbstractArray::ArrayType m_ArrayType = AbstractArray::ArrayType::Any;
+  std::vector<const AbstractArray*> m_InputCellArrays;
   std::vector<std::vector<usize>> m_InputTupleShapes;
-  IArray* m_DestCellArray = nullptr;
+  AbstractArray* m_DestCellArray = nullptr;
   std::vector<usize> m_OriginalDestDims;
   std::vector<usize> m_NewDestDims;
   Direction m_Direction = Direction::Z;
@@ -1125,14 +1125,14 @@ private:
 };
 
 /**
- * @brief This class will copy over all of the data from the first input array of any IArray type, then the second input array of the same IArray type to the given destination array (of the same
- * IArray type). This class DOES NOT do any bounds checking and assumes that the destination array has already been properly sized to fit all of the data.
+ * @brief This class will copy over all of the data from the first input array of any AbstractArray type, then the second input array of the same AbstractArray type to the given destination array (of
+ * the same AbstractArray type). This class DOES NOT do any bounds checking and assumes that the destination array has already been properly sized to fit all of the data.
  */
 template <typename T>
 class CombineArrays
 {
 public:
-  CombineArrays(IArray& destCellArray, const std::vector<const IArray*>& inputCellArrays, const std::vector<std::vector<usize>>& inputTupleShapes, const std::vector<usize>& newDestDims,
+  CombineArrays(AbstractArray& destCellArray, const std::vector<const AbstractArray*>& inputCellArrays, const std::vector<std::vector<usize>>& inputTupleShapes, const std::vector<usize>& newDestDims,
                 Direction direction = Direction::Z, bool mirror = false)
   : m_ArrayType(destCellArray.getArrayType())
   , m_InputCellArrays(inputCellArrays)
@@ -1153,7 +1153,7 @@ public:
 
   void operator()() const
   {
-    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+    if(m_ArrayType == AbstractArray::ArrayType::NeighborListArray)
     {
       using NeighborListT = NeighborList<T>;
       auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
@@ -1165,41 +1165,41 @@ public:
       std::vector<const NeighborListT*> castedArrays;
       castedArrays.reserve(m_InputCellArrays.size());
       std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
-                     [](const IArray* elem) -> const NeighborListT* { return dynamic_cast<const NeighborListT*>(elem); });
+                     [](const AbstractArray* elem) -> const NeighborListT* { return dynamic_cast<const NeighborListT*>(elem); });
       CombineData<NeighborListT>(castedArrays, m_InputTupleShapes, *destArray, m_NewDestDims, m_Direction, m_Mirror);
     }
-    if(m_ArrayType == IArray::ArrayType::DataArray)
+    if(m_ArrayType == AbstractArray::ArrayType::DataArray)
     {
       using DataArrayType = DataArray<T>;
       std::vector<const DataArrayType*> castedArrays;
       castedArrays.reserve(m_InputCellArrays.size());
       std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
-                     [](const IArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
+                     [](const AbstractArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
       CombineData<DataArrayType>(castedArrays, m_InputTupleShapes, *dynamic_cast<DataArrayType*>(m_DestCellArray), m_NewDestDims, m_Direction, m_Mirror);
     }
-    if(m_ArrayType == IArray::ArrayType::StringArray)
+    if(m_ArrayType == AbstractArray::ArrayType::StringArray)
     {
       std::vector<const StringArray*> castedArrays;
       castedArrays.reserve(m_InputCellArrays.size());
       std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
-                     [](const IArray* elem) -> const StringArray* { return dynamic_cast<const StringArray*>(elem); });
+                     [](const AbstractArray* elem) -> const StringArray* { return dynamic_cast<const StringArray*>(elem); });
       CombineData<StringArray>(castedArrays, m_InputTupleShapes, *dynamic_cast<StringArray*>(m_DestCellArray), m_NewDestDims, m_Direction, m_Mirror);
     }
   }
 
 private:
-  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
-  std::vector<const IArray*> m_InputCellArrays;
+  AbstractArray::ArrayType m_ArrayType = AbstractArray::ArrayType::Any;
+  std::vector<const AbstractArray*> m_InputCellArrays;
   std::vector<std::vector<usize>> m_InputTupleShapes;
   std::vector<usize> m_NewDestDims;
-  IArray* m_DestCellArray = nullptr;
+  AbstractArray* m_DestCellArray = nullptr;
   Direction m_Direction = Direction::Z;
   bool m_Mirror = false;
 };
 
 /**
- * @brief This class will copy all of the data from the input array of any IArray type to the given destination array of the same IArray using the newToOldIndices list. This class DOES NOT
- * do any bounds checking and assumes that the destination array has already been properly resized to fit all of the data
+ * @brief This class will copy all of the data from the input array of any AbstractArray type to the given destination array of the same AbstractArray using the newToOldIndices list. This class DOES
+ * NOT do any bounds checking and assumes that the destination array has already been properly resized to fit all of the data
  *
  * WARNING: This method can be very memory intensive for larger geometries. Use this method with caution!
  */
@@ -1207,7 +1207,7 @@ template <typename T>
 class CopyUsingIndexList
 {
 public:
-  CopyUsingIndexList(IArray& destCellArray, const IArray& inputCellArray, const nonstd::span<const int64>& newToOldIndices)
+  CopyUsingIndexList(AbstractArray& destCellArray, const AbstractArray& inputCellArray, const nonstd::span<const int64>& newToOldIndices)
   : m_ArrayType(destCellArray.getArrayType())
   , m_InputCellArray(&inputCellArray)
   , m_DestCellArray(&destCellArray)
@@ -1228,7 +1228,7 @@ public:
     {
       int64 oldIndexI = m_NewToOldIndices[i];
       Result<> copySucceeded;
-      if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+      if(m_ArrayType == AbstractArray::ArrayType::NeighborListArray)
       {
         using NeighborListT = NeighborList<T>;
         auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
@@ -1239,7 +1239,7 @@ public:
           copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
         }
       }
-      else if(m_ArrayType == IArray::ArrayType::DataArray)
+      else if(m_ArrayType == AbstractArray::ArrayType::DataArray)
       {
         using DataArrayType = DataArray<T>;
         auto* destArray = dynamic_cast<DataArrayType*>(m_DestCellArray);
@@ -1252,7 +1252,7 @@ public:
           destArray->initializeTuple(i, 0);
         }
       }
-      else if(m_ArrayType == IArray::ArrayType::StringArray)
+      else if(m_ArrayType == AbstractArray::ArrayType::StringArray)
       {
         auto destArray = *dynamic_cast<StringArray*>(m_DestCellArray);
         if(oldIndexI >= 0)
@@ -1276,22 +1276,22 @@ public:
   }
 
 private:
-  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
-  const IArray* m_InputCellArray = nullptr;
-  IArray* m_DestCellArray = nullptr;
+  AbstractArray::ArrayType m_ArrayType = AbstractArray::ArrayType::Any;
+  const AbstractArray* m_InputCellArray = nullptr;
+  AbstractArray* m_DestCellArray = nullptr;
   nonstd::span<const int64> m_NewToOldIndices;
 };
 
 /**
- * @brief This class will copy all of the data from the RectGrid geometry input array of any IArray type to the given Image geometry destination array of the same IArray type by calculating the mapped
- * RectGrid geometry index from the Image geometry dimensions/spacing. This class DOES NOT do any bounds checking and assumes that the destination array has already been properly resized to fit all of
- * the data
+ * @brief This class will copy all of the data from the RectGrid geometry input array of any AbstractArray type to the given Image geometry destination array of the same AbstractArray type by
+ * calculating the mapped RectGrid geometry index from the Image geometry dimensions/spacing. This class DOES NOT do any bounds checking and assumes that the destination array has already been
+ * properly resized to fit all of the data
  */
 template <typename T>
 class MapRectGridDataToImageData
 {
 public:
-  MapRectGridDataToImageData(IArray& destCellArray, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims, const std::vector<float32>& imageGeoSpacing,
+  MapRectGridDataToImageData(AbstractArray& destCellArray, const AbstractArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims, const std::vector<float32>& imageGeoSpacing,
                              const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues, const Float32Array* zGridValues)
   : m_ArrayType(destCellArray.getArrayType())
   , m_InputCellArray(&inputCellArray)
@@ -1367,7 +1367,7 @@ public:
 
           // Use the computed index to copy the data from the RectGrid to the Image Geometry
           Result<> copySucceeded;
-          if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+          if(m_ArrayType == AbstractArray::ArrayType::NeighborListArray)
           {
             using NeighborListT = NeighborList<T>;
             auto* destArrayPtr = dynamic_cast<NeighborListT*>(m_DestCellArray);
@@ -1378,7 +1378,7 @@ public:
               copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArrayPtr, imageIndex, rectGridIndex, 1);
             }
           }
-          else if(m_ArrayType == IArray::ArrayType::DataArray)
+          else if(m_ArrayType == AbstractArray::ArrayType::DataArray)
           {
             using DataArrayType = DataArray<T>;
             auto* destArray = dynamic_cast<DataArrayType*>(m_DestCellArray);
@@ -1391,7 +1391,7 @@ public:
               destArray->initializeTuple(imageIndex, 0);
             }
           }
-          else if(m_ArrayType == IArray::ArrayType::StringArray)
+          else if(m_ArrayType == AbstractArray::ArrayType::StringArray)
           {
             auto destArray = *dynamic_cast<StringArray*>(m_DestCellArray);
             if(rectGridIndex >= 0)
@@ -1418,9 +1418,9 @@ public:
   }
 
 private:
-  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
-  const IArray* m_InputCellArray = nullptr;
-  IArray* m_DestCellArray = nullptr;
+  AbstractArray::ArrayType m_ArrayType = AbstractArray::ArrayType::Any;
+  const AbstractArray* m_InputCellArray = nullptr;
+  AbstractArray* m_DestCellArray = nullptr;
   const FloatVec3 m_Origin;
   const SizeVec3 m_ImageGeomDims;
   const std::vector<float32> m_ImageGeomSpacing;
@@ -1432,50 +1432,50 @@ private:
 };
 
 /**
- * @brief This function will make use of the AppendData class with the bool data type only to append data from the input IArray to the destination IArray at the given tupleOffset. This function DOES
- * NOT do any bounds checking!
+ * @brief This function will make use of the AppendData class with the bool data type only to append data from the input AbstractArray to the destination AbstractArray at the given tupleOffset. This
+ * function DOES NOT do any bounds checking!
  */
-inline void RunAppendBoolAppend(IArray& destCellArray, const std::vector<const IArray*>& inputCellArrays, const std::vector<std::vector<usize>>& inputTupleShapes,
+inline void RunAppendBoolAppend(AbstractArray& destCellArray, const std::vector<const AbstractArray*>& inputCellArrays, const std::vector<std::vector<usize>>& inputTupleShapes,
                                 const std::vector<usize>& originalDestDims, const std::vector<usize>& newDestDims, Direction direction = Direction::Z, bool mirror = false)
 {
   using DataArrayType = DataArray<bool>;
   std::vector<const DataArrayType*> castedArrays;
   castedArrays.reserve(inputTupleShapes.size());
   std::transform(inputCellArrays.cbegin(), inputCellArrays.cend(), std::back_inserter(castedArrays),
-                 [](const IArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
+                 [](const AbstractArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
   AppendData<DataArrayType>(castedArrays, inputTupleShapes, *dynamic_cast<DataArrayType*>(&destCellArray), originalDestDims, newDestDims, direction, mirror);
 }
 
 /**
- * @brief This function will make use of the CombineData method with the bool data type only to combine data from the input IArrays to the destination IArray. This function DOES
+ * @brief This function will make use of the CombineData method with the bool data type only to combine data from the input IArrays to the destination AbstractArray. This function DOES
  * NOT do any bounds checking!
  */
-inline void RunCombineBoolAppend(IArray& destCellArray, const std::vector<const IArray*>& inputCellArrays, const std::vector<std::vector<usize>>& inputTupleShapes,
+inline void RunCombineBoolAppend(AbstractArray& destCellArray, const std::vector<const AbstractArray*>& inputCellArrays, const std::vector<std::vector<usize>>& inputTupleShapes,
                                  const std::vector<usize>& newDestDims, Direction direction = Direction::Z, bool mirror = false)
 {
   using DataArrayType = DataArray<bool>;
   std::vector<const DataArrayType*> castedArrays;
   castedArrays.reserve(inputCellArrays.size());
   std::transform(inputCellArrays.cbegin(), inputCellArrays.cend(), std::back_inserter(castedArrays),
-                 [](const IArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
+                 [](const AbstractArray* elem) -> const DataArrayType* { return dynamic_cast<const DataArrayType*>(elem); });
   CombineData<DataArrayType>(castedArrays, inputTupleShapes, *dynamic_cast<DataArrayType*>(&destCellArray), newDestDims, direction, mirror);
 }
 
 /**
- * @brief This function will make use of the CopyUsingIndexList class with the bool data type only to copy data from the input IArray to the destination IArray using the given index list. This
- * function DOES NOT do any bounds checking!
+ * @brief This function will make use of the CopyUsingIndexList class with the bool data type only to copy data from the input AbstractArray to the destination AbstractArray using the given index
+ * list. This function DOES NOT do any bounds checking!
  */
-inline void RunBoolCopyUsingIndexList(IArray& destCellArray, const IArray& inputCellArray, const nonstd::span<const int64>& newToOldIndices)
+inline void RunBoolCopyUsingIndexList(AbstractArray& destCellArray, const AbstractArray& inputCellArray, const nonstd::span<const int64>& newToOldIndices)
 {
   using DataArrayType = DataArray<bool>;
   CopyUsingIndexList<DataArrayType>(*dynamic_cast<DataArrayType*>(&destCellArray), *dynamic_cast<const DataArrayType*>(&inputCellArray), newToOldIndices);
 }
 
 /**
- * @brief This function will make use of the MapRectGridDataToImageData class with the bool data type only to copy data from the input IArray to the destination IArray using the given index list. This
- * function DOES NOT do any bounds checking!
+ * @brief This function will make use of the MapRectGridDataToImageData class with the bool data type only to copy data from the input AbstractArray to the destination AbstractArray using the given
+ * index list. This function DOES NOT do any bounds checking!
  */
-inline void RunBoolMapRectToImage(IArray& destCellArray, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims, const std::vector<float32>& imageGeoSpacing,
+inline void RunBoolMapRectToImage(AbstractArray& destCellArray, const AbstractArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims, const std::vector<float32>& imageGeoSpacing,
                                   const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues, const Float32Array* zGridValues)
 {
   using DataArrayType = DataArray<bool>;
@@ -1484,17 +1484,17 @@ inline void RunBoolMapRectToImage(IArray& destCellArray, const IArray& inputCell
 }
 
 template <class ParallelRunnerT, class... ArgsT>
-void RunParallelAppend(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+void RunParallelAppend(AbstractArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
 {
-  const IArray::ArrayType arrayType = destArray.getArrayType();
+  const AbstractArray::ArrayType arrayType = destArray.getArrayType();
   DataType dataType = DataType::int32;
-  if(arrayType == IArray::ArrayType::NeighborListArray)
+  if(arrayType == AbstractArray::ArrayType::NeighborListArray)
   {
-    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
+    dataType = dynamic_cast<AbstractNeighborList*>(&destArray)->getDataType();
   }
-  if(arrayType == IArray::ArrayType::DataArray)
+  if(arrayType == AbstractArray::ArrayType::DataArray)
   {
-    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    dataType = dynamic_cast<AbstractDataArray*>(&destArray)->getDataType();
     if(dataType == DataType::boolean)
     {
       return RunAppendBoolAppend(destArray, std::forward<ArgsT>(args)...);
@@ -1505,17 +1505,17 @@ void RunParallelAppend(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... a
 }
 
 template <class ParallelRunnerT, class... ArgsT>
-void RunParallelCombine(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+void RunParallelCombine(AbstractArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
 {
-  const IArray::ArrayType arrayType = destArray.getArrayType();
+  const AbstractArray::ArrayType arrayType = destArray.getArrayType();
   DataType dataType = DataType::int32;
-  if(arrayType == IArray::ArrayType::NeighborListArray)
+  if(arrayType == AbstractArray::ArrayType::NeighborListArray)
   {
-    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
+    dataType = dynamic_cast<AbstractNeighborList*>(&destArray)->getDataType();
   }
-  if(arrayType == IArray::ArrayType::DataArray)
+  if(arrayType == AbstractArray::ArrayType::DataArray)
   {
-    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    dataType = dynamic_cast<AbstractDataArray*>(&destArray)->getDataType();
     if(dataType == DataType::boolean)
     {
       RunCombineBoolAppend(destArray, std::forward<ArgsT>(args)...);
@@ -1529,17 +1529,17 @@ void RunParallelCombine(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... 
  * WARNING: This method can be very memory intensive for larger geometries. Use this method with caution!
  */
 template <class ParallelRunnerT, class... ArgsT>
-void RunParallelCopyUsingIndexList(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+void RunParallelCopyUsingIndexList(AbstractArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
 {
-  const IArray::ArrayType arrayType = destArray.getArrayType();
+  const AbstractArray::ArrayType arrayType = destArray.getArrayType();
   DataType dataType = DataType::int32;
-  if(arrayType == IArray::ArrayType::NeighborListArray)
+  if(arrayType == AbstractArray::ArrayType::NeighborListArray)
   {
-    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
+    dataType = dynamic_cast<AbstractNeighborList*>(&destArray)->getDataType();
   }
-  if(arrayType == IArray::ArrayType::DataArray)
+  if(arrayType == AbstractArray::ArrayType::DataArray)
   {
-    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    dataType = dynamic_cast<AbstractDataArray*>(&destArray)->getDataType();
     if(dataType == DataType::boolean)
     {
       RunBoolCopyUsingIndexList(destArray, std::forward<ArgsT>(args)...);
@@ -1550,17 +1550,17 @@ void RunParallelCopyUsingIndexList(IArray& destArray, ParallelRunnerT&& runner, 
 }
 
 template <class ParallelRunnerT, class... ArgsT>
-void RunParallelMapRectToImage(IArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
+void RunParallelMapRectToImage(AbstractArray& destArray, ParallelRunnerT&& runner, ArgsT&&... args)
 {
-  const IArray::ArrayType arrayType = destArray.getArrayType();
+  const AbstractArray::ArrayType arrayType = destArray.getArrayType();
   DataType dataType = DataType::int32;
-  if(arrayType == IArray::ArrayType::NeighborListArray)
+  if(arrayType == AbstractArray::ArrayType::NeighborListArray)
   {
-    dataType = dynamic_cast<INeighborList*>(&destArray)->getDataType();
+    dataType = dynamic_cast<AbstractNeighborList*>(&destArray)->getDataType();
   }
-  if(arrayType == IArray::ArrayType::DataArray)
+  if(arrayType == AbstractArray::ArrayType::DataArray)
   {
-    dataType = dynamic_cast<IDataArray*>(&destArray)->getDataType();
+    dataType = dynamic_cast<AbstractDataArray*>(&destArray)->getDataType();
     if(dataType == DataType::boolean)
     {
       RunBoolMapRectToImage(destArray, std::forward<ArgsT>(args)...);
@@ -1582,7 +1582,7 @@ template <typename T>
 class CopyCellDataArray
 {
 public:
-  CopyCellDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const std::vector<usize>& newEdgesIndex, const std::atomic_bool& shouldCancel)
+  CopyCellDataArray(const AbstractDataArray& oldCellArray, AbstractDataArray& newCellArray, const std::vector<usize>& newEdgesIndex, const std::atomic_bool& shouldCancel)
   : m_OldCellArray(dynamic_cast<const DataArray<T>&>(oldCellArray))
   , m_NewCellArray(dynamic_cast<DataArray<T>&>(newCellArray))
   , m_NewEdgesIndex(newEdgesIndex)

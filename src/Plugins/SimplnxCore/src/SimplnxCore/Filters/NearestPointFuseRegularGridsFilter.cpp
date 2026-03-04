@@ -2,9 +2,9 @@
 
 #include "SimplnxCore/Filters/Algorithms/NearestPointFuseRegularGrids.hpp"
 
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
@@ -106,7 +106,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
 
   // Create arrays on the reference grid to hold data present on the sampling grid
   {
-    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<IDataArray>();
+    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<AbstractDataArray>();
     for(const auto& array : sampleVoxelArrays)
     {
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
@@ -127,7 +127,7 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
 
   // !!!! Not implemented for v1 !!!!
   //  {
-  //    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<INeighborList>();
+  //    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<AbstractNeighborList>();
   //    for(const auto& array : sampleVoxelArrays)
   //    {
   //      DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());

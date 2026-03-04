@@ -6,23 +6,23 @@
 using namespace nx::core;
 
 BaseGroup::BaseGroup(DataStructure& dataStructure, std::string name)
-: DataObject(dataStructure, std::move(name))
+: AbstractDataObject(dataStructure, std::move(name))
 {
 }
 
 BaseGroup::BaseGroup(DataStructure& dataStructure, std::string name, IdType importId)
-: DataObject(dataStructure, std::move(name), importId)
+: AbstractDataObject(dataStructure, std::move(name), importId)
 {
 }
 
 BaseGroup::BaseGroup(const BaseGroup& other)
-: DataObject(other)
+: AbstractDataObject(other)
 , m_DataMap(other.m_DataMap)
 {
 }
 
 BaseGroup::BaseGroup(BaseGroup&& other)
-: DataObject(std::move(other))
+: AbstractDataObject(std::move(other))
 , m_DataMap(std::move(other.m_DataMap))
 {
   auto keys = m_DataMap.getKeys();
@@ -34,7 +34,7 @@ BaseGroup::BaseGroup(BaseGroup&& other)
 
 BaseGroup::~BaseGroup() = default;
 
-DataObject::Type BaseGroup::getDataObjectType() const
+AbstractDataObject::Type BaseGroup::getDataObjectType() const
 {
   return Type::BaseGroup;
 }
@@ -74,32 +74,32 @@ bool BaseGroup::contains(const std::string& name) const
   return m_DataMap.contains(name);
 }
 
-bool BaseGroup::contains(const DataObject* obj) const
+bool BaseGroup::contains(const AbstractDataObject* obj) const
 {
   return m_DataMap.contains(obj);
 }
 
-DataObject* BaseGroup::operator[](const std::string& name)
+AbstractDataObject* BaseGroup::operator[](const std::string& name)
 {
   return m_DataMap[name];
 }
 
-const DataObject* BaseGroup::operator[](const std::string& name) const
+const AbstractDataObject* BaseGroup::operator[](const std::string& name) const
 {
   return m_DataMap[name];
 }
 
-DataObject& BaseGroup::at(const std::string& name)
+AbstractDataObject& BaseGroup::at(const std::string& name)
 {
   return m_DataMap.at(name);
 }
 
-const DataObject& BaseGroup::at(const std::string& name) const
+const AbstractDataObject& BaseGroup::at(const std::string& name) const
 {
   return m_DataMap.at(name);
 }
 
-bool BaseGroup::canInsert(const DataObject* obj) const
+bool BaseGroup::canInsert(const AbstractDataObject* obj) const
 {
   if(obj == nullptr)
   {
@@ -118,7 +118,7 @@ bool BaseGroup::canInsert(const DataObject* obj) const
 
 void BaseGroup::setDataStructure(DataStructure* dataStructure)
 {
-  DataObject::setDataStructure(dataStructure);
+  AbstractDataObject::setDataStructure(dataStructure);
   m_DataMap.setDataStructure(dataStructure);
 }
 
@@ -132,13 +132,13 @@ BaseGroup::ConstIterator BaseGroup::find(const std::string& name) const
   return m_DataMap.find(name);
 }
 
-bool BaseGroup::isParentOf(const DataObject* dataObj) const
+bool BaseGroup::isParentOf(const AbstractDataObject* dataObj) const
 {
   const std::vector<DataPath> origDataPaths = getDataPaths();
   return std::find_if(origDataPaths.begin(), origDataPaths.end(), [dataObj](const DataPath& path) { return dataObj->hasParent(path); }) != origDataPaths.end();
 }
 
-bool BaseGroup::insert(const std::weak_ptr<DataObject>& obj)
+bool BaseGroup::insert(const std::weak_ptr<AbstractDataObject>& obj)
 {
   auto ptr = obj.lock();
   if(!canInsert(ptr.get()))
@@ -153,7 +153,7 @@ bool BaseGroup::insert(const std::weak_ptr<DataObject>& obj)
   return false;
 }
 
-bool BaseGroup::remove(DataObject* obj)
+bool BaseGroup::remove(AbstractDataObject* obj)
 {
   if(obj == nullptr)
   {
@@ -218,18 +218,18 @@ std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupTyp
   static const std::map<GroupType, std::string> k_TypeToStringMap = {{GroupType::BaseGroup, "BaseGroup"},
                                                                      {GroupType::DataGroup, "DataGroup"},
                                                                      {GroupType::AttributeMatrix, "AttributeMatrix"},
-                                                                     {GroupType::IGeometry, "IGeometry"},
-                                                                     {GroupType::IGridGeometry, "IGridGeometry"},
+                                                                     {GroupType::AbstractGeometry, "AbstractGeometry"},
+                                                                     {GroupType::AbstractGridGeometry, "AbstractGridGeometry"},
                                                                      {GroupType::RectGridGeom, "RectGridGeom"},
                                                                      {GroupType::ImageGeom, "ImageGeom"},
-                                                                     {GroupType::INodeGeometry0D, "INodeGeometry0D"},
+                                                                     {GroupType::AbstractNodeGeometry0D, "AbstractNodeGeometry0D"},
                                                                      {GroupType::VertexGeom, "VertexGeom"},
-                                                                     {GroupType::INodeGeometry1D, "INodeGeometry1D"},
+                                                                     {GroupType::AbstractNodeGeometry1D, "AbstractNodeGeometry1D"},
                                                                      {GroupType::EdgeGeom, "EdgeGeom"},
-                                                                     {GroupType::INodeGeometry2D, "INodeGeometry2D"},
+                                                                     {GroupType::AbstractNodeGeometry2D, "AbstractNodeGeometry2D"},
                                                                      {GroupType::QuadGeom, "QuadGeom"},
                                                                      {GroupType::TriangleGeom, "TriangleGeom"},
-                                                                     {GroupType::INodeGeometry3D, "INodeGeometry3D"},
+                                                                     {GroupType::AbstractNodeGeometry3D, "AbstractNodeGeometry3D"},
                                                                      {GroupType::HexahedralGeom, "HexahedralGeom"},
                                                                      {GroupType::TetrahedralGeom, "TetrahedralGeom"},
                                                                      {GroupType::Unknown, "Unknown"}};
@@ -247,12 +247,12 @@ std::vector<std::string> BaseGroup::GetChildrenNames()
   return m_DataMap.getNames();
 }
 
-void BaseGroup::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
+void BaseGroup::checkUpdatedIdsImpl(const std::unordered_map<AbstractDataObject::IdType, AbstractDataObject::IdType>& updatedIdsMap)
 {
   m_DataMap.updateIds(updatedIdsMap);
 }
 
-std::vector<DataObject::IdType> BaseGroup::GetChildrenIds()
+std::vector<AbstractDataObject::IdType> BaseGroup::GetChildrenIds()
 {
   return m_DataMap.getKeys();
 }

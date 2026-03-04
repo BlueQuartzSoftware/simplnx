@@ -96,7 +96,7 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
     return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
 
-  const DataObject* dataObject = dataStructure.getData(value);
+  const AbstractDataObject* dataObject = dataStructure.getData(value);
   if(dataObject == nullptr)
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
@@ -121,7 +121,7 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
 Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
+  AbstractDataObject* object = dataStructure.getData(path);
   return {{object}};
 }
 

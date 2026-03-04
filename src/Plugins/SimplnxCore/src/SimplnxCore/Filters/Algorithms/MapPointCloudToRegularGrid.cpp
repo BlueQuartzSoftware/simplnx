@@ -38,7 +38,7 @@ using ErrorType = OutOfBoundsType<false, false, true>;
 
 template <class OutOfBoundsType = SilentType, bool UseMask = false>
 Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const VertexGeom& vertices, const ImageGeom& image, UInt64AbstractDataStore& voxelIndices,
-                         const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, uint64 outOfBoundsValue)
+                         const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& maskCompare, uint64 outOfBoundsValue)
 {
   // Out of Bounds Counter
   usize count = 0;
@@ -132,7 +132,7 @@ Result<> MapPointCloudToRegularGrid::operator()()
   const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
 
   // Create the Mask
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);

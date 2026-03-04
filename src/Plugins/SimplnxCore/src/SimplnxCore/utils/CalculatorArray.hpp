@@ -155,7 +155,7 @@ protected:
   }
 
 private:
-  std::optional<DataObject::IdType> m_ArrayId = {};
+  std::optional<AbstractDataObject::IdType> m_ArrayId = {};
   ValueType m_Type = Unknown;
   DataStructure& m_DataStructure;
 

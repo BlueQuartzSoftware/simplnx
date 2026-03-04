@@ -10,7 +10,7 @@ using namespace nx::core;
 namespace nx::core
 {
 CopyDataObjectAction::CopyDataObjectAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths)
-: IDataCreationAction(newPath)
+: AbstractDataCreationAction(newPath)
 , m_Path(path)
 , m_NewPath(newPath)
 , m_AllCreatedPaths(allCreatedPaths)
@@ -19,10 +19,10 @@ CopyDataObjectAction::CopyDataObjectAction(const DataPath& path, const DataPath&
 
 CopyDataObjectAction::~CopyDataObjectAction() noexcept = default;
 
-std::shared_ptr<DataObject> CopyDataObjectAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
+std::shared_ptr<AbstractDataObject> CopyDataObjectAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
 {
   auto* data = dataStructure.getData(sourcePath);
-  std::shared_ptr<DataObject> copy = data->deepCopy(destPath);
+  std::shared_ptr<AbstractDataObject> copy = data->deepCopy(destPath);
   return copy;
 }
 

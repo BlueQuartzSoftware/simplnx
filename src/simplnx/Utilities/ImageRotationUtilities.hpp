@@ -342,7 +342,7 @@ template <typename T>
 class RotateImageGeometryWithTrilinearInterpolation
 {
 public:
-  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& rotateArgs, const Matrix4fR& transformationMatrix,
+  RotateImageGeometryWithTrilinearInterpolation(const AbstractDataArray* sourceArray, AbstractDataArray* targetArray, const RotateArgs& rotateArgs, const Matrix4fR& transformationMatrix,
                                                 FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
@@ -505,8 +505,8 @@ public:
   }
 
 private:
-  const IDataArray* m_SourceArray;
-  IDataArray* m_TargetArray;
+  const AbstractDataArray* m_SourceArray;
+  AbstractDataArray* m_TargetArray;
   ImageRotationUtilities::RotateArgs m_Params;
   Matrix4fR m_TransformationMatrix;
   FilterProgressCallback* m_FilterCallback = nullptr;
@@ -517,7 +517,7 @@ template <typename T>
 class RotateImageGeometryWithNearestNeighbor
 {
 public:
-  RotateImageGeometryWithNearestNeighbor(const IDataArray* sourceArray, IDataArray* targetArray, const RotateArgs& args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
+  RotateImageGeometryWithNearestNeighbor(const AbstractDataArray* sourceArray, AbstractDataArray* targetArray, const RotateArgs& args, const Matrix4fR& transformationMatrix, bool sliceBySlice,
                                          FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
@@ -613,8 +613,8 @@ public:
   }
 
 private:
-  const IDataArray* m_SourceArray;
-  IDataArray* m_TargetArray;
+  const AbstractDataArray* m_SourceArray;
+  AbstractDataArray* m_TargetArray;
   ImageRotationUtilities::RotateArgs m_Params;
   const Matrix4fR& m_TransformationMatrix;
   bool m_SliceBySlice = false;
@@ -627,7 +627,7 @@ private:
 class ApplyTransformationToNodeGeometry
 {
 public:
-  ApplyTransformationToNodeGeometry(IGeometry::SharedVertexList& verticesPtr, const Matrix4fR& transformationMatrix, FilterProgressCallback* filterCallback)
+  ApplyTransformationToNodeGeometry(AbstractGeometry::SharedVertexList& verticesPtr, const Matrix4fR& transformationMatrix, FilterProgressCallback* filterCallback)
   : m_TransformationMatrix(transformationMatrix)
   , m_Vertices(verticesPtr)
   , m_FilterCallback(filterCallback)
@@ -672,7 +672,7 @@ public:
 
 private:
   const Matrix4fR& m_TransformationMatrix;
-  IGeometry::SharedVertexList& m_Vertices;
+  AbstractGeometry::SharedVertexList& m_Vertices;
   FilterProgressCallback* m_FilterCallback = nullptr;
 };
 } // namespace nx::core::ImageRotationUtilities

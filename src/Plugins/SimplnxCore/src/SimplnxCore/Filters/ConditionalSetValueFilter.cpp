@@ -95,7 +95,7 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   auto selectedArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   auto pConditionalPath = filterArgs.value<DataPath>(k_ConditionalArrayPath_Key);
 
-  const auto& inputDataObject = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+  const auto& inputDataObject = dataStructure.getDataAs<AbstractDataArray>(selectedArrayPath);
 
   if(replaceValueString.empty())
   {
@@ -109,7 +109,7 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   if(useConditionalValue)
   {
     // Validate that the Conditional Array is of the correct type
-    const auto* dataObject = dataStructure.getDataAs<IDataArray>(pConditionalPath);
+    const auto* dataObject = dataStructure.getDataAs<AbstractDataArray>(pConditionalPath);
 
     if(dataObject->getDataType() != nx::core::DataType::boolean && dataObject->getDataType() != nx::core::DataType::uint8 && dataObject->getDataType() != nx::core::DataType::int8)
     {

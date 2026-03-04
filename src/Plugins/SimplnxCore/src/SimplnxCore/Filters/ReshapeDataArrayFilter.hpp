@@ -3,12 +3,12 @@
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
 #include "simplnx/Common/StringLiteral.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT ReshapeDataArrayFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReshapeDataArrayFilter : public AbstractFilter
 {
 public:
   ReshapeDataArrayFilter() = default;

@@ -658,7 +658,7 @@ struct ExecuteBoundsStatsCalculations
 {
   template <typename T>
   Result<> operator()(DataStructure& dataStructure, const ComputeBoundingBoxStatsInputValues* inputValues, const ImageGeom& imageGeom, const Float32AbstractDataStore& unifiedBounds,
-                      const IDataArray& inputIDataArray)
+                      const AbstractDataArray& inputIDataArray)
   {
     usize numTuples = unifiedBounds.getNumberOfTuples();
 
@@ -732,7 +732,7 @@ Result<> ComputeBoundingBoxStats::operator()()
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
   auto& unifiedArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->UnifiedPath).getDataStoreRef();
-  auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputPath);
+  auto& inputArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->InputPath);
   if(inputArray.getDataType() == DataType::boolean)
   {
     return MakeErrorResult(-98500, "Boolean arrays cannot be used as inputs to this filter.");

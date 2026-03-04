@@ -4,8 +4,8 @@
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <iostream>

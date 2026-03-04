@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/Filters/Algorithms/ReshapeDataArray.hpp"
 
-#include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
@@ -103,7 +103,7 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
     tDims.push_back(static_cast<usize>(floatValue));
   }
 
-  auto& inputArray = dataStructure.getDataRefAs<IArray>(inputArrayPath);
+  auto& inputArray = dataStructure.getDataRefAs<AbstractArray>(inputArrayPath);
   auto inputArrayTupleShape = inputArray.getTupleShape();
   if(inputArrayTupleShape == tDims)
   {
@@ -117,22 +117,22 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   auto outputArrayPath = inputArrayPath.getParent().createChildPath(fmt::format(".{}", inputArrayPath.getTargetName()));
   switch(inputArrayType)
   {
-  case IArray::ArrayType::DataArray: {
-    auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+  case AbstractArray::ArrayType::DataArray: {
+    auto& inputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(inputArrayPath);
     resultOutputActions.value().appendAction(
         std::make_unique<CreateArrayAction>(inputDataArray.getDataType(), tDims, inputDataArray.getComponentShape(), outputArrayPath, inputDataArray.getDataFormat()));
     break;
   }
-  case IArray::ArrayType::NeighborListArray: {
-    auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
+  case AbstractArray::ArrayType::NeighborListArray: {
+    auto& inputNeighborList = dataStructure.getDataRefAs<AbstractNeighborList>(inputArrayPath);
     resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), tDims, outputArrayPath));
     break;
   }
-  case IArray::ArrayType::StringArray: {
+  case AbstractArray::ArrayType::StringArray: {
     resultOutputActions.value().appendAction(std::make_unique<CreateStringArrayAction>(tDims, outputArrayPath));
     break;
   }
-  case IArray::ArrayType::Any: {
+  case AbstractArray::ArrayType::Any: {
     return MakePreflightErrorResult(to_underlying(ReshapeDataArray::ErrorCodes::InputArrayEqualsAny),
                                     fmt::format("Input array '{}' has array type 'Any'.  Something has gone horribly wrong, please contact the developers.", inputArray.getName()));
   }

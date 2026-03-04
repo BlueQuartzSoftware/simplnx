@@ -1,8 +1,8 @@
 #include "RemoveFlaggedVerticesFilter.hpp"
 
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
@@ -31,7 +31,7 @@ struct RemoveFlaggedVerticesFunctor
 {
   // copy data to masked geometry
   template <class T>
-  void operator()(const IDataArray& sourceIDataArray, IDataArray& destIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskCompare, size_t numVerticesToKeep) const
+  void operator()(const AbstractDataArray& sourceIDataArray, AbstractDataArray& destIDataArray, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& maskCompare, size_t numVerticesToKeep) const
   {
     const auto& sourceDataStore = sourceIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& destinationDataStore = destIDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -162,7 +162,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
     const DataPath reducedVertGeomAttrMatPath = reducedVertexPath.createChildPath(vertexAttrMatName);
     for(const auto& [identifier, object] : *selectedCellDataPtr)
     {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      const auto& srcArray = dynamic_cast<const AbstractDataArray&>(*object);
       const DataType dataType = srcArray.getDataType();
       const ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       const ShapeType tupleShape = srcArray.getIDataStoreRef().getTupleShape();
@@ -174,7 +174,7 @@ IFilter::PreflightResult RemoveFlaggedVerticesFilter::preflightImpl(const DataSt
 
   // This section covers copying the other Attribute Matrix objects from the source geometry
   // to the destination geometry
-  auto childPaths = GetAllChildDataPaths(dataStructure, vertexGeomPath, DataObject::Type::DataObject, ignorePaths);
+  auto childPaths = GetAllChildDataPaths(dataStructure, vertexGeomPath, IDataObject::Type::AbstractDataObject, ignorePaths);
   if(childPaths.has_value())
   {
     for(const auto& childPath : childPaths.value())
@@ -225,7 +225,7 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, 
   const VertexGeom& vertexGeom = dataStructure.getDataRefAs<VertexGeom>(vertexGeomPath);
   const std::string vertexDataName = vertexGeom.getVertexAttributeMatrixDataPath().getTargetName();
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, maskArrayPath);
@@ -269,11 +269,11 @@ Result<> RemoveFlaggedVerticesFilter::executeImpl(DataStructure& dataStructure, 
   const AttributeMatrix* sourceVertexAttrMatPtr = vertexGeom.getVertexAttributeMatrix();
   for(const auto& [identifier, object] : *sourceVertexAttrMatPtr)
   {
-    const auto& src = dynamic_cast<const IDataArray&>(*object);
+    const auto& src = dynamic_cast<const AbstractDataArray&>(*object);
 
     const DataPath destinationPath = reducedVertexGeom.getVertexAttributeMatrixDataPath().createChildPath(src.getName());
 
-    auto& dest = dataStructure.getDataRefAs<IDataArray>(destinationPath);
+    auto& dest = dataStructure.getDataRefAs<AbstractDataArray>(destinationPath);
     messageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName())});
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, maskCompare, numVerticesToKeep);

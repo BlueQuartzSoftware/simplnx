@@ -19,7 +19,8 @@ template <typename T>
 class CropEdgeGeomArray
 {
 public:
-  CropEdgeGeomArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const AttributeMatrix& srcAttrMatrix, const std::vector<bool>& tupleMask, const std::atomic_bool& shouldCancel)
+  CropEdgeGeomArray(const AbstractDataArray& oldCellArray, AbstractDataArray& newCellArray, const AttributeMatrix& srcAttrMatrix, const std::vector<bool>& tupleMask,
+                    const std::atomic_bool& shouldCancel)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SrcAttrMatrix(srcAttrMatrix)
@@ -349,10 +350,10 @@ Result<> CropEdgeGeometry::operator()()
         return {};
       }
 
-      const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
+      const auto& oldDataArray = dynamic_cast<const AbstractDataArray&>(*oldDataObject);
       const std::string srcName = oldDataArray.getName();
 
-      auto& newDataArray = dynamic_cast<IDataArray&>(destVertexAttrMatrix.at(srcName));
+      auto& newDataArray = dynamic_cast<AbstractDataArray&>(destVertexAttrMatrix.at(srcName));
 
       m_MessageHandler(fmt::format("Cropping Volume || Copying Vertex Array {}", srcName));
       ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcVertexAttrMatrix, vertexReferenced, m_ShouldCancel);
@@ -391,10 +392,10 @@ Result<> CropEdgeGeometry::operator()()
         return {};
       }
 
-      const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
+      const auto& oldDataArray = dynamic_cast<const AbstractDataArray&>(*oldDataObject);
       const std::string srcName = oldDataArray.getName();
 
-      auto& newDataArray = dynamic_cast<IDataArray&>(destEdgesAttrMatrix.at(srcName));
+      auto& newDataArray = dynamic_cast<AbstractDataArray&>(destEdgesAttrMatrix.at(srcName));
 
       m_MessageHandler(fmt::format("Cropping Volume || Copying Edge Array {}", srcName));
       ExecuteParallelFunction<CropEdgeGeomArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcEdgesAttrMatrix, edgesMask, m_ShouldCancel);

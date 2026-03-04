@@ -84,9 +84,9 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
       {
         continue;
       }
-      const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(arrayPath);
+      const auto& generatedDataArray = dataStructure.getDataRefAs<AbstractDataArray>(arrayPath);
       DataType type = generatedDataArray.getDataType();
-      auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(arrayPath);
+      auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<AbstractDataArray>(arrayPath);
       DataType exemplarType = exemplarDataArray.getDataType();
 
       if(type != exemplarType)

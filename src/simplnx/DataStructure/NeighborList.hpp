@@ -3,7 +3,7 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/AbstractListStore.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 
 namespace nx::core
 {
@@ -13,7 +13,7 @@ namespace nx::core
  * @tparam T
  */
 template <class T>
-class NeighborList : public INeighborList
+class NeighborList : public AbstractNeighborList
 {
 public:
   using value_type = T;
@@ -76,16 +76,16 @@ public:
   /**
    * @brief Returns a shallow copy of the NeighborList without copying data.
    * THE CALLING CODE MUST DISPOSE OF THE RETURNED OBJECT.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* shallowCopy() override;
+  AbstractDataObject* shallowCopy() override;
 
   /**
    * @brief Returns a deep copy of the NeighborList including a deep copy of the
    * data.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief Gives this array a human readable name
@@ -368,7 +368,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override;
+  AbstractDataObject::Type getDataObjectType() const override;
 
   /**
    * @brief Returns a pointer to the underlying IListStore.

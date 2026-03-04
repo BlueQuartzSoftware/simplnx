@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -36,7 +36,7 @@ namespace nx::core
  * ITK Module: ITKAnisotropicSmoothing
  * ITK Group: AnisotropicSmoothing
  */
-class ITKIMAGEPROCESSING_EXPORT ITKCurvatureAnisotropicDiffusionImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKCurvatureAnisotropicDiffusionImageFilter : public AbstractFilter
 {
 public:
   ITKCurvatureAnisotropicDiffusionImageFilter() = default;

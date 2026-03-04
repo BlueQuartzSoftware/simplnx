@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -44,7 +44,7 @@ namespace nx::core
  * ITK Module: ITKCurvatureFlow
  * ITK Group: CurvatureFlow
  */
-class ITKIMAGEPROCESSING_EXPORT ITKMinMaxCurvatureFlowImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKMinMaxCurvatureFlowImageFilter : public AbstractFilter
 {
 public:
   ITKMinMaxCurvatureFlowImageFilter() = default;

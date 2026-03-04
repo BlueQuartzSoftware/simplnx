@@ -24,7 +24,7 @@ class ComputeIPFColorsImpl
 {
 public:
   ComputeIPFColorsImpl(ComputeIPFColors* filter, FloatVec3Type referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures, int32_t numPhases,
-                       const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors)
+                       const nx::core::AbstractDataArray* goodVoxels, nx::core::UInt8Array& colors)
   : m_Filter(filter)
   , m_ReferenceDir(referenceDir)
   , m_CellEulerAngles(eulers.getDataStoreRef())
@@ -123,7 +123,7 @@ private:
   nx::core::Int32AbstractDataStore& m_CellPhases;
   nx::core::UInt32AbstractDataStore& m_CrystalStructures;
   int32_t m_NumPhases = 0;
-  const nx::core::IDataArray* m_GoodVoxels = nullptr;
+  const nx::core::AbstractDataArray* m_GoodVoxels = nullptr;
   nx::core::UInt8AbstractDataStore& m_CellIPFColors;
 };
 } // namespace
@@ -163,16 +163,16 @@ Result<> ComputeIPFColors::operator()()
 
   MatrixMath::Normalize3x1(normRefDir[0], normRefDir[1], normRefDir[2]);
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  typename ParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&eulers);
   algArrays.push_back(&phases);
   algArrays.push_back(&crystalStructures);
   algArrays.push_back(&ipfColors);
 
-  nx::core::IDataArray* goodVoxelsArray = nullptr;
+  nx::core::AbstractDataArray* goodVoxelsArray = nullptr;
   if(m_InputValues->useGoodVoxels)
   {
-    goodVoxelsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->goodVoxelsArrayPath);
+    goodVoxelsArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->goodVoxelsArrayPath);
     algArrays.push_back(goodVoxelsArray);
   }
 

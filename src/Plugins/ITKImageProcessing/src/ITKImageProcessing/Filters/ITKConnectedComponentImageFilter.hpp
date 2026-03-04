@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -24,7 +24,7 @@ namespace nx::core
  * ITK Module: ITKConnectedComponents
  * ITK Group: ConnectedComponents
  */
-class ITKIMAGEPROCESSING_EXPORT ITKConnectedComponentImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKConnectedComponentImageFilter : public AbstractFilter
 {
 public:
   ITKConnectedComponentImageFilter() = default;

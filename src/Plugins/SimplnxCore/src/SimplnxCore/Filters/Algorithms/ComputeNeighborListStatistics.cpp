@@ -21,8 +21,8 @@ public:
   using DataArrayType = DataArray<T>;
   using StoreType = AbstractDataStore<T>;
 
-  ComputeNeighborListStatisticsImpl(ComputeNeighborListStatistics* filter, const INeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation, bool summation,
-                                    std::vector<IDataArray*>& arrays, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+  ComputeNeighborListStatisticsImpl(ComputeNeighborListStatistics* filter, const AbstractNeighborList& source, bool length, bool min, bool max, bool mean, bool median, bool stdDeviation,
+                                    bool summation, std::vector<AbstractDataArray*>& arrays, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_ShouldCancel(shouldCancel)
   , m_Source(source)
@@ -139,7 +139,7 @@ private:
   ComputeNeighborListStatistics* m_Filter = nullptr;
   const std::atomic_bool& m_ShouldCancel;
 
-  const INeighborList& m_Source;
+  const AbstractNeighborList& m_Source;
   bool m_Length = false;
   bool m_Min = false;
   bool m_Max = false;
@@ -148,7 +148,7 @@ private:
   bool m_StdDeviation = false;
   bool m_Summation = false;
 
-  std::vector<IDataArray*>& m_Arrays;
+  std::vector<AbstractDataArray*>& m_Arrays;
   ProgressMessageHelper& m_ProgressMessageHelper;
 };
 } // namespace
@@ -169,7 +169,7 @@ ComputeNeighborListStatistics::~ComputeNeighborListStatistics() noexcept = defau
 // -----------------------------------------------------------------------------
 Result<> ComputeNeighborListStatistics::operator()()
 {
-  const auto& inputINeighborList = m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->TargetNeighborListPath);
+  const auto& inputINeighborList = m_DataStructure.getDataRefAs<AbstractNeighborList>(m_InputValues->TargetNeighborListPath);
 
   DataType type = inputINeighborList.getDataType();
   if(type == DataType::boolean)
@@ -183,35 +183,35 @@ Result<> ComputeNeighborListStatistics::operator()()
     return MakeErrorResult(k_EmptyNeighborList, fmt::format("ComputeNeighborListStatisticsFilter::NeighborList {} was empty", inputINeighborList.getName()));
   }
 
-  std::vector<IDataArray*> arrays(7, nullptr);
+  std::vector<AbstractDataArray*> arrays(7, nullptr);
 
   if(m_InputValues->FindLength)
   {
-    arrays[0] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->LengthPath);
+    arrays[0] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->LengthPath);
   }
   if(m_InputValues->FindMin)
   {
-    arrays[1] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MinPath);
+    arrays[1] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MinPath);
   }
   if(m_InputValues->FindMax)
   {
-    arrays[2] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaxPath);
+    arrays[2] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MaxPath);
   }
   if(m_InputValues->FindMean)
   {
-    arrays[3] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeanPath);
+    arrays[3] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MeanPath);
   }
   if(m_InputValues->FindMedian)
   {
-    arrays[4] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedianPath);
+    arrays[4] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MedianPath);
   }
   if(m_InputValues->FindStdDeviation)
   {
-    arrays[5] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->StdDeviationPath);
+    arrays[5] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->StdDeviationPath);
   }
   if(m_InputValues->FindSummation)
   {
-    arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationPath);
+    arrays[6] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->SummationPath);
   }
 
   MessageHelper messageHelper(m_MessageHandler);

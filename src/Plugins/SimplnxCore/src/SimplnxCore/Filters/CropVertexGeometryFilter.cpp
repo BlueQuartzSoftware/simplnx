@@ -20,7 +20,7 @@ namespace
 struct CopyDataToCroppedGeometryFunctor
 {
   template <typename T>
-  void operator()(const IDataArray* inDataRef, IDataArray* outDataRef, const std::vector<int64>& croppedPoints)
+  void operator()(const AbstractDataArray* inDataRef, AbstractDataArray* outDataRef, const std::vector<int64>& croppedPoints)
   {
     const auto& inputData = inDataRef->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& croppedData = outDataRef->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -80,11 +80,11 @@ Parameters CropVertexGeometryFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
   params.insert(
-      std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexAttributeMatrixName));
+      std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", AbstractNodeGeometry0D::k_VertexAttributeMatrixName));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Vertex Data Arrays to crop", "The complete path to all the vertex data arrays to crop", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
   return params;
 }
 
@@ -187,7 +187,7 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 
   for(auto&& targetArrayPath : targetArrays)
   {
-    auto& targetArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
+    auto& targetArray = dataStructure.getDataRefAs<AbstractDataArray>(targetArrayPath);
 
     DataType type = targetArray.getDataType();
     auto tDims = targetArray.getNumberOfTuples();
@@ -261,8 +261,8 @@ Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, con
   {
     DataPath destArrayPath(croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
 
-    const auto* srcArray = dataStructure.getDataAs<IDataArray>(targetArrayPath);
-    auto* destArray = dataStructure.getDataAs<IDataArray>(destArrayPath);
+    const auto* srcArray = dataStructure.getDataAs<AbstractDataArray>(targetArrayPath);
+    auto* destArray = dataStructure.getDataAs<AbstractDataArray>(destArrayPath);
 
     ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArray->getDataType(), srcArray, destArray, croppedPoints);
   }

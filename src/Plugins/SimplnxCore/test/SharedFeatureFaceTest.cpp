@@ -71,8 +71,8 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
     const DataPath kExemplarArrayPath = k_GeometryPath.createChildPath(k_FaceAttributeMatrixName).createChildPath(kExemplarArrayName);
     const DataPath kNxArrayPath = k_GeometryPath.createChildPath(k_FaceAttributeMatrixName).createChildPath(k_FeatureFaceIdsArrayName);
 
-    const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
-    const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
+    const auto& kExemplarsArray = dataStructure.getDataRefAs<AbstractDataArray>(kExemplarArrayPath);
+    const auto& kNxArray = dataStructure.getDataRefAs<AbstractDataArray>(kNxArrayPath);
 
     UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
@@ -81,8 +81,8 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
     const DataPath kExemplarArrayPath = k_GeometryPath.createChildPath(k_GrainBoundaryName).createChildPath(kExemplarArrayName);
     const DataPath kNxArrayPath = k_GeometryPath.createChildPath(k_GrainBoundaryAttributeMatrixName).createChildPath(k_FeatureFaceLabelsArrayName);
 
-    const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
-    const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
+    const auto& kExemplarsArray = dataStructure.getDataRefAs<AbstractDataArray>(kExemplarArrayPath);
+    const auto& kNxArray = dataStructure.getDataRefAs<AbstractDataArray>(kNxArrayPath);
 
     UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }
@@ -91,8 +91,8 @@ TEST_CASE("SimplnxCore::SharedFeatureFaceFilter", "[SimplnxCore][SharedFeatureFa
     const DataPath kExemplarArrayPath = k_GeometryPath.createChildPath(k_GrainBoundaryName).createChildPath(kExemplarArrayName);
     const DataPath kNxArrayPath = k_GeometryPath.createChildPath(k_GrainBoundaryAttributeMatrixName).createChildPath(k_FeatureNumTrianglesArrayName);
 
-    const auto& kExemplarsArray = dataStructure.getDataRefAs<IDataArray>(kExemplarArrayPath);
-    const auto& kNxArray = dataStructure.getDataRefAs<IDataArray>(kNxArrayPath);
+    const auto& kExemplarsArray = dataStructure.getDataRefAs<AbstractDataArray>(kExemplarArrayPath);
+    const auto& kNxArray = dataStructure.getDataRefAs<AbstractDataArray>(kNxArrayPath);
 
     UnitTest::CompareDataArrays<int32>(kExemplarsArray, kNxArray);
   }

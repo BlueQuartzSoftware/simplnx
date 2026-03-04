@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ITKImageReaderFilter
  * @brief This filter will ....
  */
-class ITKIMAGEPROCESSING_EXPORT ITKImageReaderFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKImageReaderFilter : public AbstractFilter
 {
 public:
   ITKImageReaderFilter() = default;

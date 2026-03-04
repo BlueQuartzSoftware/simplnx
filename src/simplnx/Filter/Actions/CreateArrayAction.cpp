@@ -21,7 +21,7 @@ struct CreateArrayFunctor
 namespace nx::core
 {
 CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat, std::string fillValue)
-: IDataCreationAction(path)
+: AbstractDataCreationAction(path)
 , m_Type(type)
 , m_Dims(tDims)
 , m_CDims(cDims)

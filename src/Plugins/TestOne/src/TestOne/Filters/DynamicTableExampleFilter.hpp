@@ -1,13 +1,13 @@
 #pragma once
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include "TestOne/TestOne_export.hpp"
 
 namespace nx::core
 {
-class TESTONE_EXPORT DynamicTableExampleFilter : public IFilter
+class TESTONE_EXPORT DynamicTableExampleFilter : public AbstractFilter
 {
 public:
   DynamicTableExampleFilter() = default;

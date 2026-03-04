@@ -433,7 +433,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Unified", "
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
+  auto* edgesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
   geom->setEdgeList(*edgesArray);
 
   const std::string k_EdgeAMName = "Edge Data";
@@ -507,7 +507,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Edge Geom Test - Split", "[S
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
+  auto* edgesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
   geom->setEdgeList(*edgesArray);
 
   const std::string k_EdgeAMName = "Edge Data";
@@ -590,7 +590,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Unified
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   const std::string k_FaceAMName = "Face Data";
@@ -663,7 +663,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Triangle Geom Test - Split",
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   const std::string k_FaceAMName = "Face Data";
@@ -745,7 +745,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Unified", "
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
   geom->setFaceList(*facesArray);
 
   const std::string k_FaceAMName = "Face Data";
@@ -818,7 +818,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Quad Geom Test - Split", "[S
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
   geom->setFaceList(*facesArray);
 
   const std::string k_FaceAMName = "Face Data";
@@ -900,7 +900,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Preflight - Unexpect
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   const std::string k_FaceAMName = "Face Data";
@@ -946,7 +946,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureBoundsFilter: Invalid Execute - Feature AM
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   const std::string k_FaceAMName = "Face Data";

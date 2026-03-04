@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
@@ -33,7 +33,7 @@ Result<> AlignSectionsMisorientation::operator()()
   {
     return {};
   }
-  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  const auto& gridGeom = m_DataStructure.getDataRefAs<AbstractGridGeometry>(m_InputValues->ImageGeometryPath);
 
   return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
 }
@@ -41,7 +41,7 @@ Result<> AlignSectionsMisorientation::operator()()
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare = nullptr;
   if(m_InputValues->UseMask)
   {
     try
@@ -56,7 +56,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeom = m_DataStructure.getDataAs<AbstractGridGeometry>(m_InputValues->ImageGeometryPath);
 
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);

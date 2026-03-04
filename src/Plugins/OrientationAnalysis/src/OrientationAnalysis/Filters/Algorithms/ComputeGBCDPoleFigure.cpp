@@ -321,7 +321,7 @@ Result<> ComputeGBCDPoleFigure::operator()()
 
   m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Intensity Plot for phase {}", m_InputValues->PhaseOfInterest)});
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  typename ParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&poleFigure);
   algArrays.push_back(&gbcd);
 

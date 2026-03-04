@@ -9,7 +9,7 @@ namespace nx::core
 /**
  * @brief Action to create a DataGroup with the DataStructure
  */
-class SIMPLNX_EXPORT CreateDataGroupAction : public IDataCreationAction
+class SIMPLNX_EXPORT CreateDataGroupAction : public AbstractDataCreationAction
 {
 public:
   CreateDataGroupAction() = delete;

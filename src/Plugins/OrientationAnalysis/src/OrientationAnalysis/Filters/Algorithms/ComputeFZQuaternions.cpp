@@ -122,13 +122,13 @@ Result<> ComputeFZQuaternions::operator()()
   Int32Array& phaseArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   Float32Array& quatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath);
   UInt32Array& xtalArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  IDataArray* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
+  AbstractDataArray* maskArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MaskArrayPath);
   Float32Array& fzQuatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath.replaceName(m_InputValues->OutputFzQuatsArrayName));
 
   std::atomic_int32_t warningCount = 0;
   int32_t numPhases = static_cast<int32_t>(xtalArray.getNumberOfTuples());
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  typename ParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&phaseArray);
   algArrays.push_back(&quatArray);
   algArrays.push_back(&xtalArray);

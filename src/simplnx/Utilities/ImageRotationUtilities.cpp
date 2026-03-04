@@ -84,21 +84,21 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fR& trans
 
   FloatVec3 outputSpacing = {DetermineSpacing(spacing, xAxisNew) * transformScale[0], DetermineSpacing(spacing, yAxisNew) * transformScale[1], DetermineSpacing(spacing, zAxisNew) * transformScale[2]};
 
-  USizeVec3 outputDims = {static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / outputSpacing[0])),
-                          static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / outputSpacing[1])),
-                          static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / outputSpacing[2]))};
+  USizeVec3 outputDims = {static_cast<AbstractGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / outputSpacing[0])),
+                          static_cast<AbstractGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / outputSpacing[1])),
+                          static_cast<AbstractGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / outputSpacing[2]))};
 
   if(outputDims[0] == 0)
   {
-    outputDims[0] = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[0] = static_cast<AbstractGeometry::MeshIndexType>(1);
   }
   if(outputDims[1] == 0)
   {
-    outputDims[1] = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[1] = static_cast<AbstractGeometry::MeshIndexType>(1);
   }
   if(outputDims[2] == 0)
   {
-    outputDims[2] = static_cast<IGeometry::MeshIndexType>(1);
+    outputDims[2] = static_cast<AbstractGeometry::MeshIndexType>(1);
   }
 
   RotateArgs params;

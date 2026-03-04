@@ -93,7 +93,7 @@ struct ExecuteTemplate
   }
 
   template <typename T>
-  void operator()(const ImageGeom& imageGeom, IDataArray* inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
+  void operator()(const ImageGeom& imageGeom, AbstractDataArray* inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
                   const IFilter::MessageHandler& messageHandler)
   {
     const auto& inputStore = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -212,7 +212,7 @@ struct ExecuteTemplate
         {
           for(const auto& [dataId, dataObject] : *attrMatrix)
           {
-            auto& dataArray = dynamic_cast<IDataArray&>(*dataObject);
+            auto& dataArray = dynamic_cast<AbstractDataArray&>(*dataObject);
             dataArray.copyTuple(neighbor, voxelIndex);
           }
         }
@@ -250,7 +250,7 @@ const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel()
 Result<> ReplaceElementAttributesWithNeighborValues::operator()()
 {
 
-  auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
+  auto* srcIDataArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->InputArrayPath);
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
   ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray->getDataType(), imageGeom, srcIDataArray, m_InputValues->SelectedComparison, m_InputValues->MinConfidence, m_InputValues->Loop, m_ShouldCancel,

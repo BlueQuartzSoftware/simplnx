@@ -117,12 +117,12 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
 
   std::optional<std::vector<DataPath>> amChildPaths = GetAllChildArrayDataPaths(dataStructure, featureAMPath);
 
-  std::vector<IArray*> featureIArrays = {};
+  std::vector<AbstractArray*> featureIArrays = {};
   if(amChildPaths.has_value())
   {
     for(const auto& childPath : amChildPaths.value())
     {
-      featureIArrays.push_back(dataStructure.getDataAs<IArray>(childPath));
+      featureIArrays.push_back(dataStructure.getDataAs<AbstractArray>(childPath));
     }
   }
 

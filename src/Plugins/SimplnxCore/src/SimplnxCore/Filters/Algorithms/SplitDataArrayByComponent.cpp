@@ -11,7 +11,7 @@ namespace
 struct SplitArraysFunctor
 {
   template <typename T>
-  void operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, const SplitDataArrayByComponentInputValues* inputValues)
+  void operator()(DataStructure& dataStructure, const AbstractDataArray* inputIDataArray, const SplitDataArrayByComponentInputValues* inputValues)
   {
     const auto& inputStore = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize numTuples = inputStore.getNumberOfTuples();
@@ -53,7 +53,7 @@ const std::atomic_bool& SplitDataArrayByComponent::getCancel()
 // -----------------------------------------------------------------------------
 Result<> SplitDataArrayByComponent::operator()()
 {
-  auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
+  auto* inputArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->InputArrayPath);
 
   ExecuteDataFunction(SplitArraysFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, m_InputValues);
 

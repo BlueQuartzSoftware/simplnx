@@ -3,7 +3,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Output.hpp"
@@ -20,7 +20,7 @@ namespace nx::core
  * @brief Action for creating a Triangle or QuadGeometry in a DataStructure
  */
 template <typename Geometry2DType>
-class CreateGeometry2DAction : public IDataCreationAction
+class CreateGeometry2DAction : public AbstractDataCreationAction
 {
 public:
   using DimensionType = std::vector<size_t>;
@@ -37,7 +37,7 @@ public:
    */
   CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& faceAttributeMatrixName,
                          const std::string& sharedVerticesName, const std::string& sharedFacesName, std::string createdDataFormat = "")
-  : IDataCreationAction(geometryPath)
+  : AbstractDataCreationAction(geometryPath)
   , m_NumFaces(numFaces)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
@@ -59,7 +59,7 @@ public:
    */
   CreateGeometry2DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputFacesArrayPath, const std::string& vertexAttributeMatrixName,
                          const std::string& faceAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
-  : IDataCreationAction(geometryPath)
+  : AbstractDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_FaceDataName(faceAttributeMatrixName)
   , m_SharedVerticesName(inputVerticesArrayPath.getTargetName())
@@ -87,8 +87,8 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
     static constexpr StringLiteral prefix = "CreateGeometry2DAction: ";
-    using MeshIndexType = IGeometry::MeshIndexType;
-    using SharedTriList = IGeometry::SharedTriList;
+    using MeshIndexType = AbstractGeometry::MeshIndexType;
+    using SharedTriList = AbstractGeometry::SharedTriList;
     const DataPath faceDataPath = getFaceDataPath();
     const DataPath vertexDataPath = getVertexDataPath();
 
@@ -144,10 +144,10 @@ public:
       faceTupleShape = faces->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
-      std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
+      std::shared_ptr<AbstractDataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
-      std::shared_ptr<DataObject> facesCopy = faces->deepCopy(getCreatedPath().createChildPath(m_SharedFacesName));
+      std::shared_ptr<AbstractDataObject> facesCopy = faces->deepCopy(getCreatedPath().createChildPath(m_SharedFacesName));
       const auto facesArray = std::dynamic_pointer_cast<DataArray<MeshIndexType>>(facesCopy);
 
       geometry2d->setFaceList(*facesArray);
@@ -288,7 +288,7 @@ public:
    * @brief Returns the number of faces
    * @return
    */
-  IGeometry::MeshIndexType numFaces() const
+  AbstractGeometry::MeshIndexType numFaces() const
   {
     return m_NumFaces;
   }
@@ -297,7 +297,7 @@ public:
    * @brief Returns the number of vertices (estimated in some circumstances)
    * @return
    */
-  IGeometry::MeshIndexType numVertices() const
+  AbstractGeometry::MeshIndexType numVertices() const
   {
     return m_NumVertices;
   }
@@ -322,8 +322,8 @@ protected:
   CreateGeometry2DAction() = default;
 
 private:
-  IGeometry::MeshIndexType m_NumFaces = 1;
-  IGeometry::MeshIndexType m_NumVertices = Geometry2DType::k_NumVerts;
+  AbstractGeometry::MeshIndexType m_NumFaces = 1;
+  AbstractGeometry::MeshIndexType m_NumVertices = Geometry2DType::k_NumVerts;
   std::string m_VertexDataName;
   std::string m_FaceDataName;
   std::string m_SharedVerticesName;

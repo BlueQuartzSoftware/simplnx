@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class WriteASCIIDataFilter
  * @brief This filter will export data from **DataArray** as "plaintext" to one or more files according to selection parameters
  */
-class SIMPLNXCORE_EXPORT WriteASCIIDataFilter : public IFilter
+class SIMPLNXCORE_EXPORT WriteASCIIDataFilter : public AbstractFilter
 {
 public:
   WriteASCIIDataFilter() = default;

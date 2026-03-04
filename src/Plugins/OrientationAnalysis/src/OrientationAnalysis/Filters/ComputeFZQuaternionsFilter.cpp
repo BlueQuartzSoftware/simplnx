@@ -29,7 +29,7 @@ class GenerateMaskedFZQuatsImpl
 {
 public:
   GenerateMaskedFZQuatsImpl(const Float32AbstractDataStore& quats, const Int32AbstractDataStore& phases, const UInt32AbstractDataStore& crystalStructures, const int32 numPhases,
-                            std::unique_ptr<MaskCompareUtilities::MaskCompare>& goodVoxels, Float32AbstractDataStore& fzQuats, const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount)
+                            std::unique_ptr<MaskCompareUtilities::IMaskCompare>& goodVoxels, Float32AbstractDataStore& fzQuats, const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount)
   : m_Quats(quats)
   , m_CellPhases(phases)
   , m_CrystalStructures(crystalStructures)
@@ -93,7 +93,7 @@ private:
   const Int32AbstractDataStore& m_CellPhases;
   const UInt32AbstractDataStore& m_CrystalStructures;
   const int32 m_NumPhases = 0;
-  std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_GoodVoxels;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare>& m_GoodVoxels;
   Float32AbstractDataStore& m_FZQuats;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_int32_t& m_WarningCount;
@@ -267,7 +267,7 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
 
   if(pUseGoodVoxelsValue)
   {
-    const auto& maskArray = dataStructure.getDataRefAs<IDataArray>(pGoodVoxelsArrayPathValue);
+    const auto& maskArray = dataStructure.getDataRefAs<AbstractDataArray>(pGoodVoxelsArrayPathValue);
     if(maskArray.getNumberOfTuples() != quatArray.getNumberOfTuples())
     {
       return {MakeErrorResult<OutputActions>(-49002,
@@ -299,13 +299,13 @@ Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, c
   auto& phaseArray = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
   auto& quatArray = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
   auto& xtalArray = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
-  auto* maskArray = dataStructure.getDataAs<IDataArray>(pGoodVoxelsArrayPathValue);
+  auto* maskArray = dataStructure.getDataAs<AbstractDataArray>(pGoodVoxelsArrayPathValue);
   auto& fzQuatArray = dataStructure.getDataRefAs<Float32Array>(pFZQuatsArrayPathValue);
 
   std::atomic_int32_t warningCount = 0;
   auto numPhases = static_cast<int32>(xtalArray.getNumberOfTuples());
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
+  typename ParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&phaseArray);
   algArrays.push_back(&quatArray);
   algArrays.push_back(&xtalArray);
@@ -325,7 +325,7 @@ Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, c
 
     if(pUseGoodVoxelsValue)
     {
-      std::unique_ptr<MaskCompareUtilities::MaskCompare> maskArrayPtr = nullptr;
+      std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskArrayPtr = nullptr;
       try
       {
         maskArrayPtr = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, pGoodVoxelsArrayPathValue);

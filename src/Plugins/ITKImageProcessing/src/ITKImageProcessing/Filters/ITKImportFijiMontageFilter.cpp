@@ -78,7 +78,7 @@ Parameters ITKImportFijiMontageFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Fiji Configuration File", "This is the configuration file in the same directory as all of the identified geometries",
                                                           fs::path(""), FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry",
-                                                   to_underlying(IGeometry::LengthUnit::Micrometer), IGeometry::GetAllLengthUnitStrings()));
+                                                   to_underlying(AbstractGeometry::LengthUnit::Micrometer), AbstractGeometry::GetAllLengthUnitStrings()));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "Set the origin of the mosaic to a user defined value", false));
   params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The new origin of the mosaic", std::vector<float32>(3), std::vector<std::string>(3)));
   params.insertLinkableParameter(
@@ -240,7 +240,7 @@ Result<> ITKImportFijiMontageFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.convertToGrayScale = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   inputValues.parentDataGroup = filterArgs.value<bool>(k_ParentDataGroup_Key);
   inputValues.inputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.lengthUnit = static_cast<IGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key));
+  inputValues.lengthUnit = static_cast<AbstractGeometry::LengthUnit>(filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key));
   inputValues.origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
   inputValues.colorWeights = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   inputValues.DataGroupName = filterArgs.value<StringParameter::ValueType>(k_DataGroupName_Key);

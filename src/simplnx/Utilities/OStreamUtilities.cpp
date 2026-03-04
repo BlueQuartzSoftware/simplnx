@@ -30,8 +30,8 @@ const std::array<std::string, 5> k_DelimiterStrings = {" ", ";", ",", ":", "\t"}
 struct PrintNeighborList
 {
   template <typename ScalarType>
-  Result<> operator()(std::ostream& outputStrm, INeighborList* inputNeighborList, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& delimiter = ",",
-                      bool hasIndex = false, bool hasHeader = false)
+  Result<> operator()(std::ostream& outputStrm, AbstractNeighborList* inputNeighborList, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                      const std::string& delimiter = ",", bool hasIndex = false, bool hasHeader = false)
   {
     auto& neighborList = *dynamic_cast<NeighborList<ScalarType>*>(inputNeighborList);
     auto start = std::chrono::steady_clock::now();
@@ -140,8 +140,8 @@ struct PrintNeighborList
 struct PrintDataArray
 {
   template <typename ScalarType>
-  Result<> operator()(std::ostream& outputStrm, const IDataArray& inputDataArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const std::string& delimiter = ",",
-                      int32 tuplesPerLine = 0)
+  Result<> operator()(std::ostream& outputStrm, const AbstractDataArray& inputDataArray, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                      const std::string& delimiter = ",", int32 tuplesPerLine = 0)
   {
     const auto& dataStore = inputDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
     auto start = std::chrono::steady_clock::now();
@@ -283,7 +283,7 @@ class TupleWriter : public ITupleWriter
   using DataArrayType = DataArray<ScalarType>;
 
 public:
-  TupleWriter(const IDataArray& iDataArray, const std::string& delimiter)
+  TupleWriter(const AbstractDataArray& iDataArray, const std::string& delimiter)
   : m_Name(iDataArray.getName())
   , m_DataStore(iDataArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>())
   , m_Delimiter(delimiter)
@@ -349,7 +349,7 @@ private:
 struct AddTupleWriter
 {
   template <typename ScalarType>
-  Result<> operator()(std::vector<std::shared_ptr<ITupleWriter>>& writers, const IDataArray& iDataArray, const std::string& delimiter)
+  Result<> operator()(std::vector<std::shared_ptr<ITupleWriter>>& writers, const AbstractDataArray& iDataArray, const std::string& delimiter)
   {
     writers.push_back(std::make_shared<TupleWriter<ScalarType>>(iDataArray, delimiter));
     return {};
@@ -404,14 +404,14 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
     auto outputFilePath = atomicFile.tempFilePath().string();
-    mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
+    mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing AbstractArray ({}) to output file {}", dataPath.getTargetName(), outputFilePath));
 
     // Scope file writer in code block to get around file lock on windows (enforce destructor order)
     {
       std::ofstream outStrm(outputFilePath, std::ios_base::out | std::ios_base::binary);
 
       std::pair<int32, std::string> result = {0, "PrintDataSetsToMultipleFiles default failure. If you are seeing this error something bad has happened."};
-      auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
+      auto* dataArray = dataStructure.getDataAs<AbstractDataArray>(dataPath);
       if(dataArray != nullptr)
       {
         if(exportToBinary)
@@ -428,7 +428,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
       {
         PrintStringArray(outStrm, *stringArray, mesgHandler, shouldCancel, delimiter);
       }
-      auto* neighborList = dataStructure.getDataAs<INeighborList>(dataPath);
+      auto* neighborList = dataStructure.getDataAs<AbstractNeighborList>(dataPath);
       if(neighborList != nullptr)
       {
         if(exportToBinary)
@@ -458,7 +458,7 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
 }
 
 /**
- * @brief [Single Output][Custom OStream] | Writes one IArray child to some OStream
+ * @brief [Single Output][Custom OStream] | Writes one AbstractArray child to some OStream
  * @param outputStrm The already opened output string to write to
  * @param objectPath The datapath for respective dataObject to be written out
  * @param dataStructure The simplnx datastructure where *objectPath* datacontainer is stored
@@ -471,9 +471,9 @@ Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>& objectPaths, 
 void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                            const std::string& delimiter, bool includeIndex, bool includeHeaders, size_t componentsPerLine)
 {
-  mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing IArray ({}) to output stream", objectPath.getTargetName()));
+  mesgHandler(IFilter::Message::Type::Info, fmt::format("Writing AbstractArray ({}) to output stream", objectPath.getTargetName()));
 
-  auto* dataArray = dataStructure.getDataAs<IDataArray>(objectPath);
+  auto* dataArray = dataStructure.getDataAs<AbstractDataArray>(objectPath);
   if(dataArray != nullptr)
   {
     ExecuteDataFunction(PrintDataArray{}, dataArray->getDataType(), outputStrm, *dataArray, mesgHandler, shouldCancel, delimiter, componentsPerLine);
@@ -483,7 +483,7 @@ void PrintSingleDataObject(std::ostream& outputStrm, const DataPath& objectPath,
   {
     PrintStringArray(outputStrm, *stringArray, mesgHandler, shouldCancel, delimiter);
   }
-  auto* neighborList = dataStructure.getDataAs<INeighborList>(objectPath);
+  auto* neighborList = dataStructure.getDataAs<AbstractNeighborList>(objectPath);
   if(neighborList != nullptr)
   {
     ExecuteNeighborFunction(PrintNeighborList{}, neighborList->getDataType(), outputStrm, neighborList, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);
@@ -508,7 +508,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
                                const std::atomic_bool& shouldCancel, const std::string& delimiter, bool includeIndex, bool includeHeaders, bool writeFirstIndex, const std::string& indexName,
                                const std::vector<DataPath>& neighborLists, bool writeNumOfFeatures)
 {
-  const auto& firstDataArray = dataStructure.getDataRefAs<IArray>(objectPaths[0]);
+  const auto& firstDataArray = dataStructure.getDataRefAs<AbstractArray>(objectPaths[0]);
   usize numTuples = firstDataArray.getNumberOfTuples();
   auto start = std::chrono::steady_clock::now();
 
@@ -516,10 +516,10 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   std::vector<std::shared_ptr<ITupleWriter>> writers;
   for(const auto& selectedArrayPath : objectPaths)
   {
-    auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    auto* dataArrayPtr = dataStructure.getDataAs<AbstractDataArray>(selectedArrayPath);
     if(nullptr != dataArrayPtr)
     {
-      const auto& iDataArrayRef = dataStructure.getDataRefAs<IDataArray>(selectedArrayPath);
+      const auto& iDataArrayRef = dataStructure.getDataRefAs<AbstractDataArray>(selectedArrayPath);
       ExecuteDataFunction(AddTupleWriter{}, iDataArrayRef.getDataType(), writers, iDataArrayRef, delimiter);
     }
     auto* stringArrayPtr = dataStructure.getDataAs<StringArray>(selectedArrayPath);
@@ -540,7 +540,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   {
     size_t featureCount = 0;
 
-    featureCount += dataStructure.getDataRefAs<IArray>(objectPaths.at(0)).getNumberOfTuples();
+    featureCount += dataStructure.getDataRefAs<AbstractArray>(objectPaths.at(0)).getNumberOfTuples();
     if(!writeFirstIndex)
     {
       featureCount--;
@@ -609,7 +609,7 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
   {
     for(const auto& dataPath : neighborLists)
     {
-      auto* neighborList = dataStructure.getDataAs<INeighborList>(dataPath);
+      auto* neighborList = dataStructure.getDataAs<AbstractNeighborList>(dataPath);
       if(neighborList != nullptr)
       {
         ExecuteNeighborFunction(PrintNeighborList{}, neighborList->getDataType(), outputStrm, neighborList, mesgHandler, shouldCancel, delimiter, includeIndex, includeHeaders);

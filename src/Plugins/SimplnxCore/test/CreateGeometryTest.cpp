@@ -17,7 +17,7 @@
 
 using namespace nx::core;
 
-void CreateVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+void CreateVerticesArray(DataStructure& dataStructure, const std::string& name, AbstractDataObject::IdType parentId)
 {
   Float32Array* verticesArray = UnitTest::CreateTestDataArray<float32>(dataStructure, name, {144}, {3}, parentId);
   (*verticesArray)[0] = -0.707107;
@@ -454,9 +454,9 @@ void CreateVerticesArray(DataStructure& dataStructure, const std::string& name, 
   (*verticesArray)[431] = 0;
 }
 
-void CreateEdgesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+void CreateEdgesArray(DataStructure& dataStructure, const std::string& name, AbstractDataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* edgesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {264}, {2}, parentId);
+  AbstractGeometry::MeshIndexArrayType* edgesListArray = UnitTest::CreateTestDataArray<AbstractGeometry::MeshIndexType>(dataStructure, name, {264}, {2}, parentId);
   (*edgesListArray)[0] = 12;
   (*edgesListArray)[1] = 0;
   (*edgesListArray)[2] = 0;
@@ -987,9 +987,9 @@ void CreateEdgesArray(DataStructure& dataStructure, const std::string& name, Dat
   (*edgesListArray)[527] = 142;
 }
 
-void CreateTrianglesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+void CreateTrianglesArray(DataStructure& dataStructure, const std::string& name, AbstractDataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* trianglesListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {242}, {3}, parentId);
+  AbstractGeometry::MeshIndexArrayType* trianglesListArray = UnitTest::CreateTestDataArray<AbstractGeometry::MeshIndexType>(dataStructure, name, {242}, {3}, parentId);
   (*trianglesListArray)[0] = 0;
   (*trianglesListArray)[1] = 1;
   (*trianglesListArray)[2] = 13;
@@ -1718,9 +1718,9 @@ void CreateTrianglesArray(DataStructure& dataStructure, const std::string& name,
   (*trianglesListArray)[725] = 142;
 }
 
-void CreateQuadsArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+void CreateQuadsArray(DataStructure& dataStructure, const std::string& name, AbstractDataObject::IdType parentId)
 {
-  IGeometry::MeshIndexArrayType* quadsListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, name, {121}, {4}, parentId);
+  AbstractGeometry::MeshIndexArrayType* quadsListArray = UnitTest::CreateTestDataArray<AbstractGeometry::MeshIndexType>(dataStructure, name, {121}, {4}, parentId);
   (*quadsListArray)[0] = 0;
   (*quadsListArray)[1] = 1;
   (*quadsListArray)[2] = 13;
@@ -2207,7 +2207,7 @@ void CreateQuadsArray(DataStructure& dataStructure, const std::string& name, Dat
   (*quadsListArray)[483] = 142;
 }
 
-void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& tetsName, DataObject::IdType parentId)
+void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& tetsName, AbstractDataObject::IdType parentId)
 {
   Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStructure, verticesName, {5}, {3}, parentId);
   (*vertListArray)[0] = -1;
@@ -2225,7 +2225,7 @@ void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string&
   (*vertListArray)[12] = 1;
   (*vertListArray)[13] = 0.5;
   (*vertListArray)[14] = 0;
-  IGeometry::MeshIndexArrayType* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, tetsName, {2}, {4}, parentId);
+  AbstractGeometry::MeshIndexArrayType* polyListArray = UnitTest::CreateTestDataArray<AbstractGeometry::MeshIndexType>(dataStructure, tetsName, {2}, {4}, parentId);
   (*polyListArray)[0] = 0;
   (*polyListArray)[1] = 1;
   (*polyListArray)[2] = 2;
@@ -2236,7 +2236,7 @@ void CreateTetAndVerticesArrays(DataStructure& dataStructure, const std::string&
   (*polyListArray)[7] = 3;
 }
 
-void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& hexsName, DataObject::IdType parentId)
+void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string& verticesName, const std::string& hexsName, AbstractDataObject::IdType parentId)
 {
   Float32Array* vertListArray = UnitTest::CreateTestDataArray<float32>(dataStructure, verticesName, {12}, {3}, parentId);
   (*vertListArray)[0] = -1;
@@ -2275,7 +2275,7 @@ void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string&
   (*vertListArray)[33] = 1;
   (*vertListArray)[34] = -1;
   (*vertListArray)[35] = 1;
-  IGeometry::MeshIndexArrayType* polyListArray = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, hexsName, {2}, {8}, parentId);
+  AbstractGeometry::MeshIndexArrayType* polyListArray = UnitTest::CreateTestDataArray<AbstractGeometry::MeshIndexType>(dataStructure, hexsName, {2}, {8}, parentId);
   (*polyListArray)[0] = 6;
   (*polyListArray)[1] = 7;
   (*polyListArray)[2] = 4;
@@ -2294,7 +2294,7 @@ void CreateHexAndVerticesArrays(DataStructure& dataStructure, const std::string&
   (*polyListArray)[15] = 3;
 }
 
-void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const std::string& name, DataObject::IdType parentId)
+void CreateIncompatibleVerticesArray(DataStructure& dataStructure, const std::string& name, AbstractDataObject::IdType parentId)
 {
   Float32Array* verticesArray = UnitTest::CreateTestDataArray<float32>(dataStructure, name, {2}, {3}, parentId);
   (*verticesArray)[0] = -0.707107;
@@ -2317,10 +2317,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
   const std::string geometryName = "[Geometry Test]";
   const DataPath geometryPath({geometryName});
 
-  const std::string vertexAmName = INodeGeometry0D::k_VertexAttributeMatrixName;
-  const std::string edgeAmName = INodeGeometry1D::k_EdgeAttributeMatrixName;
-  const std::string faceAmName = INodeGeometry2D::k_FaceAttributeMatrixName;
-  const std::string cellAmName = IGridGeometry::k_CellAttributeMatrixName;
+  const std::string vertexAmName = AbstractNodeGeometry0D::k_VertexAttributeMatrixName;
+  const std::string edgeAmName = AbstractNodeGeometry1D::k_EdgeAttributeMatrixName;
+  const std::string faceAmName = AbstractNodeGeometry2D::k_FaceAttributeMatrixName;
+  const std::string cellAmName = AbstractGridGeometry::k_CellAttributeMatrixName;
 
   const std::string vertexListName = "Shared Vertex List";
   const std::string edgeListName = "Edge List";
@@ -2623,10 +2623,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     const auto edgeAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(edgeAmName));
     REQUIRE(edgeAm != nullptr);
     REQUIRE(createdGeom->getEdgeAttributeMatrix() != nullptr);
-    const auto destEdges = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(edgeListName));
+    const auto destEdges = dataStructure.getDataAs<AbstractGeometry::MeshIndexArrayType>(geometryPath.createChildPath(edgeListName));
     REQUIRE(destEdges != nullptr);
     REQUIRE(createdGeom->getEdges() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcEdgesPath, geometryPath.createChildPath(edgeListName));
+    UnitTest::CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, srcEdgesPath, geometryPath.createChildPath(edgeListName));
   }
 
   SECTION("Triangle Geometry Copy")
@@ -2685,10 +2685,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     const auto faceAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(faceAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    const auto destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
+    const auto destFaces = dataStructure.getDataAs<AbstractGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTrianglesPath, geometryPath.createChildPath(triangleListName));
+    UnitTest::CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, srcTrianglesPath, geometryPath.createChildPath(triangleListName));
   }
 
   SECTION("Quad Geometry Copy")
@@ -2747,10 +2747,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     const auto quadAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(quadAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    const auto destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(quadListName));
+    const auto destFaces = dataStructure.getDataAs<AbstractGeometry::MeshIndexArrayType>(geometryPath.createChildPath(quadListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcQuadsPath, geometryPath.createChildPath(quadListName));
+    UnitTest::CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, srcQuadsPath, geometryPath.createChildPath(quadListName));
   }
 
   SECTION("Tetrahedral Geometry Copy")
@@ -2809,10 +2809,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     const auto tetAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(tetAm != nullptr);
     REQUIRE(createdGeom->getPolyhedraAttributeMatrix() != nullptr);
-    const auto destCells = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(tetListName));
+    const auto destCells = dataStructure.getDataAs<AbstractGeometry::MeshIndexArrayType>(geometryPath.createChildPath(tetListName));
     REQUIRE(destCells != nullptr);
     REQUIRE(createdGeom->getPolyhedra() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcTetsPath, geometryPath.createChildPath(tetListName));
+    UnitTest::CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, srcTetsPath, geometryPath.createChildPath(tetListName));
   }
 
   SECTION("Hexahedral Geometry Copy")
@@ -2871,10 +2871,10 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     const auto hexAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(cellAmName));
     REQUIRE(hexAm != nullptr);
     REQUIRE(createdGeom->getPolyhedraAttributeMatrix() != nullptr);
-    const auto destCells = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(hexListName));
+    const auto destCells = dataStructure.getDataAs<AbstractGeometry::MeshIndexArrayType>(geometryPath.createChildPath(hexListName));
     REQUIRE(destCells != nullptr);
     REQUIRE(createdGeom->getPolyhedra() != nullptr);
-    UnitTest::CompareArrays<IGeometry::MeshIndexType>(dataStructure, srcHexsPath, geometryPath.createChildPath(hexListName));
+    UnitTest::CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, srcHexsPath, geometryPath.createChildPath(hexListName));
   }
 
   SECTION("Triangle Geometry Move")
@@ -2932,7 +2932,7 @@ TEST_CASE("SimplnxCore::CreateGeometry: Valid Execution", "[SimplnxCore][CreateG
     const auto faceAm = dataStructure.getDataAs<AttributeMatrix>(geometryPath.createChildPath(faceAmName));
     REQUIRE(faceAm != nullptr);
     REQUIRE(createdGeom->getFaceAttributeMatrix() != nullptr);
-    const auto destFaces = dataStructure.getDataAs<IGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
+    const auto destFaces = dataStructure.getDataAs<AbstractGeometry::MeshIndexArrayType>(geometryPath.createChildPath(triangleListName));
     REQUIRE(destFaces != nullptr);
     REQUIRE(createdGeom->getFaces() != nullptr);
 

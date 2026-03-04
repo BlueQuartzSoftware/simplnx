@@ -85,7 +85,7 @@ IFilter::PreflightResult WriteSPParksSitesFilter::preflightImpl(const DataStruct
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
 
-  usize fIdsTupCount = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue)->getNumberOfTuples();
+  usize fIdsTupCount = dataStructure.getDataAs<AbstractDataArray>(pFeatureIdsArrayPathValue)->getNumberOfTuples();
 
   return {};
 }

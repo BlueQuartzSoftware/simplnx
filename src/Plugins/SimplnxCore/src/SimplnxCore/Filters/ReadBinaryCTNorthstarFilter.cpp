@@ -2,7 +2,7 @@
 
 #include "SimplnxCore/Filters/Algorithms/ReadBinaryCTNorthstar.hpp"
 
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -51,12 +51,12 @@ std::vector<std::string> ParseNextLine(std::ifstream& inStream, char delimiter, 
 }
 
 // -----------------------------------------------------------------------------
-std::string GenerateGeometryInfoString(const ReadBinaryCTNorthstarFilter::ImageGeometryInfo& info, const IGeometry::LengthUnit& lengthUnit)
+std::string GenerateGeometryInfoString(const ReadBinaryCTNorthstarFilter::ImageGeometryInfo& info, const AbstractGeometry::LengthUnit& lengthUnit)
 {
   SizeVec3 dims = info.Dimensions;
   FloatVec3 origin = info.Origin;
   FloatVec3 spacing = info.Spacing;
-  std::string lengthUnitStr = IGeometry::LengthUnitToString(lengthUnit);
+  std::string lengthUnitStr = AbstractGeometry::LengthUnitToString(lengthUnit);
   std::string desc = fmt::format("X Range: {} to {} (Delta: {} {}) 0-{} Voxels\n", origin[0], origin[0] + (static_cast<float32>(dims[0]) * spacing[0]), static_cast<float32>(dims[0]) * spacing[0],
                                  lengthUnitStr, dims[0] - 1);
   desc.append(fmt::format("Y Range: {} to {} (Delta: {} {}) 0-{} Voxels\n", origin[1], origin[1] + (static_cast<float32>(dims[1]) * spacing[1]), static_cast<float32>(dims[1]) * spacing[1],
@@ -375,7 +375,8 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
   params.insert(std::make_unique<VectorInt32Parameter>(k_EndVoxelCoord_Key, "Ending XYZ Voxel for Subvolume", "The ending subvolume voxel (inclusive)", std::vector<int32>({1, 1, 1}),
                                                        std::vector<std::string>(3)));
 
-  params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
+  params.insert(
+      std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, AbstractGeometry::GetAllLengthUnitStrings()));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(
@@ -512,7 +513,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
       DataType::float32, std::vector<usize>{importedGeometryInfo.Dimensions[2], importedGeometryInfo.Dimensions[1], importedGeometryInfo.Dimensions[0]}, std::vector<usize>{1}, densityArrayPath));
 
   // Set the preflight updated values
-  std::string volumeDescription = GenerateGeometryInfoString(geometryInfo, static_cast<IGeometry::LengthUnit>(pLengthUnitValue));
+  std::string volumeDescription = GenerateGeometryInfoString(geometryInfo, static_cast<AbstractGeometry::LengthUnit>(pLengthUnitValue));
   std::string dataFileInfo = GenerateDataFileListInfoString(dataFiles);
 
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -521,7 +522,7 @@ IFilter::PreflightResult ReadBinaryCTNorthstarFilter::preflightImpl(const DataSt
 
   if(pImportSubvolumeValue)
   {
-    std::string importedVolumeDescription = GenerateGeometryInfoString(importedGeometryInfo, static_cast<IGeometry::LengthUnit>(pLengthUnitValue));
+    std::string importedVolumeDescription = GenerateGeometryInfoString(importedGeometryInfo, static_cast<AbstractGeometry::LengthUnit>(pLengthUnitValue));
     preflightUpdatedValues.push_back({"Subvolume", importedVolumeDescription});
   }
 

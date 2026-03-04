@@ -67,8 +67,8 @@ Result<> SliceTriangleGeometry::operator()()
   auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->SliceDataContainerName);
   edgeGeom.resizeVertexList(numVerts);
   edgeGeom.resizeEdgeList(numEdges);
-  INodeGeometry0D::SharedVertexList& verts = edgeGeom.getVerticesRef();
-  INodeGeometry1D::SharedEdgeList& edges = edgeGeom.getEdgesRef();
+  AbstractNodeGeometry0D::SharedVertexList& verts = edgeGeom.getVerticesRef();
+  AbstractNodeGeometry1D::SharedEdgeList& edges = edgeGeom.getEdgesRef();
   edgeGeom.getVertexAttributeMatrix()->resizeTuples({numVerts});
   edgeGeom.getEdgeAttributeMatrix()->resizeTuples({numEdges});
   auto& sliceAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SliceDataContainerName.createChildPath(m_InputValues->SliceAttributeMatrixName));

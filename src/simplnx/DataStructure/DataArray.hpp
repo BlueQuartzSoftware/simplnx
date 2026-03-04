@@ -2,11 +2,11 @@
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 
 #include <vector>
 
@@ -22,13 +22,13 @@ constexpr StringLiteral k_TypeName = "DataArray<T>";
 
 /**
  * @class DataArray
- * @brief The DataArray class is a type of DataObject that exists to store and
+ * @brief The DataArray class is a type of AbstractDataObject that exists to store and
  * retrieve array data within the DataStructure. The DataArray is designed to
  * allow expandability into multiple sources of data, including out-of-core data,
  * through the use of derived DataStore classes.
  */
 template <class T>
-class DataArray : public IDataArray
+class DataArray : public AbstractDataArray
 {
   friend class NeighborList<T>;
 
@@ -43,7 +43,7 @@ public:
   /**
    * @brief Attempts to create a DataArray with the specified values and add
    * it to the DataStructure. If a parentId is provided, then the DataArray
-   * is created with the target DataObject as its parent. Otherwise, the
+   * is created with the target AbstractDataObject as its parent. Otherwise, the
    * created DataArray is nested directly within the DataStructure.
    *
    * In either case, the DataArray is then owned by the DataStructure and will
@@ -81,7 +81,7 @@ public:
    * @param tupleShape  The tuple dimensions of the data. If you want to mimic an image then your shape should be {height, width} slowest to fastest dimension
    * @param componentShape The component dimensions of the data. If you want to mimic an RGB image then your component would be {3},
    * if you want to store a 3Rx4C matrix then it would be {3, 4}.
-   * @param parentId The DataObject that will own the DataArray instance.
+   * @param parentId The AbstractDataObject that will own the DataArray instance.
    * @return DataArray<T>* Instance of the DataArray object that is owned and managed by the DataStructure
    */
   template <typename DataStoreType>
@@ -111,7 +111,7 @@ public:
   /**
    * @brief Attempts to create a DataArray with the specified values and add
    * it to the DataStructure. If a parentId is provided, then the DataArray
-   * is created with the target DataObject as its parent. Otherwise, the
+   * is created with the target AbstractDataObject as its parent. Otherwise, the
    * created DataArray is nested directly within the DataStructure.
    *
    * In either case, the DataArray is then owned by the DataStructure and will
@@ -120,7 +120,7 @@ public:
    * in which it is created. Use the object's ID or DataPath to retrieve the
    * DataArray if it is needed after the program has left the current scope.
    *
-   * Unlike Create, Import allows the DataObject ID to be set for use in
+   * Unlike Create, Import allows the AbstractDataObject ID to be set for use in
    * importing data.
    *
    * Returns a pointer to the created DataArray if the process succeeds.
@@ -150,7 +150,7 @@ public:
    * @param other
    */
   DataArray(const DataArray<T>& other)
-  : IDataArray(other)
+  : AbstractDataArray(other)
   , m_DataStore(other.m_DataStore)
   {
   }
@@ -160,7 +160,7 @@ public:
    * @param other
    */
   DataArray(DataArray<T>&& other)
-  : IDataArray(std::move(other))
+  : AbstractDataArray(std::move(other))
   , m_DataStore(std::move(other.m_DataStore))
   {
   }
@@ -174,7 +174,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override
+  AbstractDataObject::Type getDataObjectType() const override
   {
     return Type::DataArray;
   }
@@ -191,9 +191,9 @@ public:
   /**
    * @brief Returns a shallow copy of the DataArray without copying data. THE CALLING CODE
    * MUST DISPOSE OF THE RETURNED OBJECT.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* shallowCopy() override
+  AbstractDataObject* shallowCopy() override
   {
     return new DataArray(*this);
   }
@@ -201,9 +201,9 @@ public:
   /**
    * @brief Returns a deep copy of the DataArray including a deep copy of the
    * data store. The object will be owned by the DataStructure.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override
   {
     DataStructure& dataStruct = getDataStructureRef();
     if(dataStruct.containsData(copyPath))
@@ -730,7 +730,7 @@ public:
   }
 
   /**
-   * @brief Flushes the DataObject to its respective target.
+   * @brief Flushes the AbstractDataObject to its respective target.
    * In-memory DataObjects are not affected.
    */
   void flush() const override
@@ -754,7 +754,7 @@ protected:
    * @param store
    */
   DataArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type> store = nullptr)
-  : IDataArray(dataStructure, std::move(name))
+  : AbstractDataArray(dataStructure, std::move(name))
   {
     setDataStore(std::move(store));
   }
@@ -770,7 +770,7 @@ protected:
    * @param store
    */
   DataArray(DataStructure& dataStructure, std::string name, IdType importId, std::shared_ptr<store_type> store = nullptr)
-  : IDataArray(dataStructure, std::move(name), importId)
+  : AbstractDataArray(dataStructure, std::move(name), importId)
   {
     setDataStore(std::move(store));
   }

@@ -49,7 +49,7 @@ std::vector<std::string> AlignGeometriesFilter::defaultTags() const
 //------------------------------------------------------------------------------
 Parameters AlignGeometriesFilter::parameters() const
 {
-  GeometrySelectionParameter::AllowedTypes geomTypes = IGeometry::GetAllGeomTypes();
+  GeometrySelectionParameter::AllowedTypes geomTypes = AbstractGeometry::GetAllGeomTypes();
 
   Parameters params;
 

@@ -11,9 +11,9 @@ namespace nx::core::HDF5
 AttributeMatrixIO::AttributeMatrixIO() = default;
 AttributeMatrixIO::~AttributeMatrixIO() noexcept = default;
 
-DataObject::Type AttributeMatrixIO::getDataType() const
+AbstractDataObject::Type AttributeMatrixIO::getDataType() const
 {
-  return DataObject::Type::AttributeMatrix;
+  return IDataObject::Type::AttributeMatrix;
 }
 
 std::string AttributeMatrixIO::getTypeName() const
@@ -21,8 +21,8 @@ std::string AttributeMatrixIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const group_reader_type& parentGroup, const std::string& objectName, AbstractDataObject::IdType importId,
+                                     const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
 
   auto groupReader = parentGroup.openGroup(objectName);
@@ -59,7 +59,7 @@ Result<> AttributeMatrixIO::writeData(DataStructureWriter& dataStructureWriter, 
   return WriteBaseGroupData(dataStructureWriter, attributeMatrix, parentGroup, importable);
 }
 
-Result<> AttributeMatrixIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> AttributeMatrixIO::writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }

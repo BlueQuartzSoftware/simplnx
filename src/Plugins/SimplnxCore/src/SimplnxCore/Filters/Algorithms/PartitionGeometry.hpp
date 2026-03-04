@@ -4,7 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -54,7 +54,7 @@ struct SIMPLNXCORE_EXPORT PartitionGeometryInputValues
 class SIMPLNXCORE_EXPORT PartitionGeometry
 {
 public:
-  using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using VertexStore = AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>;
 
   PartitionGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, PartitionGeometryInputValues* inputValues);
   ~PartitionGeometry() noexcept;
@@ -69,7 +69,7 @@ public:
     USizeVec3 geometryDims;
     std::optional<FloatVec3> geometryOrigin;
     std::optional<FloatVec3> geometrySpacing;
-    IGeometry::LengthUnit geometryUnits;
+    AbstractGeometry::LengthUnit geometryUnits;
   };
 
   Result<> operator()();
@@ -99,7 +99,7 @@ private:
    * @return The result of the partitioning algorithm.  Valid if successful, invalid
    * if there was an error.
    */
-  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue);
+  Result<> partitionCellBasedGeometry(const AbstractGridGeometry& inputGeometry, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue);
 
   /**
    * @brief Partitions a vertex list (typically from a node-based geometry) according to

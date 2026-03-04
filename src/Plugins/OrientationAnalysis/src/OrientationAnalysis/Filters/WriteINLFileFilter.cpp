@@ -104,8 +104,8 @@ IFilter::PreflightResult WriteINLFileFilter::preflightImpl(const DataStructure& 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  IArray::ArrayType arrayType = dataStructure.getDataAs<IArray>(pMaterialNameArrayPathValue)->getArrayType();
-  if(arrayType != IArray::ArrayType::StringArray)
+  AbstractArray::ArrayType arrayType = dataStructure.getDataAs<AbstractArray>(pMaterialNameArrayPathValue)->getArrayType();
+  if(arrayType != AbstractArray::ArrayType::StringArray)
   {
     return MakePreflightErrorResult(-78430, fmt::format("Array [{}] type is incorrect, must be of type StringArray.", pMaterialNameArrayPathValue.toString()));
   }

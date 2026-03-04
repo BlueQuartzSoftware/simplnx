@@ -63,7 +63,7 @@ Parameters CombineAttributeArraysFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Combine", "The complete path to each of the Attribute Arrays to combine",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
@@ -120,13 +120,13 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   size_t numComps = 0;
   for(const auto& dataPath : selectedDataArrayPathsValue)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
+    const auto* dataArray = dataStructure.getDataAs<AbstractDataArray>(dataPath);
     numComps += dataArray->getNumberOfComponents();
   }
 
   // Create the output array
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedDataArrayPathsValue[0]);
+    const auto* dataArray = dataStructure.getDataAs<AbstractDataArray>(selectedDataArrayPathsValue[0]);
     auto tupleShape = dataArray->getTupleShape();
     auto action = std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].replaceName(stackedDataArrayName));
     resultOutputActions.value().appendAction(std::move(action));

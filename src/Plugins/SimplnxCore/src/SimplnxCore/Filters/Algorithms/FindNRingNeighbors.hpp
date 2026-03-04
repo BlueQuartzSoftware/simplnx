@@ -5,7 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
@@ -30,7 +30,7 @@ struct SIMPLNXCORE_EXPORT FindNRingNeighborsInputValues
 class SIMPLNXCORE_EXPORT FindNRingNeighbors
 {
 public:
-  using UniqueFaceIds_t = std::set<IGeometry::MeshIndexType>;
+  using UniqueFaceIds_t = std::set<AbstractGeometry::MeshIndexType>;
 
   FindNRingNeighbors(FindNRingNeighborsInputValues* inputValues);
   ~FindNRingNeighbors() noexcept;

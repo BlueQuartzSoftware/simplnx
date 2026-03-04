@@ -18,9 +18,9 @@ namespace nx::core::HDF5
 StringArrayIO::StringArrayIO() = default;
 StringArrayIO::~StringArrayIO() noexcept = default;
 
-DataObject::Type StringArrayIO::getDataType() const
+AbstractDataObject::Type StringArrayIO::getDataType() const
 {
-  return DataObject::Type::AttributeMatrix;
+  return IDataObject::Type::AttributeMatrix;
 }
 
 std::string StringArrayIO::getTypeName() const
@@ -28,8 +28,8 @@ std::string StringArrayIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                                 const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, AbstractDataObject::IdType importId,
+                                 const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto datasetReader = parentGroup.openDataset(objectName);
   std::string dataArrayName = datasetReader.getName();
@@ -109,7 +109,7 @@ Result<> StringArrayIO::finishImportingData(DataStructure& dataStructure, const 
   return {};
 }
 
-Result<> StringArrayIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> StringArrayIO::writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }

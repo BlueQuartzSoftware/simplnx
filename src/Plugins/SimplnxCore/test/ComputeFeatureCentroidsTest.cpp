@@ -57,8 +57,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter", "[SimplnxCore][ComputeFe
     const DataPath k_CentroidsArrayPath({k_DataContainer, k_CellFeatureData, k_Centroids});
     const DataPath k_CentroidsNXArrayPath({k_DataContainer, k_CellFeatureData, k_CentroidsNX});
 
-    const auto& k_CentroidsArray = dataStructure.getDataRefAs<IDataArray>(k_CentroidsArrayPath);
-    const auto& k_CentroidsNXArray = dataStructure.getDataRefAs<IDataArray>(k_CentroidsNXArrayPath);
+    const auto& k_CentroidsArray = dataStructure.getDataRefAs<AbstractDataArray>(k_CentroidsArrayPath);
+    const auto& k_CentroidsNXArray = dataStructure.getDataRefAs<AbstractDataArray>(k_CentroidsNXArrayPath);
 
     CompareDataArrays<float>(k_CentroidsArray, k_CentroidsNXArray);
   }

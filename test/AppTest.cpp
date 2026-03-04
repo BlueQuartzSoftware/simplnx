@@ -239,16 +239,16 @@ TEST_CASE("Application::getDataType", "[Application]")
 
   SECTION("Default data types are registered")
   {
-    REQUIRE(app->getDataType("DataGroup") == DataObject::Type::DataGroup);
-    REQUIRE(app->getDataType("AttributeMatrix") == DataObject::Type::AttributeMatrix);
-    REQUIRE(app->getDataType("Image Geom") == DataObject::Type::ImageGeom);
-    REQUIRE(app->getDataType("Vertex Geom") == DataObject::Type::VertexGeom);
+    REQUIRE(app->getDataType("DataGroup") == IDataObject::Type::DataGroup);
+    REQUIRE(app->getDataType("AttributeMatrix") == IDataObject::Type::AttributeMatrix);
+    REQUIRE(app->getDataType("Image Geom") == IDataObject::Type::ImageGeom);
+    REQUIRE(app->getDataType("Vertex Geom") == IDataObject::Type::VertexGeom);
   }
 
   SECTION("Unknown data type returns DataObject")
   {
     auto type = app->getDataType("NonExistentType");
-    REQUIRE(type == DataObject::Type::DataObject);
+    REQUIRE(type == IDataObject::Type::AbstractDataObject);
   }
 }
 
@@ -258,15 +258,15 @@ TEST_CASE("Application::addDataType", "[Application]")
 
   SECTION("Add custom data type")
   {
-    app->addDataType(DataObject::Type::DataGroup, "CustomType");
-    REQUIRE(app->getDataType("CustomType") == DataObject::Type::DataGroup);
+    app->addDataType(IDataObject::Type::DataGroup, "CustomType");
+    REQUIRE(app->getDataType("CustomType") == IDataObject::Type::DataGroup);
   }
 
   SECTION("Override existing data type")
   {
     auto originalType = app->getDataType("DataGroup");
-    app->addDataType(DataObject::Type::ImageGeom, "DataGroup");
-    REQUIRE(app->getDataType("DataGroup") == DataObject::Type::ImageGeom);
+    app->addDataType(IDataObject::Type::ImageGeom, "DataGroup");
+    REQUIRE(app->getDataType("DataGroup") == IDataObject::Type::ImageGeom);
     // Restore original
     app->addDataType(originalType, "DataGroup");
   }

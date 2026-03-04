@@ -20,7 +20,7 @@ public:
   RequireMinimumSizeFeaturesTransferDataImpl(const RequireMinimumSizeFeaturesTransferDataImpl&) = default;
 
   RequireMinimumSizeFeaturesTransferDataImpl(RequireMinimumSizeFeatures* filterAlg, usize totalPoints, const Int32AbstractDataStore& featureIds, const std::vector<int64>& neighborVoxelIndex,
-                                             const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
+                                             const std::shared_ptr<AbstractDataArray>& dataArrayPtr, MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_NeighborsVoxelIndex(neighborVoxelIndex)
@@ -68,7 +68,7 @@ private:
   RequireMinimumSizeFeatures* m_FilterAlg = nullptr;
   usize m_TotalPoints = 0;
   std::vector<int64> m_NeighborsVoxelIndex;
-  const std::shared_ptr<IDataArray> m_DataArrayPtr;
+  const std::shared_ptr<AbstractDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
   MessageHelper& m_MessageHelper;
   const std::atomic_bool& m_ShouldCancel;
@@ -245,7 +245,7 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
     messageHelper.sendMessage(fmt::format("Remaining voxels: {} - Updating Data Arrays... ", counter));
 
     // Build up a list of the DataArrays that we are going to operate on.
-    const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsPath, {});
+    const std::vector<std::shared_ptr<AbstractDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsPath, {});
 
     ParallelTaskAlgorithm taskRunner;
     taskRunner.setParallelizationEnabled(true);
@@ -262,7 +262,7 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
     }
     taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
     // Now update the feature Ids
-    auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsPath);
+    auto featureIDataArray = m_DataStructure.getSharedDataAs<AbstractDataArray>(m_InputValues->FeatureIdsPath);
     taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
     taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, featureIDataArray, messageHelper, m_ShouldCancel));
   }

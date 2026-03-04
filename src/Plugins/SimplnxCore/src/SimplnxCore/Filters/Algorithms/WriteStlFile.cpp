@@ -19,8 +19,8 @@ using namespace nx::core;
 
 namespace
 {
-using TriStore = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
-using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+using TriStore = AbstractDataStore<AbstractGeometry::MeshIndexArrayType::value_type>;
+using VertexStore = AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>;
 
 struct LimitBoundAtomicFileFactory;
 
@@ -72,8 +72,8 @@ struct LimitBoundAtomicFileFactory
   }
 };
 
-Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
-                           const std::atomic_bool& shouldCancel, const IGeometry::MeshIndexType startValue = 0)
+Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const AbstractGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
+                           const std::atomic_bool& shouldCancel, const AbstractGeometry::MeshIndexType startValue = 0)
 {
   Result<> result;
 
@@ -126,7 +126,7 @@ Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGe
   attrByteCountPtr[0] = 0;
 
   // Loop over all the triangles for this spin
-  for(IGeometry::MeshIndexType triangle = startValue; triangle < endValue; ++triangle)
+  for(AbstractGeometry::MeshIndexType triangle = startValue; triangle < endValue; ++triangle)
   {
     if(shouldCancel)
     {
@@ -137,9 +137,9 @@ Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGe
     }
 
     // Get the true indices of the 3 nodes
-    IGeometry::MeshIndexType nId0 = triangles[triangle * 3];
-    IGeometry::MeshIndexType nId1 = triangles[triangle * 3 + 1];
-    IGeometry::MeshIndexType nId2 = triangles[triangle * 3 + 2];
+    AbstractGeometry::MeshIndexType nId0 = triangles[triangle * 3];
+    AbstractGeometry::MeshIndexType nId1 = triangles[triangle * 3 + 1];
+    AbstractGeometry::MeshIndexType nId2 = triangles[triangle * 3 + 2];
 
     vert1Ptr[0] = static_cast<float>(vertices[nId0 * 3]);
     vert1Ptr[1] = static_cast<float>(vertices[nId0 * 3 + 1]);
@@ -185,8 +185,8 @@ Result<> SingleWriteOutStl(WriteStlFile* filter, const fs::path& path, const IGe
 class SingleOutWrapper
 {
 public:
-  SingleOutWrapper(WriteStlFile* filter, const fs::path& path, const IGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
-                   const IGeometry::MeshIndexType startValue, const std::atomic_bool& shouldCancel)
+  SingleOutWrapper(WriteStlFile* filter, const fs::path& path, const AbstractGeometry::MeshIndexType endValue, std::string header, const TriStore& triangles, const VertexStore& vertices,
+                   const AbstractGeometry::MeshIndexType startValue, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_Path(path)
   , m_EndValue(endValue)
@@ -207,11 +207,11 @@ public:
 private:
   WriteStlFile* m_Filter = nullptr;
   const fs::path m_Path;
-  const IGeometry::MeshIndexType m_EndValue;
+  const AbstractGeometry::MeshIndexType m_EndValue;
   std::string m_Header;
   const TriStore& m_Triangles;
   const VertexStore& m_Vertices;
-  const IGeometry::MeshIndexType m_StartValue;
+  const AbstractGeometry::MeshIndexType m_StartValue;
   const std::atomic_bool& m_ShouldCancel;
 };
 
@@ -221,7 +221,7 @@ private:
 class MultiWriteStlFileImpl
 {
 public:
-  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const IGeometry::MeshIndexType endValue, const std::string header, const TriStore& triangles,
+  MultiWriteStlFileImpl(WriteStlFile* filter, LimitBoundAtomicFile& limitBoundAtomicFile, const AbstractGeometry::MeshIndexType endValue, const std::string header, const TriStore& triangles,
                         const VertexStore& vertices, const Int32AbstractDataStore& featureIds, const int32 featureId, const usize maxTriangles, const std::atomic_bool& shouldCancel)
   : m_Filter(filter)
   , m_LimitBoundAtomicFile(limitBoundAtomicFile)
@@ -297,7 +297,7 @@ public:
 
     const usize numComps = m_FeatureIds.getNumberOfComponents();
     // Loop over all the triangles for this spin
-    for(IGeometry::MeshIndexType triangle = startValue; triangle < m_EndValue; triangle++)
+    for(AbstractGeometry::MeshIndexType triangle = startValue; triangle < m_EndValue; triangle++)
     {
       if(m_ShouldCancel)
       {
@@ -330,9 +330,9 @@ public:
       }
 
       // Get the true indices of the 3 nodes
-      IGeometry::MeshIndexType nId0 = m_Triangles[triangle * 3];
-      IGeometry::MeshIndexType nId1 = m_Triangles[triangle * 3 + 1];
-      IGeometry::MeshIndexType nId2 = m_Triangles[triangle * 3 + 2];
+      AbstractGeometry::MeshIndexType nId0 = m_Triangles[triangle * 3];
+      AbstractGeometry::MeshIndexType nId1 = m_Triangles[triangle * 3 + 1];
+      AbstractGeometry::MeshIndexType nId2 = m_Triangles[triangle * 3 + 2];
 
       if(m_FeatureIds[triangle * numComps] == m_FeatureId)
       {
@@ -341,7 +341,7 @@ public:
       else if(numComps > 1 && m_FeatureIds[triangle * numComps + 1] == m_FeatureId)
       {
         // Switch the 2 node indices
-        IGeometry::MeshIndexType temp = nId1;
+        AbstractGeometry::MeshIndexType temp = nId1;
         nId1 = nId2;
         nId2 = temp;
       }
@@ -393,7 +393,7 @@ public:
 private:
   WriteStlFile* m_Filter = nullptr;
   LimitBoundAtomicFile& m_LimitBoundAtomicFile;
-  const IGeometry::MeshIndexType m_EndValue;
+  const AbstractGeometry::MeshIndexType m_EndValue;
   const std::string m_Header;
   const TriStore& m_Triangles;
   const VertexStore& m_Vertices;
@@ -403,7 +403,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 };
 
-Result<> ExecuteSingleFileOverflow(WriteStlFile* filter, const IGeometry::MeshIndexType nTriangles, const std::string& header, const fs::path& firstFile, const TriStore& triangles,
+Result<> ExecuteSingleFileOverflow(WriteStlFile* filter, const AbstractGeometry::MeshIndexType nTriangles, const std::string& header, const fs::path& firstFile, const TriStore& triangles,
                                    const VertexStore& vertices, const usize maxTriangles, const std::atomic_bool& shouldCancel)
 {
   const usize count = nTriangles / maxTriangles;
@@ -484,7 +484,7 @@ Result<> WriteStlFile::operator()()
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
   const ::VertexStore& vertices = triangleGeom.getVertices()->getDataStoreRef();
   const ::TriStore& triangles = triangleGeom.getFaces()->getDataStoreRef();
-  const IGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
+  const AbstractGeometry::MeshIndexType nTriangles = triangleGeom.getNumberOfFaces();
 
   auto groupingType = static_cast<GroupingType>(m_InputValues->GroupingType);
 
@@ -587,7 +587,7 @@ Result<> WriteStlFile::operator()()
     std::map<int32, int32> uniqueGrainIdToPhase;
 
     const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesPath);
-    for(IGeometry::MeshIndexType i = 0; i < nTriangles; i++)
+    for(AbstractGeometry::MeshIndexType i = 0; i < nTriangles; i++)
     {
       uniqueGrainIdToPhase.emplace(featureIds[i * 2], featurePhases[i * 2]);
       uniqueGrainIdToPhase.emplace(featureIds[i * 2 + 1], featurePhases[i * 2 + 1]);

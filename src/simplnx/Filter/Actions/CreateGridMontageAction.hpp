@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Array.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -10,7 +10,7 @@ namespace nx::core
 /**
  * @brief Action for creating an ImageGeometry in a DataStructure
  */
-class SIMPLNX_EXPORT CreateGridMontageAction : public IDataCreationAction
+class SIMPLNX_EXPORT CreateGridMontageAction : public AbstractDataCreationAction
 {
 public:
   using DimensionType = std::vector<usize>;

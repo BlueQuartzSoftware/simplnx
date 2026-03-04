@@ -102,7 +102,7 @@ Parameters ExampleFilter2Filter::parameters() const
   params.insert(
       std::make_unique<GeometrySelectionParameter>(k_Param11, "Geometry Selection Parameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArray Selection Parameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_Param30, "Attribute Matrix Selection", "Example Help Text", DataPath{}));
 
   params.linkParameters(k_Param7, k_Param9, std::make_any<BoolParameter::ValueType>(true));

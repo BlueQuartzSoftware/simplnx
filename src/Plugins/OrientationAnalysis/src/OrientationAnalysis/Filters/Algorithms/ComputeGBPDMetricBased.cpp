@@ -65,7 +65,7 @@ public:
 class TrianglesSelector
 {
 public:
-  TrianglesSelector(bool excludeTripleLines, const IGeometry::SharedFaceList& triangles, const Int8Array& nodeTypes,
+  TrianglesSelector(bool excludeTripleLines, const AbstractGeometry::SharedFaceList& triangles, const Int8Array& nodeTypes,
 #ifdef SIMPLNX_ENABLE_MULTICORE
                     tbb::concurrent_vector<TriAreaAndNormals>& selectedTriangles,
 #else
@@ -151,7 +151,7 @@ public:
 private:
   // corresponding to Phase of Interest
   bool m_ExcludeTripleLines;
-  const IGeometry::SharedFaceList& m_Triangles;
+  const AbstractGeometry::SharedFaceList& m_Triangles;
   const Int8Array& m_NodeTypes;
 #ifdef SIMPLNX_ENABLE_MULTICORE
   tbb::concurrent_vector<TriAreaAndNormals>& m_SelectedTriangles;
@@ -313,7 +313,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesArrayPath);
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  const IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
+  const AbstractGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
 
   const float64 limitDist = m_InputValues->LimitDist * Constants::k_PiOver180D;
 

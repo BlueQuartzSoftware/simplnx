@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @brief This filter will segment each 2D slice, creating Feature Ids that are used when determining the mutual information between neighboring slices. The slices are shifted relative to one another
  * until the position of maximum mutual information is determined for each section.
  */
-class ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT AlignSectionsMutualInformationFilter : public AbstractFilter
 {
 public:
   AlignSectionsMutualInformationFilter() = default;

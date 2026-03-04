@@ -69,7 +69,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
   REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
   REQUIRE(imageGeom.getSpacing() == exemplarImageGeom.getSpacing());
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
-  REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
+  REQUIRE(imageGeom.getUnits() == AbstractGeometry::LengthUnit::Micrometer);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, exemplarImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
 
@@ -122,7 +122,7 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
   REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
   REQUIRE(imageGeom.getSpacing() == exemplarImageGeom.getSpacing());
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
-  REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
+  REQUIRE(imageGeom.getUnits() == AbstractGeometry::LengthUnit::Micrometer);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, exemplarImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
 

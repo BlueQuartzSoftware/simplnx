@@ -10,12 +10,12 @@
 using namespace nx::core;
 
 ImageGeom::ImageGeom(DataStructure& dataStructure, std::string name)
-: IGridGeometry(dataStructure, std::move(name))
+: AbstractGridGeometry(dataStructure, std::move(name))
 {
 }
 
 ImageGeom::ImageGeom(DataStructure& dataStructure, std::string name, IdType importId)
-: IGridGeometry(dataStructure, std::move(name), importId)
+: AbstractGridGeometry(dataStructure, std::move(name), importId)
 {
 }
 
@@ -24,9 +24,9 @@ IGeometry::Type ImageGeom::getGeomType() const
   return IGeometry::Type::Image;
 }
 
-DataObject::Type ImageGeom::getDataObjectType() const
+AbstractDataObject::Type ImageGeom::getDataObjectType() const
 {
-  return DataObject::Type::ImageGeom;
+  return IDataObject::Type::ImageGeom;
 }
 
 BaseGroup::GroupType ImageGeom::getGroupType() const
@@ -59,12 +59,12 @@ std::string ImageGeom::getTypeName() const
   return k_TypeName;
 }
 
-DataObject* ImageGeom::shallowCopy()
+AbstractDataObject* ImageGeom::shallowCopy()
 {
   return new ImageGeom(*this);
 }
 
-std::shared_ptr<DataObject> ImageGeom::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> ImageGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure

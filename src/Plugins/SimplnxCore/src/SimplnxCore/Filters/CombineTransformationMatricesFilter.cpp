@@ -54,7 +54,7 @@ Parameters CombineTransformationMatricesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Input Matrices", "The list of Attribute Arrays that represent Square Matrices of all the same dimensions",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{DataType::float32}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
@@ -98,13 +98,13 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
 
   // Check for unequal array types, data types, and component dimensions
   ShapeType cDims;
-  IArray::ArrayType arrayType;
+  AbstractArray::ArrayType arrayType;
   std::string arrayTypeName;
   usize numTuples = 0;
   nx::core::DataType arrayDataType;
   for(usize i = 0; i < inputArrayPaths.size(); ++i)
   {
-    const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPaths[i]);
+    const auto& inputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(inputArrayPaths[i]);
 
     auto totalElements = inputDataArray.getNumberOfTuples() * inputDataArray.getNumberOfComponents();
     if(totalElements != 16)
@@ -116,7 +116,7 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
 
     for(usize j = i + 1; j < inputArrayPaths.size(); ++j)
     {
-      const auto& inputDataArray2 = dataStructure.getDataRefAs<IDataArray>(inputArrayPaths[j]);
+      const auto& inputDataArray2 = dataStructure.getDataRefAs<AbstractDataArray>(inputArrayPaths[j]);
 
       if(inputDataArray.getDataType() != inputDataArray2.getDataType())
       {

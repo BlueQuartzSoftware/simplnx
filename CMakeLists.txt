@@ -369,13 +369,13 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataFactory.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/AbstractDataIOManager.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IOConstants.hpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractDataIO.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.hpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStoreIO.hpp
@@ -390,12 +390,12 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractGeometryIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractGridGeometryIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractNodeGeom0dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractNodeGeom1dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractNodeGeom2dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractNodeGeom3dIO.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/NeighborListIO.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.hpp
@@ -422,6 +422,13 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.hpp
 
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractGridGeometry.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractNodeGeometry0D.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractNodeGeometry1D.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractNodeGeometry2D.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractNodeGeometry3D.hpp
+
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.hpp
@@ -433,6 +440,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/IPlugin.hpp
   ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.hpp
@@ -442,24 +450,26 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractDataStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractListStore.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractStringStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IStringStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/AttributeMatrix.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/BaseGroup.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataGroup.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataMap.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataObject.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractDataObject.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataObject.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataPath.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructure.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStructure.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyListStore.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IArray.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractArray.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractDataArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IListStore.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractNeighborList.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/NeighborList.hpp
@@ -468,6 +478,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/StringArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/StringStore.hpp
 
+  ${SIMPLNX_SOURCE_DIR}/Filter/AbstractFilter.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/AbstractParameter.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/AnyCloneable.hpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Arguments.hpp
@@ -510,6 +521,7 @@ set(SIMPLNX_HDRS
 
   ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineFilter.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.hpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/IPipelineNode.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Pipeline.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/PipelineFilter.hpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/PlaceholderFilter.hpp
@@ -527,11 +539,13 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.hpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/IPlugin.hpp
   ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayCreationUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlignSections.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayThreshold.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/IArrayThreshold.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataArrayUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
@@ -549,13 +563,14 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IntersectionUtilities.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ISegmentFeatures.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/AbstractSegmentFeatures.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
@@ -619,13 +634,13 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Observers/AbstractDataStructureObserver.cpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/DataIOCollection.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/IDataIOManager.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/AbstractDataIOManager.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/Generic/CoreDataIOManager.cpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataIOManager.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureReader.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/DataStructureWriter.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractDataIO.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IOUtilities.cpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IDataStoreIO.cpp
@@ -637,12 +652,12 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/GridMontageIO.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/HexahedralGeomIO.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/ImageGeomIO.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IGeometryIO.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/IGridGeometryIO.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom0dIO.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom1dIO.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom2dIO.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/INodeGeom3dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractGeometryIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractGridGeometryIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractNodeGeom0dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractNodeGeom1dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractNodeGeom2dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/AbstractNodeGeom3dIO.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/QuadGeomIO.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/RectGridGeomIO.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/StringArrayIO.cpp
@@ -650,6 +665,12 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/TriangleGeomIO.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IO/HDF5/VertexGeomIO.cpp
 
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractGeometry.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractGridGeometry.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractNodeGeometry0D.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractNodeGeometry1D.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractNodeGeometry2D.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/AbstractNodeGeometry3D.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGeometry.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/IGridGeometry.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry0D.cpp
@@ -670,15 +691,16 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridMontage.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/GridTileIndex.cpp
 
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractStringStore.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IStringStore.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/AttributeMatrix.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/BaseGroup.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataGroup.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataMap.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/DataObject.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractDataObject.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataPath.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DataStructure.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/INeighborList.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStructure.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/AbstractNeighborList.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/LinkedPath.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/NeighborList.cpp
@@ -686,6 +708,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/StringArray.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/StringStore.cpp
 
+  ${SIMPLNX_SOURCE_DIR}/Filter/AbstractFilter.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/AbstractParameter.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/Arguments.cpp
   ${SIMPLNX_SOURCE_DIR}/Filter/ConstDataParameter.cpp
@@ -719,6 +742,7 @@ set(SIMPLNX_SRCS
 
   ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineFilter.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/AbstractPipelineNode.cpp
+  ${SIMPLNX_SOURCE_DIR}/Pipeline/IPipelineNode.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Pipeline.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/PipelineFilter.cpp
   ${SIMPLNX_SOURCE_DIR}/Pipeline/PlaceholderFilter.cpp
@@ -736,6 +760,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Pipeline/Messaging/RenamedMessage.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Plugin/AbstractPlugin.cpp
+  ${SIMPLNX_SOURCE_DIR}/Plugin/IPlugin.cpp
   ${SIMPLNX_SOURCE_DIR}/Plugin/PluginLoader.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/ArrayCreationUtilities.cpp
@@ -752,12 +777,12 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData2DAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelData3DAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/SegmentFeatures.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/AbstractSegmentFeatures.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlignSections.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.cpp

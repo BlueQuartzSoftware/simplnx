@@ -23,7 +23,7 @@ using namespace nx::core;
 namespace
 {
 template <class T>
-std::string ComputeMD5HashTyped(const IDataArray& outputDataArray)
+std::string ComputeMD5HashTyped(const AbstractDataArray& outputDataArray)
 {
   const auto& dataArray = dynamic_cast<const DataArray<T>&>(outputDataArray);
   usize arraySize = dataArray.getSize();
@@ -84,7 +84,7 @@ float64 ComputeDiff(PixelType p1, PixelType p2)
 }
 
 template <class PixelType, uint32 Dimensions>
-Result<> CompareImagesImpl(const ImageGeom& inputImageGeom, const IDataArray& outputDataArray, const ImageGeom& baselineImageGeom, const IDataArray& baselineDataArray, float64 tolerance)
+Result<> CompareImagesImpl(const ImageGeom& inputImageGeom, const AbstractDataArray& outputDataArray, const ImageGeom& baselineImageGeom, const AbstractDataArray& baselineDataArray, float64 tolerance)
 {
   using DataArrayType = DataArray<PixelType>;
 
@@ -110,7 +110,8 @@ Result<> CompareImagesImpl(const ImageGeom& inputImageGeom, const IDataArray& ou
 }
 
 template <class PixelType>
-Result<> CompareImagesTyped(const ImageGeom& inputImageGeom, const IDataArray& outputDataArray, const ImageGeom& baselineImageGeom, const IDataArray& baselineDataArray, float64 tolerance)
+Result<> CompareImagesTyped(const ImageGeom& inputImageGeom, const AbstractDataArray& outputDataArray, const ImageGeom& baselineImageGeom, const AbstractDataArray& baselineDataArray,
+                            float64 tolerance)
 {
   SizeVec3 inputDims = inputImageGeom.getDimensions();
   if(inputDims[2] == 1)
@@ -133,7 +134,7 @@ namespace ITKTestBase
 //------------------------------------------------------------------------------
 bool IsArrayInMemory(DataStructure& dataStructure, const DataPath& outputDataPath)
 {
-  const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputDataPath);
+  const auto& outputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(outputDataPath);
   DataType outputDataType = outputDataArray.getDataType();
 
   switch(outputDataType)
@@ -179,7 +180,7 @@ bool IsArrayInMemory(DataStructure& dataStructure, const DataPath& outputDataPat
 //------------------------------------------------------------------------------
 std::string ComputeMd5Hash(DataStructure& dataStructure, const DataPath& outputDataPath)
 {
-  const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputDataPath);
+  const auto& outputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(outputDataPath);
   DataType outputDataType = outputDataArray.getDataType();
   // if(!outputDataArray.getDataFormat().empty())
   //{
@@ -270,7 +271,7 @@ Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeo
   }
   SizeVec3 baselineDims = baselineImageGeom->getDimensions();
 
-  const auto* baselineDataArray = dataStructure.getDataAs<IDataArray>(baselineDataPath);
+  const auto* baselineDataArray = dataStructure.getDataAs<AbstractDataArray>(baselineDataPath);
   if(baselineDataArray == nullptr)
   {
     return MakeErrorResult(-11, fmt::format("Could not get DataArray for Baseline"));
@@ -284,7 +285,7 @@ Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeo
   }
   SizeVec3 outputDims = inputImageGeom->getDimensions();
 
-  const auto* outputDataArray = dataStructure.getDataAs<IDataArray>(outputDataPath);
+  const auto* outputDataArray = dataStructure.getDataAs<AbstractDataArray>(outputDataPath);
   if(outputDataArray == nullptr)
   {
     return MakeErrorResult(-13, fmt::format("Could not get DataArray for Output"));

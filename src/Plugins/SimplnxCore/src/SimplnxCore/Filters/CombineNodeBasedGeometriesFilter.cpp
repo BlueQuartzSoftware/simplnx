@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry3D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry3D.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
@@ -33,12 +33,12 @@ struct GeometryArrayInfo
 {
   std::string name;
   ShapeType compDims;
-  IArray::ArrayType arrayType;
+  AbstractArray::ArrayType arrayType;
   std::optional<DataType> dataType;
 };
 
 template <typename NodeGeomType, typename GetArrayFunc, typename GetAttrMatrixFunc>
-std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindGeometryElements(const IGeometry* geom, GetArrayFunc getArray, GetAttrMatrixFunc getAttrMatrix)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindGeometryElements(const AbstractGeometry* geom, GetArrayFunc getArray, GetAttrMatrixFunc getAttrMatrix)
 {
   bool arrayExists = false;
   bool attrMatrixExists = false;
@@ -59,9 +59,9 @@ std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindGeometryElements(cons
     {
       for(const auto& item : *attrMatrix)
       {
-        auto* iDataArray = dynamic_cast<IDataArray*>(item.second.get());
-        auto* iNeighborList = dynamic_cast<INeighborList*>(item.second.get());
-        auto* iArray = dynamic_cast<IArray*>(item.second.get());
+        auto* iDataArray = dynamic_cast<AbstractDataArray*>(item.second.get());
+        auto* iNeighborList = dynamic_cast<AbstractNeighborList*>(item.second.get());
+        auto* iArray = dynamic_cast<AbstractArray*>(item.second.get());
         if(iDataArray != nullptr)
         {
           geometryArraysInfo.push_back({iDataArray->getName(), iDataArray->getComponentShape(), iDataArray->getArrayType(), iDataArray->getDataType()});
@@ -81,56 +81,56 @@ std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindGeometryElements(cons
   return std::make_tuple(arrayExists, attrMatrixExists, geometryArraysInfo);
 }
 
-std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindVertexElements(const IGeometry* geom)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindVertexElements(const AbstractGeometry* geom)
 {
-  auto getVerticesArrayFunc = [](const INodeGeometry0D* ptr) -> auto
+  auto getVerticesArrayFunc = [](const AbstractNodeGeometry0D* ptr) -> auto
   {
     return ptr->getVertices();
   };
-  auto getVertexAttrMatrixFunc = [](const INodeGeometry0D* ptr) -> auto
+  auto getVertexAttrMatrixFunc = [](const AbstractNodeGeometry0D* ptr) -> auto
   {
     return ptr->getVertexAttributeMatrix();
   };
-  return FindGeometryElements<INodeGeometry0D>(geom, getVerticesArrayFunc, getVertexAttrMatrixFunc);
+  return FindGeometryElements<AbstractNodeGeometry0D>(geom, getVerticesArrayFunc, getVertexAttrMatrixFunc);
 }
 
-std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindEdgeElements(const IGeometry* geom)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindEdgeElements(const AbstractGeometry* geom)
 {
-  auto getEdgesArrayFunc = [](const INodeGeometry1D* ptr) -> auto
+  auto getEdgesArrayFunc = [](const AbstractNodeGeometry1D* ptr) -> auto
   {
     return ptr->getEdges();
   };
-  auto getEdgeAttrMatrixFunc = [](const INodeGeometry1D* ptr) -> auto
+  auto getEdgeAttrMatrixFunc = [](const AbstractNodeGeometry1D* ptr) -> auto
   {
     return ptr->getEdgeAttributeMatrix();
   };
-  return FindGeometryElements<INodeGeometry1D>(geom, getEdgesArrayFunc, getEdgeAttrMatrixFunc);
+  return FindGeometryElements<AbstractNodeGeometry1D>(geom, getEdgesArrayFunc, getEdgeAttrMatrixFunc);
 }
 
-std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindFaceElements(const IGeometry* geom)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindFaceElements(const AbstractGeometry* geom)
 {
-  auto getFacesArrayFunc = [](const INodeGeometry2D* ptr) -> auto
+  auto getFacesArrayFunc = [](const AbstractNodeGeometry2D* ptr) -> auto
   {
     return ptr->getFaces();
   };
-  auto getFaceAttrMatrixFunc = [](const INodeGeometry2D* ptr) -> auto
+  auto getFaceAttrMatrixFunc = [](const AbstractNodeGeometry2D* ptr) -> auto
   {
     return ptr->getFaceAttributeMatrix();
   };
-  return FindGeometryElements<INodeGeometry2D>(geom, getFacesArrayFunc, getFaceAttrMatrixFunc);
+  return FindGeometryElements<AbstractNodeGeometry2D>(geom, getFacesArrayFunc, getFaceAttrMatrixFunc);
 }
 
-std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindPolyElements(const IGeometry* geom)
+std::tuple<bool, bool, std::vector<GeometryArrayInfo>> FindPolyElements(const AbstractGeometry* geom)
 {
-  auto getPolyArrayFunc = [](const INodeGeometry3D* ptr) -> auto
+  auto getPolyArrayFunc = [](const AbstractNodeGeometry3D* ptr) -> auto
   {
     return ptr->getPolyhedra();
   };
-  auto getPolyAttrMatrixFunc = [](const INodeGeometry3D* ptr) -> auto
+  auto getPolyAttrMatrixFunc = [](const AbstractNodeGeometry3D* ptr) -> auto
   {
     return ptr->getPolyhedraAttributeMatrix();
   };
-  return FindGeometryElements<INodeGeometry3D>(geom, getPolyArrayFunc, getPolyAttrMatrixFunc);
+  return FindGeometryElements<AbstractNodeGeometry3D>(geom, getPolyArrayFunc, getPolyAttrMatrixFunc);
 }
 
 /**
@@ -279,20 +279,20 @@ Result<> AddOutputArray(const GeometryArrayInfo& arrayInfo, const DataPath& outp
 {
   switch(arrayInfo.arrayType)
   {
-  case IArray::ArrayType::DataArray: {
+  case AbstractArray::ArrayType::DataArray: {
     actions.appendAction(
         std::make_unique<CreateArrayAction>(arrayInfo.dataType.value(), std::vector<usize>{1}, arrayInfo.compDims, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
     break;
   }
-  case IArray::ArrayType::StringArray: {
+  case AbstractArray::ArrayType::StringArray: {
     actions.appendAction(std::make_unique<CreateStringArrayAction>(std::vector<usize>{1}, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
     break;
   }
-  case IArray::ArrayType::NeighborListArray: {
+  case AbstractArray::ArrayType::NeighborListArray: {
     actions.appendAction(std::make_unique<CreateNeighborListAction>(arrayInfo.dataType.value(), std::vector<usize>{1}, outputGeomPath.createChildPath(attrMatrixName).createChildPath(arrayInfo.name)));
     break;
   }
-  case IArray::ArrayType::Any: {
+  case AbstractArray::ArrayType::Any: {
     return MakeErrorResult(-56, fmt::format("Geometry at path '{}' has array with name '{}' that has array type 'Any'.  This should NEVER happen.  Please contact the developers.", arrayInfo.name,
                                             outputGeomPath.toString()));
   }
@@ -305,7 +305,7 @@ Result<> CreateINodeGeometry0DObjects(const DataPath& outputGeomPath, const std:
 {
   for(const auto& vertexDataArrayInfo : vertexDataArraysInfo)
   {
-    auto result = AddOutputArray(vertexDataArrayInfo, outputGeomPath, INodeGeometry0D::k_VertexAttributeMatrixName, actions);
+    auto result = AddOutputArray(vertexDataArrayInfo, outputGeomPath, AbstractNodeGeometry0D::k_VertexAttributeMatrixName, actions);
     if(result.invalid())
     {
       return result;
@@ -319,22 +319,23 @@ template <class INodeGeom>
 Result<> CreateINodeGeometry1DObjects(const DataPath& outputGeomPath, bool edgesArrayExists, bool edgeAttrMatrixExists, const std::vector<GeometryArrayInfo>& edgeDataArraysInfo,
                                       OutputActions& actions)
 {
-  if constexpr(!std::is_same_v<INodeGeometry1D, INodeGeom>)
+  if constexpr(!std::is_same_v<AbstractNodeGeometry1D, INodeGeom>)
   {
     // Create Edge Attribute Matrix and Edges Array
     if(edgeAttrMatrixExists)
     {
-      actions.appendAction(std::make_unique<CreateAttributeMatrixAction>(outputGeomPath.createChildPath(INodeGeometry1D::k_EdgeAttributeMatrixName), ShapeType{1}));
+      actions.appendAction(std::make_unique<CreateAttributeMatrixAction>(outputGeomPath.createChildPath(AbstractNodeGeometry1D::k_EdgeAttributeMatrixName), ShapeType{1}));
     }
     if(edgesArrayExists)
     {
-      actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{2}, outputGeomPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName)));
+      actions.appendAction(
+          std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{2}, outputGeomPath.createChildPath(AbstractNodeGeometry1D::k_SharedEdgeListName)));
     }
   }
 
   for(const auto& edgeDataArrayInfo : edgeDataArraysInfo)
   {
-    auto result = AddOutputArray(edgeDataArrayInfo, outputGeomPath, INodeGeometry1D::k_EdgeAttributeMatrixName, actions);
+    auto result = AddOutputArray(edgeDataArrayInfo, outputGeomPath, AbstractNodeGeometry1D::k_EdgeAttributeMatrixName, actions);
     if(result.invalid())
     {
       return result;
@@ -348,31 +349,31 @@ template <class NodeGeom, class INodeGeom>
 Result<> CreateINodeGeometry2DObjects(const DataPath& outputGeomPath, bool facesArrayExists, bool faceAttrMatrixExists, const std::vector<GeometryArrayInfo>& faceDataArraysInfo,
                                       OutputActions& actions)
 {
-  if constexpr(!std::is_same_v<INodeGeometry2D, INodeGeom>)
+  if constexpr(!std::is_same_v<AbstractNodeGeometry2D, INodeGeom>)
   {
     // Create Face Attribute Matrix and Faces Array
     if(faceAttrMatrixExists)
     {
-      actions.appendAction(std::make_unique<CreateAttributeMatrixAction>(outputGeomPath.createChildPath(INodeGeometry2D::k_FaceAttributeMatrixName), ShapeType{1}));
+      actions.appendAction(std::make_unique<CreateAttributeMatrixAction>(outputGeomPath.createChildPath(AbstractNodeGeometry2D::k_FaceAttributeMatrixName), ShapeType{1}));
     }
     if(facesArrayExists)
     {
       if constexpr(std::is_same_v<TetrahedralGeom, NodeGeom>)
       {
         actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{TetrahedralGeom::k_NumFaceVerts},
-                                                                 outputGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName)));
+                                                                 outputGeomPath.createChildPath(AbstractNodeGeometry2D::k_SharedFacesListName)));
       }
       else if constexpr(std::is_same_v<HexahedralGeom, NodeGeom>)
       {
         actions.appendAction(std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{HexahedralGeom::k_NumFaceVerts},
-                                                                 outputGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName)));
+                                                                 outputGeomPath.createChildPath(AbstractNodeGeometry2D::k_SharedFacesListName)));
       }
     }
   }
 
   for(const auto& faceDataArrayInfo : faceDataArraysInfo)
   {
-    auto result = AddOutputArray(faceDataArrayInfo, outputGeomPath, INodeGeometry2D::k_FaceAttributeMatrixName, actions);
+    auto result = AddOutputArray(faceDataArrayInfo, outputGeomPath, AbstractNodeGeometry2D::k_FaceAttributeMatrixName, actions);
     if(result.invalid())
     {
       return result;
@@ -386,7 +387,7 @@ Result<> CreateINodeGeometry3DObjects(const DataPath& outputGeomPath, const std:
 {
   for(const auto& polyDataArrayInfo : polyDataArraysInfo)
   {
-    auto result = AddOutputArray(polyDataArrayInfo, outputGeomPath, INodeGeometry3D::k_PolyhedronDataName, actions);
+    auto result = AddOutputArray(polyDataArrayInfo, outputGeomPath, AbstractNodeGeometry3D::k_PolyhedronDataName, actions);
     if(result.invalid())
     {
       return result;
@@ -401,7 +402,7 @@ Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const 
                                           const std::vector<GeometryArrayInfo>& edgeDataArraysInfo, bool facesArrayExists, bool faceAttrMatrixExists,
                                           const std::vector<GeometryArrayInfo>& faceDataArraysInfo, const std::vector<GeometryArrayInfo>& polyDataArraysInfo, OutputActions& actions)
 {
-  if constexpr(std::is_base_of_v<INodeGeometry3D, NodeGeom>)
+  if constexpr(std::is_base_of_v<AbstractNodeGeometry3D, NodeGeom>)
   {
     auto result = CreateINodeGeometry3DObjects(outputGeomPath, polyDataArraysInfo, actions);
     if(result.invalid())
@@ -410,7 +411,7 @@ Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const 
     }
   }
 
-  if constexpr(std::is_base_of_v<INodeGeometry2D, NodeGeom>)
+  if constexpr(std::is_base_of_v<AbstractNodeGeometry2D, NodeGeom>)
   {
     auto result = CreateINodeGeometry2DObjects<NodeGeom, INodeGeom>(outputGeomPath, facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, actions);
     if(result.invalid())
@@ -419,7 +420,7 @@ Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const 
     }
   }
 
-  if constexpr(std::is_base_of_v<INodeGeometry1D, NodeGeom>)
+  if constexpr(std::is_base_of_v<AbstractNodeGeometry1D, NodeGeom>)
   {
     auto result = CreateINodeGeometry1DObjects<INodeGeom>(outputGeomPath, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo, actions);
     if(result.invalid())
@@ -428,7 +429,7 @@ Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const 
     }
   }
 
-  if constexpr(std::is_base_of_v<INodeGeometry0D, NodeGeom>)
+  if constexpr(std::is_base_of_v<AbstractNodeGeometry0D, NodeGeom>)
   {
     auto result = CreateINodeGeometry0DObjects(outputGeomPath, vertexDataArraysInfo, actions);
     if(result.invalid())
@@ -441,7 +442,7 @@ Result<> CreateOtherAttrMatricesAndArrays(const DataPath& outputGeomPath, const 
 }
 
 template <typename FindFunc>
-void RecordElementPresence(FindFunc findFunc, const IGeometry* geom, usize i, usize totalCount, std::vector<bool>& arraysExist, std::vector<bool>& attrMatricesExist,
+void RecordElementPresence(FindFunc findFunc, const AbstractGeometry* geom, usize i, usize totalCount, std::vector<bool>& arraysExist, std::vector<bool>& attrMatricesExist,
                            std::map<std::string, std::vector<std::optional<GeometryArrayInfo>>>& dataArraysExistMap)
 {
   // Call the provided find function, which returns a tuple.
@@ -546,7 +547,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
 
   // Use an optional so that the first input geometry type sets the optional
   // and subsequent input geometries' types are checked against the optional
-  std::optional<IGeometry::Type> geometryTypeOpt;
+  std::optional<AbstractGeometry::Type> geometryTypeOpt;
 
   // All of these structures are used to keep track of which attribute matrices
   // and arrays exist in each input geometry.  These are then used later in preflight
@@ -569,7 +570,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   for(usize i = 0; i < inputGeometryPaths.size(); ++i)
   {
     const auto& inputGeometryPath = inputGeometryPaths[i];
-    const auto* iGeomPtr = dataStructure.getDataAs<IGeometry>(inputGeometryPath);
+    const auto* iGeomPtr = dataStructure.getDataAs<AbstractGeometry>(inputGeometryPath);
     if(iGeomPtr == nullptr)
     {
       // This is not a geometry
@@ -577,7 +578,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
           to_underlying(CombineNodeBasedGeometries::ErrorCodes::ObjectNotAGeometry),
           fmt::format("The data object at data path '{}' is not a geometry.  All data objects MUST be geometries with the same geometry type.", inputGeometryPath.toString()))};
     }
-    const auto* iNodeGeomPtr = dataStructure.getDataAs<INodeGeometry0D>(inputGeometryPath);
+    const auto* iNodeGeomPtr = dataStructure.getDataAs<AbstractNodeGeometry0D>(inputGeometryPath);
     if(iNodeGeomPtr == nullptr)
     {
       // This is not a node geometry
@@ -859,13 +860,13 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
 
   // Create the output geometry with all its vertex, edge, face, and polyhedra attribute matrices and arrays
   OutputActions actions;
-  IGeometry::Type geometryType = geometryTypeOpt.value();
+  AbstractGeometry::Type geometryType = geometryTypeOpt.value();
   switch(geometryType)
   {
   case IGeometry::Type::Vertex: {
     actions.appendAction(std::make_unique<CreateVertexGeometryAction>(outputGeometryPath, 1, VertexGeom::k_VertexAttributeMatrixName, VertexGeom::k_SharedVertexListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<VertexGeom, INodeGeometry0D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
-                                                                                        facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<VertexGeom, AbstractNodeGeometry0D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                               facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -875,8 +876,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Edge: {
     actions.appendAction(std::make_unique<CreateEdgeGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, EdgeGeom::k_EdgeAttributeMatrixName,
                                                                     VertexGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<EdgeGeom, INodeGeometry1D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
-                                                                                      facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<EdgeGeom, AbstractNodeGeometry1D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                             facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -886,8 +887,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Triangle: {
     actions.appendAction(std::make_unique<CreateTriangleGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, TriangleGeom::k_FaceAttributeMatrixName,
                                                                         VertexGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<TriangleGeom, INodeGeometry2D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
-                                                                                          facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<TriangleGeom, AbstractNodeGeometry2D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                                 facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -897,8 +898,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Quad: {
     actions.appendAction(std::make_unique<CreateQuadGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, QuadGeom::k_FaceAttributeMatrixName,
                                                                     VertexGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<QuadGeom, INodeGeometry2D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
-                                                                                      facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<QuadGeom, AbstractNodeGeometry2D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                             facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -908,8 +909,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Tetrahedral: {
     actions.appendAction(std::make_unique<CreateTetrahedralGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, TetrahedralGeom::k_PolyhedronDataName,
                                                                            VertexGeom::k_SharedVertexListName, TetrahedralGeom::k_SharedPolyhedronListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<TetrahedralGeom, INodeGeometry3D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
-                                                                                             facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<TetrahedralGeom, AbstractNodeGeometry3D>(
+        outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo, facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};
@@ -919,8 +920,8 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   case IGeometry::Type::Hexahedral: {
     actions.appendAction(std::make_unique<CreateHexahedralGeometryAction>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, HexahedralGeom::k_PolyhedronDataName,
                                                                           VertexGeom::k_SharedVertexListName, HexahedralGeom::k_SharedPolyhedronListName));
-    auto creationResult = CreateOtherAttrMatricesAndArrays<HexahedralGeom, INodeGeometry3D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
-                                                                                            facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
+    auto creationResult = CreateOtherAttrMatricesAndArrays<HexahedralGeom, AbstractNodeGeometry3D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
+                                                                                                   facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(std::move(creationResult), {})};

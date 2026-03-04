@@ -11,7 +11,7 @@ namespace nx::core
  * @class CreateNeighborListAction
  * @brief Action for creating NeighborList arrays in a DataStructure
  */
-class SIMPLNX_EXPORT CreateNeighborListAction : public IDataCreationAction
+class SIMPLNX_EXPORT CreateNeighborListAction : public AbstractDataCreationAction
 {
 public:
   CreateNeighborListAction() = delete;

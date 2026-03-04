@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeFaceIPFColoringFilter
  * @brief This filter will generate a pair of colors for each Triangle in a Triangle Geometry based on the inverse pole figure (IPF) color scheme for the present crystal structure.
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeFaceIPFColoringFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeFaceIPFColoringFilter : public AbstractFilter
 {
 public:
   ComputeFaceIPFColoringFilter() = default;

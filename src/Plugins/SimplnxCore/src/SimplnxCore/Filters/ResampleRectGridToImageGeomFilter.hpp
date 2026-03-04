@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ResampleRectGridToImageGeomFilter
  * @brief This filter will re-sample an existing RectilinearGrid onto a regular grid (Image Geometry) and copy cell data into the newly created Image Geometry Data Container during the process.
  */
-class SIMPLNXCORE_EXPORT ResampleRectGridToImageGeomFilter : public IFilter
+class SIMPLNXCORE_EXPORT ResampleRectGridToImageGeomFilter : public AbstractFilter
 {
 public:
   ResampleRectGridToImageGeomFilter() = default;

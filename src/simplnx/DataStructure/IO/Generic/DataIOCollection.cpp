@@ -1,8 +1,8 @@
 #include "DataIOCollection.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/IO/Generic/AbstractDataIOManager.hpp"
 #include "simplnx/DataStructure/IO/Generic/CoreDataIOManager.hpp"
-#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 
 namespace nx::core
@@ -14,7 +14,7 @@ DataIOCollection::DataIOCollection()
 }
 DataIOCollection::~DataIOCollection() noexcept = default;
 
-void DataIOCollection::addIOManager(std::shared_ptr<IDataIOManager> manager)
+void DataIOCollection::addIOManager(std::shared_ptr<AbstractDataIOManager> manager)
 {
   if(manager == nullptr)
   {
@@ -24,7 +24,7 @@ void DataIOCollection::addIOManager(std::shared_ptr<IDataIOManager> manager)
   m_ManagerMap[manager->formatName()] = manager;
 }
 
-std::shared_ptr<IDataIOManager> DataIOCollection::getManager(const std::string& formatName) const
+std::shared_ptr<AbstractDataIOManager> DataIOCollection::getManager(const std::string& formatName) const
 {
   if(m_ManagerMap.find(formatName) == m_ManagerMap.end())
   {

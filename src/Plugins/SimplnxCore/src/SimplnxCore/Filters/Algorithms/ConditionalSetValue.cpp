@@ -12,7 +12,7 @@ namespace
 struct ReplaceValueInArrayFunctor
 {
   template <typename ScalarType>
-  void operator()(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue)
+  void operator()(AbstractDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue)
   {
     auto& dataStore = workingArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
 
@@ -49,9 +49,9 @@ Result<> ConditionalSetValue::operator()()
 {
   if(m_InputValues->UseConditional)
   {
-    DataObject& inputDataObject = m_DataStructure.getDataRef(m_InputValues->SelectedArrayPath);
+    AbstractDataObject& inputDataObject = m_DataStructure.getDataRef(m_InputValues->SelectedArrayPath);
 
-    const IDataArray& conditionalArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ConditionalArrayPath);
+    const AbstractDataArray& conditionalArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->ConditionalArrayPath);
 
     Result<> result = ConditionalReplaceValueInArray(m_InputValues->ReplaceValue, inputDataObject, conditionalArray, m_InputValues->InvertMask);
 
@@ -59,7 +59,7 @@ Result<> ConditionalSetValue::operator()()
   }
   else
   {
-    auto& inputDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
+    auto& inputDataArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->SelectedArrayPath);
     ExecuteDataFunction(ReplaceValueInArrayFunctor{}, inputDataArray.getDataType(), inputDataArray, m_InputValues->RemoveValue, m_InputValues->ReplaceValue);
   }
 

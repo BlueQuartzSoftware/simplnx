@@ -2,12 +2,12 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT ReadStringDataArrayFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReadStringDataArrayFilter : public AbstractFilter
 {
 public:
   ReadStringDataArrayFilter() = default;

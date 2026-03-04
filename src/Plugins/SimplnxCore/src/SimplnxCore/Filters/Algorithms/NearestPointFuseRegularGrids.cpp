@@ -88,7 +88,8 @@ template <typename T>
 class CopyFromIndicesListImpl
 {
 public:
-  CopyFromIndicesListImpl(const IArray& sourceArray, IArray& destArray, const ImageGeom& sampleImageGeom, const ImageGeom& refImageGeom, float64 fillValue, const std::atomic_bool& shouldCancel)
+  CopyFromIndicesListImpl(const AbstractArray& sourceArray, AbstractArray& destArray, const ImageGeom& sampleImageGeom, const ImageGeom& refImageGeom, float64 fillValue,
+                          const std::atomic_bool& shouldCancel)
   : m_SourceArray(sourceArray)
   , m_DestArray(destArray)
   , m_ArrayType(destArray.getArrayType())
@@ -107,26 +108,26 @@ public:
 
   void operator()() const
   {
-    if(m_ArrayType == IArray::ArrayType::NeighborListArray)
+    if(m_ArrayType == AbstractArray::ArrayType::NeighborListArray)
     {
       return;
     }
-    else if(m_ArrayType == IArray::ArrayType::DataArray)
+    else if(m_ArrayType == AbstractArray::ArrayType::DataArray)
     {
       using DataArrayT = DataArray<T>;
       auto destArray = dynamic_cast<DataArrayT&>(m_DestArray);
       CopyData<DataArrayT>(dynamic_cast<const DataArrayT&>(m_SourceArray), destArray, m_SampleGeom, m_RefGeom, m_ShouldCancel, static_cast<T>(m_FillValue));
     }
-    else if(m_ArrayType == IArray::ArrayType::StringArray)
+    else if(m_ArrayType == AbstractArray::ArrayType::StringArray)
     {
       CopyData<StringArray>(dynamic_cast<const StringArray&>(m_SourceArray), dynamic_cast<StringArray&>(m_DestArray), m_SampleGeom, m_RefGeom, m_ShouldCancel, "");
     }
   }
 
 private:
-  const IArray& m_SourceArray;
-  IArray& m_DestArray;
-  IArray::ArrayType m_ArrayType = IArray::ArrayType::Any;
+  const AbstractArray& m_SourceArray;
+  AbstractArray& m_DestArray;
+  AbstractArray::ArrayType m_ArrayType = AbstractArray::ArrayType::Any;
   const ImageGeom& m_SampleGeom;
   const ImageGeom& m_RefGeom;
   float64 m_FillValue;
@@ -172,17 +173,17 @@ Result<> NearestPointFuseRegularGrids::operator()()
 
   // Copy according to  calculated values
   ParallelTaskAlgorithm taskRunner;
-  auto sampleVoxelArrays = sampleAM.findAllChildrenOfType<IArray>();
+  auto sampleVoxelArrays = sampleAM.findAllChildrenOfType<AbstractArray>();
   for(const auto& array : sampleVoxelArrays)
   {
     // this path was created in preflight
     DataPath createdArrayPath = m_InputValues->ReferenceCellAttributeMatrixPath.createChildPath(array->getName());
-    auto& refAMArray = m_DataStructure.getDataRefAs<IArray>(createdArrayPath);
+    auto& refAMArray = m_DataStructure.getDataRefAs<AbstractArray>(createdArrayPath);
 
     DataType dataType = DataType::int32;
-    if(refAMArray.getArrayType() == IArray::ArrayType::DataArray)
+    if(refAMArray.getArrayType() == AbstractArray::ArrayType::DataArray)
     {
-      dataType = dynamic_cast<IDataArray&>(refAMArray).getDataType();
+      dataType = dynamic_cast<AbstractDataArray&>(refAMArray).getDataType();
     }
 
     ExecuteParallelFunction<CopyFromIndicesListImpl>(dataType, taskRunner, *array, refAMArray, sampleImageGeom, refImageGeom, m_InputValues->fillValue, getCancel());

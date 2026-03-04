@@ -1,20 +1,20 @@
 #pragma once
 
-#include "AbstractStringStore.hpp"
+#include "IStringStore.hpp"
 
 #include <string>
 #include <vector>
 
 namespace nx::core
 {
-class StringStore : public AbstractStringStore
+class StringStore : public IStringStore
 {
 public:
   explicit StringStore(const ShapeType& tupleShape);
   explicit StringStore(std::vector<std::string> strings, const ShapeType& tupleShape);
   ~StringStore();
 
-  std::unique_ptr<AbstractStringStore> deepCopy() const override;
+  std::unique_ptr<IStringStore> deepCopy() const override;
 
   /**
    * @brief Returns the number of tuples in the ListStore.
@@ -45,7 +45,7 @@ public:
   const_reference getValue(usize index) const override;
   void setValue(usize index, const value_type& value) override;
 
-  AbstractStringStore& operator=(const std::vector<std::string>& values) override;
+  IStringStore& operator=(const std::vector<std::string>& values) override;
 
 private:
   ShapeType m_TupleShape;

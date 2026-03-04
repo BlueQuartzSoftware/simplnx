@@ -2,10 +2,10 @@
 
 #include "SimplnxCore/Filters/Algorithms/ResampleRectGridToImageGeom.hpp"
 
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
@@ -62,7 +62,7 @@ Parameters ResampleRectGridToImageGeomFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(
       k_SelectedDataArrayPaths_Key, "Attribute Arrays to Copy", "Rectilinear Grid Cell Data to possibly copy", MultiArraySelectionParameter::ValueType{},
-      MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray, IArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
+      MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray, AbstractArray::ArrayType::StringArray, AbstractArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<VectorInt32Parameter>(k_Dimensions_Key, "Dimensions (Voxels)", "The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry",
                                                        std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}));
@@ -139,7 +139,7 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
   for(const auto& path : pSelectedDataArrayPathsValue)
   {
     const DataPath destPath = destCellDataPath.createChildPath(path.getTargetName());
-    const auto* srcArray = dataStructure.getDataAs<IArray>(path);
+    const auto* srcArray = dataStructure.getDataAs<AbstractArray>(path);
 
     if(srcCellDataPath != path.getParent())
     {
@@ -162,27 +162,28 @@ IFilter::PreflightResult ResampleRectGridToImageGeomFilter::preflightImpl(const 
       }
     }
 
-    IArray::ArrayType arrayType = srcArray->getArrayType();
-    if(arrayType == IArray::ArrayType::DataArray)
+    AbstractArray::ArrayType arrayType = srcArray->getArrayType();
+    if(arrayType == AbstractArray::ArrayType::DataArray)
     {
-      const auto* srcDataArray = dataStructure.getDataAs<IDataArray>(path);
+      const auto* srcDataArray = dataStructure.getDataAs<AbstractDataArray>(path);
       auto createArrayAction = std::make_unique<CreateArrayAction>(srcDataArray->getDataType(), dims, srcDataArray->getComponentShape(), destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-    else if(arrayType == IArray::ArrayType::NeighborListArray)
+    else if(arrayType == AbstractArray::ArrayType::NeighborListArray)
     {
-      const auto* srcDataArray = dataStructure.getDataAs<INeighborList>(path);
+      const auto* srcDataArray = dataStructure.getDataAs<AbstractNeighborList>(path);
       auto createArrayAction = std::make_unique<CreateNeighborListAction>(srcDataArray->getDataType(), dims, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
-    else if(arrayType == IArray::ArrayType::StringArray)
+    else if(arrayType == AbstractArray::ArrayType::StringArray)
     {
       auto createArrayAction = std::make_unique<CreateStringArrayAction>(dims, destPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     else
     {
-      resultOutputActions.warnings().push_back({-7366, fmt::format("Data Object at path '{}' is not an IArray type and thus cannot be copied over to the re-sampled image geometry", path.toString())});
+      resultOutputActions.warnings().push_back(
+          {-7366, fmt::format("Data Object at path '{}' is not an AbstractArray type and thus cannot be copied over to the re-sampled image geometry", path.toString())});
     }
   }
 

@@ -48,10 +48,7 @@ public:
    */
   virtual uint64 getNumberOfLists() const = 0;
 
-  uint64 size() const
-  {
-    return getNumberOfLists();
-  }
+  virtual uint64 size() const = 0;
 
   /**
    * @brief Clears the array.

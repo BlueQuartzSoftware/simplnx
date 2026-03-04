@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -16,7 +16,7 @@ namespace nx::core
  * ITK Module: ITKImageGradient
  * ITK Group: ImageGradient
  */
-class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKGradientMagnitudeRecursiveGaussianImageFilter : public AbstractFilter
 {
 public:
   ITKGradientMagnitudeRecursiveGaussianImageFilter() = default;

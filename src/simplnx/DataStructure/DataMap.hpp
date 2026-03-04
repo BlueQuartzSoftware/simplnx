@@ -13,7 +13,7 @@
 namespace nx::core
 {
 class DataStructure;
-class DataObject;
+class AbstractDataObject;
 class DataPath;
 
 /**
@@ -26,7 +26,7 @@ class SIMPLNX_EXPORT DataMap
 {
 public:
   using IdType = uint64;
-  using MapType = std::map<IdType, std::shared_ptr<DataObject>>;
+  using MapType = std::map<IdType, std::shared_ptr<AbstractDataObject>>;
   using Iterator = typename MapType::iterator;
   using ConstIterator = typename MapType::const_iterator;
 
@@ -49,7 +49,7 @@ public:
 
   /**
    * @brief Destroys the DataMap, deleting the std::shared_ptrs that make up
-   * the map. If the map had the last reference to a DataObject, that object
+   * the map. If the map had the last reference to a AbstractDataObject, that object
    * is destroyed.
    */
   ~DataMap();
@@ -72,23 +72,23 @@ public:
   bool empty() const;
 
   /**
-   * @brief Attempts to insert the target DataObject into the map.
+   * @brief Attempts to insert the target AbstractDataObject into the map.
    * Returns true if it succeeded. Returns false otherwise.
    * @param obj
    * @return bool
    */
-  bool insert(const std::shared_ptr<DataObject>& obj);
+  bool insert(const std::shared_ptr<AbstractDataObject>& obj);
 
   /**
-   * @brief Attempts to remove the target DataObject from the map.
+   * @brief Attempts to remove the target AbstractDataObject from the map.
    * Returns true if it succeeded. Returns false otherwise.
    * @param obj
    * @return bool
    */
-  bool remove(DataObject* obj);
+  bool remove(AbstractDataObject* obj);
 
   /**
-   * @brief Attempts to remove a DataObject with the target IdType from the map.
+   * @brief Attempts to remove a AbstractDataObject with the target IdType from the map.
    * Returns true if it succeeded. Returns false otherwise.
    * @param identifier
    * @return bool
@@ -96,7 +96,7 @@ public:
   bool remove(IdType identifier);
 
   /**
-   * @brief Attempts to remove a DataObject from the map using the target
+   * @brief Attempts to remove a AbstractDataObject from the map using the target
    * iterator. Returns true if it succeeded. Returns false otherwise.
    * @param iter
    * @return bool
@@ -124,63 +124,63 @@ public:
   /**
    * @brief Returns a map of Id and DataObjects in the map and its contained
    * groups.
-   * @return std::map<IdType, std::weak_ptr<DataObject>>
+   * @return std::map<IdType, std::weak_ptr<AbstractDataObject>>
    */
-  std::map<IdType, std::weak_ptr<DataObject>> getAllItems() const;
+  std::map<IdType, std::weak_ptr<AbstractDataObject>> getAllItems() const;
 
   /**
-   * @brief Returns a vector of the contained DataObject names.
+   * @brief Returns a vector of the contained AbstractDataObject names.
    * @return std::vector<std::string>
    */
   std::vector<std::string> getNames() const;
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified IdType.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns a pointer to the AbstractDataObject with the specified IdType.
+   * Returns nullptr if no AbstractDataObject is found.
    * @param key
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* operator[](IdType key);
+  AbstractDataObject* operator[](IdType key);
 
   /**
-   * @brief Returns a const pointer to the DataObject with the specified IdType.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns a const pointer to the AbstractDataObject with the specified IdType.
+   * Returns nullptr if no AbstractDataObject is found.
    * @param key
-   * @return const DataObject*
+   * @return const AbstractDataObject*
    */
-  const DataObject* operator[](IdType key) const;
+  const AbstractDataObject* operator[](IdType key) const;
 
   /**
-   * @brief Returns a pointer to the DataObject with the specified name.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns a pointer to the AbstractDataObject with the specified name.
+   * Returns nullptr if no AbstractDataObject is found.
    * @param name
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* operator[](const std::string& name);
+  AbstractDataObject* operator[](const std::string& name);
 
   /**
-   * @brief Returns a const pointer to the DataObject with the specified name.
-   * Returns nullptr if no DataObject is found.
+   * @brief Returns a const pointer to the AbstractDataObject with the specified name.
+   * Returns nullptr if no AbstractDataObject is found.
    * @param name
-   * @return const DataObject*
+   * @return const AbstractDataObject*
    */
-  const DataObject* operator[](const std::string& name) const;
+  const AbstractDataObject* operator[](const std::string& name) const;
 
   /**
-   * @brief Returns a reference to the DataObject with the specified name.
-   * Throws if no DataObject is found.
+   * @brief Returns a reference to the AbstractDataObject with the specified name.
+   * Throws if no AbstractDataObject is found.
    * @param name
-   * @return DataObject&
+   * @return AbstractDataObject&
    */
-  DataObject& at(const std::string& name);
+  AbstractDataObject& at(const std::string& name);
 
   /**
-   * @brief Returns a const reference to the DataObject with the specified name.
-   * Throws if no DataObject is found.
+   * @brief Returns a const reference to the AbstractDataObject with the specified name.
+   * Throws if no AbstractDataObject is found.
    * @param name
-   * @return const DataObject&
+   * @return const AbstractDataObject&
    */
-  const DataObject& at(const std::string& name) const;
+  const AbstractDataObject& at(const std::string& name) const;
 
   /**
    * @brief Checks if the DataMap contains the specified IdType.
@@ -190,14 +190,14 @@ public:
   bool contains(IdType identifier) const;
 
   /**
-   * @brief Checks if the DataMap contains the specified DataObject.
+   * @brief Checks if the DataMap contains the specified AbstractDataObject.
    * @param obj
    * @return bool
    */
-  bool contains(const DataObject* obj) const;
+  bool contains(const AbstractDataObject* obj) const;
 
   /**
-   * @brief Checks if the DataMap contains a DataObject with the specified name.
+   * @brief Checks if the DataMap contains a AbstractDataObject with the specified name.
    * @param name
    * @return bool
    */

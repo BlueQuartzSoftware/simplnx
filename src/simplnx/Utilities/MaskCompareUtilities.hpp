@@ -3,8 +3,8 @@
 #include "simplnx/simplnx_export.hpp"
 
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 
 namespace nx::core::MaskCompareUtilities
 {
@@ -21,9 +21,9 @@ namespace nx::core::MaskCompareUtilities
  *  }
  * @endcode
  */
-struct MaskCompare
+struct IMaskCompare
 {
-  virtual ~MaskCompare() noexcept = default;
+  virtual ~IMaskCompare() noexcept = default;
 
   /**
    * @brief Both of the values pointed to by the index *must* be `true` or non-zero. If either of the values or
@@ -59,7 +59,7 @@ struct MaskCompare
   virtual usize countTrueValues() const = 0;
 };
 
-struct BoolMaskCompare : public MaskCompare
+struct BoolMaskCompare : public IMaskCompare
 {
   BoolMaskCompare(AbstractDataStore<bool>& dataStore)
   : m_DataStore(dataStore)
@@ -99,7 +99,7 @@ struct BoolMaskCompare : public MaskCompare
   }
 };
 
-struct UInt8MaskCompare : public MaskCompare
+struct UInt8MaskCompare : public IMaskCompare
 {
   UInt8MaskCompare(AbstractDataStore<uint8>& dataStore)
   : m_DataStore(dataStore)
@@ -156,12 +156,12 @@ struct UInt8MaskCompare : public MaskCompare
  * @param maskArrayPath The DataPath of the mask array.
  * @return
  */
-SIMPLNX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath);
+SIMPLNX_EXPORT std::unique_ptr<IMaskCompare> InstantiateMaskCompare(DataStructure& dataStructure, const DataPath& maskArrayPath);
 
 /**
  * @brief Convenience method to create an instance of the MaskCompare subclass
  * @param maskArrayPtr A Pointer to the mask array which can be of either `bool` or `uint8` type.
  * @return
  */
-SIMPLNX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArrayPtr);
+SIMPLNX_EXPORT std::unique_ptr<IMaskCompare> InstantiateMaskCompare(AbstractDataArray& maskArrayPtr);
 } // namespace nx::core::MaskCompareUtilities

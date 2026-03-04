@@ -49,7 +49,7 @@ void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFea
   }
 }
 
-void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures, std::vector<IArray*>& featureIArrays)
+void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures, std::vector<AbstractArray*>& featureIArrays)
 {
   std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
 

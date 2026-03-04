@@ -84,7 +84,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Er
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -128,7 +128,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -250,7 +250,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warn
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -312,7 +312,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -661,7 +661,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Recta
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
+  auto* edgesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
   geom->setEdgeList(*edgesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -722,7 +722,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Spher
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
+  auto* edgesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
   geom->setEdgeList(*edgesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -782,7 +782,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - R
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -829,7 +829,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - S
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
   geom->setFaceList(*facesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -875,7 +875,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Recta
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
   geom->setFaceList(*facesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();
@@ -922,7 +922,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Spher
   auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
   geom->setVertices(*vertexArray);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
+  auto* facesArray = AbstractGeometry::MeshIndexArrayType::CreateWithStore<DataStore<AbstractGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
   geom->setFaceList(*facesArray);
 
   auto& vertices = vertexArray->getDataStoreRef();

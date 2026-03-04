@@ -21,12 +21,12 @@ public:
   using DimensionsType = SizeVec3;
   using TileIdType = GridTileIndex;
 
-  static inline constexpr StringLiteral k_TypeName = "GridMontage";
+  static constexpr StringLiteral k_TypeName = "GridMontage";
 
   /**
    * @brief Attempts to create a new GridMontage and insert it into the
    * DataStructure. If the parentId is provided, then the created montage will
-   * be nested under the target DataObject. Otherwise, the montage will be
+   * be nested under the target AbstractDataObject. Otherwise, the montage will be
    * placed directly under the DataStructure.
    *
    * If the created montage cannot be placed under the target parent, then this
@@ -42,14 +42,14 @@ public:
   /**
    * @brief Attempts to create a new GridMontage and insert it into the
    * DataStructure. If the parentId is provided, then the created montage will
-   * be nested under the target DataObject. Otherwise, the montage will be
+   * be nested under the target AbstractDataObject. Otherwise, the montage will be
    * placed directly under the DataStructure.
    *
    * If the created montage cannot be placed under the target parent, then this
    * method returns nullptr. Otherwise, this method returns a pointer to the
    * created montage.
    *
-   * Unlike Create, Import allows the DataObject ID to be set for use in
+   * Unlike Create, Import allows the AbstractDataObject ID to be set for use in
    * importing data.
    * @param dataStructure
    * @param name
@@ -76,25 +76,25 @@ public:
   ~GridMontage() override;
 
   /**
-   * @brief Returns the typename of the DataObject as a std::string.
+   * @brief Returns the typename of the AbstractDataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override;
 
   /**
-   * @brief Returns a shallow copy of the current DataObject but does not add
+   * @brief Returns a shallow copy of the current AbstractDataObject but does not add
    * it to the DataStructure. It is up to the caller to delete the returned
    * value.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* shallowCopy() override;
+  AbstractDataObject* shallowCopy() override;
 
   /**
-   * @brief Returns a deep copy of the current DataObject but does not add it
+   * @brief Returns a deep copy of the current AbstractDataObject but does not add it
    * to the DataStructure. It is up to the caller to delete the returned value.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override;
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override;
 
   /**
    * @brief Returns the number of rows in the montage.
@@ -154,7 +154,7 @@ public:
    * @param geom
    * @return std::optional<SizeVec3>
    */
-  std::optional<SizeVec3> getTilePosOfGeometry(const IGeometry* geom) const;
+  std::optional<SizeVec3> getTilePosOfGeometry(const AbstractGeometry* geom) const;
 
   /**
    * @brief Returns the tile index for the target geometry. Returns nullptr if the geometry
@@ -162,23 +162,23 @@ public:
    * @param geom
    * @return std::shared_ptr<AbstractTileIndex>
    */
-  std::shared_ptr<AbstractTileIndex> getTileIndex(IGeometry* geom) const override;
+  std::shared_ptr<AbstractTileIndex> getTileIndex(AbstractGeometry* geom) const override;
 
   /**
    * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
    * if no geometry was found.
    * @param index
-   * @return IGeometry*
+   * @return AbstractGeometry*
    */
-  IGeometry* getGeometry(const AbstractTileIndex* index) override;
+  AbstractGeometry* getGeometry(const AbstractTileIndex* index) override;
 
   /**
    * @brief Returns a pointer to the geometry at the specified tile index. Returns nullptr
    * if no geometry was found.
    * @param index
-   * @return const IGeometry*
+   * @return const AbstractGeometry*
    */
-  const IGeometry* getGeometry(const AbstractTileIndex* index) const override;
+  const AbstractGeometry* getGeometry(const AbstractTileIndex* index) const override;
 
   /**
    * @brief Sets the geometry at the position specified by the provided
@@ -187,7 +187,7 @@ public:
    * @param index
    * @param geom
    */
-  void setGeometry(const AbstractTileIndex* index, IGeometry* geom) override;
+  void setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom) override;
 
   /**
    * @brief Sets the geometry at the specified 3D tile position. Does nothing
@@ -195,21 +195,21 @@ public:
    * @param position
    * @param geom
    */
-  void setGeometry(const SizeVec3& position, IGeometry* geom);
+  void setGeometry(const SizeVec3& position, AbstractGeometry* geom);
 
   /**
    * @brief Returns the geometry at the specified position.
    * Returns nullptr if no geometry could be found.
-   * @return const IGeometry*
+   * @return const AbstractGeometry*
    */
-  IGeometry* getGeometry(const SizeVec3& position);
+  AbstractGeometry* getGeometry(const SizeVec3& position);
 
   /**
    * @brief Returns the geometry at the specified position.
    * Returns nullptr if no geometry could be found.
-   * @return const IGeometry*
+   * @return const AbstractGeometry*
    */
-  const IGeometry* getGeometry(const SizeVec3& position) const;
+  const AbstractGeometry* getGeometry(const SizeVec3& position) const;
 
   /**
    * @brief Returns a TooltipGenerator for generating the appropriate HTML tooltips.

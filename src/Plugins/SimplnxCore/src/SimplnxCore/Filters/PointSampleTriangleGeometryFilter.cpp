@@ -79,7 +79,7 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Face Attribute Arrays to Transfer",
                                                                "The paths to the Face Attribute Arrays to transfer to the created Vertex Geometry where the mask is false, if Use Mask is checked",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
@@ -87,7 +87,7 @@ Parameters PointSampleTriangleGeometryFilter::parameters() const
                                                              "The complete path to the DataGroup holding the Vertex Geometry that represents the sampling points", DataPath({"[Vertex Geometry]"})));
   params.insertSeparator(Parameters::Separator{"Output Vertex Attribute Matrix"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data", "The complete path to the vertex data arrays for the Vertex Geometry",
-                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
+                                                          AbstractNodeGeometry0D::k_VertexAttributeMatrixName));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
@@ -131,7 +131,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
     uint64 numTuples = 0;
     if(!pSelectedDataArrayPaths.empty())
     {
-      numTuples = dataStructure.getDataAs<IDataArray>(pSelectedDataArrayPaths[0])->getNumberOfTuples();
+      numTuples = dataStructure.getDataAs<AbstractDataArray>(pSelectedDataArrayPaths[0])->getNumberOfTuples();
     }
 
     auto createVertexGeometryAction = std::make_unique<CreateVertexGeometryAction>(pVertexGeometryDataPath, numTuples, pVertexGroupDataName, VertexGeom::k_SharedVertexListName);
@@ -152,7 +152,7 @@ IFilter::PreflightResult PointSampleTriangleGeometryFilter::preflightImpl(const 
   // Ensure that if pMaskValue is TRUE that the Mask Path is valid
   if(pUseMask)
   {
-    const DataObject* maskArray = dataStructure.getData(pMaskArrayPath);
+    const AbstractDataObject* maskArray = dataStructure.getData(pMaskArrayPath);
     if(nullptr == maskArray)
     {
       Error result = {-500, fmt::format("'Use Mask Array' is selected but the DataPath '{}' does not exist. Please ensure the mask array exists in the DataStructure.", pMaskArrayPath.toString())};

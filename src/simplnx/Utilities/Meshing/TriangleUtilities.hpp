@@ -2,8 +2,8 @@
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core::MeshingUtilities
@@ -24,9 +24,9 @@ inline static constexpr usize k_22 = 8;
  * @brief This function calculates the volume of a supplied triangle
  * @param vertIndices The indices that make up the points of a triangle
  * @param vertices The SharedVertexList of the parent geometry
- * @returns INodeGeometry2D::SharedVertexList::value_type the calculated volume
+ * @returns AbstractNodeGeometry2D::SharedVertexList::value_type the calculated volume
  */
-SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(const std::array<usize, 3>& vertIndices, const INodeGeometry2D::SharedVertexList::store_type& vertices);
+SIMPLNX_EXPORT AbstractNodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(const std::array<usize, 3>& vertIndices, const AbstractNodeGeometry2D::SharedVertexList::store_type& vertices);
 } // namespace detail
 
 /**
@@ -39,7 +39,7 @@ SIMPLNX_EXPORT INodeGeometry2D::SharedVertexList::value_type FindTriangleVolume(
  * @param mesgHandler
  * @returns Result<usize> This result will contain the number of triangles that could not be repaired
  */
-SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
+SIMPLNX_EXPORT Result<> RepairTriangleWinding(AbstractNodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, AbstractGeometry::MeshIndexType>& neighbors,
                                               const Int32AbstractDataStore& idsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
 
 /**
@@ -49,7 +49,7 @@ SIMPLNX_EXPORT Result<> RepairTriangleWinding(INodeGeometry2D::SharedFaceList::s
 class SIMPLNX_EXPORT CalculateNormalsImpl
 {
 public:
-  CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, Float64AbstractDataStore& normals,
+  CalculateNormalsImpl(const AbstractNodeGeometry2D::SharedFaceList::store_type& triangles, const AbstractNodeGeometry2D::SharedVertexList::store_type& verts, Float64AbstractDataStore& normals,
                        const std::atomic_bool& shouldCancel);
   ~CalculateNormalsImpl() = default;
 
@@ -58,8 +58,8 @@ public:
   void operator()(const Range& range) const;
 
 private:
-  const INodeGeometry2D::SharedFaceList::store_type& m_Triangles;
-  const INodeGeometry2D::SharedVertexList::store_type& m_Vertices;
+  const AbstractNodeGeometry2D::SharedFaceList::store_type& m_Triangles;
+  const AbstractNodeGeometry2D::SharedVertexList::store_type& m_Vertices;
   Float64AbstractDataStore& m_Normals;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -75,8 +75,8 @@ private:
  * @returns Result<usize> function result
  */
 template <class ContainerT>
-Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts, const Int32AbstractDataStore& idsStore,
-                                 ContainerT& volumes, const std::atomic_bool& shouldCancel)
+Result<> CalculateFeatureVolumes(const AbstractNodeGeometry2D::SharedFaceList::store_type& triangles, const AbstractNodeGeometry2D::SharedVertexList::store_type& verts,
+                                 const Int32AbstractDataStore& idsStore, ContainerT& volumes, const std::atomic_bool& shouldCancel)
 {
   usize volumeSize = volumes.size();
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};

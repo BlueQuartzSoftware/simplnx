@@ -22,8 +22,9 @@ class PipelineFilter;
 
 /**
  * @class IFilter
- * @brief IFilter is the interface for filters providing access to both metadata (e.g. name, uuid, etc.)
- * and the algorithm itself (i.e. preflight/execute).
+ * @brief IFilter is the pure virtual interface for all filters, providing the
+ * public API contract for metadata (name, uuid, etc.) and algorithm execution
+ * (preflight/execute). All nested types that form the public API are defined here.
  */
 class SIMPLNX_EXPORT IFilter
 {
@@ -136,7 +137,7 @@ public:
    * @brief Returns the default tags for this filter.
    * @return std::vector<std::string>
    */
-  virtual std::vector<std::string> defaultTags() const;
+  virtual std::vector<std::string> defaultTags() const = 0;
 
   /**
    * @brief Returns the parameters of the filter (i.e. its inputs)
@@ -168,8 +169,8 @@ public:
    * @param shouldCancel
    * @return PreflightResult
    */
-  PreflightResult preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}, const std::atomic_bool& shouldCancel = false,
-                            const ExecutionContext& executionContext = ExecutionContext()) const;
+  virtual PreflightResult preflight(const DataStructure& data, const Arguments& args, const MessageHandler& messageHandler = {}, const std::atomic_bool& shouldCancel = false,
+                                    const ExecutionContext& executionContext = ExecutionContext()) const = 0;
 
   /**
    * @brief Applies the filter's algorithm to the DataStructure with the given arguments. Returns any warnings/errors.
@@ -181,56 +182,31 @@ public:
    * @param shouldCancel
    * @return ExecuteResult
    */
-  ExecuteResult execute(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {},
-                        const std::atomic_bool& shouldCancel = false, const ExecutionContext& executionContext = ExecutionContext()) const;
+  virtual ExecuteResult execute(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode = nullptr, const MessageHandler& messageHandler = {},
+                                const std::atomic_bool& shouldCancel = false, const ExecutionContext& executionContext = ExecutionContext()) const = 0;
 
   /**
    * @brief Converts the given arguments to a JSON representation using the filter's parameters.
    * @param args
    * @return nlohmann::json
    */
-  virtual nlohmann::json toJson(const Arguments& args) const;
+  virtual nlohmann::json toJson(const Arguments& args) const = 0;
 
   /**
    * @brief Converts JSON to arguments based on the filter's parameters.
    * @param json
    * @return Result<Arguments>
    */
-  Result<Arguments> fromJson(const nlohmann::json& json) const;
+  virtual Result<Arguments> fromJson(const nlohmann::json& json) const = 0;
 
   /**
-   * @brief Returns the set of default arguments for this filter.k
+   * @brief Returns the set of default arguments for this filter.
    * @return Arguments
    */
-  Arguments getDefaultArguments() const;
+  virtual Arguments getDefaultArguments() const = 0;
 
 protected:
   IFilter() = default;
-
-  /**
-   * @brief Classes that implement IFilter must provide this function for preflight.
-   * Runs after the filter runs the checks in its parameters.
-   * @param data
-   * @param args
-   * @param messageHandler
-   * @param shouldCancel
-   * @return PreflightResult
-   */
-  virtual PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                        const ExecutionContext& executionContext) const = 0;
-
-  /**
-   * @brief Classes that implement IFilter must provide this function for execute.
-   * Runs after the filter applies the OutputActions from preflight.
-   * @param data
-   * @param args
-   * @param pipelineNode
-   * @param messageHandler
-   * @param shouldCancel
-   * @return Result<>
-   */
-  virtual Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const = 0;
 };
 
 using FilterCreationFunc = std::function<IFilter::UniquePointer()>;

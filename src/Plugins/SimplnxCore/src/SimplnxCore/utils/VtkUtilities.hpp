@@ -261,7 +261,7 @@ inline std::string ConvertDataTypeToVtkDataType() noexcept
 struct WriteVtkDataFunctor
 {
   template <typename T>
-  Result<> operator()(std::ofstream& outStrm, IDataArray& iDataArray, bool binary, const nx::core::IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+  Result<> operator()(std::ofstream& outStrm, AbstractDataArray& iDataArray, bool binary, const nx::core::IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     using DataArrayType = DataArray<T>;
 

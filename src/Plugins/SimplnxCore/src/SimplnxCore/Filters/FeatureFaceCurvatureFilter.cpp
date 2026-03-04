@@ -155,7 +155,7 @@ IFilter::PreflightResult FeatureFaceCurvatureFilter::preflightImpl(const DataStr
     dataArrays.push_back(surfaceMeshTriangleCentroidsPath);
   }
 
-  // auto* dataArray = dataStructure.getDataAs<IDataArray>(triangles->getFaceAttributeMatrixDataPath());
+  // auto* dataArray = dataStructure.getDataAs<AbstractDataArray>(triangles->getFaceAttributeMatrixDataPath());
   ShapeType tupleShape = triangleMatrix->getShape();
 
   nx::core::Result<OutputActions> resultOutputActions;

@@ -458,7 +458,7 @@ void TestNeighborListArrayToFromString<float64>(DataStructure& datastructure, co
   REQUIRE(ok);
 }
 
-TEST_CASE("IArray ToFromString")
+TEST_CASE("AbstractArray ToFromString")
 {
   DataStructure datastructure;
 

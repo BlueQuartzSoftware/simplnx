@@ -144,7 +144,7 @@ private:
   static Result<> ConcatenateArrays(DataStructure& dataStructure, const std::vector<DataPath>& inputArrayPaths, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler,
                                     const std::atomic_bool& shouldCancel)
   {
-    const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputArrayPath);
+    const auto& outputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(outputArrayPath);
     Result<> result;
     ExecuteDataFunction(ConcatenateDataArraysTemplateImpl{}, outputDataArray.getDataType(), dataStructure, inputArrayPaths, outputArrayPath, messageHandler, shouldCancel, result);
     return result;
@@ -153,7 +153,7 @@ private:
   static Result<> ConcatenateNeighborLists(DataStructure& dataStructure, const std::vector<DataPath>& inputArrayPaths, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler,
                                            const std::atomic_bool& shouldCancel)
   {
-    const auto& outputNeighborList = dataStructure.getDataRefAs<INeighborList>(outputArrayPath);
+    const auto& outputNeighborList = dataStructure.getDataRefAs<AbstractNeighborList>(outputArrayPath);
     Result<> result;
     ExecuteNeighborFunction(ConcatenateNeighborListsTemplateImpl{}, outputNeighborList.getDataType(), dataStructure, inputArrayPaths, outputArrayPath, messageHandler, shouldCancel, result);
     return result;

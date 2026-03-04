@@ -1,8 +1,8 @@
 #include "IOUtilities.hpp"
 
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataMap.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
@@ -14,7 +14,7 @@
 
 namespace nx::core
 {
-Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, nx::core::HDF5::ObjectIO& objectWriter, const DataObject* dataObject, bool importable)
+Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, nx::core::HDF5::ObjectIO& objectWriter, const AbstractDataObject* dataObject, bool importable)
 {
   // Add to DataStructureWriter for use in linking
   dataStructureWriter.addWriter(objectWriter, dataObject->getId());
@@ -44,7 +44,8 @@ Result<> HDF5::ReadBaseGroup(DataStructureReader& dataStructureReader, const nx:
   return ReadDataMap(dataStructureReader, baseGroup->getDataMap(), groupReader, baseGroup->getId(), useEmptyDataStores);
 }
 
-Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const nx::core::HDF5::GroupIO& groupReader, std::optional<DataObject::IdType> parentId, bool useEmptyDataStore)
+Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const nx::core::HDF5::GroupIO& groupReader, std::optional<AbstractDataObject::IdType> parentId,
+                           bool useEmptyDataStore)
 {
   auto childrenNames = groupReader.getChildNames();
   if(childrenNames.empty())

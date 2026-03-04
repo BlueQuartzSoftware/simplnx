@@ -19,12 +19,12 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
 
   // Loop over all the paths from the feature group and remove the data arrays that do NOT have the
   // same number of Tuples as the 'activeObjects' vector
-  std::vector<std::shared_ptr<IDataArray>> matchingDataArrayPtrs;
+  std::vector<std::shared_ptr<AbstractDataArray>> matchingDataArrayPtrs;
 
   for(const auto& entry : featureDataMap)
   {
-    std::shared_ptr<DataObject> dataObject = entry.second;
-    std::shared_ptr<IDataArray> dataArray = std::dynamic_pointer_cast<IDataArray>(dataObject);
+    std::shared_ptr<AbstractDataObject> dataObject = entry.second;
+    std::shared_ptr<AbstractDataArray> dataArray = std::dynamic_pointer_cast<AbstractDataArray>(dataObject);
     if(nullptr != dataArray)
     {
       if(dataArray->getNumberOfTuples() == activeObjects.size())
@@ -97,7 +97,7 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
 
       if(featureIdsChanged)
       {
-        auto result = GetAllChildDataPaths(dataStructure, featureDataGroupPath, DataObject::Type::NeighborList);
+        auto result = GetAllChildDataPaths(dataStructure, featureDataGroupPath, IDataObject::Type::NeighborList);
         if(result.has_value())
         {
           std::vector<DataPath> neighborListDataPaths = result.value();
@@ -126,16 +126,16 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
 }
 
 // -----------------------------------------------------------------------------
-std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<DataPath>& ignoredDataPaths)
+std::vector<std::shared_ptr<AbstractDataArray>> GenerateDataArrayList(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<DataPath>& ignoredDataPaths)
 {
-  std::vector<std::shared_ptr<IDataArray>> arrays;
-  std::set<std::shared_ptr<IDataArray>> childArrays;
+  std::vector<std::shared_ptr<AbstractDataArray>> arrays;
+  std::set<std::shared_ptr<AbstractDataArray>> childArrays;
   DataPath parentPath = dataArrayPath.getParent();
   if(parentPath.empty())
   {
     for(const auto& [key, object] : dataStructure.getDataMap())
     {
-      if(auto typePtr = std::dynamic_pointer_cast<IDataArray>(object); typePtr != nullptr)
+      if(auto typePtr = std::dynamic_pointer_cast<AbstractDataArray>(object); typePtr != nullptr)
       {
         childArrays.insert(typePtr);
       }
@@ -144,7 +144,7 @@ std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructu
   else
   {
     const auto& parent = dataStructure.getDataRefAs<BaseGroup>(parentPath);
-    childArrays = parent.findAllChildrenOfType<IDataArray>();
+    childArrays = parent.findAllChildrenOfType<AbstractDataArray>();
   }
   for(const auto& childArray : childArrays)
   {
@@ -173,7 +173,7 @@ std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructu
   return arrays;
 }
 
-std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, AbstractDataObject::Type dataObjectType,
                                                           const std::vector<DataPath>& ignoredDataPaths)
 {
   std::vector<DataPath> childDataObjects;
@@ -206,8 +206,8 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
           break;
         }
       }
-      const DataObject* dataObject = dataStructure.getData(childPath);
-      if(dataObject != nullptr && !ignore && (dataObjectType == DataObject::Type::DataObject || dataObject->getDataObjectType() == dataObjectType))
+      const AbstractDataObject* dataObject = dataStructure.getData(childPath);
+      if(dataObject != nullptr && !ignore && (dataObjectType == IDataObject::Type::AbstractDataObject || dataObject->getDataObjectType() == dataObjectType))
       {
         childDataObjects.push_back(childPath);
       }
@@ -222,10 +222,10 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parent)
 {
   std::vector<DataPath> childDataObjects;
-  const DataObject* dataObject1 = dataStructure.getData(parent);
-  if(dataObject1 == nullptr || dataObject1->getDataObjectType() == DataObject::Type::DataArray || dataObject1->getDataObjectType() == DataObject::Type::DynamicListArray ||
-     dataObject1->getDataObjectType() == DataObject::Type::NeighborList || dataObject1->getDataObjectType() == DataObject::Type::ScalarData ||
-     dataObject1->getDataObjectType() == DataObject::Type::StringArray)
+  const AbstractDataObject* dataObject1 = dataStructure.getData(parent);
+  if(dataObject1 == nullptr || dataObject1->getDataObjectType() == IDataObject::Type::DataArray || dataObject1->getDataObjectType() == IDataObject::Type::DynamicListArray ||
+     dataObject1->getDataObjectType() == IDataObject::Type::NeighborList || dataObject1->getDataObjectType() == IDataObject::Type::ScalarData ||
+     dataObject1->getDataObjectType() == IDataObject::Type::StringArray)
   {
     return {};
   }
@@ -272,7 +272,7 @@ std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructu
     {
       bool ignore = false;
       DataPath childPath = parentGroup.createChildPath(childName);
-      const DataObject* dataObject = dataStructure.getData(childPath);
+      const AbstractDataObject* dataObject = dataStructure.getData(childPath);
       for(const auto& ignoredPath : ignoredDataPaths)
       {
         if(childPath == ignoredPath)
@@ -281,7 +281,7 @@ std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructu
           break;
         }
       }
-      if(!ignore && dynamic_cast<const IArray*>(dataObject) != nullptr)
+      if(!ignore && dynamic_cast<const AbstractArray*>(dataObject) != nullptr)
       {
         childDataObjects.push_back(childPath);
       }
@@ -342,7 +342,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
   return {childDataObjects};
 }
 
-std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, AbstractDataObject::Type dataObjectType,
                                                                    const std::vector<DataPath>& ignoredDataPaths)
 {
   std::vector<DataPath> childDataObjects;
@@ -377,8 +377,8 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStr
       }
       if(!ignore)
       {
-        const DataObject* dataObject = dataStructure.getData(childPath);
-        if(dataObject != nullptr && (dataObjectType == DataObject::Type::DataObject || dataObject->getDataObjectType() == dataObjectType))
+        const AbstractDataObject* dataObject = dataStructure.getData(childPath);
+        if(dataObject != nullptr && (dataObjectType == IDataObject::Type::AbstractDataObject || dataObject->getDataObjectType() == dataObjectType))
         {
           childDataObjects.push_back(childPath);
         }
@@ -413,8 +413,8 @@ bool ContainsDataArrayName(const DataStructure& dataStructure, const DataPath& p
     for(const auto& childName : childrenNames)
     {
       DataPath childPath = parentGroup.createChildPath(childName);
-      const DataObject* dataObject = dataStructure.getData(childPath);
-      if(dynamic_cast<const IDataArray*>(dataObject) != nullptr && childName == arrayName)
+      const AbstractDataObject* dataObject = dataStructure.getData(childPath);
+      if(dynamic_cast<const AbstractDataArray*>(dataObject) != nullptr && childName == arrayName)
       {
         return true;
       }

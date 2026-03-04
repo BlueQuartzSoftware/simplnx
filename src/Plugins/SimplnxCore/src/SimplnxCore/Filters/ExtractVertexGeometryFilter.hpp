@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -13,7 +13,7 @@ namespace nx::core
  * geometry into a new VertexGeometry. The user is given the option to copy or move cell arrays
  * over to the newly created VertexGeometry.
  */
-class SIMPLNXCORE_EXPORT ExtractVertexGeometryFilter : public IFilter
+class SIMPLNXCORE_EXPORT ExtractVertexGeometryFilter : public AbstractFilter
 {
 public:
   ExtractVertexGeometryFilter() = default;

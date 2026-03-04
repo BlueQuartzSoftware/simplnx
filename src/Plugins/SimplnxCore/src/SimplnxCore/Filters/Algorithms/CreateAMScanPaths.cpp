@@ -228,7 +228,7 @@ std::vector<LineSegment> fillPolygonWithParallelLines(const std::vector<float>& 
 }
 
 // ----------------------------------------------------------------------------
-void extractRegion(INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, AbstractDataStore<int32>& regionIds, AbstractDataStore<int32>& sliceIds,
+void extractRegion(AbstractNodeGeometry0D::SharedVertexList& vertices, AbstractNodeGeometry1D::SharedEdgeList& edges, AbstractDataStore<int32>& regionIds, AbstractDataStore<int32>& sliceIds,
                    int32_t regionIdToExtract, int32_t sliceIdToExtract, std::vector<float>& outVertices, std::vector<size_t>& outEdges)
 {
   outVertices.clear();
@@ -342,8 +342,8 @@ Result<> CreateAMScanPaths::operator()()
 {
   // Get References to all the INPUT Data Objects
   auto& CADLayers = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->CADSliceDataContainerName);
-  INodeGeometry1D::SharedEdgeList& outlineEdges = CADLayers.getEdgesRef();
-  INodeGeometry0D::SharedVertexList& outlineVertices = CADLayers.getVerticesRef();
+  AbstractNodeGeometry1D::SharedEdgeList& outlineEdges = CADLayers.getEdgesRef();
+  AbstractNodeGeometry0D::SharedVertexList& outlineVertices = CADLayers.getVerticesRef();
   auto& cadSliceIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADSliceIdsArrayPath)->getDataStoreRef();
   auto& cadRegionIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CADRegionIdsArrayPath)->getDataStoreRef();
   usize numCADLayerEdges = CADLayers.getNumberOfEdges();
@@ -353,8 +353,8 @@ Result<> CreateAMScanPaths::operator()()
   hatchesEdgeGeom.resizeEdgeList(0ULL);
   hatchesEdgeGeom.resizeVertexList(0ULL);
 
-  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& hatchVertsDataStore = hatchesEdgeGeom.getVertices()->getDataStoreRef();
-  AbstractDataStore<INodeGeometry1D::SharedEdgeList::value_type>& hatchesDataStore = hatchesEdgeGeom.getEdges()->getDataStoreRef();
+  AbstractDataStore<AbstractNodeGeometry0D::SharedVertexList::value_type>& hatchVertsDataStore = hatchesEdgeGeom.getVertices()->getDataStoreRef();
+  AbstractDataStore<AbstractNodeGeometry1D::SharedEdgeList::value_type>& hatchesDataStore = hatchesEdgeGeom.getEdges()->getDataStoreRef();
 
   const DataPath hatchAttributeMatrixPath = m_InputValues->HatchDataContainerName.createChildPath(m_InputValues->HatchAttributeMatrixName);
   auto& hatchSliceIdsDataStore = m_DataStructure.getDataAs<Int32Array>(hatchAttributeMatrixPath.createChildPath(m_InputValues->CADSliceIdsArrayPath.getTargetName()))->getDataStoreRef();

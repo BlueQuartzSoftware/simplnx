@@ -3,7 +3,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -35,7 +35,7 @@ Result<> AlignSectionsMutualInformation::operator()()
   {
     return {};
   }
-  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  const auto& gridGeom = m_DataStructure.getDataRefAs<AbstractGridGeometry>(m_InputValues->ImageGeometryPath);
 
   return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
 }

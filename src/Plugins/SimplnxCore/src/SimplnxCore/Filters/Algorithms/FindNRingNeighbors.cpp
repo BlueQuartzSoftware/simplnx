@@ -37,7 +37,7 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
   {
     return result;
   }
-  const INodeGeometry1D::ElementDynamicList* node2TrianglePtr = triangleGeom->getElementsContainingVert();
+  const AbstractNodeGeometry1D::ElementDynamicList* node2TrianglePtr = triangleGeom->getElementsContainingVert();
 
   // Figure out these boolean values for a sanity check
   bool check0 = faceLabels[triangleId * 2] == m_InputValues->RegionId0 && faceLabels[triangleId * 2 + 1] == m_InputValues->RegionId1;
@@ -68,12 +68,12 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
       {
         // Get all the triangles for this Node id
         uint16_t tCount = node2TrianglePtr->getNumberOfElements(triangles[triangleIdx * 3 + i]);
-        IGeometry::MeshIndexType* data = node2TrianglePtr->getElementListPointer(triangles[triangleIdx * 3 + i]);
+        AbstractGeometry::MeshIndexType* data = node2TrianglePtr->getElementListPointer(triangles[triangleIdx * 3 + i]);
 
         // Copy all the triangles into our "2Ring" set which will be the unique set of triangle ids
         for(uint16_t t = 0; t < tCount; ++t)
         {
-          IGeometry::MeshIndexType tid = data[t];
+          AbstractGeometry::MeshIndexType tid = data[t];
           check0 = faceLabels[tid * 2] == m_InputValues->RegionId0 && faceLabels[tid * 2 + 1] == m_InputValues->RegionId1;
           check1 = faceLabels[tid * 2 + 1] == m_InputValues->RegionId0 && faceLabels[tid * 2] == m_InputValues->RegionId1;
 

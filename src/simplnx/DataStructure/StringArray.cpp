@@ -35,30 +35,30 @@ StringArray* StringArray::Import(DataStructure& dataStructure, const std::string
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name)
-: IArray(dataStructure, std::move(name))
+: AbstractArray(dataStructure, std::move(name))
 {
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, collection_type strings)
-: IArray(dataStructure, std::move(name))
+: AbstractArray(dataStructure, std::move(name))
 {
   m_Strings = std::make_shared<StringStore>(strings, tupleShape);
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type>& store)
-: IArray(dataStructure, std::move(name))
+: AbstractArray(dataStructure, std::move(name))
 , m_Strings(store)
 {
 }
 
 StringArray::StringArray(DataStructure& dataStructure, std::string name, const ShapeType& tupleShape, IdType importId, collection_type strings)
-: IArray(dataStructure, std::move(name), importId)
+: AbstractArray(dataStructure, std::move(name), importId)
 {
   m_Strings = std::make_shared<StringStore>(strings, tupleShape);
 }
 
 StringArray::StringArray(const StringArray& other)
-: IArray(other)
+: AbstractArray(other)
 , m_Strings(other.m_Strings)
 {
 }
@@ -78,39 +78,39 @@ StringArray::StringArray(const StringArray& other)
  * The initialization performed by each mem-initializer constitutes a full-expression.
  * Any expression in a mem-initializer is evaluated as part of the full-expression that performs the initialization.
  *
- * Thus, disregard clang-tidy, the second move here is still a valid one because the IArray portion of the object will
+ * Thus, disregard clang-tidy, the second move here is still a valid one because the AbstractArray portion of the object will
  * be moved first leaving the derived class member variables (m_Strings) in a valid state as only
- * the base (IArray) has been marked-to-be/or-is destroyed, however, `other` should not be used after ctor initializer list as
+ * the base (AbstractArray) has been marked-to-be/or-is destroyed, however, `other` should not be used after ctor initializer list as
  * it will no longer be in a valid state.
  */
 StringArray::StringArray(StringArray&& other) noexcept
-: IArray(std::move(other))
+: AbstractArray(std::move(other))
 , m_Strings(std::move(other.m_Strings))
 {
 }
 
 StringArray::~StringArray() noexcept = default;
 
-DataObject::Type StringArray::getDataObjectType() const
+AbstractDataObject::Type StringArray::getDataObjectType() const
 {
-  return DataObject::Type::StringArray;
+  return IDataObject::Type::StringArray;
 }
 std::string StringArray::getTypeName() const
 {
   return k_TypeName;
 }
 
-IArray::ArrayType StringArray::getArrayType() const
+AbstractArray::ArrayType StringArray::getArrayType() const
 {
   return ArrayType::StringArray;
 }
 
-DataObject* StringArray::shallowCopy()
+AbstractDataObject* StringArray::shallowCopy()
 {
   return new StringArray(*this);
 }
 
-std::shared_ptr<DataObject> StringArray::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> StringArray::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   if(dataStruct.containsData(copyPath))
@@ -199,14 +199,14 @@ StringArray::const_iterator StringArray::cend() const
 
 StringArray& StringArray::operator=(const StringArray& rhs)
 {
-  DataObject::operator=(rhs);
+  AbstractDataObject::operator=(rhs);
   m_Strings = rhs.m_Strings;
   return *this;
 }
 
 StringArray& StringArray::operator=(StringArray&& rhs) noexcept
 {
-  DataObject::operator=(rhs);
+  AbstractDataObject::operator=(rhs);
   m_Strings = std::move(rhs.m_Strings);
   return *this;
 }
@@ -257,7 +257,7 @@ void StringArray::swapTuples(usize index0, usize index1)
   (*m_Strings)[index1] = value;
 }
 
-void StringArray::setStore(const std::shared_ptr<AbstractStringStore>& newStore)
+void StringArray::setStore(const std::shared_ptr<IStringStore>& newStore)
 {
   m_Strings = newStore;
 }

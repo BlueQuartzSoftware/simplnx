@@ -84,7 +84,7 @@ Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
+  const AbstractDataObject* object = dataStructure.getData(value);
   if(object != nullptr)
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
@@ -96,7 +96,7 @@ Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure
 Result<std::any> ArrayCreationParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
+  AbstractDataObject* object = dataStructure.getData(path);
   return {{object}};
 }
 

@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @brief This filter determines the direction of the C-axis for each Element by applying the quaternion of the Element to the <001> direction, which is the C-axis for Hexagonal materials. This will
  * tell where the C-axis of the Element sits in the sample reference frame.
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeCAxisLocationsFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeCAxisLocationsFilter : public AbstractFilter
 {
 public:
   ComputeCAxisLocationsFilter() = default;

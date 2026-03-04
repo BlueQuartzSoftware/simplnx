@@ -45,7 +45,7 @@ DataStructure CreateDataStructure()
   verticesRef[11] = 0;
   edgeGeom->setVertices(*vertices);
 
-  IGeometry::SharedEdgeList* edges = UnitTest::CreateTestDataArray<uint64>(dataStructure, k_EdgesName, {4}, {2}, edgeGeom->getId());
+  AbstractGeometry::SharedEdgeList* edges = UnitTest::CreateTestDataArray<uint64>(dataStructure, k_EdgesName, {4}, {2}, edgeGeom->getId());
   auto& edgesRef = edges->getDataStoreRef();
   edgesRef[0] = 0;
   edgesRef[1] = 1;

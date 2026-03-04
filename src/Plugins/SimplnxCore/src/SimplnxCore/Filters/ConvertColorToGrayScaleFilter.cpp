@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/Filters/Algorithms/ConvertColorToGrayScale.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
@@ -65,7 +65,7 @@ Parameters ConvertColorToGrayScaleFilter::parameters() const
   params.linkParameters(k_ConversionAlgorithm_Key, k_ColorChannel_Key, std::make_any<ChoicesParameter::ValueType>(3));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputDataArrayPath_Key, "Input Data Arrays", "Select all DataArrays that need to be converted to GrayScale",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                MultiArraySelectionParameter::AllowedDataTypes{DataType::uint8}, MultiArraySelectionParameter::AllowedComponentShapes{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<StringParameter>(k_OutputArrayPrefix_Key, "Output Data Array Prefix",
@@ -129,7 +129,7 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
   DataPath outputDataArrayPath;
   for(const auto& inputDataArrayPath : inputDataArrayPaths)
   {
-    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
+    const auto& inputArray = dataStructure.getDataRefAs<AbstractDataArray>(inputDataArrayPath);
     std::vector<std::string> inputPathVector = inputDataArrayPath.getPathVector();
     std::string inputArrayName = inputDataArrayPath.getTargetName();
     std::string outputArrayName = fmt::format("{}{}", outputArrayPrefix, inputArrayName);

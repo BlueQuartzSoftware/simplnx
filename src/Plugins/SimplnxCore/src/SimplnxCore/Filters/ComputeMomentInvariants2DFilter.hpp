@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @brief This filter computes the 2D Omega-1 and Omega 2 values from the Central Moments matrix and optionally will normalize the values to a unit circle and also optionally save the Central Moments
  * matrix as a DataArray to the Cell Feature Attribute Matrix.
  */
-class SIMPLNXCORE_EXPORT ComputeMomentInvariants2DFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeMomentInvariants2DFilter : public AbstractFilter
 {
 public:
   ComputeMomentInvariants2DFilter() = default;

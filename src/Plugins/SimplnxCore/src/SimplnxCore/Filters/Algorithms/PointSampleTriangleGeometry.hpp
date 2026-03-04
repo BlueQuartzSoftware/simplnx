@@ -41,7 +41,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -87,7 +87,7 @@ public:
   PointSampleTriangleGeometry& operator=(const PointSampleTriangleGeometry&) = delete;
   PointSampleTriangleGeometry& operator=(PointSampleTriangleGeometry&&) noexcept = delete;
 
-  using MeshIndexType = IGeometry::MeshIndexType;
+  using MeshIndexType = AbstractGeometry::MeshIndexType;
 
   Result<> operator()();
 
@@ -107,8 +107,8 @@ private:
   DataPath m_MaskArrayPath = {"", "", ""};
   std::vector<DataPath> m_SelectedDataPaths = {};
 
-  std::vector<IDataArray::WeakPointer> m_SelectedWeakPtrVector;
-  std::vector<IDataArray::WeakPointer> m_CreatedWeakPtrVector;
+  std::vector<AbstractDataArray::WeakPointer> m_SelectedWeakPtrVector;
+  std::vector<AbstractDataArray::WeakPointer> m_CreatedWeakPtrVector;
 
   int32_t m_NumSamples = 0;
 #endif

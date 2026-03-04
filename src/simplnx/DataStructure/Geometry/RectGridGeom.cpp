@@ -11,12 +11,12 @@
 using namespace nx::core;
 
 RectGridGeom::RectGridGeom(DataStructure& dataStructure, std::string name)
-: IGridGeometry(dataStructure, std::move(name))
+: AbstractGridGeometry(dataStructure, std::move(name))
 {
 }
 
 RectGridGeom::RectGridGeom(DataStructure& dataStructure, std::string name, IdType importId)
-: IGridGeometry(dataStructure, std::move(name), importId)
+: AbstractGridGeometry(dataStructure, std::move(name), importId)
 {
 }
 
@@ -25,9 +25,9 @@ IGeometry::Type RectGridGeom::getGeomType() const
   return IGeometry::Type::RectGrid;
 }
 
-DataObject::Type RectGridGeom::getDataObjectType() const
+AbstractDataObject::Type RectGridGeom::getDataObjectType() const
 {
-  return DataObject::Type::RectGridGeom;
+  return IDataObject::Type::RectGridGeom;
 }
 
 BaseGroup::GroupType RectGridGeom::getGroupType() const
@@ -60,12 +60,12 @@ std::string RectGridGeom::getTypeName() const
   return k_TypeName;
 }
 
-DataObject* RectGridGeom::shallowCopy()
+AbstractDataObject* RectGridGeom::shallowCopy()
 {
   return new RectGridGeom(*this);
 }
 
-std::shared_ptr<DataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> RectGridGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure
@@ -273,15 +273,15 @@ std::shared_ptr<Float32Array> RectGridGeom::getSharedZBounds()
   return getDataStructure()->getSharedDataAs<Float32Array>(m_zBoundsId.value());
 }
 
-DataObject::OptionalId RectGridGeom::getXBoundsId() const
+AbstractDataObject::OptionalId RectGridGeom::getXBoundsId() const
 {
   return m_xBoundsId;
 }
-DataObject::OptionalId RectGridGeom::getYBoundsId() const
+AbstractDataObject::OptionalId RectGridGeom::getYBoundsId() const
 {
   return m_yBoundsId;
 }
-DataObject::OptionalId RectGridGeom::getZBoundsId() const
+AbstractDataObject::OptionalId RectGridGeom::getZBoundsId() const
 {
   return m_zBoundsId;
 }
@@ -722,9 +722,9 @@ std::optional<usize> RectGridGeom::getIndex(float64 xCoord, float64 yCoord, floa
   return (ySize * xSize * z) + (xSize * y) + x;
 }
 
-void RectGridGeom::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)
+void RectGridGeom::checkUpdatedIdsImpl(const std::unordered_map<AbstractDataObject::IdType, AbstractDataObject::IdType>& updatedIdsMap)
 {
-  IGridGeometry::checkUpdatedIdsImpl(updatedIdsMap);
+  AbstractGridGeometry::checkUpdatedIdsImpl(updatedIdsMap);
   std::vector<bool> visited(3, false);
 
   for(const auto& updatedId : updatedIdsMap)

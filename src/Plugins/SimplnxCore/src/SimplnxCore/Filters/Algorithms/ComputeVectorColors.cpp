@@ -37,7 +37,7 @@ const std::atomic_bool& ComputeVectorColors::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeVectorColors::operator()()
 {
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);

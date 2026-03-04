@@ -151,7 +151,7 @@ IFilter::PreflightResult RunITKProjectionDataCheck(const DataStructure& dataStru
     return MakeErrorResult<OutputActions>(-76590, fmt::format("Input {} type is not currently supported. Please reach out to devs if you have a use case.", DataTypeToString(dataType)));
   };
 
-  DataType type = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
+  DataType type = dataStructure.getDataRefAs<AbstractDataArray>(selectedInputArray).getDataType();
   Result<OutputActions> helperOutputActions = RunTemplateFunctor<ITKProjectionSupportedOutputTypes>(RunITKProjectionDataCheckFunctor<ArrayOptionsType>{}, fallbackFunc, type, dataStructure,
                                                                                                     selectedInputArray, imageGeomPath, outputArrayPath);
 
@@ -182,7 +182,7 @@ Result<> RunITKProjectionExecute(DataStructure& dataStructure, const DataPath& s
     outputArrayPath = finalImageGeomPath.createChildPath(originalGeometry.getCellDataPath().getTargetName()).createChildPath(outputArrayName);
   }
 
-  DataType type = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
+  DataType type = dataStructure.getDataRefAs<AbstractDataArray>(selectedInputArray).getDataType();
 
   auto fallbackFunc = [](DataType dataType) {
     return MakeErrorResult(-76591, fmt::format("Input {} type is not currently supported. Please reach out to devs if you have a use case.", DataTypeToString(dataType)));
@@ -197,7 +197,7 @@ Result<> RunITKProjectionExecute(DataStructure& dataStructure, const DataPath& s
   }
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(finalImageGeomPath);
-  auto iArrayTupleShape = dataStructure.getDataAs<IArray>(outputArrayPath)->getTupleShape();
+  auto iArrayTupleShape = dataStructure.getDataAs<AbstractArray>(outputArrayPath)->getTupleShape();
 
   // Update the Image Geometry with the new dimensions
   imageGeom.setDimensions({iArrayTupleShape[2], iArrayTupleShape[1], iArrayTupleShape[0]});

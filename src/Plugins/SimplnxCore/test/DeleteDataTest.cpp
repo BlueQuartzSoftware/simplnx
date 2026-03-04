@@ -50,7 +50,7 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFi
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  DataObject* removedDataArray = dataStructure.getData(selectedDataPath1);
+  AbstractDataObject* removedDataArray = dataStructure.getData(selectedDataPath1);
   REQUIRE(removedDataArray == nullptr);
   REQUIRE(dataStructure.getData(selectedDataPath2) == nullptr);
 
@@ -88,7 +88,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  DataObject* removedDataArray = dataStructure.getData(selectedDataGroupPath);
+  AbstractDataObject* removedDataArray = dataStructure.getData(selectedDataGroupPath);
   REQUIRE(removedDataArray == nullptr);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -102,7 +102,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 
 // TEST_CASE("SimplnxCore::Delete Shared Node (Node removal)", "[SimplnxCore][DeleteDataFilter]")
 //{
-//   // For this test case the goal will be to completely wipe node (DataObject) C out of the
+//   // For this test case the goal will be to completely wipe node (AbstractDataObject) C out of the
 //   // graph completely. Ie clear all edges (parent and child) to node C, call the destructor
 //   // on the node to ensure it doesn't become freehanging, and verify that the object is no longer
 //   // in the data-lake (DataStructure) tables by ID grep.
@@ -125,7 +125,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //   // Store Data prior to deletion to verify removal
 //   // The target node here is k_GroupCName (the DataGroup named C)
-//   std::weak_ptr<DataObject> objectCPtr = dataStructure.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
+//   std::weak_ptr<AbstractDataObject> objectCPtr = dataStructure.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
 //   auto groupCId = dataStructure.getId(selectedDataGroupPath).value();
 //
 //   DeleteDataFilter filter;
@@ -231,7 +231,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //     // Store Data prior to deletion to verify removal
 //     // The target node here is k_GroupDName (the DataGroup named D)
-//     std::weak_ptr<DataObject> objectDPtr = dataStructure.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
+//     std::weak_ptr<AbstractDataObject> objectDPtr = dataStructure.getSharedData(selectedDataGroupPath); // convert the shared ptr to a weak ptr
 //     auto groupDId = dataStructure.getId(selectedDataGroupPath).value();
 //
 //     DeleteDataFilter filter;
@@ -422,7 +422,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //     // Store Data prior to deletion to verify removal
 //     // The target node here is k_GroupBName (the DataGroup named B)
-//     std::map<DataObject::IdType, std::weak_ptr<DataObject>> removedValues;
+//     std::map<AbstractDataObject::IdType, std::weak_ptr<AbstractDataObject>> removedValues;
 //     std::vector<DataPath> pathsRemoved = {groupBPath, groupFPath, groupGPath, arrayMPath, arrayLPath};
 //
 //     for(const auto& path : pathsRemoved)
@@ -430,9 +430,9 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //       removedValues.emplace(dataStructure.getId(path).value(), dataStructure.getSharedData(path));
 //     }
 //
-//     std::weak_ptr<DataObject> objectEPtr = dataStructure.getSharedData(groupEPath); // convert the shared ptr to a weak ptr
+//     std::weak_ptr<AbstractDataObject> objectEPtr = dataStructure.getSharedData(groupEPath); // convert the shared ptr to a weak ptr
 //     auto groupEId = dataStructure.getId(groupEPath).value();
-//     std::weak_ptr<DataObject> objectKPtr = dataStructure.getSharedData(arrayKPath); // convert the shared ptr to a weak ptr
+//     std::weak_ptr<AbstractDataObject> objectKPtr = dataStructure.getSharedData(arrayKPath); // convert the shared ptr to a weak ptr
 //     auto arrayKId = dataStructure.getId(arrayKPath).value();
 //
 //     DeleteDataFilter filter;
@@ -479,7 +479,7 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 //
 //     // Store Data prior to deletion to verify removal
 //     // The target node here is k_GroupBName (the DataGroup named B)
-//     std::map<DataObject::IdType, std::weak_ptr<DataObject>> removedValues;
+//     std::map<AbstractDataObject::IdType, std::weak_ptr<AbstractDataObject>> removedValues;
 //     std::vector<DataPath> pathsRemoved = {groupBPath, groupFPath, groupGPath, groupEPath, arrayMPath, arrayLPath, arrayKPath};
 //
 //     for(const auto& path : pathsRemoved)

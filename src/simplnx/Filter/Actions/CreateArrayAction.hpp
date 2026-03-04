@@ -15,7 +15,7 @@ namespace nx::core
 /**
  * @brief Action for creating DataArrays in a DataStructure
  */
-class SIMPLNX_EXPORT CreateArrayAction : public IDataCreationAction
+class SIMPLNX_EXPORT CreateArrayAction : public AbstractDataCreationAction
 {
 public:
   inline static constexpr StringLiteral k_DefaultDataFormat = "";

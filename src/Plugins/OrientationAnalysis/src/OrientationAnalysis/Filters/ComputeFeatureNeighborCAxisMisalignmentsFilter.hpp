@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeFeatureNeighborCAxisMisalignmentsFilter
  * @brief This filter determines, for each Feature, the C-axis mis alignments with the Features that are in contact with it.
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborCAxisMisalignmentsFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborCAxisMisalignmentsFilter : public AbstractFilter
 {
 public:
   ComputeFeatureNeighborCAxisMisalignmentsFilter() = default;

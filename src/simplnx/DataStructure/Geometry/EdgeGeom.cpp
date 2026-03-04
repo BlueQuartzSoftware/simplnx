@@ -7,20 +7,20 @@
 using namespace nx::core;
 
 EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name)
-: INodeGeometry1D(dataStructure, std::move(name))
+: AbstractNodeGeometry1D(dataStructure, std::move(name))
 {
   m_UnitDimensionality = 1;
 }
 
 EdgeGeom::EdgeGeom(DataStructure& dataStructure, std::string name, IdType importId)
-: INodeGeometry1D(dataStructure, std::move(name), importId)
+: AbstractNodeGeometry1D(dataStructure, std::move(name), importId)
 {
   m_UnitDimensionality = 1;
 }
 
-DataObject::Type EdgeGeom::getDataObjectType() const
+AbstractDataObject::Type EdgeGeom::getDataObjectType() const
 {
-  return DataObject::Type::EdgeGeom;
+  return IDataObject::Type::EdgeGeom;
 }
 
 EdgeGeom* EdgeGeom::Create(DataStructure& dataStructure, std::string name, const std::optional<IdType>& parentId)
@@ -43,7 +43,7 @@ EdgeGeom* EdgeGeom::Import(DataStructure& dataStructure, std::string name, IdTyp
   return data.get();
 }
 
-IGeometry::Type EdgeGeom::getGeomType() const
+AbstractGeometry::Type EdgeGeom::getGeomType() const
 {
   return IGeometry::Type::Edge;
 }
@@ -58,12 +58,12 @@ std::string EdgeGeom::getTypeName() const
   return k_TypeName;
 }
 
-DataObject* EdgeGeom::shallowCopy()
+AbstractDataObject* EdgeGeom::shallowCopy()
 {
   return new EdgeGeom(*this);
 }
 
-std::shared_ptr<DataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> EdgeGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure
@@ -161,7 +161,7 @@ Result<> EdgeGeom::findElementSizes(bool recalculate)
 
   std::array<Point3Df, 2> verts = {Point3Df(0.0f, 0.0f, 0.0f), Point3Df(0.0f, 0.0f, 0.0f)};
 
-  for(usize i = 0; i < INodeGeometry1D::getNumberOfCells(); i++)
+  for(usize i = 0; i < AbstractNodeGeometry1D::getNumberOfCells(); i++)
   {
     getEdgeCoordinates(i, verts);
     float32 length = 0.0f;

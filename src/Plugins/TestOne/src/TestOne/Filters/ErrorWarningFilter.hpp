@@ -1,8 +1,8 @@
 #pragma once
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include "TestOne/TestOne_export.hpp"
 namespace nx::core
@@ -10,7 +10,7 @@ namespace nx::core
 /**
  * @brief The ErrorWarningFilter class. See [Filter documentation](@ref ErrorWarningFilter) for details.
  */
-class TESTONE_EXPORT ErrorWarningFilter : public nx::core::IFilter
+class TESTONE_EXPORT ErrorWarningFilter : public nx::core::AbstractFilter
 {
 public:
   ErrorWarningFilter() = default;

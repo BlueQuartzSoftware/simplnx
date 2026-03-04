@@ -55,7 +55,7 @@ public:
   Result<> execute()
   {
     auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-    imageGeom.setUnits(IGeometry::LengthUnit::Micrometer);
+    imageGeom.setUnits(AbstractGeometry::LengthUnit::Micrometer);
 
     int index = 0;
     for(const auto& currentScanName : m_InputValues->SelectedScanNames.scanNames)

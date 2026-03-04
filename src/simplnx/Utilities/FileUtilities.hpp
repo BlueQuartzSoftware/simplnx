@@ -95,15 +95,15 @@ public:
 
   [[nodiscard]] usize columnIndex() const;
 
-  [[nodiscard]] const IArray& array() const;
+  [[nodiscard]] const AbstractArray& array() const;
 
   virtual Result<> parse(const std::string& token, size_t index) = 0;
 
 protected:
-  AbstractDataParser(IArray& array, const std::string& columnName, usize columnIndex);
+  AbstractDataParser(AbstractArray& array, const std::string& columnName, usize columnIndex);
 
 private:
-  IArray& m_Array;
+  AbstractArray& m_Array;
   usize m_ColumnIndex = 0;
   std::string m_ColumnName;
 };

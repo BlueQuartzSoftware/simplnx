@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class TriangleNormalFilter
  * @brief This filter calculates the normals for each face of a **TriangleGeom** object
  */
-class SIMPLNXCORE_EXPORT TriangleNormalFilter : public IFilter
+class SIMPLNXCORE_EXPORT TriangleNormalFilter : public AbstractFilter
 {
 public:
   TriangleNormalFilter() = default;

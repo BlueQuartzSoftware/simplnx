@@ -3,7 +3,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
@@ -19,7 +19,7 @@ namespace nx::core
  * @brief Action for creating a Vertex Geometry in a DataStructure
  */
 
-class CreateVertexGeometryAction : public IDataCreationAction
+class CreateVertexGeometryAction : public AbstractDataCreationAction
 {
 public:
   /**
@@ -29,9 +29,9 @@ public:
    * @param vertexAttributeMatrixName The name of the vertex AttributeMatrix to be created
    * @param sharedVertexListName The name of the shared vertex list array to be created
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName,
+  CreateVertexGeometryAction(const DataPath& geometryPath, AbstractGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName,
                              std::string createdDataFormat = "")
-  : IDataCreationAction(geometryPath)
+  : AbstractDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_SharedVertexListName(sharedVertexListName)
@@ -48,7 +48,7 @@ public:
    */
   CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
                              std::string createdDataFormat = "")
-  : IDataCreationAction(geometryPath)
+  : AbstractDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_SharedVertexListName(inputVerticesArrayPath.getTargetName())
   , m_InputVertices(inputVerticesArrayPath)
@@ -118,7 +118,7 @@ public:
     {
       tupleShape = vertices->getTupleShape();
 
-      std::shared_ptr<DataObject> copy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVertexListName));
+      std::shared_ptr<AbstractDataObject> copy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVertexListName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(copy);
 
       vertexGeom->setVertices(*vertexArray);
@@ -196,9 +196,9 @@ public:
 
   /**
    * @brief Returns the number of vertices (estimated in some circumstances)
-   * @return IGeometry::MeshIndexType
+   * @return AbstractGeometry::MeshIndexType
    */
-  IGeometry::MeshIndexType numVertices() const
+  AbstractGeometry::MeshIndexType numVertices() const
   {
     return m_NumVertices;
   }
@@ -240,7 +240,7 @@ protected:
   CreateVertexGeometryAction() = default;
 
 private:
-  IGeometry::MeshIndexType m_NumVertices = 1;
+  AbstractGeometry::MeshIndexType m_NumVertices = 1;
   std::string m_VertexDataName;
   std::string m_SharedVertexListName;
   DataPath m_InputVertices;

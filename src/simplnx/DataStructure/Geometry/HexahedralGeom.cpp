@@ -9,18 +9,18 @@
 using namespace nx::core;
 
 HexahedralGeom::HexahedralGeom(DataStructure& dataStructure, std::string name)
-: INodeGeometry3D(dataStructure, std::move(name))
+: AbstractNodeGeometry3D(dataStructure, std::move(name))
 {
 }
 
 HexahedralGeom::HexahedralGeom(DataStructure& dataStructure, std::string name, IdType importId)
-: INodeGeometry3D(dataStructure, std::move(name), importId)
+: AbstractNodeGeometry3D(dataStructure, std::move(name), importId)
 {
 }
 
-DataObject::Type HexahedralGeom::getDataObjectType() const
+AbstractDataObject::Type HexahedralGeom::getDataObjectType() const
 {
-  return DataObject::Type::HexahedralGeom;
+  return AbstractDataObject::Type::HexahedralGeom;
 }
 
 usize HexahedralGeom::getNumberOfVerticesPerEdge() const
@@ -63,12 +63,12 @@ std::string HexahedralGeom::getTypeName() const
   return k_TypeName;
 }
 
-DataObject* HexahedralGeom::shallowCopy()
+AbstractDataObject* HexahedralGeom::shallowCopy()
 {
   return new HexahedralGeom(*this);
 }
 
-std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure
@@ -163,7 +163,7 @@ std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_UnsharedEdgeListId = unsharedEdgesCopy->getId();
     }
-    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_SharedEdgeListName)); edgesCopy != nullptr)
+    if(const auto edgesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry1D::k_SharedEdgeListName)); edgesCopy != nullptr)
     {
       copy->m_EdgeDataArrayId = edgesCopy->getId();
     }
@@ -171,7 +171,7 @@ std::shared_ptr<DataObject> HexahedralGeom::deepCopy(const DataPath& copyPath)
     {
       copy->m_UnsharedFaceListId = unsharedFacesCopy->getId();
     }
-    if(const auto facesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry3D::k_SharedFacesListName)); facesCopy != nullptr)
+    if(const auto facesCopy = dataStruct.getDataAs<DataArray<MeshIndexType>>(copyPath.createChildPath(INodeGeometry2D::k_SharedFacesListName)); facesCopy != nullptr)
     {
       copy->m_FaceListId = facesCopy->getId();
     }

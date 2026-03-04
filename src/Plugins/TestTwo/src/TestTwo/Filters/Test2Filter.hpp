@@ -1,12 +1,12 @@
 #pragma once
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include "TestTwo/TestTwo_export.hpp"
 namespace nx::core
 {
-class TESTTWO_EXPORT Test2Filter : public nx::core::IFilter
+class TESTTWO_EXPORT Test2Filter : public nx::core::AbstractFilter
 {
 public:
   Test2Filter();

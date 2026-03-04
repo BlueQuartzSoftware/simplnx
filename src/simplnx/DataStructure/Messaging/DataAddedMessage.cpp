@@ -4,7 +4,7 @@
 
 using namespace nx::core;
 
-DataAddedMessage::DataAddedMessage(const DataStructure* dataStructure, DataObject::IdType addedId)
+DataAddedMessage::DataAddedMessage(const DataStructure* dataStructure, AbstractDataObject::IdType addedId)
 : AbstractDataStructureMessage(dataStructure)
 , m_Id(addedId)
 {
@@ -29,12 +29,12 @@ AbstractDataStructureMessage::MessageType DataAddedMessage::getMsgType() const
   return DataAddedMessage::MsgType;
 }
 
-DataObject::IdType DataAddedMessage::getId() const
+AbstractDataObject::IdType DataAddedMessage::getId() const
 {
   return m_Id;
 }
 
-const DataObject* DataAddedMessage::getData() const
+const AbstractDataObject* DataAddedMessage::getData() const
 {
   return getDataStructure()->getData(m_Id);
 }

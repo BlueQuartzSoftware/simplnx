@@ -81,7 +81,7 @@ IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data
     {
       for(const auto& path : dataPaths)
       {
-        const auto* possibleIArray = dataStructure.getDataAs<IArray>(path);
+        const auto* possibleIArray = dataStructure.getDataAs<AbstractArray>(path);
         if(possibleIArray != nullptr)
         {
           if(possibleAM->getShape() != possibleIArray->getTupleShape())

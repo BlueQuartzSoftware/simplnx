@@ -110,7 +110,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
   return shouldLoop;
 }
 
-std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, std::unique_ptr<MaskCompareUtilities::MaskCompare>& flaggedFeatures, const bool fillRemovedFeatures)
+std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, std::unique_ptr<MaskCompareUtilities::IMaskCompare>& flaggedFeatures, const bool fillRemovedFeatures)
 {
   bool good = false;
   usize totalPoints = featureIds.getNumberOfTuples();
@@ -150,7 +150,7 @@ std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, std::unique_p
   return activeObjects;
 }
 
-void FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
+void FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<AbstractDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
 
@@ -262,7 +262,7 @@ Result<> RemoveFlaggedFeatures::operator()()
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   auto function = static_cast<Functionality>(m_InputValues->ExtractFeatures);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> flaggedFeatures = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> flaggedFeatures = nullptr;
   try
   {
     flaggedFeatures = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->FlaggedFeaturesArrayPath);
@@ -390,7 +390,7 @@ Result<> RemoveFlaggedFeatures::operator()()
         }
 
         m_MessageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling bad voxels...")});
-        std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
+        std::vector<std::shared_ptr<AbstractDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
         FindVoxelArrays(featureIds, neighbors, voxelArrays, getCancel());
       } while(shouldLoop);
     }

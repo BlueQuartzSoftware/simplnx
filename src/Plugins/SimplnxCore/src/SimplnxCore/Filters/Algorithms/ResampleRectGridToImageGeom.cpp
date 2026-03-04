@@ -67,9 +67,9 @@ Result<> ResampleRectGridToImageGeom::operator()()
       return {};
     }
 
-    const auto& srcArray = m_DataStructure.getDataRefAs<IArray>(srcArrayPath);
+    const auto& srcArray = m_DataStructure.getDataRefAs<AbstractArray>(srcArrayPath);
     const std::string srcName = srcArray.getName();
-    auto& destDataArray = dynamic_cast<IArray&>(destCellDataAM.at(srcName));
+    auto& destDataArray = dynamic_cast<AbstractArray&>(destCellDataAM.at(srcName));
     m_MessageHandler(fmt::format("Resample Rect Grid To Image Geom || Copying Data Array {}", srcName));
 
     CopyFromArray::RunParallelMapRectToImage(destDataArray, taskRunner, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValues, yGridValues, zGridValues);

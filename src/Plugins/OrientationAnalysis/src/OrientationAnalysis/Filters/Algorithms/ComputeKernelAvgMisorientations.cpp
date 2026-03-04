@@ -184,12 +184,12 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   progressMessageHelper.setMaxProgresss(udims[2] * udims[1] * udims[0]);
   progressMessageHelper.setProgressMessageTemplate("Finding Kernel Average Misorientations || {:.2f}%");
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->CrystalStructuresArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->KernelAverageMisorientationsArrayName));
-  algArrays.push_back(m_DataStructure.getDataAs<IDataArray>(m_InputValues->QuatsArrayPath));
+  typename ParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->CellPhasesArrayPath));
+  algArrays.push_back(m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->CrystalStructuresArrayPath));
+  algArrays.push_back(m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->FeatureIdsArrayPath));
+  algArrays.push_back(m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->KernelAverageMisorientationsArrayName));
+  algArrays.push_back(m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->QuatsArrayPath));
 
   ParallelData3DAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range3D(0, udims[0], 0, udims[1], 0, udims[2]));

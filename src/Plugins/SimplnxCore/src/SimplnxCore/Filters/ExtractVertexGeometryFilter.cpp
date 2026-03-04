@@ -3,7 +3,7 @@
 
 #include "SimplnxCore/Filters/Algorithms/ExtractVertexGeometry.hpp"
 
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
@@ -72,7 +72,7 @@ Parameters ExtractVertexGeometryFilter::parameters() const
                                                    ChoicesParameter::Choices{"Copy Attribute Arrays", "Move Attribute Arrays"}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IncludedDataArrayPaths_Key, "Included Attribute Arrays", "The arrays to copy/move to the vertex array",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Geometry"});
@@ -116,7 +116,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto& geometry = dataStructure.getDataRefAs<IGridGeometry>({pInputGeometryPathValue});
+  const auto& geometry = dataStructure.getDataRefAs<AbstractGridGeometry>({pInputGeometryPathValue});
   SizeVec3 dims = geometry.getDimensions();
   usize geomElementCount = dims[0] * dims[1] * dims[2];
 
@@ -143,7 +143,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   // as the output Vertex Geometry
   if(!dataPaths.empty())
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPaths.front());
+    const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(dataPaths.front());
     if(dataArray.getNumberOfTuples() != geomElementCount)
     {
       return {MakeErrorResult<OutputActions>(-2006, fmt::format("The selected DataArrays do not have the correct number of tuples. The Input Geometry ({}) has {} tuples but the "
@@ -156,7 +156,7 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
   const DataPath vertexAttrMatrixPath = pVertexGeometryPathValue.createChildPath(pVertexAttrMatrixNameValue);
   for(const DataPath& dataPath : pIncludedDataArrayPathsValue)
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(dataPath);
+    const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(dataPath);
 
     DataPath newDataPath = vertexAttrMatrixPath.createChildPath(dataPath.getTargetName());
     auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), std::vector<usize>{dataArray.getNumberOfTuples()}, dataArray.getComponentShape(), newDataPath);

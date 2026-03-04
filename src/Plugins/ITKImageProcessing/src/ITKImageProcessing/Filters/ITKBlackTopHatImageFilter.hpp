@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -21,7 +21,7 @@ namespace nx::core
  * ITK Module: ITKMathematicalMorphology
  * ITK Group: MathematicalMorphology
  */
-class ITKIMAGEPROCESSING_EXPORT ITKBlackTopHatImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKBlackTopHatImageFilter : public AbstractFilter
 {
 public:
   ITKBlackTopHatImageFilter() = default;

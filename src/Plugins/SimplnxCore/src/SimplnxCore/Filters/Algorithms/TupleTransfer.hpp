@@ -76,7 +76,7 @@ public:
     m_SourceDataPath = selectedDataPath;
     m_DestinationDataPath = createdArrayPath;
 
-    IDataArray* cellArrayPtr = dataStructure.template getDataAs<IDataArray>(m_SourceDataPath);
+    AbstractDataArray* cellArrayPtr = dataStructure.template getDataAs<AbstractDataArray>(m_SourceDataPath);
     m_NumComps = cellArrayPtr->getNumberOfComponents();
   }
 
@@ -181,7 +181,7 @@ public:
     m_SourceDataPath = selectedDataPath;
     m_DestinationDataPath = createdArrayPath;
 
-    IDataArray* cellArrayPtr = dataStructure.template getDataAs<IDataArray>(m_SourceDataPath);
+    AbstractDataArray* cellArrayPtr = dataStructure.template getDataAs<AbstractDataArray>(m_SourceDataPath);
     m_NumComps = cellArrayPtr->getNumberOfComponents();
   }
 

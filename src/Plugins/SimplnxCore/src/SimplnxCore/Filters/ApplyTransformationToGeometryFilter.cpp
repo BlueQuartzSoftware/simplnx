@@ -107,7 +107,7 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Geometry", "The target geometry on which to perform the transformation", DataPath{},
-                                                             IGeometry::GetAllGeomTypes()));
+                                                             AbstractGeometry::GetAllGeomTypes()));
 
   params.insertSeparator(Parameters::Separator{"Image Geometry Resampling/Interpolation"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_InterpolationType_Key, "Resampling or Interpolation (Image Geometry Only)",
@@ -313,7 +313,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
           continue;
         }
 
-        const auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(dataArrayPath);
+        const auto* neighborListPtr = dataStructure.getDataAs<AbstractNeighborList>(dataArrayPath);
         if(nullptr != neighborListPtr)
         {
           resultOutputActions.warnings().push_back(
@@ -389,7 +389,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
         for(const auto& cellArrayName : selectedCellArrayNames)
         {
           const DataPath srcCellArrayDataPath = srcImagePath.createChildPath(cellDataName).createChildPath(cellArrayName);
-          const auto& srcArray = dataStructure.getDataRefAs<IDataArray>(srcCellArrayDataPath);
+          const auto& srcArray = dataStructure.getDataRefAs<AbstractDataArray>(srcCellArrayDataPath);
           const ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
           const std::string dataStoreFormat = srcArray.getDataFormat();
           resultOutputActions.value().appendAction(
@@ -417,7 +417,7 @@ IFilter::PreflightResult ApplyTransformationToGeometryFilter::preflightImpl(cons
       }
 
       // copy over the rest of the data from the src Image Geometry into the Target Image Geometry
-      auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+      auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, IDataObject::Type::AbstractDataObject, ignorePaths);
       if(childPaths.has_value())
       {
         for(const auto& childPath : childPaths.value())

@@ -72,15 +72,15 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTriangleGeometryPath_Key, "Created Triangle Geometry Path", "Path to create the new Triangle Geometry", DataPath()));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Attribute Matrix", "Created vertex data AttributeMatrix name",
-                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_TriangleAttributeMatrixName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name", INodeGeometry2D::k_FaceAttributeMatrixName));
+                                                          AbstractNodeGeometry0D::k_VertexAttributeMatrixName));
+  params.insert(std::make_unique<DataObjectNameParameter>(k_TriangleAttributeMatrixName_Key, "Face Data Attribute Matrix", "Created face data AttributeMatrix name",
+                                                          AbstractNodeGeometry2D::k_FaceAttributeMatrixName));
 
   params.insertSeparator(Parameters::Separator{"Optional Transferred Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays", "Paths to vertex-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, GetAllDataTypes()));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyTrianglePaths_Key, "Copy Face Arrays", "Paths to face-related DataArrays that should be copied to the new geometry",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, GetAllDataTypes()));
   return params;
 }
 
@@ -155,7 +155,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   for(const auto& data_array : copyVertexPaths)
   {
     copiedArrays.push_back(data_array);
-    auto targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
+    auto targetDataArray = dataStructure.getDataAs<AbstractDataArray>(data_array);
     if(targetDataArray == nullptr)
     {
       std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());
@@ -182,7 +182,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   for(const auto& data_array : copyTrianglePaths)
   {
     copiedArrays.push_back(data_array);
-    auto targetDataArray = dataStructure.getDataAs<IDataArray>(data_array);
+    auto targetDataArray = dataStructure.getDataAs<AbstractDataArray>(data_array);
     if(targetDataArray == nullptr)
     {
       std::string ss = fmt::format("Could not find DataArray at path '{}'", data_array.toString());

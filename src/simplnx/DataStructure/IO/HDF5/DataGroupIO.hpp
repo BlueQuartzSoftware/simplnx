@@ -35,8 +35,8 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataGroupName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& dataGroupName, AbstractDataObject::IdType importId,
+                    const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore = false) const override;
 
   /**
    * @brief Attempts to write a DataGroup to HDF5.
@@ -50,16 +50,16 @@ public:
   Result<> writeData(DataStructureWriter& dataStructureWriter, const DataGroup& dataGroup, group_writer_type& parentGroup, bool importable) const;
 
   /**
-   * @brief Attempts to write the target DataObject to HDF5.
-   * Returns an error if the DataObject cannot be cast to a DataGroup.
+   * @brief Attempts to write the target AbstractDataObject to HDF5.
+   * Returns an error if the AbstractDataObject cannot be cast to a DataGroup.
    * Otherwise, this method returns the result of writeData(...)
    * @param dataStructureWriter
    * @param dataObject
    * @param parentWriter
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const override;
 
-  DataObject::Type getDataType() const override;
+  AbstractDataObject::Type getDataType() const override;
 
   std::string getTypeName() const override;
 };

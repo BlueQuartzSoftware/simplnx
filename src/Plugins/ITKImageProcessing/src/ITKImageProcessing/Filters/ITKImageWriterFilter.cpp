@@ -343,7 +343,7 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
   // Stored fastest to slowest i.e. X Y Z
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   // Stored slowest to fastest i.e. Z Y X
-  const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(imageArrayPath);
+  const auto& imageArray = dataStructure.getDataRefAs<AbstractDataArray>(imageArrayPath);
 
   const IDataStore& imageArrayStore = imageArray.getIDataStoreRef();
 
@@ -398,13 +398,13 @@ Result<> ITKImageWriterFilter::executeImpl(DataStructure& dataStructure, const A
   auto totalDigits = filterArgs.value<int32>(k_TotalIndexDigits_Key);
   auto fillChar = filterArgs.value<StringParameter::ValueType>(k_LeadingDigitCharacter_Key);
 
-  const IDataArray* inputArray = dataStructure.getDataAs<IDataArray>(imageArrayPath);
+  const AbstractDataArray* inputArray = dataStructure.getDataAs<AbstractDataArray>(imageArrayPath);
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   // Stored fastest to slowest i.e. X Y Z
   SizeVec3 dims = imageGeom.getDimensions();
 
-  const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(imageArrayPath);
+  const auto& imageArray = dataStructure.getDataRefAs<AbstractDataArray>(imageArrayPath);
   usize nComp = imageArray.getNumberOfComponents();
   const IDataStore& currentData = imageArray.getIDataStoreRef();
 

@@ -7,7 +7,7 @@ using namespace nx::core;
 
 LinkedPath::LinkedPath() = default;
 
-LinkedPath::LinkedPath(const DataStructure* dataStructure, const std::vector<DataObject::IdType>& idPath)
+LinkedPath::LinkedPath(const DataStructure* dataStructure, const std::vector<AbstractDataObject::IdType>& idPath)
 : m_DataStructure(dataStructure)
 , m_IdPath(idPath)
 {
@@ -72,27 +72,27 @@ usize LinkedPath::getLength() const
   return m_IdPath.size();
 }
 
-DataObject::IdType LinkedPath::operator[](usize index) const
+AbstractDataObject::IdType LinkedPath::operator[](usize index) const
 {
   return getIdAt(index);
 }
 
-DataObject::IdType LinkedPath::getId() const
+AbstractDataObject::IdType LinkedPath::getId() const
 {
   return getIdAt(getLength() - 1);
 }
 
-DataObject::IdType LinkedPath::getIdAt(usize index) const
+AbstractDataObject::IdType LinkedPath::getIdAt(usize index) const
 {
   return m_IdPath[index];
 }
 
-const DataObject* LinkedPath::getData() const
+const AbstractDataObject* LinkedPath::getData() const
 {
   return getDataAt(m_IdPath.size() - 1);
 }
 
-const DataObject* LinkedPath::getDataAt(usize index) const
+const AbstractDataObject* LinkedPath::getDataAt(usize index) const
 {
   return getDataStructure()->getData(m_IdPath[index]);
 }
@@ -104,7 +104,7 @@ std::string LinkedPath::getName() const
 
 std::string LinkedPath::getNameAt(usize index) const
 {
-  const DataObject* data = getDataAt(index);
+  const AbstractDataObject* data = getDataAt(index);
   if(data == nullptr)
   {
     return "[ missing ]";

@@ -186,7 +186,7 @@ Result<> ITKBinaryProjectionImageFilter::executeImpl(DataStructure& dataStructur
   }
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  auto iArrayTupleShape = dataStructure.getDataAs<IArray>(outputArrayPath)->getTupleShape();
+  auto iArrayTupleShape = dataStructure.getDataAs<AbstractArray>(outputArrayPath)->getTupleShape();
 
   // Update the Image Geometry with the new dimensions
   imageGeom.setDimensions({iArrayTupleShape[2], iArrayTupleShape[1], iArrayTupleShape[0]});

@@ -14,7 +14,7 @@ namespace
 constexpr int32_t k_UnsupportedTypeError = -5001;
 
 template <typename T>
-Result<> DoCopy(IDataArray* inputDataArray, DataStructure& dataStructure, DataPath&& path, IDataAction::Mode mode)
+Result<> DoCopy(AbstractDataArray* inputDataArray, DataStructure& dataStructure, DataPath&& path, IDataAction::Mode mode)
 {
   auto* castInputArray = dynamic_cast<DataArray<T>*>(inputDataArray);
   ShapeType tupleShape = castInputArray->getDataStore()->getTupleShape();
@@ -26,7 +26,7 @@ Result<> DoCopy(IDataArray* inputDataArray, DataStructure& dataStructure, DataPa
 namespace nx::core
 {
 CopyArrayInstanceAction::CopyArrayInstanceAction(const DataPath& selectedDataPath, const DataPath& createdDataPath)
-: IDataCreationAction(createdDataPath)
+: AbstractDataCreationAction(createdDataPath)
 , m_SelectedDataPath(selectedDataPath)
 {
 }
@@ -35,7 +35,7 @@ CopyArrayInstanceAction::~CopyArrayInstanceAction() noexcept = default;
 
 Result<> CopyArrayInstanceAction::apply(DataStructure& dataStructure, Mode mode) const
 {
-  auto* inputDataArray = dataStructure.getDataAs<IDataArray>(m_SelectedDataPath);
+  auto* inputDataArray = dataStructure.getDataAs<AbstractDataArray>(m_SelectedDataPath);
 
   if(TemplateHelpers::CanDynamicCast<Float32Array>()(inputDataArray))
   {

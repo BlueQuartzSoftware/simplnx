@@ -5,7 +5,7 @@
 namespace nx::core
 {
 StringStore::StringStore(const ShapeType& tupleShape)
-: AbstractStringStore()
+: IStringStore()
 , m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
 , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
 , m_Data(m_NumTuples)
@@ -13,7 +13,7 @@ StringStore::StringStore(const ShapeType& tupleShape)
 }
 
 StringStore::StringStore(std::vector<std::string> strings, const ShapeType& tupleShape)
-: AbstractStringStore()
+: IStringStore()
 , m_TupleShape(tupleShape.cbegin(), tupleShape.cend())
 , m_NumTuples(strings.size())
 , m_Data(std::move(strings))
@@ -72,12 +72,12 @@ void StringStore::setValue(usize index, const value_type& value)
   m_Data.at(index) = value;
 }
 
-std::unique_ptr<AbstractStringStore> StringStore::deepCopy() const
+std::unique_ptr<IStringStore> StringStore::deepCopy() const
 {
   return std::make_unique<StringStore>(m_Data, m_TupleShape);
 }
 
-AbstractStringStore& StringStore::operator=(const std::vector<std::string>& values)
+IStringStore& StringStore::operator=(const std::vector<std::string>& values)
 {
   m_Data = values;
   m_TupleShape = ShapeType{values.size()};

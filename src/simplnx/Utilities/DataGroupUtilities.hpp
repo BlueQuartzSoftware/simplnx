@@ -1,9 +1,9 @@
 #pragma once
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/simplnx_export.hpp"
 
@@ -35,7 +35,7 @@ SIMPLNX_EXPORT bool RemoveInactiveObjects(DataStructure& dataStructure, const Da
  * @param ignoredDataPaths Vector of DataPaths that should be remove from the final vector.
  * @return
  */
-SIMPLNX_EXPORT std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<DataPath>& ignoredDataPaths);
+SIMPLNX_EXPORT std::vector<std::shared_ptr<AbstractDataArray>> GenerateDataArrayList(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<DataPath>& ignoredDataPaths);
 
 /**
  * @brief This function will return all the DataPaths within a BaseGroup that are of a certain type
@@ -45,7 +45,7 @@ SIMPLNX_EXPORT std::vector<std::shared_ptr<IDataArray>> GenerateDataArrayList(co
  * @param ignoredDataPaths Vector of DataPaths that should be remove from the final vector.
  * @return std::optional<std::vector<DataPath>>  of child paths that meet the DataObjectType requirement if there no errors during the process.
  */
-SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, AbstractDataObject::Type dataObjectType,
                                                                          const std::vector<DataPath>& ignoredDataPaths = {});
 
 /**
@@ -57,11 +57,11 @@ SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const D
 SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& dataStructure, const DataPath& parent);
 
 /**
- * @brief This function will return all the DataPaths within a BaseGroup that are of an IArray type
+ * @brief This function will return all the DataPaths within a BaseGroup that are of an AbstractArray type
  * @param dataStructure The DataStructure to use
  * @param parentGroup The parent group whose children you want to get
  * @param ignoredDataPaths Vector of DataPaths that should be remove from the final vector.
- * @return std::optional<std::vector<DataPath>>  of child paths that are an IArray type if there no errors during the process.
+ * @return std::optional<std::vector<DataPath>>  of child paths that are an AbstractArray type if there no errors during the process.
  */
 SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths = {});
 
@@ -70,7 +70,7 @@ SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(co
  * @param dataStructure The DataStructure to use
  * @param parentGroup The parent group whose children you want to get
  * @param ignoredDataPaths Vector of DataPaths that should be remove from the final vector.
- * @return std::optional<std::vector<DataPath>>  of child paths that are an IArray type if there no errors during the process.
+ * @return std::optional<std::vector<DataPath>>  of child paths that are an AbstractArray type if there no errors during the process.
  */
 SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths = {});
 
@@ -80,13 +80,13 @@ SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursiv
  * @param parentGroup The parent group whose children you want to get
  * @param dataObjectType The type of children you want to get
  * @param ignoredDataPaths Vector of DataPaths that should be remove from the final vector.
- * @return std::optional<std::vector<DataPath>>  of child paths that are an IArray type if there no errors during the process.
+ * @return std::optional<std::vector<DataPath>>  of child paths that are an AbstractArray type if there no errors during the process.
  */
-SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, DataObject::Type dataObjectType,
+SIMPLNX_EXPORT std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, AbstractDataObject::Type dataObjectType,
                                                                                   const std::vector<DataPath>& ignoredDataPaths = {});
 
 /**
- * @brief This function will return true if the arrayName is in the list of children of type IDataArray for the given parentGroup
+ * @brief This function will return true if the arrayName is in the list of children of type AbstractDataArray for the given parentGroup
  * @param dataStructure The DataStructure to use
  * @param parentGroup The parent group whose children you want to check against
  * @param arrayName The target name of the array you want to check for in the parentGroup

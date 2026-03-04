@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeGBCDMetricBasedFilter
  * @brief This filter computes a section through the five-dimensional grain boundary distribution for a fixed mis orientation.
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeGBCDMetricBasedFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ComputeGBCDMetricBasedFilter : public AbstractFilter
 {
 public:
   ComputeGBCDMetricBasedFilter() = default;

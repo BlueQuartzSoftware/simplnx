@@ -1,13 +1,13 @@
 #pragma once
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include "TestOne/TestOne_export.hpp"
 namespace nx::core
 {
-class TESTONE_EXPORT TestFilter : public nx::core::IFilter
+class TESTONE_EXPORT TestFilter : public nx::core::AbstractFilter
 {
 public:
   TestFilter();

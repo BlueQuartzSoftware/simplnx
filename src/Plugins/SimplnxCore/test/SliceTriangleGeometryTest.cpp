@@ -71,8 +71,8 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
 
   // Compare the exemplar and the computed outputs
   {
-    auto exemplarGeom = dataStructure.getDataAs<IGeometry>(k_ExemplarEdgeGeometryPath);
-    auto computedGeom = dataStructure.getDataAs<IGeometry>(k_ComputedEdgeGeometryPath);
+    auto exemplarGeom = dataStructure.getDataAs<AbstractGeometry>(k_ExemplarEdgeGeometryPath);
+    auto computedGeom = dataStructure.getDataAs<AbstractGeometry>(k_ComputedEdgeGeometryPath);
     REQUIRE(UnitTest::CompareIGeometry(exemplarGeom, computedGeom));
   }
   {

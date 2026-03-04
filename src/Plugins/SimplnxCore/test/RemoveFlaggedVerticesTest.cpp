@@ -164,21 +164,21 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxC
     DataPath generated = ::k_ReducedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(::k_DataName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(::k_DataName);
 
-    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<AbstractDataArray>(generated), dataStructure.getDataRefAs<AbstractDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(::k_CopyTestName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_CopyTestName);
 
-    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<AbstractDataArray>(generated), dataStructure.getDataRefAs<AbstractDataArray>(exemplar));
   }
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(VertexGeom::k_SharedVertexListName);
     DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(::k_VertexListName);
 
-    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
+    UnitTest::CompareDataArrays<float32>(dataStructure.getDataRefAs<AbstractDataArray>(generated), dataStructure.getDataRefAs<AbstractDataArray>(exemplar));
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

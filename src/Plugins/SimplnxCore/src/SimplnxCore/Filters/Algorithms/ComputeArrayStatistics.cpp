@@ -17,7 +17,7 @@ using namespace nx::core;
 namespace
 {
 // -----------------------------------------------------------------------------
-bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& arrays)
+bool CheckArraysInMemory(const nx::core::ParallelAlgorithm::AlgorithmArrays& arrays)
 {
   if(arrays.empty())
   {
@@ -44,7 +44,7 @@ template <typename T>
 class StatisticsByFeatureImpl
 {
 public:
-  StatisticsByFeatureImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
+  StatisticsByFeatureImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask,
                           const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, BoolArray* featureHasDataArray, UInt64Array* lengthArray, DataArray<T>* minArray,
                           DataArray<T>* maxArray, Float32Array* meanArray, NeighborList<T>* modeArray, Float32Array* stdDevArray, Float32Array* summationArray, const std::atomic_bool& shouldCancel,
                           MessageHelper& messageHelper)
@@ -234,7 +234,7 @@ private:
   bool m_Mode;
   bool m_StdDeviation;
   bool m_Summation;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask = nullptr;
+  const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& m_Mask = nullptr;
   const Int32AbstractDataStore& m_FeatureIds;
   const AbstractDataStore<T>& m_Source;
   BoolArray* m_FeatureHasDataArray = nullptr;
@@ -433,8 +433,8 @@ template <typename T>
 class MedianByFeatureImpl
 {
 public:
-  MedianByFeatureImpl(const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, bool findMedian, bool findNumUnique,
-                      Float32Array* medianArray, Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, MessageHelper& messageHelper)
+  MedianByFeatureImpl(const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& mask, const Int32AbstractDataStore& featureIds, const AbstractDataStore<T>& source, bool findMedian,
+                      bool findNumUnique, Float32Array* medianArray, Int32Array* numUniqueValuesArray, DataArray<uint64>* lengthArray, MessageHelper& messageHelper)
   : m_FindMedian(findMedian)
   , m_FindNumUniqueValues(findNumUnique)
   , m_MedianArray(medianArray)
@@ -501,7 +501,7 @@ private:
   bool m_FindNumUniqueValues;
   Float32Array* m_MedianArray;
   Int32Array* m_NumUniqueValuesArray;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask = nullptr;
+  const std::unique_ptr<MaskCompareUtilities::IMaskCompare>& m_Mask = nullptr;
   const Int32AbstractDataStore& m_FeatureIds;
   const AbstractDataStore<T>& m_Source;
   const DataArray<uint64>* m_LengthArray = nullptr;
@@ -599,7 +599,7 @@ private:
 
 // -----------------------------------------------------------------------------
 template <class ContainerType, typename T>
-void FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arrays, const ComputeArrayStatisticsInputValues* inputValues)
+void FindStatisticsImpl(const ContainerType& data, std::vector<AbstractArray*>& arrays, const ComputeArrayStatisticsInputValues* inputValues)
 {
   if(inputValues->FindLength)
   {
@@ -803,9 +803,9 @@ Result<> InitializeArrays(DataStructure& dataStructure, const ComputeArrayStatis
 struct ComputeArrayStatisticsFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const IDataArray& inputIDataArray, std::vector<IArray*>& arrays, const ComputeArrayStatisticsInputValues* inputValues)
+  Result<> operator()(DataStructure& dataStructure, const AbstractDataArray& inputIDataArray, std::vector<AbstractArray*>& arrays, const ComputeArrayStatisticsInputValues* inputValues)
   {
-    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+    std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare = nullptr;
     if(inputValues->UseMask)
     {
       try
@@ -878,10 +878,10 @@ struct ComputeArrayStatisticsFunctor
 struct ComputeArrayStatisticsByFeatureFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, std::vector<IArray*>& arrays, usize numFeatures, const ComputeArrayStatisticsInputValues* inputValues,
-                      const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
+  Result<> operator()(DataStructure& dataStructure, const AbstractDataArray* inputIDataArray, std::vector<AbstractArray*>& arrays, usize numFeatures,
+                      const ComputeArrayStatisticsInputValues* inputValues, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
   {
-    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+    std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare = nullptr;
     if(inputValues->UseMask)
     {
       try
@@ -915,7 +915,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
 
     auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[9]);
 
-    IParallelAlgorithm::AlgorithmArrays indexAlgArrays;
+    ParallelAlgorithm::AlgorithmArrays indexAlgArrays;
     indexAlgArrays.push_back(inputArrayPtr);
     indexAlgArrays.push_back(featureHasDataPtr);
     indexAlgArrays.push_back(lengthArrayPtr);
@@ -955,7 +955,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
       ParallelDataAlgorithm medianDataAlg;
       {
         // Scoped to prevent alg use of ptr array
-        IParallelAlgorithm::AlgorithmArrays medianAlgArrays;
+        ParallelAlgorithm::AlgorithmArrays medianAlgArrays;
         medianAlgArrays.push_back(featureIdsPtr);
         medianAlgArrays.push_back(inputArrayPtr);
         medianAlgArrays.push_back(medianArrayPtr);
@@ -989,7 +989,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
   }
 
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const IDataArray* inputIDataArray, std::vector<IArray*>& arrays, const std::pair<int32, int32>& range,
+  Result<> operator()(DataStructure& dataStructure, const AbstractDataArray* inputIDataArray, std::vector<AbstractArray*>& arrays, const std::pair<int32, int32>& range,
                       const ComputeArrayStatisticsInputValues* inputValues, const std::atomic_bool& shouldCancel, MessageHelper& messageHelper)
   {
     Result<> initializationResult = InitializeArrays<T>(dataStructure, inputValues);
@@ -1013,7 +1013,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
 
     auto* featureHasDataPtr = dynamic_cast<BoolArray*>(arrays[9]);
 
-    IParallelAlgorithm::AlgorithmArrays indexAlgArrays;
+    ParallelAlgorithm::AlgorithmArrays indexAlgArrays;
     indexAlgArrays.push_back(tempMaskPtr);
     indexAlgArrays.push_back(featureIdsMapPtr);
     indexAlgArrays.push_back(featureIdsPtr);
@@ -1058,7 +1058,7 @@ struct ComputeArrayStatisticsByFeatureFunctor
       ParallelDataAlgorithm medianDataAlg;
       {
         // Scoped to prevent alg use of ptr array
-        IParallelAlgorithm::AlgorithmArrays medianAlgArrays;
+        ParallelAlgorithm::AlgorithmArrays medianAlgArrays;
         medianAlgArrays.push_back(featureIdsPtr);
         medianAlgArrays.push_back(inputArrayPtr);
         medianAlgArrays.push_back(medianArrayPtr);
@@ -1115,57 +1115,57 @@ Result<> ComputeArrayStatistics::operator()()
     return {};
   }
 
-  std::vector<IArray*> arrays(9, nullptr);
+  std::vector<AbstractArray*> arrays(9, nullptr);
 
   if(m_InputValues->FindLength)
   {
-    arrays[0] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->LengthArrayName);
+    arrays[0] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->LengthArrayName);
   }
   if(m_InputValues->FindMin)
   {
-    arrays[1] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MinimumArrayName);
+    arrays[1] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MinimumArrayName);
   }
   if(m_InputValues->FindMax)
   {
-    arrays[2] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaximumArrayName);
+    arrays[2] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MaximumArrayName);
   }
   if(m_InputValues->FindMean)
   {
-    arrays[3] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeanArrayName);
+    arrays[3] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MeanArrayName);
   }
   if(m_InputValues->FindMedian)
   {
-    arrays[4] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedianArrayName);
+    arrays[4] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->MedianArrayName);
   }
   if(m_InputValues->FindMode)
   {
-    arrays[5] = m_DataStructure.getDataAs<INeighborList>(m_InputValues->ModeArrayName);
+    arrays[5] = m_DataStructure.getDataAs<AbstractNeighborList>(m_InputValues->ModeArrayName);
   }
   if(m_InputValues->FindStdDeviation)
   {
-    arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->StdDeviationArrayName);
+    arrays[6] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->StdDeviationArrayName);
   }
   if(m_InputValues->FindSummation)
   {
-    arrays[7] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationArrayName);
+    arrays[7] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->SummationArrayName);
   }
   if(m_InputValues->FindNumUniqueValues)
   {
-    arrays[8] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->NumUniqueValuesName);
+    arrays[8] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->NumUniqueValuesName);
   }
 
   MessageHelper messageHelper(m_MessageHandler);
 
   if(!m_InputValues->ComputeByIndex)
   {
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
+    const auto& inputArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->SelectedArrayPath);
 
     // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
     return ExecuteNeighborFunction(ComputeArrayStatisticsFunctor{}, inputArray.getDataType(), m_DataStructure, inputArray, arrays, m_InputValues);
   }
 
   arrays.resize(10);
-  arrays[9] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureHasDataArrayName);
+  arrays[9] = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->FeatureHasDataArrayName);
 
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   // Get max and min feature ids
@@ -1207,7 +1207,7 @@ Result<> ComputeArrayStatistics::operator()()
   case FeatureIdRangeControls::None: {
     auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
     destAttrMatPtr->resizeTuples({numFeatures});
-    const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
+    const auto* inputArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->SelectedArrayPath);
 
     // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
     return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, m_ShouldCancel, messageHelper);
@@ -1228,7 +1228,7 @@ Result<> ComputeArrayStatistics::operator()()
   tempMask.fill(false);
   if(m_InputValues->UseMask)
   {
-    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+    std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare = nullptr;
     try
     {
       maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
@@ -1280,7 +1280,7 @@ Result<> ComputeArrayStatistics::operator()()
 
   auto* destAttrMatPtr = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->DestinationAttributeMatrix);
   destAttrMatPtr->resizeTuples({numFeatures});
-  const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath);
+  const auto* inputArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->SelectedArrayPath);
 
   // We must use ExecuteNeighborFunction because the Mode array is a NeighborList
   return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, std::make_pair(trueMin, trueMax), m_InputValues,

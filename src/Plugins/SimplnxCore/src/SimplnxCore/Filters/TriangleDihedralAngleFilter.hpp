@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class TriangleDihedralAngleFilter
  * @brief This filter will create a list of all dihedral angles ordered from smallest angle to largest from a **TriangleGeom** object
  */
-class SIMPLNXCORE_EXPORT TriangleDihedralAngleFilter : public IFilter
+class SIMPLNXCORE_EXPORT TriangleDihedralAngleFilter : public AbstractFilter
 {
 public:
   TriangleDihedralAngleFilter() = default;

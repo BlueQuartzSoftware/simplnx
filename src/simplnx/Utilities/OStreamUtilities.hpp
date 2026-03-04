@@ -1,11 +1,11 @@
 #pragma once
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -51,7 +51,7 @@ SIMPLNX_EXPORT Result<> PrintDataSetsToMultipleFiles(const std::vector<DataPath>
                                                      size_t componentsPerLine = 0);
 
 /**
- * @brief [Single Output][Custom OStream] | Writes one IArray child to some OStream
+ * @brief [Single Output][Custom OStream] | Writes one AbstractArray child to some OStream
  * @param outputStrm The already opened output string to write to
  * @param objectPath The datapath for respective dataObject to be written out
  * @param dataStructure The simplnx datastructure where *objectPath* datacontainer is stored

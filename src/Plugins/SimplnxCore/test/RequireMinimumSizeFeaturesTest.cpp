@@ -78,7 +78,7 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
 
     for(const auto& cellArrayPath : selectedCellArrays)
     {
-      const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
+      const auto& generatedDataArray = dataStructure.getDataRefAs<AbstractDataArray>(cellArrayPath);
       DataType type = generatedDataArray.getDataType();
 
       // Now generate the path to the exemplar data set in the exemplar data structure.
@@ -87,12 +87,12 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
       DataPath exemplarDataArrayPath(generatedPathVector);
 
       // Check to see if there is something to compare against in the exemplar file.
-      if(nullptr == exemplarDataStructure.getDataAs<IDataArray>(exemplarDataArrayPath))
+      if(nullptr == exemplarDataStructure.getDataAs<AbstractDataArray>(exemplarDataArrayPath))
       {
         continue;
       }
 
-      auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath);
+      auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<AbstractDataArray>(exemplarDataArrayPath);
       DataType exemplarType = exemplarDataArray.getDataType();
 
       std::cout << "Comparing: " << cellArrayPath.toString() << " <==> " << exemplarDataArrayPath.toString() << std::endl;

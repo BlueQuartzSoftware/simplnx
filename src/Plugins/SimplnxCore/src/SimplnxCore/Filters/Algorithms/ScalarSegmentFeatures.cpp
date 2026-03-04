@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "simplnx/DataStructure/DataStore.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 
 using namespace nx::core;
@@ -23,13 +23,13 @@ constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
 /**
  * @brief The TSpecificCompareFunctorBool class extends @see CompareFunctor to compare boolean data
  */
-class TSpecificCompareFunctorBool : public SegmentFeatures::CompareFunctor
+class TSpecificCompareFunctorBool : public ISegmentFeatures::CompareFunctor
 {
 public:
   using DataArrayType = BoolArray;
   CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctorBool)
 
-  TSpecificCompareFunctorBool(IDataArray* data, int64 length, AbstractDataStore<int32>* featureIds)
+  TSpecificCompareFunctorBool(AbstractDataArray* data, int64 length, AbstractDataStore<int32>* featureIds)
   : m_Length(length)
   , m_FeatureIdsArray(featureIds)
   , m_Data(dynamic_cast<DataArrayType*>(data))
@@ -64,7 +64,7 @@ private:
  * @brief The TSpecificCompareFunctor class extens @see CompareFunctor to compare templated data
  */
 template <class T>
-class TSpecificCompareFunctor : public SegmentFeatures::CompareFunctor
+class TSpecificCompareFunctor : public ISegmentFeatures::CompareFunctor
 {
 public:
   CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctor)
@@ -72,7 +72,7 @@ public:
   using DataArrayType = DataArray<T>;
   using DataStoreType = AbstractDataStore<T>;
 
-  TSpecificCompareFunctor(IDataArray* data, int64 length, T tolerance, AbstractDataStore<int32>* featureIds)
+  TSpecificCompareFunctor(AbstractDataArray* data, int64 length, T tolerance, AbstractDataStore<int32>* featureIds)
   : m_Length(length)
   , m_Tolerance(tolerance)
   , m_FeatureIdsArray(featureIds)
@@ -119,7 +119,7 @@ private:
 
 ScalarSegmentFeatures::ScalarSegmentFeatures(DataStructure& dataStructure, ScalarSegmentFeaturesInputValues* inputValues, const std::atomic_bool& shouldCancel,
                                              const IFilter::MessageHandler& mesgHandler)
-: SegmentFeatures(dataStructure, shouldCancel, mesgHandler)
+: AbstractSegmentFeatures(dataStructure, shouldCancel, mesgHandler)
 , m_InputValues(inputValues)
 {
   m_IsPeriodic = inputValues->IsPeriodic;
@@ -145,11 +145,11 @@ Result<> ScalarSegmentFeatures::operator()()
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeom = m_DataStructure.getDataAs<AbstractGridGeometry>(m_InputValues->ImageGeometryPath);
 
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
-  auto* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
+  auto* inputDataArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->InputDataPath);
   size_t inDataPoints = inputDataArray->getNumberOfTuples();
   nx::core::DataType dataType = inputDataArray->getDataType();
 
@@ -206,7 +206,7 @@ Result<> ScalarSegmentFeatures::operator()()
   }
   if(inputDataArray->getNumberOfComponents() != 1)
   {
-    m_CompareFunctor = std::make_shared<SegmentFeatures::CompareFunctor>(); // The default CompareFunctor which ALWAYS returns false for the comparison
+    m_CompareFunctor = std::make_shared<ISegmentFeatures::CompareFunctor>(); // The default CompareFunctor which ALWAYS returns false for the comparison
   }
 
   // Run the segmentation algorithm

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/AbstractArray.hpp"
 #include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
 #include "simplnx/Utilities/ArrayThreshold.hpp"

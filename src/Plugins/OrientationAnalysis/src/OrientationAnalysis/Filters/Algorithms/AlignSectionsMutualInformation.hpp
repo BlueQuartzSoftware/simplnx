@@ -59,7 +59,7 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_MaskCompare = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> m_MaskCompare = nullptr;
 };
 
 } // namespace nx::core

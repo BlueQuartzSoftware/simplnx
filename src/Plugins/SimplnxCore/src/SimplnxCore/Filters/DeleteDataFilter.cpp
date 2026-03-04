@@ -83,7 +83,7 @@ IFilter::PreflightResult DeleteDataFilter::preflightImpl(const DataStructure& da
   OutputActions deleteActions;
   for(const auto& dataObjectPath : dataObjectPaths)
   {
-    const auto* dataObject = dataStructure.getDataAs<DataObject>(dataObjectPath);
+    const auto* dataObject = dataStructure.getDataAs<AbstractDataObject>(dataObjectPath);
 
     // switch(deletionType)
     //{

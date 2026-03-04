@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ITKImageWriterFilter
  * @brief This filter will ....
  */
-class ITKIMAGEPROCESSING_EXPORT ITKImageWriterFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKImageWriterFilter : public AbstractFilter
 {
 public:
   ITKImageWriterFilter() = default;
@@ -38,9 +38,9 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static inline constexpr usize k_XYPlane = 0;
-  static inline constexpr usize k_XZPlane = 1;
-  static inline constexpr usize k_YZPlane = 2;
+  static constexpr usize k_XYPlane = 0;
+  static constexpr usize k_XZPlane = 1;
+  static constexpr usize k_YZPlane = 2;
 
   /**
    * @brief Returns the name of the filter.

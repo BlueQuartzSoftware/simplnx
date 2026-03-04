@@ -19,11 +19,11 @@ class SIMPLNX_EXPORT Preferences
   friend class AbstractPlugin;
 
 public:
-  static inline constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";                   // bytes
-  static inline constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";      // string
-  static inline constexpr StringLiteral k_LargeDataStructureSize_Key = "large_datastructure_size"; // bytes
-  static inline constexpr StringLiteral k_ForceOocData_Key = "force_ooc_data";                     // boolean
-  static inline constexpr nx::core::StringLiteral k_OoCTempDirectory_ID = "ooc_temp_directory";    // Out-of-Core temp directory
+  static constexpr StringLiteral k_LargeDataSize_Key = "large_data_size";                   // bytes
+  static constexpr StringLiteral k_PreferredLargeDataFormat_Key = "large_data_format";      // string
+  static constexpr StringLiteral k_LargeDataStructureSize_Key = "large_datastructure_size"; // bytes
+  static constexpr StringLiteral k_ForceOocData_Key = "force_ooc_data";                     // boolean
+  static constexpr nx::core::StringLiteral k_OoCTempDirectory_ID = "ooc_temp_directory";    // Out-of-Core temp directory
 
   static std::filesystem::path DefaultFilePath(const std::string& applicationName);
 

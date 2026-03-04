@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/Utilities/IParallelAlgorithm.hpp"
+#include "simplnx/Utilities/ParallelAlgorithm.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -20,7 +20,7 @@ namespace nx::core
  * TBB for parallelization and will fallback to non-parallelization if it is not available
  * or the parallelization is disabled.
  */
-class SIMPLNX_EXPORT ParallelTaskAlgorithm : public IParallelAlgorithm
+class SIMPLNX_EXPORT ParallelTaskAlgorithm : public ParallelAlgorithm
 {
 public:
   ParallelTaskAlgorithm();

@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class CAxisSegmentFeaturesFilter
  * @brief This filter segments the Features by grouping neighboring Cells that satisfy the C-axis misalignment tolerance, i.e., have misalignment angle less than the value set by the user.
  */
-class ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT CAxisSegmentFeaturesFilter : public AbstractFilter
 {
 public:
   CAxisSegmentFeaturesFilter() = default;

@@ -104,7 +104,7 @@ auto CreateRandomGenerator(T rangeMin, T rangeMax, uint64 seed)
 struct InitializeArrayFunctor
 {
   template <class T>
-  void operator()(IDataArray& dataArray, const std::array<usize, 3>& dims, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax,
+  void operator()(AbstractDataArray& dataArray, const std::array<usize, 3>& dims, uint64 xMin, uint64 xMax, uint64 yMin, uint64 yMax, uint64 zMin, uint64 zMax,
                   InitializeImageGeomCellDataFilter::InitType initType, float64 initValue, const RangeType& initRange, uint64 seed)
   {
     T rangeMin;
@@ -207,7 +207,7 @@ Parameters InitializeImageGeomCellDataFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "The cell data arrays in which to initialize a sub-volume to zeros", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The geometry containing the cell data for which to initialize", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
 
@@ -294,7 +294,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 
   for(const DataPath& path : cellArrayPaths)
   {
-    const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(path);
+    const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(path);
     ShapeType tupleShape = dataArray.getIDataStoreRef().getTupleShape();
 
     if(tupleShape.size() != reversedImageDims.size())
@@ -369,7 +369,7 @@ Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStruc
 
   for(const DataPath& path : cellArrayPaths)
   {
-    auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(path);
+    auto& iDataArray = dataStructure.getDataRefAs<AbstractDataArray>(path);
 
     ExecuteNeighborFunction(InitializeArrayFunctor{}, iDataArray.getDataType(), iDataArray, dims, xMin, xMax, yMin, yMax, zMin, zMax, initType, initValue, initRange, seed); // NO BOOL
 

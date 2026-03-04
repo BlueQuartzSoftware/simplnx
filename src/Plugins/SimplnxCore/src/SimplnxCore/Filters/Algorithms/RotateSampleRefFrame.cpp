@@ -88,8 +88,8 @@ Result<> RotateSampleRefFrame::operator()()
       return {};
     }
 
-    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
-    auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* srcDataArray = m_DataStructure.getDataAs<AbstractDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    auto* destDataArray = m_DataStructure.getDataAs<AbstractDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
     m_MessageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
 
     ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, rotationMatrix,

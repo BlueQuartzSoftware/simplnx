@@ -4,7 +4,7 @@
 
 using namespace nx::core;
 
-DataReparentedMessage::DataReparentedMessage(const DataStructure* dataStructure, DataObject::IdType targetData, DataObject::IdType targetParent, bool parentAdded)
+DataReparentedMessage::DataReparentedMessage(const DataStructure* dataStructure, AbstractDataObject::IdType targetData, AbstractDataObject::IdType targetParent, bool parentAdded)
 : AbstractDataStructureMessage(dataStructure)
 , m_TargetId(targetData)
 , m_ParentId(targetParent)
@@ -35,22 +35,22 @@ AbstractDataStructureMessage::MessageType DataReparentedMessage::getMsgType() co
   return MsgType;
 }
 
-DataObject::IdType DataReparentedMessage::getTargetId() const
+AbstractDataObject::IdType DataReparentedMessage::getTargetId() const
 {
   return m_TargetId;
 }
 
-DataObject::IdType DataReparentedMessage::getParentId() const
+AbstractDataObject::IdType DataReparentedMessage::getParentId() const
 {
   return m_ParentId;
 }
 
-const DataObject* DataReparentedMessage::getTargetData() const
+const AbstractDataObject* DataReparentedMessage::getTargetData() const
 {
   return getDataStructure()->getData(m_TargetId);
 }
 
-const DataObject* DataReparentedMessage::getParentData() const
+const AbstractDataObject* DataReparentedMessage::getParentData() const
 {
   return getDataStructure()->getData(m_ParentId);
 }

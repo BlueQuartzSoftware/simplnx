@@ -396,6 +396,33 @@ public:
   ~AbstractDataStore() override = default;
 
   /**
+   * @brief Returns the number of values stored within the DataStore.
+   * @return usize
+   */
+  usize getSize() const override
+  {
+    return getNumberOfTuples() * getNumberOfComponents();
+  }
+
+  /**
+   * @brief Returns the number of values stored within the DataStore.
+   * @return usize
+   */
+  usize size() const override
+  {
+    return getSize();
+  }
+
+  /**
+   * @brief Returns if there are any elements in the array object
+   * @return bool, true if the DataStore has a size() == 0
+   */
+  bool empty() const override
+  {
+    return getNumberOfTuples() == 0;
+  }
+
+  /**
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index

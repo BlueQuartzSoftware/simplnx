@@ -75,8 +75,8 @@ TEST_CASE("OrientationAnalysis::ComputeShapesFilter", "[SimplnxCore][ComputeShap
     {
       const DataPath exemplarPath({k_DataContainer, k_CellFeatureData, comparisonName});
       const DataPath calculatedPath({k_DataContainer, k_CellFeatureData, comparisonName + "NX"});
-      const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
-      const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
+      const auto& exemplarData = dataStructure.getDataRefAs<AbstractDataArray>(exemplarPath);
+      const auto& calculatedData = dataStructure.getDataRefAs<AbstractDataArray>(calculatedPath);
       UnitTest::CompareDataArrays<float>(exemplarData, calculatedData);
     }
   }

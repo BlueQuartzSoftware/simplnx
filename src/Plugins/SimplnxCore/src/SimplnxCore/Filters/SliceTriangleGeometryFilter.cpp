@@ -132,7 +132,7 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
 
   // create the edge geometry
   {
-    auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pSliceDataContainerNameValue, 1, 2, INodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
+    auto createGeometryAction = std::make_unique<CreateEdgeGeometryAction>(pSliceDataContainerNameValue, 1, 2, AbstractNodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
                                                                            EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }

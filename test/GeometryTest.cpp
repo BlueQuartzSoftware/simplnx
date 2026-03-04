@@ -19,13 +19,13 @@ using namespace nx::core;
 ////////////////////////////////////
 // Begin generic geometry testing //
 ////////////////////////////////////
-void testAbstractGeometry(IGeometry* geom)
+void testAbstractGeometry(AbstractGeometry* geom)
 {
   SECTION("abstract geometry")
   {
     SECTION("units")
     {
-      const auto units = IGeometry::LengthUnit::Fathom;
+      const auto units = AbstractGeometry::LengthUnit::Fathom;
       geom->setUnits(units);
       REQUIRE(geom->getUnits() == units);
     }
@@ -42,7 +42,7 @@ void testAbstractGeometry(IGeometry* geom)
   }
 }
 
-void testGeom2D(INodeGeometry2D* geom)
+void testGeom2D(AbstractNodeGeometry2D* geom)
 {
   SECTION("abstract geometry 2D")
   {
@@ -88,7 +88,7 @@ void testGeom2D(INodeGeometry2D* geom)
   }
 }
 
-void testGeom3D(INodeGeometry3D* geom)
+void testGeom3D(AbstractNodeGeometry3D* geom)
 {
   SECTION("abstract geometry 3D")
   {
@@ -135,7 +135,7 @@ void testGeom3D(INodeGeometry3D* geom)
   }
 }
 
-void testGeomGrid(IGridGeometry* geom)
+void testGeomGrid(AbstractGridGeometry* geom)
 {
   SECTION("abstract geometry grid")
   {

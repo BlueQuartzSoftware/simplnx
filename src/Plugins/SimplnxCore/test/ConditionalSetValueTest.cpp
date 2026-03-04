@@ -96,7 +96,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
   nx::core::SizeVec3 imageGeomDims = imageGeometry->getDimensions();
 
   DataPath ciDataPath = DataPath({k_SmallIN100, k_EbsdScanData, k_ConfidenceIndex});
-  DataObject* ciDataObject = dataStructure.getData(ciDataPath);
+  AbstractDataObject* ciDataObject = dataStructure.getData(ciDataPath);
 
   DataArray<float32>* ciDataArray = dynamic_cast<Float32Array*>(ciDataObject);
   // Fill every value with 10.0 into the ciArray

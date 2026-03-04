@@ -67,28 +67,19 @@ public:
    * @brief Returns the number of values stored within the DataStore.
    * @return usize
    */
-  usize getSize() const
-  {
-    return getNumberOfTuples() * getNumberOfComponents();
-  }
+  virtual usize getSize() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.
    * @return usize
    */
-  usize size() const
-  {
-    return getSize();
-  }
+  virtual usize size() const = 0;
 
   /**
    * @brief Returns if there are any elements in the array object
    * @return bool, true if the DataStore has a size() == 0
    */
-  bool empty() const
-  {
-    return getNumberOfTuples() == 0;
-  }
+  virtual bool empty() const = 0;
 
   /**
    * @brief Resizes the DataStore to handle the specified number of tuples.
@@ -112,10 +103,7 @@ public:
    * @brief Returns the data format used for storing the array data.
    * @return data format as string
    */
-  virtual std::string getDataFormat() const
-  {
-    return "";
-  }
+  virtual std::string getDataFormat() const = 0;
 
   /**
    * @brief Returns the size of the stored type of the data store.

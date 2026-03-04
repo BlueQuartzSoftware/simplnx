@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class WriteStatsGenOdfAngleFileFilter
  * @brief This filter will generate a synthetic microstructure with an ODF that matches (as closely as possible) an existing experimental data set or other data set that is being mimicked.
  */
-class ORIENTATIONANALYSIS_EXPORT WriteStatsGenOdfAngleFileFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT WriteStatsGenOdfAngleFileFilter : public AbstractFilter
 {
 public:
   WriteStatsGenOdfAngleFileFilter() = default;
@@ -41,11 +41,11 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static inline constexpr uint64 k_CommaDelimiter = 0;
-  static inline constexpr uint64 k_SemiColonDelimiter = 1;
-  static inline constexpr uint64 k_SpaceDelimiter = 2;
-  static inline constexpr uint64 k_ColonDelimiter = 3;
-  static inline constexpr uint64 k_TabDelimiter = 4;
+  static constexpr uint64 k_CommaDelimiter = 0;
+  static constexpr uint64 k_SemiColonDelimiter = 1;
+  static constexpr uint64 k_SpaceDelimiter = 2;
+  static constexpr uint64 k_ColonDelimiter = 3;
+  static constexpr uint64 k_TabDelimiter = 4;
 
   /**
    * @brief Returns the name of the filter.

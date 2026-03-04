@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class UncertainRegularGridSampleSurfaceMeshFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT UncertainRegularGridSampleSurfaceMeshFilter : public IFilter
+class SIMPLNXCORE_EXPORT UncertainRegularGridSampleSurfaceMeshFilter : public AbstractFilter
 {
 public:
   UncertainRegularGridSampleSurfaceMeshFilter() = default;

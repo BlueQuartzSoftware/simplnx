@@ -1,9 +1,9 @@
 #include "DataStructureWriter.hpp"
 
 #include "simplnx/Core/Application.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
+#include "simplnx/DataStructure/IO/HDF5/AbstractDataIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
-#include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -66,16 +66,16 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     return MakeErrorResult(-6, fmt::format("Cannot append because object '{}' already exists", targetName));
   }
 
-  auto idResult = dataStructureGroup.readScalarAttribute<DataObject::IdType>(Constants::k_NextIdTag);
+  auto idResult = dataStructureGroup.readScalarAttribute<AbstractDataObject::IdType>(Constants::k_NextIdTag);
   if(idResult.invalid())
   {
     return ConvertResult(std::move(idResult));
   }
-  DataObject::IdType nextObjectId = idResult.value();
+  AbstractDataObject::IdType nextObjectId = idResult.value();
 
   DataStructure dataStructureShallowCopy = dataStructure;
 
-  for(DataObject* topLevelObject : dataStructureShallowCopy.getTopLevelData())
+  for(AbstractDataObject* topLevelObject : dataStructureShallowCopy.getTopLevelData())
   {
     if(topLevelObject->getName() != targetName)
     {
@@ -91,7 +91,7 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     return writeNextIdResult;
   }
 
-  const DataObject& dataObject = dataStructureShallowCopy.getDataRef(dataPath);
+  const AbstractDataObject& dataObject = dataStructureShallowCopy.getDataRef(dataPath);
   HDF5::DataStructureWriter dataStructureWriter;
   return dataStructureWriter.writeDataObject(&dataObject, dataStructureGroup);
 }
@@ -107,7 +107,7 @@ Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, 
   return AppendFile(file, dataStructure, dataPath);
 }
 
-Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
+Result<> DataStructureWriter::writeDataObject(const AbstractDataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
 {
   // Check if data has already been written
   if(hasDataBeenWritten(dataObject))
@@ -118,7 +118,7 @@ Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::
   else
   {
     // Write new data
-    auto factory = m_IOManager->getFactoryAs<IDataIO>(dataObject->getTypeName());
+    auto factory = m_IOManager->getFactoryAs<AbstractDataIO>(dataObject->getTypeName());
     if(factory == nullptr)
     {
       std::string ss = fmt::format("Could not find IO factory for datatype: {}", dataObject->getTypeName());
@@ -160,7 +160,7 @@ Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStruct
   return writeDataMap(dataStructure.getDataMap(), groupIO);
 }
 
-Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
+Result<> DataStructureWriter::writeDataObjectLink(const AbstractDataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
 {
   auto objectPath = getPathForObjectId(dataObject->getId());
   auto result = parentGroup.createLink(objectPath);
@@ -170,7 +170,7 @@ Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, 
   }
 
   // NeighborList extra data link
-  if(const auto* neighborList = dynamic_cast<const INeighborList*>(dataObject))
+  if(const auto* neighborList = dynamic_cast<const AbstractNeighborList*>(dataObject))
   {
     auto numNeighborsName = neighborList->getNumNeighborsArrayName();
     auto dataPath = getPathForObjectSibling(dataObject->getId(), numNeighborsName);
@@ -183,7 +183,7 @@ Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, 
   return {};
 }
 
-bool DataStructureWriter::hasDataBeenWritten(const DataObject* targetObject) const
+bool DataStructureWriter::hasDataBeenWritten(const AbstractDataObject* targetObject) const
 {
   if(targetObject == nullptr)
   {
@@ -192,12 +192,12 @@ bool DataStructureWriter::hasDataBeenWritten(const DataObject* targetObject) con
   return hasDataBeenWritten(targetObject->getId());
 }
 
-bool DataStructureWriter::hasDataBeenWritten(DataObject::IdType targetId) const
+bool DataStructureWriter::hasDataBeenWritten(AbstractDataObject::IdType targetId) const
 {
   return m_IdMap.find(targetId) != m_IdMap.end();
 }
 
-std::string DataStructureWriter::getPathForObjectId(DataObject::IdType objectId) const
+std::string DataStructureWriter::getPathForObjectId(AbstractDataObject::IdType objectId) const
 {
   if(!hasDataBeenWritten(objectId))
   {
@@ -206,7 +206,7 @@ std::string DataStructureWriter::getPathForObjectId(DataObject::IdType objectId)
   return m_IdMap.at(objectId);
 }
 
-std::string DataStructureWriter::getParentPathForObjectId(DataObject::IdType objectId) const
+std::string DataStructureWriter::getParentPathForObjectId(AbstractDataObject::IdType objectId) const
 {
   auto objectPath = getPathForObjectId(objectId);
   if(objectPath.empty())
@@ -221,7 +221,7 @@ std::string DataStructureWriter::getParentPathForObjectId(DataObject::IdType obj
   return objectPath.substr(0, lastIndex);
 }
 
-std::string DataStructureWriter::getPathForObjectSibling(DataObject::IdType objectId, const std::string& siblingName) const
+std::string DataStructureWriter::getPathForObjectSibling(AbstractDataObject::IdType objectId, const std::string& siblingName) const
 {
   auto objectPath = getParentPathForObjectId(objectId);
   if(!objectPath.empty())
@@ -237,7 +237,7 @@ void DataStructureWriter::clearIdMap()
   m_IdMap.clear();
 }
 
-void DataStructureWriter::addWriter(nx::core::HDF5::ObjectIO& objectWriter, DataObject::IdType objectId)
+void DataStructureWriter::addWriter(nx::core::HDF5::ObjectIO& objectWriter, AbstractDataObject::IdType objectId)
 {
   m_IdMap[objectId] = objectWriter.getObjectPath();
 }

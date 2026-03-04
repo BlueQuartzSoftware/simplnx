@@ -18,7 +18,7 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
 
   usize totalPoints = destImageGeom.getNumberOfCells();
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(featureIdsArrayPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<AbstractDataArray>(featureIdsArrayPath);
   usize totalFeatures = destCellFeatureAM.getNumberOfTuples();
   std::vector<bool> activeObjects(totalFeatures, false);
   if(0 == totalFeatures)

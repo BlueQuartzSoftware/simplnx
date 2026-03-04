@@ -1,8 +1,8 @@
 #include "CropImageGeometryFilter.hpp"
 
+#include "simplnx/DataStructure/AbstractNeighborList.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/INeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
@@ -71,7 +71,7 @@ template <typename T>
 class CropImageGeomDataArray
 {
 public:
-  CropImageGeomDataArray(const IDataArray& oldCellArray, IDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds, const std::atomic_bool& shouldCancel)
+  CropImageGeomDataArray(const AbstractDataArray& oldCellArray, AbstractDataArray& newCellArray, const ImageGeom& srcImageGeom, std::array<uint64, 6> bounds, const std::atomic_bool& shouldCancel)
   : m_OldCellStore(oldCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_NewCellStore(newCellArray.template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_SrcImageGeom(srcImageGeom)
@@ -474,7 +474,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
     for(const auto& [identifier, object] : *selectedCellData)
     {
-      const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
+      const auto& srcArray = dynamic_cast<const AbstractDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
       ShapeType componentShape = srcArray.getIDataStoreRef().getComponentShape();
       DataPath dataArrayPath = newCellAttributeMatrixPath.createChildPath(srcArray.getName());
@@ -499,14 +499,14 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destCellFeatureAmPath, tDims));
     for(const auto& [identifier, object] : srcCellFeatureData)
     {
-      if(const auto* srcArray = dynamic_cast<const IDataArray*>(object.get()); srcArray != nullptr)
+      if(const auto* srcArray = dynamic_cast<const AbstractDataArray*>(object.get()); srcArray != nullptr)
       {
         DataType dataType = srcArray->getDataType();
         ShapeType componentShape = srcArray->getIDataStoreRef().getComponentShape();
         DataPath dataArrayPath = destCellFeatureAmPath.createChildPath(srcArray->getName());
         resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, tDims, std::move(componentShape), dataArrayPath));
       }
-      else if(const auto* srcNeighborListArray = dynamic_cast<const INeighborList*>(object.get()); srcNeighborListArray != nullptr)
+      else if(const auto* srcNeighborListArray = dynamic_cast<const AbstractNeighborList*>(object.get()); srcNeighborListArray != nullptr)
       {
         warningMsg += "\n" + cellFeatureAmPath.toString() + "/" + srcNeighborListArray->getName();
       }
@@ -523,7 +523,7 @@ IFilter::PreflightResult CropImageGeometryFilter::preflightImpl(const DataStruct
 
   // This section covers copying the other Attribute Matrix objects from the source geometry
   // to the destination geometry
-  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, DataObject::Type::DataObject, ignorePaths);
+  auto childPaths = GetAllChildDataPaths(dataStructure, srcImagePath, IDataObject::Type::AbstractDataObject, ignorePaths);
   if(childPaths.has_value())
   {
     for(const auto& childPath : childPaths.value())
@@ -644,10 +644,10 @@ Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, cons
       return {};
     }
 
-    const auto& oldDataArray = dynamic_cast<const IDataArray&>(*oldDataObject);
+    const auto& oldDataArray = dynamic_cast<const AbstractDataArray&>(*oldDataObject);
     const std::string srcName = oldDataArray.getName();
 
-    auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
+    auto& newDataArray = dynamic_cast<AbstractDataArray&>(destCellDataAM.at(srcName));
 
     messageHandler(fmt::format("Cropping Volume || Copying Data Array {}", srcName));
     ExecuteParallelFunction<CropImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, bounds, shouldCancel);
@@ -692,16 +692,16 @@ Result<> CropImageGeometryFilter::executeImpl(DataStructure& dataStructure, cons
     // created, so we can use the convenience of the DataArray.deepCopy() function.
     for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
     {
-      DataObject* dataObject = dataStructure.getData(sourceFeatureDataPaths[index]);
-      if(dataObject->getDataObjectType() == DataObject::Type::DataArray)
+      AbstractDataObject* dataObject = dataStructure.getData(sourceFeatureDataPaths[index]);
+      if(dataObject->getDataObjectType() == IDataObject::Type::DataArray)
       {
-        auto result = DeepCopy<IDataArray>(dataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
+        auto result = DeepCopy<AbstractDataArray>(dataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
         if(result.invalid())
         {
           return result;
         }
       }
-      else if(dataObject->getDataObjectType() == DataObject::Type::StringArray)
+      else if(dataObject->getDataObjectType() == IDataObject::Type::StringArray)
       {
         auto result = DeepCopy<StringArray>(dataStructure, sourceFeatureDataPaths[index], destFeatureDataPaths[index]);
         if(result.invalid())

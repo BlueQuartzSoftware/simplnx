@@ -3,8 +3,8 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -19,7 +19,7 @@ namespace nx::core
  * @brief Action for creating an Edge Geometry in a DataStructure
  */
 template <typename Geometry1DType>
-class CreateGeometry1DAction : public IDataCreationAction
+class CreateGeometry1DAction : public AbstractDataCreationAction
 {
 public:
   using DimensionType = std::vector<size_t>;
@@ -36,7 +36,7 @@ public:
    */
   CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& edgeAttributeMatrixName,
                          const std::string& sharedVerticesName, const std::string& sharedEdgesName, std::string createdDataFormat = "")
-  : IDataCreationAction(geometryPath)
+  : AbstractDataCreationAction(geometryPath)
   , m_NumEdges(numEdges)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
@@ -58,7 +58,7 @@ public:
    */
   CreateGeometry1DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputEdgesArrayPath, const std::string& vertexAttributeMatrixName,
                          const std::string& edgeAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
-  : IDataCreationAction(geometryPath)
+  : AbstractDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_EdgeDataName(edgeAttributeMatrixName)
   , m_SharedVerticesName(inputVerticesArrayPath.getTargetName())
@@ -87,8 +87,8 @@ public:
   {
     static constexpr StringLiteral prefix = "CreateGeometry1DAction: ";
 
-    using MeshIndexType = IGeometry::MeshIndexType;
-    using SharedEdgeList = IGeometry::SharedEdgeList;
+    using MeshIndexType = AbstractGeometry::MeshIndexType;
+    using SharedEdgeList = AbstractGeometry::SharedEdgeList;
     DataPath edgeDataPath = getEdgeDataPath();
     DataPath vertexDataPath = getVertexDataPath();
 
@@ -144,10 +144,10 @@ public:
       edgeTupleShape = edges->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
-      std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
+      std::shared_ptr<AbstractDataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
-      std::shared_ptr<DataObject> edgesCopy = edges->deepCopy(getCreatedPath().createChildPath(m_SharedEdgesName));
+      std::shared_ptr<AbstractDataObject> edgesCopy = edges->deepCopy(getCreatedPath().createChildPath(m_SharedEdgesName));
       const auto edgesArray = std::dynamic_pointer_cast<DataArray<MeshIndexType>>(edgesCopy);
 
       geometry1d->setEdgeList(*edgesArray);
@@ -288,7 +288,7 @@ public:
    * @brief Returns the number of edges
    * @return
    */
-  IGeometry::MeshIndexType numEdges() const
+  AbstractGeometry::MeshIndexType numEdges() const
   {
     return m_NumEdges;
   }
@@ -297,7 +297,7 @@ public:
    * @brief Returns the number of vertices (estimated in some circumstances)
    * @return
    */
-  IGeometry::MeshIndexType numVertices() const
+  AbstractGeometry::MeshIndexType numVertices() const
   {
     return m_NumVertices;
   }
@@ -322,8 +322,8 @@ protected:
   CreateGeometry1DAction() = default;
 
 private:
-  IGeometry::MeshIndexType m_NumEdges = 1;
-  IGeometry::MeshIndexType m_NumVertices = 2;
+  AbstractGeometry::MeshIndexType m_NumEdges = 1;
+  AbstractGeometry::MeshIndexType m_NumVertices = 2;
   std::string m_VertexDataName;
   std::string m_EdgeDataName;
   std::string m_SharedVerticesName;

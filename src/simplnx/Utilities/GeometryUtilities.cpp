@@ -52,7 +52,7 @@ void GeometryUtilities::FindUniqueIdsImpl::operator()(const Range& range) const
   convert(range.min(), range.max());
 }
 
-Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const AbstractNodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis)
 {
   BoundingBox3Df boundingBox = geometry.getBoundingBox();
   if(!boundingBox.isValid())
@@ -125,7 +125,7 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(c
   return Result<FloatVec3>{lengthPerPartition};
 }
 
-Result<FloatVec3> GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
+Result<FloatVec3> GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(const AbstractNodeGeometry0D& geometry)
 {
   BoundingBox3Df boundingBox = geometry.getBoundingBox();
   if(!boundingBox.isValid())
@@ -500,8 +500,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
 
 // ----------------------------------------------------------------------------
 //
-usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>& tris,
-                                                     AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd,
+usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<AbstractNodeGeometry2D::SharedFaceList::value_type>& tris,
+                                                     AbstractDataStore<AbstractNodeGeometry0D::SharedVertexList::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd,
                                                      float32 sliceResolution)
 {
   for(usize i = 0; i < numTris; i++)
@@ -531,8 +531,8 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
 
 // ----------------------------------------------------------------------------
 //
-using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+using TriStore = AbstractDataStore<AbstractNodeGeometry2D::SharedFaceList::value_type>;
+using VertsStore = AbstractDataStore<AbstractNodeGeometry0D::SharedVertexList::value_type>;
 
 inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
 {

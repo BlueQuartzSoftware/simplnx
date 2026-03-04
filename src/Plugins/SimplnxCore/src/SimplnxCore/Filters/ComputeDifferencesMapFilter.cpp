@@ -25,7 +25,7 @@ IFilter::PreflightResult validateArrayTypes(const DataStructure& dataStructure, 
   std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
-    if(auto dataArray = dataStructure.getDataAs<IDataArray>(dataPath))
+    if(auto dataArray = dataStructure.getDataAs<AbstractDataArray>(dataPath))
     {
       if(!dataType.has_value())
       {
@@ -141,10 +141,10 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 
   std::vector<DataPath> dataArrayPaths;
 
-  const auto& firstInputArray = dataStructure.getDataRefAs<IDataArray>(firstInputArrayPath);
+  const auto& firstInputArray = dataStructure.getDataRefAs<AbstractDataArray>(firstInputArrayPath);
   dataArrayPaths.push_back(firstInputArrayPath);
 
-  const auto& secondInputArray = dataStructure.getDataRefAs<IDataArray>(secondInputArrayPath);
+  const auto& secondInputArray = dataStructure.getDataRefAs<AbstractDataArray>(secondInputArrayPath);
   dataArrayPaths.push_back(secondInputArrayPath);
 
   if(!dataArrayPaths.empty())

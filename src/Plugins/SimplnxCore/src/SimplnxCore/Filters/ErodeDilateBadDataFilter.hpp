@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -13,7 +13,7 @@ namespace nx::core
  * copying neighbor data into the voxel with featureId = 0. See the Markdown for
  * a more comprehensive explanation
  */
-class SIMPLNXCORE_EXPORT ErodeDilateBadDataFilter : public IFilter
+class SIMPLNXCORE_EXPORT ErodeDilateBadDataFilter : public AbstractFilter
 {
 public:
   ErodeDilateBadDataFilter() = default;

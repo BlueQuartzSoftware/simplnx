@@ -124,8 +124,8 @@ Result<> ReadStlFile::operator()()
   triangleGeom.resizeFaceList(triCount);
   triangleGeom.resizeVertexList(triCount * 3);
 
-  using SharedTriList = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
-  using SharedVertList = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using SharedTriList = AbstractDataStore<AbstractGeometry::MeshIndexArrayType::value_type>;
+  using SharedVertList = AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>;
 
   SharedTriList& triangles = triangleGeom.getFaces()->getDataStoreRef();
   SharedVertList& nodes = triangleGeom.getVertices()->getDataStoreRef();

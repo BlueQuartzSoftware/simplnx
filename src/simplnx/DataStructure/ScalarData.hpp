@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/TypeTraits.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 
 namespace nx::core
 {
@@ -18,7 +18,7 @@ inline constexpr StringLiteral k_TypeName = "ScalarData";
  * retrieved or edited after the object has been constructed.
  */
 template <typename T>
-class ScalarData : public DataObject
+class ScalarData : public AbstractDataObject
 {
 public:
   using value_type = T;
@@ -56,7 +56,7 @@ public:
    * If the ScalarData cannot be created, this method returns nullptr.
    * Otherwise, a pointer to the created ScalarData will be returned.
    *
-   * Unlike Create, Import allows setting the DataObject ID for use in
+   * Unlike Create, Import allows setting the AbstractDataObject ID for use in
    * importing DataObjects from external sources.
    * @param dataStructure
    * @param name
@@ -81,7 +81,7 @@ public:
    * @param other
    */
   ScalarData(const ScalarData& other)
-  : DataObject(other)
+  : AbstractDataObject(other)
   , m_Data(other.m_Data)
   {
   }
@@ -93,7 +93,7 @@ public:
    * @param other
    */
   ScalarData(ScalarData&& other) noexcept
-  : DataObject(std::move(other))
+  : AbstractDataObject(std::move(other))
   , m_Data(std::move(other.m_Data))
   {
   }
@@ -104,7 +104,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override
+  AbstractDataObject::Type getDataObjectType() const override
   {
     return Type::ScalarData;
   }
@@ -166,7 +166,7 @@ public:
   }
 
   /**
-   * @brief Returns typename of the DataObject as a std::string.
+   * @brief Returns typename of the AbstractDataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override
@@ -178,9 +178,9 @@ public:
    * @brief Returns a shallow copy of the ScalarData. The created ScalarData
    * is not added to the DataStructure, and it is up to the caller to delete
    * it.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* shallowCopy() override
+  AbstractDataObject* shallowCopy() override
   {
     return new ScalarData(*this);
   }
@@ -188,9 +188,9 @@ public:
   /**
    * @brief Returns a deep copy of the ScalarData. This copy is not added to
    * the DataStructure, and it is up to the caller to delete it.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override
   {
     auto& dataStruct = *getDataStructure();
     if(dataStruct.containsData(copyPath))
@@ -286,7 +286,7 @@ protected:
    * @param defaultValue
    */
   ScalarData(DataStructure& dataStructure, const std::string& name, value_type defaultValue)
-  : DataObject(dataStructure, name)
+  : AbstractDataObject(dataStructure, name)
   , m_Data(defaultValue)
   {
   }
@@ -299,7 +299,7 @@ protected:
    * @param defaultValue
    */
   ScalarData(DataStructure& dataStructure, const std::string& name, IdType importId, value_type defaultValue)
-  : DataObject(dataStructure, name, importId)
+  : AbstractDataObject(dataStructure, name, importId)
   , m_Data(defaultValue)
   {
   }

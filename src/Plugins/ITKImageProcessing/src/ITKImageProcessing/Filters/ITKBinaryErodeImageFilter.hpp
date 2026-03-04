@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -35,7 +35,7 @@ namespace nx::core
  * ITK Module: ITKBinaryMathematicalMorphology
  * ITK Group: BinaryMathematicalMorphology
  */
-class ITKIMAGEPROCESSING_EXPORT ITKBinaryErodeImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKBinaryErodeImageFilter : public AbstractFilter
 {
 public:
   ITKBinaryErodeImageFilter() = default;

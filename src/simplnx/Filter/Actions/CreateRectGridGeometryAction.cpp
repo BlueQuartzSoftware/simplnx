@@ -11,7 +11,7 @@ namespace nx::core
 {
 CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, usize xBoundTuples, usize yBoundTuples, usize zBoundTuples, const std::string& cellAttributeMatrixName,
                                                            const std::string& xBoundsName, const std::string& yBoundsName, const std::string& zBoundsName, std::string createdDataFormat)
-: IDataCreationAction(path)
+: AbstractDataCreationAction(path)
 , m_NumXBoundTuples(xBoundTuples)
 , m_NumYBoundTuples(yBoundTuples)
 , m_NumZBoundTuples(zBoundTuples)
@@ -25,7 +25,7 @@ CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path,
 
 CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, const DataPath& inputXBoundsPath, const DataPath& inputYBoundsPath, const DataPath& inputZBoundsPath,
                                                            const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat)
-: IDataCreationAction(path)
+: AbstractDataCreationAction(path)
 , m_CellDataName(cellAttributeMatrixName)
 , m_XBoundsArrayName(inputXBoundsPath.getTargetName())
 , m_YBoundsArrayName(inputYBoundsPath.getTargetName())
@@ -108,9 +108,9 @@ Result<> CreateRectGridGeometryAction::apply(DataStructure& dataStructure, Mode 
   Result<> results;
   if(m_ArrayHandlingType == ArrayHandlingType::Copy)
   {
-    std::shared_ptr<DataObject> xCopy = xBounds->deepCopy(getCreatedPath().createChildPath(m_XBoundsArrayName));
-    std::shared_ptr<DataObject> yCopy = yBounds->deepCopy(getCreatedPath().createChildPath(m_YBoundsArrayName));
-    std::shared_ptr<DataObject> zCopy = zBounds->deepCopy(getCreatedPath().createChildPath(m_ZBoundsArrayName));
+    std::shared_ptr<AbstractDataObject> xCopy = xBounds->deepCopy(getCreatedPath().createChildPath(m_XBoundsArrayName));
+    std::shared_ptr<AbstractDataObject> yCopy = yBounds->deepCopy(getCreatedPath().createChildPath(m_YBoundsArrayName));
+    std::shared_ptr<AbstractDataObject> zCopy = zBounds->deepCopy(getCreatedPath().createChildPath(m_ZBoundsArrayName));
     const auto xBoundsArray = std::dynamic_pointer_cast<Float32Array>(xCopy);
     const auto yBoundsArray = std::dynamic_pointer_cast<Float32Array>(yCopy);
     const auto zBoundsArray = std::dynamic_pointer_cast<Float32Array>(zCopy);

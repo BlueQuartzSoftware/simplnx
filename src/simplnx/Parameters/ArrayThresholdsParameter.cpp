@@ -1,7 +1,7 @@
 #include "ArrayThresholdsParameter.hpp"
 
 #include "simplnx/Common/Any.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
@@ -86,13 +86,13 @@ Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructu
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(dataPath);
+  const AbstractDataObject* object = dataStructure.getData(dataPath);
   if(object == nullptr)
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object does not exist at path '{}'", prefix, dataPath.toString()));
   }
 
-  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
+  const auto* dataArray = dynamic_cast<const AbstractDataArray*>(object);
   if(dataArray == nullptr)
   {
     return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, dataPath.toString()));

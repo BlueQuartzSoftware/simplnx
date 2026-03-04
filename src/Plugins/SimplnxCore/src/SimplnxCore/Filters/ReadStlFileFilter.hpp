@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -13,7 +13,7 @@ namespace nx::core
  * contained in the SimplnxCore/Filters/Algorithms/ReadStlFile
  *
  */
-class SIMPLNXCORE_EXPORT ReadStlFileFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReadStlFileFilter : public AbstractFilter
 {
 public:
   ReadStlFileFilter() = default;

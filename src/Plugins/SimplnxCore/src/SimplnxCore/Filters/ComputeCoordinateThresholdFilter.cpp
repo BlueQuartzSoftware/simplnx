@@ -3,10 +3,10 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeCoordinateThreshold.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -106,7 +106,7 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   auto pSelectedGeomPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometryPath_Key);
   auto pCreatedMaskPathValue = filterArgs.value<ArrayCreationParameter::ValueType>(k_CreatedMaskPath_Key);
 
-  const auto& geom = dataStructure.getDataRefAs<IGeometry>(pSelectedGeomPathValue);
+  const auto& geom = dataStructure.getDataRefAs<AbstractGeometry>(pSelectedGeomPathValue);
 
   std::vector<PreflightValue> preflightUpdatedValues;
   if(geom.getGeomType() == IGeometry::Type::Image)

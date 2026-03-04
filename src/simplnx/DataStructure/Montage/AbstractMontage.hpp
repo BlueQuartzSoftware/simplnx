@@ -9,7 +9,7 @@
 namespace nx::core
 {
 class AbstractTileIndex;
-class IGeometry;
+class AbstractGeometry;
 
 /**
  * @class AbstractMontage
@@ -18,12 +18,12 @@ class IGeometry;
 class SIMPLNX_EXPORT AbstractMontage : public BaseGroup
 {
 public:
-  using CollectionType = std::vector<IGeometry*>;
+  using CollectionType = std::vector<AbstractGeometry*>;
   using Iterator = CollectionType::iterator;
   using ConstIterator = CollectionType::const_iterator;
   using BoundsType = void;
 
-  static inline constexpr StringLiteral k_TypeName = "AbstractMontage";
+  static constexpr StringLiteral k_TypeName = "AbstractMontage";
 
   /**
    * @brief Creates a copy of the target AbstractMontage but does not add it to
@@ -46,7 +46,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override;
+  AbstractDataObject::Type getDataObjectType() const override;
 
   /**
    * @brief Returns the number of tiles in the montage.
@@ -82,17 +82,17 @@ public:
    * @brief Returns a pointer to the geometry at the specified tile index.
    * Returns nullptr if no geometry was found.
    * @param index
-   * @return IGeometry*
+   * @return AbstractGeometry*
    */
-  virtual IGeometry* getGeometry(const AbstractTileIndex* index) = 0;
+  virtual AbstractGeometry* getGeometry(const AbstractTileIndex* index) = 0;
 
   /**
    * @brief Returns a pointer to the geometry at the specified tile index.
    * Returns nullptr if no geometry was found.
    * @param index
-   * @return const IGeometry*
+   * @return const AbstractGeometry*
    */
-  virtual const IGeometry* getGeometry(const AbstractTileIndex* index) const = 0;
+  virtual const AbstractGeometry* getGeometry(const AbstractTileIndex* index) const = 0;
 
   /**
    * @brief Returns the tile index for the specified geometry. This is a pure
@@ -101,7 +101,7 @@ public:
    * @param geom
    * @return std::shared_ptr<AbstractTileIndex>
    */
-  virtual std::shared_ptr<AbstractTileIndex> getTileIndex(IGeometry* geom) const = 0;
+  virtual std::shared_ptr<AbstractTileIndex> getTileIndex(AbstractGeometry* geom) const = 0;
 
   /**
    * @brief Sets the geometry for the target tile index. The implementation is
@@ -109,7 +109,7 @@ public:
    * @param index
    * @param geom
    */
-  virtual void setGeometry(const AbstractTileIndex* index, IGeometry* geom) = 0;
+  virtual void setGeometry(const AbstractTileIndex* index, AbstractGeometry* geom) = 0;
 
   /**
    * @brief Returns an iterator to the beginning of the montage.
@@ -154,7 +154,7 @@ protected:
   AbstractMontage(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
-   * @brief Checks if the specified DataObject can be added to the montage.
+   * @brief Checks if the specified AbstractDataObject can be added to the montage.
    * Returns true if the object can be added. Returns false otherwise.
 
    * This is an override of the method in BaseGroup to ensure that only
@@ -162,7 +162,7 @@ protected:
    * @param obj
    * @return bool
    */
-  bool canInsert(const DataObject* obj) const override;
+  bool canInsert(const AbstractDataObject* obj) const override;
 
   /**
    * @brief Returns a reference of the collection for use in derived classes.

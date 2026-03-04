@@ -1,7 +1,7 @@
 #include "ExtractVertexGeometry.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
@@ -23,7 +23,7 @@ struct CopyDataFunctor
   }
 
   template <typename T>
-  void operator()(const IDataArray* srcIArray, IDataArray* destIArray, const std::vector<bool>& maskArray)
+  void operator()(const AbstractDataArray* srcIArray, AbstractDataArray* destIArray, const std::vector<bool>& maskArray)
   {
     const auto& srcArray = srcIArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& destArray = destIArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -69,7 +69,7 @@ const std::atomic_bool& ExtractVertexGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExtractVertexGeometry::operator()()
 {
-  const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->InputGeometryPath);
+  const auto& inputGeometry = m_DataStructure.getDataRefAs<AbstractGridGeometry>(m_InputValues->InputGeometryPath);
   auto& vertexGeometry = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexGeometryPath);
 
   SizeVec3 dims = inputGeometry.getDimensions();
@@ -101,7 +101,7 @@ Result<> ExtractVertexGeometry::operator()()
   std::vector<bool> maskedPoints;
   if(m_InputValues->UseMask)
   {
-    std::unique_ptr<MaskCompareUtilities::MaskCompare> maskArrayPtr = nullptr;
+    std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskArrayPtr = nullptr;
     try
     {
       maskArrayPtr = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, maskArrayPath);
@@ -129,7 +129,7 @@ Result<> ExtractVertexGeometry::operator()()
   // of each cell and then set that into the new VertexGeometry
   m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Generating vertex geometry"));
 
-  IGeometry::SharedVertexList& vertices = vertexGeometry.getVerticesRef();
+  AbstractGeometry::SharedVertexList& vertices = vertexGeometry.getVerticesRef();
   auto& verticesDataStore = vertices.getDataStoreRef();
   usize vertIdx = 0;
   for(usize idx = 0; idx < totalCells; idx++)
@@ -158,9 +158,9 @@ Result<> ExtractVertexGeometry::operator()()
   vertexAttrMatrix.resizeTuples({vertexCount});
   for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)
   {
-    const auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(dataArrayPath);
+    const auto* srcIDataArray = m_DataStructure.getDataAs<AbstractDataArray>(dataArrayPath);
     DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArray->getName());
-    auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
+    auto* destDataArray = m_DataStructure.getDataAs<AbstractDataArray>(destDataArrayPath);
     ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray->getDataType(), srcIDataArray, destDataArray, maskedPoints);
   }
 

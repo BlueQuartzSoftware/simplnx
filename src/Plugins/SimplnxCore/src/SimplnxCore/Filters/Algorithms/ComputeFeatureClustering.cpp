@@ -137,7 +137,7 @@ Result<> ComputeFeatureClustering::operator()()
   auto& clusteringList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->ClusteringListArrayName);
   auto& rdfStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->RDFArrayName)->getDataStoreRef();
   auto& minMaxDistancesStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->MaxMinArrayName)->getDataStoreRef();
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   if(m_InputValues->RemoveBiasedFeatures)
   {
     try

@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ComputeVolumeFractionsFilter
  * @brief This filter will calculate the volume fraction for each Ensemble
  */
-class SIMPLNXCORE_EXPORT ComputeVolumeFractionsFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeVolumeFractionsFilter : public AbstractFilter
 {
 public:
   ComputeVolumeFractionsFilter() = default;

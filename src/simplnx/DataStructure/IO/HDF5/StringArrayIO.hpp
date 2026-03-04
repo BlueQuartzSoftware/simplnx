@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/AbstractDataIO.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace HDF5
 /**
  * @brief The StringArrayIO class serves as a reader and writer between StringArrays and HDF5
  */
-class SIMPLNX_EXPORT StringArrayIO : public IDataIO
+class SIMPLNX_EXPORT StringArrayIO : public AbstractDataIO
 {
 public:
   using data_type = StringArray;
@@ -35,8 +35,8 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& arrayName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const override;
+  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& arrayName, AbstractDataObject::IdType importId,
+                    const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore) const override;
 
   /**
    * @brief Attempts to write an StringArray to HDF5.
@@ -58,14 +58,14 @@ public:
   Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const override;
 
   /**
-   * @brief Attempts to write the DataObject to HDF5.
-   * Returns an error if the DataObject cannot be cast to a StringArray.
+   * @brief Attempts to write the AbstractDataObject to HDF5.
+   * Returns an error if the AbstractDataObject cannot be cast to a StringArray.
    * Otherwise, this method returns writeData(...)
    * Return Result<>
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const override;
 
-  DataObject::Type getDataType() const override;
+  AbstractDataObject::Type getDataType() const override;
 
   std::string getTypeName() const override;
 };

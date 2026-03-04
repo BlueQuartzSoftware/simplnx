@@ -1,0 +1,236 @@
+#pragma once
+
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/INodeGeometry1D.hpp"
+
+namespace nx::core
+{
+class SIMPLNX_EXPORT AbstractNodeGeometry1D : public AbstractNodeGeometry0D, public INodeGeometry1D
+{
+public:
+  static constexpr StringLiteral k_TypeName = "INodeGeometry1D";
+
+  ~AbstractNodeGeometry1D() noexcept override = default;
+
+  /**
+   * @brief
+   * @return
+   */
+  SharedEdgeList* getEdges();
+
+  /**
+   * @brief
+   * @return
+   */
+  const SharedEdgeList* getEdges() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  SharedEdgeList& getEdgesRef();
+
+  /**
+   * @brief
+   * @return
+   */
+  const SharedEdgeList& getEdgesRef() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  void setEdgeList(const SharedEdgeList& edges);
+
+  std::optional<IdType> getEdgeListId() const;
+  void setEdgeListId(const std::optional<IdType>& edgeList);
+
+  /**
+   * @brief Resizes the edge list to the target size.
+   * @param size
+   */
+  void resizeEdgeList(usize size);
+
+  /**
+   * @brief Returns the number of edges in the geometry.
+   * @return usize
+   */
+  usize getNumberOfCells() const override;
+
+  /**
+   * @brief returns the number of edges in the geometry
+   * @return
+   */
+  usize getNumberOfEdges() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  usize getNumberOfVerticesPerEdge() const override = 0;
+
+  /**
+   * @brief Sets the vertex IDs making up the specified edge. This method does
+   * nothing if the edge list could not be found.
+   * @param edgeId
+   * @param vertexIds The index into the shared vertex list of each vertex
+   */
+  void setEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds);
+
+  /**
+   * @brief Returns the vertices that make up the specified edge by reference.
+   * This method does nothing if the edge list could not be found.
+   * @param edgeId
+   * @param vertexIds The index into the shared vertex list of each vertex
+   */
+  void getEdgePointIds(usize edgeId, nonstd::span<usize> vertexIds) const;
+
+  /**
+   * @brief Returns the vertex coordinates for a specified edge by reference.
+   * This method does nothing if the edge list could not be found.
+   * @param edgeId
+   * @param vert1
+   * @param vert2
+   */
+  void getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const;
+
+  /**
+   * @brief
+   * recalculate If true, this function will recalculate the array. Otherwise, it will leave the array as is.
+   * @return Result<>
+   */
+  Result<> findElementsContainingVert(bool recalculate) override = 0;
+
+  /**
+   * @brief
+   * @return const ElementDynamicList*
+   */
+  const ElementDynamicList* getElementsContainingVert() const;
+
+  /**
+   * @brief
+   */
+  void deleteElementsContainingVert();
+
+  /**
+   * @brief
+   * @return Result<>
+   */
+  Result<> findElementNeighbors(bool recalculate) override = 0;
+
+  /**
+   * @brief
+   * @return const ElementDynamicList*
+   */
+  const ElementDynamicList* getElementNeighbors() const;
+
+  /**
+   * @brief
+   */
+  void deleteElementNeighbors();
+
+  /**
+   * @brief
+   * @return Result<>
+   */
+  Result<> findElementCentroids(bool recalculate) override = 0;
+
+  /**
+   * @brief
+   * @return const Float32Array*
+   */
+  const Float32Array* getElementCentroids() const;
+
+  /**
+   * @brief
+   */
+  void deleteElementCentroids();
+
+  /****************************************************************************
+   * These functions get values related to where the Vertex Coordinates are
+   * stored in the DataStructure
+   */
+
+  const std::optional<IdType>& getEdgeListDataArrayId() const;
+
+  /**
+   * @brief
+   * @return
+   */
+  const std::optional<IdType>& getEdgeAttributeMatrixId() const;
+
+  /**
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each edge
+   * @return
+   */
+  AttributeMatrix* getEdgeAttributeMatrix();
+
+  /**
+   * @brief Returns pointer to the Attribute Matrix that holds data assigned to each edge
+   * @return
+   */
+  const AttributeMatrix* getEdgeAttributeMatrix() const;
+
+  /**
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each edge
+   * @return
+   */
+  AttributeMatrix& getEdgeAttributeMatrixRef();
+
+  /**
+   * @brief Returns reference to the Attribute Matrix that holds data assigned to each edge
+   * @return
+   */
+  const AttributeMatrix& getEdgeAttributeMatrixRef() const;
+
+  /**
+   * @brief Returns the DataPath to the AttributeMatrix for the edge data
+   * @return
+   */
+  DataPath getEdgeAttributeMatrixDataPath() const;
+
+  /**
+   * @brief Sets the Attribute Matrix for the data assigned to the edges
+   * @param attributeMatrix
+   */
+  void setEdgeAttributeMatrix(const AttributeMatrix& attributeMatrix);
+
+  void setEdgeDataId(const std::optional<IdType>& edgeDataId);
+
+  std::optional<IdType> getElementContainingVertId() const;
+  std::optional<IdType> getElementNeighborsId() const;
+  std::optional<IdType> getElementCentroidsId() const;
+  std::optional<IdType> getElementSizesId() const;
+
+  void setElementContainingVertId(const std::optional<IdType>& elementsContainingVertId);
+  void setElementNeighborsId(const std::optional<IdType>& elementNeighborsId);
+  void setElementCentroidsId(const std::optional<IdType>& centroidsId);
+  void setElementSizesId(const std::optional<IdType>& sizesId);
+
+  /**
+   * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.
+   * @return A Result<> object possibly with error code and message.
+   */
+  Result<> validate() const override;
+
+protected:
+  AbstractNodeGeometry1D(DataStructure& dataStructure, std::string name);
+
+  AbstractNodeGeometry1D(DataStructure& dataStructure, std::string name, IdType importId);
+
+  /**
+   * @brief Updates the array IDs. Should only be called by AbstractDataObject::checkUpdatedIds.
+   * @param updatedIdsMap
+   */
+  void checkUpdatedIdsImpl(const std::unordered_map<AbstractDataObject::IdType, AbstractDataObject::IdType>& updatedIdsMap) override;
+
+  /* ***************************************************************************
+   * These variables are the Ids of the arrays from the DataStructure object.
+   */
+  std::optional<IdType> m_EdgeDataArrayId;
+  std::optional<IdType> m_EdgeAttributeMatrixId;
+  std::optional<IdType> m_CellContainingVertDataArrayId;
+  std::optional<IdType> m_CellNeighborsDataArrayId;
+  std::optional<IdType> m_CellCentroidsDataArrayId;
+};
+} // namespace nx::core

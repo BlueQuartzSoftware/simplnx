@@ -2,13 +2,13 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/AbstractSegmentFeatures.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
-#include "simplnx/Utilities/SegmentFeatures.hpp"
 
 #include <random>
 #include <vector>
@@ -22,7 +22,7 @@ struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
   bool UseMask;
   bool RandomizeFeatureIds;
   bool IsPeriodic = false;
-  SegmentFeatures::NeighborScheme NeighborScheme;
+  ISegmentFeatures::NeighborScheme NeighborScheme;
   DataPath ImageGeometryPath;
   DataPath InputDataPath;
   DataPath MaskArrayPath;
@@ -34,7 +34,7 @@ struct SIMPLNXCORE_EXPORT ScalarSegmentFeaturesInputValues
 /**
  * @brief The ScalarSegmentFeatures class
  */
-class SIMPLNXCORE_EXPORT ScalarSegmentFeatures : public SegmentFeatures
+class SIMPLNXCORE_EXPORT ScalarSegmentFeatures : public AbstractSegmentFeatures
 {
 public:
   using FeatureIdsArrayType = Int32Array;
@@ -76,7 +76,7 @@ private:
   const ScalarSegmentFeaturesInputValues* m_InputValues = nullptr;
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
   GoodVoxelsArrayType* m_GoodVoxelsArray = nullptr;
-  std::shared_ptr<SegmentFeatures::CompareFunctor> m_CompareFunctor;
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxels = nullptr;
+  std::shared_ptr<ISegmentFeatures::CompareFunctor> m_CompareFunctor;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> m_GoodVoxels = nullptr;
 };
 } // namespace nx::core

@@ -1,7 +1,7 @@
 #include "ConcatenateDataArraysFilter.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
 #include "simplnx/Filter/Actions/CreateStringArrayAction.hpp"
@@ -54,7 +54,7 @@ Parameters ConcatenateDataArraysFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Arrays To Concatenate",
                                                                "Select the arrays that will be concatenated together.  The arrays will be concatenated in the order they are listed here.",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::Any}, GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArray_Key, "Output Array", "The output array that contains the concatenated arrays.", DataPath({"Concatenated Array"})));
@@ -93,15 +93,15 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 
   // Check for unequal array types, data types, and component dimensions
   ShapeType cDims;
-  IArray::ArrayType arrayType;
+  AbstractArray::ArrayType arrayType;
   std::string arrayTypeName;
   usize numTuples = 0;
   for(usize i = 0; i < inputArrayPaths.size(); ++i)
   {
-    const auto& inputDataArray = dataStructure.getDataRefAs<IArray>(inputArrayPaths[i]);
+    const auto& inputDataArray = dataStructure.getDataRefAs<AbstractArray>(inputArrayPaths[i]);
     for(usize j = i + 1; j < inputArrayPaths.size(); ++j)
     {
-      const auto& inputDataArray2 = dataStructure.getDataRefAs<IArray>(inputArrayPaths[j]);
+      const auto& inputDataArray2 = dataStructure.getDataRefAs<AbstractArray>(inputArrayPaths[j]);
 
       if(inputDataArray.getTypeName() != inputDataArray2.getTypeName())
       {
@@ -134,24 +134,24 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
 
   switch(arrayType)
   {
-  case IArray::ArrayType::DataArray: {
-    const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPaths[0]);
+  case AbstractArray::ArrayType::DataArray: {
+    const auto& inputDataArray = dataStructure.getDataRefAs<AbstractDataArray>(inputArrayPaths[0]);
     auto action = std::make_unique<CreateArrayAction>(inputDataArray.getDataType(), tDims, cDims, outputArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
     break;
   }
-  case IArray::ArrayType::StringArray: {
+  case AbstractArray::ArrayType::StringArray: {
     auto action = std::make_unique<CreateStringArrayAction>(tDims, outputArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
     break;
   }
-  case IArray::ArrayType::NeighborListArray: {
-    const auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPaths[0]);
+  case AbstractArray::ArrayType::NeighborListArray: {
+    const auto& inputNeighborList = dataStructure.getDataRefAs<AbstractNeighborList>(inputArrayPaths[0]);
     auto action = std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), tDims, outputArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
     break;
   }
-  case IArray::ArrayType::Any: {
+  case AbstractArray::ArrayType::Any: {
     return MakePreflightErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::InputArraysEqualAny),
                                     "Every array in the input arrays list has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.");
   }

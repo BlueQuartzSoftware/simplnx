@@ -94,7 +94,7 @@ const std::atomic_bool& ConvertQuaternion::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertQuaternion::operator()()
 {
-  const auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->QuaternionDataArrayPath);
+  const auto& iDataArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->QuaternionDataArrayPath);
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, iDataArray.getNumberOfTuples());

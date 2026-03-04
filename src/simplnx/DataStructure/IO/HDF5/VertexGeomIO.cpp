@@ -10,9 +10,9 @@ namespace nx::core::HDF5
 VertexGeomIO::VertexGeomIO() = default;
 VertexGeomIO::~VertexGeomIO() noexcept = default;
 
-DataObject::Type VertexGeomIO::getDataType() const
+AbstractDataObject::Type VertexGeomIO::getDataType() const
 {
-  return DataObject::Type::VertexGeom;
+  return IDataObject::Type::VertexGeom;
 }
 
 std::string VertexGeomIO::getTypeName() const
@@ -20,11 +20,11 @@ std::string VertexGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> VertexGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                                const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
+Result<> VertexGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, AbstractDataObject::IdType importId,
+                                const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto* geometry = VertexGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
-  return INodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  return AbstractNodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
 Result<> VertexGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
@@ -34,15 +34,15 @@ Result<> VertexGeomIO::finishImportingData(DataStructure& dataStructure, const D
   {
     return MakeErrorResult(-50595, fmt::format("Failed to finish importing VertexGeom at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }
-  return INodeGeom0dIO::FinishImportingNodeGeom0dData(dataStructure, dataPath, dataStructureGroup);
+  return AbstractNodeGeom0dIO::FinishImportingNodeGeom0dData(dataStructure, dataPath, dataStructureGroup);
 }
 
 Result<> VertexGeomIO::writeData(DataStructureWriter& structureReader, const VertexGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
 {
-  return INodeGeom0dIO::WriteNodeGeom0dData(structureReader, geometry, parentGroupWriter, importable);
+  return AbstractNodeGeom0dIO::WriteNodeGeom0dData(structureReader, geometry, parentGroupWriter, importable);
 }
 
-Result<> VertexGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> VertexGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const AbstractDataObject* dataObject, group_writer_type& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }

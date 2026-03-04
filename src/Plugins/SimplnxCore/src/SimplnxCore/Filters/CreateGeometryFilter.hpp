@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class CreateGeometryFilter
  * @brief This filter will ....
  */
-class SIMPLNXCORE_EXPORT CreateGeometryFilter : public IFilter
+class SIMPLNXCORE_EXPORT CreateGeometryFilter : public AbstractFilter
 {
 public:
   CreateGeometryFilter() = default;
@@ -57,18 +57,18 @@ public:
   static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
 
   // GeometryType values
-  static inline constexpr uint64 k_ImageGeometry = 0;
-  static inline constexpr uint64 k_RectGridGeometry = 1;
-  static inline constexpr uint64 k_VertexGeometry = 2;
-  static inline constexpr uint64 k_EdgeGeometry = 3;
-  static inline constexpr uint64 k_TriangleGeometry = 4;
-  static inline constexpr uint64 k_QuadGeometry = 5;
-  static inline constexpr uint64 k_TetGeometry = 6;
-  static inline constexpr uint64 k_HexGeometry = 7;
+  static constexpr uint64 k_ImageGeometry = 0;
+  static constexpr uint64 k_RectGridGeometry = 1;
+  static constexpr uint64 k_VertexGeometry = 2;
+  static constexpr uint64 k_EdgeGeometry = 3;
+  static constexpr uint64 k_TriangleGeometry = 4;
+  static constexpr uint64 k_QuadGeometry = 5;
+  static constexpr uint64 k_TetGeometry = 6;
+  static constexpr uint64 k_HexGeometry = 7;
   // ArrayHandling values
-  static inline constexpr uint64 k_CopyArray = 0;
-  static inline constexpr uint64 k_MoveArray = 1;
-  static inline constexpr uint64 k_ReferenceArray = 2;
+  static constexpr uint64 k_CopyArray = 0;
+  static constexpr uint64 k_MoveArray = 1;
+  static constexpr uint64 k_ReferenceArray = 2;
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

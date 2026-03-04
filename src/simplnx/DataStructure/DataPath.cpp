@@ -1,7 +1,7 @@
 #include "DataPath.hpp"
 
 #include "simplnx/Common/Types.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
@@ -23,7 +23,7 @@ DataPath::DataPath(std::vector<std::string> path)
     {
       continue;
     }
-    if(!DataObject::IsValidName(item))
+    if(!AbstractDataObject::IsValidName(item))
     {
       throw std::invalid_argument(fmt::format("DataPath: Invalid DataObject name - [{}]. One of the DataObject names contains the '/' character.", fmt::join(path, ",")));
     }

@@ -2,9 +2,9 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Parameters.hpp"
 
 namespace nx::core
@@ -14,7 +14,7 @@ namespace nx::core
  * @brief The WriteDREAM3DFilter is an IFilter class designed to export the
  * DataStructure to a target HDF5 file.
  */
-class SIMPLNXCORE_EXPORT WriteDREAM3DFilter : public IFilter
+class SIMPLNXCORE_EXPORT WriteDREAM3DFilter : public AbstractFilter
 {
 public:
   WriteDREAM3DFilter() = default;

@@ -8,7 +8,7 @@ namespace nx::core
 /**
  * @brief Action for copying a BaseGroup in a DataStructure
  */
-class SIMPLNX_EXPORT CopyDataObjectAction : public IDataCreationAction
+class SIMPLNX_EXPORT CopyDataObjectAction : public AbstractDataCreationAction
 {
 public:
   CopyDataObjectAction() = delete;
@@ -60,9 +60,9 @@ private:
    * @param dataStructure
    * @param targetPath
    * @param copyPath
-   * @return std::shared_ptr<DataObject>
+   * @return std::shared_ptr<AbstractDataObject>
    */
-  static std::shared_ptr<DataObject> copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath);
+  static std::shared_ptr<AbstractDataObject> copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath);
 
   ////////////
   // Variables

@@ -129,7 +129,7 @@ private:
     return {};
   }
 
-  void CompareResults(IDataArray& selectedArray) // compare hash of both file strings
+  void CompareResults(AbstractDataArray& selectedArray) // compare hash of both file strings
   {
     std::hash<std::string> str_hash;
 
@@ -195,12 +195,12 @@ private:
     {
       for(int32 i = 0; i < daps1.size(); i++)
       {
-        CompareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[i]));
+        CompareResults(m_DataStructure.getDataRefAs<AbstractDataArray>(daps1[i]));
       }
     }
     else if(fileType == k_SingleFile)
     {
-      CompareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[0]));
+      CompareResults(m_DataStructure.getDataRefAs<AbstractDataArray>(daps1[0]));
     }
   }
 };

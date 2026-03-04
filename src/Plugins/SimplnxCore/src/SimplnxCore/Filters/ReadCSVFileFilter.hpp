@@ -2,9 +2,9 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 class AbstractDataParser;
 
@@ -21,7 +21,7 @@ namespace nx::core
  * If multiple columns are in fact different components of the same array, then the columns may be imported as
  * separate arrays and then combined in the correct order using the Combine Attribute Arrays filter.
  */
-class SIMPLNXCORE_EXPORT ReadCSVFileFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReadCSVFileFilter : public AbstractFilter
 {
 public:
   ReadCSVFileFilter();

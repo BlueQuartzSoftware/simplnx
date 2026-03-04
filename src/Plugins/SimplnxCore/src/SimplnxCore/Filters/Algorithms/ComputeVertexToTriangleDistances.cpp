@@ -13,8 +13,8 @@ using namespace nx::core;
 namespace
 {
 using RTreeType = RTree<size_t, float, 3, float>;
-using SharedTriListT = AbstractDataStore<IGeometry::SharedTriList::value_type>;
-using SharedVertexListT = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+using SharedTriListT = AbstractDataStore<AbstractGeometry::SharedTriList::value_type>;
+using SharedVertexListT = AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>;
 
 /**
  * @brief 3x1 Matrix as a row.

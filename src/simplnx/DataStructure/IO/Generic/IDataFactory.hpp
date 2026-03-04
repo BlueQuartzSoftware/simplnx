@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 
 #include <optional>
@@ -19,10 +19,10 @@ public:
   virtual ~IDataFactory() noexcept = default;
 
   /**
-   * @brief Returns the Type of the DataObject subclass that the factory is designed for.
+   * @brief Returns the Type of the AbstractDataObject subclass that the factory is designed for.
    * @return std::string
    */
-  virtual DataObject::Type getDataType() const = 0;
+  virtual AbstractDataObject::Type getDataType() const = 0;
 
   // Copy and move constuctors / operators deleted
   IDataFactory(const IDataFactory& other) = delete;

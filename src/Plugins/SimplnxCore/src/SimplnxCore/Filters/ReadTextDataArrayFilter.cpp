@@ -26,7 +26,7 @@ namespace
 struct CSVReadFileFunctor
 {
   template <typename T>
-  Result<> operator()(IDataArray* inputIDataArray, const fs::path& inputFilePath, uint64 skipLines, char delimiter)
+  Result<> operator()(AbstractDataArray* inputIDataArray, const fs::path& inputFilePath, uint64 skipLines, char delimiter)
   {
     auto& store = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     return CsvParser::ReadFile<T>(inputFilePath, store, skipLines, delimiter);
@@ -173,7 +173,7 @@ Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, cons
 
   char delimiter = nx::core::CsvParser::IndexToDelimiter(choiceIndex);
 
-  auto* iDataArray = dataStructure.getDataAs<IDataArray>(path);
+  auto* iDataArray = dataStructure.getDataAs<AbstractDataArray>(path);
   return ExecuteDataFunction(CSVReadFileFunctor{}, iDataArray->getDataType(), iDataArray, inputFilePath, skipLines, delimiter);
 }
 

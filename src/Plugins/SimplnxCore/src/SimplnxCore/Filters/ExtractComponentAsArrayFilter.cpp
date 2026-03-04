@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/Filters/Algorithms/ExtractComponentAsArray.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Filter/Actions/RenameDataAction.hpp"
@@ -97,7 +97,7 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& selectedArray = dataStructure.getDataRefAs<IDataArray>(pSelectedArrayPathValue);
+  const auto& selectedArray = dataStructure.getDataRefAs<AbstractDataArray>(pSelectedArrayPathValue);
 
   // Verify Components
   const usize selectedArrayComp = selectedArray.getNumberOfComponents();

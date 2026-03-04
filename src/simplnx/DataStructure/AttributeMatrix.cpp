@@ -1,8 +1,8 @@
 #include "AttributeMatrix.hpp"
 
 #include "simplnx/Common/Aliases.hpp"
+#include "simplnx/DataStructure/AbstractArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IArray.hpp"
 
 #include <exception>
 
@@ -26,7 +26,7 @@ AttributeMatrix::AttributeMatrix(AttributeMatrix&&) = default;
 
 AttributeMatrix::~AttributeMatrix() noexcept = default;
 
-DataObject::Type AttributeMatrix::getDataObjectType() const
+AbstractDataObject::Type AttributeMatrix::getDataObjectType() const
 {
   return Type::AttributeMatrix;
 }
@@ -56,7 +56,7 @@ AttributeMatrix* AttributeMatrix::Import(DataStructure& dataStructure, std::stri
   return data.get();
 }
 
-std::shared_ptr<DataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
+std::shared_ptr<AbstractDataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
 {
   auto& dataStruct = getDataStructureRef();
   // Don't construct with identifier since it will get created when inserting into data structure
@@ -69,7 +69,7 @@ std::shared_ptr<DataObject> AttributeMatrix::deepCopy(const DataPath& copyPath)
   return nullptr;
 }
 
-DataObject* AttributeMatrix::shallowCopy()
+AbstractDataObject* AttributeMatrix::shallowCopy()
 {
   return new AttributeMatrix(*this);
 }
@@ -79,14 +79,14 @@ std::string AttributeMatrix::getTypeName() const
   return k_TypeName;
 }
 
-bool AttributeMatrix::canInsert(const DataObject* obj) const
+bool AttributeMatrix::canInsert(const AbstractDataObject* obj) const
 {
   if(!BaseGroup::canInsert(obj))
   {
     return false;
   }
 
-  const auto* arrayObjectPtr = dynamic_cast<const IArray*>(obj);
+  const auto* arrayObjectPtr = dynamic_cast<const AbstractArray*>(obj);
 
   if(arrayObjectPtr == nullptr)
   {
@@ -114,7 +114,7 @@ usize AttributeMatrix::getNumberOfTuples() const
 void AttributeMatrix::resizeTuples(ShapeType tupleShape)
 {
   m_TupleShape = std::move(tupleShape);
-  auto childArrays = findAllChildrenOfType<IArray>();
+  auto childArrays = findAllChildrenOfType<AbstractArray>();
   for(const auto& array : childArrays)
   {
     array->resizeTuples(m_TupleShape);
@@ -124,13 +124,13 @@ void AttributeMatrix::resizeTuples(ShapeType tupleShape)
 Result<> AttributeMatrix::validate() const
 {
   Result<> result;
-  auto childArrays = findAllChildrenOfType<IArray>();
+  auto childArrays = findAllChildrenOfType<AbstractArray>();
   usize numTuples = getNumberOfTuples();
   for(const auto& array : childArrays)
   {
     if(array->getNumberOfTuples() != numTuples)
     {
-      result = MergeResults(result, MakeErrorResult(-4701, fmt::format("AttributeMatrix '{}' has {} tuples but the contained IArray object '{}' has {} total tuples.", getName(), numTuples,
+      result = MergeResults(result, MakeErrorResult(-4701, fmt::format("AttributeMatrix '{}' has {} tuples but the contained AbstractArray object '{}' has {} total tuples.", getName(), numTuples,
                                                                        array->getName(), array->getNumberOfTuples())));
     }
   }

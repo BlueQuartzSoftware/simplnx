@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class FlyingEdges3DFilter
  * @brief This filter will draw a 3 dimensional contouring line through an Image Geometry based on an input value.
  */
-class SIMPLNXCORE_EXPORT FlyingEdges3DFilter : public IFilter
+class SIMPLNXCORE_EXPORT FlyingEdges3DFilter : public AbstractFilter
 {
 public:
   FlyingEdges3DFilter() = default;

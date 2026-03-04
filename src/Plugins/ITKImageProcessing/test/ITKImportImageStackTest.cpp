@@ -879,7 +879,7 @@ TEST_CASE("ITKImportImageStack::Grayscale_Conversion", "[ITKImageProcessing][ITK
 
   // Verify grayscale array was created
   DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+  REQUIRE_NOTHROW(ds.getDataRefAs<AbstractDataArray>(grayscalePath));
 
   // Compare against exemplar
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -1155,7 +1155,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Crop_Grayscale", "[ITKImageProcessin
 
   // Verify grayscale array exists
   DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+  REQUIRE_NOTHROW(ds.getDataRefAs<AbstractDataArray>(grayscalePath));
 
   // Compare against exemplar
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -1188,7 +1188,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Resample_Grayscale", "[ITKImageProce
 
   // Verify grayscale array exists
   DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+  REQUIRE_NOTHROW(ds.getDataRefAs<AbstractDataArray>(grayscalePath));
 
   // Compare against exemplar
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -1220,7 +1220,7 @@ TEST_CASE("ITKImportImageStack::Interaction_Grayscale_Flip", "[ITKImageProcessin
 
   // Verify grayscale array exists
   DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+  REQUIRE_NOTHROW(ds.getDataRefAs<AbstractDataArray>(grayscalePath));
 
   // Compare against exemplar
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -1254,7 +1254,7 @@ TEST_CASE("ITKImportImageStack::Interaction_FullPipeline", "[ITKImageProcessing]
 
   // Verify grayscale array exists
   DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(grayscalePath));
+  REQUIRE_NOTHROW(ds.getDataRefAs<AbstractDataArray>(grayscalePath));
 
   // Compare against exemplar
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);

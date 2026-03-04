@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/Plugin/IPlugin.hpp"
+
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -17,7 +19,7 @@ namespace H5
 class IDataFactory;
 }
 
-class IDataIOManager;
+class AbstractDataIOManager;
 
 /**
  * @class AbstractPlugin
@@ -26,43 +28,28 @@ class IDataIOManager;
  * retrieving information about the plugin and creating filters within the
  * plugin.
  */
-class SIMPLNX_EXPORT AbstractPlugin
+class SIMPLNX_EXPORT AbstractPlugin : public IPlugin
 {
 public:
-  using IdType = Uuid;
-  using FilterContainerType = std::unordered_set<FilterHandle>;
-  using IOManagerPointer = std::shared_ptr<IDataIOManager>;
-  using IOManagersContainerType = std::vector<IOManagerPointer>;
-
-  struct SIMPLNX_EXPORT SIMPLData
-  {
-    using ConversionFunction = std::function<Result<Arguments>(const nlohmann::json&)>;
-
-    Uuid simplnxUuid;
-    ConversionFunction convertJson;
-  };
-
-  using SIMPLMapType = std::map<Uuid, SIMPLData>;
-
-  virtual ~AbstractPlugin();
+  ~AbstractPlugin() override;
 
   /**
    * @brief Returns the plugin's name.
    * @return std::string
    */
-  std::string getName() const;
+  std::string getName() const override;
 
   /**
    * @brief Returns the plugin's description.
    * @return std::string
    */
-  std::string getDescription() const;
+  std::string getDescription() const override;
 
   /**
    * @brief Returns the plugin's ID.
    * @return IdType
    */
-  IdType getId() const;
+  IdType getId() const override;
 
   /**
    * @brief Checks if the plugin contains a filter with the given ID. Returns
@@ -70,7 +57,7 @@ public:
    * @param identifier
    * @return bool
    */
-  bool containsFilterId(FilterHandle::FilterIdType identifier) const;
+  bool containsFilterId(FilterHandle::FilterIdType identifier) const override;
 
   /**
    * @brief Create's an IFilter with the specified ID. If the plugin
@@ -79,26 +66,26 @@ public:
    * @param filterId
    * @return IFilter::UniquePointer
    */
-  IFilter::UniquePointer createFilter(FilterHandle::FilterIdType filterId) const;
+  IFilter::UniquePointer createFilter(FilterHandle::FilterIdType filterId) const override;
 
   /**
    * @brief Returns a set of FilterHandles pointing to each of the filters
    * contained in the plugin.
    * @return std::unordered_set<nx::core::FilterHandle>
    */
-  FilterContainerType getFilterHandles() const;
+  FilterContainerType getFilterHandles() const override;
 
   /**
    * @brief
    * @return
    */
-  FilterContainerType::size_type getFilterCount() const;
+  FilterContainerType::size_type getFilterCount() const override;
 
   /**
    * @brief Returns the plugin's vendor name.
    * @return std::string
    */
-  std::string getVendor() const;
+  std::string getVendor() const override;
 
   /**
    * @brief Returns a collection of DataStructure IO managers available
@@ -106,16 +93,16 @@ public:
    * to a specific format.
    * @return IOManagersContainerType
    */
-  IOManagersContainerType getDataIOManagers() const;
+  IOManagersContainerType getDataIOManagers() const override;
 
   /**
    * @brief Returns a map of UUIDs as strings, where SIMPL UUIDs are keys to
    * their simplnx counterpart
    * @return SIMPLMapType
    */
-  virtual SIMPLMapType getSimplToSimplnxMap() const = 0;
+  SIMPLMapType getSimplToSimplnxMap() const override = 0;
 
-  virtual void setOocTempDirectory(const std::string& path);
+  void setOocTempDirectory(const std::string& path) override;
 
 protected:
   /**

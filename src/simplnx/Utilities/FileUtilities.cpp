@@ -272,7 +272,7 @@ const int32 k_FileNotOpen = -108;
 const int32 k_CannotSkipToLine = -115;
 const int32 k_EmptyLine = -119;
 
-AbstractDataParser::AbstractDataParser(IArray& array, const std::string& columnName, usize columnIndex)
+AbstractDataParser::AbstractDataParser(AbstractArray& array, const std::string& columnName, usize columnIndex)
 : m_Array(array)
 , m_ColumnName(columnName)
 , m_ColumnIndex(columnIndex)
@@ -289,7 +289,7 @@ usize AbstractDataParser::columnIndex() const
   return m_ColumnIndex;
 }
 
-const IArray& AbstractDataParser::array() const
+const AbstractArray& AbstractDataParser::array() const
 {
   return m_Array;
 }

@@ -4,7 +4,7 @@
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry1DAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -130,8 +130,9 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   usize maxVertices = maxEdges * 2; // Conservative estimate. It will be reduced by deduplication
 
   // Create the Edge Geometry action
-  auto createEdgeGeomAction = std::make_unique<CreateEdgeGeometryAction>(pOutputEdgeGeometryPathValue, maxEdges, maxVertices, INodeGeometry0D::k_VertexAttributeMatrixName,
-                                                                         INodeGeometry1D::k_EdgeAttributeMatrixName, INodeGeometry0D::k_SharedVertexListName, INodeGeometry1D::k_SharedEdgeListName);
+  auto createEdgeGeomAction =
+      std::make_unique<CreateEdgeGeometryAction>(pOutputEdgeGeometryPathValue, maxEdges, maxVertices, AbstractNodeGeometry0D::k_VertexAttributeMatrixName,
+                                                 AbstractNodeGeometry1D::k_EdgeAttributeMatrixName, AbstractNodeGeometry0D::k_SharedVertexListName, AbstractNodeGeometry1D::k_SharedEdgeListName);
   resultOutputActions.value().appendAction(std::move(createEdgeGeomAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

@@ -1,7 +1,7 @@
 #include "ReadDeformKeyFileV12.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -519,7 +519,7 @@ private:
     return {};
   }
 
-  Result<> readVertexCoordinates(AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertex, usize numVerts)
+  Result<> readVertexCoordinates(AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>& vertex, usize numVerts)
   {
     std::string buf;
     std::vector<std::string> tokens; /* vector to store the split data */
@@ -560,7 +560,7 @@ private:
     return {};
   }
 
-  Result<> readQuadGeometry(AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>& quads, usize numCells)
+  Result<> readQuadGeometry(AbstractDataStore<AbstractGeometry::MeshIndexArrayType::value_type>& quads, usize numCells)
   {
     std::string buf;
     std::vector<std::string> tokens; /* vector to store the split data */
@@ -678,7 +678,7 @@ private:
         if(m_Allocate)
         {
           // Grab vertex list from quad geom
-          AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertex = m_DataStructure.getDataAs<QuadGeom>(m_QuadGeomPath)->getVertices()->getDataStoreRef();
+          AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>& vertex = m_DataStructure.getDataAs<QuadGeom>(m_QuadGeomPath)->getVertices()->getDataStoreRef();
 
           auto vertexResult = readVertexCoordinates(vertex, numVerts);
           if(vertexResult.invalid())
@@ -706,7 +706,7 @@ private:
         {
           auto& quadGeom = m_DataStructure.getDataRefAs<QuadGeom>(m_QuadGeomPath);
           quadGeom.setSpatialDimensionality(2);
-          AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>& quads = quadGeom.getFaces()->getDataStoreRef();
+          AbstractDataStore<AbstractGeometry::MeshIndexArrayType::value_type>& quads = quadGeom.getFaces()->getDataStoreRef();
           auto quadResult = readQuadGeometry(quads, numCells);
           if(quadResult.invalid())
           {

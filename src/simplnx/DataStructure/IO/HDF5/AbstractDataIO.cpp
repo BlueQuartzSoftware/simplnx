@@ -1,0 +1,62 @@
+#include "AbstractDataIO.hpp"
+
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
+
+#include <fmt/format.h>
+
+namespace nx::core::HDF5
+{
+AbstractDataIO::AbstractDataIO() = default;
+AbstractDataIO::~AbstractDataIO() noexcept = default;
+
+AbstractDataObject::OptionalId AbstractDataIO::ReadDataId(const object_reader_type& groupReader, const std::string& tag)
+{
+  if(!groupReader.isValid())
+  {
+    return {};
+  }
+
+  auto result = groupReader.readScalarAttribute<AbstractDataObject::IdType>(tag);
+  if(result.invalid())
+  {
+    return {};
+  }
+  AbstractDataObject::IdType id = std::move(result.value());
+
+  return id;
+}
+
+Result<> AbstractDataIO::WriteDataId(object_writer_type& objectWriter, const std::optional<AbstractDataObject::IdType>& objectId, const std::string& tag)
+{
+  if(!objectId.has_value())
+  {
+    return {};
+  }
+
+  AbstractDataObject::IdType id = objectId.value();
+  return objectWriter.writeScalarAttribute(tag, id);
+}
+
+Result<> AbstractDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const AbstractDataObject& dataObject, object_writer_type& objectWriter, bool importable)
+{
+  std::string dataTypeName = dataObject.getTypeName();
+  objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataTypeName);
+  objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject.getId());
+
+  int32 value = (importable ? 1 : 0);
+  objectWriter.writeScalarAttribute(Constants::k_ImportableTag, value);
+
+  // Add to DataStructureWriter for use in linking
+  dataStructureWriter.addWriter(objectWriter, dataObject.getId());
+
+  return {};
+}
+
+Result<> AbstractDataIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+{
+  return {};
+}
+} // namespace nx::core::HDF5

@@ -2,8 +2,8 @@
 
 #include "Algorithms/CreateColorMap.hpp"
 
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -110,7 +110,7 @@ IFilter::PreflightResult CreateColorMapFilter::preflightImpl(const DataStructure
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& dataArray = dataStructure.getDataRefAs<IDataArray>(pSelectedDataArrayPathValue);
+  const auto& dataArray = dataStructure.getDataRefAs<AbstractDataArray>(pSelectedDataArrayPathValue);
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint8, dataArray.getTupleShape(), std::vector<usize>{3}, pRgbArrayPathValue);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 

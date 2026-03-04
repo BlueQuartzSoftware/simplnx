@@ -12,7 +12,7 @@
 
 namespace nx::core::UnitTest::Comparison
 {
-inline bool CompareDataObject(const DataObject& exemplarObject, const DataObject& testObject);
+inline bool CompareDataObject(const AbstractDataObject& exemplarObject, const AbstractDataObject& testObject);
 
 inline bool CompareBaseGroup(const BaseGroup& exemplarObject, const BaseGroup& testObject)
 {
@@ -28,8 +28,8 @@ inline bool CompareBaseGroup(const BaseGroup& exemplarObject, const BaseGroup& t
     {
       return false;
     }
-    const DataObject* exemplarChild = exemplarObject[childName];
-    const DataObject* testChild = testObject[childName];
+    const AbstractDataObject* exemplarChild = exemplarObject[childName];
+    const AbstractDataObject* testChild = testObject[childName];
     // Recursive. Could have issues with a deeply nested DataStructure
     if(!CompareDataObject(*exemplarChild, *testChild))
     {
@@ -40,12 +40,12 @@ inline bool CompareBaseGroup(const BaseGroup& exemplarObject, const BaseGroup& t
   return true;
 }
 
-inline bool CompareIArray(const IArray& exemplarObject, const IArray& testObject)
+inline bool CompareIArray(const AbstractArray& exemplarObject, const AbstractArray& testObject)
 {
   return testObject.getTupleShape() == exemplarObject.getTupleShape() && testObject.getComponentShape() == exemplarObject.getComponentShape();
 }
 
-inline bool CompareINeighborList(const INeighborList& exemplarObject, const INeighborList& testObject)
+inline bool CompareINeighborList(const AbstractNeighborList& exemplarObject, const AbstractNeighborList& testObject)
 {
   if(testObject.getDataType() != exemplarObject.getDataType())
   {
@@ -73,13 +73,13 @@ bool CompareNeighborListValues(const NeighborList<T>& exemplarObject, const Neig
 struct CompareNeighborListFunctor
 {
   template <class T>
-  bool operator()(const INeighborList& exemplarObject, const INeighborList& testObject) const
+  bool operator()(const AbstractNeighborList& exemplarObject, const AbstractNeighborList& testObject) const
   {
     return CompareNeighborListValues(dynamic_cast<const NeighborList<T>&>(exemplarObject), dynamic_cast<const NeighborList<T>&>(testObject));
   }
 };
 
-inline bool CompareNeighborList(const INeighborList& exemplarObject, const INeighborList& testObject)
+inline bool CompareNeighborList(const AbstractNeighborList& exemplarObject, const AbstractNeighborList& testObject)
 {
   if(!CompareINeighborList(exemplarObject, testObject))
   {
@@ -91,7 +91,7 @@ inline bool CompareNeighborList(const INeighborList& exemplarObject, const INeig
   return ExecuteNeighborFunction(CompareNeighborListFunctor{}, dataType, exemplarObject, testObject);
 }
 
-inline bool CompareIDataArray(const IDataArray& exemplarObject, const IDataArray& testObject)
+inline bool CompareIDataArray(const AbstractDataArray& exemplarObject, const AbstractDataArray& testObject)
 {
   if(testObject.getDataType() != exemplarObject.getDataType())
   {
@@ -119,13 +119,13 @@ bool CompareDataArrayValues(const DataArray<T>& exemplarObject, const DataArray<
 struct CompareDataArrayFunctor
 {
   template <class T>
-  bool operator()(const IDataArray& exemplarObject, const IDataArray& testObject) const
+  bool operator()(const AbstractDataArray& exemplarObject, const AbstractDataArray& testObject) const
   {
     return CompareDataArrayValues(dynamic_cast<const DataArray<T>&>(exemplarObject), dynamic_cast<const DataArray<T>&>(testObject));
   }
 };
 
-inline bool CompareDataArray(const IDataArray& exemplarObject, const IDataArray& testObject)
+inline bool CompareDataArray(const AbstractDataArray& exemplarObject, const AbstractDataArray& testObject)
 {
   if(!CompareIDataArray(exemplarObject, testObject))
   {
@@ -166,7 +166,7 @@ inline bool CompareAttributeMatrix(const AttributeMatrix& exemplarObject, const 
   return CompareBaseGroup(exemplarObject, testObject);
 }
 
-inline bool CheckOptionalObject(const DataObject* exemplarObject, const DataObject* testObject)
+inline bool CheckOptionalObject(const AbstractDataObject* exemplarObject, const AbstractDataObject* testObject)
 {
   if((exemplarObject == nullptr && testObject != nullptr) || (exemplarObject != nullptr && testObject == nullptr))
   {
@@ -179,7 +179,7 @@ inline bool CheckOptionalObject(const DataObject* exemplarObject, const DataObje
   return true;
 }
 
-inline bool CompareIGeometry(const IGeometry& exemplarObject, const IGeometry& testObject)
+inline bool CompareIGeometry(const AbstractGeometry& exemplarObject, const AbstractGeometry& testObject)
 {
   if(exemplarObject.getSpatialDimensionality() != testObject.getSpatialDimensionality())
   {
@@ -201,7 +201,7 @@ inline bool CompareIGeometry(const IGeometry& exemplarObject, const IGeometry& t
   return CompareBaseGroup(exemplarObject, testObject);
 }
 
-inline bool CompareIGridGeometry(const IGridGeometry& exemplarObject, const IGridGeometry& testObject)
+inline bool CompareIGridGeometry(const AbstractGridGeometry& exemplarObject, const AbstractGridGeometry& testObject)
 {
   if(testObject.getDimensions() != exemplarObject.getDimensions())
   {
@@ -249,7 +249,7 @@ inline bool CompareRectGridGeom(const RectGridGeom& exemplarObject, const RectGr
   return CompareIGridGeometry(exemplarObject, testObject);
 }
 
-inline bool CompareINodeGeometry0D(const INodeGeometry0D& exemplarObject, const INodeGeometry0D& testObject)
+inline bool CompareINodeGeometry0D(const AbstractNodeGeometry0D& exemplarObject, const AbstractNodeGeometry0D& testObject)
 {
   if(!CheckOptionalObject(exemplarObject.getVertices(), testObject.getVertices()))
   {
@@ -267,7 +267,7 @@ inline bool CompareVertexGeom(const VertexGeom& exemplarObject, const VertexGeom
   return CompareINodeGeometry0D(exemplarObject, testObject);
 }
 
-inline bool CompareINodeGeometry1D(const INodeGeometry1D& exemplarObject, const INodeGeometry1D& testObject)
+inline bool CompareINodeGeometry1D(const AbstractNodeGeometry1D& exemplarObject, const AbstractNodeGeometry1D& testObject)
 {
   if(!CheckOptionalObject(exemplarObject.getEdges(), testObject.getEdges()))
   {
@@ -298,7 +298,7 @@ inline bool CompareEdgeGeom(const EdgeGeom& exemplarObject, const EdgeGeom& test
   return CompareINodeGeometry1D(exemplarObject, testObject);
 }
 
-inline bool CompareINodeGeometry2D(const INodeGeometry2D& exemplarObject, const INodeGeometry2D& testObject)
+inline bool CompareINodeGeometry2D(const AbstractNodeGeometry2D& exemplarObject, const AbstractNodeGeometry2D& testObject)
 {
   if(!CheckOptionalObject(exemplarObject.getFaces(), testObject.getFaces()))
   {
@@ -326,7 +326,7 @@ inline bool CompareQuadGeom(const QuadGeom& exemplarObject, const QuadGeom& test
   return CompareINodeGeometry2D(exemplarObject, testObject);
 }
 
-inline bool CompareINodeGeometry3D(const INodeGeometry3D& exemplarObject, const INodeGeometry3D& testObject)
+inline bool CompareINodeGeometry3D(const AbstractNodeGeometry3D& exemplarObject, const AbstractNodeGeometry3D& testObject)
 {
   if(!CheckOptionalObject(exemplarObject.getPolyhedra(), testObject.getPolyhedra()))
   {
@@ -354,14 +354,14 @@ inline bool CompareHexahedralGeom(const HexahedralGeom& exemplarObject, const He
   return CompareINodeGeometry3D(exemplarObject, testObject);
 }
 
-inline bool CompareDataObject(const DataObject& exemplarObject, const DataObject& testObject)
+inline bool CompareDataObject(const AbstractDataObject& exemplarObject, const AbstractDataObject& testObject)
 {
   if(testObject.getName() != exemplarObject.getName())
   {
     return false;
   }
 
-  DataObject::Type testObjectType = testObject.getDataObjectType();
+  AbstractDataObject::Type testObjectType = testObject.getDataObjectType();
 
   if(testObjectType != testObject.getDataObjectType())
   {
@@ -375,44 +375,44 @@ inline bool CompareDataObject(const DataObject& exemplarObject, const DataObject
 
   switch(testObjectType)
   {
-  case DataObject::Type::AttributeMatrix: {
+  case IDataObject::Type::AttributeMatrix: {
     return CompareAttributeMatrix(dynamic_cast<const AttributeMatrix&>(exemplarObject), dynamic_cast<const AttributeMatrix&>(testObject));
   }
-  case DataObject::Type::DataGroup: {
+  case IDataObject::Type::DataGroup: {
     return CompareBaseGroup(dynamic_cast<const BaseGroup&>(exemplarObject), dynamic_cast<const BaseGroup&>(testObject));
   }
-  case DataObject::Type::DataArray: {
-    return CompareDataArray(dynamic_cast<const IDataArray&>(exemplarObject), dynamic_cast<const IDataArray&>(testObject));
+  case IDataObject::Type::DataArray: {
+    return CompareDataArray(dynamic_cast<const AbstractDataArray&>(exemplarObject), dynamic_cast<const AbstractDataArray&>(testObject));
   }
-  case DataObject::Type::TetrahedralGeom: {
+  case IDataObject::Type::TetrahedralGeom: {
     return CompareTetrahedralGeom(dynamic_cast<const TetrahedralGeom&>(exemplarObject), dynamic_cast<const TetrahedralGeom&>(testObject));
   }
-  case DataObject::Type::HexahedralGeom: {
+  case IDataObject::Type::HexahedralGeom: {
     return CompareHexahedralGeom(dynamic_cast<const HexahedralGeom&>(exemplarObject), dynamic_cast<const HexahedralGeom&>(testObject));
   }
-  case DataObject::Type::TriangleGeom: {
+  case IDataObject::Type::TriangleGeom: {
     return CompareTriangleGeom(dynamic_cast<const TriangleGeom&>(exemplarObject), dynamic_cast<const TriangleGeom&>(testObject));
   }
-  case DataObject::Type::QuadGeom: {
+  case IDataObject::Type::QuadGeom: {
     return CompareQuadGeom(dynamic_cast<const QuadGeom&>(exemplarObject), dynamic_cast<const QuadGeom&>(testObject));
   }
-  case DataObject::Type::EdgeGeom: {
+  case IDataObject::Type::EdgeGeom: {
     return CompareEdgeGeom(dynamic_cast<const EdgeGeom&>(exemplarObject), dynamic_cast<const EdgeGeom&>(testObject));
   }
-  case DataObject::Type::VertexGeom: {
+  case IDataObject::Type::VertexGeom: {
     return CompareVertexGeom(dynamic_cast<const VertexGeom&>(exemplarObject), dynamic_cast<const VertexGeom&>(testObject));
   }
-  case DataObject::Type::ImageGeom: {
+  case IDataObject::Type::ImageGeom: {
     return CompareImageGeom(dynamic_cast<const ImageGeom&>(exemplarObject), dynamic_cast<const ImageGeom&>(testObject));
   }
-  case DataObject::Type::RectGridGeom: {
+  case IDataObject::Type::RectGridGeom: {
     return CompareRectGridGeom(dynamic_cast<const RectGridGeom&>(exemplarObject), dynamic_cast<const RectGridGeom&>(testObject));
   }
-  case DataObject::Type::StringArray: {
+  case IDataObject::Type::StringArray: {
     return CompareStringArray(dynamic_cast<const StringArray&>(exemplarObject), dynamic_cast<const StringArray&>(testObject));
   }
-  case DataObject::Type::NeighborList: {
-    return CompareNeighborList(dynamic_cast<const INeighborList&>(exemplarObject), dynamic_cast<const INeighborList&>(testObject));
+  case IDataObject::Type::NeighborList: {
+    return CompareNeighborList(dynamic_cast<const AbstractNeighborList&>(exemplarObject), dynamic_cast<const AbstractNeighborList&>(testObject));
   }
   default: {
     throw std::runtime_error(fmt::format("Equality not implemented for {}", testObject.getTypeName()));

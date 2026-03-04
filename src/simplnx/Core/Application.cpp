@@ -24,8 +24,8 @@
 #include <fmt/core.h>
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/IO/Generic/AbstractDataIOManager.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
-#include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 #include "simplnx/Filter/FilterList.hpp"
 #include "simplnx/Plugin/AbstractPlugin.hpp"
 #include "simplnx/Plugin/PluginLoader.hpp"
@@ -125,21 +125,21 @@ Result<> Application::initialize()
 
 void Application::initDefaultDataTypes()
 {
-  addDataType(DataObject::Type::DynamicListArray, "DynamicListArray");
-  addDataType(DataObject::Type::ScalarData, "ScalarData");
-  addDataType(DataObject::Type::DataGroup, "DataGroup");
-  addDataType(DataObject::Type::AttributeMatrix, "AttributeMatrix");
-  addDataType(DataObject::Type::DataArray, "Data Array<T>");
-  addDataType(DataObject::Type::RectGridGeom, "Rect Grid Geom");
-  addDataType(DataObject::Type::ImageGeom, "Image Geom");
-  addDataType(DataObject::Type::VertexGeom, "Vertex Geom");
-  addDataType(DataObject::Type::EdgeGeom, "Edge Geom");
-  addDataType(DataObject::Type::QuadGeom, "Quad Geom");
-  addDataType(DataObject::Type::TriangleGeom, "Triangle Geom");
-  addDataType(DataObject::Type::HexahedralGeom, "Hexahedral Geom");
-  addDataType(DataObject::Type::TetrahedralGeom, "Tetrahedral Geom");
-  addDataType(DataObject::Type::NeighborList, "NeighborList");
-  addDataType(DataObject::Type::StringArray, "String Array");
+  addDataType(IDataObject::Type::DynamicListArray, "DynamicListArray");
+  addDataType(IDataObject::Type::ScalarData, "ScalarData");
+  addDataType(IDataObject::Type::DataGroup, "DataGroup");
+  addDataType(IDataObject::Type::AttributeMatrix, "AttributeMatrix");
+  addDataType(IDataObject::Type::DataArray, "Data Array<T>");
+  addDataType(IDataObject::Type::RectGridGeom, "Rect Grid Geom");
+  addDataType(IDataObject::Type::ImageGeom, "Image Geom");
+  addDataType(IDataObject::Type::VertexGeom, "Vertex Geom");
+  addDataType(IDataObject::Type::EdgeGeom, "Edge Geom");
+  addDataType(IDataObject::Type::QuadGeom, "Quad Geom");
+  addDataType(IDataObject::Type::TriangleGeom, "Triangle Geom");
+  addDataType(IDataObject::Type::HexahedralGeom, "Hexahedral Geom");
+  addDataType(IDataObject::Type::TetrahedralGeom, "Tetrahedral Geom");
+  addDataType(IDataObject::Type::NeighborList, "NeighborList");
+  addDataType(IDataObject::Type::StringArray, "String Array");
 }
 
 Application::~Application()
@@ -343,7 +343,7 @@ std::shared_ptr<DataIOCollection> Application::getIOCollection() const
   return m_DataIOCollection;
 }
 
-std::shared_ptr<IDataIOManager> Application::getIOManager(const std::string& formatName) const
+std::shared_ptr<AbstractDataIOManager> Application::getIOManager(const std::string& formatName) const
 {
   return m_DataIOCollection->getManager(formatName);
 }
@@ -396,16 +396,16 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
   return {};
 }
 
-void Application::addDataType(DataObject::Type type, const std::string& name)
+void Application::addDataType(AbstractDataObject::Type type, const std::string& name)
 {
   m_NamedTypesMap[name] = type;
 }
 
-DataObject::Type Application::getDataType(const std::string& name) const
+AbstractDataObject::Type Application::getDataType(const std::string& name) const
 {
   if(m_NamedTypesMap.find(name) == m_NamedTypesMap.end())
   {
-    return DataObject::Type::DataObject;
+    return IDataObject::Type::AbstractDataObject;
   }
   return m_NamedTypesMap.at(name);
 }

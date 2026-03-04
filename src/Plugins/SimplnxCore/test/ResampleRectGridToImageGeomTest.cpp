@@ -35,7 +35,7 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Valid Filter Executio
   DataStructure dataStructure = LoadDataStructure(fs::path(fmt::format("{}/6_6_resample_rect_grid_to_image_geom.dream3d", unit_test::k_TestFilesDir)));
   Arguments args;
 
-  // Create a neighbor list and string array for testing selected arrays with all IArray types
+  // Create a neighbor list and string array for testing selected arrays with all AbstractArray types
   {
     const auto& cellDataAM = dataStructure.getDataRefAs<AttributeMatrix>(k_RectGridCellDataPath);
     const usize numTuples = cellDataAM.getNumberOfTuples();

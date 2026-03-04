@@ -39,7 +39,7 @@ public:
   Type type() const final;
 
   /**
-   * @brief Returns whether the parameter refers to a required or created DataObject.
+   * @brief Returns whether the parameter refers to a required or created AbstractDataObject.
    * @return
    */
   Category category() const;

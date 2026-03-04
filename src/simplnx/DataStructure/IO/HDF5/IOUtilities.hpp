@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/Result.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
@@ -10,7 +10,7 @@ namespace nx::core
 {
 class BaseGroup;
 class DataMap;
-class DataObject;
+class AbstractDataObject;
 
 namespace HDF5
 {
@@ -21,7 +21,7 @@ class GroupIO;
 class ObjectIO;
 
 /**
- * @brief Attempts to write the DataObject attributes to HDF5.
+ * @brief Attempts to write the AbstractDataObject attributes to HDF5.
  * Returns a Result<> with any errors or warnings encountered during the process.
  * @param dataStructureWriter
  * @param objectWriter
@@ -29,7 +29,7 @@ class ObjectIO;
  * @param importable
  * @return Result<>
  */
-Result<> SIMPLNX_EXPORT WriteObjectAttributes(DataStructureWriter& dataStructureWriter, ObjectIO& objectWriter, const DataObject* dataObject, bool importable);
+Result<> SIMPLNX_EXPORT WriteObjectAttributes(DataStructureWriter& dataStructureWriter, ObjectIO& objectWriter, const AbstractDataObject* dataObject, bool importable);
 
 /**
  * @brief Attempts to read the DataMap from HDF5.
@@ -41,7 +41,8 @@ Result<> SIMPLNX_EXPORT WriteObjectAttributes(DataStructureWriter& dataStructure
  * @param useEmptyDataStore = false
  * @return Result<>
  */
-Result<> SIMPLNX_EXPORT ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const GroupIO& parentGroup, std::optional<DataObject::IdType> parentId, bool useEmptyDataStore = false);
+Result<> SIMPLNX_EXPORT ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const GroupIO& parentGroup, std::optional<AbstractDataObject::IdType> parentId,
+                                    bool useEmptyDataStore = false);
 
 /**
  * @brief Attempts to read the BaseGroup from HDF5.

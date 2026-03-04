@@ -161,7 +161,8 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
       CreateImageGeometryAction::SpacingType spacing = reader.getLabDCTSpacing();
       std::vector<float> origin = reader.getLabDCTOrigin();
 
-      auto createDataGroupAction = std::make_unique<CreateImageGeometryAction>(pLabDCTImageGeometryPath, dims, origin, spacing, pLabDCTCellAttributeMatrixNameValue, IGeometry::LengthUnit::Millimeter);
+      auto createDataGroupAction =
+          std::make_unique<CreateImageGeometryAction>(pLabDCTImageGeometryPath, dims, origin, spacing, pLabDCTCellAttributeMatrixNameValue, AbstractGeometry::LengthUnit::Millimeter);
       resultOutputActions.value().appendAction(std::move(createDataGroupAction));
     }
 
@@ -246,7 +247,7 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
       std::vector<float> origin = reader.getAbsorptionCTOrigin();
 
       auto createDataGroupAction =
-          std::make_unique<CreateImageGeometryAction>(pAbsorptionCTImageGeometryPath, dims, origin, spacing, pAbsorptionCTCellAttributeMatrixNameValue, IGeometry::LengthUnit::Millimeter);
+          std::make_unique<CreateImageGeometryAction>(pAbsorptionCTImageGeometryPath, dims, origin, spacing, pAbsorptionCTCellAttributeMatrixNameValue, AbstractGeometry::LengthUnit::Millimeter);
       resultOutputActions.value().appendAction(std::move(createDataGroupAction));
     }
 

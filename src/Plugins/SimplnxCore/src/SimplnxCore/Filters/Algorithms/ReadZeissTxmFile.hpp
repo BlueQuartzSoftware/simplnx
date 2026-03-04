@@ -46,7 +46,7 @@ struct ZeissTxmHeaderMetadata
   CreateImageGeometryAction::DimensionType Dimensions = {0, 0, 0};
   CreateImageGeometryAction::SpacingType Spacing = {0.0f, 0.0f, 0.0f};
   CreateImageGeometryAction::OriginType Origin = {0.0f, 0.0f, 0.0f};
-  IGeometry::LengthUnit Units = IGeometry::LengthUnit::Micrometer;
+  AbstractGeometry::LengthUnit Units = AbstractGeometry::LengthUnit::Micrometer;
   std::string DataFilePath = {};
   ZeissTxmDataType DataType = ZeissTxmDataType::FLOAT_TYPE;
   void clear()
@@ -54,7 +54,7 @@ struct ZeissTxmHeaderMetadata
     Dimensions = {0, 0, 0};
     Spacing = {0.0f, 0.0f, 0.0f};
     Origin = {0.0f, 0.0f, 0.0f};
-    Units = IGeometry::LengthUnit::Micrometer;
+    Units = AbstractGeometry::LengthUnit::Micrometer;
     DataFilePath = {};
     DataType = ZeissTxmDataType::FLOAT_TYPE;
   }

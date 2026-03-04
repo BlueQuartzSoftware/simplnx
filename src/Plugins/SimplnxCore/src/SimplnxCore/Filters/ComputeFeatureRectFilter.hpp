@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -13,7 +13,7 @@ namespace nx::core
  * This data can be important for finding the smallest encompassing volume. The values are given in pixel
  * coordinates.
  */
-class SIMPLNXCORE_EXPORT ComputeFeatureRectFilter : public IFilter
+class SIMPLNXCORE_EXPORT ComputeFeatureRectFilter : public AbstractFilter
 {
 public:
   ComputeFeatureRectFilter() = default;

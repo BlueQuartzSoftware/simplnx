@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
@@ -304,7 +304,7 @@ Result<> ComputeFeatureSizes::operator()()
   }
 
   const DataPath geomPath = m_InputValues->InputImageGeometryPath;
-  auto& geom = m_DataStructure.getDataRefAs<IGeometry>(geomPath);
+  auto& geom = m_DataStructure.getDataRefAs<AbstractGeometry>(geomPath);
   const auto& featureIds = featureIdsArrayPtr->getDataStoreRef();
 
   const DataPath featureAttributeMatrixPath = m_InputValues->FeatureAttributeMatrixPath;

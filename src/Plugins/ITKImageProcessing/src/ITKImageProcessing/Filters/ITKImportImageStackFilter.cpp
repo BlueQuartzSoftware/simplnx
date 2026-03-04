@@ -259,7 +259,7 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     // ======================= Convert to GrayScale Section ===================
     DataPath srcImageDataPath = imageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
 
-    bool validInputForGrayScaleConversion = importedDataStructure.getDataRefAs<IDataArray>(srcImageDataPath).getDataType() == DataType::uint8;
+    bool validInputForGrayScaleConversion = importedDataStructure.getDataRefAs<AbstractDataArray>(srcImageDataPath).getDataType() == DataType::uint8;
     if(convertToGrayscale && validInputForGrayScaleConversion && nullptr != grayScaleFilter.get())
     {
       // This same filter was used to preflight so as long as nothing changes on disk this really should work....
@@ -277,16 +277,16 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       }
 
       // deletion of non-grayscale array
-      DataObject::IdType id;
+      AbstractDataObject::IdType id;
       { // scoped for safety since this reference will be nonexistent in a moment
-        auto& oldArray = importedDataStructure.getDataRefAs<IDataArray>(srcImageDataPath);
+        auto& oldArray = importedDataStructure.getDataRefAs<AbstractDataArray>(srcImageDataPath);
         id = oldArray.getId();
       }
       importedDataStructure.removeData(id);
 
       // rename grayscale array to reflect original
       {
-        auto& gray = importedDataStructure.getDataRefAs<IDataArray>(srcImageDataPath.replaceName("gray" + srcImageDataPath.getTargetName()));
+        auto& gray = importedDataStructure.getDataRefAs<AbstractDataArray>(srcImageDataPath.replaceName("gray" + srcImageDataPath.getTargetName()));
         if(!gray.canRename(srcImageDataPath.getTargetName()))
         {
           return MakeErrorResult(-64543, fmt::format("Unable to rename the internal grayscale array to {}", srcImageDataPath.getTargetName()));
@@ -520,7 +520,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   std::vector<usize> outputDims;
   std::vector<float32> outputSpacing;
   std::vector<float32> outputOrigin;
-  IGeometry::LengthUnit outputUnits;
+  AbstractGeometry::LengthUnit outputUnits;
 
   // Create a sub-filter to read each image, although for preflight we are going to read the first image in the
   // list and hope the rest are correct.
@@ -726,7 +726,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   }
 
   const DataPath imageDataPath = currentImageGeomPath.createChildPath(cellDataName).createChildPath(pImageDataArrayNameValue);
-  auto& imageData = tmpDs.getDataRefAs<IDataArray>(imageDataPath);
+  auto& imageData = tmpDs.getDataRefAs<AbstractDataArray>(imageDataPath);
   if(pConvertToGrayScaleValue)
   {
     if(imageData.getDataType() != DataType::uint8)

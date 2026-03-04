@@ -1,7 +1,7 @@
 #include "AlignSectionsFeatureCentroid.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
@@ -31,7 +31,7 @@ Result<> AlignSectionsFeatureCentroid::operator()()
   {
     return {};
   }
-  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  const auto& gridGeom = m_DataStructure.getDataRefAs<AbstractGridGeometry>(m_InputValues->ImageGeometryPath);
 
   return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
 }
@@ -39,7 +39,7 @@ Result<> AlignSectionsFeatureCentroid::operator()()
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts)
 {
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskCompare;
   try
   {
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);

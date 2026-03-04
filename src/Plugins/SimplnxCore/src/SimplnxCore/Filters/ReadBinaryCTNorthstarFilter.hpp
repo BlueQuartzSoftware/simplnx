@@ -2,6 +2,7 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
 
 #include <filesystem>
@@ -20,7 +21,7 @@ namespace nx::core
  * files are in the same directory as the .nsihdr files.
 
  */
-class SIMPLNXCORE_EXPORT ReadBinaryCTNorthstarFilter : public IFilter
+class SIMPLNXCORE_EXPORT ReadBinaryCTNorthstarFilter : public AbstractFilter
 {
 public:
   ReadBinaryCTNorthstarFilter();

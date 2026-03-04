@@ -1,8 +1,8 @@
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry0D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -38,8 +38,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
   DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
 
   DataPath exemplarTriangleGeomPath({"Exemplar QuickMesh"});
-  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
-  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
+  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(AbstractNodeGeometry2D::k_SharedFacesListName);
+  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(AbstractNodeGeometry0D::k_SharedVertexListName);
 
   {
     Arguments args;
@@ -90,14 +90,14 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  AbstractGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+  AbstractGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
   REQUIRE(triangle->getNumberOfTuples() == 63440);
   REQUIRE(vertices->getNumberOfTuples() == 28910);
 
   // Compare the shared vertex list and shared triangle list
-  CompareArrays<IGeometry::MeshIndexType>(dataStructure, exemplarSharedTriPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
+  CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, exemplarSharedTriPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
   CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
 
   DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
@@ -132,8 +132,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
   DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
 
   DataPath exemplarTriangleGeomPath({"Exemplar QuickMesh Winding"});
-  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
-  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
+  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(AbstractNodeGeometry2D::k_SharedFacesListName);
+  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(AbstractNodeGeometry0D::k_SharedVertexListName);
 
   {
     Arguments args;
@@ -184,14 +184,14 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  AbstractGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+  AbstractGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
   REQUIRE(triangle->getNumberOfTuples() == 63440);
   REQUIRE(vertices->getNumberOfTuples() == 28910);
 
   // Compare the shared vertex list and shared triangle list
-  CompareArrays<IGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
+  CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
   CompareArrays<float32>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName), exemplarSharedVertexPath);
 
   DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
@@ -226,8 +226,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
   DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
 
   DataPath exemplarTriangleGeomPath({"Exemplar QuickMesh Problem Voxels"});
-  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
-  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
+  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(AbstractNodeGeometry2D::k_SharedFacesListName);
+  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(AbstractNodeGeometry0D::k_SharedVertexListName);
 
   {
     Arguments args;
@@ -278,14 +278,14 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  AbstractGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+  AbstractGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
   REQUIRE(triangle->getNumberOfTuples() == 63440);
   REQUIRE(vertices->getNumberOfTuples() == 28910);
 
   // Compare the shared vertex list and shared triangle list
-  CompareArrays<IGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
+  CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
   CompareArrays<float32>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName), exemplarSharedVertexPath);
 
   DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);
@@ -320,8 +320,8 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
 
   DataPath exemplarTriangleGeomPath({"Exemplar QuickMesh Problem Voxel Winding"});
-  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
-  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
+  DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(AbstractNodeGeometry2D::k_SharedFacesListName);
+  DataPath exemplarSharedVertexPath = exemplarTriangleGeomPath.createChildPath(AbstractNodeGeometry0D::k_SharedVertexListName);
 
   {
     Arguments args;
@@ -372,14 +372,14 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   }
   // Check a few things about the generated data.
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
-  IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
-  IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
+  AbstractGeometry::SharedTriList* triangle = triangleGeom.getFaces();
+  AbstractGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
 
   REQUIRE(triangle->getNumberOfTuples() == 63440);
   REQUIRE(vertices->getNumberOfTuples() == 28910);
 
   // Compare the shared vertex list and shared triangle list
-  CompareArrays<IGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
+  CompareArrays<AbstractGeometry::MeshIndexType>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName), exemplarSharedTriPath);
   CompareArrays<float32>(dataStructure, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName), exemplarSharedVertexPath);
 
   DataPath exemplarFaceAttrMatPath = exemplarTriangleGeomPath.createChildPath(k_FaceDataGroupName);

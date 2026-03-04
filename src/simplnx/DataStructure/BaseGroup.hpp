@@ -1,7 +1,7 @@
 #pragma once
 
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/DataMap.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <memory>
@@ -13,43 +13,43 @@ namespace nx::core
 {
 /**
  * @class BaseGroup
- * @brief The BaseGroup class is the base class for all DataObject containers
+ * @brief The BaseGroup class is the base class for all AbstractDataObject containers
  * in the DataStructure. This is not an abstract class as all core functionality
  * is provided by this class, but for type-checking purposes, this cannot not be
  * the specified type when creating objects directly. Use DataGroup when a normal
  * group of DataObjects is desired.
  *
- * Child classes should override 'bool canInsert(const DataObject*) const'
+ * Child classes should override 'bool canInsert(const AbstractDataObject*) const'
  * to determine which DataObjects can be added to the group and which cannot.
  * By default, an object cannot be added if another object with the same name
  * already exists in the group. Additional rules can be added in derived
  * classes.
  */
-class SIMPLNX_EXPORT BaseGroup : public DataObject
+class SIMPLNX_EXPORT BaseGroup : public AbstractDataObject
 {
 public:
   using Iterator = typename DataMap::Iterator;
   using ConstIterator = typename DataMap::ConstIterator;
 
-  static inline constexpr StringLiteral k_TypeName = "BaseGroup";
+  static constexpr StringLiteral k_TypeName = "BaseGroup";
 
   enum class GroupType : uint32
   {
     BaseGroup,
     DataGroup,
     AttributeMatrix,
-    IGeometry,
-    IGridGeometry,
+    AbstractGeometry,
+    AbstractGridGeometry,
     RectGridGeom,
     ImageGeom,
-    INodeGeometry0D,
+    AbstractNodeGeometry0D,
     VertexGeom,
-    INodeGeometry1D,
+    AbstractNodeGeometry1D,
     EdgeGeom,
-    INodeGeometry2D,
+    AbstractNodeGeometry2D,
     QuadGeom,
     TriangleGeom,
-    INodeGeometry3D,
+    AbstractNodeGeometry3D,
     HexahedralGeom,
     TetrahedralGeom,
     Unknown
@@ -72,7 +72,7 @@ public:
   /**
    * @brief Destroys the BaseGroup and removes it from the list of it's
    * children's known parents. If a child no longer has any parents, the
-   * DataObject is destroyed.
+   * AbstractDataObject is destroyed.
    */
   ~BaseGroup() override;
 
@@ -80,7 +80,7 @@ public:
    * @brief Returns an enumeration of the class or subclass. Used for quick comparison or type deduction
    * @return
    */
-  DataObject::Type getDataObjectType() const override;
+  AbstractDataObject::Type getDataObjectType() const override;
 
   /**
    * @brief Returns true if this object is derived from BaseGroup.
@@ -131,7 +131,7 @@ public:
   bool contains(const std::string& name) const;
 
   /**
-   * @brief Returns true if the specified DataObject is found among the
+   * @brief Returns true if the specified AbstractDataObject is found among the
    * container's children. Returns false otherwise.
    *
    * BaseGroups found among the container's children are not expanded during
@@ -139,51 +139,51 @@ public:
    * @param obj
    * @return bool
    */
-  bool contains(const DataObject* obj) const;
+  bool contains(const AbstractDataObject* obj) const;
 
   /**
-   * Returns a pointer to the DataObject child with the specified name. Returns
+   * Returns a pointer to the AbstractDataObject child with the specified name. Returns
    * nullptr if no child exists with the specified name exists.
    *
    * BaseGroups found among the container's children are not expanded during
    * the operation.
    * @param name
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* operator[](const std::string& name);
+  AbstractDataObject* operator[](const std::string& name);
 
   /**
-   * Returns a pointer to the DataObject child with the specified name. Returns
+   * Returns a pointer to the AbstractDataObject child with the specified name. Returns
    * nullptr if no child exists with the specified name exists.
    *
    * BaseGroups found among the container's children are not expanded during
    * the operation.
    * @param name
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  const DataObject* operator[](const std::string& name) const;
+  const AbstractDataObject* operator[](const std::string& name) const;
 
   /**
-   * Returns a pointer to the DataObject child with the specified name.
+   * Returns a pointer to the AbstractDataObject child with the specified name.
    * Throws if no child exists with the specified name exists.
    *
    * BaseGroups found among the container's children are not expanded during
    * the operation.
    * @param name
-   * @return DataObject&
+   * @return AbstractDataObject&
    */
-  DataObject& at(const std::string& name);
+  AbstractDataObject& at(const std::string& name);
 
   /**
-   * Returns a pointer to the DataObject child with the specified name.
+   * Returns a pointer to the AbstractDataObject child with the specified name.
    * Throws if no child exists with the specified name exists.
    *
    * BaseGroups found among the container's children are not expanded during
    * the operation.
    * @param name
-   * @return const DataObject&
+   * @return const AbstractDataObject&
    */
-  const DataObject& at(const std::string& name) const;
+  const AbstractDataObject& at(const std::string& name) const;
 
   /**
    * @brief Returns an iterator to the child with the specified name. If no
@@ -238,23 +238,23 @@ public:
   }
 
   /**
-   * @brief Returns true if this group is a parent of the given DataObject
+   * @brief Returns true if this group is a parent of the given AbstractDataObject
    * @return bool
    */
-  bool isParentOf(const DataObject* dataObj) const;
+  bool isParentOf(const AbstractDataObject* dataObj) const;
 
   /**
-   * @brief Attempts to insert the specified DataObject into the container. If the
-   * DataObject passes 'canInsert(obj: weak_ptr<DataObject>): bool', the DataObject
+   * @brief Attempts to insert the specified AbstractDataObject into the container. If the
+   * AbstractDataObject passes 'canInsert(obj: weak_ptr<AbstractDataObject>): bool', the AbstractDataObject
    * will be inserted into the container and the method returns true. Otherwise,
    * returns false.
    * @param obj
    * @return bool
    */
-  bool insert(const std::weak_ptr<DataObject>& obj);
+  bool insert(const std::weak_ptr<AbstractDataObject>& obj);
 
   /**
-   * Attempts to remove the specified DataObject from the container. Returns
+   * Attempts to remove the specified AbstractDataObject from the container. Returns
    * true if it succeeded. Returns false otherwise.
    *
    * BaseGroups found among the container's children are not expanded during
@@ -262,10 +262,10 @@ public:
    * @param obj
    * @return bool
    */
-  bool remove(DataObject* obj);
+  bool remove(AbstractDataObject* obj);
 
   /**
-   * Attempts to remove a DataObject with the specified name from the container.
+   * Attempts to remove a AbstractDataObject with the specified name from the container.
    * Returns true if it succeeded. Returns false otherwise.
    *
    * BaseGroups found among the container's children are not expanded during
@@ -337,7 +337,7 @@ public:
   /**
    * @brief Querys the DataMap for the object ids in m_DataMap
    */
-  std::vector<DataObject::IdType> GetChildrenIds();
+  std::vector<AbstractDataObject::IdType> GetChildrenIds();
 
 protected:
   /**
@@ -356,24 +356,24 @@ protected:
   BaseGroup(DataStructure& dataStructure, std::string name, IdType importId);
 
   /**
-   * @brief Updates the DataMap IDs. Should only be called by DataObject::checkUpdatedIds.
+   * @brief Updates the DataMap IDs. Should only be called by AbstractDataObject::checkUpdatedIds.
    * @param updatedIdsMap
    */
-  void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap) override;
+  void checkUpdatedIdsImpl(const std::unordered_map<AbstractDataObject::IdType, AbstractDataObject::IdType>& updatedIdsMap) override;
 
   /**
-   * @brief Checks if the provided DataObject can be added to the container.
+   * @brief Checks if the provided AbstractDataObject can be added to the container.
    * This is a virtual method so that derived classes can modify what can or
-   * cannot be added to the container. Returns true if the DataObject can be
+   * cannot be added to the container. Returns true if the AbstractDataObject can be
    * added to the container. Otherwise, returns false.
    *
-   * By default, a DataObject cannot be added to the BaseContainer if an object
+   * By default, a AbstractDataObject cannot be added to the BaseContainer if an object
    * with that name is already in the container. No BaseGroup children are
    * expanded during this operation.
    * @param obj
    * @return bool
    */
-  virtual bool canInsert(const DataObject* obj) const;
+  virtual bool canInsert(const AbstractDataObject* obj) const;
 
   /**
    * @brief Sets a new DataStructure for the BaseGroup. Updates the DataMap

@@ -288,7 +288,7 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter (Case 2): Valid filter execution - Ski
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // Check that the array does not exist
-  const IDataArray* array = dataStructure.getDataAs<IDataArray>(arrayPath);
+  const AbstractDataArray* array = dataStructure.getDataAs<AbstractDataArray>(arrayPath);
   REQUIRE(array == nullptr);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);

@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @brief This filter will replace data using data from surrounding voxels. See more
  * at the help file.
  */
-class SIMPLNXCORE_EXPORT FillBadDataFilter : public IFilter
+class SIMPLNXCORE_EXPORT FillBadDataFilter : public AbstractFilter
 {
 public:
   FillBadDataFilter() = default;

@@ -7,12 +7,12 @@ namespace nx::core
 /**
  * @brief Action for importing DataObjects into a DataStructure.
  */
-class SIMPLNX_EXPORT ImportObjectAction : public IDataCreationAction
+class SIMPLNX_EXPORT ImportObjectAction : public AbstractDataCreationAction
 {
 public:
   ImportObjectAction() = delete;
 
-  ImportObjectAction(const std::shared_ptr<DataObject>& importObject, const DataPath& path);
+  ImportObjectAction(const std::shared_ptr<AbstractDataObject>& importObject, const DataPath& path);
 
   ~ImportObjectAction() noexcept override;
 
@@ -37,13 +37,13 @@ public:
   UniquePointer clone() const override;
 
   /**
-   * @brief Returns a shared_ptr to the DataObject being imported into the DataStructure.
-   * @return std::shared_ptr<DataObject>
+   * @brief Returns a shared_ptr to the AbstractDataObject being imported into the DataStructure.
+   * @return std::shared_ptr<AbstractDataObject>
    */
-  std::shared_ptr<DataObject> getImportObject() const;
+  std::shared_ptr<AbstractDataObject> getImportObject() const;
 
   /**
-   * @brief Returns the path used to insert the DataObject into the DataStructure.
+   * @brief Returns the path used to insert the AbstractDataObject into the DataStructure.
    * @return DataPath
    */
   DataPath path() const;
@@ -55,6 +55,6 @@ public:
   std::vector<DataPath> getAllCreatedPaths() const override;
 
 private:
-  std::shared_ptr<DataObject> m_ImportData;
+  std::shared_ptr<AbstractDataObject> m_ImportData;
 };
 } // namespace nx::core

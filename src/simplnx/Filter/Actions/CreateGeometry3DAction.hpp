@@ -3,8 +3,8 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
@@ -20,7 +20,7 @@ namespace nx::core
  * @brief Action for creating a Tetrahedral or Hexehedral Geometry in a DataStructure
  */
 template <typename Geometry3DType>
-class CreateGeometry3DAction : public IDataCreationAction
+class CreateGeometry3DAction : public AbstractDataCreationAction
 {
 public:
   using DimensionType = std::vector<size_t>;
@@ -37,7 +37,7 @@ public:
    */
   CreateGeometry3DAction(const DataPath& geometryPath, size_t numCells, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& cellAttributeMatrixName,
                          const std::string& sharedVerticesName, const std::string& sharedCellsName, std::string createdDataFormat = "")
-  : IDataCreationAction(geometryPath)
+  : AbstractDataCreationAction(geometryPath)
   , m_NumCells(numCells)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
@@ -59,7 +59,7 @@ public:
    */
   CreateGeometry3DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputCellsArrayPath, const std::string& vertexAttributeMatrixName,
                          const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
-  : IDataCreationAction(geometryPath)
+  : AbstractDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_CellDataName(cellAttributeMatrixName)
   , m_SharedVerticesName(inputVerticesArrayPath.getTargetName())
@@ -87,8 +87,8 @@ public:
   Result<> apply(DataStructure& dataStructure, Mode mode) const override
   {
     static constexpr StringLiteral prefix = "CreateGeometry3DAction: ";
-    using MeshIndexType = IGeometry::MeshIndexType;
-    using SharedCellList = IGeometry::SharedFaceList;
+    using MeshIndexType = AbstractGeometry::MeshIndexType;
+    using SharedCellList = AbstractGeometry::SharedFaceList;
     const DataPath cellDataPath = getCellDataPath();
     const DataPath vertexDataPath = getVertexDataPath();
 
@@ -144,10 +144,10 @@ public:
       cellTupleShape = cells->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
-      std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
+      std::shared_ptr<AbstractDataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
-      std::shared_ptr<DataObject> cellsCopy = cells->deepCopy(getCreatedPath().createChildPath(m_SharedCellsName));
+      std::shared_ptr<AbstractDataObject> cellsCopy = cells->deepCopy(getCreatedPath().createChildPath(m_SharedCellsName));
       const auto cellsArray = std::dynamic_pointer_cast<DataArray<MeshIndexType>>(cellsCopy);
 
       geometry3d->setPolyhedraList(*cellsArray);
@@ -287,7 +287,7 @@ public:
    * @brief Returns the number of cells
    * @return
    */
-  IGeometry::MeshIndexType numCells() const
+  AbstractGeometry::MeshIndexType numCells() const
   {
     return m_NumCells;
   }
@@ -296,7 +296,7 @@ public:
    * @brief Returns the number of vertices (estimated in some circumstances)
    * @return
    */
-  IGeometry::MeshIndexType numVertices() const
+  AbstractGeometry::MeshIndexType numVertices() const
   {
     return m_NumVertices;
   }
@@ -321,8 +321,8 @@ protected:
   CreateGeometry3DAction() = default;
 
 private:
-  IGeometry::MeshIndexType m_NumCells = 1;
-  IGeometry::MeshIndexType m_NumVertices = Geometry3DType::k_NumVerts;
+  AbstractGeometry::MeshIndexType m_NumCells = 1;
+  AbstractGeometry::MeshIndexType m_NumVertices = Geometry3DType::k_NumVerts;
   std::string m_VertexDataName;
   std::string m_CellDataName;
   std::string m_SharedVerticesName;

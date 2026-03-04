@@ -3,9 +3,9 @@
 #include "SimplnxCore/Filters/Algorithms/Silhouette.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/DataStructure/AbstractDataArray.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/DeleteDataAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
@@ -108,8 +108,8 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  auto clusterArray = dataStructure.getDataAs<IDataArray>(pSelectedArrayPathValue);
-  auto clusterIds = dataStructure.getDataAs<IDataArray>(pFeatureIdsArrayPathValue);
+  auto clusterArray = dataStructure.getDataAs<AbstractDataArray>(pSelectedArrayPathValue);
+  auto clusterIds = dataStructure.getDataAs<AbstractDataArray>(pFeatureIdsArrayPathValue);
   if(clusterArray->getNumberOfTuples() != clusterIds->getNumberOfTuples())
   {
     return MakePreflightErrorResult(-8976, fmt::format("The the number of tuples for {} ({}) do not match the number of tuples for {} ({})", clusterArray->getName(), clusterArray->getNumberOfTuples(),

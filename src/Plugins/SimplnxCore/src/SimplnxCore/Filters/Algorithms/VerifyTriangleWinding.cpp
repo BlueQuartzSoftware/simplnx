@@ -48,7 +48,7 @@ public:
         }
 
         // Flip it
-        const IGeometry::MeshIndexType tempValue = m_Triangles[(i * 3) + 0];
+        const AbstractGeometry::MeshIndexType tempValue = m_Triangles[(i * 3) + 0];
         m_Triangles[(i * 3) + 0] = m_Triangles[(i * 3) + 2];
         m_Triangles[(i * 3) + 2] = tempValue;
         break;
@@ -74,7 +74,7 @@ public:
         }
 
         // Flip it
-        const IGeometry::MeshIndexType tempValue = m_Triangles[(i * 3) + 0];
+        const AbstractGeometry::MeshIndexType tempValue = m_Triangles[(i * 3) + 0];
         m_Triangles[(i * 3) + 0] = m_Triangles[(i * 3) + 2];
         m_Triangles[(i * 3) + 2] = tempValue;
         break;
@@ -156,7 +156,7 @@ Result<> VerifyTriangleWinding::operator()()
     {
       return MakeErrorResult(-56321, fmt::format("Unable to generate the connectivity list for {} geometry.", triGeom.getName()));
     }
-    const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+    const auto& connectivity = m_DataStructure.getDataRefAs<AbstractGeometry::ElementDynamicList>(optionalId.value());
 
     m_MessageHandler("Repairing Windings...");
     // This is reused since it may contain warnings
@@ -179,7 +179,7 @@ Result<> VerifyTriangleWinding::operator()()
     maxFeature = std::max(idsStore[i], maxFeature);
   }
 
-  std::vector<IGeometry::SharedVertexList::value_type> volumes(maxFeature + 1);
+  std::vector<AbstractGeometry::SharedVertexList::value_type> volumes(maxFeature + 1);
   auto volumeResult = MeshingUtilities::CalculateFeatureVolumes(triangles, triGeom.getVertices()->getDataStoreRef(), idsStore, volumes, m_ShouldCancel);
   if(volumeResult.invalid())
   {

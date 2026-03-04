@@ -18,7 +18,7 @@ class CopyEdgeDataToVertexData
 public:
   using StoreType = AbstractDataStore<T>;
 
-  CopyEdgeDataToVertexData(const IDataArray* selectedEdgeArray, IDataArray* createdVertexArray, const UInt64AbstractDataStore& vertexEdgeIds, const std::atomic_bool& shouldCancel)
+  CopyEdgeDataToVertexData(const AbstractDataArray* selectedEdgeArray, AbstractDataArray* createdVertexArray, const UInt64AbstractDataStore& vertexEdgeIds, const std::atomic_bool& shouldCancel)
   : m_SelectedEdgeDataStore(selectedEdgeArray->template getIDataStoreRefAs<StoreType>())
   , m_CreatedVertexDataStore(createdVertexArray->template getIDataStoreRefAs<StoreType>())
   , m_VertexEdgeDataStore(vertexEdgeIds)
@@ -209,8 +209,8 @@ Result<> PointSampleEdgeGeometry::operator()()
   for(const auto& selectedArrayPath : m_InputValues->pSelectedDataArrayPaths)
   {
     DataPath createdArrayPath = vertexAttrMatPath.createChildPath(selectedArrayPath.getTargetName());
-    const auto* selectedEdgeArray = m_DataStructure.getDataAs<IDataArray>(selectedArrayPath);
-    auto* createdVertexArray = m_DataStructure.getDataAs<IDataArray>(createdArrayPath);
+    const auto* selectedEdgeArray = m_DataStructure.getDataAs<AbstractDataArray>(selectedArrayPath);
+    auto* createdVertexArray = m_DataStructure.getDataAs<AbstractDataArray>(createdArrayPath);
 
     if(maxEdgeId >= selectedEdgeArray->getNumberOfTuples())
     {

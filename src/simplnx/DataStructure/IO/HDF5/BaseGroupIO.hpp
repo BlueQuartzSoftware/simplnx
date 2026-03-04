@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
+#include "simplnx/DataStructure/IO/HDF5/AbstractDataIO.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace HDF5
 /**
  * @brief The BaseGroupIO class serves as the base IO class for reading and writing BaseGroups to HDF5
  */
-class SIMPLNX_EXPORT BaseGroupIO : public IDataIO
+class SIMPLNX_EXPORT BaseGroupIO : public AbstractDataIO
 {
 public:
   BaseGroupIO();
@@ -47,8 +47,8 @@ protected:
    * @param useEmptyDataStore
    * @return Result<>
    */
-  static Result<> ReadBaseGroupData(DataStructureReader& dataStructureReader, BaseGroup& baseGroup, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
-                                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
+  static Result<> ReadBaseGroupData(DataStructureReader& dataStructureReader, BaseGroup& baseGroup, const group_reader_type& parentGroup, const std::string& objectName,
+                                    AbstractDataObject::IdType importId, const std::optional<AbstractDataObject::IdType>& parentId, bool useEmptyDataStore = false);
 
   /**
    * @brief attempts to write the BaseGroup data to HDF5.

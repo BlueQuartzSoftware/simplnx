@@ -25,7 +25,7 @@ public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
-  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
+  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<AbstractDataArray> dataArrayPtr)
   : m_MessageHelper(messageHelper)
   , m_TotalPoints(totalPoints)
   , m_BestNeighbor(bestNeighbor)
@@ -57,7 +57,7 @@ private:
   MessageHelper& m_MessageHelper;
   size_t m_TotalPoints = 0;
   std::vector<int64> m_BestNeighbor;
-  std::shared_ptr<IDataArray> m_DataArrayPtr;
+  std::shared_ptr<AbstractDataArray> m_DataArrayPtr;
 };
 
 // -----------------------------------------------------------------------------
@@ -208,7 +208,7 @@ Result<> NeighborOrientationCorrelation::operator()()
     }
 
     // Build up a list of the DataArrays that we are going to operate on.
-    std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
+    std::vector<std::shared_ptr<AbstractDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
     // The idea for this parallel section is to parallelize over each Data Array that
     // will need it's data adjusted. This should go faster than before by about 2x.
     // Better speed up could be achieved if we had better data locality.

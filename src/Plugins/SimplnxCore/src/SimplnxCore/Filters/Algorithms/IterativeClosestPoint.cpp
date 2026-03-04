@@ -18,7 +18,7 @@ template <typename Derived>
 struct VertexGeomAdaptor
 {
   const Derived& obj;
-  AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>* verts;
+  AbstractDataStore<AbstractNodeGeometry0D::SharedVertexList::value_type>* verts;
   size_t m_NumComponents = 0;
   size_t m_NumTuples = 0;
 

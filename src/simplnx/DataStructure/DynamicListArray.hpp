@@ -1,7 +1,7 @@
 #pragma once
 
 #include "simplnx/Common/StringLiteral.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 
 #include <cstring>
 #include <iostream>
@@ -17,7 +17,7 @@ inline constexpr StringLiteral k_TypeName = "DynamicListArray";
 }
 
 template <typename T, typename K>
-class DynamicListArray : public DataObject
+class DynamicListArray : public AbstractDataObject
 {
 public:
   friend class DataStructure;
@@ -33,7 +33,7 @@ public:
   /**
    * @brief Attempts to create a new DynamicListArray and insert it into the
    * DataStructure. If a parentId is provided, the created DynamicListArray
-   * will be nested under the target DataObject. Otherwise, it will be placed
+   * will be nested under the target AbstractDataObject. Otherwise, it will be placed
    * directly under the DataStructure.
    *
    * Returns a pointer to the created DynamicListArray if the operation succeeded.
@@ -56,7 +56,7 @@ public:
   /**
    * @brief Attempts to create a new DynamicListArray and insert it into the
    * DataStructure. If a parentId is provided, the created DynamicListArray
-   * will be nested under the target DataObject. Otherwise, it will be placed
+   * will be nested under the target AbstractDataObject. Otherwise, it will be placed
    * directly under the DataStructure.
    *
    * Returns a pointer to the created DynamicListArray if the operation succeeded.
@@ -84,7 +84,7 @@ public:
    * @param other
    */
   DynamicListArray(const DynamicListArray& other)
-  : DataObject(other)
+  : AbstractDataObject(other)
   , m_Size(other.m_Size)
   {
     allocate(other.m_Size);
@@ -101,7 +101,7 @@ public:
    * @param other
    */
   DynamicListArray(DynamicListArray&& other)
-  : DataObject(std::move(other))
+  : AbstractDataObject(std::move(other))
   , m_Array(std::move(other.m_Array))
   , m_Size(std::move(other.m_Size))
   {
@@ -127,13 +127,13 @@ public:
     }
   }
 
-  DataObject::Type getDataObjectType() const override
+  AbstractDataObject::Type getDataObjectType() const override
   {
     return Type::DynamicListArray;
   }
 
   /**
-   * @brief Returns the typename of the DataObject as a std::string.
+   * @brief Returns the typename of the AbstractDataObject as a std::string.
    * @return std::string
    */
   std::string getTypeName() const override
@@ -153,9 +153,9 @@ public:
   /**
    * @brief Creates a copy of the object. The caller is responsible for
    * deleting the returned value.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  std::shared_ptr<DataObject> deepCopy(const DataPath& copyPath) override
+  std::shared_ptr<AbstractDataObject> deepCopy(const DataPath& copyPath) override
   {
     auto& dataStruct = getDataStructureRef();
     if(dataStruct.containsData(copyPath))
@@ -188,9 +188,9 @@ public:
 
   /**
    * @brief The DynamicListArray cannot be shallow copied.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  DataObject* shallowCopy() override
+  AbstractDataObject* shallowCopy() override
   {
     return new DynamicListArray(*this);
   }
@@ -339,7 +339,7 @@ protected:
    * @param name
    */
   DynamicListArray(DataStructure& dataStructure, std::string name)
-  : DataObject(dataStructure, std::move(name))
+  : AbstractDataObject(dataStructure, std::move(name))
   {
   }
 
@@ -350,7 +350,7 @@ protected:
    * @param importId
    */
   DynamicListArray(DataStructure& dataStructure, std::string name, IdType importId)
-  : DataObject(dataStructure, std::move(name), importId)
+  : AbstractDataObject(dataStructure, std::move(name), importId)
   {
   }
 

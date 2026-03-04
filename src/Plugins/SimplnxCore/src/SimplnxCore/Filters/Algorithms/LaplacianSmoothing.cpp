@@ -3,7 +3,7 @@
 #include "LaplacianSmoothing.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractNodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
 using namespace nx::core;
@@ -24,7 +24,7 @@ Result<> LaplacianSmoothing::operator()()
 
   // At the end of the algorithm, the 2D Node Geometry will have edges that are not
   // needed. This will remove those from the DataStructure
-  if(auto* nodeGeom2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath); nullptr != nodeGeom2DPtr)
+  if(auto* nodeGeom2DPtr = m_DataStructure.getDataAs<AbstractNodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath); nullptr != nodeGeom2DPtr)
   {
     auto edgeListId = nodeGeom2DPtr->getEdgeListId();
     nodeGeom2DPtr->setEdgeListId(0);
@@ -41,7 +41,7 @@ Result<> LaplacianSmoothing::operator()()
 // -----------------------------------------------------------------------------
 Result<> LaplacianSmoothing::edgeBasedSmoothing()
 {
-  auto& nodeGeom1DRef = m_DataStructure.getDataRefAs<INodeGeometry1D>(m_InputValues->pTriangleGeometryDataPath);
+  auto& nodeGeom1DRef = m_DataStructure.getDataRefAs<AbstractNodeGeometry1D>(m_InputValues->pTriangleGeometryDataPath);
 
   if(nodeGeom1DRef.getVertices() == nullptr)
   {
@@ -49,12 +49,12 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   }
 
   Float32AbstractDataStore& vertDataStoreRef = nodeGeom1DRef.getVertices()->getDataStoreRef();
-  IGeometry::MeshIndexType numberOfVertices = nodeGeom1DRef.getNumberOfVertices();
+  AbstractGeometry::MeshIndexType numberOfVertices = nodeGeom1DRef.getNumberOfVertices();
 
   // Generate the Lambda Array
   std::vector<float> lambdas = generateLambdaArray();
 
-  auto inode2DPtr = m_DataStructure.getDataAs<INodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
+  auto inode2DPtr = m_DataStructure.getDataAs<AbstractNodeGeometry2D>(m_InputValues->pTriangleGeometryDataPath);
   if(nullptr != inode2DPtr)
   {
     //  Generate the Unique Edges
@@ -64,8 +64,8 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
   }
 
-  AbstractDataStore<IGeometry::SharedEdgeList::value_type>& edges = nodeGeom1DRef.getEdges()->getDataStoreRef();
-  IGeometry::MeshIndexType numEdges = edges.getNumberOfTuples();
+  AbstractDataStore<AbstractGeometry::SharedEdgeList::value_type>& edges = nodeGeom1DRef.getEdges()->getDataStoreRef();
+  AbstractGeometry::MeshIndexType numEdges = edges.getNumberOfTuples();
 
   std::vector<int32> numConnections(numberOfVertices, 0);
 
@@ -80,12 +80,12 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
     // Compute the Deltas for each point
-    for(IGeometry::MeshIndexType i = 0; i < numEdges; i++)
+    for(AbstractGeometry::MeshIndexType i = 0; i < numEdges; i++)
     {
-      IGeometry::MeshIndexType in1 = edges[2 * i];     // row of the first vertex
-      IGeometry::MeshIndexType in2 = edges[2 * i + 1]; // row the second vertex
+      AbstractGeometry::MeshIndexType in1 = edges[2 * i];     // row of the first vertex
+      AbstractGeometry::MeshIndexType in2 = edges[2 * i + 1]; // row the second vertex
 
-      for(IGeometry::MeshIndexType j = 0; j < 3; j++)
+      for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
       {
 #if 0
         Q_ASSERT(static_cast<size_t>(3 * in1 + j) < static_cast<size_t>(numberOfVertices * 3));
@@ -100,11 +100,11 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
     }
 
     // Move each point
-    for(IGeometry::MeshIndexType i = 0; i < numberOfVertices; i++)
+    for(AbstractGeometry::MeshIndexType i = 0; i < numberOfVertices; i++)
     {
-      for(IGeometry::MeshIndexType j = 0; j < 3; j++)
+      for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
       {
-        IGeometry::MeshIndexType in0 = 3 * i + j;
+        AbstractGeometry::MeshIndexType in0 = 3 * i + j;
         dlta = deltaArray[in0] / numConnections[i];
 
         float ll = lambdas[i];
@@ -126,10 +126,10 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       }
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
       // Compute the Delta's
-      for(IGeometry::MeshIndexType i = 0; i < numEdges; i++)
+      for(AbstractGeometry::MeshIndexType i = 0; i < numEdges; i++)
       {
-        IGeometry::MeshIndexType in1 = edges[2 * i];     // row of the first vertex
-        IGeometry::MeshIndexType in2 = edges[2 * i + 1]; // row the second vertex
+        AbstractGeometry::MeshIndexType in1 = edges[2 * i];     // row of the first vertex
+        AbstractGeometry::MeshIndexType in2 = edges[2 * i + 1]; // row the second vertex
 
         for(int32_t j = 0; j < 3; j++)
         {
@@ -146,11 +146,11 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       }
 
       // Move the points
-      for(IGeometry::MeshIndexType i = 0; i < numberOfVertices; i++)
+      for(AbstractGeometry::MeshIndexType i = 0; i < numberOfVertices; i++)
       {
-        for(IGeometry::MeshIndexType j = 0; j < 3; j++)
+        for(AbstractGeometry::MeshIndexType j = 0; j < 3; j++)
         {
-          IGeometry::MeshIndexType in0 = 3 * i + j;
+          AbstractGeometry::MeshIndexType in0 = 3 * i + j;
           dlta = deltaArray[in0] / numConnections[i];
 
           float ll = lambdas[i] * m_InputValues->pMuFactor;

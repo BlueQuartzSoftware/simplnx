@@ -66,7 +66,7 @@ int32 SanityCheckFileSizeVersusAllocatedSize(usize allocatedBytes, usize fileSiz
 
 // -----------------------------------------------------------------------------
 template <typename T>
-Result<> ReadBinaryFile(IDataArray* dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
+Result<> ReadBinaryFile(AbstractDataArray* dataArrayPtr, const std::string& filename, uint64 skipHeaderBytes, ChoicesParameter::ValueType endian)
 {
   constexpr usize k_DefaultBlockSize = 1000000;
 
@@ -120,7 +120,7 @@ Result<> ReadRawBinary::execute()
   {
     return {};
   }
-  auto* binaryIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
+  auto* binaryIDataArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues.createdAttributeArrayPathValue);
 
   if(binaryIDataArray->getNumberOfComponents() != static_cast<usize>(m_InputValues.numberOfComponentsValue))
   {

@@ -69,7 +69,7 @@ Result<> WriteVtkRectilinearGrid::operator()()
 
   for(const DataPath& arrayPath : m_InputValues->SelectedDataArrayPaths)
   {
-    ExecuteDataFunction(WriteVtkDataArrayFunctor{}, m_DataStructure.getDataAs<IDataArray>(arrayPath)->getDataType(), outputFile, m_InputValues->WriteBinaryFile, m_DataStructure, arrayPath,
+    ExecuteDataFunction(WriteVtkDataArrayFunctor{}, m_DataStructure.getDataAs<AbstractDataArray>(arrayPath)->getDataType(), outputFile, m_InputValues->WriteBinaryFile, m_DataStructure, arrayPath,
                         m_MessageHandler);
   }
 

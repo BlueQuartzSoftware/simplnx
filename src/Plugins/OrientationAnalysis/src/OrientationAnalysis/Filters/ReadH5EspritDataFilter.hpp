@@ -2,8 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class ReadH5EspritDataFilter
  * @brief This filter will read a single .h5 file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the intermediate .h5ebsd file.
  */
-class ORIENTATIONANALYSIS_EXPORT ReadH5EspritDataFilter : public IFilter
+class ORIENTATIONANALYSIS_EXPORT ReadH5EspritDataFilter : public AbstractFilter
 {
 public:
   ReadH5EspritDataFilter() = default;

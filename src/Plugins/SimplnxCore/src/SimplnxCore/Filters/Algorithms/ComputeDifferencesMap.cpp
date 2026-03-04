@@ -9,7 +9,7 @@ namespace
 struct ExecuteFindDifferenceMapFunctor
 {
   template <typename DataType>
-  void operator()(IDataArray* firstArrayPtr, IDataArray* secondArrayPtr, IDataArray* differenceMapPtr)
+  void operator()(AbstractDataArray* firstArrayPtr, AbstractDataArray* secondArrayPtr, AbstractDataArray* differenceMapPtr)
   {
     using store_type = AbstractDataStore<DataType>;
 
@@ -51,9 +51,9 @@ ComputeDifferencesMap::~ComputeDifferencesMap() noexcept = default;
 Result<> ComputeDifferencesMap::operator()()
 {
 
-  auto* firstInputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FirstInputArrayPath);
-  auto* secondInputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SecondInputArrayPath);
-  auto* differenceMapArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->DifferenceMapArrayPath);
+  auto* firstInputArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->FirstInputArrayPath);
+  auto* secondInputArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->SecondInputArrayPath);
+  auto* differenceMapArray = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->DifferenceMapArrayPath);
 
   ExecuteDataFunction(ExecuteFindDifferenceMapFunctor{}, firstInputArray->getDataType(), firstInputArray, secondInputArray, differenceMapArray);
 

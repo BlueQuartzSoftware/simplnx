@@ -80,7 +80,7 @@ inline constexpr usize String2Bytes(std::string_view string, usize offset, usize
  */
 struct SIMPLNX_EXPORT Uuid
 {
-  static inline constexpr usize k_Size = 16;
+  static constexpr usize k_Size = 16;
 
   /**
    * @brief Parses a uuid string into a Uuid.
@@ -88,7 +88,7 @@ struct SIMPLNX_EXPORT Uuid
    * Must have both braces or none. Must have all dashes or none.
    * @return Parsed uuid if successful. Otherwise, empty optional.
    */
-  static inline constexpr std::optional<Uuid> FromString(std::string_view string)
+  static constexpr std::optional<Uuid> FromString(std::string_view string)
   {
     if(string.empty())
     {

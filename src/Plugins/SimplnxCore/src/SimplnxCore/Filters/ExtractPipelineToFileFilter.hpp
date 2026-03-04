@@ -2,9 +2,9 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Filter/Parameters.hpp"
 
 namespace nx::core
@@ -14,7 +14,7 @@ namespace nx::core
  * @brief The ExtractPipelineToFileFilter is an IFilter class designed to extract the pipeline data
  * from a target DREAM3D-NX file and export it out to it's own file.
  */
-class SIMPLNXCORE_EXPORT ExtractPipelineToFileFilter : public IFilter
+class SIMPLNXCORE_EXPORT ExtractPipelineToFileFilter : public AbstractFilter
 {
 public:
   ExtractPipelineToFileFilter() = default;

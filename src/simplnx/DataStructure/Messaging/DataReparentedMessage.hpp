@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Messaging/AbstractDataStructureMessage.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -11,7 +11,7 @@ namespace nx::core
 /**
  * @class DataReparentedMessage
  * @brief The DataReparentedMessage class is a type of DataStructure message
- * emitted when a DataObject gains or loses a parent object. The message
+ * emitted when a AbstractDataObject gains or loses a parent object. The message
  * includes the target object's ID, the target parent's ID, and whether or not
  * the parent was added or removed.
  */
@@ -21,14 +21,14 @@ public:
   static const MessageType MsgType = 4;
 
   /**
-   * @brief Constructs a DataReparentedMessage, specifying the target DataObject,
+   * @brief Constructs a DataReparentedMessage, specifying the target AbstractDataObject,
    * parent ID, and whether or not the parent was added or removed.
    * @param dataStructure
    * @param targetData
    * @param targetParent
    * @param parentAdded
    */
-  DataReparentedMessage(const DataStructure* dataStructure, DataObject::IdType targetData, DataObject::IdType targetParent, bool parentAdded = true);
+  DataReparentedMessage(const DataStructure* dataStructure, AbstractDataObject::IdType targetData, AbstractDataObject::IdType targetParent, bool parentAdded = true);
 
   /**
    * @brief Copy constructor
@@ -51,45 +51,45 @@ public:
   MessageType getMsgType() const override;
 
   /**
-   * @brief Returns the target DataObject ID.
+   * @brief Returns the target AbstractDataObject ID.
    * @return IdType
    */
-  DataObject::IdType getTargetId() const;
+  AbstractDataObject::IdType getTargetId() const;
 
   /**
-   * @brief Returns the parent DataObject ID.
+   * @brief Returns the parent AbstractDataObject ID.
    * @return IdType
    */
-  DataObject::IdType getParentId() const;
+  AbstractDataObject::IdType getParentId() const;
 
   /**
-   * @brief Returns a read-only pointer to the target DataObject.
-   * @return DataObject*
+   * @brief Returns a read-only pointer to the target AbstractDataObject.
+   * @return AbstractDataObject*
    */
-  const DataObject* getTargetData() const;
+  const AbstractDataObject* getTargetData() const;
 
   /**
    * @brief Returns a read-only pointer to the target parent.
-   * @return DataObject*
+   * @return AbstractDataObject*
    */
-  const DataObject* getParentData() const;
+  const AbstractDataObject* getParentData() const;
 
   /**
-   * @brief Returns true if the target parent was added to the DataObject.
+   * @brief Returns true if the target parent was added to the AbstractDataObject.
    * @return bool
    */
   bool wasParentAdded() const;
 
   /**
-   * @brief Returns true if the target parent was removed from the DataObject.
+   * @brief Returns true if the target parent was removed from the AbstractDataObject.
    * @return bool
    */
   bool wasParentRemoved() const;
 
 protected:
 private:
-  DataObject::IdType m_TargetId;
-  DataObject::IdType m_ParentId;
+  AbstractDataObject::IdType m_TargetId;
+  AbstractDataObject::IdType m_ParentId;
   bool m_ParentAdded = true;
 };
 } // namespace nx::core

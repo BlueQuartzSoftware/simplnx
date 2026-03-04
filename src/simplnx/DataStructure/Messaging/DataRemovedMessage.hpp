@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Messaging/AbstractDataStructureMessage.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -11,9 +11,9 @@ namespace nx::core
 /**
  * @class DataRemovedMessage
  * @brief The DataRemovedMessage class is a DataStructure message class that
- * notifies observers that a DataObject has been removed. The message includes
- * DataObject's ID and name at the moment of deletion. DataPaths are not
- * available because parent information is not available when a DataObject is
+ * notifies observers that a AbstractDataObject has been removed. The message includes
+ * AbstractDataObject's ID and name at the moment of deletion. DataPaths are not
+ * available because parent information is not available when a AbstractDataObject is
  * being deleted.
  */
 class SIMPLNX_EXPORT DataRemovedMessage : public AbstractDataStructureMessage
@@ -23,13 +23,13 @@ public:
 
   /**
    * @brief Constructs a DataRemovedMessage for the target DataStructure marking a
-   * DataObject ID as being removed. The DataObject's name is also provided to
+   * AbstractDataObject ID as being removed. The AbstractDataObject's name is also provided to
    * describe the object in a human-readable format.
    * @param dataStructure
    * @param identifier
    * @param name
    */
-  DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& name);
+  DataRemovedMessage(const DataStructure* dataStructure, AbstractDataObject::IdType identifier, const std::string& name);
 
   /**
    * @brief Creates a copy of the target DataRemovedMessage.
@@ -52,13 +52,13 @@ public:
   MessageType getMsgType() const override;
 
   /**
-   * @brief Returns the removed DataObject's ID.
+   * @brief Returns the removed AbstractDataObject's ID.
    * @return IdType
    */
-  DataObject::IdType getId() const;
+  AbstractDataObject::IdType getId() const;
 
   /**
-   * @brief Returns the name of the removed DataObject.
+   * @brief Returns the name of the removed AbstractDataObject.
    * @return std::string
    */
   std::string getName() const;
@@ -66,6 +66,6 @@ public:
 protected:
 private:
   std::string m_Name;
-  DataObject::IdType m_Id;
+  AbstractDataObject::IdType m_Id;
 };
 } // namespace nx::core

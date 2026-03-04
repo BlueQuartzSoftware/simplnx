@@ -44,10 +44,10 @@ const ChoicesParameter::ValueType k_ExistingSchemeModeIndex = 3;
  * @param lengthUnits The length units of the input geometry
  * @return The text description of the current input geometry.
  */
-std::string GenerateInputGeometryDisplayText(const SizeVec3& dims, const FloatVec3& origin, const FloatVec3& spacing, const IGeometry::LengthUnit& lengthUnits)
+std::string GenerateInputGeometryDisplayText(const SizeVec3& dims, const FloatVec3& origin, const FloatVec3& spacing, const AbstractGeometry::LengthUnit& lengthUnits)
 {
-  std::string lengthUnitStr = IGeometry::LengthUnitToString(lengthUnits);
-  if(lengthUnits == IGeometry::LengthUnit::Unspecified)
+  std::string lengthUnitStr = AbstractGeometry::LengthUnitToString(lengthUnits);
+  if(lengthUnits == AbstractGeometry::LengthUnit::Unspecified)
   {
     lengthUnitStr.append(" Units");
   }
@@ -75,7 +75,8 @@ std::string GenerateInputGeometryDisplayText(const SizeVec3& dims, const FloatVe
  * partitioning scheme geometry fits the input geometry or not.
  * @return The text description of the partitioning scheme geometry.
  */
-std::string GeneratePartitioningSchemeDisplayText(const SizeVec3& psDims, const FloatVec3& psOrigin, const FloatVec3& psSpacing, const IGeometry::LengthUnit& lengthUnits, const IGeometry& iGeom)
+std::string GeneratePartitioningSchemeDisplayText(const SizeVec3& psDims, const FloatVec3& psOrigin, const FloatVec3& psSpacing, const AbstractGeometry::LengthUnit& lengthUnits,
+                                                  const AbstractGeometry& iGeom)
 {
   const float32 xRangeMax = (psOrigin[0] + (static_cast<float32>(psDims[0]) * psSpacing[0]));
   const float32 xDelta = static_cast<float32>(psDims[0]) * psSpacing[0];
@@ -84,8 +85,8 @@ std::string GeneratePartitioningSchemeDisplayText(const SizeVec3& psDims, const 
   const float32 zRangeMax = (psOrigin[2] + (static_cast<float32>(psDims[2]) * psSpacing[2]));
   const float32 zDelta = static_cast<float32>(psDims[2]) * psSpacing[2];
 
-  std::string lengthUnitStr = IGeometry::LengthUnitToString(lengthUnits);
-  if(lengthUnits == IGeometry::LengthUnit::Unspecified)
+  std::string lengthUnitStr = AbstractGeometry::LengthUnitToString(lengthUnits);
+  if(lengthUnits == AbstractGeometry::LengthUnit::Unspecified)
   {
     lengthUnitStr.append(" Units");
   }
@@ -244,7 +245,7 @@ Parameters PartitionGeometryFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Geometry Parameters"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputGeometryToPartition_Key, "Input Geometry to Partition", "The input geometry that will be partitioned", DataPath{},
-                                                             IGeometry::GetAllGeomTypes()));
+                                                             AbstractGeometry::GetAllGeomTypes()));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_InputGeometryCellAttributeMatrixPath_Key, "Input Geometry Cell Attribute Matrix ",
                                                                     "The attribute matrix that represents the cell data for the geometry.(Vertex=>Node Geometry, Cell=>Image/Rectilinear)",
                                                                     DataPath{}));
@@ -352,7 +353,7 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   const SizeVec3 numberOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
 
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pInputGeomCellAMPathValue);
-  const auto& iGeom = dataStructure.getDataRefAs<IGeometry>({pInputGeometryToPartitionValue});
+  const auto& iGeom = dataStructure.getDataRefAs<AbstractGeometry>({pInputGeometryToPartitionValue});
   std::string inputGeometryInformation;
   Result<PartitionGeometry::PSGeomInfo> psInfo;
   switch(iGeom.getGeomType())
@@ -496,8 +497,8 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
                                                                                        const DataPath& attrMatrixPath) const
 {
-  const auto& geometry = dataStructure.getDataRefAs<INodeGeometry0D>({geometryToPartitionPath});
-  const IGeometry::SharedVertexList& vertexList = geometry.getVerticesRef();
+  const auto& geometry = dataStructure.getDataRefAs<AbstractNodeGeometry0D>({geometryToPartitionPath});
+  const AbstractGeometry::SharedVertexList& vertexList = geometry.getVerticesRef();
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(attrMatrixPath);
   if(attrMatrix.getNumberOfTuples() != vertexList.getNumberOfTuples())
   {
@@ -513,7 +514,7 @@ Result<PartitionGeometry::PSGeomInfo> PartitionGeometryFilter::generateNodeBased
 }
 
 // -----------------------------------------------------------------------------
-Result<> PartitionGeometryFilter::DataCheckDimensionality(const INodeGeometry0D& geometry)
+Result<> PartitionGeometryFilter::DataCheckDimensionality(const AbstractNodeGeometry0D& geometry)
 {
   Result<bool> yzPlaneResult = geometry.isYZPlane();
   if(yzPlaneResult.valid() && yzPlaneResult.value())
@@ -679,7 +680,7 @@ Result<> PartitionGeometryFilter::dataCheckPartitioningScheme(const GeomType& ge
   }
   else
   {
-    const IGeometry::SharedVertexList& vertexList = geometryToPartition.getVertices();
+    const AbstractGeometry::SharedVertexList& vertexList = geometryToPartition.getVertices();
     if(attrMatrix.getNumberOfTuples() != vertexList.getNumberOfTuples())
     {
       return MakeErrorResult(-3010, fmt::format("{}: The attribute matrix '{}' does not have the same tuple count ({}) as geometry \"{}\"'s vertex count ({}).", humanName(), attrMatrix.getName(),

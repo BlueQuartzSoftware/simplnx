@@ -3,9 +3,9 @@
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
 #include "simplnx/Common/Array.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGeometry.hpp"
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -16,7 +16,7 @@ namespace nx::core
  * @class ITKImportImageStack
  * @brief This filter will ....
  */
-class ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKImportFijiMontageFilter : public AbstractFilter
 {
 public:
   ITKImportFijiMontageFilter();

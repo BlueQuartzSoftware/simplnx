@@ -91,7 +91,7 @@ void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractD
 struct FillBadDataUpdateTuplesFunctor
 {
   template <typename T>
-  void operator()(const Int32AbstractDataStore& featureIds, IDataArray* outputIDataArray, const std::vector<int32>& neighbors)
+  void operator()(const Int32AbstractDataStore& featureIds, AbstractDataArray* outputIDataArray, const std::vector<int32>& neighbors)
   {
     auto& outputStore = outputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     FillBadDataUpdateTuples(featureIds, outputStore, neighbors);
@@ -565,7 +565,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 
   // Get a list of all cell arrays that need to be updated during filling
   // Exclude arrays specified in ignoredDataArrayPaths
-  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
+  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), IDataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
   std::vector<DataPath> voxelArrayNames;
   if(allChildArrays.has_value())
   {
@@ -664,7 +664,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
         continue;
       }
 
-      auto* oldCellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
+      auto* oldCellArray = m_DataStructure.getDataAs<AbstractDataArray>(cellArrayPath);
 
       // Use the type-dispatched update function to handle all data types
       ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, oldCellArray->getDataType(), featureIdsStore, oldCellArray, neighbors);

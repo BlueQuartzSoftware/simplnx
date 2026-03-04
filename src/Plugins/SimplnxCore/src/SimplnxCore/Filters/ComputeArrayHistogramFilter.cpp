@@ -71,7 +71,7 @@ Parameters ComputeArrayHistogramFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray},
                                                                nx::core::GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
@@ -145,15 +145,15 @@ IFilter::PreflightResult ComputeArrayHistogramFilter::preflightImpl(const DataSt
     parentPath = pDataGroupNameValue;
   }
 
-  const IDataArray* maskArray = nullptr;
+  const AbstractDataArray* maskArray = nullptr;
   if(useMask)
   {
-    maskArray = dataStructure.getDataAs<IDataArray>(maskArrayPath);
+    maskArray = dataStructure.getDataAs<AbstractDataArray>(maskArrayPath);
   }
 
   for(auto& selectedArrayPath : pSelectedArrayPathsValue)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    const auto* dataArray = dataStructure.getDataAs<AbstractDataArray>(selectedArrayPath);
     if(maskArray && maskArray->getNumberOfTuples() != dataArray->getNumberOfTuples())
     {
       return {MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}.  These tuple counts MUST match.", maskArray->getName(),
@@ -223,7 +223,7 @@ Result<> ComputeArrayHistogramFilter::executeImpl(DataStructure& dataStructure, 
   std::vector<DataPath> createdModalRangesDataPaths;
   for(auto& selectedArrayPath : inputValues.SelectedArrayPaths) // regenerate based on preflight
   {
-    const auto& dataArray = dataStructure.getDataAs<IDataArray>(selectedArrayPath);
+    const auto& dataArray = dataStructure.getDataAs<AbstractDataArray>(selectedArrayPath);
     auto arrayGroupPath = dataGroupPath.createChildPath(fmt::format("\"{}\" Histogram", dataArray->getName()));
     auto countsPath = arrayGroupPath.createChildPath(binCountName);
     createdCountsDataPaths.push_back(countsPath);

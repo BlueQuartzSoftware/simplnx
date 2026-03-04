@@ -145,7 +145,7 @@ IFilter::PreflightResult InitializeDataFilter::preflightImpl(const DataStructure
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(filterArgs.value<DataPath>(k_ArrayPath_Key));
+  auto& iDataArray = dataStructure.getDataRefAs<AbstractDataArray>(filterArgs.value<DataPath>(k_ArrayPath_Key));
   usize numComp = iDataArray.getNumberOfComponents(); // check that the values string is greater than max comps
 
   if(iDataArray.getDataType() == DataType::boolean)

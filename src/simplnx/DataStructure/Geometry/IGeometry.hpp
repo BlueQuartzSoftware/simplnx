@@ -2,14 +2,23 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/DynamicListArray.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 namespace nx::core
 {
-class SIMPLNX_EXPORT IGeometry : public BaseGroup
+/**
+ * @class IGeometry
+ * @brief Pure virtual interface for all geometry types.
+ *
+ * This interface defines the common contract that all geometries must satisfy.
+ * Type aliases, enums, and string constants live here so that scope-resolution
+ * references such as IGeometry::Type continue to compile unchanged.
+ */
+class SIMPLNX_EXPORT IGeometry
 {
 public:
   friend class DataStructure;
@@ -25,8 +34,7 @@ public:
   using SharedHexList = MeshIndexArrayType;
   using ElementDynamicList = DynamicListArray<uint16, MeshIndexType>;
 
-  static inline constexpr StringLiteral k_VoxelSizes = "Voxel Sizes";
-  static inline constexpr StringLiteral k_TypeName = "IGeometry";
+  static constexpr StringLiteral k_VoxelSizes = "Voxel Sizes";
 
   /* We are leveraging the bounded nature of the following enum to expedite processing
    *
@@ -50,7 +58,7 @@ public:
 
   inline static constexpr std::array<StringLiteral, 8> k_GeomTypeStrings = {"Image", "RectGrid", "Vertex", "Edge", "Triangle", "Quad", "Tetrahedral", "Hexahedral"};
 
-  enum class LengthUnit : EnumType
+  enum class LengthUnit : uint32
   {
     Yoctometer,
     Zeptometer,
@@ -83,15 +91,7 @@ public:
     Unknown = 101U
   };
 
-  IGeometry() = delete;
-
-  IGeometry(const IGeometry&) = default;
-  IGeometry(IGeometry&&) = default;
-
-  IGeometry& operator=(const IGeometry&) = delete;
-  IGeometry& operator=(IGeometry&&) noexcept = delete;
-
-  ~IGeometry() noexcept override = default;
+  virtual ~IGeometry() noexcept = default;
 
   /**
    * @brief Returns the type of geometry.
@@ -116,21 +116,6 @@ public:
 
   /**
    * @brief
-   * @return const Float32Array*
-   */
-  const Float32Array* getElementSizes() const;
-
-  OptionalId getElementSizesId() const;
-
-  void setElementSizesId(const OptionalId& sizesId);
-
-  /**
-   * @brief
-   */
-  void deleteElementSizes();
-
-  /**
-   * @brief
    * @return Point3D<float64>
    */
   virtual Point3D<float64> getParametricCenter() const = 0;
@@ -143,82 +128,16 @@ public:
   virtual void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const = 0;
 
   /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getUnitDimensionality() const;
-
-  /**
-   * @brief
-   * @param value
-   */
-  void setUnitDimensionality(uint32 value);
-
-  /**
-   * @brief
-   * @return uint32
-   */
-  uint32 getSpatialDimensionality() const;
-
-  /**
-   * @brief
-   * @param value
-   */
-  void setSpatialDimensionality(uint32 value);
-
-  static std::set<std::string> StringListFromGeometryType(const std::set<Type>& geomTypes);
-
-  static const std::set<Type>& GetAllGeomTypes();
-
-  static const std::vector<std::string>& GetAllLengthUnitStrings();
-
-  /**
-   * @brief Returns the length units used by the geometry.
-   * @return LengthUnit
-   */
-  LengthUnit getUnits() const;
-
-  /**
-   * @brief Sets the length units used by the geometry.
-   * @param units
-   */
-  void setUnits(LengthUnit units);
-
-  /**
-   * @brief
-   * @param geomType
-   * @return std::string
-   */
-  static std::string GeomTypeToString(Type geomType);
-
-  /**
-   * @brief
-   * @param unit
-   * @return std::string
-   */
-  static std::string LengthUnitToString(LengthUnit unit);
-
-  /**
    * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.
    * @return A Result<> object possibly with error code and message.
    */
   virtual Result<> validate() const = 0;
 
 protected:
-  IGeometry(DataStructure& dataStructure, std::string name);
-
-  IGeometry(DataStructure& dataStructure, std::string name, IdType importId);
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIdsMap
-   */
-  void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap) override;
-
-  std::optional<IdType> m_ElementSizesId;
-
-  LengthUnit m_Units = LengthUnit::Meter;
-  uint32 m_UnitDimensionality = 3;
-  uint32 m_SpacialDimensionality = 3;
+  IGeometry() = default;
+  IGeometry(const IGeometry&) = default;
+  IGeometry(IGeometry&&) = default;
+  IGeometry& operator=(const IGeometry&) = default;
+  IGeometry& operator=(IGeometry&&) noexcept = default;
 };
 } // namespace nx::core

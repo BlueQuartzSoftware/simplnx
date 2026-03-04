@@ -3,7 +3,7 @@
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/AbstractGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateAttributeMatrixAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -125,7 +125,7 @@ IFilter::PreflightResult EBSDSegmentFeaturesFilter::preflightImpl(const DataStru
 
   // Validate the Grid Geometry
   auto gridGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
+  const auto* inputGridGeom = dataStructure.getDataAs<AbstractGridGeometry>(gridGeomPath);
   DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
   auto featureIdsPath = inputCellDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
@@ -185,7 +185,7 @@ Result<> EBSDSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, co
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
   inputValues.IsPeriodic = filterArgs.value<bool>(k_IsPeriodic_Key);
-  inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
+  inputValues.NeighborScheme = static_cast<ISegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
 
   return EBSDSegmentFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -20,35 +20,35 @@ constexpr StringLiteral k_ArrayType = "array";
 constexpr StringLiteral k_CollectionType = "collection";
 } // namespace
 
-IArrayThreshold::IArrayThreshold() = default;
-IArrayThreshold::IArrayThreshold(const IArrayThreshold& other) = default;
+AbstractArrayThreshold::AbstractArrayThreshold() = default;
+AbstractArrayThreshold::AbstractArrayThreshold(const AbstractArrayThreshold& other) = default;
 
-IArrayThreshold::IArrayThreshold(IArrayThreshold&& other) noexcept
+AbstractArrayThreshold::AbstractArrayThreshold(AbstractArrayThreshold&& other) noexcept
 : m_IsInverted(other.m_IsInverted)
 , m_UnionType(other.m_UnionType)
 {
 }
-IArrayThreshold::~IArrayThreshold() = default;
+AbstractArrayThreshold::~AbstractArrayThreshold() = default;
 
-bool IArrayThreshold::isInverted() const
+bool AbstractArrayThreshold::isInverted() const
 {
   return m_IsInverted;
 }
-void IArrayThreshold::setInverted(bool inverted)
+void AbstractArrayThreshold::setInverted(bool inverted)
 {
   m_IsInverted = inverted;
 }
 
-IArrayThreshold::UnionOperator IArrayThreshold::getUnionOperator() const
+AbstractArrayThreshold::UnionOperator AbstractArrayThreshold::getUnionOperator() const
 {
   return m_UnionType;
 }
-void IArrayThreshold::setUnionOperator(UnionOperator unionType)
+void AbstractArrayThreshold::setUnionOperator(UnionOperator unionType)
 {
   m_UnionType = unionType;
 }
 
-nlohmann::json IArrayThreshold::toJson() const
+nlohmann::json AbstractArrayThreshold::toJson() const
 {
   nlohmann::json json;
   json[k_Inverted_Tag] = isInverted();
@@ -58,7 +58,7 @@ nlohmann::json IArrayThreshold::toJson() const
 }
 
 ArrayThreshold::ArrayThreshold()
-: IArrayThreshold()
+: AbstractArrayThreshold()
 , m_ArrayPath()
 
 {
@@ -66,7 +66,7 @@ ArrayThreshold::ArrayThreshold()
 ArrayThreshold::ArrayThreshold(const ArrayThreshold& other) = default;
 
 ArrayThreshold::ArrayThreshold(ArrayThreshold&& other) noexcept
-: IArrayThreshold(std::move(other))
+: AbstractArrayThreshold(std::move(other))
 , m_ArrayPath(std::move(other.m_ArrayPath))
 , m_Value(other.m_Value)
 , m_Comparison(other.m_Comparison)
@@ -141,7 +141,7 @@ std::set<DataPath> ArrayThreshold::getRequiredPaths() const
 
 nlohmann::json ArrayThreshold::toJson() const
 {
-  auto json = IArrayThreshold::toJson();
+  auto json = AbstractArrayThreshold::toJson();
   json[k_Type_Tag] = k_ArrayType;
   json[k_ArrayPath_Tag] = getArrayPath().toString();
   json[k_ComponentIndex_Tag] = getComponentIndex();
@@ -182,14 +182,14 @@ std::shared_ptr<ArrayThreshold> ArrayThreshold::FromJson(const nlohmann::json& j
 }
 
 ArrayThresholdSet::ArrayThresholdSet()
-: IArrayThreshold()
+: AbstractArrayThreshold()
 {
 }
 
 ArrayThresholdSet::ArrayThresholdSet(const ArrayThresholdSet& other) = default;
 
 ArrayThresholdSet::ArrayThresholdSet(ArrayThresholdSet&& other) noexcept
-: IArrayThreshold(std::move(other))
+: AbstractArrayThreshold(std::move(other))
 , m_Thresholds(std::move(other.m_Thresholds))
 {
 }
@@ -234,7 +234,7 @@ std::set<DataPath> ArrayThresholdSet::getRequiredPaths() const
 
 nlohmann::json ArrayThresholdSet::toJson() const
 {
-  auto json = IArrayThreshold::toJson();
+  auto json = AbstractArrayThreshold::toJson();
   json[k_Type_Tag] = k_CollectionType;
 
   nlohmann::json collection = nlohmann::json::array();

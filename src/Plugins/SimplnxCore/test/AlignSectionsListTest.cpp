@@ -20,7 +20,7 @@ const DataPath k_AlignmentAMPath = Constants::k_DataContainerPath.createChildPat
 struct CompareArraysFunctor
 {
   template <typename T>
-  void operator()(const IDataArray& computedArray, const IDataArray& exemplarArray)
+  void operator()(const AbstractDataArray& computedArray, const AbstractDataArray& exemplarArray)
   {
     UnitTest::CompareDataArrays<T>(computedArray, exemplarArray);
   }
@@ -84,8 +84,8 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Relative Shifts execution", "[S
 
   for(const auto& path : selectedCellArrays.value())
   {
-    const auto& computedIDataArray = dataStructure.getDataRefAs<IDataArray>(path);
-    const auto& exemplarIDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(path);
+    const auto& computedIDataArray = dataStructure.getDataRefAs<AbstractDataArray>(path);
+    const auto& exemplarIDataArray = exemplarDataStructure.getDataRefAs<AbstractDataArray>(path);
 
     ExecuteDataFunction(::CompareArraysFunctor{}, computedIDataArray.getDataType(), computedIDataArray, exemplarIDataArray);
   }
@@ -152,8 +152,8 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
 
   for(const auto& path : selectedCellArrays.value())
   {
-    const auto& computedIDataArray = dataStructure.getDataRefAs<IDataArray>(path);
-    const auto& exemplarIDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(path);
+    const auto& computedIDataArray = dataStructure.getDataRefAs<AbstractDataArray>(path);
+    const auto& exemplarIDataArray = exemplarDataStructure.getDataRefAs<AbstractDataArray>(path);
 
     ExecuteDataFunction(::CompareArraysFunctor{}, computedIDataArray.getDataType(), computedIDataArray, exemplarIDataArray);
   }

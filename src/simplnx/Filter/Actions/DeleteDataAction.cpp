@@ -1,9 +1,9 @@
 #include "DeleteDataAction.hpp"
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/DataStructure/AbstractDataObject.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataObject.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 
@@ -18,7 +18,7 @@ constexpr int32 k_ClassTypeErrorCode = -3246;
 
 Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IDataAction::Mode mode)
 {
-  DataObject* targetObject = dataStructure.getData(path);
+  AbstractDataObject* targetObject = dataStructure.getData(path);
   if(targetObject == nullptr)
   {
     return MakeErrorResult(k_TargetNotFoundErrorCode, fmt::format("Trying to delete DataObject '{}' which does not exist.", path.getTargetName()));
@@ -48,7 +48,7 @@ Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IData
 //     for(const auto& childName : childrenNames)
 //     {
 //       DataPath childPath = parent.createChildPath(childName);
-//       const DataObject* dataObject = dataStructure.getData(childPath);
+//       const AbstractDataObject* dataObject = dataStructure.getData(childPath);
 //       childDataObjects.push_back(childPath);
 //     }
 //   } catch(std::exception& e)
@@ -61,7 +61,7 @@ Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IData
 // Result<> TerminateNodesRecursively(DataStructure& dataStructure, const DataPath& path, IDataAction::Mode mode, const bool checkDependence)
 //{
 //   Result<> result = {};
-//   DataObject* node = dataStructure.getData(path);
+//   AbstractDataObject* node = dataStructure.getData(path);
 //
 //   if(checkDependence)
 //   {
@@ -88,7 +88,7 @@ Result<> TerminateNode(DataStructure& dataStructure, const DataPath& path, IData
 //
 // Result<> TerminateEdge(DataStructure& dataStructure, const DataPath& path, IDataAction::Mode mode)
 //{
-//   DataObject* targetObject = dataStructure.getData(path);
+//   AbstractDataObject* targetObject = dataStructure.getData(path);
 //   if(targetObject == nullptr)
 //   {
 //     return MakeErrorResult(k_TargetNotFoundErrorCode, fmt::format("Trying to delete DataPath '{}' which does not exist.", path.toString()));

@@ -2,8 +2,8 @@
 
 #include "ITKImageProcessing/ITKImageProcessing_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -31,7 +31,7 @@ namespace nx::core
  * ITK Module: ITKImageIntensity
  * ITK Group: ImageIntensity
  */
-class ITKIMAGEPROCESSING_EXPORT ITKAtanImageFilter : public IFilter
+class ITKIMAGEPROCESSING_EXPORT ITKAtanImageFilter : public AbstractFilter
 {
 public:
   ITKAtanImageFilter() = default;

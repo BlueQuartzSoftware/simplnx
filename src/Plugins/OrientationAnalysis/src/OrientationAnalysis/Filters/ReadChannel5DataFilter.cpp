@@ -148,7 +148,7 @@ IFilter::PreflightResult ReadChannel5DataFilter::preflightImpl(const DataStructu
 
   // Define an Action that makes changes to the DataStructure
   auto createImageGeometryAction = std::make_unique<CreateImageGeometryAction>(pImageGeometryPath, CreateImageGeometryAction::DimensionType({imageGeomDims[0], imageGeomDims[1], imageGeomDims[2]}),
-                                                                               origin, spacing, pCellAttributeMatrixNameValue, IGeometry::LengthUnit::Micrometer);
+                                                                               origin, spacing, pCellAttributeMatrixNameValue, AbstractGeometry::LengthUnit::Micrometer);
 
   // Assign the createImageGeometryAction to the Result<OutputActions>::actions vector via an appendAction
   nx::core::Result<OutputActions> resultOutputActions;

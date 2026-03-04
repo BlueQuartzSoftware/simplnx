@@ -76,7 +76,7 @@ Parameters ITKImageReaderFilter::parameters() const
                                                           FileSystemPathParameter::PathType::InputFile, false));
 
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry",
-                                                   to_underlying(IGeometry::LengthUnit::Micrometer), IGeometry::GetAllLengthUnitStrings()));
+                                                   to_underlying(AbstractGeometry::LengthUnit::Micrometer), AbstractGeometry::GetAllLengthUnitStrings()));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Set the final created image data type.", false));
   params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric Type of data to create", 0ULL,
@@ -188,7 +188,7 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
 
   DataPath imageDataArrayPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataArrayName);
 
-  // const IDataArray* inputArrayPtr = dataStructure.getDataAs<IDataArray>(imageDataArrayPath);
+  // const AbstractDataArray* inputArrayPtr = dataStructure.getDataAs<AbstractDataArray>(imageDataArrayPath);
   // if(!inputArrayPtr->getDataFormat().empty())
   //{
   //   return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", imageDataArrayPath.toString()));

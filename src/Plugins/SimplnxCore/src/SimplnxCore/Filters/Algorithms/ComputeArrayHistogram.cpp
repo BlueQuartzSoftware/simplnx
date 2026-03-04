@@ -8,7 +8,7 @@
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
-#include <simplnx/DataStructure/INeighborList.hpp>
+#include <simplnx/DataStructure/AbstractNeighborList.hpp>
 #include <tuple>
 
 using namespace nx::core;
@@ -48,7 +48,7 @@ Result<> ComputeArrayHistogram::operator()()
 
   std::atomic<usize> overflow = 0;
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> mask = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> mask = nullptr;
   if(m_InputValues->MaskPath.has_value())
   {
     mask = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskPath.value());
@@ -61,8 +61,8 @@ Result<> ComputeArrayHistogram::operator()()
       return {};
     }
 
-    const auto* inputData = m_DataStructure.getDataAs<IDataArray>(selectedArrayPaths[i]);
-    auto* binRanges = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
+    const auto* inputData = m_DataStructure.getDataAs<AbstractDataArray>(selectedArrayPaths[i]);
+    auto* binRanges = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
     auto& counts = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(i))->getDataStoreRef();
     auto& mostPopulated = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedBinMostPopulatedDataPaths.at(i))->getDataStoreRef();
 
@@ -93,13 +93,13 @@ Result<> ComputeArrayHistogram::operator()()
       return {};
     }
 
-    const auto* inputData = m_DataStructure.getDataAs<IDataArray>(selectedArrayPaths[i]);
-    auto* binRanges = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
-    INeighborList* modalBinRanges = nullptr;
+    const auto* inputData = m_DataStructure.getDataAs<AbstractDataArray>(selectedArrayPaths[i]);
+    auto* binRanges = m_DataStructure.getDataAs<AbstractDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
+    AbstractNeighborList* modalBinRanges = nullptr;
     if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
     {
       auto modalBinRangesPaths = m_InputValues->CreatedBinModalRangesDataPaths.value();
-      modalBinRanges = m_DataStructure.getDataAs<INeighborList>(modalBinRangesPaths.at(i));
+      modalBinRanges = m_DataStructure.getDataAs<AbstractNeighborList>(modalBinRangesPaths.at(i));
       ExecuteParallelFunctor<HistogramUtilities::concurrent::CalculateModalBinRangesImplFunctor, NoBooleanType>(
           HistogramUtilities::concurrent::CalculateModalBinRangesImplFunctor{}, inputData->getDataType(), taskRunner, inputData, binRanges, modalBinRanges, mask, m_ShouldCancel);
     }

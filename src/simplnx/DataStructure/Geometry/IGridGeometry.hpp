@@ -2,27 +2,27 @@
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/simplnx_export.hpp"
 
-#include "simplnx/Common/StringLiteral.hpp"
+#include <optional>
 
 namespace nx::core
 {
-class SIMPLNX_EXPORT IGridGeometry : public IGeometry
+/**
+ * @class IGridGeometry
+ * @brief Pure virtual interface for grid-based geometries (ImageGeom, RectGridGeom).
+ *
+ * Contains the string constants and pure virtual methods that form the
+ * public contract for grid geometries.
+ */
+class SIMPLNX_EXPORT IGridGeometry
 {
 public:
   static constexpr StringLiteral k_CellAttributeMatrixName = "Cell Data";
   static constexpr StringLiteral k_TypeName = "IGridGeometry";
 
-  IGridGeometry() = delete;
-  IGridGeometry(const IGridGeometry&) = default;
-  IGridGeometry(IGridGeometry&&) = default;
-
-  IGridGeometry& operator=(const IGridGeometry&) = delete;
-  IGridGeometry& operator=(IGridGeometry&&) noexcept = delete;
-
-  ~IGridGeometry() noexcept override = default;
+  virtual ~IGridGeometry() noexcept = default;
 
   /**
    * @brief
@@ -112,7 +112,7 @@ public:
    * @param x
    * @param y
    * @param z
-   * @preturn Point3D<float32>
+   * @return Point3D<float32>
    */
   virtual Point3D<float32> getCoordsf(usize x, usize y, usize z) const = 0;
 
@@ -164,71 +164,11 @@ public:
    */
   virtual std::optional<usize> getIndex(float64 xCoord, float64 yCoord, float64 zCoord) const = 0;
 
-  /**
-   * @brief
-   * @return
-   */
-  const std::optional<IdType>& getCellDataId() const;
-
-  /**
-   * @brief
-   * @return
-   */
-  AttributeMatrix* getCellData();
-
-  /**
-   * @brief
-   * @return
-   */
-  const AttributeMatrix* getCellData() const;
-
-  /**
-   * @brief
-   * @return
-   */
-  AttributeMatrix& getCellDataRef();
-
-  /**
-   * @brief
-   * @return
-   */
-  const AttributeMatrix& getCellDataRef() const;
-
-  /**
-   * @brief
-   * @return
-   */
-  DataPath getCellDataPath() const;
-
-  /**
-   * @brief
-   * @param attributeMatrix
-   */
-  void setCellData(const AttributeMatrix& attributeMatrix);
-
-  /**
-   * @brief
-   * @param id
-   */
-  void setCellData(OptionalId id);
-
-  /**
-   * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.
-   * @return A Result<> object possibly with error code and message.
-   */
-  Result<> validate() const override;
-
 protected:
-  IGridGeometry(DataStructure& dataStructure, std::string name);
-
-  IGridGeometry(DataStructure& dataStructure, std::string name, IdType importId);
-
-  /**
-   * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.
-   * @param updatedIdsMap
-   */
-  void checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap) override;
-
-  std::optional<IdType> m_CellDataId;
+  IGridGeometry() = default;
+  IGridGeometry(const IGridGeometry&) = default;
+  IGridGeometry(IGridGeometry&&) = default;
+  IGridGeometry& operator=(const IGridGeometry&) = default;
+  IGridGeometry& operator=(IGridGeometry&&) noexcept = default;
 };
 } // namespace nx::core

@@ -96,7 +96,8 @@ void CountEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, 
  */
 template <typename T>
 void PopulateVerticalEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
-                           INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, usize& currentEdge, const std::atomic_bool& shouldCancel, const Range& range)
+                           AbstractNodeGeometry0D::SharedVertexList& vertices, AbstractNodeGeometry1D::SharedEdgeList& edges, usize& currentEdge, const std::atomic_bool& shouldCancel,
+                           const Range& range)
 {
   for(usize y = range.min(); y < range.max(); y++)
   {
@@ -151,7 +152,8 @@ void PopulateVerticalEdges(const AbstractDataStore<T>& featureIds, usize dimX, u
  */
 template <typename T>
 void PopulateHorizontalEdgesImpl(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
-                                 INodeGeometry0D::SharedVertexList& vertices, INodeGeometry1D::SharedEdgeList& edges, usize& currentEdge, const std::atomic_bool& shouldCancel, const Range& range)
+                                 AbstractNodeGeometry0D::SharedVertexList& vertices, AbstractNodeGeometry1D::SharedEdgeList& edges, usize& currentEdge, const std::atomic_bool& shouldCancel,
+                                 const Range& range)
 {
   for(usize y = range.min(); y < range.max(); y++)
   {
@@ -313,8 +315,8 @@ struct ExtractFeatureBoundariesFunctor
     edgeGeom.resizeVertexList(numVertices);
     edgeGeom.resizeEdgeList(totalEdgeCount);
 
-    INodeGeometry0D::SharedVertexList& verticesRef = edgeGeom.getVerticesRef();
-    INodeGeometry1D::SharedEdgeList& edgesRef = edgeGeom.getEdgesRef();
+    AbstractNodeGeometry0D::SharedVertexList& verticesRef = edgeGeom.getVerticesRef();
+    AbstractNodeGeometry1D::SharedEdgeList& edgesRef = edgeGeom.getEdgesRef();
 
     // =========================================================================
     // PASS 2 - POPULATE: Create vertices and edge connectivity
@@ -499,7 +501,7 @@ Result<> ExtractFeatureBoundaries2D::operator()()
   // Get references to the input/output geometries and feature IDs array
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
   auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->OutputEdgeGeometryPath);
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<AbstractDataArray>(m_InputValues->FeatureIdsArrayPath);
 
   // Get the data type to dispatch to the correct template instantiation
   const DataType dataType = featureIdsArray.getDataType();

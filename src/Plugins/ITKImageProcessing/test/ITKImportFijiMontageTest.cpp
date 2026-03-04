@@ -44,7 +44,7 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
 
   args.insertOrAssign(ITKImportFijiMontageFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(smallInputFile));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_DataGroupName_Key, std::make_any<std::string>(k_DataGroupName));
-  args.insertOrAssign(ITKImportFijiMontageFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(IGeometry::LengthUnit::Micrometer)));
+  args.insertOrAssign(ITKImportFijiMontageFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(AbstractGeometry::LengthUnit::Micrometer)));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ChangeOrigin_Key, std::make_any<bool>(false));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ConvertToGrayScale_Key, std::make_any<bool>(false));
   args.insertOrAssign(ITKImportFijiMontageFilter::k_ParentDataGroup_Key, std::make_any<bool>(true));
@@ -61,8 +61,8 @@ TEST_CASE("ITKImageProcessing::ITKImportFijiMontage: Basic 2x2 Grid Montage", "[
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  std::vector<DataPath> generatedGroup = GetAllChildDataPaths(dataStructure, k_DataGroupPath, DataObject::Type::ImageGeom).value();
-  std::vector<DataPath> exemplarGroup = GetAllChildDataPaths(exemplarDataStructure, k_DataGroupPath, DataObject::Type::ImageGeom).value();
+  std::vector<DataPath> generatedGroup = GetAllChildDataPaths(dataStructure, k_DataGroupPath, IDataObject::Type::ImageGeom).value();
+  std::vector<DataPath> exemplarGroup = GetAllChildDataPaths(exemplarDataStructure, k_DataGroupPath, IDataObject::Type::ImageGeom).value();
   REQUIRE(generatedGroup.size() == exemplarGroup.size());
   for(usize i = 0; i < generatedGroup.size(); i++)
   {

@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class CreateAMScanPathsFilter
  * @brief This filter will generate additive manufacturing scan paths from an edge geometry
  */
-class SIMPLNXCORE_EXPORT CreateAMScanPathsFilter : public IFilter
+class SIMPLNXCORE_EXPORT CreateAMScanPathsFilter : public AbstractFilter
 {
 public:
   CreateAMScanPathsFilter() = default;

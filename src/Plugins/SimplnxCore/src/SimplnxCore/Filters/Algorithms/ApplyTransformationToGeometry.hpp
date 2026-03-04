@@ -20,29 +20,29 @@ namespace nx::core
 {
 namespace detail
 {
-static inline constexpr StringLiteral k_NoTransform = "No Transform";
-static inline constexpr StringLiteral k_PrecomputedTransformationMatrix = "Pre-Computed Transformation Matrix (4x4)";
-static inline constexpr StringLiteral k_ManualTransformationMatrix = "Manual Transformation Matrix";
-static inline constexpr StringLiteral k_Rotation = "Rotation";
-static inline constexpr StringLiteral k_Translation = "Translation";
-static inline constexpr StringLiteral k_Scale = "Scale";
+static constexpr StringLiteral k_NoTransform = "No Transform";
+static constexpr StringLiteral k_PrecomputedTransformationMatrix = "Pre-Computed Transformation Matrix (4x4)";
+static constexpr StringLiteral k_ManualTransformationMatrix = "Manual Transformation Matrix";
+static constexpr StringLiteral k_Rotation = "Rotation";
+static constexpr StringLiteral k_Translation = "Translation";
+static constexpr StringLiteral k_Scale = "Scale";
 static inline const ChoicesParameter::Choices k_TransformationChoices = {k_NoTransform, k_PrecomputedTransformationMatrix, k_ManualTransformationMatrix, k_Rotation, k_Translation, k_Scale};
 
-static inline constexpr ChoicesParameter::ValueType k_NoTransformIdx = 0ULL;
-static inline constexpr ChoicesParameter::ValueType k_PrecomputedTransformationMatrixIdx = 1ULL;
-static inline constexpr ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
-static inline constexpr ChoicesParameter::ValueType k_RotationIdx = 3ULL;
-static inline constexpr ChoicesParameter::ValueType k_TranslationIdx = 4ULL;
-static inline constexpr ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
+static constexpr ChoicesParameter::ValueType k_NoTransformIdx = 0ULL;
+static constexpr ChoicesParameter::ValueType k_PrecomputedTransformationMatrixIdx = 1ULL;
+static constexpr ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
+static constexpr ChoicesParameter::ValueType k_RotationIdx = 3ULL;
+static constexpr ChoicesParameter::ValueType k_TranslationIdx = 4ULL;
+static constexpr ChoicesParameter::ValueType k_ScaleIdx = 5ULL;
 
-static inline constexpr StringLiteral k_NearestNeighborInterpolation = "Nearest Neighbor Resampling";
-static inline constexpr StringLiteral k_LinearInterpolation = "Linear Interpolation";
-static inline constexpr StringLiteral k_NoInterpolation = "No Interpolation";
+static constexpr StringLiteral k_NearestNeighborInterpolation = "Nearest Neighbor Resampling";
+static constexpr StringLiteral k_LinearInterpolation = "Linear Interpolation";
+static constexpr StringLiteral k_NoInterpolation = "No Interpolation";
 static inline const ChoicesParameter::Choices k_InterpolationChoices = {k_NearestNeighborInterpolation, k_LinearInterpolation, k_NoInterpolation};
 
-static inline constexpr ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
-static inline constexpr ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
-static inline constexpr ChoicesParameter::ValueType k_NoInterpolationIdx = 2ULL;
+static constexpr ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
+static constexpr ChoicesParameter::ValueType k_LinearInterpolationIdx = 1ULL;
+static constexpr ChoicesParameter::ValueType k_NoInterpolationIdx = 2ULL;
 } // namespace detail
 
 struct SIMPLNXCORE_EXPORT ApplyTransformationToGeometryInputValues

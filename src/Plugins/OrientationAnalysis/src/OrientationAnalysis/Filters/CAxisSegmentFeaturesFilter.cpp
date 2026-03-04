@@ -126,7 +126,7 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
 
   // Validate the Grid Geometry
   auto gridGeomPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  const auto* inputGridGeom = dataStructure.getDataAs<IGridGeometry>(gridGeomPath);
+  const auto* inputGridGeom = dataStructure.getDataAs<AbstractGridGeometry>(gridGeomPath);
   DataPath inputCellDataPath = inputGridGeom->getCellDataPath();
   auto featureIdsPath = inputCellDataPath.createChildPath(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   auto pCellFeatureAttributeMatrixNameValue = gridGeomPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
@@ -185,7 +185,7 @@ Result<> CAxisSegmentFeaturesFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.FeatureIdsArrayPath = inputValues.QuatsArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
   inputValues.CellFeatureAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key));
   inputValues.ActiveArrayPath = inputValues.CellFeatureAttributeMatrixPath.createChildPath(filterArgs.value<std::string>(k_ActiveArrayName_Key));
-  inputValues.NeighborScheme = static_cast<SegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
+  inputValues.NeighborScheme = static_cast<ISegmentFeatures::NeighborScheme>(filterArgs.value<ChoicesParameter::ValueType>(k_NeighborScheme_Key));
 
   return CAxisSegmentFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

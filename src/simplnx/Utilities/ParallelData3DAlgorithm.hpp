@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/Range3D.hpp"
 #include "simplnx/Common/Types.hpp"
-#include "simplnx/Utilities/IParallelAlgorithm.hpp"
+#include "simplnx/Utilities/ParallelAlgorithm.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -23,7 +23,7 @@ namespace nx::core
  * utilizes TBB for parallelization and will fallback to non-parallelization if it is not
  * available or the parallelization is disabled.
  */
-class SIMPLNX_EXPORT ParallelData3DAlgorithm : public IParallelAlgorithm
+class SIMPLNX_EXPORT ParallelData3DAlgorithm : public ParallelAlgorithm
 {
 public:
   using RangeType = Range3D;

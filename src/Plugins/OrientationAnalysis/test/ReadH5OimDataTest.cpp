@@ -68,7 +68,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Single Scan", "[Orientation
   REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
   REQUIRE(imageGeom.getSpacing() == exemplarImageGeom.getSpacing());
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
-  REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
+  REQUIRE(imageGeom.getUnits() == AbstractGeometry::LengthUnit::Micrometer);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, exemplarImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
 
@@ -120,7 +120,7 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: Multi Scan", "[OrientationA
   REQUIRE(imageGeom.getDimensions() == exemplarImageGeom.getDimensions());
   REQUIRE(imageGeom.getSpacing() == exemplarImageGeom.getSpacing());
   REQUIRE(imageGeom.getOrigin() == exemplarImageGeom.getOrigin());
-  REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
+  REQUIRE(imageGeom.getUnits() == AbstractGeometry::LengthUnit::Micrometer);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, exemplarImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
 

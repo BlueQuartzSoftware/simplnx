@@ -52,7 +52,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
     {
       if(i % 4 == 0)
       {
-        IGeometry::MeshIndexType temp = triangles[(i * 3) + 0];
+        AbstractGeometry::MeshIndexType temp = triangles[(i * 3) + 0];
         triangles[(i * 3) + 0] = triangles[(i * 3) + 2];
         triangles[(i * 3) + 2] = temp;
       }
@@ -174,7 +174,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
     {
       if(i % 4 == 0)
       {
-        IGeometry::MeshIndexType temp = triangles[(i * 3) + 0];
+        AbstractGeometry::MeshIndexType temp = triangles[(i * 3) + 0];
         triangles[(i * 3) + 0] = triangles[(i * 3) + 2];
         triangles[(i * 3) + 2] = temp;
       }

@@ -44,7 +44,7 @@ namespace
 struct CreateCalculatorArrayFunctor
 {
   template <typename T>
-  CalculatorItem::Pointer operator()(DataStructure& dataStructure, bool allocate, const IDataArray* iDataArrayPtr)
+  CalculatorItem::Pointer operator()(DataStructure& dataStructure, bool allocate, const AbstractDataArray* iDataArrayPtr)
   {
     const auto* inputDataArray = dynamic_cast<const DataArray<T>*>(iDataArrayPtr);
     CalculatorItem::Pointer itemPtr = CalculatorArray<T>::New(dataStructure, inputDataArray, ICalculatorArray::Array, allocate);
@@ -510,7 +510,7 @@ Result<> ArrayCalculatorParser::parseArray(std::string token, std::vector<Calcul
   }
 
   DataPath tokenArrayPath = m_SelectedGroupPath.empty() ? DataPath({token}) : m_SelectedGroupPath.createChildPath(token);
-  const auto* dataArray = m_DataStructure.getDataAs<IDataArray>(tokenArrayPath);
+  const auto* dataArray = m_DataStructure.getDataAs<AbstractDataArray>(tokenArrayPath);
   if(firstArray_NumTuples < 0 && firstArray_Name.empty())
   {
     firstArray_NumTuples = dataArray->getNumberOfTuples();

@@ -2,12 +2,12 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
-class SIMPLNXCORE_EXPORT RobustAutomaticThresholdFilter : public IFilter
+class SIMPLNXCORE_EXPORT RobustAutomaticThresholdFilter : public AbstractFilter
 {
 public:
   RobustAutomaticThresholdFilter() = default;

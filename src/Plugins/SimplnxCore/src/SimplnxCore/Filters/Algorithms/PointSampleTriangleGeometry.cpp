@@ -84,7 +84,7 @@ Result<> PointSampleTriangleGeometry::operator()()
   // We get the pointer to the Array instead of a reference because it might not have been set because
   // the bool "use_mask" might have been false, but we do NOT want to try to get the array
   // 'on demand' in the loop. That is a BAD idea as is it really slow to do that. (10x slower).
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskArray = nullptr;
+  std::unique_ptr<MaskCompareUtilities::IMaskCompare> maskArray = nullptr;
   if(m_Inputs->pUseMask)
   {
     try
@@ -100,7 +100,7 @@ Result<> PointSampleTriangleGeometry::operator()()
   }
 
   // Get a reference to the Vertex List
-  AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertices = vertex.getVertices()->getDataStoreRef();
+  AbstractDataStore<AbstractGeometry::SharedVertexList::value_type>& vertices = vertex.getVertices()->getDataStoreRef();
 
   // Create a vector of TupleTransferFunctions for each of the Triangle Face to Vertex Data Arrays
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;

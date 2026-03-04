@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -12,7 +12,7 @@ namespace nx::core
  * @brief This filter will extract components of an array either to a new array or
  * delete it.
  */
-class SIMPLNXCORE_EXPORT ExtractComponentAsArrayFilter : public IFilter
+class SIMPLNXCORE_EXPORT ExtractComponentAsArrayFilter : public AbstractFilter
 {
 public:
   ExtractComponentAsArrayFilter() = default;

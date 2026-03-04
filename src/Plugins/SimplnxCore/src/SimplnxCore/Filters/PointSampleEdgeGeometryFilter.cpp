@@ -67,14 +67,14 @@ Parameters PointSampleEdgeGeometryFilter::parameters() const
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Edge Attribute Arrays to Transfer",
                                                                "The paths to the Edge Attribute Arrays to transfer to the created Vertex Geometry", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameter(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_SampledVertexGeometryPath_Key, "Output Vertex Geometry",
                                                              "Location in the data structure where the new Vertex Geometry, containing all points sampled along each scan vector, will be created.",
                                                              DataPath({"Sampled Vertex Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Created Vertex Data Attribute Matrix Name", "The name of the created Vertex Attribute Matrix",
-                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
+                                                          AbstractNodeGeometry0D::k_VertexAttributeMatrixName));
 
   params.insert(std::make_unique<DataObjectNameParameter>(k_EdgeIdsArrayName_Key, "Output Edge Ids Array Name",
                                                           "Name for the array that will hold, for each sampled vertex, the id of the edge that it belongs to.", "Edge Ids"));
@@ -130,7 +130,7 @@ IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const Data
   for(const auto& selectedDataPath : pSelectedDataArrayPaths)
   {
     DataPath createdDataPath = pVertexGroupDataPath.createChildPath(selectedDataPath.getTargetName());
-    const auto& selectedDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+    const auto& selectedDataArray = dataStructure.getDataRefAs<AbstractDataArray>(selectedDataPath);
     DataType dataType = selectedDataArray.getDataType();
     auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, tDims, selectedDataArray.getComponentShape(), createdDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));

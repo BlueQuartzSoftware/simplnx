@@ -30,7 +30,8 @@ namespace
 struct MapPointCloudDataByKernelFunctor
 {
   template <typename T>
-  void operator()(IDataArray* source, INeighborList* dynamic, std::vector<float>& kernelVals, const int64 kernel[3], const usize dims[3], usize curX, usize curY, usize curZ, usize vertIdx)
+  void operator()(AbstractDataArray* source, AbstractNeighborList* dynamic, std::vector<float>& kernelVals, const int64 kernel[3], const usize dims[3], usize curX, usize curY, usize curZ,
+                  usize vertIdx)
   {
     auto& inputData = source->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto* interpolatedDataPtr = dynamic_cast<NeighborList<T>*>(dynamic);
@@ -199,10 +200,10 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InterpolateArrays_Key, "Attribute Arrays to Interpolate", "DataPaths to interpolate", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllNumericTypes(),
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, GetAllNumericTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyArrays_Key, "Attribute Arrays to Copy", "DataPaths to copy", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes(),
+                                                               MultiArraySelectionParameter::AllowedTypes{AbstractArray::ArrayType::DataArray}, GetAllDataTypes(),
                                                                MultiArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
@@ -284,7 +285,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     dataArrays.push_back(interpolatePath);
 
-    auto targetArray = dataStructure.getDataAs<IDataArray>(interpolatePath);
+    auto targetArray = dataStructure.getDataAs<AbstractDataArray>(interpolatePath);
     auto targetPath = interpolatedGroupPath.createChildPath(targetArray->getName());
     if(targetArray->getNumberOfComponents() != 1)
     {
@@ -304,7 +305,7 @@ IFilter::PreflightResult InterpolatePointCloudToRegularGridFilter::preflightImpl
   {
     dataArrays.push_back(copyPath);
 
-    auto targetArray = dataStructure.getDataAs<IDataArray>(copyPath);
+    auto targetArray = dataStructure.getDataAs<AbstractDataArray>(copyPath);
     auto targetPath = interpolatedGroupPath.createChildPath(targetArray->getName());
     if(targetArray->getNumberOfComponents() != 1)
     {
@@ -459,8 +460,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     for(const auto& interpolatedDataPathItem : interpolatedDataPaths)
     {
       const auto dynamicArrayPath = interpolatedGroupPath.createChildPath(interpolatedDataPathItem.getTargetName());
-      auto* dynamicArrayToInterpolate = dataStructure.getDataAs<INeighborList>(dynamicArrayPath);
-      auto* sourceArray = dataStructure.getDataAs<IDataArray>(interpolatedDataPathItem);
+      auto* dynamicArrayToInterpolate = dataStructure.getDataAs<AbstractNeighborList>(dynamicArrayPath);
+      auto* sourceArray = dataStructure.getDataAs<AbstractDataArray>(interpolatedDataPathItem);
 
       const auto& type = sourceArray->getDataType();
       if(type == DataType::boolean) // Can't be executed will throw error
@@ -475,8 +476,8 @@ Result<> InterpolatePointCloudToRegularGridFilter::executeImpl(DataStructure& da
     for(const auto& copyDataPath : copyDataPaths)
     {
       auto dynamicArrayPath = interpolatedGroupPath.createChildPath(copyDataPath.getTargetName());
-      auto* dynamicArrayToCopy = dataStructure.getDataAs<INeighborList>(dynamicArrayPath);
-      auto* sourceArray = dataStructure.getDataAs<IDataArray>(copyDataPath);
+      auto* dynamicArrayToCopy = dataStructure.getDataAs<AbstractNeighborList>(dynamicArrayPath);
+      auto* sourceArray = dataStructure.getDataAs<AbstractDataArray>(copyDataPath);
 
       const auto& type = sourceArray->getDataType();
       if(type == DataType::boolean) // Can't be executed will throw error

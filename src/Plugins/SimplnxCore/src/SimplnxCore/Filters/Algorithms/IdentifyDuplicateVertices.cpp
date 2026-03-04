@@ -29,11 +29,12 @@ const std::atomic_bool& IdentifyDuplicateVertices::getCancel()
 // -----------------------------------------------------------------------------
 Result<> IdentifyDuplicateVertices::operator()()
 {
-  const auto& geom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->TargetGeometryPath);
-  const INodeGeometry2D::SharedVertexList::store_type& verts = geom.getVertices()->getDataStoreRef();
+  const auto& geom = m_DataStructure.getDataRefAs<AbstractNodeGeometry0D>(m_InputValues->TargetGeometryPath);
+  const AbstractNodeGeometry2D::SharedVertexList::store_type& verts = geom.getVertices()->getDataStoreRef();
 
   // Sort Vertices
-  MeshingUtilities::SortedVerticesList sortedVerticesList = MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
+  MeshingUtilities::SortedVerticesList sortedVerticesList =
+      MeshingUtilities::OrderSharedVertices(m_DataStructure.getDataRefAs<AbstractNodeGeometry0D>(m_InputValues->TargetGeometryPath), m_ShouldCancel);
   if(!MeshingUtilities::HasDuplicateVertices(geom.getVertices()->getDataStoreRef(), sortedVerticesList))
   {
     // no duplicates found
@@ -41,7 +42,7 @@ Result<> IdentifyDuplicateVertices::operator()()
   }
 
   // Leverage ordering assumptions to speed up duplicate checks
-  std::array<IGeometry::MeshIndexType, 3> offset;
+  std::array<AbstractGeometry::MeshIndexType, 3> offset;
   switch(sortedVerticesList.axis)
   {
   case MeshingUtilities::AxialAlignment::X: {
@@ -60,11 +61,11 @@ Result<> IdentifyDuplicateVertices::operator()()
 
   auto& duplicatesMask = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->DuplicatesMaskPath)->getDataStoreRef();
   duplicatesMask.fill(0);
-  using VertT = INodeGeometry0D::SharedVertexList::value_type;
+  using VertT = AbstractNodeGeometry0D::SharedVertexList::value_type;
   for(usize i = 1; i < sortedVerticesList.ordering.size(); i++)
   {
-    const IGeometry::MeshIndexType prevIndex = sortedVerticesList.ordering[i - 1] * 3;
-    const IGeometry::MeshIndexType currentIndex = sortedVerticesList.ordering[i] * 3;
+    const AbstractGeometry::MeshIndexType prevIndex = sortedVerticesList.ordering[i - 1] * 3;
+    const AbstractGeometry::MeshIndexType currentIndex = sortedVerticesList.ordering[i] * 3;
     if(std::numeric_limits<VertT>::epsilon() < std::fabs(verts[prevIndex + offset[0]] - verts[currentIndex + offset[0]]))
     {
       // value on first axis is different; proceed to next iteration

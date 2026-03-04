@@ -2,7 +2,7 @@
 
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
-#include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/AbstractArray.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -135,22 +135,22 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
     }
-    const DataObject* object = dataStructure.getData(path);
+    const AbstractDataObject* object = dataStructure.getData(path);
     if(object == nullptr)
     {
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
-    const auto* dataArray = dataStructure.getDataAs<IArray>(path);
+    const auto* dataArray = dataStructure.getDataAs<AbstractArray>(path);
     if(dataArray == nullptr)
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not an IArray type", prefix, path.toString())});
+      errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not an AbstractArray type", prefix, path.toString())});
       continue;
     }
-    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && m_AllowedTypes.count(dataArray->getArrayType()) == 0)
+    if(m_AllowedTypes.find(AbstractArray::ArrayType::Any) == m_AllowedTypes.end() && m_AllowedTypes.count(dataArray->getArrayType()) == 0)
     {
       errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(),
-                                                                                            dataArray->getTypeName(), IArray::StringListFromArrayType(m_AllowedTypes))});
+                                                                                            dataArray->getTypeName(), AbstractArray::StringListFromArrayType(m_AllowedTypes))});
       continue;
     }
     if(!m_RequiredComponentShapes.empty())
@@ -190,7 +190,7 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
 Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& paths = GetAnyRef<ValueType>(value);
-  std::vector<DataObject*> objects;
+  std::vector<AbstractDataObject*> objects;
   for(const auto& path : paths)
   {
     objects.push_back(dataStructure.getData(path));

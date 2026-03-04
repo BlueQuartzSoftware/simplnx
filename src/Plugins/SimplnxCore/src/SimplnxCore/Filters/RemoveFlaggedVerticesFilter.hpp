@@ -2,8 +2,8 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/Filter/AbstractFilter.hpp"
 #include "simplnx/Filter/FilterTraits.hpp"
-#include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
@@ -11,7 +11,7 @@ namespace nx::core
  * @class RemoveFlaggedVerticesFilter
  * @brief This filter will remove specified vertices from the specified geometry.
  */
-class SIMPLNXCORE_EXPORT RemoveFlaggedVerticesFilter : public IFilter
+class SIMPLNXCORE_EXPORT RemoveFlaggedVerticesFilter : public AbstractFilter
 {
 public:
   RemoveFlaggedVerticesFilter() = default;
