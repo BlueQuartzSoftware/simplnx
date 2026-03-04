@@ -537,6 +537,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/AlgorithmDispatch.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.hpp
@@ -558,6 +559,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelTaskAlgorithm.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SamplingUtils.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SegmentFeatures.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/UnionFind.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TimeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp

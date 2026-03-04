@@ -5,6 +5,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
@@ -68,8 +69,16 @@ Result<> CAxisSegmentFeatures::operator()()
   auto* active = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
   active->fill(1);
 
-  // Run the segmentation algorithm
-  execute(imageGeometry);
+  // Dispatch between DFS (in-core) and CCL (OOC) algorithms
+  if(IsOutOfCore(*m_FeatureIdsArray) || ForceOocAlgorithm())
+  {
+    auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
+    executeCCL(imageGeometry, featureIdsStore);
+  }
+  else
+  {
+    execute(imageGeometry);
+  }
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
@@ -127,10 +136,7 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   }
   if(seed >= 0)
   {
-    auto& cellFeatureAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
     featureIds[static_cast<usize>(seed)] = gnum;
-    const ShapeType tDims = {static_cast<usize>(gnum) + 1};
-    cellFeatureAM.resizeTuples(tDims); // This will resize the active array
   }
   return seed;
 }
@@ -181,4 +187,60 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
     }
   }
   return group;
+}
+
+// -----------------------------------------------------------------------------
+bool CAxisSegmentFeatures::isValidVoxel(int64 point) const
+{
+  // Check mask
+  if(m_InputValues->UseMask && !m_GoodVoxelsArray->isTrue(point))
+  {
+    return false;
+  }
+  // Check that the voxel has a valid phase (> 0)
+  Int32Array& cellPhases = *m_CellPhases;
+  if(cellPhases[point] <= 0)
+  {
+    return false;
+  }
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
+{
+  // The neighbor must also be valid
+  if(!isValidVoxel(point2))
+  {
+    return false;
+  }
+
+  Int32Array& cellPhases = *m_CellPhases;
+
+  // Must be same phase
+  if(cellPhases[point1] != cellPhases[point2])
+  {
+    return false;
+  }
+
+  // Calculate c-axis misalignment
+  const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
+  Float32Array& quats = *m_QuatsArray;
+
+  const ebsdlib::QuatF q1(quats[point1 * 4], quats[point1 * 4 + 1], quats[point1 * 4 + 2], quats[point1 * 4 + 3]);
+  const ebsdlib::QuatF q2(quats[point2 * 4], quats[point2 * 4 + 1], quats[point2 * 4 + 2], quats[point2 * 4 + 3]);
+
+  const ebsdlib::OrientationMatrixFType oMatrix1 = q1.toOrientationMatrix();
+  const ebsdlib::OrientationMatrixFType oMatrix2 = q2.toOrientationMatrix();
+
+  Eigen::Vector3f c1 = oMatrix1.transpose() * cAxis;
+  Eigen::Vector3f c2 = oMatrix2.transpose() * cAxis;
+
+  c1.normalize();
+  c2.normalize();
+
+  float32 w = std::clamp(((c1[0] * c2[0]) + (c1[1] * c2[1]) + (c1[2] * c2[2])), -1.0F, 1.0F);
+  w = std::acos(w);
+
+  return w <= m_InputValues->MisorientationTolerance || (Constants::k_PiD - w) <= m_InputValues->MisorientationTolerance;
 }
