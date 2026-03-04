@@ -153,6 +153,7 @@ namespace Constants
 {
 inline constexpr int32 k_ImageGeometryDimensionMismatch = -2000;
 inline constexpr int32 k_ImageComponentDimensionMismatch = -2001;
+inline constexpr int32 k_OutOfCoreDataNotSupported = -2002;
 
 } // namespace Constants
 
@@ -311,6 +312,17 @@ std::vector<usize> GetComponentDimensions()
   return {itk::NumericTraits<PixelT>::GetLength()};
 }
 
+/**
+ * @brief Wraps an in-memory DataStore in an ITK ImportImageFilter image,
+ *        giving ITK a zero-copy view of the store's data buffer.
+ *
+ * @pre @p dataStore must be an in-memory DataStore (not out-of-core).
+ * @tparam PixelT     ITK pixel type.
+ * @tparam Dimensions Image dimensionality (2 or 3).
+ * @param dataStore   In-memory data store whose buffer is imported.
+ * @param imageGeom   Geometry providing origin, spacing, and dimensions.
+ * @return Smart pointer to the constructed ITK image. The DataStore retains ownership of the buffer.
+ */
 template <class PixelT, uint32 Dimensions>
 typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<UnderlyingType_t<PixelT>>& dataStore, const ImageGeomData& imageGeom)
 {
@@ -364,6 +376,17 @@ typename itk::Image<PixelT, Dimensions>::Pointer WrapDataStoreInImage(DataStore<
   return WrapDataStoreInImage<PixelT, Dimensions>(dataStore, ImageGeomData(imageGeom));
 }
 
+/**
+ * @brief Transfers ownership of an ITK image's pixel buffer into an in-memory DataStore.
+ *        After this call the ITK image no longer manages the buffer; the DataStore is the sole owner.
+ *
+ * @pre @p dataStore must be an in-memory DataStore (not out-of-core).
+ * @tparam PixelT   ITK pixel type.
+ * @tparam Dimension Image dimensionality (2 or 3).
+ * @param image     Source ITK image whose buffer is transferred. The image should be disconnected
+ *                  from the ITK pipeline (DisconnectPipeline()) before calling this function.
+ * @param dataStore Destination in-memory DataStore that will take ownership of the buffer.
+ */
 template <class PixelT, uint32 Dimension>
 void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, DataStore<UnderlyingType_t<PixelT>>& dataStore)
 {
@@ -380,8 +403,8 @@ void ConvertImageToDataStore(itk::Image<PixelT, Dimension>& image, DataStore<Und
   // ITK use the global new allocator
   auto* bufferPtr = reinterpret_cast<T*>(pixelContainer->GetBufferPointer());
   pixelContainer->ContainerManageMemoryOff();
-  std::unique_ptr<T[]> newData(bufferPtr);
-  dataStore = DataStore<T>(std::move(newData), std::move(tDims), std::move(cDims));
+  std::unique_ptr<T[]> newDataPtr(bufferPtr);
+  dataStore = DataStore<T>(std::move(newDataPtr), std::move(tDims), std::move(cDims));
 }
 
 // Could replace with class type non-type template parameters in C++20
@@ -833,6 +856,12 @@ Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPa
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const auto& inputDataStore = inputArray.getIDataStoreRef();
 
+  if(!inputArray.getDataFormat().empty())
+  {
+    return MakeErrorResult<OutputActions>(Constants::k_OutOfCoreDataNotSupported,
+                                          fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
+  }
+
   return ArraySwitchFunc<detail::DataCheckImplFunctor, ArrayOptionsT, OutputActions, OutputT>(inputDataStore, imageGeom, -1, dataStructure, inputArrayPath, imageGeomPath, outputArrayPath);
 }
 
@@ -851,7 +880,7 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
 
   if(!inputArray.getDataFormat().empty())
   {
-    return MakeErrorResult(-9999, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
+    return MakeErrorResult(Constants::k_OutOfCoreDataNotSupported, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
   }
 
   try
