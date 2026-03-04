@@ -81,6 +81,28 @@ Result<> ErodeDilateCoordinationNumber::operator()()
   bool keepGoing = true;
   int32 counter = 1;
 
+  // Z-slice buffering: maintain rolling window of 3 adjacent Z-slices for FeatureIds
+  // to avoid random OOC chunk access during neighbor lookups.
+  const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
+
+  // Rolling window: slot 0 = z-1, slot 1 = z (current), slot 2 = z+1
+  std::array<std::vector<int32>, 3> featureIdSlices;
+  for(auto& fis : featureIdSlices)
+  {
+    fis.resize(sliceSize);
+  }
+
+  auto readFeatureIdSlice = [&](int64 z, usize slot) {
+    const usize zOffset = static_cast<usize>(z) * sliceSize;
+    for(usize i = 0; i < sliceSize; i++)
+    {
+      featureIdSlices[slot][i] = featureIds[zOffset + i];
+    }
+  };
+
+  // Face neighbor ordering: 0=-Z, 1=-Y, 2=-X, 3=+X, 4=+Y, 5=+Z
+  constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
+
   while(counter > 0 && keepGoing)
   {
     counter = 0;
@@ -89,20 +111,47 @@ Result<> ErodeDilateCoordinationNumber::operator()()
       keepGoing = false;
     }
 
+    // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
+    readFeatureIdSlice(0, 1);
+    if(dims[2] > 1)
+    {
+      readFeatureIdSlice(1, 2);
+    }
+
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      const int64 zStride = dims[0] * dims[1] * zIdx;
+      // Advance rolling window for z > 0
+      if(zIdx > 0)
+      {
+        std::swap(featureIdSlices[0], featureIdSlices[1]);
+        std::swap(featureIdSlices[1], featureIdSlices[2]);
+        if(zIdx + 1 < dims[2])
+        {
+          readFeatureIdSlice(zIdx + 1, 2);
+        }
+      }
+
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        const int64 yStride = dims[0] * yIdx;
         for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          const int64 voxelIndex = zStride + yStride + xIdx;
-          const int32 featureName = featureIds[voxelIndex];
+          const int64 voxelIndex = dims[0] * dims[1] * zIdx + dims[0] * yIdx + xIdx;
+          const usize inSlice = static_cast<usize>(yIdx * dims[0] + xIdx);
+          const int32 featureName = featureIdSlices[1][inSlice];
           int32 coordination = 0;
           int32 most = 0;
-          // Loop over the 6 face neighbors of the voxel
+
           std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+
+          const std::array<usize, 6> neighborInSlice = {
+              inSlice,                                          // -Z
+              static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
+              static_cast<usize>(yIdx * dims[0] + (xIdx - 1)), // -X
+              static_cast<usize>(yIdx * dims[0] + (xIdx + 1)), // +X
+              static_cast<usize>((yIdx + 1) * dims[0] + xIdx), // +Y
+              inSlice                                           // +Z
+          };
+
           for(const auto& faceIndex : faceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
@@ -111,8 +160,8 @@ Result<> ErodeDilateCoordinationNumber::operator()()
             }
 
             const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+            const int32 feature = featureIdSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
 
-            const int32 feature = featureIds[neighborPoint];
             if((featureName > 0 && feature == 0) || (featureName == 0 && feature > 0))
             {
               coordination = coordination + 1;
@@ -139,8 +188,13 @@ Result<> ErodeDilateCoordinationNumber::operator()()
             {
               ExecuteDataFunction(DataArrayCopyTupleFunctor{}, voxelArray->getDataType(), *voxelArray, neighbor, voxelIndex);
             }
+            // Update the buffer to reflect the in-place modification
+            // Since featureIds is in voxelArrays, the copyTuple above updated
+            // the backing store. Re-read the modified voxel into our buffer.
+            featureIdSlices[1][inSlice] = featureIds[voxelIndex];
           }
-          // Loop over the 6 face neighbors of the voxel
+
+          // Reset featureCount for neighbors
           isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
           for(const auto& faceIndex : faceNeighborInternalIdx)
           {
@@ -149,8 +203,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
               continue;
             }
 
-            const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-            const int32 feature = featureIds[neighborPoint];
+            const int32 feature = featureIdSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
             if(feature > 0)
             {
               featureCount[feature] = 0;

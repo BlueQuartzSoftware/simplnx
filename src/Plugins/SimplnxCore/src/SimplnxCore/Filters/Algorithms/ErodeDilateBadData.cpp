@@ -116,23 +116,74 @@ Result<> ErodeDilateBadData::operator()()
 
   std::vector<int32> featureCount(numFeatures + 1, 0);
 
+  // Z-slice buffering: maintain a rolling window of 3 adjacent Z-slices for
+  // FeatureIds to avoid random OOC chunk access during neighbor lookups.
+  const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
+
+  // Rolling window: slot 0 = z-1, slot 1 = z (current), slot 2 = z+1
+  std::array<std::vector<int32>, 3> featureIdSlices;
+  for(auto& fis : featureIdSlices)
+  {
+    fis.resize(sliceSize);
+  }
+
+  auto readFeatureIdSlice = [&](int64 z, usize slot) {
+    const usize zOffset = static_cast<usize>(z) * sliceSize;
+    for(usize i = 0; i < sliceSize; i++)
+    {
+      featureIdSlices[slot][i] = featureIds[zOffset + i];
+    }
+  };
+
+  // Helper to read a FeatureId from the rolling buffer.
+  // neighborSlot: 0 = z-1, 1 = z (current), 2 = z+1
+  // Face neighbor ordering: 0=-Z, 1=-Y, 2=-X, 3=+X, 4=+Y, 5=+Z
+  constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
+
   for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
+    // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
+    readFeatureIdSlice(0, 1);
+    if(dims[2] > 1)
+    {
+      readFeatureIdSlice(1, 2);
+    }
+
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      const int64 zStride = dims[0] * dims[1] * zIdx;
+      // Advance rolling window for z > 0
+      if(zIdx > 0)
+      {
+        std::swap(featureIdSlices[0], featureIdSlices[1]);
+        std::swap(featureIdSlices[1], featureIdSlices[2]);
+        if(zIdx + 1 < dims[2])
+        {
+          readFeatureIdSlice(zIdx + 1, 2);
+        }
+      }
+
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        const int64 yStride = dims[0] * yIdx;
         for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          const int64 voxelIndex = zStride + yStride + xIdx;
-          const int32 featureName = featureIds[voxelIndex];
+          const int64 voxelIndex = xIdx + yIdx * dims[0] + zIdx * static_cast<int64>(sliceSize);
+          const usize inSlice = static_cast<usize>(yIdx * dims[0] + xIdx);
+          const int32 featureName = featureIdSlices[1][inSlice];
           if(featureName == 0)
           {
             int32 most = 0;
-            // Loop over the 6 face neighbors of the voxel
             std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+
+            // Precompute neighbor in-slice indices for buffer lookups
+            const std::array<usize, 6> neighborInSlice = {
+                inSlice,                                           // -Z: same xy position in prev slice
+                static_cast<usize>((yIdx - 1) * dims[0] + xIdx),  // -Y
+                static_cast<usize>(yIdx * dims[0] + (xIdx - 1)),  // -X
+                static_cast<usize>(yIdx * dims[0] + (xIdx + 1)),  // +X
+                static_cast<usize>((yIdx + 1) * dims[0] + xIdx),  // +Y
+                inSlice                                            // +Z: same xy position in next slice
+            };
+
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
@@ -140,8 +191,8 @@ Result<> ErodeDilateBadData::operator()()
                 continue;
               }
               const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+              const int32 feature = featureIdSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
 
-              const int32 feature = featureIds[neighborPoint];
               if(m_InputValues->Operation == detail::k_DilateIndex && feature > 0)
               {
                 neighbors[neighborPoint] = voxelIndex;
@@ -159,17 +210,13 @@ Result<> ErodeDilateBadData::operator()()
             }
             if(m_InputValues->Operation == detail::k_ErodeIndex)
             {
-              // Loop over the 6 face neighbors of the voxel
-              isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
               for(const auto& faceIndex : faceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
                 {
                   continue;
                 }
-                const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-
-                const int32 feature = featureIds[neighborPoint];
+                const int32 feature = featureIdSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
                 featureCount[feature] = 0;
               }
             }
