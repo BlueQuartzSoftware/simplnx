@@ -31,3 +31,4 @@ test_data/
 vcpkg_installed/
 Workspace
 CLAUDE.md
+.claude
