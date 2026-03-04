@@ -246,10 +246,14 @@ set(AlgorithmList
   ExtractVertexGeometry
   FeatureFaceCurvature
   FillBadData
+  FillBadDataBFS
+  FillBadDataCCL
   FindNRingNeighbors
   FlyingEdges3D
   IdentifyDuplicateVertices
   IdentifySample
+  IdentifySampleBFS
+  IdentifySampleCCL
   InitializeData
   InitializeImageGeomCellData
   InterpolatePointCloudToRegularGrid
