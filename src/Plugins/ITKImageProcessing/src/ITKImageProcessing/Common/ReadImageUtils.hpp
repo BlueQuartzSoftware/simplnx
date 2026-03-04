@@ -21,7 +21,7 @@ concept NotBoolOrSignedT = !std::is_same_v<T, bool> && !std::is_signed_v<T>;
 /* clang-format on */
 
 template <NotBoolOrSignedT NewStoreT, class PixelT, uint32 Dimension>
-  requires NotBoolOrSignedT<ITK::UnderlyingType_t<PixelT>>
+requires NotBoolOrSignedT<ITK::UnderlyingType_t<PixelT>>
 void ConvertImageToDataStoreAsType(itk::Image<PixelT, Dimension>& image, DataStore<NewStoreT>& dataStore)
 {
   using ImageType = itk::Image<PixelT, Dimension>;
