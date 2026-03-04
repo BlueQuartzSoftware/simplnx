@@ -1,11 +1,14 @@
 #include "SimplnxCore/Filters/ScalarSegmentFeaturesFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
@@ -34,6 +37,12 @@ const std::string k_ExemplaryCombinationAllConnectedFeatureIdsName = "Exemplary 
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[SimplnxCore][ScalarSegmentFeatures]")
 {
+  UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // SmallIN100: 100x100x100, largest 1-comp int32/float32 array => 100*100*4 = 40,000 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 40000, true);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
   // Read the Small IN100 Data set
@@ -99,6 +108,12 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures", "[SimplnxCore][ScalarSegmentFeat
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Neighbor Scheme", "[Reconstruction][ScalarSegmentFeatures]")
 {
+  UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // Neighbor scheme test: 8x5x10, largest int32 array => 5*10*4 = 200 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 200, true);
+
   /**
    * We are going to use Catch2's GENERATE macro to create variations of parameter values.
    * EVERYTHING after the GENERATE macro will be run for each of the generated sets of values
@@ -170,4 +185,79 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Neighbor Scheme", "[Reconstructio
       UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
   }
+}
+
+TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Benchmark 200x200x200", "[SimplnxCore][ScalarSegmentFeatures][Benchmark]")
+{
+  UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // 200x200x200, largest array is int32 1-comp => 200*200*4 = 160,000 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 160000, true);
+
+  constexpr usize kDimX = 200;
+  constexpr usize kDimY = 200;
+  constexpr usize kDimZ = 200;
+  const ShapeType cellTupleShape = {kDimZ, kDimY, kDimX};
+  const auto benchmarkFile = fs::path(fmt::format("{}/scalar_segment_features_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
+
+  // Stage 1: Build data programmatically and write to .dream3d
+  {
+    DataStructure buildDS;
+    auto* imageGeom = ImageGeom::Create(buildDS, "DataContainer");
+    imageGeom->setDimensions({kDimX, kDimY, kDimZ});
+    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+    auto* cellAM = AttributeMatrix::Create(buildDS, "Cell Data", cellTupleShape, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+
+    // Create scalar input array: blocks of 25 voxels with distinct integer values
+    // Creates a grid of ~512 distinct regions (8x8x8 blocks)
+    auto* scalarArray = CreateTestDataArray<int32>(buildDS, "ScalarData", cellTupleShape, {1}, cellAM->getId());
+    auto& scalarStore = scalarArray->getDataStoreRef();
+
+    constexpr usize kBlockSize = 25;
+    for(usize z = 0; z < kDimZ; z++)
+    {
+      for(usize y = 0; y < kDimY; y++)
+      {
+        for(usize x = 0; x < kDimX; x++)
+        {
+          const usize idx = z * kDimX * kDimY + y * kDimX + x;
+          const usize bx = x / kBlockSize;
+          const usize by = y / kBlockSize;
+          const usize bz = z / kBlockSize;
+          // Each block gets a unique scalar value; tolerance=0 means only identical values merge
+          scalarStore[idx] = static_cast<int32>(bz * 64 + by * 8 + bx);
+        }
+      }
+    }
+
+    UnitTest::WriteTestDataStructure(buildDS, benchmarkFile);
+  }
+
+  // Stage 2: Reload (arrays become ZarrStore in OOC) and run filter
+  DataStructure dataStructure = UnitTest::LoadDataStructure(benchmarkFile);
+
+  {
+    ScalarSegmentFeaturesFilter filter;
+    Arguments args;
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(DataPath({"DataContainer", "Cell Data", "ScalarData"})));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(0));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>("CellFeatureData"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  fs::remove(benchmarkFile);
 }

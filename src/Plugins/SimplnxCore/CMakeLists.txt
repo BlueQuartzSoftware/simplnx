@@ -247,11 +247,15 @@ set(AlgorithmList
   ExtractVertexGeometry
   FeatureFaceCurvature
   FillBadData
+  FillBadDataBFS
+  FillBadDataCCL
   FindNRingNeighbors
   FlyingEdges3D
   HierarchicalSmooth
   IdentifyDuplicateVertices
   IdentifySample
+  IdentifySampleBFS
+  IdentifySampleCCL
   InitializeData
   InitializeImageGeomCellData
   InterpolatePointCloudToRegularGrid
