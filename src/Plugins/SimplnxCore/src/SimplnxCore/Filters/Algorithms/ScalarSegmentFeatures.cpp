@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 using namespace nx::core;
 
@@ -52,6 +53,15 @@ public:
       return true;
     }
     return false;
+  }
+
+  bool compare(int64 index, int64 neighIndex) override
+  {
+    if(index >= m_Length || neighIndex >= m_Length)
+    {
+      return false;
+    }
+    return (*m_Data)[neighIndex] == (*m_Data)[index];
   }
 
 private:
@@ -107,6 +117,20 @@ public:
       }
     }
     return false;
+  }
+
+  bool compare(int64 index, int64 neighIndex) override
+  {
+    if(index >= m_Length || neighIndex >= m_Length)
+    {
+      return false;
+    }
+
+    if(m_Data[index] >= m_Data[neighIndex])
+    {
+      return (m_Data[index] - m_Data[neighIndex]) <= m_Tolerance;
+    }
+    return (m_Data[neighIndex] - m_Data[index]) <= m_Tolerance;
   }
 
 private:
@@ -209,8 +233,16 @@ Result<> ScalarSegmentFeatures::operator()()
     m_CompareFunctor = std::make_shared<SegmentFeatures::CompareFunctor>(); // The default CompareFunctor which ALWAYS returns false for the comparison
   }
 
-  // Run the segmentation algorithm
-  execute(gridGeom);
+  // Dispatch between DFS (in-core) and CCL (OOC) algorithms
+  if(IsOutOfCore(*m_FeatureIdsArray) || ForceOocAlgorithm())
+  {
+    auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
+    executeCCL(gridGeom, featureIdsStore);
+  }
+  else
+  {
+    execute(gridGeom);
+  }
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
@@ -282,4 +314,25 @@ bool ScalarSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighb
   }
 
   return false;
+}
+
+// -----------------------------------------------------------------------------
+bool ScalarSegmentFeatures::isValidVoxel(int64 point) const
+{
+  if(m_InputValues->UseMask && !m_GoodVoxels->isTrue(point))
+  {
+    return false;
+  }
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+bool ScalarSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
+{
+  // Both voxels must be valid
+  if(!isValidVoxel(point2))
+  {
+    return false;
+  }
+  return m_CompareFunctor->compare(point1, point2);
 }

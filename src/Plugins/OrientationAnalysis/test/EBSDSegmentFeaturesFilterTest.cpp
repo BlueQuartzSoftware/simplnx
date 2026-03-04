@@ -5,13 +5,17 @@
 #include "OrientationAnalysisTestUtils.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <fmt/format.h>
 
+#include <cmath>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -43,6 +47,10 @@ inline const DataPath k_FeatureIdsMaskAllPath = k_InputGeometryPath.createChildP
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:Face", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // segment_features_test_data: 3x144x144, Quats (float32, 4-comp) => 144*144*4*4 = 331,776 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 331776, true);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   // Read Exemplar DREAM3D File Filter
@@ -100,12 +108,15 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:Face", "[OrientationAnalysis
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:All", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // segment_features_test_data: 3x144x144, Quats (float32, 4-comp) => 144*144*4*4 = 331,776 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 331776, true);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/segment_features_test_data/segment_features_test_data.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
-
   // EBSD Segment Features/Semgent Features (Misorientation) Filter
   {
     EBSDSegmentFeaturesFilter filter;
@@ -157,6 +168,10 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:All", "[OrientationAnalysis]
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskFace", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // segment_features_test_data: 3x144x144, Quats (float32, 4-comp) => 144*144*4*4 = 331,776 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 331776, true);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   // Read Exemplar DREAM3D File Filter
@@ -214,6 +229,10 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskFace", "[OrientationAnal
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskAll", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // segment_features_test_data: 3x144x144, Quats (float32, 4-comp) => 144*144*4*4 = 331,776 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 331776, true);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "segment_features_test_data.tar.gz", "segment_features_test_data");
   // Read Exemplar DREAM3D File Filter
@@ -266,4 +285,101 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskAll", "[OrientationAnaly
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+}
+
+TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Benchmark 200x200x200", "[OrientationAnalysis][EBSDSegmentFeatures][Benchmark]")
+{
+  UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // 200x200x200, Quats float32 4-comp => 200*200*4*4 = 640,000 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 640000, true);
+
+  constexpr usize kDimX = 200;
+  constexpr usize kDimY = 200;
+  constexpr usize kDimZ = 200;
+  const ShapeType cellTupleShape = {kDimZ, kDimY, kDimX};
+  const auto benchmarkFile = fs::path(fmt::format("{}/ebsd_segment_features_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
+
+  // Stage 1: Build data programmatically and write to .dream3d
+  {
+    DataStructure buildDS;
+    auto* imageGeom = ImageGeom::Create(buildDS, "DataContainer");
+    imageGeom->setDimensions({kDimX, kDimY, kDimZ});
+    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+    auto* cellAM = AttributeMatrix::Create(buildDS, "CellData", cellTupleShape, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+
+    // Create Quats array (float32, 4-component) with block grain pattern
+    auto* quatsArray = UnitTest::CreateTestDataArray<float32>(buildDS, "Quats", cellTupleShape, {4}, cellAM->getId());
+    auto& quatsStore = quatsArray->getDataStoreRef();
+
+    // Create Phases array (int32, 1-component) - all phase 1
+    auto* phasesArray = UnitTest::CreateTestDataArray<int32>(buildDS, "Phases", cellTupleShape, {1}, cellAM->getId());
+    auto& phasesStore = phasesArray->getDataStoreRef();
+
+    // Fill quaternions: divide into 25-voxel blocks, each block gets a distinct orientation
+    constexpr usize kBlockSize = 25;
+    for(usize z = 0; z < kDimZ; z++)
+    {
+      for(usize y = 0; y < kDimY; y++)
+      {
+        for(usize x = 0; x < kDimX; x++)
+        {
+          const usize idx = z * kDimX * kDimY + y * kDimX + x;
+          phasesStore[idx] = 1;
+
+          usize bx = x / kBlockSize;
+          usize by = y / kBlockSize;
+          usize bz = z / kBlockSize;
+          float angle = static_cast<float>((bx * 73 + by * 137 + bz * 251) % 360) * (3.14159265f / 180.0f);
+          float halfAngle = angle * 0.5f;
+          quatsStore[idx * 4 + 0] = std::cos(halfAngle);
+          quatsStore[idx * 4 + 1] = 0.0f;
+          quatsStore[idx * 4 + 2] = 0.0f;
+          quatsStore[idx * 4 + 3] = std::sin(halfAngle);
+        }
+      }
+    }
+
+    // Create CellEnsembleData with CrystalStructures
+    const ShapeType ensembleTupleShape = {2};
+    auto* ensembleAM = AttributeMatrix::Create(buildDS, "CellEnsembleData", ensembleTupleShape, imageGeom->getId());
+    auto* crystalStructsArray = UnitTest::CreateTestDataArray<uint32>(buildDS, "CrystalStructures", ensembleTupleShape, {1}, ensembleAM->getId());
+    auto& crystalStructsStore = crystalStructsArray->getDataStoreRef();
+    crystalStructsStore[0] = 999; // Phase 0: Unknown
+    crystalStructsStore[1] = 1;   // Phase 1: Cubic_High
+
+    UnitTest::WriteTestDataStructure(buildDS, benchmarkFile);
+  }
+
+  // Stage 2: Reload (arrays become ZarrStore in OOC) and run filter
+  DataStructure dataStructure = UnitTest::LoadDataStructure(benchmarkFile);
+
+  {
+    EBSDSegmentFeaturesFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Quats"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("Grain Data"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  fs::remove(benchmarkFile);
 }

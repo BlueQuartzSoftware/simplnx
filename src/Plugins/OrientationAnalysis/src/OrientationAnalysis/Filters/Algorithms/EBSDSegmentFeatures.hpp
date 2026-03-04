@@ -56,26 +56,12 @@ public:
   Result<> operator()();
 
 protected:
-  /**
-   * @brief
-   * @param data
-   * @param args
-   * @param gnum
-   * @param nextSeed
-   * @return int64
-   */
   int64_t getSeed(int32 gnum, int64 nextSeed) const override;
-
-  /**
-   * @brief
-   * @param data
-   * @param args
-   * @param referencepoint
-   * @param neighborpoint
-   * @param gnum
-   * @return bool
-   */
   bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
+
+  // CCL virtual method overrides
+  bool isValidVoxel(int64 point) const override;
+  bool areNeighborsSimilar(int64 point1, int64 point2) const override;
 
 private:
   const EBSDSegmentFeaturesInputValues* m_InputValues = nullptr;

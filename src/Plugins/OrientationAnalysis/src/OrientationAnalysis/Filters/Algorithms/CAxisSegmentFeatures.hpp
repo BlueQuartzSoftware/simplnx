@@ -49,6 +49,10 @@ protected:
   int64 getSeed(int32 gnum, int64 nextSeed) const override;
   bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
 
+  // CCL virtual method overrides
+  bool isValidVoxel(int64 point) const override;
+  bool areNeighborsSimilar(int64 point1, int64 point2) const override;
+
 private:
   const CAxisSegmentFeaturesInputValues* m_InputValues = nullptr;
 
