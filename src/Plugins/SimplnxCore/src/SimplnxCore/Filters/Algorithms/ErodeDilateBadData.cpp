@@ -4,66 +4,9 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
-#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
-namespace
-{
-class ErodeDilateBadDataTransferDataImpl
-{
-public:
-  ErodeDilateBadDataTransferDataImpl() = delete;
-  ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
-
-  ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
-                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
-  : m_FilterAlg(filterAlg)
-  , m_TotalPoints(totalPoints)
-  , m_Operation(operation)
-  , m_Neighbors(neighbors)
-  , m_DataArrayPtr(dataArrayPtr)
-  , m_FeatureIds(featureIds)
-  , m_MessageHelper(messageHelper)
-  {
-  }
-  ErodeDilateBadDataTransferDataImpl(ErodeDilateBadDataTransferDataImpl&&) = default;                // Move Constructor Not Implemented
-  ErodeDilateBadDataTransferDataImpl& operator=(const ErodeDilateBadDataTransferDataImpl&) = delete; // Copy Assignment Not Implemented
-  ErodeDilateBadDataTransferDataImpl& operator=(ErodeDilateBadDataTransferDataImpl&&) = delete;      // Move Assignment Not Implemented
-
-  ~ErodeDilateBadDataTransferDataImpl() = default;
-
-  void operator()() const
-  {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
-    std::string arrayName = m_DataArrayPtr->getName();
-    for(usize i = 0; i < m_TotalPoints; i++)
-    {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
-
-      const int32 featureName = m_FeatureIds[i];
-      const int64 neighbor = m_Neighbors[i];
-      if(neighbor >= 0)
-      {
-        if((featureName == 0 && m_FeatureIds[neighbor] > 0 && m_Operation == detail::k_ErodeIndex) || (featureName > 0 && m_FeatureIds[neighbor] == 0 && m_Operation == detail::k_DilateIndex))
-        {
-          m_DataArrayPtr->copyTuple(neighbor, i);
-        }
-      }
-    }
-  }
-
-private:
-  ErodeDilateBadData* m_FilterAlg = nullptr;
-  usize m_TotalPoints = 0;
-  ChoicesParameter::ValueType m_Operation = 0;
-  std::vector<int64> m_Neighbors;
-  const std::shared_ptr<IDataArray> m_DataArrayPtr;
-  const Int32AbstractDataStore& m_FeatureIds;
-  MessageHelper& m_MessageHelper;
-};
-} // namespace
 
 // -----------------------------------------------------------------------------
 ErodeDilateBadData::ErodeDilateBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateBadDataInputValues* inputValues)
@@ -225,30 +168,47 @@ Result<> ErodeDilateBadData::operator()()
       }
     }
 
-    // Build up a list of the DataArrays that we are going to operate on.
+    // Sequential per-array transfer: process one array at a time so only one array's
+    // chunks compete for the OOC cache. This avoids the chunk thrashing that occurs
+    // when ParallelTaskAlgorithm processes multiple arrays simultaneously.
     const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
-    MessageHelper messageHelper(m_MessageHandler);
-
-    ParallelTaskAlgorithm taskRunner;
-    taskRunner.setParallelizationEnabled(true);
     for(const auto& voxelArray : voxelArrays)
     {
-      // We need to skip updating the FeatureIds until all the other arrays are updated
-      // since we actually depend on the feature Ids values.
       if(voxelArray->getName() == m_InputValues->FeatureIdsArrayPath.getTargetName())
       {
         continue;
       }
-
-      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray, messageHelper));
+      for(usize i = 0; i < totalPoints; i++)
+      {
+        const int64 neighbor = neighbors[i];
+        if(neighbor >= 0)
+        {
+          const int32 featureName = featureIds[i];
+          if((featureName == 0 && featureIds[neighbor] > 0 && m_InputValues->Operation == detail::k_ErodeIndex) ||
+             (featureName > 0 && featureIds[neighbor] == 0 && m_InputValues->Operation == detail::k_DilateIndex))
+          {
+            voxelArray->copyTuple(neighbor, i);
+          }
+        }
+      }
     }
-    taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
-    // Now update the feature Ids
+    // Update FeatureIds last since the condition check depends on the original values
     auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
-    taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
+    for(usize i = 0; i < totalPoints; i++)
+    {
+      const int64 neighbor = neighbors[i];
+      if(neighbor >= 0)
+      {
+        const int32 featureName = featureIds[i];
+        if((featureName == 0 && featureIds[neighbor] > 0 && m_InputValues->Operation == detail::k_ErodeIndex) ||
+           (featureName > 0 && featureIds[neighbor] == 0 && m_InputValues->Operation == detail::k_DilateIndex))
+        {
+          featureIDataArray->copyTuple(neighbor, i);
+        }
+      }
+    }
   }
 
   return {};

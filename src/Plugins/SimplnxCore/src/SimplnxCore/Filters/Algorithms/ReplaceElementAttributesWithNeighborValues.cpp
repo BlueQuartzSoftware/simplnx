@@ -228,25 +228,17 @@ struct ExecuteTemplate
         break;
       }
 
-      progIncrement = static_cast<int64_t>(totalPoints / 50);
-      prog = 1;
-      progressInt = 0;
-      for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
+      // Sequential per-array transfer: process one array at a time so only one array's
+      // chunks compete for the OOC cache. The per-voxel-per-array ordering causes chunk
+      // thrashing when multiple arrays' chunks evict each other between voxel iterations.
+      for(const auto& [dataId, dataObject] : *attrMatrix)
       {
-        if(voxelIndex > prog)
+        auto& dataArray = dynamic_cast<IDataArray&>(*dataObject);
+        for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
         {
-          progressInt = static_cast<int64_t>(((float)voxelIndex / totalPoints) * 100.0f);
-          const std::string progressMessage = fmt::format("Transferring Loop({}) Progress: {}% Complete", count, progressInt);
-          messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
-          prog = prog + progIncrement;
-        }
-
-        const int64 neighbor = bestNeighbor[voxelIndex];
-        if(neighbor != -1)
-        {
-          for(const auto& [dataId, dataObject] : *attrMatrix)
+          const int64 neighbor = bestNeighbor[voxelIndex];
+          if(neighbor != -1)
           {
-            auto& dataArray = dynamic_cast<IDataArray&>(*dataObject);
             dataArray.copyTuple(neighbor, voxelIndex);
           }
         }
