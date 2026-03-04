@@ -208,7 +208,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
 
   if(selectedArrayNames.find(ebsdlib::CellData::EulerAngles) != selectedArrayNames.end())
   {
-    //  radian conversion = M_PI / 180.0;
+    //  radian conversion = std::numbers::pi / 180.0;
     auto* euler0 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[0]));
     auto* euler1 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[1]));
     auto* euler2 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[2]));

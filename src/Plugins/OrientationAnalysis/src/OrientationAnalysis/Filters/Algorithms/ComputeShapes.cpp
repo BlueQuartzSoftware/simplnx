@@ -13,8 +13,9 @@
 #include <Eigen/Eigenvalues>
 
 #include <array>
-#include <cmath>
+#include <numbers>
 #include <utility>
+
 namespace
 {
 /**
@@ -272,7 +273,7 @@ void ComputeShapes::findMoments()
       }
     }
   }
-  double sphere = (2000.0 * M_PI * M_PI) / 9.0;
+  double sphere = (2000.0 * std::numbers::pi * std::numbers::pi) / 9.0;
   // constant for moments because voxels are broken into smaller voxels
   double konst1 = static_cast<double>((modXRes / 2.0) * (modYRes / 2.0) * (modZRes / 2.0));
   // constant for volumes because voxels are counted as one
@@ -451,7 +452,7 @@ void ComputeShapes::findAxes()
   const auto& centroids = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentroidsArrayPath);
 
   size_t numfeatures = centroids.getNumberOfTuples();
-  constexpr double multiplier = 1.0 / (4.0 * M_PI);
+  constexpr double multiplier = 1.0 / (4.0 * std::numbers::pi);
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
     double r1 = m_FeatureEigenVals[3 * featureId];
@@ -515,7 +516,7 @@ void ComputeShapes::findAxes2D()
     spacing = imageGeom.getSpacing();
   }
 
-  double preterm = 4.0 / M_PI;
+  double preterm = 4.0 / std::numbers::pi;
   preterm = std::pow(preterm, 0.25);
 
   for(size_t i = 1; i < numfeatures; i++)
