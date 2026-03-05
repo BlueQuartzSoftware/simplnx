@@ -32,6 +32,13 @@ struct SIMPLNXCORE_EXPORT FillBadDataInputValues
 class SIMPLNXCORE_EXPORT FillBadData
 {
 public:
+  /**
+   * @brief Constructs the dispatcher with the required context for algorithm selection.
+   * @param dataStructure The data structure containing the arrays to process.
+   * @param mesgHandler Handler for progress and informational messages.
+   * @param shouldCancel Cancellation flag checked during execution.
+   * @param inputValues Filter parameter values controlling fill behavior.
+   */
   FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
   ~FillBadData() noexcept;
 
@@ -40,6 +47,10 @@ public:
   FillBadData& operator=(const FillBadData&) = delete;
   FillBadData& operator=(FillBadData&&) noexcept = delete;
 
+  /**
+   * @brief Dispatches to either BFS or CCL algorithm based on data residency.
+   * @return Result indicating success or an error with a descriptive message.
+   */
   Result<> operator()();
 
 private:

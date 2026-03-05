@@ -26,6 +26,13 @@ struct IdentifySampleInputValues;
 class SIMPLNXCORE_EXPORT IdentifySampleBFS
 {
 public:
+  /**
+   * @brief Constructs the BFS sample identification algorithm with the required context.
+   * @param dataStructure The data structure containing the arrays to process.
+   * @param mesgHandler Handler for progress and informational messages.
+   * @param shouldCancel Cancellation flag checked during execution.
+   * @param inputValues Filter parameter values controlling identification behavior.
+   */
   IdentifySampleBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const IdentifySampleInputValues* inputValues);
   ~IdentifySampleBFS() noexcept;
 
@@ -34,6 +41,10 @@ public:
   IdentifySampleBFS& operator=(const IdentifySampleBFS&) = delete;
   IdentifySampleBFS& operator=(IdentifySampleBFS&&) noexcept = delete;
 
+  /**
+   * @brief Executes the BFS flood-fill algorithm to identify the largest sample region.
+   * @return Result indicating success or an error with a descriptive message.
+   */
   Result<> operator()();
 
 private:

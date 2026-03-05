@@ -34,6 +34,13 @@ struct FillBadDataInputValues;
 class SIMPLNXCORE_EXPORT FillBadDataCCL
 {
 public:
+  /**
+   * @brief Constructs the CCL fill algorithm with the required context.
+   * @param dataStructure The data structure containing the arrays to process.
+   * @param mesgHandler Handler for progress and informational messages.
+   * @param shouldCancel Cancellation flag checked during execution.
+   * @param inputValues Filter parameter values controlling fill behavior.
+   */
   FillBadDataCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
   ~FillBadDataCCL() noexcept;
 
@@ -42,8 +49,16 @@ public:
   FillBadDataCCL& operator=(const FillBadDataCCL&) = delete;
   FillBadDataCCL& operator=(FillBadDataCCL&&) noexcept = delete;
 
+  /**
+   * @brief Executes the CCL-based algorithm to identify and fill bad data regions.
+   * @return Result indicating success or an error with a descriptive message.
+   */
   Result<> operator()();
 
+  /**
+   * @brief Returns the cancellation flag reference.
+   * @return Reference to the atomic cancellation flag.
+   */
   const std::atomic_bool& getCancel() const;
 
 private:

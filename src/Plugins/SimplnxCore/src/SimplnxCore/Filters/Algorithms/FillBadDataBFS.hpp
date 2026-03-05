@@ -26,6 +26,13 @@ struct FillBadDataInputValues;
 class SIMPLNXCORE_EXPORT FillBadDataBFS
 {
 public:
+  /**
+   * @brief Constructs the BFS fill algorithm with the required context.
+   * @param dataStructure The data structure containing the arrays to process.
+   * @param mesgHandler Handler for progress and informational messages.
+   * @param shouldCancel Cancellation flag checked during execution.
+   * @param inputValues Filter parameter values controlling fill behavior.
+   */
   FillBadDataBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
   ~FillBadDataBFS() noexcept;
 
@@ -34,6 +41,10 @@ public:
   FillBadDataBFS& operator=(const FillBadDataBFS&) = delete;
   FillBadDataBFS& operator=(FillBadDataBFS&&) noexcept = delete;
 
+  /**
+   * @brief Executes the BFS flood-fill algorithm to identify and fill bad data regions.
+   * @return Result indicating success or an error with a descriptive message.
+   */
   Result<> operator()();
 
 private:
