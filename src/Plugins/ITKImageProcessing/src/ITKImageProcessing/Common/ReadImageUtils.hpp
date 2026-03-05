@@ -15,6 +15,57 @@ using namespace nx::core;
 
 namespace cxItkImageReaderFilter
 {
+/* clang-format off */
+template <typename T>
+concept NotBoolOrSignedT = !std::is_same_v<T, bool> && !std::is_signed_v<T>;
+/* clang-format on */
+
+template <NotBoolOrSignedT NewStoreT, class PixelT, uint32 Dimension>
+requires NotBoolOrSignedT<ITK::UnderlyingType_t<PixelT>>
+void ConvertImageToDataStoreAsType(itk::Image<PixelT, Dimension>& image, DataStore<NewStoreT>& dataStore)
+{
+  using ImageType = itk::Image<PixelT, Dimension>;
+  using T = ITK::UnderlyingType_t<PixelT>;
+  typename ImageType::PixelContainer* pixelContainer = image.GetPixelContainer();
+
+  const auto* rawBufferPtr = reinterpret_cast<const T*>(pixelContainer->GetBufferPointer());
+
+  constexpr auto destMaxV = static_cast<float64>(std::numeric_limits<NewStoreT>::max());
+  constexpr auto originMaxV = std::numeric_limits<T>::max();
+  std::transform(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), dataStore.data(), [](auto value) {
+    float64 ratio = static_cast<float64>(value) / static_cast<float64>(originMaxV);
+    return static_cast<NewStoreT>(ratio * destMaxV);
+  });
+}
+
+// Converts itk::Image to DataStore for ITK reader filters
+// Can optionally convert the type to uint8, uint16, uint32
+struct ConvertImageToDatastoreFunctor
+{
+  template <typename NewStoreT, class PixelT, uint32 Dimension>
+  Result<> operator()(DataStructure& dataStructure, const DataPath& arrayPath, itk::Image<PixelT, Dimension>& image)
+  {
+    using UnderlyingPixelT = ITK::UnderlyingType_t<PixelT>;
+
+    auto& dataArray = dataStructure.getDataRefAs<DataArray<NewStoreT>>(arrayPath);
+    auto& dataStore = dataArray.template getIDataStoreRefAs<DataStore<NewStoreT>>();
+
+    if constexpr(std::is_same_v<NewStoreT, UnderlyingPixelT>)
+    {
+      ITK::ConvertImageToDataStore(image, dataStore);
+    }
+    else if constexpr(NotBoolOrSignedT<NewStoreT> && NotBoolOrSignedT<UnderlyingPixelT>)
+    {
+      ConvertImageToDataStoreAsType(image, dataStore);
+    }
+    else
+    {
+      return MakeErrorResult(-934235, "ConvertImageToDatastoreFunctor executed with conversion to signed type or bool. This should never happen.");
+    }
+    return {};
+  }
+};
+
 enum class OriginSpacingProcessingTiming : uint64_t
 {
   Preprocessed = 0,
@@ -293,7 +344,7 @@ struct ReadImageIntoArrayFunctor
     using T = ITK::UnderlyingType_t<PixelT>;
 
     auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(arrayPath);
-    auto& dataStore = dataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& dataStore = dataArray.template getIDataStoreRefAs<DataStore<T>>();
 
     typename ReaderType::Pointer reader = ReaderType::New();
     reader->SetFileName(filePath);
@@ -340,7 +391,7 @@ struct ReadImageIntoArrayFunctor
     }
     outputImage = result.value();
 
-    return ExecuteNeighborFunction(ITK::ConvertImageToDatastoreFunctor{}, dataType, dataStructure, arrayPath, *outputImage);
+    return ExecuteNeighborFunction(ConvertImageToDatastoreFunctor{}, dataType, dataStructure, arrayPath, *outputImage);
   }
 };
 

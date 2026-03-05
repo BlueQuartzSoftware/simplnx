@@ -134,7 +134,7 @@ Result<> WriteImage(IDataStore& dataStore, const ITK::ImageGeomData& imageGeom, 
 {
   using ImageType = itk::Image<PixelT, Dimensions>;
 
-  auto& typedDataStore = dynamic_cast<AbstractDataStore<ITK::UnderlyingType_t<PixelT>>&>(dataStore);
+  auto& typedDataStore = dynamic_cast<DataStore<ITK::UnderlyingType_t<PixelT>>&>(dataStore);
 
   typename itk::Image<PixelT, Dimensions>::Pointer image = ITK::WrapDataStoreInImage<PixelT, Dimensions>(typedDataStore, imageGeom);
   if(Is2DFormat(filePath) && Dimensions == 3)
