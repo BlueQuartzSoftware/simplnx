@@ -21,7 +21,7 @@ ErodeDilateBadData::ErodeDilateBadData(DataStructure& dataStructure, const IFilt
 ErodeDilateBadData::~ErodeDilateBadData() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ErodeDilateBadData::getCancel()
+const std::atomic_bool& ErodeDilateBadData::getCancel() const
 {
   return m_ShouldCancel;
 }
@@ -29,7 +29,7 @@ const std::atomic_bool& ErodeDilateBadData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ErodeDilateBadData::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
   const usize totalPoints = featureIds.getNumberOfTuples();
 
   std::vector<int64> neighbors(totalPoints, -1);

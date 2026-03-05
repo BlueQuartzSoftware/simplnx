@@ -63,9 +63,13 @@ public:
   ErodeDilateMask& operator=(const ErodeDilateMask&) = delete;
   ErodeDilateMask& operator=(ErodeDilateMask&&) noexcept = delete;
 
+  /**
+   * @brief Executes the erode/dilate mask algorithm.
+   * @return Result<> indicating success or any errors encountered during execution
+   */
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
+  const std::atomic_bool& getCancel() const;
 
 private:
   DataStructure& m_DataStructure;

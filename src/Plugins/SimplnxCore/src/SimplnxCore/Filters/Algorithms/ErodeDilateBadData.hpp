@@ -62,9 +62,13 @@ public:
   ErodeDilateBadData& operator=(const ErodeDilateBadData&) = delete;
   ErodeDilateBadData& operator=(ErodeDilateBadData&&) noexcept = delete;
 
+  /**
+   * @brief Executes the erode/dilate bad data algorithm.
+   * @return Result<> indicating success or any errors encountered during execution
+   */
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
+  const std::atomic_bool& getCancel() const;
 
 private:
   DataStructure& m_DataStructure;

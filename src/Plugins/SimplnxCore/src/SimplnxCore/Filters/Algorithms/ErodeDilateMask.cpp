@@ -20,7 +20,7 @@ ErodeDilateMask::ErodeDilateMask(DataStructure& dataStructure, const IFilter::Me
 ErodeDilateMask::~ErodeDilateMask() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ErodeDilateMask::getCancel()
+const std::atomic_bool& ErodeDilateMask::getCancel() const
 {
   return m_ShouldCancel;
 }

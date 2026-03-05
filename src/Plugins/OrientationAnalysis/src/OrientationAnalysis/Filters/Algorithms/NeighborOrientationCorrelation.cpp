@@ -9,12 +9,6 @@
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
-#ifdef SIMPLNX_ENABLE_MULTICORE
-#define RUN_TASK g->run
-#else
-#define RUN_TASK
-#endif
-
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
@@ -98,7 +92,6 @@ Result<> NeighborOrientationCorrelation::operator()()
   };
 
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   std::array<int32, 6> neighborSimCount = {};
   std::vector<int64> bestNeighbor(totalPoints, -1);
@@ -294,9 +287,9 @@ Result<> NeighborOrientationCorrelation::operator()()
 
     // Build up a list of the DataArrays that we are going to operate on.
     std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
-    // The idea for this parallel section is to parallelize over each Data Array that
-    // will need it's data adjusted. This should go faster than before by about 2x.
-    // Better speed up could be achieved if we had better data locality.
+    // Parallel per-array transfer: each task processes one entire array sequentially,
+    // which keeps OOC chunk access patterns coherent within each array. Multiple arrays
+    // run concurrently via ParallelTaskAlgorithm.
     ParallelTaskAlgorithm parallelTask;
     for(const auto& dataArrayPtr : voxelArrays)
     {

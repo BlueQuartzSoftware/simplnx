@@ -52,9 +52,13 @@ public:
   ErodeDilateCoordinationNumber& operator=(const ErodeDilateCoordinationNumber&) = delete;
   ErodeDilateCoordinationNumber& operator=(ErodeDilateCoordinationNumber&&) noexcept = delete;
 
+  /**
+   * @brief Executes the erode/dilate coordination number algorithm.
+   * @return Result<> indicating success or any errors encountered during execution
+   */
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
+  const std::atomic_bool& getCancel() const;
 
 private:
   DataStructure& m_DataStructure;

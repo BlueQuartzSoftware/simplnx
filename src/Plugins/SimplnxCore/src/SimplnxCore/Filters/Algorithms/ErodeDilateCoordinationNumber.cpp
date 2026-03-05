@@ -35,7 +35,7 @@ ErodeDilateCoordinationNumber::ErodeDilateCoordinationNumber(DataStructure& data
 ErodeDilateCoordinationNumber::~ErodeDilateCoordinationNumber() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ErodeDilateCoordinationNumber::getCancel()
+const std::atomic_bool& ErodeDilateCoordinationNumber::getCancel() const
 {
   return m_ShouldCancel;
 }

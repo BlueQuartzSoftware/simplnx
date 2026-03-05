@@ -227,9 +227,10 @@ struct ExecuteTemplate
         break;
       }
 
-      // Sequential per-array transfer: process one array at a time so only one array's
-      // chunks compete for the OOC cache. The per-voxel-per-array ordering causes chunk
-      // thrashing when multiple arrays' chunks evict each other between voxel iterations.
+      // Sequential per-array transfer: process one array at a time across all voxels,
+      // so only one array's chunks compete for the OOC cache at a time. This avoids the
+      // chunk thrashing that occurs with per-voxel-per-array ordering. All cell-level
+      // arrays in the attribute matrix are updated (including the comparison array itself).
       for(const auto& [dataId, dataObject] : *attrMatrix)
       {
         auto* dataArrayPtr = dynamic_cast<IDataArray*>(dataObject.get());
@@ -271,7 +272,7 @@ ReplaceElementAttributesWithNeighborValues::ReplaceElementAttributesWithNeighbor
 ReplaceElementAttributesWithNeighborValues::~ReplaceElementAttributesWithNeighborValues() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel()
+const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel() const
 {
   return m_ShouldCancel;
 }

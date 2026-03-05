@@ -59,9 +59,13 @@ public:
   ReplaceElementAttributesWithNeighborValues& operator=(const ReplaceElementAttributesWithNeighborValues&) = delete;
   ReplaceElementAttributesWithNeighborValues& operator=(ReplaceElementAttributesWithNeighborValues&&) noexcept = delete;
 
+  /**
+   * @brief Executes the replace element attributes with neighbor values algorithm.
+   * @return Result<> indicating success or any errors encountered during execution
+   */
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
+  const std::atomic_bool& getCancel() const;
 
 private:
   DataStructure& m_DataStructure;
