@@ -9,6 +9,12 @@ namespace nx::core
 {
 struct ComputeBoundaryCellsInputValues;
 
+/**
+ * @class ComputeBoundaryCellsDirect
+ * @brief In-core algorithm for ComputeBoundaryCells. Preserves the original sequential
+ * Z-Y-X voxel iteration with face-neighbor boundary counting. Selected by DispatchAlgorithm
+ * when all input arrays are backed by in-memory DataStore.
+ */
 class SIMPLNXCORE_EXPORT ComputeBoundaryCellsDirect
 {
 public:

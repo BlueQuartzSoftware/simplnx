@@ -9,6 +9,13 @@ namespace nx::core
 {
 struct ComputeBoundaryCellsInputValues;
 
+/**
+ * @class ComputeBoundaryCellsScanline
+ * @brief Out-of-core algorithm for ComputeBoundaryCells. Wraps the voxel iteration in
+ * chunk-sequential access using getNumberOfChunks/loadChunk/getChunkLowerBounds/getChunkUpperBounds
+ * for guaranteed sequential disk I/O. Selected by DispatchAlgorithm when any input array
+ * is backed by ZarrStore.
+ */
 class SIMPLNXCORE_EXPORT ComputeBoundaryCellsScanline
 {
 public:

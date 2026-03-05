@@ -9,6 +9,13 @@ namespace nx::core
 {
 struct ComputeSurfaceFeaturesInputValues;
 
+/**
+ * @class ComputeSurfaceFeaturesScanline
+ * @brief Out-of-core algorithm for ComputeSurfaceFeatures. Uses chunk-sequential 3D iteration
+ * with 2D coordinate remapping for degenerate dimensions, ensuring sequential disk I/O
+ * on ZarrStore-backed arrays. Selected by DispatchAlgorithm when any input array is
+ * backed by ZarrStore.
+ */
 class SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesScanline
 {
 public:

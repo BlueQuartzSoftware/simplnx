@@ -9,6 +9,12 @@ namespace nx::core
 {
 struct ComputeSurfaceAreaToVolumeInputValues;
 
+/**
+ * @class ComputeSurfaceAreaToVolumeDirect
+ * @brief In-core algorithm for ComputeSurfaceAreaToVolume. Preserves the original sequential
+ * Z-Y-X voxel iteration with face-neighbor surface area accumulation per feature.
+ * Selected by DispatchAlgorithm when all input arrays are backed by in-memory DataStore.
+ */
 class SIMPLNXCORE_EXPORT ComputeSurfaceAreaToVolumeDirect
 {
 public:

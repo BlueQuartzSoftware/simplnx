@@ -9,6 +9,13 @@ namespace nx::core
 {
 struct ComputeSurfaceAreaToVolumeInputValues;
 
+/**
+ * @class ComputeSurfaceAreaToVolumeScanline
+ * @brief Out-of-core algorithm for ComputeSurfaceAreaToVolume. Wraps the voxel iteration in
+ * chunk-sequential access for guaranteed sequential disk I/O on ZarrStore-backed arrays.
+ * Feature-level ratio and sphericity computations are unchanged. Selected by DispatchAlgorithm
+ * when any input array is backed by ZarrStore.
+ */
 class SIMPLNXCORE_EXPORT ComputeSurfaceAreaToVolumeScanline
 {
 public:

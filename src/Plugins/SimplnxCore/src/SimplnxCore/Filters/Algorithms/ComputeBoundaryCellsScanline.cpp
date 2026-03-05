@@ -24,7 +24,7 @@ ComputeBoundaryCellsScanline::~ComputeBoundaryCellsScanline() noexcept = default
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundaryCellsScanline::operator()()
 {
-  const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 udims = imageGeometry.getDimensions();
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),

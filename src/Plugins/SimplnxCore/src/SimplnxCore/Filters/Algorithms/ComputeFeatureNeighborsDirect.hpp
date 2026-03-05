@@ -9,6 +9,13 @@ namespace nx::core
 {
 struct ComputeFeatureNeighborsInputValues;
 
+/**
+ * @class ComputeFeatureNeighborsDirect
+ * @brief In-core algorithm for ComputeFeatureNeighbors. Preserves the original two-phase
+ * algorithm: Phase 1 iterates all voxels to build per-feature neighbor lists, Phase 2
+ * computes shared surface areas. Selected by DispatchAlgorithm when all input arrays
+ * are backed by in-memory DataStore.
+ */
 class SIMPLNXCORE_EXPORT ComputeFeatureNeighborsDirect
 {
 public:

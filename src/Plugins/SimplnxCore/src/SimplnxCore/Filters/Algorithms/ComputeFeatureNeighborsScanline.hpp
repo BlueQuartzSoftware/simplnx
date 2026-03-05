@@ -9,6 +9,13 @@ namespace nx::core
 {
 struct ComputeFeatureNeighborsInputValues;
 
+/**
+ * @class ComputeFeatureNeighborsScanline
+ * @brief Out-of-core algorithm for ComputeFeatureNeighbors. Wraps only Phase 1 (voxel iteration)
+ * in chunk-sequential access for guaranteed sequential disk I/O on ZarrStore-backed arrays.
+ * Phase 2 (feature-level surface area computation) is unchanged. Selected by DispatchAlgorithm
+ * when any input array is backed by ZarrStore.
+ */
 class SIMPLNXCORE_EXPORT ComputeFeatureNeighborsScanline
 {
 public:
