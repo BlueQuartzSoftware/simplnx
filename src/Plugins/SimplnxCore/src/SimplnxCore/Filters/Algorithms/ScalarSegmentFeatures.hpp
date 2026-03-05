@@ -54,8 +54,19 @@ protected:
   int64_t getSeed(int32 gnum, int64 nextSeed) const override;
   bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
 
-  // CCL virtual method overrides
+  /**
+   * @brief Checks whether a voxel can participate in scalar segmentation based on the mask.
+   * @param point Linear voxel index.
+   * @return true if the voxel passes the mask check (or no mask is used).
+   */
   bool isValidVoxel(int64 point) const override;
+
+  /**
+   * @brief Determines whether two neighboring voxels belong to the same scalar segment.
+   * @param point1 First voxel index.
+   * @param point2 Second (neighbor) voxel index.
+   * @return true if both voxels are valid and their scalar values are within tolerance.
+   */
   bool areNeighborsSimilar(int64 point1, int64 point2) const override;
 
 private:

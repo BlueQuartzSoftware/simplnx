@@ -61,10 +61,12 @@ public:
 
   /**
    * @brief Chunk-sequential CCL-based segmentation optimized for out-of-core.
+   *
    * Subclasses must override isValidVoxel() and areNeighborsSimilar() to use this code path.
-   * @param gridGeom
-   * @param featureIdsStore
-   * @return
+   *
+   * @param gridGeom The grid geometry providing dimensions and neighbor offsets.
+   * @param featureIdsStore The data store to write assigned feature IDs into.
+   * @return Result indicating success or an error with a descriptive message.
    */
   Result<> executeCCL(IGridGeometry* gridGeom, AbstractDataStore<int32>& featureIdsStore);
 

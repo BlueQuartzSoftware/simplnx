@@ -12,6 +12,7 @@ namespace nx::core
 {
 
 /**
+ * @class VectorUnionFind
  * @brief Vector-based union-find for dense label sets (labels 1..N).
  *
  * Uses flat vectors instead of hash maps for O(1) access. Suitable for
@@ -22,12 +23,20 @@ class VectorUnionFind
 public:
   VectorUnionFind() = default;
 
+  /**
+   * @brief Pre-allocates internal storage for the expected number of labels.
+   * @param capacity Maximum expected label value.
+   */
   void reserve(usize capacity)
   {
     m_Parent.reserve(capacity + 1);
     m_Rank.reserve(capacity + 1);
   }
 
+  /**
+   * @brief Creates a new singleton set for label x if it does not already exist.
+   * @param x Label to initialize.
+   */
   void makeSet(int64 x)
   {
     if(static_cast<usize>(x) >= m_Parent.size())
@@ -41,6 +50,11 @@ public:
     }
   }
 
+  /**
+   * @brief Finds the root label with path-halving compression.
+   * @param x Label to find the root for.
+   * @return Root label of the equivalence class.
+   */
   int64 find(int64 x)
   {
     while(m_Parent[x] != x)
@@ -51,6 +65,11 @@ public:
     return x;
   }
 
+  /**
+   * @brief Merges the equivalence classes of two labels using union-by-rank.
+   * @param a First label.
+   * @param b Second label.
+   */
   void unite(int64 a, int64 b)
   {
     a = find(a);
@@ -76,6 +95,7 @@ private:
 };
 
 /**
+ * @struct IdentifySampleSliceBySliceFunctor
  * @brief BFS-based implementation for slice-by-slice mode.
  *
  * Slices are 2D and small relative to the full volume, so OOC chunk
@@ -84,6 +104,9 @@ private:
  */
 struct IdentifySampleSliceBySliceFunctor
 {
+  /**
+   * @brief Enumerates the three orthogonal slice planes.
+   */
   enum class Plane
   {
     XY,
@@ -94,6 +117,15 @@ struct IdentifySampleSliceBySliceFunctor
   static constexpr int64 k_Dp1[4] = {0, 0, -1, 1};
   static constexpr int64 k_Dp2[4] = {-1, 1, 0, 0};
 
+  /**
+   * @brief Performs BFS-based sample identification on each 2D slice of the given plane.
+   * @param imageGeom The image geometry providing dimensions.
+   * @param goodVoxelsPtr The mask array marking sample vs. non-sample voxels.
+   * @param fillHoles Whether to fill interior holes in each slice.
+   * @param plane Which orthogonal plane to slice along.
+   * @param messageHandler Handler for progress messages.
+   * @param shouldCancel Cancellation flag checked between slices.
+   */
   template <typename T>
   void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, Plane plane, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
