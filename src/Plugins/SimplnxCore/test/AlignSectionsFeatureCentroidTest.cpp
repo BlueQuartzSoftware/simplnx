@@ -1,11 +1,11 @@
 #include "SimplnxCore/Filters/AlignSectionsFeatureCentroidFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
@@ -132,7 +132,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroid: Benchmark 200x200x200", "[SimplnxCore][AlignSectionsFeatureCentroidFilter][Benchmark]")
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroid: Benchmark 200x200x200", "[SimplnxCore][AlignSectionsFeatureCentroidFilter][.Benchmark]")
 {
   UnitTest::LoadPlugins();
   // 200x200x200, largest cell array is EulerAngles float32 3-comp => 200*200*3*4 = 480,000 bytes/slice

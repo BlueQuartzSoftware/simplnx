@@ -6,9 +6,9 @@
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <cmath>
@@ -174,7 +174,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test",
   UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
-TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: Benchmark 200x200x200", "[OrientationAnalysis][AlignSectionsMisorientation][Benchmark]")
+TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: Benchmark 200x200x200", "[OrientationAnalysis][AlignSectionsMisorientation][.Benchmark]")
 {
   UnitTest::LoadPlugins();
   // 200x200x200, Quats float32 4-comp => 200*200*4*4 = 640,000 bytes/slice

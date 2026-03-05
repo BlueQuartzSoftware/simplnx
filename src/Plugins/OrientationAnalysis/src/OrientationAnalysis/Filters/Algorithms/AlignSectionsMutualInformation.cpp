@@ -357,8 +357,8 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
   auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  auto& m_CellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& m_CrystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
   size_t initialVoxelsListSize = 1000;
 
@@ -385,7 +385,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
 
       for(int64 point = currentStartPoint; point < endPoint; point++)
       {
-        if((!m_InputValues->UseMask || (m_MaskCompare != nullptr && m_MaskCompare->isTrue(point))) && miFeatureIds[point] == 0 && m_CellPhases[point] > 0)
+        if((!m_InputValues->UseMask || (m_MaskCompare != nullptr && m_MaskCompare->isTrue(point))) && miFeatureIds[point] == 0 && cellPhases[point] > 0)
         {
           seed = point;
           currentStartPoint = point;
@@ -414,7 +414,7 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
 
           auto q1TupleIndex = currentpoint * 4;
           ebsdlib::QuatD quat1(quats[q1TupleIndex], quats[q1TupleIndex + 1], quats[q1TupleIndex + 2], quats[q1TupleIndex + 3]);
-          uint32_t laueClass1 = m_CrystalStructures[m_CellPhases[currentpoint]];
+          uint32_t laueClass1 = crystalStructures[cellPhases[currentpoint]];
           for(int32_t i = 0; i < 4; i++)
           {
             int64 neighbor = currentpoint + neighborPoints[i];
@@ -434,12 +434,12 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
             {
               continue;
             }
-            if(miFeatureIds[neighbor] <= 0 && m_CellPhases[neighbor] > 0)
+            if(miFeatureIds[neighbor] <= 0 && cellPhases[neighbor] > 0)
             {
               float32 angle = std::numeric_limits<float>::max();
               auto q2TupleIndex = neighbor * 4;
               ebsdlib::QuatD quat2(quats[q2TupleIndex], quats[q2TupleIndex + 1], quats[q2TupleIndex + 2], quats[q2TupleIndex + 3]);
-              uint32_t phase2 = m_CrystalStructures[m_CellPhases[neighbor]];
+              uint32_t phase2 = crystalStructures[cellPhases[neighbor]];
 
               if(laueClass1 == phase2)
               {

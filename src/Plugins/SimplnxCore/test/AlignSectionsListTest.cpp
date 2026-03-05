@@ -1,10 +1,10 @@
 #include "SimplnxCore/Filters/AlignSectionsListFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
@@ -178,7 +178,7 @@ TEST_CASE("SimplnxCore::AlignSectionsListFilter: Cumulative Shifts execution", "
   UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
-TEST_CASE("SimplnxCore::AlignSectionsListFilter: Benchmark 200x200x200", "[SimplnxCore][AlignSectionsListFilter][Benchmark]")
+TEST_CASE("SimplnxCore::AlignSectionsListFilter: Benchmark 200x200x200", "[SimplnxCore][AlignSectionsListFilter][.Benchmark]")
 {
   UnitTest::LoadPlugins();
   // 200x200x200, largest cell array is EulerAngles float32 3-comp => 200*200*3*4 = 480,000 bytes/slice

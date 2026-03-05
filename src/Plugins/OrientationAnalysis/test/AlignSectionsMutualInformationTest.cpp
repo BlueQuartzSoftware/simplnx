@@ -3,11 +3,11 @@
 #include "OrientationAnalysis/Filters/AlignSectionsMutualInformationFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
-#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <cmath>
@@ -179,7 +179,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformationFilter: output tes
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformation: Benchmark 200x200x200", "[OrientationAnalysis][AlignSectionsMutualInformationFilter][Benchmark]")
+TEST_CASE("OrientationAnalysis::AlignSectionsMutualInformation: Benchmark 200x200x200", "[OrientationAnalysis][AlignSectionsMutualInformationFilter][.Benchmark]")
 {
   UnitTest::LoadPlugins();
   // 200x200x200, Quats float32 4-comp => 200*200*4*4 = 640,000 bytes/slice

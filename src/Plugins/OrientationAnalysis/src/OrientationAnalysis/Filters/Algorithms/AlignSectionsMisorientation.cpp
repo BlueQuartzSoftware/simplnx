@@ -9,8 +9,6 @@
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
-#include <iostream>
-
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
@@ -98,10 +96,6 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64_t>& xShifts, 
     // Loop over the Z Direction
     for(int64_t iter = 1; iter < dims[2]; iter++)
     {
-      if(m_ShouldCancel)
-      {
-        return {};
-      }
       throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
       if(getCancel())
       {
@@ -403,10 +397,6 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64_t>& xShift
 
   for(int64_t iter = 1; iter < dims[2]; iter++)
   {
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
     throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Shifts || {:.2f}% Complete", CalculatePercentComplete(iter, dims[2])); });
     if(getCancel())
     {
