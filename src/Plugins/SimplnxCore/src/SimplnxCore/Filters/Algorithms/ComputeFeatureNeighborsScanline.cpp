@@ -9,8 +9,6 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
-#include <sstream>
-
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
@@ -27,6 +25,12 @@ ComputeFeatureNeighborsScanline::ComputeFeatureNeighborsScanline(DataStructure& 
 ComputeFeatureNeighborsScanline::~ComputeFeatureNeighborsScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes feature neighbor lists using chunk-sequential iteration.
+ * OOC path: Phase 1 iterates chunks in order to build per-feature neighbor
+ * counts. Phase 2 deduplicates and computes shared surface areas.
+ * Same logic as ComputeFeatureNeighborsDirect.
+ */
 Result<> ComputeFeatureNeighborsScanline::operator()()
 {
   auto storeBoundaryCells = m_InputValues->StoreBoundaryCells;
@@ -58,16 +62,10 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
   usize totalPoints = featureIds.getNumberOfTuples();
   usize totalFeatures = numNeighbors.getNumberOfTuples();
 
-  /* Ensure that we will be able to work with the user selected featureId Array */
-  const auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIds.begin(), featureIds.end());
-  if(static_cast<usize>(*maxFeatureId) >= totalFeatures)
-  {
-    std::stringstream out;
-    out << "Data Array " << featureIdsPath.getTargetName() << " has a maximum value of " << *maxFeatureId << " which is greater than the "
-        << " number of features from array " << numNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the "
-        << " incorrect array for the 'FeatureIds' array?";
-    return MakeErrorResult(-24500, out.str());
-  }
+  // Max feature ID validation is deferred to after the chunk-sequential loop
+  // to avoid a separate full scan through OOC data. The loop's
+  // `feature < neighborlist.size()` guard prevents out-of-bounds access.
+  int32 observedMaxFeatureId = 0;
 
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   SizeVec3 uDims = imageGeom.getDimensions();
@@ -140,6 +138,10 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
           const int64 voxelIndex = kStride + jStride + static_cast<int64>(xIdx);
           onsurf = 0;
           feature = featureIds[voxelIndex];
+          if(feature > observedMaxFeatureId)
+          {
+            observedMaxFeatureId = feature;
+          }
           if(feature > 0 && feature < neighborlist.size())
           {
             const int64 ix = static_cast<int64>(xIdx);
@@ -186,6 +188,15 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
         }
       }
     }
+  }
+
+  // Validate max feature ID (deferred from before the loop to avoid a separate OOC scan)
+  if(static_cast<usize>(observedMaxFeatureId) >= totalFeatures)
+  {
+    return MakeErrorResult(-24500,
+                           fmt::format("Data Array {} has a maximum value of {} which is greater than the number of features from array {} which has {}. "
+                                       "Did you select the incorrect array for the 'FeatureIds' array?",
+                                       featureIdsPath.getTargetName(), observedMaxFeatureId, numNeighborsPath.getTargetName(), totalFeatures));
   }
 
   // Phase 2: Build NeighborList objects (operates on small feature-level data, no chunk iteration needed)

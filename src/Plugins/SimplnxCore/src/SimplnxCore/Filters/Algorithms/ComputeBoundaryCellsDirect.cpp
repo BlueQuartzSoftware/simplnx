@@ -22,6 +22,10 @@ ComputeBoundaryCellsDirect::ComputeBoundaryCellsDirect(DataStructure& dataStruct
 ComputeBoundaryCellsDirect::~ComputeBoundaryCellsDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Counts boundary faces per voxel using direct Z-Y-X iteration.
+ * In-core path: iterates all voxels sequentially, checking 6 face neighbors.
+ */
 Result<> ComputeBoundaryCellsDirect::operator()()
 {
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);

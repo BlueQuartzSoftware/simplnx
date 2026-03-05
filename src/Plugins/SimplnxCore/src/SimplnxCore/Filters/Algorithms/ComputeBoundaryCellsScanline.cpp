@@ -22,6 +22,11 @@ ComputeBoundaryCellsScanline::ComputeBoundaryCellsScanline(DataStructure& dataSt
 ComputeBoundaryCellsScanline::~ComputeBoundaryCellsScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Counts boundary faces per voxel using chunk-sequential iteration.
+ * OOC path: iterates chunks in order via loadChunk/getChunkLowerBounds/getChunkUpperBounds,
+ * then Z-Y-X within each chunk. Same logic as ComputeBoundaryCellsDirect.
+ */
 Result<> ComputeBoundaryCellsScanline::operator()()
 {
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);

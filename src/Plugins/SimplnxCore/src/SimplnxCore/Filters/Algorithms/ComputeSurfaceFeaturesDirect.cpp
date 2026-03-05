@@ -196,6 +196,11 @@ ComputeSurfaceFeaturesDirect::ComputeSurfaceFeaturesDirect(DataStructure& dataSt
 ComputeSurfaceFeaturesDirect::~ComputeSurfaceFeaturesDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Identifies surface features using direct Z-Y-X iteration.
+ * In-core path: delegates to findSurfaceFeatures3D or findSurfaceFeatures2D
+ * depending on geometry dimensionality.
+ */
 Result<> ComputeSurfaceFeaturesDirect::operator()()
 {
   const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;
@@ -223,7 +228,7 @@ Result<> ComputeSurfaceFeaturesDirect::operator()()
   }
   else
   {
-    MakeErrorResult(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()));
+    return MakeErrorResult(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()));
   }
 
   return {};

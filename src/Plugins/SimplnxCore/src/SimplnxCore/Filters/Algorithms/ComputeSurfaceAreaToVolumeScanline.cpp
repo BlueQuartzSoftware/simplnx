@@ -24,6 +24,11 @@ ComputeSurfaceAreaToVolumeScanline::ComputeSurfaceAreaToVolumeScanline(DataStruc
 ComputeSurfaceAreaToVolumeScanline::~ComputeSurfaceAreaToVolumeScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes surface-area-to-volume ratio using chunk-sequential iteration.
+ * OOC path: iterates chunks in order via loadChunk/getChunkLowerBounds/getChunkUpperBounds.
+ * Same logic as ComputeSurfaceAreaToVolumeDirect.
+ */
 Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
 {
   // Input Cell Data

@@ -9,8 +9,6 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
-#include <sstream>
-
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
@@ -27,6 +25,11 @@ ComputeFeatureNeighborsDirect::ComputeFeatureNeighborsDirect(DataStructure& data
 ComputeFeatureNeighborsDirect::~ComputeFeatureNeighborsDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes feature neighbor lists using direct sequential iteration.
+ * In-core path: Phase 1 iterates all voxels to build per-feature neighbor
+ * counts. Phase 2 deduplicates and computes shared surface areas.
+ */
 Result<> ComputeFeatureNeighborsDirect::operator()()
 {
   auto storeBoundaryCells = m_InputValues->StoreBoundaryCells;
@@ -58,16 +61,10 @@ Result<> ComputeFeatureNeighborsDirect::operator()()
   usize totalPoints = featureIds.getNumberOfTuples();
   usize totalFeatures = numNeighbors.getNumberOfTuples();
 
-  /* Ensure that we will be able to work with the user selected featureId Array */
-  const auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIds.begin(), featureIds.end());
-  if(static_cast<usize>(*maxFeatureId) >= totalFeatures)
-  {
-    std::stringstream out;
-    out << "Data Array " << featureIdsPath.getTargetName() << " has a maximum value of " << *maxFeatureId << " which is greater than the "
-        << " number of features from array " << numNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the "
-        << " incorrect array for the 'FeatureIds' array?";
-    return MakeErrorResult(-24500, out.str());
-  }
+  // Max feature ID validation is deferred to after the main loop to avoid
+  // a separate full scan through the data store. The loop's
+  // `feature < neighborlist.size()` guard prevents out-of-bounds access.
+  int32 observedMaxFeatureId = 0;
 
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   SizeVec3 uDims = imageGeom.getDimensions();
@@ -123,6 +120,10 @@ Result<> ComputeFeatureNeighborsDirect::operator()()
 
     onsurf = 0;
     feature = featureIds[voxelIndex];
+    if(feature > observedMaxFeatureId)
+    {
+      observedMaxFeatureId = feature;
+    }
     if(feature > 0 && feature < neighborlist.size())
     {
       int64 xIdx = voxelIndex % dims[0];
@@ -166,6 +167,15 @@ Result<> ComputeFeatureNeighborsDirect::operator()()
     {
       boundaryCells->setValue(voxelIndex, static_cast<int32>(onsurf));
     }
+  }
+
+  // Validate max feature ID (deferred from before the loop to avoid a separate full scan)
+  if(static_cast<usize>(observedMaxFeatureId) >= totalFeatures)
+  {
+    return MakeErrorResult(-24500,
+                           fmt::format("Data Array {} has a maximum value of {} which is greater than the number of features from array {} which has {}. "
+                                       "Did you select the incorrect array for the 'FeatureIds' array?",
+                                       featureIdsPath.getTargetName(), observedMaxFeatureId, numNeighborsPath.getTargetName(), totalFeatures));
   }
 
   FloatVec3 spacing = imageGeom.getSpacing();

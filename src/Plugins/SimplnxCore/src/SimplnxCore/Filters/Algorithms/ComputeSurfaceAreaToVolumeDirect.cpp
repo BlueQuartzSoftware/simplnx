@@ -24,6 +24,11 @@ ComputeSurfaceAreaToVolumeDirect::ComputeSurfaceAreaToVolumeDirect(DataStructure
 ComputeSurfaceAreaToVolumeDirect::~ComputeSurfaceAreaToVolumeDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes surface-area-to-volume ratio using direct Z-Y-X iteration.
+ * In-core path: accumulates per-feature surface area from face-neighbor
+ * comparisons, then divides by voxel volume. Optionally computes sphericity.
+ */
 Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 {
   // Input Cell Data

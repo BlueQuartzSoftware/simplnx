@@ -110,6 +110,11 @@ ComputeSurfaceFeaturesScanline::ComputeSurfaceFeaturesScanline(DataStructure& da
 ComputeSurfaceFeaturesScanline::~ComputeSurfaceFeaturesScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Identifies surface features using chunk-sequential iteration.
+ * OOC path: iterates chunks in order, handling both 3D and 2D geometries
+ * with coordinate remapping. Same logic as ComputeSurfaceFeaturesDirect.
+ */
 Result<> ComputeSurfaceFeaturesScanline::operator()()
 {
   const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;
@@ -215,6 +220,10 @@ Result<> ComputeSurfaceFeaturesScanline::operator()()
               {
                 surfaceFeatures[gNum] = 1;
               }
+            }
+            else
+            {
+              return MakeErrorResult(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()));
             }
           }
         }

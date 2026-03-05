@@ -29,6 +29,12 @@ BadDataNeighborOrientationCheckWorklist::BadDataNeighborOrientationCheckWorklist
 BadDataNeighborOrientationCheckWorklist::~BadDataNeighborOrientationCheckWorklist() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Flips bad voxels to good using a worklist-based propagation algorithm.
+ * In-core path: Phase 1 counts matching good neighbors per bad voxel.
+ * Phase 2 iteratively flips eligible voxels using a deque worklist,
+ * propagating new eligibility to neighbors immediately.
+ */
 Result<> BadDataNeighborOrientationCheckWorklist::operator()()
 {
   const float misorientationTolerance = m_InputValues->MisorientationTolerance * numbers::pi_v<float> / 180.0f;

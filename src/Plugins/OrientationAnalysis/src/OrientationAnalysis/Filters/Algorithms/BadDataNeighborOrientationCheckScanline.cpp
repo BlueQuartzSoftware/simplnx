@@ -27,6 +27,13 @@ BadDataNeighborOrientationCheckScanline::BadDataNeighborOrientationCheckScanline
 BadDataNeighborOrientationCheckScanline::~BadDataNeighborOrientationCheckScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Flips bad voxels to good using chunk-sequential multi-pass scanning.
+ * OOC path: Phase 1 counts matching good neighbors using chunk-sequential iteration.
+ * Phase 2 uses repeated chunk-sequential scans (instead of a worklist) to flip
+ * eligible voxels, with a chunk-skip optimization that avoids loading chunks
+ * with no eligible voxels.
+ */
 Result<> BadDataNeighborOrientationCheckScanline::operator()()
 {
   const float misorientationTolerance = m_InputValues->MisorientationTolerance * numbers::pi_v<float> / 180.0f;
