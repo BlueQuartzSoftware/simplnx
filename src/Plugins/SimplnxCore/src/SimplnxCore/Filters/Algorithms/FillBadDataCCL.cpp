@@ -91,7 +91,7 @@ struct TempFileGuard
 // FillBadData Implementation
 // =============================================================================
 
-FillBadDataCCL::FillBadDataCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FillBadDataInputValues* inputValues)
+FillBadDataCCL::FillBadDataCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -442,6 +442,10 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
     // Record file position after Pass 1 writes so Pass 2 doesn't read
     // stale pairs from a previous iteration (rewind doesn't truncate).
     long writeEnd = std::ftell(tmpGuard.file);
+    if(writeEnd < 0)
+    {
+      return MakeErrorResult(-87011, "Phase 4/4: Failed to get file position for temporary file");
+    }
 
     if(count == 0)
     {

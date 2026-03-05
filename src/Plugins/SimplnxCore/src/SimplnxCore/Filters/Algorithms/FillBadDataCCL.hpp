@@ -34,7 +34,7 @@ struct FillBadDataInputValues;
 class SIMPLNXCORE_EXPORT FillBadDataCCL
 {
 public:
-  FillBadDataCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FillBadDataInputValues* inputValues);
+  FillBadDataCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
   ~FillBadDataCCL() noexcept;
 
   FillBadDataCCL(const FillBadDataCCL&) = delete;
@@ -53,7 +53,7 @@ private:
   Result<> phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64_t, 3>& dims, size_t numFeatures) const;
 
   DataStructure& m_DataStructure;
-  FillBadDataInputValues* m_InputValues = nullptr;
+  const FillBadDataInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };

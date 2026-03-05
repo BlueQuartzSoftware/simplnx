@@ -49,7 +49,7 @@ struct FillBadDataUpdateTuplesFunctor
 } // namespace
 
 // =============================================================================
-FillBadDataBFS::FillBadDataBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FillBadDataInputValues* inputValues)
+FillBadDataBFS::FillBadDataBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -192,6 +192,13 @@ Result<> FillBadDataBFS::operator()()
 
   std::vector<int32_t> featureNumber(numFeatures + 1, 0);
 
+  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
+  std::vector<DataPath> voxelArrayNames;
+  if(allChildArrays.has_value())
+  {
+    voxelArrayNames = allChildArrays.value();
+  }
+
   while(count != 0)
   {
     count = 0;
@@ -202,9 +209,9 @@ Result<> FillBadDataBFS::operator()()
       {
         count++;
         int32 most = 0;
-        auto xIndex = static_cast<float32>(i % dims[0]);
-        auto yIndex = static_cast<float32>((i / dims[0]) % dims[1]);
-        auto zIndex = static_cast<float32>(i / (dims[0] * dims[1]));
+        int64 xIndex = static_cast<int64>(i % dims[0]);
+        int64 yIndex = static_cast<int64>((i / dims[0]) % dims[1]);
+        int64 zIndex = static_cast<int64>(i / (dims[0] * dims[1]));
         for(int32_t j = 0; j < 6; j++)
         {
           auto neighborPoint = static_cast<int64_t>(i + neighborPoints[j]);
@@ -212,7 +219,7 @@ Result<> FillBadDataBFS::operator()()
           {
             continue;
           }
-          if(j == 5 && zIndex == static_cast<float32>(dims[2] - 1))
+          if(j == 5 && zIndex == (dims[2] - 1))
           {
             continue;
           }
@@ -220,7 +227,7 @@ Result<> FillBadDataBFS::operator()()
           {
             continue;
           }
-          if(j == 4 && yIndex == static_cast<float32>(dims[1] - 1))
+          if(j == 4 && yIndex == (dims[1] - 1))
           {
             continue;
           }
@@ -228,7 +235,7 @@ Result<> FillBadDataBFS::operator()()
           {
             continue;
           }
-          if(j == 3 && xIndex == static_cast<float32>(dims[0] - 1))
+          if(j == 3 && xIndex == (dims[0] - 1))
           {
             continue;
           }
@@ -252,7 +259,7 @@ Result<> FillBadDataBFS::operator()()
           {
             continue;
           }
-          if(j == 5 && zIndex == static_cast<float32>(dims[2] - 1))
+          if(j == 5 && zIndex == (dims[2] - 1))
           {
             continue;
           }
@@ -260,7 +267,7 @@ Result<> FillBadDataBFS::operator()()
           {
             continue;
           }
-          if(j == 4 && yIndex == static_cast<float32>(dims[1] - 1))
+          if(j == 4 && yIndex == (dims[1] - 1))
           {
             continue;
           }
@@ -268,7 +275,7 @@ Result<> FillBadDataBFS::operator()()
           {
             continue;
           }
-          if(j == 3 && xIndex == static_cast<float32>(dims[0] - 1))
+          if(j == 3 && xIndex == (dims[0] - 1))
           {
             continue;
           }
@@ -280,13 +287,6 @@ Result<> FillBadDataBFS::operator()()
           }
         }
       }
-    }
-
-    std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
-    std::vector<DataPath> voxelArrayNames;
-    if(allChildArrays.has_value())
-    {
-      voxelArrayNames = allChildArrays.value();
     }
 
     for(const auto& cellArrayPath : voxelArrayNames)

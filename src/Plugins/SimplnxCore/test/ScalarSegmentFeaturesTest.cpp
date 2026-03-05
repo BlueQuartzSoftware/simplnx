@@ -193,17 +193,17 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Benchmark 200x200x200", "[Simplnx
   // 200x200x200, largest array is int32 1-comp => 200*200*4 = 160,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 160000, true);
 
-  constexpr usize kDimX = 200;
-  constexpr usize kDimY = 200;
-  constexpr usize kDimZ = 200;
-  const ShapeType cellTupleShape = {kDimZ, kDimY, kDimX};
+  constexpr usize k_DimX = 200;
+  constexpr usize k_DimY = 200;
+  constexpr usize k_DimZ = 200;
+  const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
   const auto benchmarkFile = fs::path(fmt::format("{}/scalar_segment_features_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
 
   // Stage 1: Build data programmatically and write to .dream3d
   {
     DataStructure buildDS;
     auto* imageGeom = ImageGeom::Create(buildDS, "DataContainer");
-    imageGeom->setDimensions({kDimX, kDimY, kDimZ});
+    imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
     imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
     imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
 
@@ -215,17 +215,17 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Benchmark 200x200x200", "[Simplnx
     auto* scalarArray = CreateTestDataArray<int32>(buildDS, "ScalarData", cellTupleShape, {1}, cellAM->getId());
     auto& scalarStore = scalarArray->getDataStoreRef();
 
-    constexpr usize kBlockSize = 25;
-    for(usize z = 0; z < kDimZ; z++)
+    constexpr usize k_BlockSize = 25;
+    for(usize z = 0; z < k_DimZ; z++)
     {
-      for(usize y = 0; y < kDimY; y++)
+      for(usize y = 0; y < k_DimY; y++)
       {
-        for(usize x = 0; x < kDimX; x++)
+        for(usize x = 0; x < k_DimX; x++)
         {
-          const usize idx = z * kDimX * kDimY + y * kDimX + x;
-          const usize bx = x / kBlockSize;
-          const usize by = y / kBlockSize;
-          const usize bz = z / kBlockSize;
+          const usize idx = z * k_DimX * k_DimY + y * k_DimX + x;
+          const usize bx = x / k_BlockSize;
+          const usize by = y / k_BlockSize;
+          const usize bz = z / k_BlockSize;
           // Each block gets a unique scalar value; tolerance=0 means only identical values merge
           scalarStore[idx] = static_cast<int32>(bz * 64 + by * 8 + bx);
         }

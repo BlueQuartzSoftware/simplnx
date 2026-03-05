@@ -32,7 +32,7 @@ struct SIMPLNXCORE_EXPORT FillBadDataInputValues
 class SIMPLNXCORE_EXPORT FillBadData
 {
 public:
-  FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FillBadDataInputValues* inputValues);
+  FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
   ~FillBadData() noexcept;
 
   FillBadData(const FillBadData&) = delete;
@@ -44,7 +44,7 @@ public:
 
 private:
   DataStructure& m_DataStructure;
-  FillBadDataInputValues* m_InputValues = nullptr;
+  const FillBadDataInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
