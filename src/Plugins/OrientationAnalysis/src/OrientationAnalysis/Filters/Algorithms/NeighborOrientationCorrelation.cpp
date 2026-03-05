@@ -25,6 +25,7 @@ public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
+  // SAFETY: bestNeighbor must outlive the ParallelTaskAlgorithm that executes this functor.
   NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
   : m_MessageHelper(messageHelper)
   , m_TotalPoints(totalPoints)
@@ -217,7 +218,7 @@ Result<> NeighborOrientationCorrelation::operator()()
             // Pre-read all valid neighbor quats and phases into local arrays.
             // Neighbor buffer slots: 0=-Z, 1=-Y(same z), 2=-X(same z), 3=+X(same z), 4=+Y(same z), 5=+Z
             // slot mapping: -Z→0, same-z→1, +Z→2
-            constexpr std::array<usize, 6> neighborSlot = {0, 1, 1, 1, 1, 2};
+            constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
             const std::array<int64, 6> neighborBufX = {xIdx, xIdx, xIdx - 1, xIdx + 1, xIdx, xIdx};
             const std::array<int64, 6> neighborBufY = {yIdx, yIdx - 1, yIdx, yIdx, yIdx + 1, yIdx};
 
@@ -230,8 +231,9 @@ Result<> NeighborOrientationCorrelation::operator()()
               {
                 usize nIdx = static_cast<usize>(neighborBufY[f] * dims[0] + neighborBufX[f]);
                 usize nIdx4 = nIdx * 4;
-                nPhases[f] = phaseSlices[neighborSlot[f]][nIdx];
-                nQuats[f] = ebsdlib::QuatD(quatSlices[neighborSlot[f]][nIdx4], quatSlices[neighborSlot[f]][nIdx4 + 1], quatSlices[neighborSlot[f]][nIdx4 + 2], quatSlices[neighborSlot[f]][nIdx4 + 3]);
+                nPhases[f] = phaseSlices[k_NeighborSlot[f]][nIdx];
+                nQuats[f] =
+                    ebsdlib::QuatD(quatSlices[k_NeighborSlot[f]][nIdx4], quatSlices[k_NeighborSlot[f]][nIdx4 + 1], quatSlices[k_NeighborSlot[f]][nIdx4 + 2], quatSlices[k_NeighborSlot[f]][nIdx4 + 3]);
               }
             }
 

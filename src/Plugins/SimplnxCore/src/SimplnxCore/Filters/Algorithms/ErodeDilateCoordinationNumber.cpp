@@ -144,12 +144,12 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
           const std::array<usize, 6> neighborInSlice = {
-              inSlice,                                          // -Z
+              inSlice,                                         // -Z
               static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
               static_cast<usize>(yIdx * dims[0] + (xIdx - 1)), // -X
               static_cast<usize>(yIdx * dims[0] + (xIdx + 1)), // +X
               static_cast<usize>((yIdx + 1) * dims[0] + xIdx), // +Y
-              inSlice                                           // +Z
+              inSlice                                          // +Z
           };
 
           for(const auto& faceIndex : faceNeighborInternalIdx)

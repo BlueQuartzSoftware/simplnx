@@ -119,12 +119,12 @@ Result<> ErodeDilateBadData::operator()()
 
             // Precompute neighbor in-slice indices for buffer lookups
             const std::array<usize, 6> neighborInSlice = {
-                inSlice,                                           // -Z: same xy position in prev slice
-                static_cast<usize>((yIdx - 1) * dims[0] + xIdx),  // -Y
-                static_cast<usize>(yIdx * dims[0] + (xIdx - 1)),  // -X
-                static_cast<usize>(yIdx * dims[0] + (xIdx + 1)),  // +X
-                static_cast<usize>((yIdx + 1) * dims[0] + xIdx),  // +Y
-                inSlice                                            // +Z: same xy position in next slice
+                inSlice,                                         // -Z: same xy position in prev slice
+                static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
+                static_cast<usize>(yIdx * dims[0] + (xIdx - 1)), // -X
+                static_cast<usize>(yIdx * dims[0] + (xIdx + 1)), // +X
+                static_cast<usize>((yIdx + 1) * dims[0] + xIdx), // +Y
+                inSlice                                          // +Z: same xy position in next slice
             };
 
             for(const auto& faceIndex : faceNeighborInternalIdx)

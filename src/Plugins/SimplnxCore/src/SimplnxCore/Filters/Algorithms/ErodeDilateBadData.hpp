@@ -43,7 +43,18 @@ struct SIMPLNXCORE_EXPORT ErodeDilateBadDataInputValues
 class SIMPLNXCORE_EXPORT ErodeDilateBadData
 {
 public:
+  /**
+   * @brief Constructs the algorithm with all required references and parameters.
+   * @param dataStructure The DataStructure containing all input/output arrays
+   * @param mesgHandler Handler for sending progress messages to the UI
+   * @param shouldCancel Atomic flag checked between iterations to support cancellation
+   * @param inputValues User-supplied parameters controlling the algorithm behavior
+   */
   ErodeDilateBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateBadDataInputValues* inputValues);
+
+  /**
+   * @brief Default destructor.
+   */
   ~ErodeDilateBadData() noexcept;
 
   ErodeDilateBadData(const ErodeDilateBadData&) = delete;

@@ -39,8 +39,19 @@ struct SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesInputValues
 class SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValues
 {
 public:
+  /**
+   * @brief Constructs the algorithm with all required references and parameters.
+   * @param dataStructure The DataStructure containing all input/output arrays
+   * @param mesgHandler Handler for sending progress messages to the UI
+   * @param shouldCancel Atomic flag checked between iterations to support cancellation
+   * @param inputValues User-supplied parameters controlling the algorithm behavior
+   */
   ReplaceElementAttributesWithNeighborValues(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                              ReplaceElementAttributesWithNeighborValuesInputValues* inputValues);
+
+  /**
+   * @brief Default destructor.
+   */
   ~ReplaceElementAttributesWithNeighborValues() noexcept;
 
   ReplaceElementAttributesWithNeighborValues(const ReplaceElementAttributesWithNeighborValues&) = delete;

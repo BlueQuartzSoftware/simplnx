@@ -111,12 +111,12 @@ Result<> ErodeDilateMask::operator()()
             std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
             const std::array<usize, 6> neighborInSlice = {
-                inSlice,                                          // -Z: same xy position in prev slice
+                inSlice,                                         // -Z: same xy position in prev slice
                 static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
                 static_cast<usize>(yIdx * dims[0] + (xIdx - 1)), // -X
                 static_cast<usize>(yIdx * dims[0] + (xIdx + 1)), // +X
                 static_cast<usize>((yIdx + 1) * dims[0] + xIdx), // +Y
-                inSlice                                           // +Z: same xy position in next slice
+                inSlice                                          // +Z: same xy position in next slice
             };
 
             for(const auto& faceIndex : faceNeighborInternalIdx)

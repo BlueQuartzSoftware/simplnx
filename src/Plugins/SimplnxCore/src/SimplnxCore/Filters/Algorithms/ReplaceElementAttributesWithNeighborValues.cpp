@@ -82,8 +82,7 @@ public:
 struct ExecuteTemplate
 {
   template <typename T>
-  void CompareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, T neighborValue, float thresholdValue, float32& best, std::vector<int64_t>& bestNeighbor, size_t i,
-                     int64 neighborPoint) const
+  void CompareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, T neighborValue, float thresholdValue, float32& best, std::vector<int64_t>& bestNeighbor, size_t i, int64 neighborPoint) const
   {
     if(comparator->compare1(neighborValue, thresholdValue) && comparator->compare2(neighborValue, best))
     {
@@ -192,12 +191,12 @@ struct ExecuteTemplate
               std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
               const std::array<usize, 6> neighborInSlice = {
-                  inSlice,                                          // -Z
+                  inSlice,                                         // -Z
                   static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
                   static_cast<usize>(yIdx * dims[0] + (xIdx - 1)), // -X
                   static_cast<usize>(yIdx * dims[0] + (xIdx + 1)), // +X
                   static_cast<usize>((yIdx + 1) * dims[0] + xIdx), // +Y
-                  inSlice                                           // +Z
+                  inSlice                                          // +Z
               };
 
               for(const auto& faceIndex : faceNeighborInternalIdx)

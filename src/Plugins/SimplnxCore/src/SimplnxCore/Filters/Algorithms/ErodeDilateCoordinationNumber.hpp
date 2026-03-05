@@ -33,7 +33,18 @@ struct SIMPLNXCORE_EXPORT ErodeDilateCoordinationNumberInputValues
 class SIMPLNXCORE_EXPORT ErodeDilateCoordinationNumber
 {
 public:
+  /**
+   * @brief Constructs the algorithm with all required references and parameters.
+   * @param dataStructure The DataStructure containing all input/output arrays
+   * @param mesgHandler Handler for sending progress messages to the UI
+   * @param shouldCancel Atomic flag checked between iterations to support cancellation
+   * @param inputValues User-supplied parameters controlling the algorithm behavior
+   */
   ErodeDilateCoordinationNumber(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateCoordinationNumberInputValues* inputValues);
+
+  /**
+   * @brief Default destructor.
+   */
   ~ErodeDilateCoordinationNumber() noexcept;
 
   ErodeDilateCoordinationNumber(const ErodeDilateCoordinationNumber&) = delete;

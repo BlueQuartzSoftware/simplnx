@@ -210,7 +210,6 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Benchmark 
   constexpr usize k_DimX = 200;
   constexpr usize k_DimY = 200;
   constexpr usize k_DimZ = 200;
-  constexpr usize k_TotalVoxels = k_DimX * k_DimY * k_DimZ;
   const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
   const auto benchmarkFile = fs::path(fmt::format("{}/neighbor_orientation_correlation_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
 

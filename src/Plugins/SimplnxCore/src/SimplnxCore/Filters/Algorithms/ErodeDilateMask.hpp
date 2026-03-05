@@ -44,7 +44,18 @@ struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues
 class SIMPLNXCORE_EXPORT ErodeDilateMask
 {
 public:
+  /**
+   * @brief Constructs the algorithm with all required references and parameters.
+   * @param dataStructure The DataStructure containing all input/output arrays
+   * @param mesgHandler Handler for sending progress messages to the UI
+   * @param shouldCancel Atomic flag checked between iterations to support cancellation
+   * @param inputValues User-supplied parameters controlling the algorithm behavior
+   */
   ErodeDilateMask(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateMaskInputValues* inputValues);
+
+  /**
+   * @brief Default destructor.
+   */
   ~ErodeDilateMask() noexcept;
 
   ErodeDilateMask(const ErodeDilateMask&) = delete;
