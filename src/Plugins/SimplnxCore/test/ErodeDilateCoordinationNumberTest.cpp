@@ -8,7 +8,6 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -33,8 +32,6 @@ const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataCont
 TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter", "[SimplnxCore][ErodeDilateCoordinationNumberFilter]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // Erode/Dilate test data: 20x201x189, EulerAngles (float32, 3-comp) => 201*189*3*4 = 455,868 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 455868, true);
 
@@ -73,8 +70,6 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter", "[SimplnxCore][Ero
 TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Benchmark 200x200x200", "[SimplnxCore][ErodeDilateCoordinationNumberFilter][Benchmark]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // 200x200x200, EulerAngles (float32, 3-comp) => 200*200*3*4 = 480,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 480000, true);
 

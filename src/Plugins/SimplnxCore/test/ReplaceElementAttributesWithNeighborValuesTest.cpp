@@ -6,7 +6,6 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -25,8 +24,6 @@ const std::string k_ExemplarDataContainer2("DataContainer");
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // Replace Element test data: 1x201x189, EulerAngles (float32, 3-comp) = 455,868 total bytes
   // Z=1 so use smaller threshold to force chunking
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 50000, true);
@@ -75,8 +72,6 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter", "[Sim
 TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter: Benchmark 200x200x200", "[SimplnxCore][ReplaceElementAttributesWithNeighborValuesFilter][Benchmark]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // 200x200x200, Confidence Index (float32, 1-comp) => 200*200*4 = 160,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 160000, true);
 

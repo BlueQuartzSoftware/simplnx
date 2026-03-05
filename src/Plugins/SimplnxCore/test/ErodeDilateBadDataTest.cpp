@@ -8,7 +8,6 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
@@ -34,8 +33,6 @@ const DataPath k_FeatureIdsDataPath = k_EbsdScanDataDataPath.createChildPath("Fe
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // Erode/Dilate test data: 20x201x189, EulerAngles (float32, 3-comp) => 201*189*3*4 = 455,868 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 455868, true);
 
@@ -84,8 +81,6 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDi
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate)", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // Erode/Dilate test data: 20x201x189, EulerAngles (float32, 3-comp) => 201*189*3*4 = 455,868 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 455868, true);
 
@@ -130,8 +125,6 @@ TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate)", "[SimplnxCore][ErodeD
 TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Benchmark 200x200x200", "[SimplnxCore][ErodeDilateBadDataFilter][Benchmark]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // 200x200x200, EulerAngles (float32, 3-comp) => 200*200*3*4 = 480,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 480000, true);
 
