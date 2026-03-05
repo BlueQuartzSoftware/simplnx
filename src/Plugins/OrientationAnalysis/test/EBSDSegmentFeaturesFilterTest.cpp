@@ -290,8 +290,6 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures:MaskAll", "[OrientationAnaly
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Benchmark 200x200x200", "[OrientationAnalysis][EBSDSegmentFeatures][Benchmark]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false, true);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // 200x200x200, Quats float32 4-comp => 200*200*4*4 = 640,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 640000, true);
 

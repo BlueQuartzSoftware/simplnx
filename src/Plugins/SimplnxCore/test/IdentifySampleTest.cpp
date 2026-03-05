@@ -101,8 +101,6 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
 TEST_CASE("SimplnxCore::IdentifySampleFilter: Benchmark 200x200x200", "[SimplnxCore][IdentifySampleFilter][Benchmark]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false, true);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // 200*200 * 1 byte = 40000 bytes per Z-slice for uint8 mask
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 40000, true);
 

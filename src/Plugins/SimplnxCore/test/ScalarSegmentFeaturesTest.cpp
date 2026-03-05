@@ -190,8 +190,6 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Neighbor Scheme", "[Reconstructio
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Benchmark 200x200x200", "[SimplnxCore][ScalarSegmentFeatures][Benchmark]")
 {
   UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false, true);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // 200x200x200, largest array is int32 1-comp => 200*200*4 = 160,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 160000, true);
 
