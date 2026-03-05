@@ -54,6 +54,8 @@ protected:
   void formFeaturesSections(std::vector<int32>& miFeatureIds, std::vector<int32>& featureCounts);
 
 private:
+  void formFeaturesSectionsOoc(std::vector<int32>& miFeatureIds, std::vector<int32>& featureCounts);
+
   DataStructure& m_DataStructure;
   const AlignSectionsMutualInformationInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;

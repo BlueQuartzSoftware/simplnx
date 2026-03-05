@@ -7,7 +7,11 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
+#include <cmath>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -25,6 +29,11 @@ using namespace nx::core;
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline", "[OrientationAnalysis][AlignSectionsMisorientation]")
 {
   UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 600000, true);
+
+  bool forceOoc = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOoc);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz", "align_sections_misorientation");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
@@ -87,11 +96,15 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
 
 TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test", "[Reconstruction][AlignSectionsMisorientationFilter]")
 {
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 600000, true);
+
+  bool forceOoc = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOoc);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_misorientation.tar.gz", "align_sections_misorientation");
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
-
-  UnitTest::LoadPlugins();
 
   auto* filterList = Application::Instance()->getFilterList();
 
@@ -159,4 +172,109 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test",
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+}
+
+TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation: Benchmark 200x200x200", "[OrientationAnalysis][AlignSectionsMisorientation][Benchmark]")
+{
+  UnitTest::LoadPlugins();
+  // 200x200x200, Quats float32 4-comp => 200*200*4*4 = 640,000 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 640000, true);
+
+  constexpr usize kDimX = 200;
+  constexpr usize kDimY = 200;
+  constexpr usize kDimZ = 200;
+  const ShapeType cellTupleShape = {kDimZ, kDimY, kDimX};
+  const auto benchmarkFile = fs::path(fmt::format("{}/align_sections_misorientation_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
+
+  // Stage 1: Build data programmatically and write to .dream3d
+  {
+    DataStructure buildDS;
+    auto* imageGeom = ImageGeom::Create(buildDS, "DataContainer");
+    imageGeom->setDimensions({kDimX, kDimY, kDimZ});
+    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+    auto* cellAM = AttributeMatrix::Create(buildDS, "CellData", cellTupleShape, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+
+    // Create Quats array (float32, 4-component) with block grain pattern
+    auto* quatsArray = UnitTest::CreateTestDataArray<float32>(buildDS, "Quats", cellTupleShape, {4}, cellAM->getId());
+    auto& quatsStore = quatsArray->getDataStoreRef();
+
+    // Create Phases array (int32, 1-component) - all phase 1
+    auto* phasesArray = UnitTest::CreateTestDataArray<int32>(buildDS, "Phases", cellTupleShape, {1}, cellAM->getId());
+    auto& phasesStore = phasesArray->getDataStoreRef();
+
+    // Create Mask array (uint8, 1-component)
+    auto* maskArray = UnitTest::CreateTestDataArray<uint8>(buildDS, "Mask", cellTupleShape, {1}, cellAM->getId());
+    auto& maskStore = maskArray->getDataStoreRef();
+
+    // Fill quaternions with block grains, mask with sphere
+    constexpr usize kBlockSize = 25;
+    const float cx = kDimX / 2.0f;
+    const float cy = kDimY / 2.0f;
+    const float cz = kDimZ / 2.0f;
+    const float radius = 90.0f;
+
+    for(usize z = 0; z < kDimZ; z++)
+    {
+      for(usize y = 0; y < kDimY; y++)
+      {
+        for(usize x = 0; x < kDimX; x++)
+        {
+          const usize idx = z * kDimX * kDimY + y * kDimX + x;
+          phasesStore[idx] = 1;
+
+          const float dx = static_cast<float>(x) - cx;
+          const float dy = static_cast<float>(y) - cy;
+          const float dz = static_cast<float>(z) - cz;
+          const float dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+          maskStore[idx] = dist < radius ? 1 : 0;
+
+          usize bx = x / kBlockSize;
+          usize by = y / kBlockSize;
+          usize bz = z / kBlockSize;
+          float angle = static_cast<float>((bx * 73 + by * 137 + bz * 251) % 360) * (3.14159265f / 180.0f);
+          float halfAngle = angle * 0.5f;
+          quatsStore[idx * 4 + 0] = std::cos(halfAngle);
+          quatsStore[idx * 4 + 1] = 0.0f;
+          quatsStore[idx * 4 + 2] = 0.0f;
+          quatsStore[idx * 4 + 3] = std::sin(halfAngle);
+        }
+      }
+    }
+
+    // Create CellEnsembleData with CrystalStructures
+    const ShapeType ensembleTupleShape = {2};
+    auto* ensembleAM = AttributeMatrix::Create(buildDS, "CellEnsembleData", ensembleTupleShape, imageGeom->getId());
+    auto* crystalStructsArray = UnitTest::CreateTestDataArray<uint32>(buildDS, "CrystalStructures", ensembleTupleShape, {1}, ensembleAM->getId());
+    auto& crystalStructsStore = crystalStructsArray->getDataStoreRef();
+    crystalStructsStore[0] = 999; // Phase 0: Unknown
+    crystalStructsStore[1] = 1;   // Phase 1: Cubic_High
+
+    UnitTest::WriteTestDataStructure(buildDS, benchmarkFile);
+  }
+
+  // Stage 2: Reload (arrays become ZarrStore in OOC) and run filter
+  DataStructure dataStructure = UnitTest::LoadDataStructure(benchmarkFile);
+
+  {
+    AlignSectionsMisorientationFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0F));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Mask"})));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Quats"})));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
+    args.insertOrAssign(AlignSectionsMisorientationFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  fs::remove(benchmarkFile);
 }

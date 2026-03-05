@@ -4,10 +4,14 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -18,6 +22,11 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Algorithm Test", "[R
   const DataPath k_ExemplarShiftsPath = Constants::k_ExemplarDataContainerPath.createChildPath("Exemplar Shifts");
 
   UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 600000, true);
+
+  bool forceOoc = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOoc);
+
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_feature_centroids.tar.gz", "align_sections_feature_centroids");
 
   // Read Exemplar DREAM3D File Filter
@@ -57,6 +66,12 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Algorithm Test", "[R
 TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reconstruction][AlignSectionsFeatureCentroidFilter]")
 {
   const std::string k_CentroidsName = "Centroids";
+
+  UnitTest::LoadPlugins();
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 600000, true);
+
+  bool forceOoc = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOoc);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "align_sections_feature_centroids.tar.gz", "align_sections_feature_centroids");
 
@@ -115,4 +130,91 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroid: Benchmark 200x200x200", "[SimplnxCore][AlignSectionsFeatureCentroidFilter][Benchmark]")
+{
+  UnitTest::LoadPlugins();
+  // 200x200x200, largest cell array is EulerAngles float32 3-comp => 200*200*3*4 = 480,000 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 480000, true);
+
+  constexpr usize kDimX = 200;
+  constexpr usize kDimY = 200;
+  constexpr usize kDimZ = 200;
+  const ShapeType cellTupleShape = {kDimZ, kDimY, kDimX};
+  const auto benchmarkFile = fs::path(fmt::format("{}/align_sections_feature_centroid_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
+
+  // Stage 1: Build data programmatically and write to .dream3d
+  {
+    DataStructure buildDS;
+    auto* imageGeom = ImageGeom::Create(buildDS, "DataContainer");
+    imageGeom->setDimensions({kDimX, kDimY, kDimZ});
+    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+    auto* cellAM = AttributeMatrix::Create(buildDS, "CellData", cellTupleShape, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+
+    // Create Mask array (uint8, 1-component) - off-center sphere with per-slice wobble
+    auto* maskArray = UnitTest::CreateTestDataArray<uint8>(buildDS, "Mask", cellTupleShape, {1}, cellAM->getId());
+    auto& maskStore = maskArray->getDataStoreRef();
+
+    // Create additional cell arrays for transfer phase workload
+    auto* eulerArray = UnitTest::CreateTestDataArray<float32>(buildDS, "EulerAngles", cellTupleShape, {3}, cellAM->getId());
+    auto& eulerStore = eulerArray->getDataStoreRef();
+    auto* featureIdsArray = UnitTest::CreateTestDataArray<int32>(buildDS, "FeatureIds", cellTupleShape, {1}, cellAM->getId());
+    auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+
+    const float cx = kDimX / 2.0f;
+    const float cy = kDimY / 2.0f;
+    const float radius = 80.0f;
+
+    for(usize z = 0; z < kDimZ; z++)
+    {
+      // Shift center per-slice to create meaningful alignment work
+      float wobbleX = 10.0f * std::sin(static_cast<float>(z) * 0.1f);
+      float wobbleY = 8.0f * std::cos(static_cast<float>(z) * 0.07f);
+      float sliceCx = cx + wobbleX;
+      float sliceCy = cy + wobbleY;
+
+      for(usize y = 0; y < kDimY; y++)
+      {
+        for(usize x = 0; x < kDimX; x++)
+        {
+          const usize idx = z * kDimX * kDimY + y * kDimX + x;
+          const float dx = static_cast<float>(x) - sliceCx;
+          const float dy = static_cast<float>(y) - sliceCy;
+          const float dist = std::sqrt(dx * dx + dy * dy);
+          maskStore[idx] = dist < radius ? 1 : 0;
+
+          eulerStore[idx * 3 + 0] = static_cast<float>(x) * 0.01f;
+          eulerStore[idx * 3 + 1] = static_cast<float>(y) * 0.01f;
+          eulerStore[idx * 3 + 2] = static_cast<float>(z) * 0.01f;
+          featureIdsStore[idx] = static_cast<int32>(maskStore[idx]);
+        }
+      }
+    }
+
+    UnitTest::WriteTestDataStructure(buildDS, benchmarkFile);
+  }
+
+  // Stage 2: Reload (arrays become ZarrStore in OOC) and run filter
+  DataStructure dataStructure = UnitTest::LoadDataStructure(benchmarkFile);
+
+  {
+    AlignSectionsFeatureCentroidFilter filter;
+    Arguments args;
+
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_UseReferenceSlice_Key, std::make_any<bool>(true));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_ReferenceSlice_Key, std::make_any<int32>(0));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Mask"})));
+    args.insertOrAssign(AlignSectionsFeatureCentroidFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  fs::remove(benchmarkFile);
 }

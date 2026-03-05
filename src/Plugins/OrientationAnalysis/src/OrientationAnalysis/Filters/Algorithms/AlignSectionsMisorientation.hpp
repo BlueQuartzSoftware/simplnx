@@ -60,6 +60,8 @@ protected:
   Result<> findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) override;
 
 private:
+  Result<> findShiftsOoc(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts);
+
   DataStructure& m_DataStructure;
   const AlignSectionsMisorientationInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;

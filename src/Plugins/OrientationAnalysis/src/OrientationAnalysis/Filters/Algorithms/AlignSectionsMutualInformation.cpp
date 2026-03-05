@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -75,8 +76,19 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
   std::vector<float32> mutualInfo1;
   std::vector<float32> mutualInfo2;
 
-  // Segment each slice
-  formFeaturesSections(miFeatureIds, featureCounts);
+  // Segment each slice — use OOC-optimized version if data is chunked
+  {
+    const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
+    const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+    if(ForceOocAlgorithm() || IsOutOfCore(quats) || IsOutOfCore(cellPhases))
+    {
+      formFeaturesSectionsOoc(miFeatureIds, featureCounts);
+    }
+    else
+    {
+      formFeaturesSections(miFeatureIds, featureCounts);
+    }
+  }
 
   std::vector<std::vector<float32>> misorientations(dims[0]);
   for(int64 i = 0; i < dims[0]; i++)
@@ -428,6 +440,174 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
               auto q2TupleIndex = neighbor * 4;
               ebsdlib::QuatD quat2(quats[q2TupleIndex], quats[q2TupleIndex + 1], quats[q2TupleIndex + 2], quats[q2TupleIndex + 3]);
               uint32_t phase2 = m_CrystalStructures[m_CellPhases[neighbor]];
+
+              if(laueClass1 == phase2)
+              {
+                ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(quat1, quat2);
+                angle = axisAngle[3];
+              }
+              if(angle < misorientationTolerance)
+              {
+                miFeatureIds[neighbor] = featureCount;
+                voxelList[size] = neighbor;
+                size++;
+                if(size >= voxelList.size())
+                {
+                  size = voxelList.size();
+                  voxelList.resize(size + initialVoxelsListSize);
+                  for(std::vector<int64_t>::size_type v = size; v < voxelList.size(); ++v)
+                  {
+                    voxelList[v] = -1;
+                  }
+                }
+              }
+            }
+          }
+        }
+        voxelList.erase(std::remove(voxelList.begin(), voxelList.end(), -1), voxelList.end());
+        featureCount++;
+        voxelList.assign(initialVoxelsListSize, -1);
+      }
+    }
+    featureCounts[slice] = featureCount;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// OOC-optimized formFeaturesSections: buffers one Z-slice of quats, cellPhases,
+// and mask into local vectors before flood-fill, eliminating random chunk-based
+// DataStore access during neighbor traversal.
+// -----------------------------------------------------------------------------
+void AlignSectionsMutualInformation::formFeaturesSectionsOoc(std::vector<int32>& miFeatureIds, std::vector<int32>& featureCounts)
+{
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+
+  SizeVec3 udims = imageGeom.getDimensions();
+  int64 dims[3] = {
+      static_cast<int64>(udims[0]),
+      static_cast<int64>(udims[1]),
+      static_cast<int64>(udims[2]),
+  };
+
+  auto orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+
+  auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
+  auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& quatsStore = quats.getDataStoreRef();
+  auto& cellPhasesStore = cellPhases.getDataStoreRef();
+
+  size_t initialVoxelsListSize = 1000;
+
+  float misorientationTolerance = m_InputValues->MisorientationTolerance * nx::core::Constants::k_PiOver180F;
+
+  featureCounts.resize(dims[2]);
+
+  const int64 sliceVoxels = dims[0] * dims[1];
+
+  // Per-slice buffers
+  std::vector<float32> quatsBuf(sliceVoxels * 4);
+  std::vector<int32> phasesBuf(sliceVoxels);
+  std::vector<uint8_t> maskBuf;
+  if(m_InputValues->UseMask)
+  {
+    maskBuf.resize(sliceVoxels, 1);
+  }
+
+  std::vector<int64_t> voxelList(initialVoxelsListSize, -1);
+  int64_t neighborPoints[4] = {-dims[0], -1, 1, dims[0]};
+
+  for(int64_t slice = 0; slice < dims[2]; slice++)
+  {
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Identifying Features: Slice {}/{} complete", slice, dims[2]));
+
+    int64 startPoint = slice * sliceVoxels;
+    int64 endPoint = (slice + 1) * sliceVoxels;
+
+    // Buffer this slice's data (sequential reads)
+    for(int64 idx = 0; idx < sliceVoxels; idx++)
+    {
+      phasesBuf[idx] = cellPhasesStore[startPoint + idx];
+    }
+    for(int64 idx = 0; idx < sliceVoxels * 4; idx++)
+    {
+      quatsBuf[idx] = quatsStore[startPoint * 4 + idx];
+    }
+    if(m_InputValues->UseMask)
+    {
+      for(int64 idx = 0; idx < sliceVoxels; idx++)
+      {
+        maskBuf[idx] = m_MaskCompare->isTrue(startPoint + idx) ? 1 : 0;
+      }
+    }
+
+    int64 currentStartPoint = startPoint;
+    int32 featureCount = 1;
+    bool noSeeds = false;
+    while(!noSeeds)
+    {
+      int64 seed = -1;
+
+      for(int64 point = currentStartPoint; point < endPoint; point++)
+      {
+        int64 localIdx = point - startPoint;
+        if((!m_InputValues->UseMask || (m_MaskCompare != nullptr && maskBuf[localIdx] != 0)) && miFeatureIds[point] == 0 && phasesBuf[localIdx] > 0)
+        {
+          seed = point;
+          currentStartPoint = point;
+        }
+        if(seed > -1)
+        {
+          break;
+        }
+      }
+
+      if(seed == -1)
+      {
+        noSeeds = true;
+      }
+      if(seed >= 0)
+      {
+        std::vector<int64_t>::size_type size = 0;
+        miFeatureIds[seed] = featureCount;
+        voxelList[size] = seed;
+        size++;
+        for(size_t j = 0; j < size; ++j)
+        {
+          int64_t currentpoint = voxelList[j];
+          int64 localCurrent = currentpoint - startPoint;
+          int64 col = currentpoint % dims[0];
+          int64 row = (currentpoint / dims[0]) % dims[1];
+
+          auto q1BufIdx = localCurrent * 4;
+          ebsdlib::QuatD quat1(quatsBuf[q1BufIdx], quatsBuf[q1BufIdx + 1], quatsBuf[q1BufIdx + 2], quatsBuf[q1BufIdx + 3]);
+          uint32_t laueClass1 = crystalStructures[phasesBuf[localCurrent]];
+          for(int32_t i = 0; i < 4; i++)
+          {
+            int64 neighbor = currentpoint + neighborPoints[i];
+            if((i == 0) && row == 0)
+            {
+              continue;
+            }
+            if((i == 3) && row == (dims[1] - 1))
+            {
+              continue;
+            }
+            if((i == 1) && col == 0)
+            {
+              continue;
+            }
+            if((i == 2) && col == (dims[0] - 1))
+            {
+              continue;
+            }
+            int64 localNeighbor = neighbor - startPoint;
+            if(miFeatureIds[neighbor] <= 0 && phasesBuf[localNeighbor] > 0)
+            {
+              float32 angle = std::numeric_limits<float>::max();
+              auto q2BufIdx = localNeighbor * 4;
+              ebsdlib::QuatD quat2(quatsBuf[q2BufIdx], quatsBuf[q2BufIdx + 1], quatsBuf[q2BufIdx + 2], quatsBuf[q2BufIdx + 3]);
+              uint32_t phase2 = crystalStructures[phasesBuf[localNeighbor]];
 
               if(laueClass1 == phase2)
               {
