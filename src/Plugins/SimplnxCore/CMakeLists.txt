@@ -186,6 +186,8 @@ set(AlgorithmList
   ComputeArrayStatistics
   ComputeBiasedFeatures
   ComputeBoundaryCells
+  ComputeBoundaryCellsDirect
+  ComputeBoundaryCellsScanline
   ComputeBoundingBoxStats
   ComputeCoordinatesImageGeom
   ComputeCoordinateThreshold
@@ -196,6 +198,8 @@ set(AlgorithmList
   ComputeFeatureCentroids
   ComputeFeatureClustering
   ComputeFeatureNeighbors
+  ComputeFeatureNeighborsDirect
+  ComputeFeatureNeighborsScanline
   ComputeFeaturePhases
   ComputeFeaturePhasesBinary
   ComputeFeatureRect
@@ -209,7 +213,11 @@ set(AlgorithmList
   ComputeNeighborListStatistics
 #  ComputeNumFeatures
   ComputeSurfaceAreaToVolume
+  ComputeSurfaceAreaToVolumeDirect
+  ComputeSurfaceAreaToVolumeScanline
   ComputeSurfaceFeatures
+  ComputeSurfaceFeaturesDirect
+  ComputeSurfaceFeaturesScanline
 #  ComputeTriangleAreas
   ComputeTriangleGeomCentroids
   ComputeTriangleGeomVolumes

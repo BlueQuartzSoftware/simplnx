@@ -3,8 +3,11 @@
 #include "SimplnxCore/Filters/ReadRawBinaryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -123,6 +126,9 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 40000, true);
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
   // Read the Small IN100 Data set
@@ -172,6 +178,9 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 40000, true);
 
   test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
@@ -179,6 +188,9 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCo
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 40000, true);
 
   test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
@@ -186,6 +198,72 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCo
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(YZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 40000, true);
 
   test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
+}
+
+TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Benchmark 200x200x200", "[SimplnxCore][ComputeSurfaceFeaturesFilter][Benchmark]")
+{
+  UnitTest::LoadPlugins();
+
+  constexpr usize kDimX = 200;
+  constexpr usize kDimY = 200;
+  constexpr usize kDimZ = 200;
+  constexpr usize kTotalVoxels = kDimX * kDimY * kDimZ;
+  const ShapeType cellTupleShape = {kDimZ, kDimY, kDimX};
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 160000, true);
+
+  const auto benchmarkFile = fs::path(fmt::format("{}/compute_surface_features_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
+
+  const std::string k_BenchGeomName = "ImageGeom";
+  const DataPath k_BenchGeomPath({k_BenchGeomName});
+  const DataPath k_BenchFeatureIdsPath = k_BenchGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_FeatureIds);
+  const DataPath k_BenchCellFeatureAMPath = k_BenchGeomPath.createChildPath(Constants::k_CellFeatureData);
+
+  {
+    DataStructure buildDS;
+    auto* imageGeom = ImageGeom::Create(buildDS, k_BenchGeomName);
+    imageGeom->setDimensions({kDimX, kDimY, kDimZ});
+    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+    auto* cellAM = AttributeMatrix::Create(buildDS, Constants::k_CellData, cellTupleShape, imageGeom->getId());
+    imageGeom->setCellData(*cellAM);
+
+    constexpr int32 kNumFeatures = 8;
+    auto* featureIds = UnitTest::CreateTestDataArray<int32>(buildDS, Constants::k_FeatureIds, cellTupleShape, {1}, cellAM->getId());
+    auto& fidsStore = featureIds->getDataStoreRef();
+    for(usize i = 0; i < kTotalVoxels; i++)
+    {
+      const usize ix = i % kDimX;
+      const usize iy = (i / kDimX) % kDimY;
+      const usize iz = i / (kDimX * kDimY);
+      const int32 octant = static_cast<int32>((iz >= kDimZ / 2 ? 4 : 0) + (iy >= kDimY / 2 ? 2 : 0) + (ix >= kDimX / 2 ? 1 : 0)) + 1;
+      fidsStore.setValue(i, ((i * 7 + 13) % 100) < 5 ? 0 : octant);
+    }
+
+    AttributeMatrix::Create(buildDS, Constants::k_CellFeatureData, {static_cast<usize>(kNumFeatures + 1)}, imageGeom->getId());
+    UnitTest::WriteTestDataStructure(buildDS, benchmarkFile);
+  }
+
+  DataStructure dataStructure = UnitTest::LoadDataStructure(benchmarkFile);
+
+  {
+    ComputeSurfaceFeaturesFilter filter;
+    Arguments args;
+    args.insertOrAssign(ComputeSurfaceFeaturesFilter::k_FeatureGeometryPath_Key, std::make_any<DataPath>(k_BenchGeomPath));
+    args.insertOrAssign(ComputeSurfaceFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_BenchFeatureIdsPath));
+    args.insertOrAssign(ComputeSurfaceFeaturesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_BenchCellFeatureAMPath));
+    args.insertOrAssign(ComputeSurfaceFeaturesFilter::k_SurfaceFeaturesArrayName_Key, std::make_any<std::string>("SurfaceFeatures"));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  fs::remove(benchmarkFile);
 }
