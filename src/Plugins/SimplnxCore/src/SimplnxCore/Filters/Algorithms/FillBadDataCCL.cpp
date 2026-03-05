@@ -356,6 +356,7 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
 
   usize count = 1;
   usize iteration = 0;
+  usize pairsWritten = 0;
   const uint64 numChunks = featureIdsStore.getNumberOfChunks();
 
   while(count != 0)
@@ -365,11 +366,17 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
 
     // Rewind for this iteration's writes
     std::rewind(tmpGuard.file);
+    pairsWritten = 0;
 
     // Pass 1 (Vote): Chunk-sequential scan writing (dest, src) pairs to temp file.
     // featureIds is read-only during this pass — two-pass semantics are automatic.
     for(uint64 chunkIdx = 0; chunkIdx < numChunks; chunkIdx++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
       featureIdsStore.loadChunk(chunkIdx);
       const auto lower = featureIdsStore.getChunkLowerBounds(chunkIdx);
       const auto upper = featureIdsStore.getChunkUpperBounds(chunkIdx);
@@ -431,20 +438,16 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
               if(bestNeighbor >= 0)
               {
                 std::array<int64, 2> pair = {voxelIndex, bestNeighbor};
-                std::fwrite(pair.data(), sizeof(int64), 2, tmpGuard.file);
+                if(std::fwrite(pair.data(), sizeof(int64), 2, tmpGuard.file) != 2)
+                {
+                  return MakeErrorResult(-87012, "Phase 4/4: Failed to write fill pair to temporary file");
+                }
+                pairsWritten++;
               }
             }
           }
         }
       }
-    }
-
-    // Record file position after Pass 1 writes so Pass 2 doesn't read
-    // stale pairs from a previous iteration (rewind doesn't truncate).
-    long writeEnd = std::ftell(tmpGuard.file);
-    if(writeEnd < 0)
-    {
-      return MakeErrorResult(-87011, "Phase 4/4: Failed to get file position for temporary file");
     }
 
     if(count == 0)
@@ -458,7 +461,7 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
     std::array<int64, 2> pair;
 
     // First pass over pairs: update all non-featureIds cell arrays
-    while(std::ftell(tmpGuard.file) < writeEnd && std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2)
+    for(usize pairIdx = 0; pairIdx < pairsWritten && std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2; pairIdx++)
     {
       int64 dest = pair[0];
       int64 src = pair[1];
@@ -476,7 +479,7 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
 
     // Second pass over pairs: update featureIds last
     std::rewind(tmpGuard.file);
-    while(std::ftell(tmpGuard.file) < writeEnd && std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2)
+    for(usize pairIdx = 0; pairIdx < pairsWritten && std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2; pairIdx++)
     {
       int64 dest = pair[0];
       int64 src = pair[1];
@@ -516,17 +519,9 @@ Result<> FillBadDataCCL::operator()()
   if(m_InputValues->storeAsNewPhase)
   {
     cellPhasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-
-    for(usize i = 0; i < totalPoints; i++)
-    {
-      if((*cellPhasesPtr)[i] > maxPhase)
-      {
-        maxPhase = (*cellPhasesPtr)[i];
-      }
-    }
   }
 
-  // Count the number of existing features for array sizing
+  // Single pass: find max feature ID and optionally max phase
   usize numFeatures = 0;
   for(usize i = 0; i < totalPoints; i++)
   {
@@ -534,6 +529,10 @@ Result<> FillBadDataCCL::operator()()
     if(featureName > numFeatures)
     {
       numFeatures = featureName;
+    }
+    if(cellPhasesPtr != nullptr && (*cellPhasesPtr)[i] > maxPhase)
+    {
+      maxPhase = (*cellPhasesPtr)[i];
     }
   }
 
