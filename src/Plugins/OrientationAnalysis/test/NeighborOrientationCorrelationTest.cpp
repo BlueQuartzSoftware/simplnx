@@ -207,18 +207,18 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Benchmark 
   // 200x200x200, Quats (float32, 4-comp) => 200*200*4*4 = 640,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 640000, true);
 
-  constexpr usize kDimX = 200;
-  constexpr usize kDimY = 200;
-  constexpr usize kDimZ = 200;
-  constexpr usize kTotalVoxels = kDimX * kDimY * kDimZ;
-  const ShapeType cellTupleShape = {kDimZ, kDimY, kDimX};
+  constexpr usize k_DimX = 200;
+  constexpr usize k_DimY = 200;
+  constexpr usize k_DimZ = 200;
+  constexpr usize k_TotalVoxels = k_DimX * k_DimY * k_DimZ;
+  const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
   const auto benchmarkFile = fs::path(fmt::format("{}/neighbor_orientation_correlation_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
 
   // Stage 1: Build data programmatically and write to .dream3d
   {
     DataStructure buildDS;
     auto* imageGeom = ImageGeom::Create(buildDS, "Image Geometry");
-    imageGeom->setDimensions({kDimX, kDimY, kDimZ});
+    imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
     imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
     imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
 
@@ -237,22 +237,22 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Benchmark 
     auto* ciArray = UnitTest::CreateTestDataArray<float32>(buildDS, "Confidence Index", cellTupleShape, {1}, cellAM->getId());
     auto& ciStore = ciArray->getDataStoreRef();
 
-    constexpr usize kBlockSize = 25;
-    constexpr usize kBlocksPerDim = kDimX / kBlockSize;
-    for(usize z = 0; z < kDimZ; z++)
+    constexpr usize k_BlockSize = 25;
+    constexpr usize k_BlocksPerDim = k_DimX / k_BlockSize;
+    for(usize z = 0; z < k_DimZ; z++)
     {
-      for(usize y = 0; y < kDimY; y++)
+      for(usize y = 0; y < k_DimY; y++)
       {
-        for(usize x = 0; x < kDimX; x++)
+        for(usize x = 0; x < k_DimX; x++)
         {
-          const usize idx = z * kDimX * kDimY + y * kDimX + x;
+          const usize idx = z * k_DimX * k_DimY + y * k_DimX + x;
           phasesStore[idx] = 1;
 
           // Block-based orientation: each 25^3 block gets a distinct quaternion
-          usize bx = x / kBlockSize;
-          usize by = y / kBlockSize;
-          usize bz = z / kBlockSize;
-          float32 angle = static_cast<float32>(bz * kBlocksPerDim * kBlocksPerDim + by * kBlocksPerDim + bx) * 0.1f;
+          usize bx = x / k_BlockSize;
+          usize by = y / k_BlockSize;
+          usize bz = z / k_BlockSize;
+          float32 angle = static_cast<float32>(bz * k_BlocksPerDim * k_BlocksPerDim + by * k_BlocksPerDim + bx) * 0.1f;
           float32 sinHalf = std::sin(angle * 0.5f);
           float32 cosHalf = std::cos(angle * 0.5f);
 
@@ -263,7 +263,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Benchmark 
           quatsStore[qIdx + 3] = sinHalf * 0.577350269f;
 
           // Low CI at block boundaries (~10% of voxels), high CI inside
-          bool isBoundary = (x % kBlockSize == 0) || (y % kBlockSize == 0) || (z % kBlockSize == 0);
+          bool isBoundary = (x % k_BlockSize == 0) || (y % k_BlockSize == 0) || (z % k_BlockSize == 0);
           bool isNoisy = ((x * 7 + y * 13 + z * 29) % 10 == 0);
           ciStore[idx] = (isBoundary || isNoisy) ? 0.05f : 0.9f;
         }

@@ -233,7 +233,12 @@ struct ExecuteTemplate
       // thrashing when multiple arrays' chunks evict each other between voxel iterations.
       for(const auto& [dataId, dataObject] : *attrMatrix)
       {
-        auto& dataArray = dynamic_cast<IDataArray&>(*dataObject);
+        auto* dataArrayPtr = dynamic_cast<IDataArray*>(dataObject.get());
+        if(dataArrayPtr == nullptr)
+        {
+          continue;
+        }
+        auto& dataArray = *dataArrayPtr;
         for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
         {
           const int64 neighbor = bestNeighbor[voxelIndex];

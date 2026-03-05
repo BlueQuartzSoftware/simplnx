@@ -66,7 +66,9 @@ public:
   NeighborOrientationCorrelation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                  NeighborOrientationCorrelationInputValues* inputValues);
 
-  /** @brief Default destructor. */
+  /**
+   * @brief Default destructor.
+   */
   ~NeighborOrientationCorrelation() noexcept;
 
   NeighborOrientationCorrelation(const NeighborOrientationCorrelation&) = delete;

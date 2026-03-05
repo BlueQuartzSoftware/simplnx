@@ -19,25 +19,12 @@
 
 using namespace nx::core;
 
-/**
- * @class NeighborOrientationCorrelationTransferDataImpl
- * @brief Functor that copies tuple data from best-neighbor voxels into low-confidence voxels
- * for a single DataArray. Designed to be executed in parallel across multiple DataArrays
- * via ParallelTaskAlgorithm.
- */
 class NeighborOrientationCorrelationTransferDataImpl
 {
 public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
-  /**
-   * @brief Constructs the transfer functor for a single DataArray.
-   * @param messageHelper Reference to the MessageHelper for progress reporting
-   * @param totalPoints Total number of voxels in the volume
-   * @param bestNeighbor Vector mapping each voxel index to its best neighbor's index (-1 if none)
-   * @param dataArrayPtr Shared pointer to the DataArray whose tuples will be copied
-   */
   NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
   : m_MessageHelper(messageHelper)
   , m_TotalPoints(totalPoints)
@@ -51,9 +38,6 @@ public:
 
   ~NeighborOrientationCorrelationTransferDataImpl() = default;
 
-  /**
-   * @brief Iterates all voxels and copies tuple data from the best neighbor where applicable.
-   */
   void operator()() const
   {
     ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
@@ -72,7 +56,7 @@ public:
 private:
   MessageHelper& m_MessageHelper;
   size_t m_TotalPoints = 0;
-  std::vector<int64> m_BestNeighbor;
+  const std::vector<int64>& m_BestNeighbor;
   std::shared_ptr<IDataArray> m_DataArrayPtr;
 };
 
@@ -90,28 +74,6 @@ NeighborOrientationCorrelation::NeighborOrientationCorrelation(DataStructure& da
 NeighborOrientationCorrelation::~NeighborOrientationCorrelation() noexcept = default;
 
 // -----------------------------------------------------------------------------
-/**
- * @brief Executes the neighbor orientation correlation cleanup algorithm.
- *
- * The algorithm proceeds through cleanup levels from 6 down to Level (inclusive),
- * decrementing by 2 each iteration (due to the additional decrement at the end of
- * the loop body). At each level, the algorithm:
- *
- * 1. **Z-slice buffering**: Maintains a rolling window of 3 Z-slices for quaternion
- *    and phase data, plus 1 slice for confidence index. This avoids random chunk
- *    access in out-of-core mode where arrays may be stored as compressed Zarr chunks.
- *
- * 2. **Neighbor correlation**: For each low-confidence voxel, examines its 6 face
- *    neighbors. Valid neighbor pairs with the same nonzero phase are compared via
- *    misorientation. Neighbors within the angular tolerance accumulate similarity
- *    counts. The last face neighbor with a positive similarity count is selected
- *    as the best replacement source.
- *
- * 3. **Data transfer**: All cell DataArrays (except ignored ones) are updated in
- *    parallel, copying tuple data from each voxel's best neighbor.
- *
- * @return Result<> Empty result on success, or containing errors if any occurred
- */
 Result<> NeighborOrientationCorrelation::operator()()
 {
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
@@ -206,6 +168,7 @@ Result<> NeighborOrientationCorrelation::operator()()
 
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
+    std::fill(bestNeighbor.begin(), bestNeighbor.end(), -1);
     usize processedVoxels = 0;
 
     // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
@@ -302,7 +265,7 @@ Result<> NeighborOrientationCorrelation::operator()()
               }
             }
 
-            // Find the best neighbor (last valid face with highest similarity count)
+            // Find the best neighbor (last valid face with positive similarity count)
             for(usize faceIndex = 0; faceIndex < k_FaceNeighborCount; faceIndex++)
             {
               if(!isValidFaceNeighbor[faceIndex])

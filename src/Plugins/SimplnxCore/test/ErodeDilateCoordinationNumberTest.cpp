@@ -73,17 +73,17 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Benchmark 200x200x2
   // 200x200x200, EulerAngles (float32, 3-comp) => 200*200*3*4 = 480,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 480000, true);
 
-  constexpr usize kDimX = 200;
-  constexpr usize kDimY = 200;
-  constexpr usize kDimZ = 200;
-  const ShapeType cellTupleShape = {kDimZ, kDimY, kDimX};
+  constexpr usize k_DimX = 200;
+  constexpr usize k_DimY = 200;
+  constexpr usize k_DimZ = 200;
+  const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
   const auto benchmarkFile = fs::path(fmt::format("{}/erode_dilate_coordination_number_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
 
   // Stage 1: Build data programmatically and write to .dream3d
   {
     DataStructure buildDS;
     auto* imageGeom = ImageGeom::Create(buildDS, "Input Data");
-    imageGeom->setDimensions({kDimX, kDimY, kDimZ});
+    imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
     imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
     imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
 
@@ -96,28 +96,28 @@ TEST_CASE("SimplnxCore::ErodeDilateCoordinationNumberFilter: Benchmark 200x200x2
     auto* eulerArray = UnitTest::CreateTestDataArray<float32>(buildDS, "EulerAngles", cellTupleShape, {3}, cellAM->getId());
     auto& eulerStore = eulerArray->getDataStoreRef();
 
-    constexpr usize kBlockSize = 25;
-    constexpr usize kBlocksPerDim = kDimX / kBlockSize;
-    for(usize z = 0; z < kDimZ; z++)
+    constexpr usize k_BlockSize = 25;
+    constexpr usize k_BlocksPerDim = k_DimX / k_BlockSize;
+    for(usize z = 0; z < k_DimZ; z++)
     {
-      for(usize y = 0; y < kDimY; y++)
+      for(usize y = 0; y < k_DimY; y++)
       {
-        for(usize x = 0; x < kDimX; x++)
+        for(usize x = 0; x < k_DimX; x++)
         {
-          const usize idx = z * kDimX * kDimY + y * kDimX + x;
+          const usize idx = z * k_DimX * k_DimY + y * k_DimX + x;
 
-          usize bx = x / kBlockSize;
-          usize by = y / kBlockSize;
-          usize bz = z / kBlockSize;
-          int32 blockFeatureId = static_cast<int32>(bz * kBlocksPerDim * kBlocksPerDim + by * kBlocksPerDim + bx + 1);
+          usize bx = x / k_BlockSize;
+          usize by = y / k_BlockSize;
+          usize bz = z / k_BlockSize;
+          int32 blockFeatureId = static_cast<int32>(bz * k_BlocksPerDim * k_BlocksPerDim + by * k_BlocksPerDim + bx + 1);
 
           bool isBad = ((x * 7 + y * 13 + z * 29) % 7 == 0);
           featureIdsStore[idx] = isBad ? 0 : blockFeatureId;
 
           const usize eIdx = idx * 3;
-          eulerStore[eIdx] = static_cast<float32>(x) / static_cast<float32>(kDimX);
-          eulerStore[eIdx + 1] = static_cast<float32>(y) / static_cast<float32>(kDimY);
-          eulerStore[eIdx + 2] = static_cast<float32>(z) / static_cast<float32>(kDimZ);
+          eulerStore[eIdx] = static_cast<float32>(x) / static_cast<float32>(k_DimX);
+          eulerStore[eIdx + 1] = static_cast<float32>(y) / static_cast<float32>(k_DimY);
+          eulerStore[eIdx + 2] = static_cast<float32>(z) / static_cast<float32>(k_DimZ);
         }
       }
     }

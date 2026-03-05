@@ -50,13 +50,13 @@ Result<> ErodeDilateMask::operator()()
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
   // Rolling window: slot 0 = z-1, slot 1 = z (current), slot 2 = z+1
-  std::array<std::vector<bool>, 3> maskSlices;
+  std::array<std::vector<uint8>, 3> maskSlices;
   for(auto& ms : maskSlices)
   {
     ms.resize(sliceSize);
   }
   // maskCopy uses same rolling window structure for output
-  std::array<std::vector<bool>, 3> maskCopySlices;
+  std::array<std::vector<uint8>, 3> maskCopySlices;
   for(auto& ms : maskCopySlices)
   {
     ms.resize(sliceSize);
@@ -106,7 +106,7 @@ Result<> ErodeDilateMask::operator()()
         {
           const usize inSlice = static_cast<usize>(yIdx * dims[0] + xIdx);
 
-          if(!maskSlices[1][inSlice])
+          if(maskSlices[1][inSlice] == 0)
           {
             std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
@@ -126,13 +126,13 @@ Result<> ErodeDilateMask::operator()()
                 continue;
               }
 
-              if(m_InputValues->Operation == detail::k_DilateIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]])
+              if(m_InputValues->Operation == detail::k_DilateIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
               {
-                maskCopySlices[1][inSlice] = true;
+                maskCopySlices[1][inSlice] = 1;
               }
-              if(m_InputValues->Operation == detail::k_ErodeIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]])
+              if(m_InputValues->Operation == detail::k_ErodeIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
               {
-                maskCopySlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] = false;
+                maskCopySlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] = 0;
               }
             }
           }
@@ -145,7 +145,7 @@ Result<> ErodeDilateMask::operator()()
         const usize prevZOffset = static_cast<usize>(zIdx - 1) * sliceSize;
         for(usize i = 0; i < sliceSize; i++)
         {
-          mask[prevZOffset + i] = maskCopySlices[0][i];
+          mask[prevZOffset + i] = (maskCopySlices[0][i] != 0);
         }
       }
     }
@@ -155,7 +155,7 @@ Result<> ErodeDilateMask::operator()()
     {
       for(usize i = 0; i < sliceSize; i++)
       {
-        mask[i] = maskCopySlices[1][i];
+        mask[i] = (maskCopySlices[1][i] != 0);
       }
     }
     else
@@ -163,7 +163,7 @@ Result<> ErodeDilateMask::operator()()
       const usize lastZOffset = static_cast<usize>(dims[2] - 1) * sliceSize;
       for(usize i = 0; i < sliceSize; i++)
       {
-        mask[lastZOffset + i] = maskCopySlices[1][i];
+        mask[lastZOffset + i] = (maskCopySlices[1][i] != 0);
       }
     }
   }

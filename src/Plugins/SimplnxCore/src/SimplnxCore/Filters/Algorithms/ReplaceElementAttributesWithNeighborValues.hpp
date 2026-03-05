@@ -19,6 +19,10 @@ inline constexpr StringLiteral k_GreaterThan = "> [Greater Than]";
 inline const ChoicesParameter::Choices k_OperationChoices = {k_LessThan, k_GreaterThan};
 } // namespace detail
 
+/**
+ * @struct ReplaceElementAttributesWithNeighborValuesInputValues
+ * @brief Holds all user-supplied parameters for the ReplaceElementAttributesWithNeighborValues algorithm.
+ */
 struct SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesInputValues
 {
   float32 MinConfidence;
@@ -29,7 +33,8 @@ struct SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValuesInputValues
 };
 
 /**
- * @class
+ * @class ReplaceElementAttributesWithNeighborValues
+ * @brief Replaces voxel data with the best face-neighbor value based on a threshold comparison.
  */
 class SIMPLNXCORE_EXPORT ReplaceElementAttributesWithNeighborValues
 {

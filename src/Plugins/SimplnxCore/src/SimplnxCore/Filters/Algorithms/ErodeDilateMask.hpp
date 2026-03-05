@@ -22,6 +22,10 @@ static inline constexpr ChoicesParameter::ValueType k_DilateIndex = 0ULL;
 static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
 } // namespace detail
 
+/**
+ * @struct ErodeDilateMaskInputValues
+ * @brief Holds all user-supplied parameters for the ErodeDilateMask algorithm.
+ */
 struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues
 {
   ChoicesParameter::ValueType Operation;
@@ -34,7 +38,8 @@ struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues
 };
 
 /**
- * @class
+ * @class ErodeDilateMask
+ * @brief Erodes or dilates a boolean mask array using face-neighbor connectivity.
  */
 class SIMPLNXCORE_EXPORT ErodeDilateMask
 {

@@ -22,60 +22,36 @@ constexpr int32 k_InvalidNumTuples = -580093;
 
 namespace nx::core
 {
-/**
- * @brief Returns the internal programmatic name of the filter.
- * @return The filter name string
- */
 //------------------------------------------------------------------------------
 std::string NeighborOrientationCorrelationFilter::name() const
 {
   return FilterTraits<NeighborOrientationCorrelationFilter>::name.str();
 }
 
-/**
- * @brief Returns the C++ class name of the filter.
- * @return The class name string
- */
 //------------------------------------------------------------------------------
 std::string NeighborOrientationCorrelationFilter::className() const
 {
   return FilterTraits<NeighborOrientationCorrelationFilter>::className;
 }
 
-/**
- * @brief Returns the universally unique identifier for this filter.
- * @return The filter's UUID
- */
 //------------------------------------------------------------------------------
 Uuid NeighborOrientationCorrelationFilter::uuid() const
 {
   return FilterTraits<NeighborOrientationCorrelationFilter>::uuid;
 }
 
-/**
- * @brief Returns the user-facing display name for this filter.
- * @return The human-readable filter name
- */
 //------------------------------------------------------------------------------
 std::string NeighborOrientationCorrelationFilter::humanName() const
 {
   return "Neighbor Orientation Correlation";
 }
 
-/**
- * @brief Returns the default tags used for searching and categorizing this filter.
- * @return A vector of tag strings
- */
 //------------------------------------------------------------------------------
 std::vector<std::string> NeighborOrientationCorrelationFilter::defaultTags() const
 {
   return {className(), "Processing", "Cleanup"};
 }
 
-/**
- * @brief Defines all user-configurable parameters for this filter.
- * @return A Parameters object containing all parameter definitions
- */
 //------------------------------------------------------------------------------
 Parameters NeighborOrientationCorrelationFilter::parameters() const
 {
@@ -105,39 +81,18 @@ Parameters NeighborOrientationCorrelationFilter::parameters() const
   return params;
 }
 
-/**
- * @brief Returns the version number of the filter's parameter schema.
- * @return The parameters version (incremented when parameters change)
- */
 //------------------------------------------------------------------------------
 IFilter::VersionType NeighborOrientationCorrelationFilter::parametersVersion() const
 {
   return 1;
 }
 
-/**
- * @brief Creates and returns a deep copy of this filter instance.
- * @return A unique pointer to the cloned filter
- */
 //------------------------------------------------------------------------------
 IFilter::UniquePointer NeighborOrientationCorrelationFilter::clone() const
 {
   return std::make_unique<NeighborOrientationCorrelationFilter>();
 }
 
-/**
- * @brief Validates filter inputs and reports what modifications the filter will make.
- *
- * Checks that all required DataArrays exist, have matching tuple counts, and are
- * compatible types. Reports that cell data arrays will be modified in place.
- *
- * @param dataStructure The input DataStructure to validate against
- * @param filterArgs The user-supplied filter arguments
- * @param messageHandler Handler for sending messages to the UI
- * @param shouldCancel Atomic flag for cancellation support
- * @param executionContext The execution context for path resolution
- * @return PreflightResult containing output actions and any warnings/errors
- */
 //------------------------------------------------------------------------------
 IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
@@ -208,22 +163,6 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
-/**
- * @brief Executes the neighbor orientation correlation algorithm on the DataStructure.
- *
- * Extracts all input values from the filter arguments, constructs a
- * NeighborOrientationCorrelation algorithm instance, and runs it. The algorithm
- * modifies cell data arrays in place by replacing low-confidence voxels with data
- * from their most orientation-correlated face neighbor.
- *
- * @param dataStructure The DataStructure containing all input arrays (modified in place)
- * @param filterArgs The user-supplied filter arguments
- * @param pipelineNode The pipeline node executing this filter (unused)
- * @param messageHandler Handler for sending progress messages to the UI
- * @param shouldCancel Atomic flag for cancellation support
- * @param executionContext The execution context for path resolution
- * @return Result<> indicating success or any errors from the algorithm
- */
 //------------------------------------------------------------------------------
 Result<> NeighborOrientationCorrelationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
@@ -258,11 +197,6 @@ constexpr StringLiteral k_IgnoredDataArrayPathsKey = "IgnoredDataArrayPaths";
 } // namespace SIMPL
 } // namespace
 
-/**
- * @brief Converts a SIMPL-format JSON object into simplnx Arguments for this filter.
- * @param json The SIMPL JSON object containing legacy filter parameters
- * @return Result<Arguments> containing the converted arguments, or errors if conversion fails
- */
 Result<Arguments> NeighborOrientationCorrelationFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = NeighborOrientationCorrelationFilter().getDefaultArguments();

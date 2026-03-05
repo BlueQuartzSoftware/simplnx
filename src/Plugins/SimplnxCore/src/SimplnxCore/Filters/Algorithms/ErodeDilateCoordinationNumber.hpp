@@ -13,6 +13,10 @@
 namespace nx::core
 {
 
+/**
+ * @struct ErodeDilateCoordinationNumberInputValues
+ * @brief Holds all user-supplied parameters for the ErodeDilateCoordinationNumber algorithm.
+ */
 struct SIMPLNXCORE_EXPORT ErodeDilateCoordinationNumberInputValues
 {
   int32 CoordinationNumber;
@@ -23,7 +27,8 @@ struct SIMPLNXCORE_EXPORT ErodeDilateCoordinationNumberInputValues
 };
 
 /**
- * @class
+ * @class ErodeDilateCoordinationNumber
+ * @brief Smooths voxel boundaries by eroding or dilating based on coordination number thresholds.
  */
 class SIMPLNXCORE_EXPORT ErodeDilateCoordinationNumber
 {

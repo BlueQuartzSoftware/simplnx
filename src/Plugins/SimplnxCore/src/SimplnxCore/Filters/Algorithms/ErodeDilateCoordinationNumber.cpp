@@ -15,7 +15,7 @@ struct DataArrayCopyTupleFunctor
   void operator()(IDataArray& outputIDataArray, size_t sourceIndex, size_t targetIndex)
   {
     using DataArrayType = DataArray<T>;
-    DataArrayType outputArray = dynamic_cast<DataArrayType&>(outputIDataArray);
+    DataArrayType& outputArray = dynamic_cast<DataArrayType&>(outputIDataArray);
     outputArray.copyTuple(sourceIndex, targetIndex);
   }
 };
@@ -195,7 +195,6 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           }
 
           // Reset featureCount for neighbors
-          isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
           for(const auto& faceIndex : faceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])

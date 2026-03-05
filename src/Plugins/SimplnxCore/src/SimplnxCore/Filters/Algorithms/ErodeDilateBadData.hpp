@@ -20,6 +20,10 @@ static inline constexpr ChoicesParameter::ValueType k_DilateIndex = 0ULL;
 static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
 } // namespace detail
 
+/**
+ * @struct ErodeDilateBadDataInputValues
+ * @brief Holds all user-supplied parameters for the ErodeDilateBadData algorithm.
+ */
 struct SIMPLNXCORE_EXPORT ErodeDilateBadDataInputValues
 {
   ChoicesParameter::ValueType Operation;
@@ -33,8 +37,8 @@ struct SIMPLNXCORE_EXPORT ErodeDilateBadDataInputValues
 };
 
 /**
- * @class ConditionalSetValueFilter
-
+ * @class ErodeDilateBadData
+ * @brief Erodes or dilates bad (FeatureId == 0) voxels by replacing them with the most common neighbor feature.
  */
 class SIMPLNXCORE_EXPORT ErodeDilateBadData
 {
