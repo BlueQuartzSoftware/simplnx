@@ -261,7 +261,7 @@ void FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStor
     if(root == label)
     {
       uint64 regionSize = unionFind.getSize(root);
-      if(static_cast<int32>(regionSize) < m_InputValues->minAllowedDefectSizeValue)
+      if(regionSize < static_cast<uint64>(m_InputValues->minAllowedDefectSizeValue))
       {
         isSmallRoot[root] = 1;
       }
@@ -325,7 +325,7 @@ void FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStor
 //   Pass 2 (Apply): Read pairs back from the temp file. Copy all cell data array
 //     components from src to dest. Update featureIds last.
 // =============================================================================
-void FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures) const
+Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures) const
 {
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
 
@@ -348,8 +348,7 @@ void FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsSt
   tmpGuard.file = std::tmpfile();
   if(tmpGuard.file == nullptr)
   {
-    m_MessageHandler({IFilter::Message::Type::Error, "Phase 4/4: Failed to create temporary file for deferred fill"});
-    return;
+    return MakeErrorResult(-87010, "Phase 4/4: Failed to create temporary file for deferred fill");
   }
 
   MessageHelper messageHelper(m_MessageHandler, std::chrono::milliseconds(1000));
@@ -364,7 +363,7 @@ void FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsSt
     iteration++;
     count = 0;
 
-    // Truncate temp file for this iteration
+    // Rewind for this iteration's writes
     std::rewind(tmpGuard.file);
 
     // Pass 1 (Vote): Chunk-sequential scan writing (dest, src) pairs to temp file.
@@ -440,6 +439,10 @@ void FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsSt
       }
     }
 
+    // Record file position after Pass 1 writes so Pass 2 doesn't read
+    // stale pairs from a previous iteration (rewind doesn't truncate).
+    long writeEnd = std::ftell(tmpGuard.file);
+
     if(count == 0)
     {
       break;
@@ -451,7 +454,7 @@ void FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsSt
     std::array<int64, 2> pair;
 
     // First pass over pairs: update all non-featureIds cell arrays
-    while(std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2)
+    while(std::ftell(tmpGuard.file) < writeEnd && std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2)
     {
       int64 dest = pair[0];
       int64 src = pair[1];
@@ -469,7 +472,7 @@ void FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsSt
 
     // Second pass over pairs: update featureIds last
     std::rewind(tmpGuard.file);
-    while(std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2)
+    while(std::ftell(tmpGuard.file) < writeEnd && std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2)
     {
       int64 dest = pair[0];
       int64 src = pair[1];
@@ -482,12 +485,13 @@ void FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsSt
   }
 
   m_MessageHandler({IFilter::Message::Type::Info, fmt::format("  Completed in {} iteration{}", iteration, iteration == 1 ? "" : "s")});
+  return {};
 }
 
 // =============================================================================
 // Main Algorithm Entry Point
 // =============================================================================
-Result<> FillBadDataCCL::operator()() const
+Result<> FillBadDataCCL::operator()()
 {
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath)->getDataStoreRef();
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
@@ -553,7 +557,5 @@ Result<> FillBadDataCCL::operator()() const
 
   // Phase 4: Iterative morphological fill
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 4/4: Filling small defects..."});
-  phaseFourIterativeFill(featureIdsStore, dims, numFeatures);
-
-  return {};
+  return phaseFourIterativeFill(featureIdsStore, dims, numFeatures);
 }

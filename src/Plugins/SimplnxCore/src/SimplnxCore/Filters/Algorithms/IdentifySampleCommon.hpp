@@ -91,6 +91,9 @@ struct IdentifySampleSliceBySliceFunctor
     YZ
   };
 
+  static constexpr int64 k_Dp1[4] = {0, 0, -1, 1};
+  static constexpr int64 k_Dp2[4] = {-1, 1, 0, 0};
+
   template <typename T>
   void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, Plane plane, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
@@ -167,11 +170,8 @@ struct IdentifySampleSliceBySliceFunctor
 
               for(int j = 0; j < 4; ++j)
               {
-                int64 dp1[4] = {0, 0, -1, 1};
-                int64 dp2[4] = {-1, 1, 0, 0};
-
-                int64 neighborP1 = localP1 + dp1[j];
-                int64 neighborP2 = localP2 + dp2[j];
+                int64 neighborP1 = localP1 + k_Dp1[j];
+                int64 neighborP2 = localP2 + k_Dp2[j];
 
                 if(neighborP1 >= 0 && neighborP1 < planeDim1 && neighborP2 >= 0 && neighborP2 < planeDim2)
                 {
@@ -251,11 +251,8 @@ struct IdentifySampleSliceBySliceFunctor
 
                 for(int j = 0; j < 4; ++j)
                 {
-                  int64 dp1[4] = {0, 0, -1, 1};
-                  int64 dp2[4] = {-1, 1, 0, 0};
-
-                  int64 neighborP1 = localP1 + dp1[j];
-                  int64 neighborP2 = localP2 + dp2[j];
+                  int64 neighborP1 = localP1 + k_Dp1[j];
+                  int64 neighborP2 = localP2 + k_Dp2[j];
 
                   if(neighborP1 >= 0 && neighborP1 < planeDim1 && neighborP2 >= 0 && neighborP2 < planeDim2)
                   {
@@ -276,7 +273,9 @@ struct IdentifySampleSliceBySliceFunctor
               {
                 for(int64 idx : currentVList)
                 {
-                  goodVoxels.setValue(fixedIdx * fixedStride + idx, true);
+                  int64 fillP1 = idx % planeDim1;
+                  int64 fillP2 = idx / planeDim1;
+                  goodVoxels.setValue(fixedIdx * fixedStride + fillP2 * stride2 + fillP1 * stride1, true);
                 }
               }
               currentVList.clear();

@@ -42,7 +42,7 @@ public:
   FillBadDataCCL& operator=(const FillBadDataCCL&) = delete;
   FillBadDataCCL& operator=(FillBadDataCCL&&) noexcept = delete;
 
-  Result<> operator()() const;
+  Result<> operator()();
 
   const std::atomic_bool& getCancel() const;
 
@@ -50,7 +50,7 @@ private:
   static void phaseOneCCL(Int32AbstractDataStore& featureIdsStore, UnionFind& unionFind, int32& nextLabel, const std::array<int64_t, 3>& dims);
   static void phaseTwoGlobalResolution(UnionFind& unionFind);
   void phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, int32 startLabel, int32 nextLabel, UnionFind& unionFind, size_t maxPhase) const;
-  void phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64_t, 3>& dims, size_t numFeatures) const;
+  Result<> phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64_t, 3>& dims, size_t numFeatures) const;
 
   DataStructure& m_DataStructure;
   FillBadDataInputValues* m_InputValues = nullptr;
