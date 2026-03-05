@@ -60,6 +60,13 @@ protected:
   Result<> findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) override;
 
 private:
+  /**
+   * @brief OOC-optimized variant of findShifts that buffers two adjacent Z-slices
+   * into local vectors before the convergence loop, eliminating per-tuple chunk thrashing.
+   * @param xShifts Output vector of cumulative X shifts per slice.
+   * @param yShifts Output vector of cumulative Y shifts per slice.
+   * @return Success or error result.
+   */
   Result<> findShiftsOoc(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts);
 
   DataStructure& m_DataStructure;

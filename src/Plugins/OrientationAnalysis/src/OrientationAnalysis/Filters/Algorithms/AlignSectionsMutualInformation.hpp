@@ -54,6 +54,13 @@ protected:
   void formFeaturesSections(std::vector<int32>& miFeatureIds, std::vector<int32>& featureCounts);
 
 private:
+  /**
+   * @brief OOC-optimized variant of formFeaturesSections that buffers one Z-slice
+   * of quats, cellPhases, and mask into local vectors before flood-fill,
+   * eliminating random chunk-based DataStore access during neighbor traversal.
+   * @param miFeatureIds Output vector of per-voxel feature IDs.
+   * @param featureCounts Output vector of feature counts per slice.
+   */
   void formFeaturesSectionsOoc(std::vector<int32>& miFeatureIds, std::vector<int32>& featureCounts);
 
   DataStructure& m_DataStructure;

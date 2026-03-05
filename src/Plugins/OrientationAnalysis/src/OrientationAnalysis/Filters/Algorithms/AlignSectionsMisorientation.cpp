@@ -381,6 +381,26 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64_t>& xShift
     cumulativeShiftsStorePtr = &m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
   }
 
+  // Pre-load the first reference slice (the top-most Z-slice)
+  {
+    int64_t firstRefOffset = (dims[2] - 1) * sliceVoxels;
+    for(int64_t idx = 0; idx < sliceVoxels; idx++)
+    {
+      refPhasesBuf[idx] = cellPhasesStore[firstRefOffset + idx];
+    }
+    for(int64_t idx = 0; idx < sliceVoxels * 4; idx++)
+    {
+      refQuatsBuf[idx] = quatsStore[firstRefOffset * 4 + idx];
+    }
+    if(m_InputValues->UseMask)
+    {
+      for(int64_t idx = 0; idx < sliceVoxels; idx++)
+      {
+        refMaskBuf[idx] = maskCompare->isTrue(firstRefOffset + idx) ? 1 : 0;
+      }
+    }
+  }
+
   for(int64_t iter = 1; iter < dims[2]; iter++)
   {
     if(m_ShouldCancel)
@@ -395,25 +415,20 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64_t>& xShift
 
     int64_t slice = (dims[2] - 1) - iter;
 
-    // Buffer reference slice (slice+1) and current slice (slice)
-    int64_t refOffset = (slice + 1) * sliceVoxels;
+    // Buffer current slice only (reference available from pre-load or previous iteration swap)
     int64_t curOffset = slice * sliceVoxels;
-
     for(int64_t idx = 0; idx < sliceVoxels; idx++)
     {
-      refPhasesBuf[idx] = cellPhasesStore[refOffset + idx];
       curPhasesBuf[idx] = cellPhasesStore[curOffset + idx];
     }
     for(int64_t idx = 0; idx < sliceVoxels * 4; idx++)
     {
-      refQuatsBuf[idx] = quatsStore[refOffset * 4 + idx];
       curQuatsBuf[idx] = quatsStore[curOffset * 4 + idx];
     }
     if(m_InputValues->UseMask)
     {
       for(int64_t idx = 0; idx < sliceVoxels; idx++)
       {
-        refMaskBuf[idx] = maskCompare->isTrue(refOffset + idx) ? 1 : 0;
         curMaskBuf[idx] = maskCompare->isTrue(curOffset + idx) ? 1 : 0;
       }
     }
@@ -517,6 +532,14 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64_t>& xShift
       (*relativeShiftsStorePtr)[yIndex] = newyshift;
       (*cumulativeShiftsStorePtr)[xIndex] = xShifts[iter];
       (*cumulativeShiftsStorePtr)[yIndex] = yShifts[iter];
+    }
+
+    // Current slice becomes the reference for the next iteration (O(1) pointer swap)
+    std::swap(refQuatsBuf, curQuatsBuf);
+    std::swap(refPhasesBuf, curPhasesBuf);
+    if(m_InputValues->UseMask)
+    {
+      std::swap(refMaskBuf, curMaskBuf);
     }
   }
 
