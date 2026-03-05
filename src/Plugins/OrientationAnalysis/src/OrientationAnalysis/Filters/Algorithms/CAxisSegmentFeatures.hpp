@@ -49,9 +49,19 @@ protected:
   int64 getSeed(int32 gnum, int64 nextSeed) const override;
   bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
 
-  /// @copydoc SegmentFeatures::isValidVoxel
+  /**
+   * @brief Checks whether a voxel can participate in C-axis segmentation based on mask and phase.
+   * @param point Linear voxel index.
+   * @return true if the voxel passes mask and phase checks.
+   */
   bool isValidVoxel(int64 point) const override;
-  /// @copydoc SegmentFeatures::areNeighborsSimilar
+
+  /**
+   * @brief Determines whether two neighboring voxels belong to the same C-axis segment.
+   * @param point1 First voxel index.
+   * @param point2 Second (neighbor) voxel index.
+   * @return true if both voxels share the same phase and their C-axis misalignment is within tolerance.
+   */
   bool areNeighborsSimilar(int64 point1, int64 point2) const override;
 
 private:
