@@ -319,6 +319,8 @@ struct IdentifySampleSliceBySliceFunctor
       {
         return;
       }
+
+      checked.assign(planeDim1 * planeDim2, false);
       if(fillHoles)
       {
         for(int64 p2 = 0; p2 < planeDim2; ++p2)
@@ -372,7 +374,9 @@ struct IdentifySampleSliceBySliceFunctor
               {
                 for(int64 idx : currentVList)
                 {
-                  goodVoxels.setValue(fixedIdx * fixedStride + idx, true);
+                  int64 globalP1 = idx % planeDim1;
+                  int64 globalP2 = idx / planeDim1;
+                  goodVoxels.setValue(fixedIdx * fixedStride + globalP2 * stride2 + globalP1 * stride1, true);
                 }
               }
               currentVList.clear();
