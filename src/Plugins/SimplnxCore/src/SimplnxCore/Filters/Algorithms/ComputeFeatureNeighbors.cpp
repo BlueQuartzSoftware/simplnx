@@ -35,8 +35,7 @@ struct ComputeFeatureNeighborsFunctor
   template <class ImageDimensionStateT>
   Result<> operator()(BoolAbstractDataStore* surfaceFeatures, Int8AbstractDataStore* boundaryCells, Float32NeighborList& sharedSurfaceAreaList, Int32NeighborList& neighborsList,
                       Int32AbstractDataStore& numNeighbors, const Int32AbstractDataStore& featureIds, usize totalFeatures, const std::array<int64, 3>& dims, const std::array<float64, 3> spacing,
-                      const std::array<int64, 6>& neighborVoxelIndexOffsets, const std::array<FaceNeighborType, 6>& faceNeighborInternalIdx, ThrottledMessenger& throttledMessenger,
-                      const std::atomic_bool& shouldCancel) const
+                      const std::array<int64, 6>& neighborVoxelIndexOffsets, ThrottledMessenger& throttledMessenger, const std::atomic_bool& shouldCancel) const
   {
     if(ProcessSurfaceFeaturesV)
     {
@@ -60,11 +59,310 @@ struct ComputeFeatureNeighborsFunctor
     std::vector<std::map<usize, float64>> neighborSurfaceAreas(totalFeatures);
     std::vector<std::set<int32>> neighborVector(totalFeatures);
 
-    // Loop over all points to generate the neighbor lists
-    for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
+    /**
+     * Stage 1: Process Boundary Cells
+     *
+     * The primary goal of Stage 1 is to isolate border cell specific checks out of Phase 2
+     * (the internal cells). This includes flagging the border cells without needing to
+     * branch, and ignoring invalid voxel faces inherently as much as possible. This segmentation
+     * also allows for removing a branch in the deepest nested loop in Phase 2.
+     *
+     * Stage 1 has been split into 3 parts, the vertex (corner), edge, and face cells.
+     * Of these parts there are two main logic flows defined by `processFrameCell` and
+     * `processFaceCell`, the main difference between the two being that the "Frame" algorithm
+     * checks every face neighbor and validates them, whereas the "Face" algorithm removes the
+     * validation check and cuts down the checked faces to only the valid ones. It should also be
+     * noted that, optimization is being left on the table with the frame section. It could be further
+     * broken down into processing each edge/voxel individually to mirror the optimization done to
+     * faces, but the segmentation done here would make it far less readable and in the greater context
+     * the speed gain is minimal considering they are O(n-2) and O(1) respectively and the greater algorithm
+     * is 0(6(n-2)^3).
+     */
+    const std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+    const std::function<void(int64, int64, int64)> processFrameCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
+      int8 numDiffNeighbors = 0;
+
+      const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
+      const int32 feature = featureIds.getValue(voxelIndex);
+      if(feature > 0)
+      {
+        if constexpr(ProcessSurfaceFeaturesV)
+        {
+          surfaceFeatures->setValue(feature, true);
+        }
+
+        // Loop over the 6 face neighbors of the voxel
+        std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+        for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
+        {
+          if(!isValidFaceNeighbor[faceIndex])
+          {
+            continue;
+          }
+
+          const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+
+          const int32 neighborFeatureId = featureIds.getValue(neighborPoint);
+          if(neighborFeatureId != feature && neighborFeatureId > 0)
+          {
+            numDiffNeighbors++;
+            neighborVector[feature].insert(neighborFeatureId);
+            neighborSurfaceAreas[feature][neighborFeatureId] += precomputedFaceAreas[faceIndex];
+          }
+        }
+      }
+      if constexpr(ProcessBoundaryCellsV)
+      {
+        boundaryCells->setValue(voxelIndex, numDiffNeighbors);
+      }
+    };
+
+    // Process Corners
+    {
+      /**
+       * Process Corners:
+       * The constexpr logic in the code block will handle the following, using XYZ indexes:
+       *
+       * Case 1: Empty X
+       *  - 0,0,0
+       *  - 0,n_Y,0
+       *  - 0,0,n_Z
+       *  - 0,n_Y,n_Z
+       *
+       * Case 2: Empty Y
+       *  - 0,0,0
+       *  - n_X,0,0
+       *  - 0,0,n_Z
+       *  - n_X,0,n_Z
+       *
+       * Case 3: Empty Z
+       *  - 0,0,0
+       *  - n_X,0,0
+       *  - 0,n_Y,0
+       *  - n_X,n_Y,0
+       *
+       * Case 4: 3D Image (Image Stack)
+       * - 0,0,0
+       * - n_X,0,0
+       * - 0,n_Y,0
+       * - 0,0,n_Z
+       * - n_X,n_Y,0
+       * - n_X,0,n_Z
+       * - 0,n_Y,n_Z
+       * - n_X,n_Y,n_Z
+       */
+
+      processFrameCell(0, 0, 0);
+      processFrameCell(dims[2] - 1, dims[1] - 1, dims[0] - 1); // If 2D the dims in empty dimension is 1 so this line effectively preforms for all cases
+
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
+      {
+        processFrameCell(0, 0, dims[0] - 1);
+      }
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
+      {
+        processFrameCell(0, dims[1] - 1, 0);
+      }
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
+      {
+        processFrameCell(dims[2] - 1, 0, 0);
+      }
+      if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+      {
+        processFrameCell(0, dims[1] - 1, dims[0] - 1);
+        processFrameCell(dims[2] - 1, 0, dims[0] - 1);
+        processFrameCell(dims[2] - 1, dims[1] - 1, 0);
+      }
+    }
+
+    // Case 0: Process Edges
+    if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
+    {
+      for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+      {
+        processFrameCell(0, 0, xIndex);
+        processFrameCell(0, dims[1] - 1, xIndex);
+        processFrameCell(dims[2] - 1, 0, xIndex);
+        processFrameCell(dims[2] - 1, dims[1] - 1, xIndex);
+      }
+    }
+
+    if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
+    {
+      for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
+      {
+        processFrameCell(0, yIndex, 0);
+        processFrameCell(0, yIndex, dims[0] - 1);
+        processFrameCell(dims[2] - 1, yIndex, 0);
+        processFrameCell(dims[2] - 1, yIndex, dims[0] - 1);
+      }
+    }
+
+    if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
+    {
+      for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
+      {
+        processFrameCell(zIndex, 0, 0);
+        processFrameCell(zIndex, 0, dims[0] - 1);
+        processFrameCell(zIndex, dims[1] - 1, 0);
+        processFrameCell(zIndex, dims[1] - 1, dims[0] - 1);
+      }
+    }
+
+    const std::function<void(int64, int64, int64, std::vector<FaceNeighborType>&)> processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex,
+                                                                                                         const std::vector<FaceNeighborType>& validFaces) -> void {
+      int8 numDiffNeighbors = 0;
+
+      const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
+      const int32 feature = featureIds.getValue(voxelIndex);
+      if(feature > 0)
+      {
+        if constexpr(ProcessSurfaceFeaturesV)
+        {
+          surfaceFeatures->setValue(feature, true);
+        }
+
+        // Loop over the face neighbors of the voxel
+        for(const auto faceIndex : validFaces) // ref more expensive than trivial copy for scalar types
+        {
+          const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+
+          const int32 neighborFeatureId = featureIds.getValue(neighborPoint);
+          if(neighborFeatureId != feature && neighborFeatureId > 0)
+          {
+            numDiffNeighbors++;
+            neighborVector[feature].insert(neighborFeatureId);
+            neighborSurfaceAreas[feature][neighborFeatureId] += precomputedFaceAreas[faceIndex];
+          }
+        }
+      }
+      if constexpr(ProcessBoundaryCellsV)
+      {
+        boundaryCells->setValue(voxelIndex, numDiffNeighbors);
+      }
+    };
+
+    // Case 1: Z Planes
+    if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
+    {
+      std::vector<FaceNeighborType> negZValidFaces;
+      std::vector<FaceNeighborType> posZValidFaces;
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+      {
+        negZValidFaces = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+        posZValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
+      }
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
+      {
+        negZValidFaces = {k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
+        posZValidFaces = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor};
+      }
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
+      {
+        negZValidFaces = {k_NegativeYNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+        posZValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveYNeighbor};
+      }
+
+      for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
+      {
+        for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+        {
+          processFaceCell(0, yIndex, xIndex, negZValidFaces);
+          processFaceCell(dims[2] - 1, yIndex, xIndex, posZValidFaces);
+        }
+      }
+    }
+
+    // Case 2: Y Planes
+    if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
+    {
+      std::vector<FaceNeighborType> negYValidFaces;
+      std::vector<FaceNeighborType> posYValidFaces;
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+      {
+        negYValidFaces = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+        posYValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
+      }
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
+      {
+        negYValidFaces = {k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
+        posYValidFaces = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor};
+      }
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
+      {
+        negYValidFaces = {k_NegativeZNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+        posYValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveZNeighbor};
+      }
+      for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
+      {
+        for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+        {
+          processFaceCell(zIndex, 0, xIndex, negYValidFaces);
+          processFaceCell(zIndex, dims[1] - 1, xIndex, posYValidFaces);
+        }
+      }
+    }
+
+    // Case 3: X Planes
+    if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
+    {
+      std::vector<FaceNeighborType> negXValidFaces;
+      std::vector<FaceNeighborType> posXValidFaces;
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+      {
+        negXValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+        posXValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+      }
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
+      {
+        negXValidFaces = {k_NegativeYNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
+        posXValidFaces = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveYNeighbor};
+      }
+      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
+      {
+        negXValidFaces = {k_NegativeZNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
+        posXValidFaces = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveZNeighbor};
+      }
+      for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
+      {
+        for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
+        {
+          processFaceCell(zIndex, yIndex, 0, negXValidFaces);
+          processFaceCell(zIndex, yIndex, dims[0] - 1, posXValidFaces);
+        }
+      }
+    }
+
+    /**
+     * Stage 2: Process Internal Cells
+     * This stage has a bulk of the computation, and runtime branching has been minimized
+     * to reflect that reality, see comment for Stage 1. This section just walks every
+     * internal cell and checks each of the neighbors, storing them onto the existing
+     * results from the boundary cell phases.
+     */
+    std::vector<FaceNeighborType> validFaceIndices;
+    if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+    {
+      validFaceIndices = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+    }
+    if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
+    {
+      validFaceIndices = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
+    }
+    if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
+    {
+      validFaceIndices = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
+    }
+    if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
+    {
+      validFaceIndices = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+    }
+
+    // Loop over all internal cells to generate the neighbor lists
+    for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
     {
       const int64 zStride = dims[0] * dims[1] * zIndex;
-      for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
+      for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
       {
         const int64 yStride = dims[0] * yIndex;
         throttledMessenger.sendThrottledMessage([&] { return fmt::format("Determining Neighbor Lists || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
@@ -73,60 +371,19 @@ struct ComputeFeatureNeighborsFunctor
         {
           return {};
         }
-        for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
+        for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
         {
           int64 voxelIndex = zStride + yStride + xIndex;
 
           // This value tracks the number of neighboring cells that have feature ids different from itself
           int8 numDiffNeighbors = 0;
           int32 feature = featureIds.getValue(voxelIndex);
-          if(feature > 0 && feature < neighborVector.size())
+          if(feature > 0)
           {
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
-            if constexpr(ProcessSurfaceFeaturesV)
+            // Loop over the face neighbors of the voxel
+            for(const auto faceIndex : validFaceIndices) // ref more expensive than trivial copy for scalar types
             {
-              if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
-              {
-                // For a face neighbor to be valid it must exist thus if there is a false in the array it is a boundary
-                if(!isValidFaceNeighbor[k_NegativeZNeighbor] || !isValidFaceNeighbor[k_NegativeYNeighbor] || !isValidFaceNeighbor[k_NegativeXNeighbor] || !isValidFaceNeighbor[k_PositiveXNeighbor] ||
-                   !isValidFaceNeighbor[k_PositiveYNeighbor] || !isValidFaceNeighbor[k_PositiveZNeighbor])
-                {
-                  surfaceFeatures->setValue(feature, true);
-                }
-              }
-              if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
-              {
-                // For a face neighbor to be valid it must exist thus if there is a false in the array it is a boundary
-                if(!isValidFaceNeighbor[k_NegativeXNeighbor] || !isValidFaceNeighbor[k_PositiveXNeighbor] || !isValidFaceNeighbor[k_NegativeYNeighbor] || !isValidFaceNeighbor[k_PositiveYNeighbor])
-                {
-                  surfaceFeatures->setValue(feature, true);
-                }
-              }
-              if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
-              {
-                // For a face neighbor to be valid it must exist thus if there is a false in the array it is a boundary
-                if(!isValidFaceNeighbor[k_NegativeXNeighbor] || !isValidFaceNeighbor[k_PositiveXNeighbor] || !isValidFaceNeighbor[k_NegativeZNeighbor] || !isValidFaceNeighbor[k_PositiveZNeighbor])
-                {
-                  surfaceFeatures->setValue(feature, true);
-                }
-              }
-              if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
-              {
-                // For a face neighbor to be valid it must exist thus if there is a false in the array it is a boundary
-                if(!isValidFaceNeighbor[k_NegativeYNeighbor] || !isValidFaceNeighbor[k_PositiveYNeighbor] || !isValidFaceNeighbor[k_NegativeZNeighbor] || !isValidFaceNeighbor[k_PositiveZNeighbor])
-                {
-                  surfaceFeatures->setValue(feature, true);
-                }
-              }
-            }
-
-            // Loop over the 6 face neighbors of the voxel
-            for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
-            {
-              if(!isValidFaceNeighbor[faceIndex])
-              {
-                continue;
-              }
+              // No need for a face validity check because we are only processing internal cells
 
               const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
@@ -242,7 +499,6 @@ Result<> ComputeFeatureNeighbors::operator()()
   std::array<float64, 3> spacing64 = {static_cast<float64>(spacing32[0]), static_cast<float64>(spacing32[1]), static_cast<float64>(spacing32[2])};
 
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   Result<> result;
   if(m_InputValues->StoreSurfaceFeatures && m_InputValues->StoreBoundaryCells)
@@ -251,25 +507,25 @@ Result<> ComputeFeatureNeighbors::operator()()
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
     result = ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures,
-                           dims, spacing64, neighborVoxelIndexOffsets, faceNeighborInternalIdx, throttledMessenger, m_ShouldCancel);
+                           dims, spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
   else if(m_InputValues->StoreSurfaceFeatures)
   {
     // Surface Features filled with `false` by default during creation in preflight
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     result = ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeatures, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                           spacing64, neighborVoxelIndexOffsets, faceNeighborInternalIdx, throttledMessenger, m_ShouldCancel);
+                           spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
   else if(m_InputValues->StoreBoundaryCells)
   {
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
     result = ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                           spacing64, neighborVoxelIndexOffsets, faceNeighborInternalIdx, throttledMessenger, m_ShouldCancel);
+                           spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
   else
   {
     result = ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, false>{}, imageGeom, nullptr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                           spacing64, neighborVoxelIndexOffsets, faceNeighborInternalIdx, throttledMessenger, m_ShouldCancel);
+                           spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
 
   if(result.invalid())

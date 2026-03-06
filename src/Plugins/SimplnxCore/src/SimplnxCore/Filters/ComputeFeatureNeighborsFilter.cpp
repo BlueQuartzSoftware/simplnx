@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/ComputeFeatureNeighbors.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateNeighborListAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -17,6 +18,11 @@
 
 namespace nx::core
 {
+namespace
+{
+constexpr int32 k_InvalidInputDimensions = -76770;
+} // namespace
+
 //------------------------------------------------------------------------------
 std::string ComputeFeatureNeighborsFilter::name() const
 {
@@ -118,6 +124,27 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
   DataPath neighborListPath = featureAttrMatrixPath.createChildPath(neighborListName);
   DataPath sharedSurfaceAreaPath = featureAttrMatrixPath.createChildPath(sharedSurfaceAreaName);
   DataPath surfaceFeaturesPath = featureAttrMatrixPath.createChildPath(surfaceFeaturesName);
+
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
+
+  usize emptyDimCount = 0;
+  if(imageGeom.getNumXCells() < 2)
+  {
+    emptyDimCount++;
+  }
+  if(imageGeom.getNumYCells() < 2)
+  {
+    emptyDimCount++;
+  }
+  if(imageGeom.getNumZCells() < 2)
+  {
+    emptyDimCount++;
+  }
+
+  if(emptyDimCount > 1)
+  {
+    return MakePreflightErrorResult(k_InvalidInputDimensions, "This filter requires at least 2 valid dimensions in the image geom. Two or more 1's were found in the image's dimensions");
+  }
 
   OutputActions actions;
 
