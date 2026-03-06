@@ -172,10 +172,9 @@ Result<> ComputeFeatureNeighborsDirect::operator()()
   // Validate max feature ID (deferred from before the loop to avoid a separate full scan)
   if(static_cast<usize>(observedMaxFeatureId) >= totalFeatures)
   {
-    return MakeErrorResult(-24500,
-                           fmt::format("Data Array {} has a maximum value of {} which is greater than the number of features from array {} which has {}. "
-                                       "Did you select the incorrect array for the 'FeatureIds' array?",
-                                       featureIdsPath.getTargetName(), observedMaxFeatureId, numNeighborsPath.getTargetName(), totalFeatures));
+    return MakeErrorResult(-24500, fmt::format("Data Array {} has a maximum value of {} which is greater than the number of features from array {} which has {}. "
+                                               "Did you select the incorrect array for the 'FeatureIds' array?",
+                                               featureIdsPath.getTargetName(), observedMaxFeatureId, numNeighborsPath.getTargetName(), totalFeatures));
   }
 
   FloatVec3 spacing = imageGeom.getSpacing();

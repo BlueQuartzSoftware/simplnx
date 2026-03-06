@@ -19,8 +19,7 @@ struct ComputeSurfaceFeaturesInputValues;
 class SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesScanline
 {
 public:
-  ComputeSurfaceFeaturesScanline(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                 const ComputeSurfaceFeaturesInputValues* inputValues);
+  ComputeSurfaceFeaturesScanline(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeSurfaceFeaturesInputValues* inputValues);
   ~ComputeSurfaceFeaturesScanline() noexcept;
 
   ComputeSurfaceFeaturesScanline(const ComputeSurfaceFeaturesScanline&) = delete;

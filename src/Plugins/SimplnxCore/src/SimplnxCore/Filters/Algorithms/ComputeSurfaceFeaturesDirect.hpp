@@ -18,8 +18,7 @@ struct ComputeSurfaceFeaturesInputValues;
 class SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesDirect
 {
 public:
-  ComputeSurfaceFeaturesDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                               const ComputeSurfaceFeaturesInputValues* inputValues);
+  ComputeSurfaceFeaturesDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeSurfaceFeaturesInputValues* inputValues);
   ~ComputeSurfaceFeaturesDirect() noexcept;
 
   ComputeSurfaceFeaturesDirect(const ComputeSurfaceFeaturesDirect&) = delete;

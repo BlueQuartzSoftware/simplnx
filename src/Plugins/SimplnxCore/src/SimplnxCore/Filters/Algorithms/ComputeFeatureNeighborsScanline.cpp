@@ -127,8 +127,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
         const int64 jStride = static_cast<int64>(yIdx) * dims[0];
         for(usize xIdx = chunkLowerBounds[2]; xIdx <= chunkUpperBounds[2]; xIdx++)
         {
-          throttledMessenger.sendThrottledMessage(
-              [&]() { return fmt::format("Determining Neighbor Lists || Chunk {}/{}", chunkIdx + 1, numChunks); });
+          throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Determining Neighbor Lists || Chunk {}/{}", chunkIdx + 1, numChunks); });
 
           if(m_ShouldCancel)
           {
@@ -193,10 +192,9 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
   // Validate max feature ID (deferred from before the loop to avoid a separate OOC scan)
   if(static_cast<usize>(observedMaxFeatureId) >= totalFeatures)
   {
-    return MakeErrorResult(-24500,
-                           fmt::format("Data Array {} has a maximum value of {} which is greater than the number of features from array {} which has {}. "
-                                       "Did you select the incorrect array for the 'FeatureIds' array?",
-                                       featureIdsPath.getTargetName(), observedMaxFeatureId, numNeighborsPath.getTargetName(), totalFeatures));
+    return MakeErrorResult(-24500, fmt::format("Data Array {} has a maximum value of {} which is greater than the number of features from array {} which has {}. "
+                                               "Did you select the incorrect array for the 'FeatureIds' array?",
+                                               featureIdsPath.getTargetName(), observedMaxFeatureId, numNeighborsPath.getTargetName(), totalFeatures));
   }
 
   // Phase 2: Build NeighborList objects (operates on small feature-level data, no chunk iteration needed)
