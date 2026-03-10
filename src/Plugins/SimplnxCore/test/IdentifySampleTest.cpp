@@ -20,29 +20,44 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilt
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "identify_sample.tar.gz", "identify_sample", true, true);
-  using TestArgType = std::tuple<bool, bool, int>;
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "identify_sample_v2.tar.gz", "identify_sample_v2");
+  using TestArgType = std::tuple<std::string, std::string, std::string>;
   /* clang-format off */
   std::vector<TestArgType> allTestParams = {
-    {false, false, 0},
-    {false, true, 0},
-    {false, true, 1},
-    {false, true, 2},
+    {"sliced", "xy", "fill"},
+    {"sliced", "xy", "nofill"},
+    {"sliced", "xz", "fill"},
+    {"sliced", "xz", "nofill"},
+    {"sliced", "yz", "fill"},
+    {"sliced", "yz", "nofill"},
 
-    {true, false, 0},
-    {true, true, 0},
-    {true, true, 1},
-    {true, true, 2},
+    {"whole", "xy", "fill"},
+    {"whole", "xy", "nofill"},
+    {"whole", "xz", "fill"},
+    {"whole", "xz", "nofill"},
+    {"whole", "yz", "fill"},
+    {"whole", "yz", "nofill"},
   };
   /* clang-format on */
   for(const auto& testParam : allTestParams)
   {
-    bool fillHoles = std::get<0>(testParam);
-    bool sliceBySlice = std::get<1>(testParam);
-    int sliceBySlicePlane = std::get<2>(testParam);
-    SECTION(fmt::format("FillHole:{} SliceBySlice:{} SlicePlane:{}", fillHoles, sliceBySlice, sliceBySlicePlane))
+    std::string slice_by_slice = std::get<0>(testParam);
+    bool sliceBySlice = slice_by_slice == "sliced";
+
+    std::string slice_plane = std::get<1>(testParam);
+
+    ChoicesParameter::ValueType sliceBySlicePlane = 0;
+    if(slice_plane == "xz")
+      sliceBySlicePlane = 1;
+    else if(slice_plane == "yz")
+      sliceBySlicePlane = 2;
+
+    std::string fill_holes = std::get<2>(testParam);
+    bool fillHoles = fill_holes == "fill";
+
+    SECTION(fmt::format("{}_{}_{}", slice_by_slice, slice_plane, fill_holes))
     {
-      fs::path inputFilePath = fs::path(fmt::format("{}/identify_sample/exemplar_{}_{}_{}.dream3d", unit_test::k_TestFilesDir, fillHoles, sliceBySlice, sliceBySlicePlane));
+      fs::path inputFilePath = fs::path(fmt::format("{}/identify_sample_v2/{}_{}_{}.dream3d", unit_test::k_TestFilesDir, slice_by_slice, slice_plane, fill_holes));
       std::cout << inputFilePath.string() << std::endl;
 
       DataStructure dataStructure = LoadDataStructure(inputFilePath);
