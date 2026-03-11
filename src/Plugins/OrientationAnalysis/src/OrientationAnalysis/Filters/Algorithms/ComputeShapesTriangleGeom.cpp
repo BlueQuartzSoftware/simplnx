@@ -12,6 +12,7 @@
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>
 
+#include <numbers>
 #include <unordered_set>
 
 using namespace nx::core;
@@ -258,7 +259,7 @@ public:
 
     // Theoretical perfect Sphere value of Omega-3. Each calculated Omega-3
     // will be normalized using this value;
-    constexpr float64 k_Sphere = (2000.0 * M_PI * M_PI) / 9.0;
+    constexpr float64 k_Sphere = (2000.0 * std::numbers::pi * std::numbers::pi) / 9.0;
 
     // define the canonical cMatrix matrix
     constexpr float64 aVal = 1.0 / 60.0;
