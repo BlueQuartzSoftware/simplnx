@@ -12,6 +12,8 @@ This **Filter** changes the origin and/or the spacing of an **Image Geometry**. 
 + Y Origin: 4
 + Z Origin: 8
 
+When setting the origin, the user may also enable the *Put Input Origin at the Center of Geometry* option, which adjusts the geometry so that the specified origin is placed at the geometric center rather than the corner.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

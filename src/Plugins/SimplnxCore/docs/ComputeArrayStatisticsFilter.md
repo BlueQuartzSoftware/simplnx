@@ -15,12 +15,12 @@ This **Filter** computes a variety of statistics for a given scalar array. The c
 | Length                  | signed 64-bit integer               |
 | Minimum                 | same type as input                  |
 | Maximum                 | same type as input                  |
-| Mean                    | double                              |
-| Median                  | double                              |
+| Mean                    | 32-bit float                        |
+| Median                  | 32-bit float                        |
 | Mode                    | same type as input                  |
-| Standard Deviation      | double                              |
-| Summation               | double                              |
-| Standardized            | double                              |
+| Standard Deviation      | 32-bit float                        |
+| Summation               | 32-bit float                        |
+| Standardized            | 32-bit float                        |
 | Number of Unique Values | signed 32-bit integer               |
 
 The user may optionally use a mask to specify points to be ignored when computing the statistics; only points where the supplied mask is *true* will be considered when computing statistics.  Additionally, the user may select to have the statistics computed per **Feature** or **Ensemble** by supplying an Ids array.  For example, if the user opts to compute statistics per **Feature** and selects an array that has 10 unique **Feature** Ids, then this **Filter** will compute 10 sets of statistics (e.g., find the mean of the supplied array for each **Feature**, find the total number of points in each **Feature** (the length), etc.).  

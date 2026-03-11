@@ -1,4 +1,4 @@
-# Write DREAM3D NX File
+# Write DREAM3D-NX File
 
 ## Description
 

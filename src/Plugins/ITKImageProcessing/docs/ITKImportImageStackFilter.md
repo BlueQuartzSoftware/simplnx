@@ -19,7 +19,7 @@ Image operations are applied in the following order:
 4. Convert to grayscale
 5. Flip image in X or Y
 
-### Origin & Spacing Options
+### Origin & Spacing Caveats
 
 The filter will create a new Image Geometry. The user can optionally override the origin and spacing for the created geometry. The default values from the input files will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options. If the user needs to have the created Image Geometry located in a different location in the global reference frame, the user can change the default origin value. The "origin" of the image is at a normal Cartesian style origin.
 
@@ -42,7 +42,7 @@ The **Origin & Spacing Processing Order** parameter controls when origin and spa
   5. Flip image in X or Y
   6. Set origin and spacing values
 
-### Resampling Options
+### Resampling Caveats
 
 The user can decide to scale the images as they are being read in by turning on the Scale Images option, and setting a scale value. A scale value of 10.0 resamples the images in the stack to one-tenth the number of pixels, a scale value of 200.0 resamples the images in the stack to double the number of pixels. The default scale value is 100.0.
 
@@ -53,7 +53,7 @@ The user can optionally convert the image data to a different data type by enabl
 - uint16
 - uint32
 
-### Cropping Options
+### Cropping Caveats
 
 The user can crop the incoming image geometry using the Cropping Options section. The cropping type options are:
 - **No Cropping**: Read the full volume into an image geometry

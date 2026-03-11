@@ -1,4 +1,4 @@
-# Pad Geometry (Image) #
+# Pad Image Geometry
 
 
 ## Group (Subgroup) ##

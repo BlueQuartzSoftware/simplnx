@@ -6,13 +6,13 @@ Core (Generation)
 
 ## Description
 
-This **Filter** performs calculations on **Attribute Arrays** using the mathematical expression entered by the user, referred to as the *infix expression*. Calculations follow standard mathematical order of operations rules. Parentheses may be used to influence priority. The output of the entered equation is stored as a new **Attribute Array** of type double in an **Attribute Matrix** chosen by the user.
+This **Filter** performs calculations on **Attribute Arrays** using the mathematical expression entered by the user, referred to as the *infix expression*. Calculations follow standard mathematical order of operations rules. Parentheses may be used to influence priority. The output of the entered equation is stored as a new **Attribute Array** of a user-selected numeric type (default: double) in an **Attribute Matrix** chosen by the user.
 
 ## Usage & Syntax
 
 The user may enter any valid mathematical expression that uses numbers, operators and/or available **Attribute Arrays**.  This expression may be typed into the **Filter** or entered using the available calculator interface. The **Filter** automatically determines how many tuples and component dimensions the output array requires.  Should the entered expression use arrays, computations performed by the **Filter** are performed per tuple, i.e. each tuple has the same expression performed. Therefore, any **Attribute Arrays** used in the entered expression must have the same number of tuples. To help prevent most cases of tuple incompatibilities, the user must select an **Attribute Matrix** to serve as the source for arrays to be used in the expression. Additionally, the output array will have the same number of tuples as the arrays used in the infix expression, and must be placed in an **Attribute Matrix** that has the same number of tuples as the source **Attribute Matrix**.
 
-All items in the entered infix expression, including values within arrays, will be cast to doubles for computation, and the resulting output will be stored as doubles. If the output array needs to be a different type for use as input to another **Filter**, consider using the Convert Attribute Data Type **Filter**.
+All items in the entered infix expression, including values within arrays, will be cast to doubles for computation. The resulting output will be stored using the numeric type selected by the user (default: double).
 
 ### Expressions Without Arrays
 

@@ -6,7 +6,7 @@ Generic (Misc)
 
 ## Description
 
-This **Filter** calculates the *centroid* of each **Feature** by determining the average X, Y, and Z position of all the **Cells** belonging to the **Feature**. Note that **Features** that intersect the outer surfaces of the sample will still have *centroids* calculated, but they will be *centroids* of the truncated part of the **Feature** that lies inside the sample.
+This **Filter** calculates the *centroid* of each **Feature** by determining the average X, Y, and Z position of all the **Cells** belonging to the **Feature**. An *Is Periodic* option is available: when enabled, **Features** that extend beyond the boundary of the **Image Geometry** are treated as wrapping around to the opposite face, and centroids are computed accordingly. When *Is Periodic* is disabled, **Features** that intersect the outer surfaces of the sample will still have *centroids* calculated, but they will be *centroids* of the truncated part of the **Feature** that lies inside the sample.
 
 % Auto generated parameter table will be inserted here
 

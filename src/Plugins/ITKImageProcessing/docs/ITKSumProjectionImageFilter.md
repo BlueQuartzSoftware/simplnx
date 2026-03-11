@@ -1,4 +1,4 @@
-# ITK Sum Projection Image Filter (ITKSumProjectionImage)
+# ITK Sum Projection Image Filter
 
 Sum projection.
 

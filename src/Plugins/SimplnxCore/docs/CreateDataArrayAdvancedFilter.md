@@ -40,8 +40,8 @@ If the parent is **NOT an Attribute Matrix**, then the user ***MUST*** set the t
 
 | Type             | Size |        Range       |
 |------------------|------|--------------------|
-| Signed Integer | 8 bit |0 to 255|
-| Unsigned Integer | 8 bit |-128 to 127|
+| Signed Integer | 8 bit |-128 to 127|
+| Unsigned Integer | 8 bit |0 to 255|
 | Signed Integer | 16 bit |-32,768 to 32,767|
 | Unsigned Integer | 16 bit |0 to 65,535|
 | Signed Integer | 32 bit |-2,147,483,648 to 2,147,483,647|

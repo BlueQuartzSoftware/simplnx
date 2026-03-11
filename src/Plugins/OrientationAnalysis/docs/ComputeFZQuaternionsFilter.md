@@ -1,8 +1,8 @@
-# Compute Reduction Orientations to Fundamental Zone
+# Compute Fundamental Zone Orientations
 
 ## Group (Subgroup)
 
-OrientationAnalysis (OrientationAnalysis)
+Processing (OrientationAnalysis)
 
 ## Description
 

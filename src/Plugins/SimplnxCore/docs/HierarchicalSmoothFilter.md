@@ -18,9 +18,6 @@ Nodes that are displaced beyond the error threshold (a multiple of a reference e
 
 ## Algorithm Overview
 
-
-## Algorithm Overview
-
 The filter applies smoothing in three hierarchical stages. Each stage's output is held fixed during subsequent stages, preserving the topology of the grain boundary network.
 
 ![Algorithm Overview — 3 Hierarchical Stages](Images/HierarchicalSmooth_algorithm_overview.png)

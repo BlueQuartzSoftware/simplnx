@@ -19,7 +19,7 @@ The following image types are supported:
 - NRRD
 - MHA
 
-### Origin & Spacing Options
+### Origin & Spacing Caveats
 
 The user can optionally override the origin and spacing (length units per pixel) for the imported image. The default values from the input file will be used unless the user explicitly enables the "Set Origin" and/or "Set Spacing" options.
 
@@ -36,7 +36,7 @@ The user can optionally convert the image data to a different data type by enabl
 - uint16
 - uint32
 
-### Cropping Options
+### Cropping Caveats
 
 The user can crop the incoming 2D image using the Cropping Options section. The cropping type options are:
 - **No Cropping**: Read the full image into an image geometry

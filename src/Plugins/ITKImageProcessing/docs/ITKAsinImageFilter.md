@@ -1,6 +1,6 @@
 # ITK Asin Image Filter
 
-Computes the sine of each pixel.
+Computes the inverse sine (arcsine) of each pixel.
 
 ## Group (Subgroup)
 

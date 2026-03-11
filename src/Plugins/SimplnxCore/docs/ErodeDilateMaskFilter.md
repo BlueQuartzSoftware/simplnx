@@ -9,8 +9,8 @@ Processing (Cleanup)
 If the mask is _dilated_, the **Filter** grows the _true_ regions by one **Cell** in an iterative sequence for a user
 defined number of iterations. During the _dilate_ process, the classification of any **Cell** neighboring a _false_ *
 *Cell** will be changed to _true_. If the mask is _eroded_, the **Filter** shrinks the _true_ regions by one **Cell** in
-an iterative sequence for a user defined number of iterations. During the _erode_ process, the classification of the
-*false* **Cells** is changed to _true_ if one of its neighbors is _true_. The **Filter** also offers the option(s) to
+an iterative sequence for a user defined number of iterations. During the _erode_ process, _true_ **Cells** that have
+at least one _false_ neighbor are changed to _false_. The **Filter** also offers the option(s) to
 turn on/off the erosion or dilation in specific directions (X, Y or Z).
 
 This filter will ONLY change the _Mask_ data array and not any of the other data arrays in the same attribute matrix.

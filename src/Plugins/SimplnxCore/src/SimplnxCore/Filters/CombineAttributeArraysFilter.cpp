@@ -44,10 +44,7 @@ std::string CombineAttributeArraysFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> CombineAttributeArraysFilter::defaultTags() const
 {
-  return {className(), "Core",
-          "Memory Management"
-          "Combine",
-          "Arrays"};
+  return {className(), "Core", "Memory Management", "Combine", "Arrays"};
 }
 
 //------------------------------------------------------------------------------

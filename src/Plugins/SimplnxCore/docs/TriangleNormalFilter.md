@@ -1,4 +1,4 @@
-# Calculate Triangle Normals
+# Compute Triangle Normals
 
 ## Group (Subgroup)
 

@@ -1,4 +1,4 @@
-# ITK Maximum Projection Image Filter (ITKMaximumProjectionImage)
+# ITK Maximum Projection Image Filter
 
 Maximum projection.
 

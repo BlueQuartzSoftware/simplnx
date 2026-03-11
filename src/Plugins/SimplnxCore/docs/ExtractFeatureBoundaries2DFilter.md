@@ -1,4 +1,4 @@
-# Extract Feature Boundaries 2D
+# Create Feature Boundaries (2D)
 
 ## Group (Subgroup)
 
@@ -15,7 +15,7 @@ The algorithm scans the Feature IDs array and identifies boundaries where adjace
 - **Shared Vertex List**: 3D coordinates of all unique vertices at feature boundaries
 - **Shared Edge List**: Connectivity pairs defining line segments between vertices
 
-### Z Value Options
+### Z Value Caveats
 
 The filter provides three options for setting the Z coordinate of the generated vertices:
 

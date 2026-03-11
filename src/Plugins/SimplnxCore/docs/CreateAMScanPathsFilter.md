@@ -1,4 +1,4 @@
-# Create AM Scan Paths Filter
+# Create AM Scan Paths
 
 ## Group (Subgroup)
 
@@ -6,7 +6,7 @@ Core (Geometry/Processing)
 
 ## Description
 
-Given an input **Edge Geometry**, stripe width, hatch spacing, laser power, and scan speed, this **Filter** will generate an **Edge Geometry** representing the additive manufacturing scan paths along with arrays containing times for each scan path node and powers, region ids, and slice ids for each scan path. The "SliceTriangleGeometry" filter is typically used before this filter to generate the proper edge geometry.
+Given an input **Edge Geometry**, hatch spacing, hatch length, and hatch rotation angle, this **Filter** will generate an **Edge Geometry** representing the additive manufacturing scan paths along with arrays containing region ids and slice ids for each scan path. The "SliceTriangleGeometry" filter is typically used before this filter to generate the proper edge geometry.
 
 ![](Images/CreateAMScanVectors_5.png)
 

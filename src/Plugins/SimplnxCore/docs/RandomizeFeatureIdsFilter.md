@@ -1,4 +1,4 @@
-# Randomize Features Filter
+# Randomize Feature Ids
 
 ## Group (Subgroup)
 

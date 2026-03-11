@@ -1,8 +1,8 @@
-# Find Twin Boundaries
+# Compute Twin Boundaries
 
 ## Group (Subgroup)
 
-Statistics (Crystallographic)
+Statistics (Crystallography)
 
 ## Description
 

@@ -6,7 +6,7 @@ Core (Memory/Management)
 
 ## Description
 
-This **Filter** allows the user to move an **Attribute Array** from one **Attribute Matrix** to another compatible **Attribute Matrix** or to move an **Attribute Matrix** from one **Data Container** to another **Data Container**. **Attribute Matrices** are compatible if the *number of tuples* are equal, **not** the actual *tuple dimensions*.
+This **Filter** allows the user to move one or more **Data Objects** to a new parent **Group**. When moving a **Data Array** into an **Attribute Matrix**, the destination must be compatible, meaning the *number of tuples* must be equal (though the actual *tuple dimensions* need not match).
 
 % Auto generated parameter table will be inserted here
 

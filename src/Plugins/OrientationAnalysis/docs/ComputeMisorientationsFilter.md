@@ -1,4 +1,4 @@
-# Compute Misorientations
+# Compute Misorientation
 
 ## Group (Subgroup)
 

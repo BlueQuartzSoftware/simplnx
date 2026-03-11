@@ -1,4 +1,4 @@
-# Read Zeiss TXM & TXRM File
+# Read Zeiss TXM/TXRM Files
 
 ## Group (Subgroup) ##
 

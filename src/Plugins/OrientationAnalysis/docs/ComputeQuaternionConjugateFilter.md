@@ -1,8 +1,8 @@
-# Generate Quaternion Conjugate
+# Compute Quaternion Conjugate
 
 ## Group (Subgroup)
 
-Processing (OrientationAnalysis)
+Processing (Crystallography)
 
 ## Description
 

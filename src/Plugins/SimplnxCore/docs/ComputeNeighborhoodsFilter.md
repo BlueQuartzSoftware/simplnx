@@ -10,9 +10,12 @@ For each feature, determine how many other features are within a user defined mu
 
 The algorithm for determining the number of **Features** is given below:
 
-1. Define a sphere centered at the **Feature**'s *centroid* and with radius equal to the average equivalent sphere diameter multiplied by the user defined multiple
-2. Check every other **Feature**'s *centroid* to see if it lies within the sphere and keep count and list of those that satisfy
-3. Repeat 1. & 2. for all **Features**
+1. Compute the average equivalent diameter for all features in a given phase
+2. Define a sphere centered at the **Feature**'s *centroid* and with radius equal to the average equivalent sphere diameter multiplied by the user defined multiple
+3. Check every other **Feature**'s *centroid* to see if it lies within the sphere and keep count and list of those that satisfy
+4. Repeat 2. & 3. for all **Features**
+
+![](images/ComputeFeatureNeighborhoods_MultiplesOfAvgDiameter.png)
 
 ## Output Notes
 

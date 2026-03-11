@@ -1,4 +1,4 @@
-# Compute Feature Shapes
+# Compute Feature Shapes (Image Geometry)
 
 ## Group (Subgroup)
 
