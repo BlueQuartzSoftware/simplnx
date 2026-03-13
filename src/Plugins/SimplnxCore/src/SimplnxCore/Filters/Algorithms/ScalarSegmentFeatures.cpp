@@ -255,8 +255,9 @@ Result<> ScalarSegmentFeatures::operator()()
   cellFeaturesAM.resizeTuples(tDims); // This will resize the active array
 
   // make sure all values are initialized and "re-reserve" index 0
-  auto& activeStore = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath)->getDataStoreRef();
-  activeStore[0] = 0;
+  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
+  activeArray->getDataStore()->fill(1);
+  (*activeArray)[0] = 0;
 
   // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
   // allows users visualizing the data to better discern each grain otherwise the coloring

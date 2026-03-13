@@ -255,6 +255,8 @@ struct IdentifySampleSliceBySliceFunctor
       {
         return;
       }
+
+      checked.assign(planeDim1 * planeDim2, false);
       if(fillHoles)
       {
         for(int64 p2 = 0; p2 < planeDim2; ++p2)
