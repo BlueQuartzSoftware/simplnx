@@ -141,6 +141,10 @@ IFilter::PreflightResult ComputeFeatureNeighborsFilter::preflightImpl(const Data
     emptyDimCount++;
   }
 
+  /**
+   * TODO:
+   *  - Review whether we should allow for shared surface area calculations on singular valid dimension
+   */
   if(emptyDimCount > 1)
   {
     return MakePreflightErrorResult(k_InvalidInputDimensions, "This filter requires at least 2 valid dimensions in the image geom. Two or more 1's were found in the image's dimensions");
