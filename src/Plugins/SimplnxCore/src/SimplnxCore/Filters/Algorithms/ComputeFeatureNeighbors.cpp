@@ -200,43 +200,64 @@ struct ComputeFeatureNeighborsFunctor
     }
 
     // Case 0: Process Edges
+    // X Edges
     if constexpr((Is2DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, XImage1D>() ||
                  IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
     {
       for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
       {
         processFrameCell(0, 0, xIndex);
-        processFrameCell(0, dims[1] - 1, xIndex);
-        processFrameCell(dims[2] - 1, 0, xIndex);
-        processFrameCell(dims[2] - 1, dims[1] - 1, xIndex);
+        if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
+        {
+          if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+          {
+            processFrameCell(0, dims[1] - 1, xIndex);
+            processFrameCell(dims[2] - 1, 0, xIndex);
+          }
+          processFrameCell(dims[2] - 1, dims[1] - 1, xIndex);
+        }
       }
     }
 
+    // Y Edges
     if constexpr((Is2DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, YImage1D>() ||
                  IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
     {
       for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
       {
         processFrameCell(0, yIndex, 0);
-        processFrameCell(0, yIndex, dims[0] - 1);
-        processFrameCell(dims[2] - 1, yIndex, 0);
-        processFrameCell(dims[2] - 1, yIndex, dims[0] - 1);
+        if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
+        {
+          if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+          {
+            processFrameCell(0, yIndex, dims[0] - 1);
+            processFrameCell(dims[2] - 1, yIndex, 0);
+          }
+          processFrameCell(dims[2] - 1, yIndex, dims[0] - 1);
+        }
       }
     }
 
-    if constexpr((Is2DImageDimsState<ImageDimensionStateT>() &&!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, ZImage1D>() ||
+    // Z Edges
+    if constexpr((Is2DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, ZImage1D>() ||
                  IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
     {
       for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
       {
         processFrameCell(zIndex, 0, 0);
-        processFrameCell(zIndex, 0, dims[0] - 1);
-        processFrameCell(zIndex, dims[1] - 1, 0);
-        processFrameCell(zIndex, dims[1] - 1, dims[0] - 1);
+        if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
+        {
+          if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+          {
+            processFrameCell(zIndex, 0, dims[0] - 1);
+            processFrameCell(zIndex, dims[1] - 1, 0);
+          }
+          processFrameCell(zIndex, dims[1] - 1, dims[0] - 1);
+        }
       }
     }
 
-    // Process Planes for
+    // Process Planes for 2D and 3D (Stack) Images
     if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
     {
       const std::function<void(int64, int64, int64, std::vector<FaceNeighborType>&)> processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex,
@@ -272,92 +293,85 @@ struct ComputeFeatureNeighborsFunctor
       };
 
       // Case 1: Z Planes
-      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
       {
-        std::vector<FaceNeighborType> negZValidFaces;
-        std::vector<FaceNeighborType> posZValidFaces;
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+        if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
         {
-          negZValidFaces = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
-          posZValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
-        }
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
-        {
-          negZValidFaces = {k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
-          posZValidFaces = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor};
-        }
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
-        {
-           negZValidFaces = {k_NegativeYNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
-          posZValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveYNeighbor};
-        }
-
-        for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
-        {
-          for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+          std::vector<FaceNeighborType> negZValidFaces = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+          std::vector<FaceNeighborType> posZValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
+          for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
           {
-            processFaceCell(0, yIndex, xIndex, negZValidFaces);
-            processFaceCell(dims[2] - 1, yIndex, xIndex, posZValidFaces);
+            for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+            {
+              processFaceCell(0, yIndex, xIndex, negZValidFaces);
+              processFaceCell(dims[2] - 1, yIndex, xIndex, posZValidFaces);
+            }
+          }
+        }
+        if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
+        {
+          std::vector<FaceNeighborType> validFaces = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
+          for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
+          {
+            for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+            {
+              processFaceCell(0, yIndex, xIndex, validFaces);
+            }
           }
         }
       }
 
       // Case 2: Y Planes
-      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
       {
-        std::vector<FaceNeighborType> negYValidFaces;
-        std::vector<FaceNeighborType> posYValidFaces;
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+        if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
         {
-          negYValidFaces = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
-          posYValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
-        }
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
-        {
-          negYValidFaces = {k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
-          posYValidFaces = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor};
-        }
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
-        {
-          negYValidFaces = {k_NegativeZNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
-          posYValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveZNeighbor};
-        }
-        for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
-        {
-          for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+          std::vector<FaceNeighborType> negYValidFaces = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+          std::vector<FaceNeighborType> posYValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
+          for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
           {
-            processFaceCell(zIndex, 0, xIndex, negYValidFaces);
-            processFaceCell(zIndex, dims[1] - 1, xIndex, posYValidFaces);
+            for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+            {
+              processFaceCell(zIndex, 0, xIndex, negYValidFaces);
+              processFaceCell(zIndex, dims[1] - 1, xIndex, posYValidFaces);
+            }
+          }
+        }
+        if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
+        {
+          std::vector<FaceNeighborType> validFaces = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
+          for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
+          {
+            for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+            {
+              processFaceCell(zIndex, 0, xIndex, validFaces);
+            }
           }
         }
       }
 
       // Case 3: X Planes
-      if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
       {
-        std::vector<FaceNeighborType> negXValidFaces;
-        std::vector<FaceNeighborType> posXValidFaces;
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+        if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
         {
-          negXValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
-          posXValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
-        }
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>())
-        {
-          negXValidFaces = {k_NegativeYNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor};
-          posXValidFaces = {k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveYNeighbor};
-        }
-        if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>())
-        {
-          negXValidFaces = {k_NegativeZNeighbor, k_PositiveXNeighbor, k_PositiveZNeighbor};
-          posXValidFaces = {k_NegativeZNeighbor, k_NegativeXNeighbor, k_PositiveZNeighbor};
-        }
-        for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
-        {
-          for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
+          std::vector<FaceNeighborType> negXValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+          std::vector<FaceNeighborType> posXValidFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_NegativeXNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+          for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
           {
-            processFaceCell(zIndex, yIndex, 0, negXValidFaces);
-            processFaceCell(zIndex, yIndex, dims[0] - 1, posXValidFaces);
+            for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
+            {
+              processFaceCell(zIndex, yIndex, 0, negXValidFaces);
+              processFaceCell(zIndex, yIndex, dims[0] - 1, posXValidFaces);
+            }
+          }
+        }
+        if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
+        {
+          std::vector<FaceNeighborType> validFaces = {k_NegativeZNeighbor, k_NegativeYNeighbor, k_PositiveYNeighbor, k_PositiveZNeighbor};
+          for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
+          {
+            for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
+            {
+              processFaceCell(zIndex, yIndex, 0, validFaces);
+            }
           }
         }
       }
