@@ -13,109 +13,154 @@ using namespace nx::core;
 namespace
 {
 /**
- * @brief This will find the 6 face neighbor's indices.
- * @param currentPoint
- * @param width
- * @param height
- * @param depth
- * @return Vector of indices
+ * @brief Returns the 6 face neighbor indices. When isPeriodic is true,
+ * boundary voxels wrap to the opposite face instead of being skipped.
+ * @param currentPoint Linear voxel index
+ * @param width X dimension
+ * @param height Y dimension
+ * @param depth Z dimension
+ * @param isPeriodic Whether to apply periodic boundary wrapping
+ * @return Vector of neighbor indices
  */
-std::vector<int64> getFaceNeighbors(const int64 currentPoint, const int64 width, const int64 height, const int64 depth)
+std::vector<int64> getFaceNeighbors(const int64 currentPoint, const int64 width, const int64 height, const int64 depth, const bool isPeriodic)
 {
   std::vector<int64> neighbors;
   neighbors.reserve(6);
 
-  // decode currentPoint -> (col, row, plane)
   const int64 col = currentPoint % width;
   const int64 tmp = currentPoint / width;
   const int64 row = tmp % height;
   const int64 plane = tmp / height;
 
-  // stride for one z-slice
   const int64 slice = width * height;
 
+  // -X
   if(col > 0)
   {
     neighbors.push_back(currentPoint - 1);
   }
+  else if(isPeriodic)
+  {
+    neighbors.push_back(currentPoint + width - 1);
+  }
+
+  // +X
   if(col < width - 1)
   {
     neighbors.push_back(currentPoint + 1);
   }
+  else if(isPeriodic)
+  {
+    neighbors.push_back(currentPoint - width + 1);
+  }
+
+  // -Y
   if(row > 0)
   {
     neighbors.push_back(currentPoint - width);
   }
+  else if(isPeriodic)
+  {
+    neighbors.push_back(currentPoint + (height - 1) * width);
+  }
+
+  // +Y
   if(row < height - 1)
   {
     neighbors.push_back(currentPoint + width);
   }
+  else if(isPeriodic)
+  {
+    neighbors.push_back(currentPoint - (height - 1) * width);
+  }
+
+  // -Z
   if(plane > 0)
   {
     neighbors.push_back(currentPoint - slice);
   }
+  else if(isPeriodic)
+  {
+    neighbors.push_back(currentPoint + (depth - 1) * slice);
+  }
+
+  // +Z
   if(plane < depth - 1)
   {
     neighbors.push_back(currentPoint + slice);
+  }
+  else if(isPeriodic)
+  {
+    neighbors.push_back(currentPoint - (depth - 1) * slice);
   }
 
   return neighbors;
 }
 
 /**
- * @brief This will find all indices that are connected via the 26 face, edge or vertex neighbors
- * @param currentPoint
- * @param width
- * @param height
- * @param depth
- * @return vector of indices
+ * @brief Returns up to 26 face/edge/vertex neighbor indices. When isPeriodic
+ * is true, boundary voxels wrap to the opposite face instead of being skipped.
+ * @param currentPoint Linear voxel index
+ * @param width X dimension
+ * @param height Y dimension
+ * @param depth Z dimension
+ * @param isPeriodic Whether to apply periodic boundary wrapping
+ * @return Vector of neighbor indices
  */
-std::vector<int64> getAllNeighbors(const int64 currentPoint, const int64 width, const int64 height, const int64 depth)
+std::vector<int64> getAllNeighbors(const int64 currentPoint, const int64 width, const int64 height, const int64 depth, const bool isPeriodic)
 {
   std::vector<int64> neighbors;
   neighbors.reserve(26);
 
-  // decode currentPoint -> (col, row, plane)
   const int64 col = currentPoint % width;
   const int64 tmp = currentPoint / width;
   const int64 row = tmp % height;
   const int64 plane = tmp / height;
 
-  // stride for one z-slice
   const int64 slice = width * height;
-
-  // baseOffset == currentPoint
-  const int64 baseOffset = currentPoint;
 
   for(int64 dz = -1; dz <= 1; ++dz)
   {
-    if(const int64 p = plane + dz; p < 0 || p >= depth)
+    int64 nz = plane + dz;
+    if(nz < 0 || nz >= depth)
     {
-      continue;
-    }
-    const int64 dzOff = dz * slice;
-
-    for(int64 dy = -1; dy <= 1; ++dy)
-    {
-      if(const int64 r = row + dy; r < 0 || r >= height)
+      if(!isPeriodic)
       {
         continue;
       }
-      const int64 dyOff = dy * width;
+      nz = (nz + depth) % depth;
+    }
+
+    for(int64 dy = -1; dy <= 1; ++dy)
+    {
+      int64 ny = row + dy;
+      if(ny < 0 || ny >= height)
+      {
+        if(!isPeriodic)
+        {
+          continue;
+        }
+        ny = (ny + height) % height;
+      }
 
       for(int64 dx = -1; dx <= 1; ++dx)
       {
-        // skip the center voxel itself
         if(dx == 0 && dy == 0 && dz == 0)
         {
           continue;
         }
-        if(int64 c = col + dx; c < 0 || c >= width)
+
+        int64 nx = col + dx;
+        if(nx < 0 || nx >= width)
         {
-          continue;
+          if(!isPeriodic)
+          {
+            continue;
+          }
+          nx = (nx + width) % width;
         }
-        int64 neighbor = baseOffset + dzOff + dyOff + dx;
-        neighbors.push_back(neighbor);
+
+        neighbors.push_back(nz * slice + ny * width + nx);
       }
     }
   }
@@ -176,10 +221,10 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
       switch(m_NeighborScheme)
       {
       case NeighborScheme::Face:
-        neighPoints = getFaceNeighbors(currentPoint, dims[0], dims[1], dims[2]);
+        neighPoints = getFaceNeighbors(currentPoint, dims[0], dims[1], dims[2], m_IsPeriodic);
         break;
       case NeighborScheme::FaceEdgeVertex:
-        neighPoints = getAllNeighbors(currentPoint, dims[0], dims[1], dims[2]);
+        neighPoints = getAllNeighbors(currentPoint, dims[0], dims[1], dims[2], m_IsPeriodic);
         break;
       }
 
@@ -267,7 +312,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   // =========================================================================
   // Phase 1: Forward CCL - assign provisional labels using backward neighbors
   // =========================================================================
-  m_MessageHelper.sendMessage("Phase 1/2: Forward CCL pass...");
+  m_MessageHelper.sendMessage("Forward CCL pass...");
 
   for(int64 iz = 0; iz < dimZ; iz++)
   {
@@ -441,7 +486,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
 
     // Send progress per Z-slice
     float percentComplete = static_cast<float>(iz + 1) / static_cast<float>(dimZ) * 100.0f;
-    throttledMessenger.sendThrottledMessage([percentComplete]() { return fmt::format("Phase 1/2: {:.1f}% complete", percentComplete); });
+    throttledMessenger.sendThrottledMessage([percentComplete]() { return fmt::format("Forward CCL: {:.1f}% complete", percentComplete); });
   }
 
   featureIdsStore.flush();
@@ -452,9 +497,187 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   }
 
   // =========================================================================
+  // Phase 1b: Periodic boundary merge
+  // =========================================================================
+  // The forward CCL pass cannot detect connections that wrap around periodic
+  // boundaries because the wrapped neighbor has a higher linear index and
+  // has not been processed yet when the boundary voxel is visited. This
+  // phase reads back provisional labels from featureIdsStore and unites
+  // labels of similar voxels on opposite boundary faces.
+  if(m_IsPeriodic)
+  {
+    m_MessageHelper.sendMessage("Merging periodic boundaries...");
+
+    if(useFaceOnly)
+    {
+      // X-axis: unite voxels at ix=0 with ix=dimX-1
+      if(dimX > 1)
+      {
+        for(int64 iz = 0; iz < dimZ; iz++)
+        {
+          for(int64 iy = 0; iy < dimY; iy++)
+          {
+            const int64 idxA = iz * sliceStride + iy * dimX;
+            const int64 idxB = iz * sliceStride + iy * dimX + (dimX - 1);
+            const int32 labelA = featureIdsStore[idxA];
+            const int32 labelB = featureIdsStore[idxB];
+            if(labelA > 0 && labelB > 0 && areNeighborsSimilar(idxA, idxB))
+            {
+              unionFind.unite(labelA, labelB);
+            }
+          }
+        }
+      }
+
+      // Y-axis: unite voxels at iy=0 with iy=dimY-1
+      if(dimY > 1)
+      {
+        for(int64 iz = 0; iz < dimZ; iz++)
+        {
+          for(int64 ix = 0; ix < dimX; ix++)
+          {
+            const int64 idxA = iz * sliceStride + ix;
+            const int64 idxB = iz * sliceStride + (dimY - 1) * dimX + ix;
+            const int32 labelA = featureIdsStore[idxA];
+            const int32 labelB = featureIdsStore[idxB];
+            if(labelA > 0 && labelB > 0 && areNeighborsSimilar(idxA, idxB))
+            {
+              unionFind.unite(labelA, labelB);
+            }
+          }
+        }
+      }
+
+      // Z-axis: unite voxels at iz=0 with iz=dimZ-1
+      if(dimZ > 1)
+      {
+        for(int64 iy = 0; iy < dimY; iy++)
+        {
+          for(int64 ix = 0; ix < dimX; ix++)
+          {
+            const int64 idxA = iy * dimX + ix;
+            const int64 idxB = (dimZ - 1) * sliceStride + iy * dimX + ix;
+            const int32 labelA = featureIdsStore[idxA];
+            const int32 labelB = featureIdsStore[idxB];
+            if(labelA > 0 && labelB > 0 && areNeighborsSimilar(idxA, idxB))
+            {
+              unionFind.unite(labelA, labelB);
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+      // FaceEdgeVertex connectivity: check all 26-neighbor pairs that wrap
+      // across periodic boundaries. Only boundary voxels can have wrapped
+      // neighbors, so skip interior voxels. Each pair is processed once
+      // (neighIdx > index) since union-find is symmetric.
+      for(int64 iz = 0; iz < dimZ; iz++)
+      {
+        for(int64 iy = 0; iy < dimY; iy++)
+        {
+          for(int64 ix = 0; ix < dimX; ix++)
+          {
+            const bool onBoundary = (ix == 0 || ix == dimX - 1 || iy == 0 || iy == dimY - 1 || iz == 0 || iz == dimZ - 1);
+            if(!onBoundary)
+            {
+              continue;
+            }
+
+            const int64 index = iz * sliceStride + iy * dimX + ix;
+            const int32 labelCurrent = featureIdsStore[index];
+            if(labelCurrent <= 0)
+            {
+              continue;
+            }
+
+            for(int64 dz = -1; dz <= 1; ++dz)
+            {
+              int64 nz = iz + dz;
+              bool wrappedZ = false;
+              if(nz < 0)
+              {
+                nz += dimZ;
+                wrappedZ = true;
+              }
+              else if(nz >= dimZ)
+              {
+                nz -= dimZ;
+                wrappedZ = true;
+              }
+
+              for(int64 dy = -1; dy <= 1; ++dy)
+              {
+                int64 ny = iy + dy;
+                bool wrappedY = false;
+                if(ny < 0)
+                {
+                  ny += dimY;
+                  wrappedY = true;
+                }
+                else if(ny >= dimY)
+                {
+                  ny -= dimY;
+                  wrappedY = true;
+                }
+
+                for(int64 dx = -1; dx <= 1; ++dx)
+                {
+                  if(dx == 0 && dy == 0 && dz == 0)
+                  {
+                    continue;
+                  }
+
+                  int64 nx = ix + dx;
+                  bool wrappedX = false;
+                  if(nx < 0)
+                  {
+                    nx += dimX;
+                    wrappedX = true;
+                  }
+                  else if(nx >= dimX)
+                  {
+                    nx -= dimX;
+                    wrappedX = true;
+                  }
+
+                  // Only process pairs that wrap in at least one axis
+                  if(!wrappedX && !wrappedY && !wrappedZ)
+                  {
+                    continue;
+                  }
+
+                  const int64 neighIdx = nz * sliceStride + ny * dimX + nx;
+                  // Process each pair once to avoid redundant work
+                  if(neighIdx <= index)
+                  {
+                    continue;
+                  }
+
+                  const int32 labelNeigh = featureIdsStore[neighIdx];
+                  if(labelNeigh > 0 && areNeighborsSimilar(index, neighIdx))
+                  {
+                    unionFind.unite(labelCurrent, labelNeigh);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // =========================================================================
   // Phase 2: Resolution - build direct provisional-label-to-final-ID lookup
   // =========================================================================
-  m_MessageHelper.sendMessage("Phase 2/2: Resolving labels and writing final feature IDs...");
+  m_MessageHelper.sendMessage("Resolving labels and writing final feature IDs...");
 
   unionFind.flatten();
 
@@ -537,7 +760,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
 
     // Send progress
     float percentComplete = static_cast<float>(chunkIdx + 1) / static_cast<float>(numChunks) * 100.0f;
-    throttledMessenger.sendThrottledMessage([percentComplete]() { return fmt::format("Phase 2/2: {:.1f}% chunks relabeled", percentComplete); });
+    throttledMessenger.sendThrottledMessage([percentComplete]() { return fmt::format("Relabeling: {:.1f}% chunks complete", percentComplete); });
   }
 
   featureIdsStore.flush();
