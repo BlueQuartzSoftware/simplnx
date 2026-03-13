@@ -556,38 +556,27 @@ Result<> ComputeFeatureNeighbors::operator()()
 
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
 
-  Result<> result;
   if(m_InputValues->StoreSurfaceFeatures && m_InputValues->StoreBoundaryCells)
   {
     // Surface Features filled with `false` by default during creation in preflight
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
-    result = ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures,
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures,
                            dims, spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
-  else if(m_InputValues->StoreSurfaceFeatures)
+  if(m_InputValues->StoreSurfaceFeatures)
   {
     // Surface Features filled with `false` by default during creation in preflight
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
-    result = ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeatures, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeatures, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
                            spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
-  else if(m_InputValues->StoreBoundaryCells)
+  if(m_InputValues->StoreBoundaryCells)
   {
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
-    result = ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
                            spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
-  else
-  {
-    result = ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, false>{}, imageGeom, nullptr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, false>{}, imageGeom, nullptr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
                            spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
-  }
-
-  if(result.invalid())
-  {
-    return result;
-  }
-
-  return {};
 }

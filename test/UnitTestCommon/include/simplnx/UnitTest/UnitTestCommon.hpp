@@ -766,6 +766,8 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
     auto computed = computedNeighborList.getList(i);
     if(exemplary.size() != 0 && computed.size() != 0)
     {
+      INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
+                           computedPath.toString(), computed.size()));
       REQUIRE(exemplary.size() == computed.size());
       std::sort(exemplary.begin(), exemplary.end());
       std::sort(computed.begin(), computed.end());
@@ -776,8 +778,6 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
         if(exemplaryVal != computedVal)
         {
           float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
-          INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
-                           computedPath.toString(), computed.size()));
           INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal));
 
           REQUIRE(diff < EPSILON);
