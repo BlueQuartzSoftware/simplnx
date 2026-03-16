@@ -195,7 +195,8 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
   // Initialize a sequence of execution modifiers
   int32 gnum = 1;
   int64 nextSeed = 0;
-  int64 seed = 0; // Always use the very first value of the array that we are using to segment
+  int64 seed = getSeed(gnum, nextSeed);
+  nextSeed = seed + 1;
   usize size = 0;
 
   // Initialize containers
@@ -263,7 +264,7 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     nextSeed = seed + 1;
   }
 
-  m_FoundFeatures = gnum - 1; // Decrement the gnum because it will end up 1 larger than it should have been.
+  m_FoundFeatures = gnum - 1; // Decrement because gnum ends up 1 larger than the last assigned feature.
   m_MessageHelper.sendMessage(fmt::format("Total Features Found: {}", m_FoundFeatures));
   return {};
 }
