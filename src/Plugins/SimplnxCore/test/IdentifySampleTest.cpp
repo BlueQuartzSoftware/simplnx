@@ -3,11 +3,12 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -18,183 +19,178 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-const DataPath k_ExemplarArrayPath = Constants::k_DataContainerPath.createChildPath(Constants::k_CellData).createChildPath("Mask Exemplar");
+// Exemplar archive
+const std::string k_ArchiveName = "identify_sample_exemplars.tar.gz";
+const std::string k_DataDirName = "identify_sample_exemplars";
+const fs::path k_DataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_DataDirName;
+const fs::path k_ExemplarFile = k_DataDir / "identify_sample.dream3d";
+
+// Geometry names
+constexpr StringLiteral k_GeomName = "DataContainer";
+constexpr StringLiteral k_CellDataName = "CellData";
+
+// Output array paths
+const DataPath k_GeomPath({k_GeomName});
+const DataPath k_MaskPath({k_GeomName, k_CellDataName, "Mask"});
+
+// Test dimensions
+constexpr usize k_Dim = 200;
+
+/**
+ * @brief Builds an IdentifySample test dataset: a sphere of "good" voxels
+ * with interior holes and exterior noise.
+ */
+void BuildIdentifySampleTestData(DataStructure& ds, usize dimX, usize dimY, usize dimZ, const std::string& geomName = "DataContainer")
+{
+  const ShapeType cellShape = {dimZ, dimY, dimX};
+  auto* imageGeom = ImageGeom::Create(ds, geomName);
+  imageGeom->setDimensions({dimX, dimY, dimZ});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  auto maskDataStore = DataStoreUtilities::CreateDataStore<uint8>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto* maskArray = DataArray<uint8>::Create(ds, "Mask", maskDataStore, cellAM->getId());
+  auto& maskStore = maskArray->getDataStoreRef();
+
+  const float cx = dimX / 2.0f;
+  const float cy = dimY / 2.0f;
+  const float cz = dimZ / 2.0f;
+  const float radius = dimX * 0.4f;
+
+  for(usize z = 0; z < dimZ; z++)
+  {
+    for(usize y = 0; y < dimY; y++)
+    {
+      for(usize x = 0; x < dimX; x++)
+      {
+        const usize idx = z * dimX * dimY + y * dimX + x;
+        const float dx = static_cast<float>(x) - cx;
+        const float dy = static_cast<float>(y) - cy;
+        const float dz = static_cast<float>(z) - cz;
+        const float dist = std::sqrt(dx * dx + dy * dy + dz * dz);
+        bool good = dist < radius;
+
+        // Interior holes (positions relative to geometry size so they work at any dim)
+        const float h1cx = cx + radius * 0.3f;
+        const float h1cy = cy + radius * 0.3f;
+        const float h1cz = cz + radius * 0.3f;
+        const float h1r = dimX * 0.053f; // ~4 at 75, ~10.6 at 200
+        const float h2cx = cx - radius * 0.3f;
+        const float h2cy = cy - radius * 0.3f;
+        const float h2cz = cz - radius * 0.3f;
+        const float h2r = dimX * 0.04f; // ~3 at 75, ~8 at 200
+
+        if(good)
+        {
+          const float h1 = std::sqrt((static_cast<float>(x) - h1cx) * (static_cast<float>(x) - h1cx) + (static_cast<float>(y) - h1cy) * (static_cast<float>(y) - h1cy) +
+                                     (static_cast<float>(z) - h1cz) * (static_cast<float>(z) - h1cz));
+          if(h1 < h1r)
+          {
+            good = false;
+          }
+          const float h2 = std::sqrt((static_cast<float>(x) - h2cx) * (static_cast<float>(x) - h2cx) + (static_cast<float>(y) - h2cy) * (static_cast<float>(y) - h2cy) +
+                                     (static_cast<float>(z) - h2cz) * (static_cast<float>(z) - h2cz));
+          if(h2 < h2r)
+          {
+            good = false;
+          }
+        }
+
+        // Isolated noise outside the sphere
+        if(!good && dist < radius + 5.0f && dist > radius)
+        {
+          if((x + y + z) % 7 == 0)
+          {
+            good = true;
+          }
+        }
+
+        maskStore[idx] = good ? 1 : 0;
+      }
+    }
+  }
 }
-TEST_CASE("SimplnxCore::IdentifySampleFilter", "[SimplnxCore][IdentifySampleFilter]")
+
+/**
+ * @brief Populates IdentifySampleFilter arguments from a test variant name.
+ *
+ * Name convention: "whole_fill", "sliced_xy_nofill", etc.
+ */
+void SetupArgs(Arguments& args, const std::string& testName, const DataPath& geomPath, const DataPath& maskPath)
+{
+  const bool fillHoles = (testName.find("nofill") == std::string::npos);
+  const bool sliceBySlice = (testName.find("sliced") != std::string::npos);
+  ChoicesParameter::ValueType slicePlane = 0;
+  if(testName.find("xz") != std::string::npos)
+  {
+    slicePlane = 1;
+  }
+  else if(testName.find("yz") != std::string::npos)
+  {
+    slicePlane = 2;
+  }
+
+  args.insertOrAssign(IdentifySampleFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(IdentifySampleFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(IdentifySampleFilter::k_FillHoles_Key, std::make_any<bool>(fillHoles));
+  args.insertOrAssign(IdentifySampleFilter::k_SliceBySlice_Key, std::make_any<bool>(sliceBySlice));
+  args.insertOrAssign(IdentifySampleFilter::k_SliceBySlicePlane_Key, std::make_any<ChoicesParameter::ValueType>(slicePlane));
+}
+} // namespace
+
+TEST_CASE("SimplnxCore::IdentifySampleFilter: 200x200x200 Exemplar Comparison", "[SimplnxCore][IdentifySampleFilter]")
 {
   UnitTest::LoadPlugins();
   bool forceOocAlgo = GENERATE(false, true);
   const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
-  // 25x25x25 dataset, Mask (uint8, 1-comp) => 25*25*1 = 625 bytes/slice
-  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 625, true);
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "identify_sample_v2.tar.gz", "identify_sample_v2");
-  using TestArgType = std::tuple<std::string, std::string, std::string>;
-  /* clang-format off */
-  std::vector<TestArgType> allTestParams = {
-    {"sliced", "xy", "fill"},
-    {"sliced", "xy", "nofill"},
-    {"sliced", "xz", "fill"},
-    {"sliced", "xz", "nofill"},
-    {"sliced", "yz", "fill"},
-    {"sliced", "yz", "nofill"},
-
-    {"whole", "xy", "fill"},
-    {"whole", "xy", "nofill"},
-    {"whole", "xz", "fill"},
-    {"whole", "xz", "nofill"},
-    {"whole", "yz", "fill"},
-    {"whole", "yz", "nofill"},
-  };
-  /* clang-format on */
-  for(const auto& testParam : allTestParams)
-  {
-    std::string slice_by_slice = std::get<0>(testParam);
-    bool sliceBySlice = slice_by_slice == "sliced";
-
-    std::string slice_plane = std::get<1>(testParam);
-
-    ChoicesParameter::ValueType sliceBySlicePlane = 0;
-    if(slice_plane == "xz")
-      sliceBySlicePlane = 1;
-    else if(slice_plane == "yz")
-      sliceBySlicePlane = 2;
-
-    std::string fill_holes = std::get<2>(testParam);
-    bool fillHoles = fill_holes == "fill";
-
-    SECTION(fmt::format("{}_{}_{}", slice_by_slice, slice_plane, fill_holes))
-    {
-      fs::path inputFilePath = fs::path(fmt::format("{}/identify_sample_v2/{}_{}_{}.dream3d", unit_test::k_TestFilesDir, slice_by_slice, slice_plane, fill_holes));
-      std::cout << inputFilePath.string() << std::endl;
-
-      DataStructure dataStructure = LoadDataStructure(inputFilePath);
-      IdentifySampleFilter filter;
-      Arguments args;
-      args.insert(IdentifySampleFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
-      args.insert(IdentifySampleFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(Constants::k_MaskArrayPath));
-      args.insert(IdentifySampleFilter::k_FillHoles_Key, std::make_any<bool>(fillHoles));
-      args.insert(IdentifySampleFilter::k_SliceBySlice_Key, std::make_any<bool>(sliceBySlice));
-      args.insert(IdentifySampleFilter::k_SliceBySlicePlane_Key, std::make_any<ChoicesParameter::ValueType>(sliceBySlicePlane));
-
-      // Preflight the filter and check result
-      auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-      // Execute the filter and check the result
-      auto executeResult = filter.execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-      WriteTestDataStructure(dataStructure, fmt::format("{}/identify_sample_output_{}_{}_{}.dream3d", unit_test::k_BinaryTestOutputDir, fillHoles, sliceBySlice, sliceBySlicePlane));
-#endif
-
-      const IDataArray& computedArray = dataStructure.getDataRefAs<IDataArray>(Constants::k_MaskArrayPath);
-      const IDataArray& exemplarArray = dataStructure.getDataRefAs<IDataArray>(k_ExemplarArrayPath);
-      CompareDataArrays<uint8>(computedArray, exemplarArray);
-
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
-    }
-  }
-}
-
-TEST_CASE("SimplnxCore::IdentifySampleFilter: Benchmark 200x200x200", "[SimplnxCore][IdentifySampleFilter][Benchmark]")
-{
-  UnitTest::LoadPlugins();
-  // 200*200 * 1 byte = 40000 bytes per Z-slice for uint8 mask
+  // uint8 1-comp => 200*200*1 = 40,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 40000, true);
 
-  constexpr usize k_DimX = 200;
-  constexpr usize k_DimY = 200;
-  constexpr usize k_DimZ = 200;
-  constexpr usize k_TotalVoxels = k_DimX * k_DimY * k_DimZ;
-  const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
-  const auto benchmarkFile = fs::path(fmt::format("{}/identify_sample_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_ArchiveName, k_DataDirName);
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
 
-  // Stage 1: Build data programmatically and write to .dream3d
+  std::string testName = GENERATE("whole_fill", "whole_nofill", "sliced_xy_fill", "sliced_xy_nofill", "sliced_xz_fill", "sliced_xz_nofill", "sliced_yz_fill", "sliced_yz_nofill");
+  DYNAMIC_SECTION("Variant: " << testName)
   {
-    DataStructure buildDS;
-    auto* imageGeom = ImageGeom::Create(buildDS, "DataContainer");
-    imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+    DataStructure dataStructure;
+    BuildIdentifySampleTestData(dataStructure, k_Dim, k_Dim, k_Dim);
 
-    auto* cellAM = AttributeMatrix::Create(buildDS, "Cell Data", cellTupleShape, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
-
-    // Create mask array: a sphere of "good" voxels with interior holes and exterior noise
-    auto* maskArray = CreateTestDataArray<uint8>(buildDS, "Mask", cellTupleShape, {1}, cellAM->getId());
-    auto& maskStore = maskArray->getDataStoreRef();
-
-    const float cx = k_DimX / 2.0f;
-    const float cy = k_DimY / 2.0f;
-    const float cz = k_DimZ / 2.0f;
-    const float radius = 80.0f;
-
-    for(usize z = 0; z < k_DimZ; z++)
-    {
-      for(usize y = 0; y < k_DimY; y++)
-      {
-        for(usize x = 0; x < k_DimX; x++)
-        {
-          const usize idx = z * k_DimX * k_DimY + y * k_DimX + x;
-          const float dx = static_cast<float>(x) - cx;
-          const float dy = static_cast<float>(y) - cy;
-          const float dz = static_cast<float>(z) - cz;
-          const float dist = std::sqrt(dx * dx + dy * dy + dz * dz);
-          bool good = dist < radius;
-
-          // Create interior holes (small sphere cavities)
-          if(good)
-          {
-            const float h1 = std::sqrt((static_cast<float>(x) - 120.0f) * (static_cast<float>(x) - 120.0f) + (static_cast<float>(y) - 120.0f) * (static_cast<float>(y) - 120.0f) +
-                                       (static_cast<float>(z) - 120.0f) * (static_cast<float>(z) - 120.0f));
-            if(h1 < 10.0f)
-            {
-              good = false;
-            }
-            const float h2 = std::sqrt((static_cast<float>(x) - 80.0f) * (static_cast<float>(x) - 80.0f) + (static_cast<float>(y) - 80.0f) * (static_cast<float>(y) - 80.0f) +
-                                       (static_cast<float>(z) - 80.0f) * (static_cast<float>(z) - 80.0f));
-            if(h2 < 8.0f)
-            {
-              good = false;
-            }
-          }
-
-          // Add some isolated small clusters outside the main sphere
-          if(!good && dist < radius + 5.0f && dist > radius)
-          {
-            if((x + y + z) % 7 == 0)
-            {
-              good = true;
-            }
-          }
-
-          maskStore[idx] = good ? 1 : 0;
-        }
-      }
-    }
-
-    UnitTest::WriteTestDataStructure(buildDS, benchmarkFile);
-  }
-
-  // Stage 2: Reload (arrays become ZarrStore in OOC) and run filter
-  DataStructure dataStructure = UnitTest::LoadDataStructure(benchmarkFile);
-
-  {
     IdentifySampleFilter filter;
     Arguments args;
-    args.insert(IdentifySampleFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
-    args.insert(IdentifySampleFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "Cell Data", "Mask"})));
-    args.insert(IdentifySampleFilter::k_FillHoles_Key, std::make_any<bool>(true));
-    args.insert(IdentifySampleFilter::k_SliceBySlice_Key, std::make_any<bool>(false));
-    args.insert(IdentifySampleFilter::k_SliceBySlicePlane_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    SetupArgs(args, testName, k_GeomPath, k_MaskPath);
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  }
 
-  fs::remove(benchmarkFile);
+    // Compare against exemplar
+    const std::string exemplarGeomName = testName + "_Exemplar";
+    const DataPath exemplarMaskPath({exemplarGeomName, std::string(k_CellDataName), "Mask"});
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
+    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<UInt8Array>(exemplarMaskPath));
+    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarMaskPath),
+                             dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("SimplnxCore::IdentifySampleFilter: Generate Test Data", "[SimplnxCore][IdentifySampleFilter][.GenerateTestData]")
+{
+  UnitTest::LoadPlugins();
+
+  const auto outputDir = fs::path(fmt::format("{}/generated_test_data/identify_sample", unit_test::k_BinaryTestOutputDir));
+  fs::create_directories(outputDir);
+
+  DataStructure ds;
+  for(const auto& name : {"whole_fill", "whole_nofill", "sliced_xy_fill", "sliced_xy_nofill", "sliced_xz_fill", "sliced_xz_nofill", "sliced_yz_fill", "sliced_yz_nofill"})
+  {
+    BuildIdentifySampleTestData(ds, k_Dim, k_Dim, k_Dim, name);
+  }
+  UnitTest::WriteTestDataStructure(ds, outputDir / "input.dream3d");
 }

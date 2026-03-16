@@ -1,15 +1,14 @@
 #include <catch2/catch.hpp>
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Pipeline/AbstractPipelineNode.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include "SimplnxCore/Filters/FillBadDataFilter.hpp"
-#include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include <filesystem>
@@ -19,56 +18,77 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-TEST_CASE("SimplnxCore::FillBadData_SmallIN100", "[Core][FillBadDataFilter]")
+namespace
 {
-  // Load the Simplnx Application instance and load the plugins
-  UnitTest::LoadPlugins();
-  bool forceOocAlgo = GENERATE(false, true);
-  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
-  // FillBadData SmallIN100: 117x201x189, EulerAngles (float32, 3-comp) => 201*189*3*4 = 455,868 bytes/slice
-  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 455868, true);
+/**
+ * @brief Builds a FillBadData test dataset with block-patterned FeatureIds
+ * and ~10% scattered bad voxels (FeatureId=0) using a deterministic pattern.
+ */
+void BuildFillBadDataTestData(DataStructure& ds, usize dimX, usize dimY, usize dimZ, usize blockSize, bool addLargeDefect = false)
+{
+  const ShapeType cellShape = {dimZ, dimY, dimX};
+  auto* imageGeom = ImageGeom::Create(ds, "DataContainer");
+  imageGeom->setDimensions({dimX, dimY, dimZ});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/6_5_exemplar.dream3d", unit_test::k_TestFilesDir));
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
 
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/6_5_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto* featureIdsArray = DataArray<int32>::Create(ds, "FeatureIds", featureIdsDataStore, cellAM->getId());
+  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
 
+  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  auto* phasesArray = DataArray<int32>::Create(ds, "Phases", phasesDataStore, cellAM->getId());
+  auto& phasesStore = phasesArray->getDataStoreRef();
+
+  const usize blocksPerDim = dimX / blockSize;
+  for(usize z = 0; z < dimZ; z++)
   {
-    // Instantiate the filter, a DataStructure object and an Arguments Object
-    FillBadDataFilter filter;
-    Arguments args;
+    for(usize y = 0; y < dimY; y++)
+    {
+      for(usize x = 0; x < dimX; x++)
+      {
+        const usize idx = z * dimX * dimY + y * dimX + x;
+        phasesStore[idx] = 1;
 
-    // Create default Parameters for the filter.
-    args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(1000));
-    args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-    args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
-    args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesArrayPath));
+        usize bx = x / blockSize;
+        usize by = y / blockSize;
+        usize bz = z / blockSize;
+        int32 blockFeatureId = static_cast<int32>(bz * blocksPerDim * blocksPerDim + by * blocksPerDim + bx + 1);
 
-    args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-    args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-
-    // Preflight the filter and check the result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args); //, nullptr, IFilter::MessageHandler{[](const IFilter::Message& message) { fmt::print("{}\n", message.message); }});
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+        // Scatter bad voxels: ~10% of voxels become bad (FeatureId=0)
+        bool isBad = ((x * 7 + y * 13 + z * 29) % 10 == 0);
+        featureIdsStore[idx] = isBad ? 0 : blockFeatureId;
+      }
+    }
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, k_CellAttributeMatrix, k_DataContainer);
-
-  // Write the DataStructure out to the file system
-  // #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_fill_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
-  // #endif
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  // Add a contiguous large defect: entire z=dimZ/2 plane set to FeatureId=0
+  if(addLargeDefect)
+  {
+    const usize z = dimZ / 2;
+    for(usize y = 0; y < dimY; y++)
+    {
+      for(usize x = 0; x < dimX; x++)
+      {
+        featureIdsStore[z * dimX * dimY + y * dimX + x] = 0;
+      }
+    }
+  }
 }
+// Exemplar archive
+const std::string k_ArchiveName = "fill_bad_data_exemplars.tar.gz";
+const std::string k_DataDirName = "fill_bad_data_exemplars";
+const fs::path k_DataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_DataDirName;
+const fs::path k_ExemplarFile = k_DataDir / "fill_bad_data.dream3d";
+
+// Test dimensions for 200^3 tests
+constexpr usize k_Dim = 200;
+constexpr usize k_BlockSize = 25;
+constexpr int32 k_MinDefectSize = 50;
+} // namespace
 
 TEST_CASE("SimplnxCore::FillBadData::Test01_SingleSmallDefect", "[Core][FillBadDataFilter]")
 {
@@ -413,75 +433,29 @@ TEST_CASE("SimplnxCore::FillBadData::Test13_StoreAsNewPhase", "[Core][FillBadDat
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::FillBadData: Benchmark 200x200x200", "[Core][FillBadDataFilter][Benchmark]")
+TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Correctness", "[Core][FillBadDataFilter]")
 {
   UnitTest::LoadPlugins();
-  // 200x200x200, FeatureIds int32 1-comp => 200*200*4 = 160,000 bytes/slice
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // int32 1-comp => 200*200*4 = 160,000 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 160000, true);
 
-  constexpr usize k_DimX = 200;
-  constexpr usize k_DimY = 200;
-  constexpr usize k_DimZ = 200;
-  constexpr usize k_TotalVoxels = k_DimX * k_DimY * k_DimZ;
-  const ShapeType cellTupleShape = {k_DimZ, k_DimY, k_DimX};
-  const auto benchmarkFile = fs::path(fmt::format("{}/fill_bad_data_benchmark.dream3d", unit_test::k_BinaryTestOutputDir));
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_ArchiveName, k_DataDirName);
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
 
-  // Stage 1: Build data programmatically and write to .dream3d
+  std::string testName = GENERATE("NoNewPhase", "NewPhase");
+  DYNAMIC_SECTION("Variant: " << testName)
   {
-    DataStructure buildDS;
-    auto* imageGeom = ImageGeom::Create(buildDS, "DataContainer");
-    imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-    imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
-    imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+    const bool storeAsNewPhase = (testName == "NewPhase");
 
-    auto* cellAM = AttributeMatrix::Create(buildDS, "CellData", cellTupleShape, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
+    DataStructure dataStructure;
+    BuildFillBadDataTestData(dataStructure, k_Dim, k_Dim, k_Dim, k_BlockSize, true);
 
-    // Create FeatureIds array (int32, 1-component) - grid of features with scattered bad voxels
-    auto* featureIdsArray = UnitTest::CreateTestDataArray<int32>(buildDS, "FeatureIds", cellTupleShape, {1}, cellAM->getId());
-    auto& featureIdsStore = featureIdsArray->getDataStoreRef();
-
-    // Create Phases array (int32, 1-component) - all phase 1
-    auto* phasesArray = UnitTest::CreateTestDataArray<int32>(buildDS, "Phases", cellTupleShape, {1}, cellAM->getId());
-    auto& phasesStore = phasesArray->getDataStoreRef();
-
-    // Fill: divide into 25-voxel blocks, each block = one feature (1-based).
-    // Scatter ~10% bad voxels (FeatureId=0) using a deterministic pattern.
-    constexpr usize k_BlockSize = 25;
-    constexpr usize k_BlocksPerDim = k_DimX / k_BlockSize; // 8
-    for(usize z = 0; z < k_DimZ; z++)
-    {
-      for(usize y = 0; y < k_DimY; y++)
-      {
-        for(usize x = 0; x < k_DimX; x++)
-        {
-          const usize idx = z * k_DimX * k_DimY + y * k_DimX + x;
-          phasesStore[idx] = 1;
-
-          usize bx = x / k_BlockSize;
-          usize by = y / k_BlockSize;
-          usize bz = z / k_BlockSize;
-          int32 blockFeatureId = static_cast<int32>(bz * k_BlocksPerDim * k_BlocksPerDim + by * k_BlocksPerDim + bx + 1);
-
-          // Scatter bad voxels: ~10% of voxels become bad (FeatureId=0)
-          bool isBad = ((x * 7 + y * 13 + z * 29) % 10 == 0);
-          featureIdsStore[idx] = isBad ? 0 : blockFeatureId;
-        }
-      }
-    }
-
-    UnitTest::WriteTestDataStructure(buildDS, benchmarkFile);
-  }
-
-  // Stage 2: Reload (arrays become ZarrStore in OOC) and run filter
-  DataStructure dataStructure = UnitTest::LoadDataStructure(benchmarkFile);
-
-  {
     FillBadDataFilter filter;
     Arguments args;
-
-    args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(50));
-    args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+    args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(k_MinDefectSize));
+    args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(storeAsNewPhase));
     args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
     args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
     args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
@@ -489,9 +463,113 @@ TEST_CASE("SimplnxCore::FillBadData: Benchmark 200x200x200", "[Core][FillBadData
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args, nullptr, IFilter::MessageHandler{[](const IFilter::Message& message) { fmt::print("{}\n", message.message); }});
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    // Compare against exemplar
+    const std::string exemplarGeomName = "DataContainer_" + testName + "_Exemplar";
+    const DataPath exemplarFeatureIdsPath({exemplarGeomName, "CellData", "FeatureIds"});
+    const DataPath exemplarPhasesPath({exemplarGeomName, "CellData", "Phases"});
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath),
+                             dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "Phases"})));
+    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarPhasesPath));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarPhasesPath),
+                             dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "Phases"})));
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBadDataFilter]")
+{
+  UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // int32 1-comp => 200*200*4 = 160,000 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 160000, true);
+
+  constexpr int32 k_Sentinel = -999;
+
+  DataStructure dataStructure;
+  BuildFillBadDataTestData(dataStructure, k_Dim, k_Dim, k_Dim, k_BlockSize, false);
+
+  // Add an extra "IgnoredArray" filled with a sentinel value
+  auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"DataContainer", "CellData"}));
+  auto ignoredDataStore = DataStoreUtilities::CreateDataStore<int32>(cellAM.getShape(), {1}, IDataAction::Mode::Execute);
+  auto* ignoredArray = DataArray<int32>::Create(dataStructure, "IgnoredArray", ignoredDataStore, cellAM.getId());
+  auto& ignoredStore = ignoredArray->getDataStoreRef();
+  for(usize i = 0; i < ignoredStore.getNumberOfTuples(); i++)
+  {
+    ignoredStore[i] = k_Sentinel;
+  }
+
+  // Record which voxels are bad before fill
+  const auto& featureIdsBefore = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"}));
+  std::vector<bool> wasBad(featureIdsBefore.getNumberOfTuples(), false);
+  usize badCount = 0;
+  for(usize i = 0; i < featureIdsBefore.getNumberOfTuples(); i++)
+  {
+    if(featureIdsBefore.getDataStoreRef().getValue(i) == 0)
+    {
+      wasBad[i] = true;
+      badCount++;
+    }
+  }
+  REQUIRE(badCount > 0);
+
+  {
+    FillBadDataFilter filter;
+    Arguments args;
+    args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(50));
+    args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+    args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+    args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Phases"})));
+    args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+
+    // Include the IgnoredArray in the ignored paths
+    MultiArraySelectionParameter::ValueType ignoredPaths = {DataPath({"DataContainer", "CellData", "IgnoredArray"})};
+    args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(ignoredPaths));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  fs::remove(benchmarkFile);
+  // Verify: FeatureIds has no zeros (all scattered bad voxels filled)
+  const auto& featureIdsAfter = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"}));
+  for(usize i = 0; i < featureIdsAfter.getNumberOfTuples(); i++)
+  {
+    REQUIRE(featureIdsAfter.getDataStoreRef().getValue(i) != 0);
+  }
+
+  // Verify: IgnoredArray is completely unchanged (sentinel at every voxel)
+  const auto& ignoredAfter = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "IgnoredArray"}));
+  for(usize i = 0; i < ignoredAfter.getNumberOfTuples(); i++)
+  {
+    REQUIRE(ignoredAfter.getDataStoreRef().getValue(i) == k_Sentinel);
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+TEST_CASE("SimplnxCore::FillBadData: Generate Test Data", "[Core][FillBadDataFilter][.GenerateTestData]")
+{
+  UnitTest::LoadPlugins();
+
+  const auto outputDir = fs::path(fmt::format("{}/generated_test_data/fill_bad_data", unit_test::k_BinaryTestOutputDir));
+  fs::create_directories(outputDir);
+
+  // 200^3 input data with large defect (full z=k_Dim/2 plane)
+  {
+    DataStructure ds;
+    BuildFillBadDataTestData(ds, k_Dim, k_Dim, k_Dim, k_BlockSize, true);
+    UnitTest::WriteTestDataStructure(ds, outputDir / "input.dream3d");
+  }
+}
+
