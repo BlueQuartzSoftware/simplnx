@@ -115,6 +115,42 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Small Correctness", "[SimplnxCore
   }
 }
 
+TEST_CASE("SimplnxCore::ScalarSegmentFeatures: FaceEdgeVertex Connectivity", "[SimplnxCore][ScalarSegmentFeatures]")
+{
+  UnitTest::LoadPlugins();
+
+  // Shared test: verifies vertex and edge connectivity with FaceEdgeVertex scheme.
+  // Setup lambda creates ScalarData with 4 isolated voxels (2 pairs) and configures args.
+  auto setupScalar = [](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
+    const ShapeType cellShape = {3, 3, 3};
+    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
+    auto scalarDS = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+    auto* scalarArr = DataArray<int32>::Create(ds, "ScalarData", scalarDS, am.getId());
+    auto& store = scalarArr->getDataStoreRef();
+    store.fill(0);
+    store[0 * 9 + 0 * 3 + 0] = 1; // (0,0,0) — vertex pair A
+    store[1 * 9 + 1 * 3 + 1] = 1; // (1,1,1) — vertex pair B
+    store[0 * 9 + 0 * 3 + 2] = 2; // (2,0,0) — edge pair C
+    store[1 * 9 + 1 * 3 + 2] = 2; // (2,1,1) — edge pair D
+
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_GridGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_InputArrayPathKey, std::make_any<DataPath>(cellDataPath.createChildPath("ScalarData")));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ScalarToleranceKey, std::make_any<int>(0));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_FeatureIdsName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_CellFeatureName_Key, std::make_any<std::string>("CellFeatureData"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
+  };
+
+  RunFaceEdgeVertexConnectivityTest<ScalarSegmentFeaturesFilter>(
+      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 0); },
+      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 1); });
+}
+
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: 200x200x200 Large OOC", "[SimplnxCore][ScalarSegmentFeatures]")
 {
   UnitTest::LoadPlugins();

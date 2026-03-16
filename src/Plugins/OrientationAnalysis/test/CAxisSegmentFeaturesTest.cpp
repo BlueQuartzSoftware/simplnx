@@ -269,6 +269,76 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: High Tolerance Merges All"
   }
 }
 
+TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivity", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  constexpr float32 k_DegToRad = 3.14159265358979323846f / 180.0f;
+
+  auto setupCAxis = [&](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
+    const ShapeType cellShape = {3, 3, 3};
+    auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
+    auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+
+    // Quaternions: background = 60° X-rotation, pairs = identity and 30° (EBSDlib order: x,y,z,w)
+    const float32 bgHalf = 60.0f * k_DegToRad * 0.5f;
+    auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(cellShape, {4}, IDataAction::Mode::Execute);
+    auto* quatsArr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
+    auto& quatsStore = quatsArr->getDataStoreRef();
+    for(usize i = 0; i < 27; i++)
+    {
+      quatsStore[i * 4 + 0] = std::sin(bgHalf);
+      quatsStore[i * 4 + 1] = 0.0f;
+      quatsStore[i * 4 + 2] = 0.0f;
+      quatsStore[i * 4 + 3] = std::cos(bgHalf);
+    }
+    for(usize idx : {static_cast<usize>(0), static_cast<usize>(1 * 9 + 1 * 3 + 1)})
+    {
+      quatsStore[idx * 4 + 0] = 0.0f;
+      quatsStore[idx * 4 + 1] = 0.0f;
+      quatsStore[idx * 4 + 2] = 0.0f;
+      quatsStore[idx * 4 + 3] = 1.0f;
+    }
+    const float32 pairHalf = 30.0f * k_DegToRad * 0.5f;
+    for(usize idx : {static_cast<usize>(0 * 9 + 0 * 3 + 2), static_cast<usize>(1 * 9 + 1 * 3 + 2)})
+    {
+      quatsStore[idx * 4 + 0] = std::sin(pairHalf);
+      quatsStore[idx * 4 + 1] = 0.0f;
+      quatsStore[idx * 4 + 2] = 0.0f;
+      quatsStore[idx * 4 + 3] = std::cos(pairHalf);
+    }
+
+    auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+    auto* phasesArr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
+    phasesArr->fill(1);
+
+    const ShapeType ensShape = {2};
+    auto* ensAM = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
+    auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(ensShape, {1}, IDataAction::Mode::Execute);
+    auto* crystArr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAM->getId());
+    auto& crystStore = crystArr->getDataStoreRef();
+    crystStore[0] = 999;
+    crystStore[1] = 0; // Hexagonal_High
+
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_NeighborScheme_Key, std::make_any<ChoicesParameter::ValueType>(neighborScheme));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("Quats")));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellDataPath.createChildPath("Phases")));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"Geom", "CellEnsembleData", "CrystalStructures"})));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>("FeatureIds"));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("CellFeatureData"));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_ActiveArrayName_Key, std::make_any<std::string>("Active"));
+    args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
+  };
+
+  RunFaceEdgeVertexConnectivityTest<CAxisSegmentFeaturesFilter>(
+      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupCAxis(args, ds, gp, cp, 0); },
+      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupCAxis(args, ds, gp, cp, 1); });
+}
+
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Generate Test Data", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][.GenerateTestData]")
 {
   UnitTest::LoadPlugins();

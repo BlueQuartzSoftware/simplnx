@@ -155,13 +155,14 @@ inline void BuildOrientationTestData(DataStructure& ds, const ShapeType& cellSha
   //   from the other z=1 blocks (30° difference → no merge).
   //
   // Expected features (3x3x3 grid):
-  //   Base: 3 (z=0 layer + center pillar, z=1 minus pillar, z=2 layer)
-  //   Periodic: 2 (z=0 and z=2 share 0° via wrapping → merge, z=1 separate)
+  //   Base (3 blocks/axis): 3 features (z=0 + center pillar, z=1 minus pillar, z=2)
+  //   Base (8 blocks/axis): 3 features (repeating 0°/30°/60° stripes)
+  //   Periodic: layers sharing the same angle merge across the boundary
   constexpr float32 k_LayerAngles[] = {0.0f, 30.0f, 60.0f};
 
   for(usize bz = 0; bz < blocksPerZ; bz++)
   {
-    const usize layerIdx = std::min(bz, static_cast<usize>(2));
+    const usize layerIdx = bz % 3;
     const float32 halfAngle = k_LayerAngles[layerIdx] * k_DegToRad * 0.5f;
     // EBSDlib quaternion layout: (x, y, z, w) — Vector-Scalar order
     const std::array<float32, 4> layerQuat = {std::sin(halfAngle), 0.0f, 0.0f, std::cos(halfAngle)};
@@ -503,6 +504,72 @@ void RunNoValidVoxelsErrorTest(SetupArgsFn setupArgs)
   const auto& errors = executeResult.result.errors();
   REQUIRE(errors.size() == 1);
   REQUIRE(errors[0].code == -87000);
+}
+
+/**
+ * @brief Tests that FaceEdgeVertex (26-neighbor) connectivity correctly merges
+ * regions connected through shared vertices and edges, not just faces.
+ *
+ * Creates a 3x3x3 geometry with 4 isolated single-voxel regions:
+ *   - Regions A,B (same data): voxels (0,0,0) and (1,1,1) — vertex-connected only
+ *   - Regions C,D (same data): voxels (2,0,0) and (2,1,1) — edge-connected only
+ *
+ * With Face (6-neighbor): 5 features (1 background + 4 isolated regions)
+ * With FaceEdgeVertex (26-neighbor): 3 features (1 background + A&B merged + C&D merged)
+ *
+ * @tparam FilterT The filter class (e.g., ScalarSegmentFeaturesFilter).
+ * @param setupFaceArgs Lambda (Arguments&, DataStructure&, DataPath geomPath, DataPath cellDataPath)
+ *        that inserts filter-specific arguments with neighborScheme=0 (Face).
+ * @param setupFevArgs Lambda with same signature but neighborScheme=1 (FaceEdgeVertex).
+ */
+template <typename FilterT, typename SetupFaceFn, typename SetupFevFn>
+void RunFaceEdgeVertexConnectivityTest(SetupFaceFn setupFaceArgs, SetupFevFn setupFevArgs)
+{
+  constexpr usize kDim = 3;
+  const std::array<usize, 3> dims = {kDim, kDim, kDim};
+  const ShapeType cellShape = {kDim, kDim, kDim};
+
+  const DataPath geomPath({"Geom"});
+  const DataPath cellDataPath({"Geom", "CellData"});
+  const DataPath featureIdsPath({"Geom", "CellData", "FeatureIds"});
+  const DataPath activePath({"Geom", "CellFeatureData", "Active"});
+
+  // Face scheme: A, B, C, D are all isolated → 5 features + index 0
+  {
+    DataStructure ds;
+    BuildSegmentFeaturesTestGeometry(ds, dims, "Geom", "CellData");
+    FilterT filter;
+    Arguments args;
+    setupFaceArgs(args, ds, geomPath, cellDataPath);
+    auto preflightResult = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    const auto& actives = ds.getDataRefAs<UInt8Array>(activePath);
+    REQUIRE(actives.getNumberOfTuples() == 6);
+  }
+
+  // FaceEdgeVertex scheme: A+B merge (vertex), C+D merge (edge) → 3 features + index 0
+  DataStructure ds;
+  BuildSegmentFeaturesTestGeometry(ds, dims, "Geom", "CellData");
+  {
+    FilterT filter;
+    Arguments args;
+    setupFevArgs(args, ds, geomPath, cellDataPath);
+    auto preflightResult = filter.preflight(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    const auto& actives = ds.getDataRefAs<UInt8Array>(activePath);
+    REQUIRE(actives.getNumberOfTuples() == 4);
+  }
+
+  // Verify the vertex-connected pair shares a FeatureId
+  const auto& fids = ds.getDataRefAs<Int32Array>(featureIdsPath);
+  const auto& fidsStore = fids.getDataStoreRef();
+  REQUIRE(fidsStore.getValue(0 * 9 + 0 * 3 + 0) == fidsStore.getValue(1 * 9 + 1 * 3 + 1)); // A == B (vertex merge)
+  REQUIRE(fidsStore.getValue(0 * 9 + 0 * 3 + 2) == fidsStore.getValue(1 * 9 + 1 * 3 + 2)); // C == D (edge merge)
+  REQUIRE(fidsStore.getValue(0 * 9 + 0 * 3 + 0) != fidsStore.getValue(0 * 9 + 0 * 3 + 2)); // A != C (different values)
 }
 
 /**
