@@ -124,84 +124,64 @@ inline void BuildOrientationTestData(DataStructure& ds, const ShapeType& cellSha
   auto* phasesArray = DataArray<int32>::Create(ds, "Phases", phasesDataStore, amId);
   auto& phasesStore = phasesArray->getDataStoreRef();
 
-  // Quaternion Hamilton product: result = a * b, where q = (w, x, y, z)
-  auto quatMul = [](const std::array<float32, 4>& a, const std::array<float32, 4>& b) -> std::array<float32, 4> {
-    return {a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3], a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
-            a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1], a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]};
-  };
-
-  constexpr float32 k_Pi = 3.14159265358979323846f;
+  constexpr float32 k_DegToRad = 3.14159265358979323846f / 180.0f;
 
   const usize blocksPerX = (dimX + blockSize - 1) / blockSize;
   const usize blocksPerY = (dimY + blockSize - 1) / blockSize;
   const usize blocksPerZ = (dimZ + blockSize - 1) / blockSize;
   const usize numBlocks = blocksPerX * blocksPerY * blocksPerZ;
 
-  // Pre-compute one quaternion per block. Two strategies are needed because
-  // EBSD compares full misorientations (24 cubic symmetry operators fold
-  // orientation space) while CAxis compares only C-axis directions (a 2D
-  // quantity on the hemisphere).
+  // Quaternion Hamilton product: result = a * b, where q = (w, x, y, z)
+  auto quatMul = [](const std::array<float32, 4>& a, const std::array<float32, 4>& b) -> std::array<float32, 4> {
+    return {a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3], a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
+            a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1], a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]};
+  };
+
   std::vector<std::array<float32, 4>> blockQuats(numBlocks);
 
-  if(crystalStructure == 0) // Hexagonal_High → CAxis comparison uses C-axis directions
-  {
-    // Fibonacci hemisphere: distributes block C-axes uniformly on the upper
-    // hemisphere with ~8-9 degree minimum separation for ≤125 blocks, which
-    // comfortably exceeds the 5-degree tolerance used in tests.
-    //
-    // The CAxis filter computes the sample-frame C-axis as:
-    //   c_sample = oMatrix.transpose() * [0,0,1]
-    // where oMatrix = rotationMatrix(q). This equals q^{-1} * [0,0,1].
-    // So we need q^{-1} * [0,0,1] = fibonacci_point, meaning
-    //   q = Ry(-theta) * Rz(-phi)
-    // (the inverse of the rotation FROM [0,0,1] TO the hemisphere point).
-    constexpr float32 k_GoldenAngle = 2.399963229728653f; // pi * (3 - sqrt(5))
-    for(usize i = 0; i < numBlocks; i++)
-    {
-      const float32 cosTheta = 1.0f - (static_cast<float32>(i) + 0.5f) / static_cast<float32>(numBlocks);
-      const float32 theta = std::acos(std::clamp(cosTheta, 0.0f, 1.0f));
-      const float32 phi = static_cast<float32>(i) * k_GoldenAngle;
+  // Z-layer orientation scheme (shared by EBSD and CAxis):
+  // All blocks in the same Z-layer share a single X-axis rotation angle.
+  // This produces 3 horizontal layers of identical orientations:
+  //   z=0: 0° rotation   → q = [1, 0, 0, 0]      c-axis = [0, 0, 1]
+  //   z=1: 30° rotation  → q = [0.966, 0.259, 0, 0] c-axis = [0, 0.5, 0.866]
+  //   z=2: 60° rotation  → q = [0.866, 0.5, 0, 0]   c-axis = [0, 0.866, 0.5]
+  //
+  // Adjacent layers differ by 30°, well above the 5° tolerance → no merge.
+  // Within each layer, all blocks share the same angle → they merge.
+  //
+  // Merge pair override (non-periodic only):
+  //   Block (1,1,1) at center of z=1 is set to 0° instead of 30°.
+  //   It merges with its z=0 neighbor (1,1,0) while staying separate
+  //   from the other z=1 blocks (30° difference → no merge).
+  //
+  // Expected features (3x3x3 grid):
+  //   Base: 3 (z=0 layer + center pillar, z=1 minus pillar, z=2 layer)
+  //   Periodic: 2 (z=0 and z=2 share 0° via wrapping → merge, z=1 separate)
+  constexpr float32 k_LayerAngles[] = {0.0f, 30.0f, 60.0f};
 
-      const float32 halfPhi = phi * 0.5f;
-      const float32 halfTheta = theta * 0.5f;
-      const std::array<float32, 4> qyNeg = {std::cos(halfTheta), 0.0f, -std::sin(halfTheta), 0.0f};
-      const std::array<float32, 4> qzNeg = {std::cos(halfPhi), 0.0f, 0.0f, -std::sin(halfPhi)};
-      blockQuats[i] = quatMul(qyNeg, qzNeg);
-    }
-  }
-  else // Cubic_High → EBSD comparison uses full misorientation
+  for(usize bz = 0; bz < blocksPerZ; bz++)
   {
-    // Composed rotations around X, Y, and (1,1,0)/sqrt(2). Each block
-    // index contributes an independent 14-degree step. Adjacent blocks
-    // differ by 14 degrees in one component — well above the 5-degree
-    // tolerance under cubic symmetry's 24-operator reduction.
-    // NOTE: Step must be chosen so that (blocksPerAxis-1)*step != 90,
-    // because 90-degree rotations around <100> are cubic symmetry
-    // operators. With periodic wrapping (7 effective blocks), 6*14=84
-    // has misorientation |90-84|=6 degrees > 5-degree tolerance.
-    constexpr float32 k_Step = 14.0f * (k_Pi / 180.0f);
-    constexpr float32 k_InvSqrt2 = 0.70710678118654752f;
+    const usize layerIdx = std::min(bz, static_cast<usize>(2));
+    const float32 halfAngle = k_LayerAngles[layerIdx] * k_DegToRad * 0.5f;
+    // EBSDlib quaternion layout: (x, y, z, w) — Vector-Scalar order
+    const std::array<float32, 4> layerQuat = {std::sin(halfAngle), 0.0f, 0.0f, std::cos(halfAngle)};
 
-    for(usize bz = 0; bz < blocksPerZ; bz++)
+    for(usize by = 0; by < blocksPerY; by++)
     {
-      for(usize by = 0; by < blocksPerY; by++)
+      for(usize bx = 0; bx < blocksPerX; bx++)
       {
-        for(usize bx = 0; bx < blocksPerX; bx++)
-        {
-          const float32 ax = static_cast<float32>(bx) * k_Step;
-          const float32 ay = static_cast<float32>(by) * k_Step;
-          const float32 az = static_cast<float32>(bz) * k_Step;
-
-          const std::array<float32, 4> qx = {std::cos(ax * 0.5f), std::sin(ax * 0.5f), 0.0f, 0.0f};
-          const std::array<float32, 4> qyRot = {std::cos(ay * 0.5f), 0.0f, std::sin(ay * 0.5f), 0.0f};
-          const float32 halfAz = az * 0.5f;
-          const std::array<float32, 4> qd = {std::cos(halfAz), std::sin(halfAz) * k_InvSqrt2, std::sin(halfAz) * k_InvSqrt2, 0.0f};
-
-          const usize blockIdx = bz * blocksPerY * blocksPerX + by * blocksPerX + bx;
-          blockQuats[blockIdx] = quatMul(qd, quatMul(qyRot, qx));
-        }
+        const usize blockIdx = bz * blocksPerY * blocksPerX + by * blocksPerX + bx;
+        blockQuats[blockIdx] = layerQuat;
       }
     }
+  }
+
+  // Merge pair: block (1,1,1) gets z=0 angle (0°) instead of z=1 angle (30°).
+  // It merges downward into the z=0 layer through face neighbor (1,1,0).
+  if(!wrapBoundary && blocksPerX >= 3 && blocksPerY >= 3 && blocksPerZ >= 3)
+  {
+    const usize idx_111 = 1 * blocksPerY * blocksPerX + 1 * blocksPerX + 1;
+    blockQuats[idx_111] = blockQuats[0]; // Set to 0° (z=0 layer angle)
   }
 
   for(usize z = 0; z < dimZ; z++)
