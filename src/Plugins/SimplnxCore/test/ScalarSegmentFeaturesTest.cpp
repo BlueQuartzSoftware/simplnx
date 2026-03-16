@@ -63,6 +63,8 @@ void SetupArgs(Arguments& args, bool useMask, bool isPeriodic, int tolerance, Ch
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Small Correctness", "[SimplnxCore][ScalarSegmentFeatures]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // int32 1-comp => 15*15*4 = 900 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 900, true);
 

@@ -69,6 +69,8 @@ void SetupArgs(Arguments& args, bool useMask, float32 tolerance = 5.0f, ChoicesP
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Small Correctness", "[OrientationAnalysis][CAxisSegmentFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // Quats float32 4-comp => 15*15*4*4 = 3,600 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 3600, true);
 

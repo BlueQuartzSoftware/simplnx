@@ -70,6 +70,8 @@ void SetupArgs(Arguments& args, bool useMask, bool isPeriodic = false, float32 t
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Small Correctness", "[OrientationAnalysis][EBSDSegmentFeatures]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = GENERATE(false, true);
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
   // Quats float32 4-comp => 15*15*4*4 = 3,600 bytes/slice
   const UnitTest::PreferencesSentinel prefsSentinel("Zarr", 3600, true);
 
