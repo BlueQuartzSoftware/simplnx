@@ -105,13 +105,11 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Small Correctness", "[SimplnxCore
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath),
-                             dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath));
-    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath),
-                             dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath), dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -148,9 +146,8 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: FaceEdgeVertex Connectivity", "[S
     args.insertOrAssign(ScalarSegmentFeaturesFilter::k_RandomizeFeatures_Key, std::make_any<bool>(false));
   };
 
-  RunFaceEdgeVertexConnectivityTest<ScalarSegmentFeaturesFilter>(
-      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 0); },
-      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 1); });
+  RunFaceEdgeVertexConnectivityTest<ScalarSegmentFeaturesFilter>([&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 0); },
+                                                                 [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupScalar(args, ds, gp, cp, 1); });
 }
 
 TEST_CASE("SimplnxCore::ScalarSegmentFeatures: 200x200x200 Large OOC", "[SimplnxCore][ScalarSegmentFeatures]")
@@ -186,13 +183,11 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: 200x200x200 Large OOC", "[Simplnx
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-  CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath),
-                           dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath));
-  CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath),
-                           dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+  CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath), dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

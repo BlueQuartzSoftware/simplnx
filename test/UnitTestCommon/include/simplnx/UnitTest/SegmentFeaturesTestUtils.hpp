@@ -49,8 +49,7 @@ inline AttributeMatrix* BuildSegmentFeaturesTestGeometry(DataStructure& ds, cons
  * @param blockSize Voxel count per block edge.
  * @param arrayName Name for the scalar array.
  */
-inline void BuildScalarTestData(DataStructure& ds, const ShapeType& cellShape, DataObject::IdType amId, usize blockSize, const std::string& arrayName = "ScalarData",
-                                bool wrapBoundary = false)
+inline void BuildScalarTestData(DataStructure& ds, const ShapeType& cellShape, DataObject::IdType amId, usize blockSize, const std::string& arrayName = "ScalarData", bool wrapBoundary = false)
 {
   const usize dimZ = cellShape[0];
   const usize dimY = cellShape[1];
@@ -133,8 +132,8 @@ inline void BuildOrientationTestData(DataStructure& ds, const ShapeType& cellSha
 
   // Quaternion Hamilton product: result = a * b, where q = (w, x, y, z)
   auto quatMul = [](const std::array<float32, 4>& a, const std::array<float32, 4>& b) -> std::array<float32, 4> {
-    return {a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3], a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
-            a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1], a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]};
+    return {a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3], a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2], a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
+            a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]};
   };
 
   std::vector<std::array<float32, 4>> blockQuats(numBlocks);

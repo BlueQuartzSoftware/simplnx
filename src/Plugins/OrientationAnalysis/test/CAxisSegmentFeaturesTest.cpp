@@ -110,13 +110,11 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Small Correctness", "[Orie
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath),
-                             dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath));
-    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath),
-                             dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath), dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -156,13 +154,11 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: 200x200x200 Large OOC", "[
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-  CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath),
-                           dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath));
-  CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath),
-                           dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+  CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath), dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -336,9 +332,8 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivit
     args.insertOrAssign(CAxisSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
   };
 
-  RunFaceEdgeVertexConnectivityTest<CAxisSegmentFeaturesFilter>(
-      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupCAxis(args, ds, gp, cp, 0); },
-      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupCAxis(args, ds, gp, cp, 1); });
+  RunFaceEdgeVertexConnectivityTest<CAxisSegmentFeaturesFilter>([&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupCAxis(args, ds, gp, cp, 0); },
+                                                                [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupCAxis(args, ds, gp, cp, 1); });
 }
 
 TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: Generate Test Data", "[OrientationAnalysis][CAxisSegmentFeaturesFilter][.GenerateTestData]")

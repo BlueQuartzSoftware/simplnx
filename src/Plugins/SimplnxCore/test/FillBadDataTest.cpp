@@ -473,13 +473,11 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Correctness", "[Core][FillBadDa
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath),
-                             dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "Phases"})));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarPhasesPath));
-    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarPhasesPath),
-                             dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "Phases"})));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarPhasesPath), dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "Phases"})));
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -572,4 +570,3 @@ TEST_CASE("SimplnxCore::FillBadData: Generate Test Data", "[Core][FillBadDataFil
     UnitTest::WriteTestDataStructure(ds, outputDir / "input.dream3d");
   }
 }
-

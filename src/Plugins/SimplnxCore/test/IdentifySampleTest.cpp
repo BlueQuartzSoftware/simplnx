@@ -173,8 +173,7 @@ TEST_CASE("SimplnxCore::IdentifySampleFilter: 200x200x200 Exemplar Comparison", 
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<UInt8Array>(exemplarMaskPath));
-    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarMaskPath),
-                             dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
+    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarMaskPath), dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }

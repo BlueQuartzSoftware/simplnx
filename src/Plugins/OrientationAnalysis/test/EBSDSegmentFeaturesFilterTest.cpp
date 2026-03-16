@@ -112,13 +112,11 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Small Correctness", "[Orien
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath),
-                             dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
     REQUIRE_NOTHROW(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath));
-    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath),
-                             dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+    CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath), dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
@@ -157,13 +155,11 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: 200x200x200 Large OOC", "[O
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-  CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath),
-                           dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
+  CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath));
-  CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath),
-                           dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
+  CompareDataArrays<uint8>(exemplarDS.getDataRefAs<UInt8Array>(exemplarActivePath), dataStructure.getDataRefAs<UInt8Array>(k_ActivePath));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -347,9 +343,8 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity
     args.insertOrAssign(EBSDSegmentFeaturesFilter::k_RandomizeFeatureIds_Key, std::make_any<bool>(false));
   };
 
-  RunFaceEdgeVertexConnectivityTest<EBSDSegmentFeaturesFilter>(
-      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupEBSD(args, ds, gp, cp, 0); },
-      [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupEBSD(args, ds, gp, cp, 1); });
+  RunFaceEdgeVertexConnectivityTest<EBSDSegmentFeaturesFilter>([&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupEBSD(args, ds, gp, cp, 0); },
+                                                               [&](Arguments& args, DataStructure& ds, const DataPath& gp, const DataPath& cp) { setupEBSD(args, ds, gp, cp, 1); });
 }
 
 TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: Generate Test Data", "[OrientationAnalysis][EBSDSegmentFeatures][.GenerateTestData]")
