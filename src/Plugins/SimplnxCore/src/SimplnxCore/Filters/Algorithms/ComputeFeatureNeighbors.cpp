@@ -535,17 +535,17 @@ Result<> ComputeFeatureNeighbors::operator()()
   usize totalFeatures = numNeighbors.getNumberOfTuples();
 
   /* Ensure that we will be able to work with the user selected featureId Array */
-  const auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIds.begin(), featureIds.end());
-  if(static_cast<usize>(*maxFeatureId) >= totalFeatures)
+  const int32 maxFeatureId = *std::max_element(featureIds.cbegin(), featureIds.cend());
+  if(static_cast<usize>(maxFeatureId) >= totalFeatures)
   {
     std::stringstream out;
-    out << "Data Array " << m_InputValues->FeatureIdsPath.getTargetName() << " has a maximum value of " << *maxFeatureId << " which is greater than the "
+    out << "Data Array " << m_InputValues->FeatureIdsPath.getTargetName() << " has a maximum value of " << maxFeatureId << " which is greater than the "
         << " number of features from array " << m_InputValues->NumberOfNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the "
         << " incorrect array for the 'FeatureIds' array?";
     return MakeErrorResult(-24500, out.str());
   }
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
   SizeVec3 uDims = imageGeom.getDimensions();
 
   std::array<int64, 3> dims = {static_cast<int64>(uDims[0]), static_cast<int64>(uDims[1]), static_cast<int64>(uDims[2])};
@@ -561,22 +561,23 @@ Result<> ComputeFeatureNeighbors::operator()()
     // Surface Features filled with `false` by default during creation in preflight
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures,
-                           dims, spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+                         spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
   if(m_InputValues->StoreSurfaceFeatures)
   {
     // Surface Features filled with `false` by default during creation in preflight
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeatures, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                           spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
+                         spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
   if(m_InputValues->StoreBoundaryCells)
   {
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
     return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                           spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
+                         spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
   }
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, false>{}, imageGeom, nullptr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                           spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
+
+  return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, false>{}, imageGeom, nullptr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims, spacing64,
+                       neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
 }
