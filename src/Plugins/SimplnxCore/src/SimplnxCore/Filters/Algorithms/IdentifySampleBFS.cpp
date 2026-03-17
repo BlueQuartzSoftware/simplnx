@@ -65,8 +65,8 @@ struct IdentifySampleBFSFunctor
     std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
     std::vector<int64> currentVList;
-    std::vector<bool> checked(totalPoints, false);  // O(N) bits: tracks visited voxels
-    std::vector<bool> sample(totalPoints, false);    // O(N) bits: marks voxels in the largest component
+    std::vector<bool> checked(totalPoints, false); // O(N) bits: tracks visited voxels
+    std::vector<bool> sample(totalPoints, false);  // O(N) bits: marks voxels in the largest component
     int64 biggestBlock = 0;
 
     // --- Phase 1: Find the largest contiguous set of good voxels ------------
