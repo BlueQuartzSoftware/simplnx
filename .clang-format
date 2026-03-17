@@ -55,6 +55,9 @@ ConstructorInitializerIndentWidth: 0
 # IndentCaseLabels: false
 # IndentWidth: 2
 # IndentWrappedFunctionNames: false
+IndentRequiresClause: false
+IndentRequires: false
+RequiresClausePosition: OwnLine
 # KeepEmptyLinesAtTheStartOfBlocks: true
 # MacroBlockBegin: ''
 # MacroBlockEnd: ''
