@@ -11,9 +11,36 @@ using namespace nx::core;
 
 namespace
 {
-// Helper: Run forward CCL on a boolean condition using a 2-slice rolling buffer.
-// Returns the VectorUnionFind, rootSizes, and the next label.
-// The condition lambda takes (goodVoxels store, index) and returns true for voxels to label.
+// =============================================================================
+// runForwardCCL
+// =============================================================================
+// Generic chunk-sequential Connected Component Labeling function that works on
+// any boolean condition. It processes the volume in chunk order (OOC-friendly)
+// using a rolling 2-slice label buffer instead of storing labels for the
+// entire volume.
+//
+// How it works:
+//   - Scans voxels in chunk order (z, y, x innermost). For each voxel where
+//     `condition(store, index)` returns true, checks three backward neighbors
+//     (x-1, y-1, z-1) for existing labels.
+//   - If no labeled neighbor exists, assigns a new provisional label.
+//   - If multiple differently-labeled neighbors exist, unites them in the
+//     union-find structure.
+//   - Tracks per-label voxel counts (labelSizes) so the largest root can be
+//     identified after flattening, without a separate counting pass.
+//
+// The `condition` lambda determines which voxels to label. For example:
+//   - `store[idx] == true` labels good voxels (sample identification)
+//   - `!store[idx]` labels bad voxels (hole detection)
+//
+// The lastClearedZ optimization prevents re-clearing the rolling buffer when
+// a Z-slice spans multiple OOC chunks (e.g., chunk shape that splits within
+// a Z-plane). Without it, entering the same Z from the next chunk would
+// zero out labels already written by the previous chunk.
+//
+// Returns a CCLResult containing the union-find, accumulated root sizes,
+// the next available label, and the largest root/size.
+// =============================================================================
 struct CCLResult
 {
   VectorUnionFind unionFind;
@@ -29,14 +56,19 @@ CCLResult runForwardCCL(AbstractDataStore<T>& store, int64 dimX, int64 dimY, int
   CCLResult result;
   const usize sliceSize = static_cast<usize>(dimX * dimY);
 
-  // Rolling 2-slice buffer: only current + previous Z-slice labels
+  // Rolling 2-slice buffer: only the current and previous Z-slice labels are
+  // kept in memory. The scanline CCL only looks at backward neighbors (x-1,
+  // y-1, z-1), so two slices suffice. This gives O(dimX * dimY) memory
+  // instead of O(volume).
   std::vector<int64> labelBuffer(2 * sliceSize, 0);
-  // Size tracking per label for finding largest component without a rescan
+  // Per-label voxel count, accumulated during the forward scan so we can
+  // find the largest component after flattening without a separate pass.
   std::vector<uint64> labelSizes;
-  labelSizes.push_back(0); // index 0 unused
+  labelSizes.push_back(0); // index 0 unused (labels start at 1)
 
   const uint64 numChunks = store.getNumberOfChunks();
-  // Track last cleared Z-slice to avoid re-clearing when a Z-slice spans multiple chunks
+  // Track last cleared Z-slice to avoid re-clearing when a Z-slice spans
+  // multiple chunks (see algorithm overview comment above).
   int64 lastClearedZ = -1;
 
   for(uint64 chunkIdx = 0; chunkIdx < numChunks; chunkIdx++)
@@ -155,9 +187,29 @@ CCLResult runForwardCCL(AbstractDataStore<T>& store, int64 dimX, int64 dimY, int
   return result;
 }
 
-// Helper: Re-derive labels for each voxel using a second forward CCL pass
-// with a rolling buffer, then apply an action lambda for each labeled voxel.
-// This avoids storing labels for the entire volume.
+// =============================================================================
+// replayForwardCCL
+// =============================================================================
+// Re-derives labels by running the exact same forward CCL scan a second time
+// (same chunk order, same scanline traversal, same union-find). Since CCL
+// label assignment is fully deterministic given the same scan order and
+// condition, the re-derived provisional labels match the original ones from
+// runForwardCCL exactly. The union-find (already flattened) is then used to
+// resolve each provisional label to its root.
+//
+// The `action` lambda is called for each labeled voxel with its resolved root
+// label, the store, and the voxel's (x, y, z) coordinates. This allows
+// per-voxel decisions (e.g., "mask out if root != largestRoot", or "fill if
+// root is an interior hole") without ever storing labels for the entire volume.
+//
+// This is the key OOC trick: by re-computing labels on the fly using only a
+// 2-slice rolling buffer, we avoid O(volume) label storage. The trade-off is
+// reading the data twice, but for OOC datasets the memory savings are critical.
+//
+// Note: the union-find unite() calls from the first pass are not repeated here
+// because the union-find is already flattened. We only need the label
+// assignment logic to re-derive the same provisional labels.
+// =============================================================================
 template <typename T, typename ConditionFn, typename ActionFn>
 void replayForwardCCL(AbstractDataStore<T>& store, int64 dimX, int64 dimY, int64 dimZ, VectorUnionFind& unionFind, ConditionFn condition, ActionFn action, const std::atomic_bool& shouldCancel)
 {
@@ -250,9 +302,36 @@ void replayForwardCCL(AbstractDataStore<T>& store, int64 dimX, int64 dimY, int64
   }
 }
 
-// Chunk-sequential scanline CCL implementation for 3D volumes.
-// Processes data in chunk order to avoid random chunk access in OOC mode.
-// Uses a 2-slice rolling buffer (O(slice) memory) instead of O(volume).
+// =============================================================================
+// IdentifySampleCCLFunctor
+// =============================================================================
+// Chunk-sequential scanline CCL implementation for identifying the largest
+// connected component of good voxels in a 3D image geometry, then optionally
+// filling interior holes. Processes data in chunk order to avoid random chunk
+// access in OOC mode, using a 2-slice rolling buffer (O(slice) memory) instead
+// of O(volume).
+//
+// The algorithm has up to four phases:
+//
+// Phase 1: Forward CCL on good voxels
+//   Run runForwardCCL with condition = (goodVoxels[idx] == true) to discover
+//   all connected components and find the largest one by voxel count.
+//
+// Phase 2: Replay CCL to mask non-sample voxels
+//   Run replayForwardCCL with the same good-voxel condition. For each voxel
+//   whose resolved root != largestRoot, set goodVoxels to false. This removes
+//   satellite regions and noise without storing the full label volume.
+//
+// Phase 3 (if fillHoles): Forward CCL on bad voxels
+//   Run runForwardCCL with condition = (!goodVoxels[idx]) to discover all
+//   connected components of non-sample space (potential holes + exterior).
+//
+// Phase 4 (if fillHoles): Replay CCL to identify and fill interior holes
+//   First replay: for each bad-voxel component, check if any voxel lies on
+//   a domain boundary. Mark boundary-touching roots in a boolean vector.
+//   Second replay: for each bad voxel whose root is NOT boundary-touching,
+//   set goodVoxels to true (filling the interior hole).
+// =============================================================================
 struct IdentifySampleCCLFunctor
 {
   template <typename T>
@@ -267,7 +346,9 @@ struct IdentifySampleCCLFunctor
 
     const uint64 numChunks = goodVoxels.getNumberOfChunks();
 
-    // Phase 1: Forward CCL on good voxels using rolling buffer
+    // --- Phase 1: Forward CCL on good voxels ----------------------------------
+    // Discover all connected components of good voxels and find the largest one.
+    // The condition lambda selects voxels where goodVoxels[idx] is true.
     messageHandler(IFilter::Message::Type::Info, "Identifying sample regions...");
     auto goodCondition = [](const AbstractDataStore<T>& s, usize idx) -> bool { return static_cast<bool>(s[idx]); };
     auto cclResult = runForwardCCL<T>(goodVoxels, dimX, dimY, dimZ, goodCondition, shouldCancel);
@@ -277,9 +358,11 @@ struct IdentifySampleCCLFunctor
       return;
     }
 
-    // Phase 2: Mask out non-sample voxels by replaying CCL
-    // Re-derive labels using a second forward pass with rolling buffer,
-    // then set non-largest-component voxels to false.
+    // --- Phase 2: Replay CCL to mask non-sample voxels ----------------------
+    // Re-derive labels using a second forward pass with the same scan order
+    // and condition. For each voxel whose resolved root is not the largest
+    // component, set goodVoxels to false (removing satellite regions/noise).
+    // No O(volume) label storage is needed -- labels are recomputed on the fly.
     messageHandler(IFilter::Message::Type::Info, "Masking non-sample voxels...");
     const int64 largestRoot = cclResult.largestRoot;
     replayForwardCCL<T>(
@@ -293,12 +376,15 @@ struct IdentifySampleCCLFunctor
         shouldCancel);
     goodVoxels.flush();
 
-    // Phase 3: Hole-fill CCL on bad voxels (if fillHoles is true)
+    // --- Phase 3: Forward CCL on bad voxels (hole detection) -----------------
+    // Only runs if fillHoles is true. Discovers connected components of
+    // non-good voxels (the complement of the sample). These include both
+    // exterior empty space and interior holes.
     if(fillHoles)
     {
       messageHandler(IFilter::Message::Type::Info, "Filling holes in sample...");
 
-      // Forward CCL on non-good voxels (holes)
+      // Condition selects voxels where goodVoxels[idx] is false (bad data)
       auto holeCondition = [](const AbstractDataStore<T>& s, usize idx) -> bool { return !static_cast<bool>(s[idx]); };
       auto holeCCL = runForwardCCL<T>(goodVoxels, dimX, dimY, dimZ, holeCondition, shouldCancel);
 
@@ -307,8 +393,12 @@ struct IdentifySampleCCLFunctor
         return;
       }
 
-      // Determine which hole roots touch the domain boundary
-      // Replay CCL to check boundary status without storing full labels
+      // --- Phase 4a: Replay CCL to identify boundary-touching roots ---------
+      // Replay the hole CCL to re-derive labels. For each labeled voxel,
+      // check if it lies on a domain boundary face. If so, mark its resolved
+      // root as boundary-touching. Components that touch the boundary are
+      // exterior space (not holes). This avoids O(volume) label storage by
+      // re-computing labels on the fly.
       std::vector<bool> boundaryRoots(holeCCL.nextLabel, false);
       replayForwardCCL<T>(
           goodVoxels, dimX, dimY, dimZ, holeCCL.unionFind, holeCondition,
@@ -320,7 +410,11 @@ struct IdentifySampleCCLFunctor
           },
           shouldCancel);
 
-      // Phase 4: Fill interior holes by replaying CCL once more
+      // --- Phase 4b: Replay CCL again to fill interior holes ----------------
+      // A third replay of the same CCL (same condition, same union-find) to
+      // apply the fill. For each bad voxel whose root is NOT boundary-touching,
+      // it must be an interior hole fully enclosed by the sample -- set it to
+      // true. Boundary-touching components are exterior and left as-is.
       replayForwardCCL<T>(
           goodVoxels, dimX, dimY, dimZ, holeCCL.unionFind, holeCondition,
           [&boundaryRoots](AbstractDataStore<T>& s, usize idx, int64 root, usize /*x*/, usize /*y*/, usize /*z*/) {

@@ -181,7 +181,36 @@ SegmentFeatures::SegmentFeatures(DataStructure& dataStructure, const std::atomic
 // -----------------------------------------------------------------------------
 SegmentFeatures::~SegmentFeatures() = default;
 
-// -----------------------------------------------------------------------------
+// =============================================================================
+// DFS Flood-Fill Segmentation (In-Core Path)
+// =============================================================================
+//
+// This method implements a depth-first search (DFS) flood-fill algorithm for
+// segmenting voxels into features when data resides entirely in memory.
+//
+// Algorithm overview:
+//   1. Iterate through voxels to find "seed" voxels — unassigned, valid voxels
+//      that start a new feature.
+//   2. For each seed, assign a new feature ID (gnum) and push the seed onto a
+//      stack (voxelsList).
+//   3. Pop voxels from the stack, examine their neighbors via the configured
+//      neighbor scheme (Face or FaceEdgeVertex), and call the subclass's
+//      determineGrouping() to decide whether a neighbor belongs to the same
+//      feature. If so, the neighbor is assigned the feature ID and pushed
+//      onto the stack for further expansion.
+//   4. When the stack empties, the current feature is complete. Find the next
+//      seed and repeat until no seeds remain.
+//
+// Features are numbered in seed-discovery order (the first unassigned voxel
+// encountered becomes feature 1, the next becomes feature 2, etc.).
+//
+// Performance note:
+//   This algorithm uses random-access memory patterns — the stack can pop to
+//   any voxel in the volume, causing non-sequential reads. This is efficient
+//   for in-core DataStore (O(1) random access) but extremely slow for OOC
+//   ZarrStore, where random access triggers chunk loads/evictions ("chunk
+//   thrashing"). Use executeCCL() for out-of-core datasets.
+// =============================================================================
 Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 {
   ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
@@ -192,14 +221,20 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
   int64 dims[3] = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
 
-  // Initialize a sequence of execution modifiers
+  // gnum tracks the current feature ID being assigned, starting at 1.
+  // nextSeed is an optimization: it tracks the lowest voxel index that might
+  // still be unassigned, so getSeed() can skip over already-segmented voxels
+  // instead of rescanning from index 0 every time.
   int32 gnum = 1;
   int64 nextSeed = 0;
   int64 seed = getSeed(gnum, nextSeed);
   nextSeed = seed + 1;
   usize size = 0;
 
-  // Initialize containers
+  // voxelsList serves as the DFS stack (LIFO). It is pre-allocated to avoid
+  // frequent reallocations. 'size' is the logical stack pointer — elements
+  // are pushed by writing to voxelsList[size] and incrementing, and popped
+  // by decrementing size and reading voxelsList[size].
   constexpr usize initialVoxelsListSize = 100000;
   std::vector<int64> voxelsList(initialVoxelsListSize, -1);
 
@@ -211,11 +246,14 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
       return {};
     }
 
+    // Start a new feature: push the seed onto the stack
     size = 0;
     voxelsList[size] = seed;
     size++;
+    // DFS expansion loop: pop a voxel, check its neighbors, push matches
     while(size > 0)
     {
+      // Pop the top of the stack (LIFO order)
       const int64 currentPoint = voxelsList[size - 1];
       size -= 1;
       std::vector<int64> neighPoints;
@@ -231,14 +269,23 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 
       for(const auto& neighbor : neighPoints)
       {
+        // determineGrouping() is implemented by the subclass. It checks whether
+        // the neighbor is unassigned & similar to the reference voxel, and if
+        // so, assigns it the current feature ID (gnum) and returns true.
         if(determineGrouping(currentPoint, neighbor, gnum))
         {
+          // Push the newly-claimed neighbor onto the stack for further expansion
           voxelsList[size] = neighbor;
           size++;
+          // nextSeed optimization: if this neighbor was the next candidate seed,
+          // advance nextSeed so getSeed() won't return an already-assigned voxel.
           if(neighbor == nextSeed)
           {
             nextSeed = neighbor + 1;
           }
+          // If the stack has grown beyond the allocated capacity, extend it.
+          // The stack is stored in a flat vector, so we grow by a fixed block
+          // and initialize the new entries to -1.
           if(size >= voxelsList.size())
           {
             size = voxelsList.size();
@@ -256,7 +303,8 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
     // Send a progress message
     float percentComplete = static_cast<float>(totalVoxelsSegmented) / static_cast<float>(totalVoxels) * 100.0f;
     throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{:.2f}% - Current Feature Count: {}", percentComplete, gnum); });
-    // Increment or set values for the next iteration
+    // Reset the stack for the next feature. assign() shrinks/grows the vector
+    // back to the finished feature size + 1 and fills with -1.
     voxelsList.assign(size + 1, -1);
     gnum++;
     // Get the next seed value
@@ -273,16 +321,38 @@ Result<> SegmentFeatures::execute(IGridGeometry* gridGeom)
 // Chunk-Sequential Connected Component Labeling (CCL) Algorithm
 // =============================================================================
 //
-// Replaces the DFS flood-fill with a three-phase scanline algorithm optimized
-// for out-of-core performance.
+// This method replaces the DFS flood-fill (execute()) with a scanline-based
+// connected-component labeling algorithm optimized for out-of-core (OOC)
+// data stores (e.g. ZarrStore). Unlike DFS, which accesses voxels in
+// unpredictable stack-driven order, CCL processes voxels in strict Z-Y-X
+// scanline order, resulting in sequential chunk access patterns that avoid
+// chunk thrashing.
 //
-// Phase 1: Forward CCL pass - assign provisional labels using backward neighbors.
-//          Uses an in-memory buffer for labels to avoid cross-chunk reads from
-//          OOC storage (backward neighbors may be in evicted chunks).
-// Phase 2: Resolution - flatten Union-Find and build contiguous renumbering.
-//          Operates entirely in-memory on the provisional labels buffer.
-// Phase 3: Relabeling - write final contiguous feature IDs to the data store
-//          in chunk-sequential order for optimal OOC write performance.
+// The algorithm has three phases:
+//
+// Phase 1 (Forward CCL):
+//   Scan voxels in Z-Y-X order. For each valid voxel, examine only its
+//   "backward" neighbors — those already visited earlier in scanline order.
+//   If a backward neighbor has a label and is similar (per areNeighborsSimilar),
+//   adopt that label. If multiple distinct labels are found among backward
+//   neighbors, unite them in a Union-Find structure. If no backward neighbor
+//   matches, assign a fresh provisional label. Labels are written to both an
+//   in-memory rolling buffer (for fast neighbor lookups) and to the OOC
+//   featureIds store (for persistence).
+//
+// Phase 1b (Periodic boundary merge):
+//   If periodic boundaries are enabled, Phase 1 cannot detect connections
+//   that wrap around the volume (the wrapped neighbor has a higher linear
+//   index and hasn't been visited yet). This phase reads back provisional
+//   labels and unites similar voxels on opposite boundary faces.
+//
+// Phase 2 (Resolution + Relabeling):
+//   Flatten the Union-Find tree, then scan the featureIds store chunk by
+//   chunk. For each provisional label, look up its Union-Find root and
+//   map it to a contiguous final feature ID. Write the final ID back in
+//   the same pass. This combined discover-and-write approach halves the
+//   number of OOC accesses compared to separate resolution and write
+//   passes, and chunk-sequential iteration ensures optimal I/O.
 // =============================================================================
 Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<int32>& featureIdsStore)
 {
@@ -303,10 +373,21 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   int32 nextLabel = 1; // Provisional labels start at 1
 
   // Rolling 2-slice buffer for backward neighbor label lookups.
-  // Backward neighbors in CCL are always in the current Z-slice or the
-  // previous Z-slice, so 2 slices is sufficient. This uses O(slice) memory
-  // instead of O(volume), enabling processing of datasets larger than RAM.
-  // Buffer layout: slice (iz % 2) occupies [sliceOffset .. sliceOffset + sliceStride)
+  //
+  // Why 2 slices is sufficient:
+  //   In Z-Y-X scanline order, a voxel at (ix, iy, iz) has backward neighbors
+  //   only in the current Z-slice (iz) or the immediately previous Z-slice
+  //   (iz-1). No backward neighbor can ever be in Z-slice (iz-2) or earlier,
+  //   because all 13 backward neighbor offsets have dz in {-1, 0}. Therefore,
+  //   keeping just 2 slices in memory — the current and the previous — is
+  //   enough for all backward neighbor label reads.
+  //
+  // This design uses O(dimX * dimY) memory instead of O(dimX * dimY * dimZ),
+  // enabling processing of datasets much larger than available RAM.
+  //
+  // Buffer layout: Z-slice (iz % 2) occupies indices
+  //   [sliceOffset .. sliceOffset + sliceStride), where
+  //   sliceOffset = (iz % 2) * sliceSize.
   const usize sliceSize = static_cast<usize>(sliceStride);
   std::vector<int32> labelBuffer(2 * sliceSize, 0);
 
@@ -322,7 +403,11 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
       return {};
     }
 
-    // Let subclass pre-load input data for this slice into local buffers
+    // Let the subclass pre-load input arrays (e.g. GoodVoxels, CellPhases,
+    // Quats) for this Z-slice into local std::vector buffers. This eliminates
+    // per-element OOC overhead during areNeighborsSimilar() calls — instead
+    // of each comparison triggering a chunk load from ZarrStore, the subclass
+    // reads from fast contiguous vectors that were bulk-loaded once per slice.
     prepareForSlice(iz, dimX, dimY, dimZ);
 
     // Clear the current slice's portion of the rolling buffer
@@ -342,15 +427,28 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
           continue;
         }
 
-        // Check backward neighbors for existing labels
-        // "Backward" means already processed in Z-Y-X scanline order
-        // Read neighbor labels from the rolling buffer (direct memory access)
+        // Check backward neighbors for existing labels.
+        // "Backward" neighbors are those with a smaller linear index — i.e.,
+        // already processed earlier in Z-Y-X scanline order. In 3D, these are
+        // neighbors with dz < 0, or dz == 0 && dy < 0, or dz == 0 && dy == 0
+        // && dx < 0. Forward neighbors (higher linear index) are not yet
+        // labeled and cannot be consulted.
+        //
+        // Neighbor labels are read from the rolling buffer (direct memory
+        // access, O(1)) rather than from the OOC featureIds store, avoiding
+        // chunk loads for every neighbor lookup.
         int32 assignedLabel = 0;
         const usize prevSliceOffset = static_cast<usize>((iz + 1) % 2) * sliceSize;
 
         if(useFaceOnly)
         {
-          // Face connectivity: 3 backward neighbors (-X, -Y, -Z)
+          // Face connectivity: exactly 3 backward neighbors exist:
+          //   -X (dx=-1): one column to the left in the same row/slice
+          //   -Y (dy=-1): one row earlier in the same slice
+          //   -Z (dz=-1): same (x,y) position in the previous slice
+          // The 3 forward neighbors (+X, +Y, +Z) have not been labeled yet
+          // and are skipped.
+
           // Check -X neighbor (same Z-slice, same buffer region)
           if(ix > 0)
           {
@@ -405,7 +503,21 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
         }
         else
         {
-          // FaceEdgeVertex connectivity: 13 backward neighbors
+          // FaceEdgeVertex connectivity: 13 backward neighbors out of 26 total.
+          //
+          // A 3x3x3 neighborhood has 26 neighbors (excluding self). Exactly
+          // half (13) have a smaller linear index in Z-Y-X order and are thus
+          // "backward." These are enumerated by iterating:
+          //   dz in {-1, 0}:
+          //     dz=-1: all 9 neighbors in the previous Z-slice (any dx, dy)
+          //     dz= 0: only neighbors with dy < 0 (3 neighbors), or
+          //            dy == 0 && dx == -1 (1 neighbor) => 4 total
+          //   Total: 9 + 4 = 13 backward neighbors
+          //
+          // The loop bounds below encode this enumeration efficiently:
+          //   - dz ranges [-1, 0]
+          //   - dy ranges [-1, +1] when dz<0, or [-1, 0] when dz==0
+          //   - dx ranges [-1, +1] when dz<0 or dy<0, or [-1, -1] when dz==0 && dy==0
           for(int64 dz = -1; dz <= 0; ++dz)
           {
             const int64 nz = iz + dz;
@@ -500,7 +612,12 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     return {};
   }
 
-  // Disable subclass input buffering — Phase 1b may access arbitrary Z-slices
+  // Disable subclass input buffering by passing iz=-1 as a sentinel value.
+  // Phase 1b (periodic boundary merge) compares voxels on opposite faces of
+  // the volume, which may be in any Z-slice (e.g. iz=0 vs iz=dimZ-1). The
+  // subclass's 1-or-2-slice buffering strategy from Phase 1 cannot handle
+  // arbitrary cross-volume access, so we signal it to fall back to direct
+  // (unbuffered) reads from the underlying data store.
   prepareForSlice(-1, dimX, dimY, dimZ);
 
   // =========================================================================
@@ -517,6 +634,14 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
 
     if(useFaceOnly)
     {
+      // Face connectivity: each axis is handled independently because face
+      // neighbors only connect along a single axis. For each axis, we
+      // iterate over the 2D face and compare each voxel at the low boundary
+      // (e.g. ix=0) with its counterpart at the high boundary (e.g.
+      // ix=dimX-1). These are the same voxel pairs that getFaceNeighbors()
+      // would return with isPeriodic=true, but which Phase 1 could not
+      // process because the wrapped neighbor had not yet been labeled.
+
       // X-axis: unite voxels at ix=0 with ix=dimX-1
       if(dimX > 1)
       {
@@ -577,15 +702,26 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     else
     {
       // FaceEdgeVertex connectivity: check all 26-neighbor pairs that wrap
-      // across periodic boundaries. Only boundary voxels can have wrapped
-      // neighbors, so skip interior voxels. Each pair is processed once
-      // (neighIdx > index) since union-find is symmetric.
+      // across periodic boundaries. Unlike face-only mode, edge and vertex
+      // neighbors can wrap across two or even three axes simultaneously
+      // (e.g. a corner voxel's diagonal neighbor wraps in X, Y, and Z).
+      // This requires checking all 26 neighbor offsets for every boundary
+      // voxel, filtering to only those that actually wrap.
+      //
+      // The onBoundary check skips interior voxels (whose 26 neighbors are
+      // all within bounds and were already handled by Phase 1).
+      //
+      // The neighIdx > index deduplication ensures each pair of periodic
+      // neighbors is united exactly once. Since union-find is symmetric
+      // (unite(A,B) == unite(B,A)), processing only the pair where the
+      // neighbor has the larger linear index avoids redundant work.
       for(int64 iz = 0; iz < dimZ; iz++)
       {
         for(int64 iy = 0; iy < dimY; iy++)
         {
           for(int64 ix = 0; ix < dimX; ix++)
           {
+            // Only boundary voxels can have neighbors that wrap around
             const bool onBoundary = (ix == 0 || ix == dimX - 1 || iy == 0 || iy == dimY - 1 || iz == 0 || iz == dimZ - 1);
             if(!onBoundary)
             {
@@ -649,14 +785,17 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
                     wrappedX = true;
                   }
 
-                  // Only process pairs that wrap in at least one axis
+                  // Only process pairs that actually wrap around at least one
+                  // axis. Non-wrapped pairs were already handled in Phase 1.
                   if(!wrappedX && !wrappedY && !wrappedZ)
                   {
                     continue;
                   }
 
                   const int64 neighIdx = nz * sliceStride + ny * dimX + nx;
-                  // Process each pair once to avoid redundant work
+                  // Deduplication: only process the pair where neighIdx > index.
+                  // This ensures each (voxelA, voxelB) pair is united exactly
+                  // once, since unite() is symmetric.
                   if(neighIdx <= index)
                   {
                     continue;
@@ -682,17 +821,39 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   }
 
   // =========================================================================
-  // Phase 2: Resolution - build direct provisional-label-to-final-ID lookup
+  // Phase 2: Resolution + Relabeling (combined single pass)
+  // =========================================================================
+  //
+  // After Phase 1/1b, every valid voxel has a provisional label and the
+  // Union-Find knows which provisional labels belong to the same connected
+  // component. This phase:
+  //   1. Flattens the Union-Find so every label points directly to its root
+  //      (path compression eliminates intermediate nodes).
+  //   2. Scans voxels chunk-by-chunk in deterministic order. For each
+  //      provisional label, performs a two-level lookup:
+  //        a) label -> root: via unionFind.find(label) (O(1) after flatten)
+  //        b) root -> finalId: via the labelToFinal[] map
+  //      If the root has not yet been assigned a final ID, allocate the next
+  //      sequential ID (finalFeatureCount++). Then cache the mapping for the
+  //      original label as well (labelToFinal[label] = finalId) so subsequent
+  //      voxels with the same provisional label skip the union-find lookup.
+  //   3. Writes the final ID back to featureIdsStore[index] in the same pass.
+  //
+  // Combining discovery and relabeling into a single pass halves the number
+  // of OOC chunk loads compared to doing them separately. The chunk-sequential
+  // iteration order ensures each chunk is loaded exactly once.
+  //
+  // Because the scan is in linear (Z-Y-X) order, final feature IDs are
+  // assigned in the order their first voxel appears in the volume, matching
+  // the seed-discovery order of the DFS algorithm.
   // =========================================================================
   m_MessageHelper.sendMessage("Resolving labels and writing final feature IDs...");
 
   unionFind.flatten();
 
-  // Single-pass resolution and relabeling: read each provisional label,
-  // discover or look up its final feature ID, and write it back immediately.
-  // This halves OOC accesses compared to separate discovery and write passes.
-  // Linear scan ensures feature IDs are assigned in the order that seeds
-  // are first encountered (matching DFS seed-discovery order).
+  // labelToFinal maps provisional label -> final contiguous feature ID.
+  // Indexed by provisional label (0..nextLabel-1). A value of 0 means
+  // "not yet assigned." This avoids a hash map and gives O(1) lookups.
   std::vector<int32> labelToFinal(static_cast<usize>(nextLabel), 0);
   int32 finalFeatureCount = 0;
 
@@ -719,16 +880,23 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
           int32 label = featureIdsStore[index];
           if(label > 0)
           {
+            // Two-level lookup: provisional label -> union-find root -> final ID
             if(labelToFinal[label] == 0)
             {
+              // Level 1: find this label's root in the (flattened) union-find
               int32 root = static_cast<int32>(unionFind.find(label));
+              // Level 2: if the root hasn't been assigned a final ID yet,
+              // allocate the next sequential feature ID
               if(labelToFinal[root] == 0)
               {
                 finalFeatureCount++;
                 labelToFinal[root] = finalFeatureCount;
               }
+              // Cache the mapping for this provisional label so future voxels
+              // with the same label skip the union-find lookup entirely
               labelToFinal[label] = labelToFinal[root];
             }
+            // Write the final contiguous feature ID back to the data store
             featureIdsStore[index] = labelToFinal[label];
           }
         }

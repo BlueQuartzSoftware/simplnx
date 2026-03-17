@@ -29,6 +29,37 @@ CAxisSegmentFeatures::CAxisSegmentFeatures(DataStructure& dataStructure, const I
 CAxisSegmentFeatures::~CAxisSegmentFeatures() noexcept = default;
 
 // -----------------------------------------------------------------------------
+// Segments a hexagonal EBSD dataset into features (grains) based on c-axis
+// alignment. Two neighboring voxels are grouped into the same feature when
+// their crystallographic c-axes (the [0001] direction) are aligned within a
+// user-specified angular tolerance. Unlike EBSDSegmentFeatures which uses full
+// misorientation via LaueOps, this filter only considers the c-axis direction,
+// which is useful for analyzing basal texture in hexagonal materials.
+//
+// Pre-validation:
+//   Before segmentation, every cell's phase is checked against the crystal
+//   structure table. All phases must be hexagonal (Hexagonal_High 6/mmm or
+//   Hexagonal_Low 6/m); if any non-hexagonal phase is found, the filter
+//   returns an error because c-axis alignment is only meaningful for HCP.
+//
+// Algorithm dispatch:
+//   - In-core data  -> execute()    : classic depth-first-search (DFS) flood fill
+//   - Out-of-core   -> executeCCL() : connected-component labeling that streams
+//                                     data slice-by-slice to limit memory usage
+//   The choice is made by checking IsOutOfCore() on the FeatureIds array (i.e.,
+//   whether the backing DataStore lives on disk) or if ForceOocAlgorithm() is
+//   set (used for testing).
+//
+// Post-processing after either algorithm:
+//   1. Validate that at least one feature was found (error if not).
+//   2. Resize the Feature AttributeMatrix to (m_FoundFeatures + 1) tuples so
+//      that all per-feature arrays (Active, etc.) have the correct size.
+//      Index 0 is reserved as an invalid/background feature.
+//   3. Initialize the Active array: fill with 1 (active), then set index 0
+//      to 0 to mark it as the reserved background slot.
+//   4. Optionally randomize FeatureIds so that spatially adjacent grains get
+//      non-sequential IDs, improving visual contrast in color-mapped renders.
+// -----------------------------------------------------------------------------
 Result<> CAxisSegmentFeatures::operator()()
 {
   this->m_NeighborScheme = m_InputValues->NeighborScheme;
@@ -113,6 +144,22 @@ Result<> CAxisSegmentFeatures::operator()()
 }
 
 // -----------------------------------------------------------------------------
+// Finds the next unassigned voxel that can serve as the seed for a new feature.
+// The scan is a simple linear walk starting from `nextSeed`, which is the index
+// immediately after the last seed found. This avoids rescanning already-assigned
+// voxels at the beginning of the array.
+//
+// A voxel is eligible to become a seed when all three conditions are met:
+//   1. featureId == 0 : the voxel has not yet been assigned to any feature.
+//   2. Passes the mask: if masking is enabled, the voxel must be flagged as
+//      "good" (e.g., not a bad scan point).
+//   3. cellPhase > 0  : the voxel belongs to a real crystallographic phase
+//      (phase 0 is reserved for unindexed/background points).
+//
+// When a valid seed is found, its featureId is immediately set to `gnum`
+// (the new feature number) so that subsequent calls will skip it.
+// Returns the linear index of the seed, or -1 if no more seeds exist.
+// -----------------------------------------------------------------------------
 int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 {
   DataArray<int32>::store_type& featureIds = m_FeatureIdsArray->getDataStoreRef();
@@ -147,6 +194,29 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   return seed;
 }
 
+// -----------------------------------------------------------------------------
+// Determines whether a neighboring voxel should be merged into the current
+// feature during the DFS flood fill (execute() path). This is NOT used by
+// the CCL path, which calls areNeighborsSimilar() instead.
+//
+// The method checks three conditions before grouping:
+//   1. The neighbor's featureId must be 0 (unassigned).
+//   2. The neighbor must pass the mask (if masking is enabled).
+//   3. The neighbor must have a c-axis aligned with the reference voxel.
+//
+// C-axis misalignment calculation:
+//   - Both voxels must share the same phase (no cross-phase grouping).
+//   - Quaternion orientations (QuatF, 4 floats) are extracted for both voxels.
+//   - Each quaternion is converted to a 3x3 orientation matrix, which is then
+//     transposed and multiplied by the crystal c-axis unit vector [0,0,1] to
+//     obtain the sample-frame c-axis direction for each voxel.
+//   - Both c-axis vectors are normalized so the dot product directly gives
+//     the cosine of the angle between them.
+//   - The dot product is clamped to [-1, 1] to guard against floating-point
+//     error, then acos() gives the misalignment angle w (in radians).
+//   - Because the c-axis is bidirectional (parallel and antiparallel are
+//     equivalent), the check accepts w <= tolerance OR (pi - w) <= tolerance.
+//   - If accepted, the neighbor's featureId is set to `gnum` as a side effect.
 // -----------------------------------------------------------------------------
 bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighborpoint, int32 gnum) const
 {
@@ -196,6 +266,25 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
 }
 
 // -----------------------------------------------------------------------------
+// Checks whether a single voxel is eligible for segmentation (used by the CCL
+// path in executeCCL()). A voxel is valid if it passes the mask and has a
+// crystallographic phase > 0.
+//
+// Slice buffer fast path:
+//   When m_UseSliceBuffers is true (OOC mode), the method checks whether the
+//   voxel's Z-slice is currently loaded in one of the two buffer slots. The
+//   slot lookup checks both m_BufferedSliceZ[0] and m_BufferedSliceZ[1] to
+//   find which slot (if any) holds the target slice. If found, mask and phase
+//   values are read from the in-memory m_MaskBuffer and m_PhaseBuffer arrays,
+//   avoiding an on-disk I/O round-trip.
+//
+// OOC fallback:
+//   If slice buffers are not active, or if the voxel's slice is not currently
+//   buffered (which can happen during Phase 1b of CCL when periodic boundary
+//   merging accesses non-adjacent slices), the method falls back to direct
+//   array access through the DataStore, which may trigger on-disk I/O for
+//   out-of-core data.
+// -----------------------------------------------------------------------------
 bool CAxisSegmentFeatures::isValidVoxel(int64 point) const
 {
   if(m_UseSliceBuffers)
@@ -233,6 +322,34 @@ bool CAxisSegmentFeatures::isValidVoxel(int64 point) const
   return true;
 }
 
+// -----------------------------------------------------------------------------
+// Determines whether two neighboring voxels have sufficiently aligned c-axes
+// to belong to the same feature. Used exclusively by the CCL path
+// (executeCCL()), whereas the DFS path uses determineGrouping() instead.
+//
+// Slice buffer fast path:
+//   When both voxels' Z-slices are present in the rolling 2-slot buffer, all
+//   data is read from the in-memory buffers (m_QuatBuffer, m_PhaseBuffer,
+//   m_MaskBuffer). The buffer index for each point is computed as:
+//     slot * sliceSize + (point - sliceZ * sliceSize)
+//   For quaternions, an additional x4 factor accounts for the 4 components
+//   per voxel. The method then:
+//     1. Checks point2's mask validity.
+//     2. Checks that point2's phase > 0 and both phases match.
+//     3. Constructs QuatF objects from the buffered quaternion components.
+//     4. Converts each quaternion to an orientation matrix, transposes it, and
+//        multiplies by [0,0,1] to get the sample-frame c-axis direction.
+//     5. Normalizes both c-axis vectors and computes the dot product.
+//     6. Clamps the dot product to [-1,1] and takes acos() to get the
+//        misalignment angle w.
+//     7. Returns true if w <= tolerance OR (pi - w) <= tolerance (because
+//        parallel and antiparallel c-axes are crystallographically equivalent).
+//
+// OOC fallback:
+//   If either voxel's slice is not buffered (e.g., during Phase 1b periodic
+//   merge), falls back to direct DataStore access: validates point2 via
+//   isValidVoxel(), checks phase equality, then computes c-axis misalignment
+//   from the full quaternion and phase arrays on disk.
 // -----------------------------------------------------------------------------
 bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
 {
@@ -328,6 +445,22 @@ bool CAxisSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
 }
 
 // -----------------------------------------------------------------------------
+// Allocates the rolling 2-slot slice buffers used by the CCL (OOC) algorithm.
+// Called once at the start of the OOC branch in operator(), before executeCCL().
+//
+// Each slot holds one full XY slice (dimX * dimY voxels). Two slots are needed
+// because the CCL algorithm compares the current slice (iz) with the previous
+// slice (iz-1), so both must be in memory simultaneously.
+//
+// Buffers allocated:
+//   - m_QuatBuffer  : 2 * sliceSize * 4 floats  (quaternion: 4 components/voxel)
+//   - m_PhaseBuffer : 2 * sliceSize int32 values (one phase ID per voxel)
+//   - m_MaskBuffer  : 2 * sliceSize uint8 values (one mask flag per voxel)
+//
+// Both m_BufferedSliceZ slots are initialized to -1 (no slice loaded).
+// m_UseSliceBuffers is set to true so that isValidVoxel() and
+// areNeighborsSimilar() will use the fast buffer path.
+// -----------------------------------------------------------------------------
 void CAxisSegmentFeatures::allocateSliceBuffers(int64 dimX, int64 dimY)
 {
   m_BufSliceSize = dimX * dimY;
@@ -340,6 +473,12 @@ void CAxisSegmentFeatures::allocateSliceBuffers(int64 dimX, int64 dimY)
   m_UseSliceBuffers = true;
 }
 
+// -----------------------------------------------------------------------------
+// Releases the slice buffers after executeCCL() completes, freeing the memory
+// back to the system. Called in the OOC branch of operator() after the CCL
+// algorithm finishes. Resets m_UseSliceBuffers to false and both
+// m_BufferedSliceZ slots to -1. Uses clear() + shrink_to_fit() on each vector
+// to guarantee memory deallocation.
 // -----------------------------------------------------------------------------
 void CAxisSegmentFeatures::deallocateSliceBuffers()
 {
@@ -355,6 +494,31 @@ void CAxisSegmentFeatures::deallocateSliceBuffers()
   m_BufSliceSize = 0;
 }
 
+// -----------------------------------------------------------------------------
+// Pre-loads voxel data for a single Z-slice into the rolling 2-slot buffer,
+// called by executeCCL() before processing each slice.
+//
+// Rolling buffer design:
+//   The target slot is determined by (iz % 2), so even slices go to slot 0 and
+//   odd slices go to slot 1. Because the CCL algorithm processes slices in
+//   order (0, 1, 2, ...), at any given slice iz the previous slice (iz-1) is
+//   always in the other slot, keeping both the current and previous slice data
+//   available in memory.
+//
+// Sentinel behavior:
+//   If iz < 0, slice buffering is disabled (m_UseSliceBuffers = false). The
+//   CCL algorithm passes iz = -1 after completing the slice-by-slice sweep to
+//   signal that subsequent calls (e.g., during Phase 1b periodic boundary
+//   merging) should use direct DataStore access instead of the buffers.
+//
+// Data loaded per slice:
+//   - Quaternions (4 float32 per voxel) into m_QuatBuffer
+//   - Phase IDs (1 int32 per voxel) into m_PhaseBuffer
+//   - Mask flags (1 uint8 per voxel) into m_MaskBuffer; if masking is disabled,
+//     all mask values are set to 1 (valid)
+//
+// Note: Unlike the EBSDSegmentFeatures version, this implementation does not
+// include a skip-if-already-loaded check; the slot is always overwritten.
 // -----------------------------------------------------------------------------
 void CAxisSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ)
 {

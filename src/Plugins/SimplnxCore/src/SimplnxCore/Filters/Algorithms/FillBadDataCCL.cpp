@@ -68,7 +68,11 @@ struct CopyTupleFunctor
   }
 };
 
-// RAII wrapper for std::FILE* that auto-closes on destruction
+// RAII wrapper for std::FILE* that guarantees cleanup of the temporary file
+// on destruction. This ensures the temp file is closed (and thus deleted by
+// the OS, since std::tmpfile creates an anonymous file) even if Phase 4
+// returns early due to cancellation or error. Copy/assignment are deleted
+// to enforce single-ownership semantics.
 struct TempFileGuard
 {
   std::FILE* file = nullptr;
@@ -127,10 +131,18 @@ void FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, UnionF
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
   // Rolling 2-slice buffer for backward neighbor label reads.
-  // Only current + previous Z-slice are needed. O(slice) memory.
+  // The scanline CCL algorithm only needs to look at three backward neighbors:
+  // x-1 (same slice), y-1 (same slice), and z-1 (previous slice). So we only
+  // need the current and immediately previous Z-slice labels in memory. The
+  // buffer alternates between even/odd Z indices via (z % 2) indexing.
+  // This gives O(dimX * dimY) memory instead of O(volume).
   std::vector<int32> labelBuffer(2 * sliceSize, 0);
 
-  // Track last cleared Z-slice to avoid re-clearing when a Z-slice spans multiple chunks
+  // Track the last Z-slice index whose buffer region was cleared. This is
+  // an optimization for the case where a single Z-slice spans multiple OOC
+  // chunks (e.g., chunk shape that splits within a Z-plane). Without this
+  // guard, re-entering the same Z from the next chunk would zero out labels
+  // already written by the previous chunk for that same Z-slice.
   int64 lastClearedZ = -1;
 
   // Process each chunk sequentially
@@ -217,10 +229,15 @@ void FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, UnionF
             unionFind.find(assignedLabel);
           }
 
-          // Write to rolling buffer AND featureIds store
+          // Write the provisional label to both the rolling buffer (for
+          // backward neighbor reads by subsequent voxels) and the featureIds
+          // store (persisted for Phases 2-3 to read back).
           labelBuffer[curOff + inSlice] = assignedLabel;
           featureIdsStore[index] = assignedLabel;
 
+          // Accumulate region size: each voxel contributes 1 to its label.
+          // After Phase 2 flattening, sizes are aggregated to root labels
+          // so we can classify regions by total voxel count.
           unionFind.addSize(assignedLabel, 1);
         }
       }
@@ -252,8 +269,13 @@ void FillBadDataCCL::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStor
   const SizeVec3 udims = selectedImageGeom.getDimensions();
   const uint64 numChunks = featureIdsStore.getNumberOfChunks();
 
-  // Build a vector-based classification: isSmallRoot[label] = 1 if small, 0 if large
-  // Only provisional labels [startLabel, nextLabel) are CCL labels; others are original feature IDs.
+  // Build a vector-based classification: isSmallRoot[label] = 1 if small, 0 if large.
+  //
+  // The startLabel boundary is critical: provisional CCL labels were assigned
+  // starting at (maxExistingFeatureId + 1) during Phase 1, so labels in the
+  // range [1, startLabel) are original good feature IDs that must NOT be
+  // touched. Only labels in [startLabel, nextLabel) are CCL-assigned bad-data
+  // region labels that need classification and relabeling.
   std::vector<int8> isSmallRoot(static_cast<usize>(nextLabel), 0);
   for(int32 label = startLabel; label < nextLabel; label++)
   {
@@ -343,7 +365,13 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
     voxelArrayNames = allChildArrays.value();
   }
 
-  // Open temp file for deferred fill pairs
+  // Open a temporary file for deferred fill pairs. We use a temp file instead
+  // of an O(N) in-memory neighbors vector so that Phase 4 stays OOC-friendly.
+  // Pass 1 writes (dest, src) index pairs to the file; Pass 2 reads them back
+  // and applies the fills. This two-pass approach ensures that featureIds are
+  // read-only during the vote scan (Pass 1), so all votes see the pre-iteration
+  // state. The TempFileGuard RAII wrapper guarantees the file is closed even
+  // if an early return or error occurs, preventing temp file leaks.
   TempFileGuard tmpGuard;
   tmpGuard.file = std::tmpfile();
   if(tmpGuard.file == nullptr)
@@ -419,7 +447,12 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
                 }
               }
 
-              // Reset vote counters
+              // Reset vote counters by re-visiting only the neighbors that
+              // were actually incremented above. This sets featureNumber[feature]
+              // back to 0 for each neighbor's feature, avoiding the need to zero
+              // the entire featureNumber vector (which would be O(numFeatures)
+              // per voxel). Since at most 6 neighbors are visited, this reset
+              // is O(1) per voxel.
               for(const auto& faceIndex : faceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
@@ -456,7 +489,15 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
     }
 
     // Pass 2 (Apply): Read (dest, src) pairs from temp file and apply fills.
-    // Update all cell arrays except featureIds first, then featureIds last.
+    // This is a two-pass apply strategy:
+    //   - First pass: update all non-featureIds cell arrays (phases, orientations,
+    //     etc.) by copying all components from src to dest.
+    //   - Second pass: update featureIds last.
+    // The reason featureIds must be updated LAST is that during the first pass,
+    // the src voxel's featureId must remain valid (> 0) so that subsequent
+    // iterations correctly identify it as a good-data source. If featureIds were
+    // updated alongside other arrays, a dest voxel that just received a new
+    // featureId could be read as a source before its other arrays were copied.
     std::rewind(tmpGuard.file);
     std::array<int64, 2> pair;
 
@@ -477,7 +518,7 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
       }
     }
 
-    // Second pass over pairs: update featureIds last
+    // Second pass over pairs: update featureIds last (see explanation above)
     std::rewind(tmpGuard.file);
     for(usize pairIdx = 0; pairIdx < pairsWritten && std::fread(pair.data(), sizeof(int64), 2, tmpGuard.file) == 2; pairIdx++)
     {

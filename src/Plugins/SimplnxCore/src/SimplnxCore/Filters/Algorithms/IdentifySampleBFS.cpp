@@ -12,10 +12,37 @@ using namespace nx::core;
 
 namespace
 {
-// BFS flood-fill algorithm for identifying the largest connected component.
-// Uses std::vector<bool> (1 bit per voxel) for minimal memory overhead.
+// =============================================================================
+// IdentifySampleBFSFunctor
+// =============================================================================
+// BFS flood-fill algorithm for identifying the largest connected component of
+// "good" voxels in an image geometry, then optionally filling interior holes.
+//
+// The algorithm has two phases:
+//
+// Phase 1 (Find Largest Component):
+//   BFS flood-fill discovers all connected components of good voxels
+//   (goodVoxels == true). Each component is found by starting BFS from an
+//   unchecked good voxel and expanding to all face-adjacent good neighbors.
+//   The largest component by voxel count is tracked as "the sample". After
+//   all components are found, any good voxels NOT in the largest component
+//   are set to false (they are noise or satellite regions).
+//   Uses O(N) memory: checked + sample vectors (std::vector<bool>, 1 bit each).
+//
+// Phase 2 (Hole Fill, optional):
+//   If fillHoles is true, a second BFS pass runs on bad voxels
+//   (goodVoxels == false). Each connected component of bad voxels is
+//   discovered via BFS. During BFS, a `touchesBoundary` flag tracks whether
+//   any voxel in the component lies on the domain boundary (x/y/z == 0 or
+//   max). If the component does NOT touch the boundary, it is fully enclosed
+//   by the sample and is an interior hole -- all its voxels are set to true.
+//   If it touches the boundary, it is external empty space and left as-is.
+//
+// NOTE: Uses std::vector<bool> (1 bit per voxel) for minimal memory overhead.
 // Fast for in-core data where random access is O(1), but causes chunk
 // thrashing in OOC mode due to BFS visiting neighbors across chunk boundaries.
+// Use IdentifySampleCCL for out-of-core compatible processing.
+// =============================================================================
 struct IdentifySampleBFSFunctor
 {
   template <typename T>
@@ -38,11 +65,13 @@ struct IdentifySampleBFSFunctor
     std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
     std::vector<int64> currentVList;
-    std::vector<bool> checked(totalPoints, false);
-    std::vector<bool> sample(totalPoints, false);
+    std::vector<bool> checked(totalPoints, false);  // O(N) bits: tracks visited voxels
+    std::vector<bool> sample(totalPoints, false);    // O(N) bits: marks voxels in the largest component
     int64 biggestBlock = 0;
 
-    // Find the largest contiguous set of good voxels using BFS flood-fill
+    // --- Phase 1: Find the largest contiguous set of good voxels ------------
+    // BFS flood-fill from each unvisited good voxel. Track the largest
+    // connected component found so far.
     float threshold = 0.0f;
     for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
@@ -63,6 +92,7 @@ struct IdentifySampleBFSFunctor
 
       if(!checked[voxelIndex] && goodVoxels.getValue(voxelIndex))
       {
+        // Start BFS from this seed voxel to discover one connected component
         currentVList.push_back(voxelIndex);
         usize count = 0;
         while(count < currentVList.size())
@@ -88,6 +118,7 @@ struct IdentifySampleBFSFunctor
           }
           count++;
         }
+        // If this component is the largest found so far, record it as the sample
         if(static_cast<int64>(currentVList.size()) >= biggestBlock)
         {
           biggestBlock = currentVList.size();
@@ -100,6 +131,8 @@ struct IdentifySampleBFSFunctor
         currentVList.clear();
       }
     }
+    // Any good voxels NOT in the largest component are noise/satellites --
+    // set them to false so only the primary sample remains.
     for(int64 i = 0; i < totalPoints; i++)
     {
       if(!sample[i] && goodVoxels.getValue(i))
@@ -110,7 +143,13 @@ struct IdentifySampleBFSFunctor
     sample.clear();
     checked.assign(totalPoints, false);
 
-    // Fill holes: flip bad voxels that are fully enclosed by the sample
+    // --- Phase 2: Hole fill (optional) ----------------------------------------
+    // BFS on bad voxels (goodVoxels == false). Each connected component of
+    // bad voxels is checked: if any voxel in the component touches a domain
+    // boundary face (x/y/z == 0 or max), the component is external empty
+    // space and is left as-is. If the component is fully enclosed by the
+    // sample (touchesBoundary == false), it is an interior hole and all
+    // its voxels are set to true.
     threshold = 0.0F;
     if(fillHoles)
     {
@@ -135,6 +174,9 @@ struct IdentifySampleBFSFunctor
 
         if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
         {
+          // BFS from this bad voxel to discover one connected component of
+          // bad data. Track whether any voxel in the component is on a
+          // domain boundary face.
           currentVList.push_back(voxelIndex);
           usize count = 0;
           touchesBoundary = false;
@@ -144,6 +186,7 @@ struct IdentifySampleBFSFunctor
             int64 xIdx = index % dims[0];
             int64 yIdx = (index / dims[0]) % dims[1];
             int64 zIdx = index / (dims[0] * dims[1]);
+            // Check if this voxel lies on any domain boundary face
             if(xIdx == 0 || xIdx == (dims[0] - 1) || yIdx == 0 || yIdx == (dims[1] - 1) || zIdx == 0 || zIdx == (dims[2] - 1))
             {
               touchesBoundary = true;
@@ -165,6 +208,8 @@ struct IdentifySampleBFSFunctor
             }
             count++;
           }
+          // If this bad-data component does not touch any boundary, it is
+          // an interior hole -- fill it by setting all voxels to true.
           if(!touchesBoundary)
           {
             for(int64 j : currentVList)
