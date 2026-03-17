@@ -156,6 +156,299 @@ TEST_CASE("Copy DataStore", "DataArray")
   }
 }
 
+TEST_CASE("DataStore Bulk getValues/setValues")
+{
+  ShapeType tupleShape{10};
+  ShapeType componentShape{3};
+  DataStore<int32> dataStore(tupleShape, componentShape, 0);
+  const usize totalSize = dataStore.getSize(); // 30
+
+  // Fill with known pattern: element[i] = i
+  for(usize i = 0; i < totalSize; i++)
+  {
+    dataStore.setValue(i, static_cast<int32>(i));
+  }
+
+  SECTION("getValues full array")
+  {
+    std::vector<int32> buffer(totalSize);
+    dataStore.getValues(0, nonstd::span<int32>(buffer.data(), totalSize));
+    for(usize i = 0; i < totalSize; i++)
+    {
+      REQUIRE(buffer[i] == static_cast<int32>(i));
+    }
+  }
+
+  SECTION("getValues partial range with offset")
+  {
+    constexpr usize offset = 5;
+    constexpr usize count = 10;
+    std::vector<int32> buffer(count);
+    dataStore.getValues(offset, nonstd::span<int32>(buffer.data(), count));
+    for(usize i = 0; i < count; i++)
+    {
+      REQUIRE(buffer[i] == static_cast<int32>(offset + i));
+    }
+  }
+
+  SECTION("getValues at end boundary")
+  {
+    constexpr usize count = 5;
+    usize offset = totalSize - count;
+    std::vector<int32> buffer(count);
+    dataStore.getValues(offset, nonstd::span<int32>(buffer.data(), count));
+    for(usize i = 0; i < count; i++)
+    {
+      REQUIRE(buffer[i] == static_cast<int32>(offset + i));
+    }
+  }
+
+  SECTION("setValues and verify")
+  {
+    std::vector<int32> newValues(10);
+    for(usize i = 0; i < 10; i++)
+    {
+      newValues[i] = static_cast<int32>(100 + i);
+    }
+    dataStore.setValues(5, nonstd::span<const int32>(newValues.data(), 10));
+
+    // Verify unchanged region
+    for(usize i = 0; i < 5; i++)
+    {
+      REQUIRE(dataStore.getValue(i) == static_cast<int32>(i));
+    }
+    // Verify changed region
+    for(usize i = 0; i < 10; i++)
+    {
+      REQUIRE(dataStore.getValue(5 + i) == static_cast<int32>(100 + i));
+    }
+    // Verify unchanged region after
+    for(usize i = 15; i < totalSize; i++)
+    {
+      REQUIRE(dataStore.getValue(i) == static_cast<int32>(i));
+    }
+  }
+
+  SECTION("getValues/setValues roundtrip")
+  {
+    std::vector<int32> buffer(totalSize);
+    dataStore.getValues(0, nonstd::span<int32>(buffer.data(), totalSize));
+
+    DataStore<int32> dataStore2(tupleShape, componentShape, 0);
+    dataStore2.setValues(0, nonstd::span<const int32>(buffer.data(), totalSize));
+
+    for(usize i = 0; i < totalSize; i++)
+    {
+      REQUIRE(dataStore2.getValue(i) == dataStore.getValue(i));
+    }
+  }
+
+  SECTION("empty span succeeds")
+  {
+    std::vector<int32> buffer;
+    REQUIRE_NOTHROW(dataStore.getValues(0, nonstd::span<int32>(buffer.data(), 0)));
+    REQUIRE_NOTHROW(dataStore.setValues(0, nonstd::span<const int32>(buffer.data(), 0)));
+  }
+
+  SECTION("out of range throws")
+  {
+    std::vector<int32> buffer(10);
+    REQUIRE_THROWS_AS(dataStore.getValues(totalSize - 5, nonstd::span<int32>(buffer.data(), 10)), std::out_of_range);
+    REQUIRE_THROWS_AS(dataStore.setValues(totalSize - 5, nonstd::span<const int32>(buffer.data(), 10)), std::out_of_range);
+  }
+
+  SECTION("single element getValues/setValues")
+  {
+    int32 val = 0;
+    dataStore.getValues(7, nonstd::span<int32>(&val, 1));
+    REQUIRE(val == 7);
+
+    int32 newVal = 999;
+    dataStore.setValues(7, nonstd::span<const int32>(&newVal, 1));
+    REQUIRE(dataStore.getValue(7) == 999);
+  }
+}
+
+TEST_CASE("DataStore Bulk fill")
+{
+  ShapeType tupleShape{20};
+  ShapeType componentShape{2};
+  DataStore<int32> dataStore(tupleShape, componentShape, 0);
+
+  dataStore.fill(42);
+
+  for(usize i = 0; i < dataStore.getSize(); i++)
+  {
+    REQUIRE(dataStore.getValue(i) == 42);
+  }
+}
+
+TEST_CASE("DataStore Bulk copy")
+{
+  ShapeType tupleShape{10};
+  ShapeType componentShape{3};
+  DataStore<int32> src(tupleShape, componentShape, 0);
+  for(usize i = 0; i < src.getSize(); i++)
+  {
+    src.setValue(i, static_cast<int32>(i * 2));
+  }
+
+  DataStore<int32> dst(tupleShape, componentShape, 0);
+  bool result = dst.copy(src);
+  REQUIRE(result == true);
+
+  for(usize i = 0; i < src.getSize(); i++)
+  {
+    REQUIRE(dst.getValue(i) == src.getValue(i));
+  }
+}
+
+TEST_CASE("DataStore Bulk copyFrom")
+{
+  ShapeType tupleShape{10};
+  ShapeType componentShape{2};
+  DataStore<int32> src(tupleShape, componentShape, 0);
+  for(usize i = 0; i < src.getSize(); i++)
+  {
+    src.setValue(i, static_cast<int32>(i + 100));
+  }
+
+  DataStore<int32> dst(tupleShape, componentShape, 0);
+  dst.fill(0);
+
+  // Copy tuples 3-6 from src to dst starting at tuple 2
+  auto result = dst.copyFrom(2, src, 3, 4);
+  REQUIRE(result.valid());
+
+  // Verify untouched region
+  for(usize i = 0; i < 4; i++) // dst tuples 0-1 (elements 0-3)
+  {
+    REQUIRE(dst.getValue(i) == 0);
+  }
+  // Verify copied region: dst tuple 2 = src tuple 3, etc.
+  for(usize t = 0; t < 4; t++)
+  {
+    for(usize c = 0; c < 2; c++)
+    {
+      usize dstIdx = (2 + t) * 2 + c;
+      usize srcIdx = (3 + t) * 2 + c;
+      REQUIRE(dst.getValue(dstIdx) == src.getValue(srcIdx));
+    }
+  }
+  // Verify untouched region after
+  for(usize i = 12; i < dst.getSize(); i++) // dst tuples 6-9
+  {
+    REQUIRE(dst.getValue(i) == 0);
+  }
+}
+
+TEST_CASE("DataStore Bulk setTuple and fillTuple")
+{
+  ShapeType tupleShape{5};
+  ShapeType componentShape{4};
+  DataStore<int32> dataStore(tupleShape, componentShape, 0);
+
+  SECTION("setTuple via span")
+  {
+    std::vector<int32> values{10, 20, 30, 40};
+    dataStore.setTuple(2, nonstd::span<const int32>(values.data(), values.size()));
+    for(usize c = 0; c < 4; c++)
+    {
+      REQUIRE(dataStore.getValue(2 * 4 + c) == values[c]);
+    }
+  }
+
+  SECTION("fillTuple")
+  {
+    dataStore.fillTuple(3, 77);
+    for(usize c = 0; c < 4; c++)
+    {
+      REQUIRE(dataStore.getValue(3 * 4 + c) == 77);
+    }
+  }
+}
+
+TEST_CASE("DataStore Cross-API Roundtrip")
+{
+  ShapeType tupleShape{10};
+  ShapeType componentShape{3};
+  DataStore<int32> dataStore(tupleShape, componentShape, 0);
+  const usize totalSize = dataStore.getSize(); // 30
+
+  SECTION("Write with setValue loop, read with getValues")
+  {
+    for(usize i = 0; i < totalSize; i++)
+    {
+      dataStore.setValue(i, static_cast<int32>(i * 7 + 3));
+    }
+
+    std::vector<int32> buffer(totalSize);
+    dataStore.getValues(0, nonstd::span<int32>(buffer.data(), totalSize));
+
+    for(usize i = 0; i < totalSize; i++)
+    {
+      REQUIRE(buffer[i] == static_cast<int32>(i * 7 + 3));
+    }
+  }
+
+  SECTION("Write with setValues, read with getValue loop")
+  {
+    std::vector<int32> values(totalSize);
+    for(usize i = 0; i < totalSize; i++)
+    {
+      values[i] = static_cast<int32>(i * 11 + 5);
+    }
+    dataStore.setValues(0, nonstd::span<const int32>(values.data(), totalSize));
+
+    for(usize i = 0; i < totalSize; i++)
+    {
+      REQUIRE(dataStore.getValue(i) == static_cast<int32>(i * 11 + 5));
+    }
+  }
+
+  SECTION("Partial write with setValues, verify with getValue loop")
+  {
+    dataStore.fill(0);
+    std::vector<int32> partial{100, 200, 300, 400, 500};
+    dataStore.setValues(10, nonstd::span<const int32>(partial.data(), partial.size()));
+
+    for(usize i = 0; i < 10; i++)
+    {
+      REQUIRE(dataStore.getValue(i) == 0);
+    }
+    REQUIRE(dataStore.getValue(10) == 100);
+    REQUIRE(dataStore.getValue(11) == 200);
+    REQUIRE(dataStore.getValue(12) == 300);
+    REQUIRE(dataStore.getValue(13) == 400);
+    REQUIRE(dataStore.getValue(14) == 500);
+    for(usize i = 15; i < totalSize; i++)
+    {
+      REQUIRE(dataStore.getValue(i) == 0);
+    }
+  }
+}
+
+TEST_CASE("DataStore Bulk getValues with multi-component")
+{
+  // Test with multi-dimensional tuple shape and multi-component
+  ShapeType tupleShape{4, 3}; // 12 tuples
+  ShapeType componentShape{2};
+  DataStore<float32> dataStore(tupleShape, componentShape, 0.0f);
+  const usize totalSize = dataStore.getSize(); // 24
+
+  for(usize i = 0; i < totalSize; i++)
+  {
+    dataStore.setValue(i, static_cast<float32>(i) * 0.5f);
+  }
+
+  std::vector<float32> buffer(totalSize);
+  dataStore.getValues(0, nonstd::span<float32>(buffer.data(), totalSize));
+  for(usize i = 0; i < totalSize; i++)
+  {
+    REQUIRE(buffer[i] == static_cast<float32>(i) * 0.5f);
+  }
+}
+
 template <typename T>
 void TestDataArrayToFromString(DataStructure& datastructure, const std::string& arrayName, const std::string& minCompareStr, const std::string& maxCompareStr)
 {

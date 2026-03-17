@@ -506,6 +506,45 @@ public:
   }
 
   /**
+   * @brief Reads a contiguous range of values using memcpy.
+   * @param startIndex The first flat element index to read from
+   * @param buffer Span to write values into
+   */
+  void getValues(usize startIndex, nonstd::span<T> buffer) const override
+  {
+    const usize count = buffer.size();
+    if(startIndex + count > this->getSize())
+    {
+      throw std::out_of_range(fmt::format("DataStore::getValues: range [{}, {}) exceeds size {}", startIndex, startIndex + count, this->getSize()));
+    }
+    std::memcpy(buffer.data(), m_Data.get() + startIndex, count * sizeof(T));
+  }
+
+  /**
+   * @brief Writes a contiguous range of values using memcpy.
+   * @param startIndex The first flat element index to write to
+   * @param buffer Span of values to write
+   */
+  void setValues(usize startIndex, nonstd::span<const T> buffer) override
+  {
+    const usize count = buffer.size();
+    if(startIndex + count > this->getSize())
+    {
+      throw std::out_of_range(fmt::format("DataStore::setValues: range [{}, {}) exceeds size {}", startIndex, startIndex + count, this->getSize()));
+    }
+    std::memcpy(m_Data.get() + startIndex, buffer.data(), count * sizeof(T));
+  }
+
+  /**
+   * @brief Fills the DataStore with the specified value using direct array access.
+   * @param value
+   */
+  void fill(value_type value) override
+  {
+    std::fill_n(m_Data.get(), this->getSize(), value);
+  }
+
+  /**
    * @brief Returns a deep copy of the data store and all its data.
    * @return std::unique_ptr<IDataStore>
    */

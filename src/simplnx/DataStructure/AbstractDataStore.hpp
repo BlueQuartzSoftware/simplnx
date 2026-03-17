@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <compare>
 #include <iterator>
+#include <memory>
 #include <vector>
 
 namespace nx::core
@@ -411,6 +412,44 @@ public:
   virtual void setValue(usize index, value_type value) = 0;
 
   /**
+   * @brief Reads a contiguous range of values from the DataStore into a buffer.
+   * Reads buffer.size() elements starting from startIndex.
+   * @param startIndex The first flat element index to read from
+   * @param buffer Span to write values into; buffer.size() determines count
+   */
+  virtual void getValues(usize startIndex, nonstd::span<T> buffer) const
+  {
+    const usize count = buffer.size();
+    if(startIndex + count > getSize())
+    {
+      throw std::out_of_range(fmt::format("AbstractDataStore::getValues: range [{}, {}) exceeds size {}", startIndex, startIndex + count, getSize()));
+    }
+    for(usize i = 0; i < count; i++)
+    {
+      buffer[i] = getValue(startIndex + i);
+    }
+  }
+
+  /**
+   * @brief Writes a contiguous range of values from a buffer into the DataStore.
+   * Writes buffer.size() elements starting at startIndex.
+   * @param startIndex The first flat element index to write to
+   * @param buffer Span of values to write; buffer.size() determines count
+   */
+  virtual void setValues(usize startIndex, nonstd::span<const T> buffer)
+  {
+    const usize count = buffer.size();
+    if(startIndex + count > getSize())
+    {
+      throw std::out_of_range(fmt::format("AbstractDataStore::setValues: range [{}, {}) exceeds size {}", startIndex, startIndex + count, getSize()));
+    }
+    for(usize i = 0; i < count; i++)
+    {
+      setValue(startIndex + i, buffer[i]);
+    }
+  }
+
+  /**
    * @brief Returns the value found at the specified index of the DataStore.
    * This cannot be used to edit the value found at the specified index.
    * @param index
@@ -584,7 +623,16 @@ public:
    */
   virtual void fill(value_type value)
   {
-    std::fill(begin(), end(), value);
+    const usize totalSize = getSize();
+    constexpr usize k_BulkBufferSize = 8192;
+    const usize bufSize = (std::min)(totalSize, k_BulkBufferSize);
+    auto buffer = std::make_unique<T[]>(bufSize);
+    std::fill_n(buffer.get(), bufSize, value);
+    for(usize offset = 0; offset < totalSize; offset += bufSize)
+    {
+      const usize batchSize = (std::min)(bufSize, totalSize - offset);
+      setValues(offset, nonstd::span<const T>(buffer.get(), batchSize));
+    }
   }
 
   /**
@@ -599,7 +647,17 @@ public:
     {
       return false;
     }
-    std::copy(other.begin(), other.end(), begin());
+    const usize totalSize = getSize();
+    constexpr usize k_BulkBufferSize = 8192;
+    const usize bufSize = (std::min)(totalSize, k_BulkBufferSize);
+    auto buffer = std::make_unique<T[]>(bufSize);
+    for(usize offset = 0; offset < totalSize; offset += bufSize)
+    {
+      const usize batchSize = (std::min)(bufSize, totalSize - offset);
+      nonstd::span<T> bufSpan(buffer.get(), batchSize);
+      other.getValues(offset, bufSpan);
+      setValues(offset, nonstd::span<const T>(buffer.get(), batchSize));
+    }
     return true;
   }
 
@@ -677,10 +735,25 @@ public:
                                          totalSrcTuples * sourceNumComponents, destTupleOffset * numComponents, getSize()));
     }
 
-    auto srcBegin = source.begin() + (srcTupleOffset * sourceNumComponents);
-    auto srcEnd = srcBegin + (totalSrcTuples * sourceNumComponents);
-    auto dstBegin = begin() + (destTupleOffset * numComponents);
-    std::copy(srcBegin, srcEnd, dstBegin);
+    const usize totalElements = totalSrcTuples * sourceNumComponents;
+    const usize srcStartIndex = srcTupleOffset * sourceNumComponents;
+    const usize dstStartIndex = destTupleOffset * numComponents;
+    constexpr usize k_BulkBufferSize = 8192;
+    const usize bufSize = (std::min)(totalElements, k_BulkBufferSize);
+    auto tempBuffer = std::make_unique<T[]>(bufSize);
+    usize remaining = totalElements;
+    usize srcOffset = srcStartIndex;
+    usize dstOffset = dstStartIndex;
+    while(remaining > 0)
+    {
+      const usize batchSize = (std::min)(remaining, bufSize);
+      nonstd::span<T> bufSpan(tempBuffer.get(), batchSize);
+      source.getValues(srcOffset, bufSpan);
+      setValues(dstOffset, nonstd::span<const T>(tempBuffer.get(), batchSize));
+      srcOffset += batchSize;
+      dstOffset += batchSize;
+      remaining -= batchSize;
+    }
     return {};
   }
 
@@ -693,10 +766,9 @@ public:
   {
     usize numComponents = getNumberOfComponents();
     index_type offset = tupleIndex * numComponents;
-    for(usize i = 0; i < numComponents; i++)
-    {
-      setValue(offset + i, value);
-    }
+    auto tupleValues = std::make_unique<T[]>(numComponents);
+    std::fill_n(tupleValues.get(), numComponents, value);
+    setValues(offset, nonstd::span<const T>(tupleValues.get(), numComponents));
   }
 
   /**
@@ -743,13 +815,8 @@ public:
       throw std::runtime_error(ss);
     }
 
-    index_type numComponents = getNumberOfComponents();
-    index_type offset = tupleIndex * numComponents;
-    usize count = values.size();
-    for(usize i = 0; i < count; i++)
-    {
-      setValue(offset + i, values[i]);
-    }
+    index_type offset = tupleIndex * getNumberOfComponents();
+    setValues(offset, values);
   }
 
   /**
