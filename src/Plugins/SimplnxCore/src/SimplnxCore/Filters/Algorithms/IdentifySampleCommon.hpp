@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <atomic>
+#include <memory>
 #include <vector>
 
 namespace nx::core
@@ -169,6 +170,9 @@ struct IdentifySampleSliceBySliceFunctor
       break;
     }
 
+    const usize sliceSize = static_cast<usize>(planeDim1 * planeDim2);
+    auto sliceBuffer = std::make_unique<T[]>(sliceSize);
+
     for(int64 fixedIdx = 0; fixedIdx < fixedDim; ++fixedIdx)
     {
       if(shouldCancel)
@@ -177,8 +181,20 @@ struct IdentifySampleSliceBySliceFunctor
       }
       messageHandler(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
 
-      std::vector<bool> checked(planeDim1 * planeDim2, false);
-      std::vector<bool> sample(planeDim1 * planeDim2, false);
+      // Read the 2D slice into a local buffer with sequential DataStore access.
+      // This avoids chunk thrashing during BFS for non-XY planes where stride2
+      // jumps across chunks (e.g., XZ/YZ planes stride by dimX*dimY per Z-step).
+      for(int64 p2 = 0; p2 < planeDim2; ++p2)
+      {
+        for(int64 p1 = 0; p1 < planeDim1; ++p1)
+        {
+          sliceBuffer[static_cast<usize>(p2 * planeDim1 + p1)] = goodVoxels.getValue(static_cast<usize>(fixedIdx * fixedStride + p2 * stride2 + p1 * stride1));
+        }
+      }
+
+      // BFS for sample identification — operates entirely on local sliceBuffer
+      std::vector<bool> checked(sliceSize, false);
+      std::vector<bool> sample(sliceSize, false);
       std::vector<int64> currentVList;
       int64 biggestBlock = 0;
 
@@ -187,14 +203,13 @@ struct IdentifySampleSliceBySliceFunctor
         for(int64 p1 = 0; p1 < planeDim1; ++p1)
         {
           int64 planeIndex = p2 * planeDim1 + p1;
-          int64 globalIndex = fixedIdx * fixedStride + p2 * stride2 + p1 * stride1;
 
-          if(!checked[planeIndex] && goodVoxels.getValue(globalIndex))
+          if(!checked[planeIndex] && static_cast<bool>(sliceBuffer[planeIndex]))
           {
             currentVList.push_back(planeIndex);
             int64 count = 0;
 
-            while(count < currentVList.size())
+            while(count < static_cast<int64>(currentVList.size()))
             {
               int64 localIdx = currentVList[count];
               int64 localP1 = localIdx % planeDim1;
@@ -208,9 +223,8 @@ struct IdentifySampleSliceBySliceFunctor
                 if(neighborP1 >= 0 && neighborP1 < planeDim1 && neighborP2 >= 0 && neighborP2 < planeDim2)
                 {
                   int64 neighborIdx = neighborP2 * planeDim1 + neighborP1;
-                  int64 globalNeighborIdx = fixedIdx * fixedStride + neighborP2 * stride2 + neighborP1 * stride1;
 
-                  if(!checked[neighborIdx] && goodVoxels.getValue(globalNeighborIdx))
+                  if(!checked[neighborIdx] && static_cast<bool>(sliceBuffer[neighborIdx]))
                   {
                     currentVList.push_back(neighborIdx);
                     checked[neighborIdx] = true;
@@ -223,7 +237,7 @@ struct IdentifySampleSliceBySliceFunctor
             if(static_cast<int64>(currentVList.size()) > biggestBlock)
             {
               biggestBlock = currentVList.size();
-              sample.assign(planeDim1 * planeDim2, false);
+              sample.assign(sliceSize, false);
               for(int64 idx : currentVList)
               {
                 sample[idx] = true;
@@ -238,25 +252,22 @@ struct IdentifySampleSliceBySliceFunctor
         return;
       }
 
-      for(int64 p2 = 0; p2 < planeDim2; ++p2)
+      // Mark non-sample voxels as false in the local buffer
+      for(usize i = 0; i < sliceSize; ++i)
       {
-        for(int64 p1 = 0; p1 < planeDim1; ++p1)
+        if(!sample[i])
         {
-          int64 planeIndex = p2 * planeDim1 + p1;
-          int64 globalIndex = fixedIdx * fixedStride + p2 * stride2 + p1 * stride1;
-
-          if(!sample[planeIndex])
-          {
-            goodVoxels.setValue(globalIndex, false);
-          }
+          sliceBuffer[i] = static_cast<T>(false);
         }
       }
+
       if(shouldCancel)
       {
         return;
       }
 
-      checked.assign(planeDim1 * planeDim2, false);
+      // BFS for hole filling — operates entirely on local sliceBuffer
+      checked.assign(sliceSize, false);
       if(fillHoles)
       {
         for(int64 p2 = 0; p2 < planeDim2; ++p2)
@@ -264,15 +275,14 @@ struct IdentifySampleSliceBySliceFunctor
           for(int64 p1 = 0; p1 < planeDim1; ++p1)
           {
             int64 planeIndex = p2 * planeDim1 + p1;
-            int64 globalIndex = fixedIdx * fixedStride + p2 * stride2 + p1 * stride1;
 
-            if(!checked[planeIndex] && !goodVoxels.getValue(globalIndex))
+            if(!checked[planeIndex] && !static_cast<bool>(sliceBuffer[planeIndex]))
             {
               currentVList.push_back(planeIndex);
               int64 count = 0;
               bool touchesBoundary = false;
 
-              while(count < currentVList.size())
+              while(count < static_cast<int64>(currentVList.size()))
               {
                 int64 localIdx = currentVList[count];
                 int64 localP1 = localIdx % planeDim1;
@@ -291,9 +301,8 @@ struct IdentifySampleSliceBySliceFunctor
                   if(neighborP1 >= 0 && neighborP1 < planeDim1 && neighborP2 >= 0 && neighborP2 < planeDim2)
                   {
                     int64 neighborIdx = neighborP2 * planeDim1 + neighborP1;
-                    int64 globalNeighborIdx = fixedIdx * fixedStride + neighborP2 * stride2 + neighborP1 * stride1;
 
-                    if(!checked[neighborIdx] && !goodVoxels.getValue(globalNeighborIdx))
+                    if(!checked[neighborIdx] && !static_cast<bool>(sliceBuffer[neighborIdx]))
                     {
                       currentVList.push_back(neighborIdx);
                       checked[neighborIdx] = true;
@@ -307,14 +316,21 @@ struct IdentifySampleSliceBySliceFunctor
               {
                 for(int64 idx : currentVList)
                 {
-                  int64 fillP1 = idx % planeDim1;
-                  int64 fillP2 = idx / planeDim1;
-                  goodVoxels.setValue(fixedIdx * fixedStride + fillP2 * stride2 + fillP1 * stride1, true);
+                  sliceBuffer[idx] = static_cast<T>(true);
                 }
               }
               currentVList.clear();
             }
           }
+        }
+      }
+
+      // Write the modified slice back to the DataStore
+      for(int64 p2 = 0; p2 < planeDim2; ++p2)
+      {
+        for(int64 p1 = 0; p1 < planeDim1; ++p1)
+        {
+          goodVoxels.setValue(static_cast<usize>(fixedIdx * fixedStride + p2 * stride2 + p1 * stride1), sliceBuffer[static_cast<usize>(p2 * planeDim1 + p1)]);
         }
       }
     }
