@@ -688,8 +688,9 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
 
   unionFind.flatten();
 
-  // Build a direct lookup table: provisionalLabel -> finalFeatureId
-  // Read provisional labels from the featureIds store (written during Phase 1).
+  // Single-pass resolution and relabeling: read each provisional label,
+  // discover or look up its final feature ID, and write it back immediately.
+  // This halves OOC accesses compared to separate discovery and write passes.
   // Linear scan ensures feature IDs are assigned in the order that seeds
   // are first encountered (matching DFS seed-discovery order).
   std::vector<int32> labelToFinal(static_cast<usize>(nextLabel), 0);
@@ -697,7 +698,6 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
 
   const uint64 numChunks = featureIdsStore.getNumberOfChunks();
 
-  // First pass: discover label-to-final mapping by reading provisional labels
   for(uint64 chunkIdx = 0; chunkIdx < numChunks; chunkIdx++)
   {
     if(m_ShouldCancel)
@@ -717,49 +717,19 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
         {
           const usize index = z * static_cast<usize>(sliceStride) + y * static_cast<usize>(dimX) + x;
           int32 label = featureIdsStore[index];
-          if(label > 0 && labelToFinal[label] == 0)
+          if(label > 0)
           {
-            int32 root = static_cast<int32>(unionFind.find(label));
-            if(labelToFinal[root] == 0)
+            if(labelToFinal[label] == 0)
             {
-              finalFeatureCount++;
-              labelToFinal[root] = finalFeatureCount;
+              int32 root = static_cast<int32>(unionFind.find(label));
+              if(labelToFinal[root] == 0)
+              {
+                finalFeatureCount++;
+                labelToFinal[root] = finalFeatureCount;
+              }
+              labelToFinal[label] = labelToFinal[root];
             }
-            labelToFinal[label] = labelToFinal[root];
-          }
-        }
-      }
-    }
-  }
-
-  if(m_ShouldCancel)
-  {
-    return {};
-  }
-
-  // Second pass: write final feature IDs to the data store in chunk-sequential order
-  for(uint64 chunkIdx = 0; chunkIdx < numChunks; chunkIdx++)
-  {
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
-
-    featureIdsStore.loadChunk(chunkIdx);
-    const auto chunkLowerBounds = featureIdsStore.getChunkLowerBounds(chunkIdx);
-    const auto chunkUpperBounds = featureIdsStore.getChunkUpperBounds(chunkIdx);
-
-    for(usize z = chunkLowerBounds[0]; z <= chunkUpperBounds[0]; z++)
-    {
-      for(usize y = chunkLowerBounds[1]; y <= chunkUpperBounds[1]; y++)
-      {
-        for(usize x = chunkLowerBounds[2]; x <= chunkUpperBounds[2]; x++)
-        {
-          const usize index = z * static_cast<usize>(sliceStride) + y * static_cast<usize>(dimX) + x;
-          int32 provLabel = featureIdsStore[index];
-          if(provLabel > 0)
-          {
-            featureIdsStore[index] = labelToFinal[provLabel];
+            featureIdsStore[index] = labelToFinal[label];
           }
         }
       }
