@@ -322,6 +322,9 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
       return {};
     }
 
+    // Let subclass pre-load input data for this slice into local buffers
+    prepareForSlice(iz, dimX, dimY, dimZ);
+
     // Clear the current slice's portion of the rolling buffer
     const usize currentSliceOffset = static_cast<usize>(iz % 2) * sliceSize;
     std::fill(labelBuffer.begin() + currentSliceOffset, labelBuffer.begin() + currentSliceOffset + sliceSize, 0);
@@ -496,6 +499,9 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   {
     return {};
   }
+
+  // Disable subclass input buffering — Phase 1b may access arbitrary Z-slices
+  prepareForSlice(-1, dimX, dimY, dimZ);
 
   // =========================================================================
   // Phase 1b: Periodic boundary merge
@@ -781,6 +787,11 @@ int64 SegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 bool SegmentFeatures::determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const
 {
   return false;
+}
+
+// -----------------------------------------------------------------------------
+void SegmentFeatures::prepareForSlice(int64 /*iz*/, int64 /*dimX*/, int64 /*dimY*/, int64 /*dimZ*/)
+{
 }
 
 // -----------------------------------------------------------------------------

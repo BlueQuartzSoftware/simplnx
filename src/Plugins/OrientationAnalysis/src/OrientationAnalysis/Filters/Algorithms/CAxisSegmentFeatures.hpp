@@ -64,6 +64,8 @@ protected:
    */
   bool areNeighborsSimilar(int64 point1, int64 point2) const override;
 
+  void prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ) override;
+
 private:
   const CAxisSegmentFeaturesInputValues* m_InputValues = nullptr;
 
@@ -71,6 +73,17 @@ private:
   Int32Array* m_CellPhases = nullptr;
   std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxelsArray = nullptr;
   Int32Array* m_FeatureIdsArray = nullptr;
+
+  void allocateSliceBuffers(int64 dimX, int64 dimY);
+  void deallocateSliceBuffers();
+
+  // Rolling 2-slot input buffers for OOC optimization.
+  std::vector<float32> m_QuatBuffer;
+  std::vector<int32> m_PhaseBuffer;
+  std::vector<uint8> m_MaskBuffer;
+  int64 m_BufSliceSize = 0;
+  int64 m_BufferedSliceZ[2] = {-1, -1};
+  bool m_UseSliceBuffers = false;
 };
 
 } // namespace nx::core

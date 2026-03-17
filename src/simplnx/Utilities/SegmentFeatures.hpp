@@ -145,6 +145,22 @@ public:
    */
   virtual bool areNeighborsSimilar(int64 point1, int64 point2) const;
 
+  /**
+   * @brief Called by executeCCL at the start of each Z-slice to allow subclasses
+   * to pre-load input data into local buffers, eliminating per-element OOC overhead
+   * during neighbor comparisons.
+   *
+   * Called with iz = -1 before Phase 1b (periodic boundary merge) to signal that
+   * buffering should be disabled, since Phase 1b may access arbitrary Z-slices.
+   *
+   * Default implementation does nothing.
+   * @param iz Current Z-slice index, or -1 to disable buffering.
+   * @param dimX X dimension of the grid.
+   * @param dimY Y dimension of the grid.
+   * @param dimZ Z dimension of the grid.
+   */
+  virtual void prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ);
+
 protected:
   DataStructure& m_DataStructure;
   bool m_IsPeriodic = false;

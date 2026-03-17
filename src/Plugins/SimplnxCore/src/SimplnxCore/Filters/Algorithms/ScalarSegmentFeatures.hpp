@@ -69,11 +69,32 @@ protected:
    */
   bool areNeighborsSimilar(int64 point1, int64 point2) const override;
 
+  /**
+   * @brief Pre-loads input scalar and mask data for the given Z-slice into
+   * rolling buffers, eliminating per-element OOC overhead during CCL.
+   * @param iz Current Z-slice index, or -1 to disable buffering.
+   * @param dimX X dimension of the grid.
+   * @param dimY Y dimension of the grid.
+   * @param dimZ Z dimension of the grid.
+   */
+  void prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ) override;
+
 private:
+  void allocateSliceBuffers(int64 dimX, int64 dimY);
+  void deallocateSliceBuffers();
+
   const ScalarSegmentFeaturesInputValues* m_InputValues = nullptr;
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
   GoodVoxelsArrayType* m_GoodVoxelsArray = nullptr;
   std::shared_ptr<SegmentFeatures::CompareFunctor> m_CompareFunctor;
   std::unique_ptr<MaskCompareUtilities::MaskCompare> m_GoodVoxels = nullptr;
+  IDataArray* m_InputDataArray = nullptr;
+
+  // Rolling 2-slot input buffers for OOC optimization.
+  std::vector<float64> m_ScalarBuffer;
+  std::vector<uint8> m_MaskBuffer;
+  int64 m_BufSliceSize = 0;
+  int64 m_BufferedSliceZ[2] = {-1, -1};
+  bool m_UseSliceBuffers = false;
 };
 } // namespace nx::core

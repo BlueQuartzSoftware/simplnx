@@ -1,11 +1,13 @@
 #include "ScalarSegmentFeatures.hpp"
 
+#include <algorithm>
 #include <memory>
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
 
 using namespace nx::core;
 
@@ -139,6 +141,23 @@ private:
   AbstractDataStore<int32>* m_FeatureIdsArray = nullptr; // The Feature Ids
   DataStoreType& m_Data;                                 // The data that is being compared
 };
+
+/**
+ * @brief Functor for type-dispatched filling of a scalar slice buffer.
+ * Converts typed data store values to float64 for uniform comparison.
+ */
+struct FillScalarSliceBufferFunctor
+{
+  template <typename T>
+  void operator()(IDataArray* dataArray, int64 baseIndex, usize sliceSize, std::vector<float64>& buffer, usize bufferOffset)
+  {
+    auto& store = dataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    for(usize i = 0; i < sliceSize; i++)
+    {
+      buffer[bufferOffset + i] = static_cast<float64>(store[static_cast<usize>(baseIndex) + i]);
+    }
+  }
+};
 } // namespace
 
 ScalarSegmentFeatures::ScalarSegmentFeatures(DataStructure& dataStructure, ScalarSegmentFeaturesInputValues* inputValues, const std::atomic_bool& shouldCancel,
@@ -174,6 +193,7 @@ Result<> ScalarSegmentFeatures::operator()()
   m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
 
   auto* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
+  m_InputDataArray = inputDataArray;
   size_t inDataPoints = inputDataArray->getNumberOfTuples();
   nx::core::DataType dataType = inputDataArray->getDataType();
 
@@ -236,8 +256,13 @@ Result<> ScalarSegmentFeatures::operator()()
   // Dispatch between DFS (in-core) and CCL (OOC) algorithms
   if(IsOutOfCore(*m_FeatureIdsArray) || ForceOocAlgorithm())
   {
+    SizeVec3 udims = gridGeom->getDimensions();
+    allocateSliceBuffers(static_cast<int64>(udims[0]), static_cast<int64>(udims[1]));
+
     auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
     executeCCL(gridGeom, featureIdsStore);
+
+    deallocateSliceBuffers();
   }
   else
   {
@@ -320,6 +345,22 @@ bool ScalarSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighb
 // -----------------------------------------------------------------------------
 bool ScalarSegmentFeatures::isValidVoxel(int64 point) const
 {
+  if(m_UseSliceBuffers)
+  {
+    const int64 iz = point / m_BufSliceSize;
+    const int slot = static_cast<int>(iz % 2);
+    if(m_BufferedSliceZ[slot] == iz)
+    {
+      const usize off = static_cast<usize>(slot) * static_cast<usize>(m_BufSliceSize) + static_cast<usize>(point - iz * m_BufSliceSize);
+      if(m_InputValues->UseMask && m_MaskBuffer[off] == 0)
+      {
+        return false;
+      }
+      return true;
+    }
+  }
+
+  // Fallback: direct OOC access
   if(m_InputValues->UseMask && !m_GoodVoxels->isTrue(point))
   {
     return false;
@@ -330,10 +371,113 @@ bool ScalarSegmentFeatures::isValidVoxel(int64 point) const
 // -----------------------------------------------------------------------------
 bool ScalarSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
 {
-  // Both voxels must be valid
+  if(m_UseSliceBuffers)
+  {
+    const int64 iz1 = point1 / m_BufSliceSize;
+    const int slot1 = static_cast<int>(iz1 % 2);
+    const int64 iz2 = point2 / m_BufSliceSize;
+    const int slot2 = static_cast<int>(iz2 % 2);
+
+    if(m_BufferedSliceZ[slot1] == iz1 && m_BufferedSliceZ[slot2] == iz2)
+    {
+      const usize sliceSize = static_cast<usize>(m_BufSliceSize);
+      const usize off1 = static_cast<usize>(slot1) * sliceSize + static_cast<usize>(point1 - iz1 * m_BufSliceSize);
+      const usize off2 = static_cast<usize>(slot2) * sliceSize + static_cast<usize>(point2 - iz2 * m_BufSliceSize);
+
+      // Check point2 validity
+      if(m_InputValues->UseMask && m_MaskBuffer[off2] == 0)
+      {
+        return false;
+      }
+
+      // Compare scalar values from the pre-loaded buffer
+      float64 val1 = m_ScalarBuffer[off1];
+      float64 val2 = m_ScalarBuffer[off2];
+      float64 diff = val1 >= val2 ? (val1 - val2) : (val2 - val1);
+      return diff <= static_cast<float64>(m_InputValues->ScalarTolerance);
+    }
+  }
+
+  // Fallback: direct OOC access
   if(!isValidVoxel(point2))
   {
     return false;
   }
   return m_CompareFunctor->compare(point1, point2);
+}
+
+// -----------------------------------------------------------------------------
+void ScalarSegmentFeatures::allocateSliceBuffers(int64 dimX, int64 dimY)
+{
+  m_BufSliceSize = dimX * dimY;
+  const usize sliceSize = static_cast<usize>(m_BufSliceSize);
+  m_ScalarBuffer.resize(2 * sliceSize);
+  m_MaskBuffer.resize(2 * sliceSize);
+  m_BufferedSliceZ[0] = -1;
+  m_BufferedSliceZ[1] = -1;
+  m_UseSliceBuffers = true;
+}
+
+// -----------------------------------------------------------------------------
+void ScalarSegmentFeatures::deallocateSliceBuffers()
+{
+  m_UseSliceBuffers = false;
+  m_ScalarBuffer = std::vector<float64>();
+  m_MaskBuffer = std::vector<uint8>();
+  m_BufferedSliceZ[0] = -1;
+  m_BufferedSliceZ[1] = -1;
+}
+
+// -----------------------------------------------------------------------------
+void ScalarSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ)
+{
+  if(iz < 0)
+  {
+    m_UseSliceBuffers = false;
+    return;
+  }
+  if(!m_UseSliceBuffers)
+  {
+    return;
+  }
+
+  const int slot = static_cast<int>(iz % 2);
+  if(m_BufferedSliceZ[slot] == iz)
+  {
+    return;
+  }
+
+  const usize sliceSize = static_cast<usize>(m_BufSliceSize);
+  const usize slotOffset = static_cast<usize>(slot) * sliceSize;
+  const int64 baseIndex = iz * m_BufSliceSize;
+
+  // Fill scalar data buffer using type dispatch
+  DataType dataType = m_InputDataArray->getDataType();
+  if(dataType == DataType::boolean)
+  {
+    auto& store = m_InputDataArray->template getIDataStoreRefAs<AbstractDataStore<bool>>();
+    for(usize i = 0; i < sliceSize; i++)
+    {
+      m_ScalarBuffer[slotOffset + i] = store[static_cast<usize>(baseIndex) + i] ? 1.0 : 0.0;
+    }
+  }
+  else
+  {
+    ExecuteDataFunctionNoBool(FillScalarSliceBufferFunctor{}, dataType, m_InputDataArray, baseIndex, sliceSize, m_ScalarBuffer, slotOffset);
+  }
+
+  // Fill mask buffer
+  if(m_InputValues->UseMask && m_GoodVoxels != nullptr)
+  {
+    for(usize i = 0; i < sliceSize; i++)
+    {
+      m_MaskBuffer[slotOffset + i] = m_GoodVoxels->isTrue(static_cast<usize>(baseIndex) + i) ? 1 : 0;
+    }
+  }
+  else
+  {
+    std::fill(m_MaskBuffer.begin() + slotOffset, m_MaskBuffer.begin() + slotOffset + sliceSize, static_cast<uint8>(1));
+  }
+
+  m_BufferedSliceZ[slot] = iz;
 }

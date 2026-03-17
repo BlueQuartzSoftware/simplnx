@@ -74,6 +74,8 @@ protected:
    */
   bool areNeighborsSimilar(int64 point1, int64 point2) const override;
 
+  void prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ) override;
+
 private:
   const EBSDSegmentFeaturesInputValues* m_InputValues = nullptr;
   Float32Array* m_QuatsArray = nullptr;
@@ -84,6 +86,19 @@ private:
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
 
   std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
+
+  void allocateSliceBuffers(int64 dimX, int64 dimY);
+  void deallocateSliceBuffers();
+
+  // Rolling 2-slot input buffers for OOC optimization.
+  // Pre-loading input data into these avoids per-element OOC overhead
+  // during neighbor comparisons in the CCL algorithm.
+  std::vector<float32> m_QuatBuffer;
+  std::vector<int32> m_PhaseBuffer;
+  std::vector<uint8> m_MaskBuffer;
+  int64 m_BufSliceSize = 0;
+  int64 m_BufferedSliceZ[2] = {-1, -1};
+  bool m_UseSliceBuffers = false;
 };
 
 } // namespace nx::core
