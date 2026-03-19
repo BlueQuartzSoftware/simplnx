@@ -517,11 +517,11 @@ public:
     {
       throw std::out_of_range(fmt::format("DataStore::getValues: range [{}, {}) exceeds size {}", startIndex, startIndex + count, this->getSize()));
     }
-    std::memcpy(buffer.data(), m_Data.get() + startIndex, count * sizeof(T));
+    std::copy(m_Data.get() + startIndex, m_Data.get() + startIndex + count, buffer.data());
   }
 
   /**
-   * @brief Writes a contiguous range of values using memcpy.
+   * @brief Writes a contiguous range of values into the DataStore.
    * @param startIndex The first flat element index to write to
    * @param buffer Span of values to write
    */
@@ -532,7 +532,7 @@ public:
     {
       throw std::out_of_range(fmt::format("DataStore::setValues: range [{}, {}) exceeds size {}", startIndex, startIndex + count, this->getSize()));
     }
-    std::memcpy(m_Data.get() + startIndex, buffer.data(), count * sizeof(T));
+    std::copy(buffer.begin(), buffer.end(), m_Data.get() + startIndex);
   }
 
   /**
@@ -542,6 +542,21 @@ public:
   void fill(value_type value) override
   {
     std::fill_n(m_Data.get(), this->getSize(), value);
+  }
+
+  /**
+   * @brief Copies data from another AbstractDataStore using direct array access.
+   * @param other The source AbstractDataStore to copy from
+   * @return bool True if the copy succeeded
+   */
+  bool copy(const AbstractDataStore<T>& other) override
+  {
+    if(this->getSize() != other.getSize())
+    {
+      return false;
+    }
+    other.getValues(0, nonstd::span<T>(m_Data.get(), this->getSize()));
+    return true;
   }
 
   /**
@@ -684,6 +699,15 @@ public:
       value -= 1;
     }
     return upperBounds;
+  }
+
+protected:
+  /**
+   * @brief Optimized data transfer for copyFrom using direct array access.
+   */
+  void copyFromImpl(usize dstStartIndex, const AbstractDataStore<T>& source, usize srcStartIndex, usize totalElements) override
+  {
+    source.getValues(srcStartIndex, nonstd::span<T>(m_Data.get() + dstStartIndex, totalElements));
   }
 
 private:

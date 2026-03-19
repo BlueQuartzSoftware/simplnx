@@ -7,10 +7,8 @@
 
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <compare>
 #include <iterator>
-#include <memory>
 #include <vector>
 
 namespace nx::core
@@ -417,18 +415,7 @@ public:
    * @param startIndex The first flat element index to read from
    * @param buffer Span to write values into; buffer.size() determines count
    */
-  virtual void getValues(usize startIndex, nonstd::span<T> buffer) const
-  {
-    const usize count = buffer.size();
-    if(startIndex + count > getSize())
-    {
-      throw std::out_of_range(fmt::format("AbstractDataStore::getValues: range [{}, {}) exceeds size {}", startIndex, startIndex + count, getSize()));
-    }
-    for(usize i = 0; i < count; i++)
-    {
-      buffer[i] = getValue(startIndex + i);
-    }
-  }
+  virtual void getValues(usize startIndex, nonstd::span<T> buffer) const = 0;
 
   /**
    * @brief Writes a contiguous range of values from a buffer into the DataStore.
@@ -436,18 +423,7 @@ public:
    * @param startIndex The first flat element index to write to
    * @param buffer Span of values to write; buffer.size() determines count
    */
-  virtual void setValues(usize startIndex, nonstd::span<const T> buffer)
-  {
-    const usize count = buffer.size();
-    if(startIndex + count > getSize())
-    {
-      throw std::out_of_range(fmt::format("AbstractDataStore::setValues: range [{}, {}) exceeds size {}", startIndex, startIndex + count, getSize()));
-    }
-    for(usize i = 0; i < count; i++)
-    {
-      setValue(startIndex + i, buffer[i]);
-    }
-  }
+  virtual void setValues(usize startIndex, nonstd::span<const T> buffer) = 0;
 
   /**
    * @brief Returns the value found at the specified index of the DataStore.
@@ -623,15 +599,9 @@ public:
    */
   virtual void fill(value_type value)
   {
-    const usize totalSize = getSize();
-    constexpr usize k_BulkBufferSize = 8192;
-    const usize bufSize = (std::min)(totalSize, k_BulkBufferSize);
-    auto buffer = std::make_unique<T[]>(bufSize);
-    std::fill_n(buffer.get(), bufSize, value);
-    for(usize offset = 0; offset < totalSize; offset += bufSize)
+    for(usize i = 0; i < getSize(); i++)
     {
-      const usize batchSize = (std::min)(bufSize, totalSize - offset);
-      setValues(offset, nonstd::span<const T>(buffer.get(), batchSize));
+      setValue(i, value);
     }
   }
 
@@ -647,16 +617,9 @@ public:
     {
       return false;
     }
-    const usize totalSize = getSize();
-    constexpr usize k_BulkBufferSize = 8192;
-    const usize bufSize = (std::min)(totalSize, k_BulkBufferSize);
-    auto buffer = std::make_unique<T[]>(bufSize);
-    for(usize offset = 0; offset < totalSize; offset += bufSize)
+    for(usize i = 0; i < getSize(); i++)
     {
-      const usize batchSize = (std::min)(bufSize, totalSize - offset);
-      nonstd::span<T> bufSpan(buffer.get(), batchSize);
-      other.getValues(offset, bufSpan);
-      setValues(offset, nonstd::span<const T>(buffer.get(), batchSize));
+      setValue(i, other.getValue(i));
     }
     return true;
   }
@@ -735,25 +698,7 @@ public:
                                          totalSrcTuples * sourceNumComponents, destTupleOffset * numComponents, getSize()));
     }
 
-    const usize totalElements = totalSrcTuples * sourceNumComponents;
-    const usize srcStartIndex = srcTupleOffset * sourceNumComponents;
-    const usize dstStartIndex = destTupleOffset * numComponents;
-    constexpr usize k_BulkBufferSize = 8192;
-    const usize bufSize = (std::min)(totalElements, k_BulkBufferSize);
-    auto tempBuffer = std::make_unique<T[]>(bufSize);
-    usize remaining = totalElements;
-    usize srcOffset = srcStartIndex;
-    usize dstOffset = dstStartIndex;
-    while(remaining > 0)
-    {
-      const usize batchSize = (std::min)(remaining, bufSize);
-      nonstd::span<T> bufSpan(tempBuffer.get(), batchSize);
-      source.getValues(srcOffset, bufSpan);
-      setValues(dstOffset, nonstd::span<const T>(tempBuffer.get(), batchSize));
-      srcOffset += batchSize;
-      dstOffset += batchSize;
-      remaining -= batchSize;
-    }
+    copyFromImpl(destTupleOffset * numComponents, source, srcTupleOffset * sourceNumComponents, totalSrcTuples * sourceNumComponents);
     return {};
   }
 
@@ -766,9 +711,10 @@ public:
   {
     usize numComponents = getNumberOfComponents();
     index_type offset = tupleIndex * numComponents;
-    auto tupleValues = std::make_unique<T[]>(numComponents);
-    std::fill_n(tupleValues.get(), numComponents, value);
-    setValues(offset, nonstd::span<const T>(tupleValues.get(), numComponents));
+    for(usize i = 0; i < numComponents; i++)
+    {
+      setValue(offset + i, value);
+    }
   }
 
   /**
@@ -1029,6 +975,22 @@ public:
   virtual Result<> writeHdf5(HDF5::DatasetIO& dataset) const = 0;
 
 protected:
+  /**
+   * @brief Performs the actual data transfer for copyFrom after bounds checking.
+   * Subclasses can override to provide optimized implementations.
+   * @param dstStartIndex Flat element index to start writing at
+   * @param source Source data store to copy from
+   * @param srcStartIndex Flat element index to start reading from
+   * @param totalElements Number of elements to copy
+   */
+  virtual void copyFromImpl(usize dstStartIndex, const AbstractDataStore& source, usize srcStartIndex, usize totalElements)
+  {
+    for(usize i = 0; i < totalElements; i++)
+    {
+      setValue(dstStartIndex + i, source.getValue(srcStartIndex + i));
+    }
+  }
+
   /**
    * @brief Default constructor
    */

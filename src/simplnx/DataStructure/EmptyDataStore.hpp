@@ -159,6 +159,22 @@ public:
   }
 
   /**
+   * @brief Throws an exception because this should never be called.
+   */
+  void getValues(usize startIndex, nonstd::span<T> buffer) const override
+  {
+    throw std::runtime_error("EmptyDataStore::getValues() is not implemented");
+  }
+
+  /**
+   * @brief Throws an exception because this should never be called.
+   */
+  void setValues(usize startIndex, nonstd::span<const T> buffer) override
+  {
+    throw std::runtime_error("EmptyDataStore::setValues() is not implemented");
+  }
+
+  /**
    * @brief Throws an exception because this should never be called. The
    * EmptyDataStore class contains no data other than its target getSize.
    * @param index
