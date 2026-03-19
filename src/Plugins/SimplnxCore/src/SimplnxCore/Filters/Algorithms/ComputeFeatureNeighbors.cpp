@@ -96,6 +96,10 @@ struct ComputeFeatureNeighborsFunctor
      * faces, but the segmentation done here would make it far less readable and in the greater context
      * the speed gain is minimal considering they are O(n-2) and O(1) respectively and the greater algorithm
      * is 0(6(n-2)^3).
+     *
+     * Note here that discussions were had of adding Kahan Summation for calculating the surface
+     * areas, but was decided against to conserve memory. At least until the issue presents itself
+     * in a real world dataset.
      */
     const std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
     const std::function<void(int64, int64, int64)> processFrameCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
@@ -105,7 +109,7 @@ struct ComputeFeatureNeighborsFunctor
       const int32 feature = featureIds.getValue(voxelIndex);
       if(feature > 0)
       {
-        if constexpr(ProcessSurfaceFeaturesV)
+        if constexpr(ProcessSurfaceFeaturesV && !Is1DImageDimsState<ImageDimensionStateT>())
         {
           surfaceFeatures->setValue(feature, true);
         }
@@ -171,9 +175,39 @@ struct ComputeFeatureNeighborsFunctor
        */
 
       processFrameCell(0, 0, 0);
+      if constexpr(ProcessSurfaceFeaturesV && Is1DImageDimsState<ImageDimensionStateT>())
+      {
+        // Since the frame cell function is shared between corners and edges
+        // 1D case for border feature flagging must be disabled to prevent
+        // the entire row from being flagged, thus we must do the corners
+        // in an explicit action.
+        // Note here that there is an argument that a new function
+        // should be defined to handle corner cells. However, this was
+        // decided against to avoid needles code duplication, as the
+        // difference between the two functions would be a single
+        // constexpr if statement
+        const int32 feature = featureIds.getValue(0);
+        surfaceFeatures->setValue(feature, true);
+      }
       if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, SingleVoxelImage>())
       {
         processFrameCell(dims[2] - 1, dims[1] - 1, dims[0] - 1); // If 2D the dims in empty dimension is 1 so this line effectively preforms for all cases
+
+        if constexpr(ProcessSurfaceFeaturesV && Is1DImageDimsState<ImageDimensionStateT>())
+        {
+          // Since the frame cell function is shared between corners and edges
+          // 1D case for border feature flagging must be disabled to prevent
+          // the entire row from being flagged, thus we must do the corners
+          // in an explicit action.
+          // Note here that there is an argument that a new function
+          // should be defined to handle corner cells. However, this was
+          // decided against to avoid needles code duplication, as the
+          // difference between the two functions would be a single
+          // constexpr if statement
+          const int64 voxelIndex = (dims[0] * dims[1] * (dims[2] - 1)) + (dims[0] * (dims[1] - 1)) + (dims[0] - 1);
+          const int32 feature = featureIds.getValue(voxelIndex);
+          surfaceFeatures->setValue(feature, true);
+        }
 
         if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
         {
@@ -258,7 +292,7 @@ struct ComputeFeatureNeighborsFunctor
     }
 
     // Process Planes for 2D and 3D (Stack) Images
-    if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
+    if constexpr(!Is1DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, SingleVoxelImage>())
     {
       const std::function<void(int64, int64, int64, std::vector<FaceNeighborType>&)> processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex,
                                                                                                            const std::vector<FaceNeighborType>& validFaces) -> void {
@@ -268,7 +302,7 @@ struct ComputeFeatureNeighborsFunctor
         const int32 feature = featureIds.getValue(voxelIndex);
         if(feature > 0)
         {
-          if constexpr(ProcessSurfaceFeaturesV)
+          if constexpr(ProcessSurfaceFeaturesV &&IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
           {
             surfaceFeatures->setValue(feature, true);
           }
@@ -440,7 +474,7 @@ struct ComputeFeatureNeighborsFunctor
       // Set the vector for each list into the NeighborList Object
       auto sharedNeiLst = std::make_shared<NeighborList<int32>::VectorType>();
       sharedNeiLst->reserve(neighborCount);
-      auto sharedSAL = std::make_shared<NeighborList<float32>::VectorType>(neighborCount);
+      auto sharedSAL = std::make_shared<NeighborList<float32>::VectorType>();
       sharedSAL->reserve(neighborCount);
       for(const auto& [featureId, surfaceArea] : neighborSurfaceAreas[featureIdx])
       {
