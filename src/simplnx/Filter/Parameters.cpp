@@ -99,7 +99,7 @@ void Parameters::linkParameters(std::string groupKey, std::string_view childKey,
 
   if(containsGroup(childKey))
   {
-    throw std::invalid_argument(fmt::format("Parameters::linkParameters(...): Group '{}' cannot be a child of another group", childKey));
+    throw std::invalid_argument(fmt::format("Parameters::linkParameters(...): Group '{}' cannot be a child of group '{}'", childKey, groupKey));
   }
 
   MapAt(m_ParamGroups, childKey, "Parameters::linkParameters(...): Key '{}' does not exist").push_back({std::move(groupKey), std::move(associatedValue)});

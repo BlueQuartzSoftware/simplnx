@@ -113,7 +113,7 @@ Parameters WritePoleFigureFilter::parameters() const
                                                           ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_MaterialNameArrayPath_Key, "Material Name", "DataPath to the input DataArray that holds the material names", DataPath{}));
 
-  params.insertSeparator(Parameters::Separator{"Output File Parameters"});
+  params.insertSeparator(Parameters::Separator{"Output Image File"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteImageToDisk, "Write Pole Figure as Image", "Should the filter write the pole figure plots to a file.", true));
 
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Directory Path",
@@ -140,15 +140,16 @@ Parameters WritePoleFigureFilter::parameters() const
   params.linkParameters(k_GenerationAlgorithm_Key, k_LambertSize_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_GenerationAlgorithm_Key, k_NumColors_Key, std::make_any<ChoicesParameter::ValueType>(0));
 
-  params.linkParameters(k_SaveAsImageGeometry_Key, k_ImageGeometryPath_Key, true);
   params.linkParameters(k_WriteImageToDisk, k_OutputPath_Key, true);
   params.linkParameters(k_WriteImageToDisk, k_ImagePrefix_Key, true);
 
-  params.linkParameters(k_SaveIntensityDataArrays, k_ImageGeometryPath_Key, true);
+  params.linkParameters(k_SaveAsImageGeometry_Key, k_ImageGeometryPath_Key, true);
+
+  params.linkParameters(k_SaveIntensityDataArrays, k_IntensityGeometryPath, true);
+  params.linkParameters(k_SaveIntensityDataArrays, k_NormalizeToMRD, true);
   params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot1Name, true);
   params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot2Name, true);
   params.linkParameters(k_SaveIntensityDataArrays, k_IntensityPlot3Name, true);
-  params.linkParameters(k_SaveIntensityDataArrays, k_NormalizeToMRD, true);
 
   return params;
 }
