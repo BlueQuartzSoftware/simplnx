@@ -301,6 +301,142 @@ DataStructure Create2DEmptyXDataStructure()
   return dataStructure;
 }
 
+DataStructure Create3DDataStructure()
+{
+  // Create an ImageGeom
+  DataStructure dataStructure = {};
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.8f, 2.2f, 1.2f}});
+  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 5}});
+
+  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5,5,5}, imageGeom->getId());
+  imageGeom->setCellData(*cellData);
+
+  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+
+  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{7}, imageGeom->getId());
+
+  // clang-format off
+  const std::array<uint8, 125> featureIdsArray = {
+    5, 5, 0, 2, 2,
+    5, 0, 2, 1, 1,
+    0, 2, 1, 1, 1,
+    1, 1, 1, 1, 1,
+    1, 1, 1, 1, 0,
+
+    5, 0, 2, 1, 1,
+    0, 2, 3, 3, 1,
+    2, 2, 2, 1, 1,
+    1, 2, 1, 1, 1,
+    1, 1, 1, 1, 1,
+
+    0, 1, 1, 1, 1,
+    1, 2, 3, 3, 1,
+    1, 2, 4, 3, 1,
+    1, 2, 3, 1, 1,
+    1, 1, 1, 1, 1,
+
+    1, 1, 1, 1, 1,
+    1, 4, 4, 4, 1,
+    1, 6, 3, 6, 1,
+    1, 6, 6, 6, 1,
+    1, 1, 1, 1, 1,
+
+    4, 2, 1, 1, 3,
+    2, 1, 2, 1, 1,
+    1, 2, 3, 4, 1,
+    1, 1, 4, 4, 1,
+    1, 1, 1, 1, 4
+  };
+  // clang-format on
+
+  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  {
+    featureIds->setValue(i, featureIdsArray[i]);
+  }
+
+  // Output
+  Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+
+  // clang-format off
+  const std::array<int8, 125> boundaryCellsArray = {
+    0, 0, 0, 2, 2,
+    0, 0, 3, 3, 1,
+    0, 2, 3, 0, 0,
+    0, 2, 0, 0, 0,
+    0, 0, 0, 0, 0,
+
+    0, 0, 3, 3, 1,
+    0, 1, 4, 4, 1,
+    2, 0, 5, 3, 0,
+    2, 4, 3, 0, 0,
+    0, 1, 0, 0, 0,
+
+    0, 1, 2, 1, 0,
+    1, 4, 4, 3, 1,
+    2, 3, 6, 5, 1,
+    1, 4, 6, 3, 0,
+    0, 1, 1, 0, 0,
+
+    1, 2, 1, 1, 1,
+    2, 5, 4, 5, 1,
+    1, 5, 5, 5, 1,
+    1, 4, 4, 4, 1,
+    0, 1, 1, 1, 1,
+
+    3, 4, 2, 1, 3,
+    4, 5, 5, 3, 1,
+    2, 5, 4, 4, 1,
+    0, 3, 4, 3, 2,
+    0, 0, 1, 2, 3
+  };
+  // clang-format on
+
+  for(usize i = 0; i < exemplarBoundaryCells->getNumberOfTuples(); i++)
+  {
+    exemplarBoundaryCells->setValue(i, boundaryCellsArray[i]);
+  }
+
+  BoolArray* exemplarSurfaceFeatures = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureData->getShape(), ShapeType{1}, featureData->getId());
+  exemplarSurfaceFeatures->setValue(1, true);
+  exemplarSurfaceFeatures->setValue(2, true);
+  exemplarSurfaceFeatures->setValue(3, true);
+  exemplarSurfaceFeatures->setValue(4, true);
+  exemplarSurfaceFeatures->setValue(5, true);
+  exemplarSurfaceFeatures->setValue(6, false);
+
+  Int32Array* exemplarNumNeighbors = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureData->getShape(), ShapeType{1}, featureData->getId());
+  exemplarNumNeighbors->setValue(1, 4);
+  exemplarNumNeighbors->setValue(2, 4);
+  exemplarNumNeighbors->setValue(3, 4);
+  exemplarNumNeighbors->setValue(4, 4);
+  exemplarNumNeighbors->setValue(5, 0);
+  exemplarNumNeighbors->setValue(6, 4);
+
+  Int32NeighborList* exemplarNeighborsList = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureData->getShape(), featureData->getId());
+  exemplarNeighborsList->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2,3,4,6}));
+  exemplarNeighborsList->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 3, 4, 6}));
+  exemplarNeighborsList->setList(3, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 4, 6}));
+  exemplarNeighborsList->setList(4, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 3, 6}));
+  exemplarNeighborsList->setList(5, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{}));
+  exemplarNeighborsList->setList(6, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1, 2, 3, 4}));
+
+  /**
+   * TODO:
+   *  - Fix
+   */
+  Float32NeighborList* exemplarSSAList = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureData->getShape(), featureData->getId());
+  exemplarSSAList->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  exemplarSSAList->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  exemplarSSAList->setList(3, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  exemplarSSAList->setList(4, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  exemplarSSAList->setList(5, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+  exemplarSSAList->setList(6, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{}));
+
+  return dataStructure;
+}
+
 void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool testSurfaceFeatures)
 {
   ComputeFeatureNeighborsFilter filter;
@@ -349,8 +485,8 @@ void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool te
 
 /**
  * TODO:
- *  - [ ] add special cases to test for isolated features (feature surrounded by zeros)
- *  - [ ] add 3d case
+ *  - [ ] add special cases to test for isolated features (feature surrounded by zeros) (3D done, 2D needed)
+ *  - [ ] fix 3d case SSA
  */
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.0: Single Voxel - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
@@ -544,6 +680,34 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.2: 2D Empty X - 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.3: 2D Empty X - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
   DataStructure dataStructure = Create2DEmptyXDataStructure();
+
+  ExecuteFilter(dataStructure, false, false);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.0: 3D - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+{
+  DataStructure dataStructure = Create3DDataStructure();
+
+  ExecuteFilter(dataStructure, true, true);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.1: 3D - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+{
+  DataStructure dataStructure = Create3DDataStructure();
+
+  ExecuteFilter(dataStructure, false, true);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.2: 3D - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+{
+  DataStructure dataStructure = Create3DDataStructure();
+
+  ExecuteFilter(dataStructure, true, false);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.3: 3D - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+{
+  DataStructure dataStructure = Create3DDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
 }
