@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/CalculatorParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
@@ -210,13 +211,53 @@ public:
    */
   static std::vector<Token> tokenize(const std::string& equation);
 
+  // Expose temp DataStructure for evaluator (Task 1e will use this)
+  DataStructure& getTempDataStructure()
+  {
+    return m_TempDataStructure;
+  }
+
 private:
+  /**
+   * @brief Runs the full parsing pipeline (tokenize, merge identifiers,
+   * resolve, bracket indexing, minus disambiguation, wrap function args,
+   * validate) and populates m_ParsedItems.
+   */
+  Result<> parse();
+
+  /**
+   * @brief Creates a unique scratch name for temporary arrays.
+   */
+  std::string nextScratchName();
+
+  /**
+   * @brief Creates a Float64Array in m_TempDataStructure from a source
+   * IDataArray, converting all values to double.  When m_IsPreflight is
+   * true the array is allocated but data is not copied.
+   * @return the DataObject::IdType of the newly created array
+   */
+  DataObject::IdType copyArrayToTemp(const IDataArray& sourceArray);
+
+  /**
+   * @brief Creates a 1-element Float64Array in m_TempDataStructure with the
+   * given scalar value.
+   * @return the DataObject::IdType of the newly created array
+   */
+  DataObject::IdType createScalarInTemp(double value);
+
   const DataStructure& m_DataStructure;
   DataStructure m_TempDataStructure;
   DataPath m_SelectedGroupPath;
   std::string m_InfixEquation;
   bool m_IsPreflight;
   usize m_ScratchCounter = 0;
+
+  // Populated by parse(); consumed by evaluateInto() (Task 1e)
+  std::vector<RpnItem> m_RpnItems;
+
+  // Shape info determined during validation
+  std::vector<usize> m_ParsedTupleShape;
+  std::vector<usize> m_ParsedComponentShape;
 };
 
 // ---------------------------------------------------------------------------
