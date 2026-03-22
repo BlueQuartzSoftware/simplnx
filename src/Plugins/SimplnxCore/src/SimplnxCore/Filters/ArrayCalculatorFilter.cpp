@@ -1,17 +1,15 @@
 #include "ArrayCalculatorFilter.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/ArrayCalculator.hpp"
-#include "SimplnxCore/utils/ICalculatorArray.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/CalculatorParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -65,7 +63,7 @@ Parameters ArrayCalculatorFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ArrayCalculatorFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -81,135 +79,45 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
   auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_CalculatorParameter_Key);
   auto pScalarTypeValue = filterArgs.value<NumericTypeParameter::ValueType>(k_ScalarType_Key);
   auto pCalculatedArrayPath = filterArgs.value<DataPath>(k_CalculatedArray_Key);
-
-  auto pSelectedGroupPath = pInfixEquationValue.m_SelectedGroup;
   auto outputGroupPath = pCalculatedArrayPath.getParent();
 
-  PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
-  std::vector<PreflightValue> preflightUpdatedValues;
 
-  // parse the infix expression
-  ArrayCalculatorParser parser(dataStructure, pSelectedGroupPath, pInfixEquationValue.m_Equation, true);
-  std::vector<CalculatorItem::Pointer> parsedInfix;
-  Result<> parsedEquationResults = parser.parseInfixEquation(parsedInfix);
-  resultOutputActions.warnings() = parsedEquationResults.warnings();
-  if(parsedEquationResults.invalid())
-  {
-    return {nonstd::make_unexpected(parsedEquationResults.errors())};
-  }
-  if(parsedInfix.empty())
-  {
-    return MakePreflightErrorResult(-7760, "Error while parsing infix expression.");
-  }
-
-  // check individual infix expression items for validity
-  for(int i = 0; i < parsedInfix.size(); i++)
-  {
-    CalculatorItem::Pointer calcItem = parsedInfix[i];
-    std::string errMsg = "";
-    CalculatorItem::ErrorCode err = calcItem->checkValidity(parsedInfix, i, errMsg);
-    int errInt = static_cast<int>(err);
-    if(errInt < 0)
-    {
-      return MakePreflightErrorResult(errInt, errMsg);
-    }
-  }
-
-  // collect calculated array dimensions, check for consistent array component dimensions in infix expression & make sure it yields a numeric result
+  // Parse and validate the expression
+  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.m_Equation, true);
   std::vector<usize> calculatedTupleShape;
   std::vector<usize> calculatedComponentShape;
-  usize calculatedNumOfTuples = 0;
-  bool tupleShapesMatch = true;
-  ICalculatorArray::ValueType resultType = ICalculatorArray::ValueType::Unknown;
+  Result<> parseResult = parser.parseAndValidate(calculatedTupleShape, calculatedComponentShape);
 
-  // We only check that the arrays have consistent tuple counts and determine the tuple shape based on whether all arrays have
-  // matching tuple shapes or not.  We DO NOT take into account the operator at all; we assume that all operators that input an array
-  // also output an array of the same tuple size.  Adding operators that can take in an array and output an array of a different size
-  // (like finding the minimum or maximum of a single array) will require a significant redesign of this filter since determining the
-  // final output tuple size/shape from an infix equation with those types of operators in it will be significantly more complicated.
-  for(const auto& item1 : parsedInfix)
-  {
-    if(item1->isICalculatorArray())
-    {
-      ICalculatorArray::Pointer array1 = std::dynamic_pointer_cast<ICalculatorArray>(item1);
-      auto tupleShape = array1->getArray()->getTupleShape();
-      auto compShape = array1->getArray()->getComponentShape();
-      auto numTuples = array1->getArray()->getNumberOfTuples();
-      if(item1->isArray())
-      {
-        if(resultType == ICalculatorArray::ValueType::Array)
-        {
-          if(!calculatedComponentShape.empty() && calculatedComponentShape != array1->getArray()->getComponentShape())
-          {
-            return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentCompDims),
-                                            fmt::format("Attribute Array '{}' has component dimensions {} which do not match the previously encountered component dimensions {} in the expression.",
-                                                        array1->getArray()->getName(), fmt::join(array1->getArray()->getComponentShape(), "x"), fmt::join(calculatedComponentShape, "x")));
-          }
-          if(!calculatedTupleShape.empty() && calculatedNumOfTuples != array1->getArray()->getNumberOfTuples())
-          {
-            return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentTuples),
-                                            fmt::format("Attribute Array '{}' has {} tuples which does not match the previously encountered tuple count of {} in the expression.",
-                                                        array1->getArray()->getName(), array1->getArray()->getNumberOfTuples(), calculatedNumOfTuples));
-          }
-          if(!calculatedTupleShape.empty() && calculatedTupleShape != tupleShape)
-          {
-            tupleShapesMatch = false;
-          }
-        }
+  // Transfer warnings
+  resultOutputActions.warnings() = parseResult.warnings();
 
-        resultType = ICalculatorArray::ValueType::Array;
-        calculatedComponentShape = compShape;
-        calculatedTupleShape = tupleShape;
-        calculatedNumOfTuples = numTuples;
-      }
-      else if(resultType == ICalculatorArray::ValueType::Unknown)
-      {
-        resultType = ICalculatorArray::ValueType::Number;
-        calculatedComponentShape = array1->getArray()->getComponentShape();
-        calculatedTupleShape = {array1->getArray()->getNumberOfTuples()};
-      }
-    }
-  }
-  if(resultType == ICalculatorArray::ValueType::Unknown)
+  if(parseResult.invalid())
   {
-    return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::NoNumericArguments), "The expression does not have any arguments that simplify down to a number.");
+    return {nonstd::make_unexpected(parseResult.errors())};
   }
 
-  if(resultType == ICalculatorArray::ValueType::Number)
+  // If the result is a scalar (1 tuple) and the output is in an AttributeMatrix,
+  // use the AttributeMatrix's shape instead
+  if(calculatedTupleShape.size() == 1 && calculatedTupleShape[0] == 1)
   {
     if(const auto* attributeMatrix = dataStructure.getDataAs<AttributeMatrix>(outputGroupPath); attributeMatrix != nullptr)
     {
       calculatedTupleShape = attributeMatrix->getShape();
     }
   }
-  else if(!tupleShapesMatch)
-  {
-    calculatedTupleShape = {calculatedNumOfTuples};
-  }
 
-  // convert to postfix notation
-  Result<ArrayCalculatorParser::ParsedEquation> rpnResults = ArrayCalculatorParser::ToRPN(pInfixEquationValue.m_Equation, parsedInfix);
-  std::vector<CalculatorItem::Pointer> rpn = rpnResults.value();
-  if(rpnResults.invalid() || rpn.empty())
-  {
-    return MakePreflightErrorResult(-7761, "Error while converting parsed infix expression to postfix notation");
-  }
+  // Create the output array
+  auto createArrayAction = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), calculatedTupleShape, calculatedComponentShape, pCalculatedArrayPath);
+  resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  // create the destination array for the calculated results
-  {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), calculatedTupleShape, calculatedComponentShape, pCalculatedArrayPath);
-    resultOutputActions.value().appendAction(std::move(createArrayAction));
-  }
-
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
-} // namespace nx::core
+  return {std::move(resultOutputActions)};
+}
 
 //------------------------------------------------------------------------------
 Result<> ArrayCalculatorFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-
   ArrayCalculatorInputValues inputValues;
   auto pInfixEquationValue = filterArgs.value<CalculatorParameter::ValueType>(k_CalculatorParameter_Key);
   inputValues.InfixEquation = pInfixEquationValue.m_Equation;

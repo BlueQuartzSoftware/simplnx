@@ -115,20 +115,10 @@ Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", prefix));
   }
-  if(!structValue.m_SelectedGroup.empty()) // if empty then using root group
-  {
-    const DataObject* dataObject = dataStructure.getData(structValue.m_SelectedGroup);
-    if(dataObject == nullptr)
-    {
-      return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_DuplicateValue,
-                                       fmt::format("{}Object does not exist at path '{}'", prefix, structValue.m_SelectedGroup.toString()));
-    }
-    const auto baseGroupObj = dataStructure.getDataAs<BaseGroup>(structValue.m_SelectedGroup);
-    if(baseGroupObj == nullptr)
-    {
-      return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, structValue.m_SelectedGroup.toString()));
-    }
-  }
+
+  // m_SelectedGroup is only a resolution hint for array name lookups.
+  // An empty path means "use root", and a non-existent or non-BaseGroup
+  // path is silently accepted -- the parser will handle any issues.
 
   return {};
 }
