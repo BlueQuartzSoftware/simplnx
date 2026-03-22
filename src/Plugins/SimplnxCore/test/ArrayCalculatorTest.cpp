@@ -1,3 +1,4 @@
+#include "SimplnxCore/Filters/Algorithms/ArrayCalculator.hpp"
 #include "SimplnxCore/Filters/ArrayCalculatorFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include "SimplnxCore/utils/CalculatorItem.hpp"
@@ -875,4 +876,119 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Filter Execution")
   SingleComponentArrayCalculatorTest1();
   SingleComponentArrayCalculatorTest2();
   MultiComponentArrayCalculatorTest();
+}
+
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tokenizer")
+{
+  using TT = nx::core::TokenType;
+
+  SECTION("Simple arithmetic")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("3 + 4.5");
+    REQUIRE(tokens.size() == 3);
+    REQUIRE(tokens[0].type == TT::Number);
+    REQUIRE(tokens[0].text == "3");
+    REQUIRE(tokens[0].position == 0);
+    REQUIRE(tokens[1].type == TT::Plus);
+    REQUIRE(tokens[1].position == 2);
+    REQUIRE(tokens[2].type == TT::Number);
+    REQUIRE(tokens[2].text == "4.5");
+    REQUIRE(tokens[2].position == 4);
+  }
+
+  SECTION("Single-word identifiers")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("Spaced Array + 1");
+    REQUIRE(tokens.size() == 4);
+    REQUIRE(tokens[0].type == TT::Identifier);
+    REQUIRE(tokens[0].text == "Spaced");
+    REQUIRE(tokens[1].type == TT::Identifier);
+    REQUIRE(tokens[1].text == "Array");
+    REQUIRE(tokens[2].type == TT::Plus);
+    REQUIRE(tokens[3].type == TT::Number);
+    REQUIRE(tokens[3].text == "1");
+  }
+
+  SECTION("Quoted string")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("\"CellData/Confidence Index\" + 1");
+    REQUIRE(tokens.size() == 3);
+    REQUIRE(tokens[0].type == TT::QuotedString);
+    REQUIRE(tokens[0].text == "CellData/Confidence Index");
+    REQUIRE(tokens[1].type == TT::Plus);
+    REQUIRE(tokens[2].type == TT::Number);
+  }
+
+  SECTION("Brackets and comma")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("Array[3, 2]");
+    REQUIRE(tokens.size() == 6);
+    REQUIRE(tokens[0].type == TT::Identifier);
+    REQUIRE(tokens[0].text == "Array");
+    REQUIRE(tokens[1].type == TT::LBracket);
+    REQUIRE(tokens[2].type == TT::Number);
+    REQUIRE(tokens[2].text == "3");
+    REQUIRE(tokens[3].type == TT::Comma);
+    REQUIRE(tokens[4].type == TT::Number);
+    REQUIRE(tokens[4].text == "2");
+    REQUIRE(tokens[5].type == TT::RBracket);
+  }
+
+  SECTION("All operator tokens")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("+ - * / ^ %");
+    REQUIRE(tokens.size() == 6);
+    REQUIRE(tokens[0].type == TT::Plus);
+    REQUIRE(tokens[1].type == TT::Minus);
+    REQUIRE(tokens[2].type == TT::Star);
+    REQUIRE(tokens[3].type == TT::Slash);
+    REQUIRE(tokens[4].type == TT::Caret);
+    REQUIRE(tokens[5].type == TT::Percent);
+  }
+
+  SECTION("Decimal starting with dot")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize(".345");
+    REQUIRE(tokens.size() == 1);
+    REQUIRE(tokens[0].type == TT::Number);
+    REQUIRE(tokens[0].text == ".345");
+  }
+
+  SECTION("Complex expression")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("sin(pi / 2)");
+    REQUIRE(tokens.size() == 6);
+    REQUIRE(tokens[0].type == TT::Identifier);
+    REQUIRE(tokens[0].text == "sin");
+    REQUIRE(tokens[1].type == TT::LParen);
+    REQUIRE(tokens[2].type == TT::Identifier);
+    REQUIRE(tokens[2].text == "pi");
+    REQUIRE(tokens[3].type == TT::Slash);
+    REQUIRE(tokens[4].type == TT::Number);
+    REQUIRE(tokens[4].text == "2");
+    REQUIRE(tokens[5].type == TT::RParen);
+  }
+
+  SECTION("Negative number tokenizes as minus + number")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("-3.14");
+    REQUIRE(tokens.size() == 2);
+    REQUIRE(tokens[0].type == TT::Minus);
+    REQUIRE(tokens[1].type == TT::Number);
+    REQUIRE(tokens[1].text == "3.14");
+  }
+
+  SECTION("Empty string")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("");
+    REQUIRE(tokens.empty());
+  }
+
+  SECTION("Parentheses")
+  {
+    auto tokens = nx::core::ArrayCalculatorParser::tokenize("(3+4)");
+    REQUIRE(tokens.size() == 5);
+    REQUIRE(tokens[0].type == TT::LParen);
+    REQUIRE(tokens[4].type == TT::RParen);
+  }
 }
