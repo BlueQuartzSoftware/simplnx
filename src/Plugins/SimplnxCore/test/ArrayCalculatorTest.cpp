@@ -12,6 +12,7 @@
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <catch2/catch.hpp>
+#include <numbers>
 
 using namespace nx::core;
 
@@ -990,4 +991,336 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tokenizer")
     REQUIRE(tokens[0].type == TT::LParen);
     REQUIRE(tokens[4].type == TT::RParen);
   }
+}
+
+// -----------------------------------------------------------------------------
+// Test 1: Array Resolution
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Array Resolution")
+{
+  UnitTest::LoadPlugins();
+
+  // Create a DataStructure with arrays in multiple groups.
+  // "Group1/SharedName" (UInt32, 10 tuples, filled with 5)
+  // "Group2/SharedName" (UInt32, 10 tuples, filled with 7)
+  // "Group1/UniqueName" (UInt32, 10 tuples, filled with 3)
+  DataStructure ds;
+  AttributeMatrix* group1 = AttributeMatrix::Create(ds, "Group1", {10ULL});
+  auto group1Id = group1->getId();
+  AttributeMatrix* group2 = AttributeMatrix::Create(ds, "Group2", {10ULL});
+  auto group2Id = group2->getId();
+
+  UInt32Array* shared1 = UInt32Array::CreateWithStore<UInt32DataStore>(ds, "SharedName", {10}, {1}, group1Id);
+  shared1->fill(5);
+  UInt32Array* shared2 = UInt32Array::CreateWithStore<UInt32DataStore>(ds, "SharedName", {10}, {1}, group2Id);
+  shared2->fill(7);
+  UInt32Array* unique1 = UInt32Array::CreateWithStore<UInt32DataStore>(ds, "UniqueName", {10}, {1}, group1Id);
+  unique1->fill(3);
+
+  ArrayCalculatorFilter filter;
+
+  SECTION("Unique bare name resolves without selected group")
+  {
+    DataPath outputPath({"Group1", "NewArray"});
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{DataPath{}, "UniqueName + 1", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE(outputArray.getNumberOfTuples() == 10);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 4.0, 0.01));
+    }
+  }
+
+  SECTION("Ambiguous bare name with no selected group gives error")
+  {
+    DataPath outputPath({"Group1", "AmbiguousResult"});
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{DataPath{}, "SharedName + 1", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors()[0].code == static_cast<int32>(CalculatorErrorCode::AmbiguousArrayName));
+  }
+
+  SECTION("Selected group resolves ambiguity")
+  {
+    DataPath outputPath({"Group1", "ResolvedResult"});
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{DataPath({"Group1"}), "SharedName + 1", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE(outputArray.getNumberOfTuples() == 10);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 6.0, 0.01));
+    }
+  }
+
+  SECTION("Quoted full path resolves directly")
+  {
+    DataPath outputPath({"Group2", "QuotedResult"});
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{DataPath{}, "\"Group2/SharedName\" + 1", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(outputPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(outputPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(outputPath);
+    REQUIRE(outputArray.getNumberOfTuples() == 10);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 8.0, 0.01));
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+// -----------------------------------------------------------------------------
+// Test 2: Built-in Constants
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Built-in Constants")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = ::createDataStructure();
+  ArrayCalculatorFilter filter;
+
+  SECTION("pi resolves to std::numbers::pi")
+  {
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, "pi", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), std::numbers::pi, 0.0001));
+    }
+  }
+
+  SECTION("e resolves to std::numbers::e")
+  {
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, "e", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), std::numbers::e, 0.0001));
+    }
+  }
+
+  SECTION("2 * pi expression works")
+  {
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, "2 * pi", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 2.0 * std::numbers::pi, 0.0001));
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+// -----------------------------------------------------------------------------
+// Test 3: Modulo Operator
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Modulo Operator")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = ::createDataStructure();
+  ArrayCalculatorFilter filter;
+
+  SECTION("Scalar modulo: 10 % 3 = 1")
+  {
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, "10 % 3", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 1.0, 0.01));
+    }
+  }
+
+  SECTION("Array modulo: InputArray2 % 3 = 1 element-wise")
+  {
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, "InputArray2 % 3", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE(outputArray.getNumberOfTuples() == 10);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 1.0, 0.01));
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+// -----------------------------------------------------------------------------
+// Test 4: Tuple+Component Indexing
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Tuple Component Indexing")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = ::createDataStructure();
+  ArrayCalculatorFilter filter;
+
+  SECTION("MultiComponent Array1[2, 1] produces scalar value 7")
+  {
+    // MultiComponent Array1 has 10 tuples x 3 comps, values 0..29 sequentially.
+    // tuple 2, comp 1 = index 2*3 + 1 = 7
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, "\"MultiComponent Array1\"[2, 1]", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    // Scalar result broadcast to all tuples in the AttributeMatrix (10 tuples)
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 7.0, 0.01));
+    }
+  }
+
+  SECTION("MultiComponent Array1[100, 0] out of bounds gives TupleOutOfRange error")
+  {
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, "\"MultiComponent Array1\"[100, 0]", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors()[0].code == static_cast<int32>(CalculatorErrorCode::TupleOutOfRange));
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+// -----------------------------------------------------------------------------
+// Test 5: Sub-expression Component Access
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Component Access")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = ::createDataStructure();
+  ArrayCalculatorFilter filter;
+
+  SECTION("(MultiComponent Array1 + MultiComponent Array2)[0] extracts component 0 of the sum")
+  {
+    // MultiComponent Array1 and Array2 both have 10 tuples x 3 components, values 0..29.
+    // Sum = 2*values = [0,2,4,6,8,10,...,58]
+    // Component 0 extraction: for each tuple t, take element at (t*3 + 0) = 2*(t*3)
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(
+                            CalculatorParameter::ValueType{k_AttributeMatrixPath, "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[0]", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE(outputArray.getNumberOfTuples() == 10);
+    REQUIRE(outputArray.getNumberOfComponents() == 1);
+    for(usize t = 0; t < 10; t++)
+    {
+      // Component 0 of sum: (t*3 + 0) + (t*3 + 0) = 2 * (t * 3)
+      double expected = 2.0 * static_cast<double>(t * 3);
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(t), expected, 0.01));
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+// -----------------------------------------------------------------------------
+// Test 6: Multi-word Array Names
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Multi-word Array Names")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = ::createDataStructure();
+  ArrayCalculatorFilter filter;
+
+  SECTION("Spaced Array + 1 = 3")
+  {
+    // Spaced Array is filled with 2, so Spaced Array + 1 = 3
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
+                        std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{k_AttributeMatrixPath, "Spaced Array + 1", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    REQUIRE(outputArray.getNumberOfTuples() == 10);
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), 3.0, 0.01));
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
 }

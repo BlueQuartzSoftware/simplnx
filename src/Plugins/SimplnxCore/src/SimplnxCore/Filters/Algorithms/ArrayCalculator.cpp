@@ -1356,6 +1356,19 @@ Result<> ArrayCalculatorParser::parse()
     return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), "The expression does not have any arguments that simplify down to a number.");
   }
 
+  // Check if there is a ComponentExtract item in the parsed list.
+  // If so, the final output will be single-component regardless of the
+  // input array's component shape.
+  bool hasComponentExtract = false;
+  for(const auto& item : items)
+  {
+    if(item.kind == ParsedItem::Kind::ComponentExtract)
+    {
+      hasComponentExtract = true;
+      break;
+    }
+  }
+
   // Store the parsed shape info for use by parseAndValidate()
   if(hasArray)
   {
@@ -1367,7 +1380,7 @@ Result<> ArrayCalculatorParser::parse()
     {
       m_ParsedTupleShape = {arrayNumTuples};
     }
-    m_ParsedComponentShape = arrayCompShape;
+    m_ParsedComponentShape = hasComponentExtract ? std::vector<usize>{1} : arrayCompShape;
   }
   else
   {
