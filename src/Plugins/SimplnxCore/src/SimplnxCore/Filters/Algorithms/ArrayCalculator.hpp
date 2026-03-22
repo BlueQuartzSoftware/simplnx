@@ -1,18 +1,174 @@
 #pragma once
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
-#include "SimplnxCore/utils/CalculatorItem.hpp"
 
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/CalculatorParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 
+#include <atomic>
+#include <functional>
+#include <string>
+#include <vector>
+
 namespace nx::core
 {
 
+// ---------------------------------------------------------------------------
+// Error codes preserved from the legacy CalculatorItem::ErrorCode enum
+// ---------------------------------------------------------------------------
+enum class CalculatorErrorCode : int
+{
+  Success = 0,
+  InvalidEquation = -4009,
+  InvalidComponent = -4010,
+  EmptyEquation = -4011,
+  EmptyCalArray = -4012,
+  EmptySelMatrix = -4013,
+  LostAttrMatrix = -4014,
+  IncorrectTupleCount = -4015,
+  InconsistentTuples = -4016,
+  UnrecognizedItem = -4017,
+  MismatchedParentheses = -4018,
+  UnexpectedOutput = -4019,
+  ComponentOutOfRange = -4020,
+  InvalidArrayName = -4022,
+  InconsistentIndexing = -4023,
+  InconsistentCompDims = -4024,
+  AttrArrayZeroTuplesWarning = -4025,
+  OrphanedComponent = -4026,
+  OperatorNoLeftValue = -4027,
+  OperatorNoRightValue = -4028,
+  OperatorNoOpeningParen = -4029,
+  OperatorNoClosingParen = -4030,
+  NoNumericArguments = -4031,
+  MissingArguments = -4032,
+  NotEnoughArguments = -4033,
+  TooManyArguments = -4034,
+  InvalidSymbol = -4035,
+  NoPrecedingUnaryOperator = -4036,
+  InvalidOutputArrayType = -4037,
+  AttributeMatrixInsertionError = -4038,
+  AmbiguousArrayName = -4039,
+  TupleOutOfRange = -4040
+};
+
+// ---------------------------------------------------------------------------
+// Warning codes preserved from the legacy CalculatorItem::WarningCode enum
+// ---------------------------------------------------------------------------
+enum class CalculatorWarningCode : int
+{
+  None = 0,
+  NumericValueWarning = -5010,
+  AmbiguousNameWarning = -5011
+};
+
+// ---------------------------------------------------------------------------
+// Lexer token types
+// ---------------------------------------------------------------------------
+enum class TokenType
+{
+  Number,
+  Identifier,
+  QuotedString,
+  Plus,
+  Minus,
+  Star,
+  Slash,
+  Caret,
+  Percent,
+  LParen,
+  RParen,
+  LBracket,
+  RBracket,
+  Comma
+};
+
+// ---------------------------------------------------------------------------
+// A single token produced by the lexer
+// ---------------------------------------------------------------------------
+struct SIMPLNXCORE_EXPORT Token
+{
+  TokenType type;
+  std::string text;
+  size_t position = 0;
+};
+
+// ---------------------------------------------------------------------------
+// Definition of an operator or function in the calculator language
+// ---------------------------------------------------------------------------
+struct SIMPLNXCORE_EXPORT OperatorDef
+{
+  std::string token;
+
+  enum Kind
+  {
+    BinaryInfix,
+    Function,
+    UnaryPrefix
+  } kind;
+
+  int precedence;
+  int numArgs;
+
+  enum Associativity
+  {
+    Left,
+    Right
+  } associativity = Left;
+
+  enum TrigMode
+  {
+    None,
+    ForwardTrig,
+    InverseTrig
+  } trigMode = None;
+
+  std::function<double(double)> unaryOp;
+  std::function<double(double, double)> binaryOp;
+};
+
+// ---------------------------------------------------------------------------
+// A value that lives on the evaluation stack (either a scalar or an array)
+// ---------------------------------------------------------------------------
+struct SIMPLNXCORE_EXPORT CalcValue
+{
+  enum class Kind
+  {
+    Number,
+    Array
+  } kind;
+
+  DataObject::IdType arrayId;
+};
+
+// ---------------------------------------------------------------------------
+// A single item in the RPN (reverse-polish notation) evaluation sequence
+// ---------------------------------------------------------------------------
+struct SIMPLNXCORE_EXPORT RpnItem
+{
+  enum class Type
+  {
+    Value,
+    Operator,
+    ComponentExtract
+  } type;
+
+  CalcValue value;
+  const OperatorDef* op = nullptr;
+  int componentIndex = -1;
+};
+
+// ---------------------------------------------------------------------------
+// Returns the global table of all supported operators and functions
+// ---------------------------------------------------------------------------
+SIMPLNXCORE_EXPORT const std::vector<OperatorDef>& getOperatorRegistry();
+
+// ---------------------------------------------------------------------------
+// Input values passed from ArrayCalculatorFilter to the algorithm
+// ---------------------------------------------------------------------------
 struct SIMPLNXCORE_EXPORT ArrayCalculatorInputValues
 {
   DataPath SelectedGroup;
@@ -22,42 +178,50 @@ struct SIMPLNXCORE_EXPORT ArrayCalculatorInputValues
   DataPath CalculatedArray;
 };
 
+// ---------------------------------------------------------------------------
+// Parses and validates an infix calculator equation, then evaluates it
+// ---------------------------------------------------------------------------
 class SIMPLNXCORE_EXPORT ArrayCalculatorParser
 {
 public:
-  using ParsedEquation = std::vector<CalculatorItem::Pointer>;
+  ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight);
+  ~ArrayCalculatorParser() noexcept = default;
 
-  ArrayCalculatorParser(const DataStructure& dataStruct, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight);
+  ArrayCalculatorParser(const ArrayCalculatorParser&) = delete;
+  ArrayCalculatorParser(ArrayCalculatorParser&&) noexcept = delete;
+  ArrayCalculatorParser& operator=(const ArrayCalculatorParser&) = delete;
+  ArrayCalculatorParser& operator=(ArrayCalculatorParser&&) noexcept = delete;
 
-  Result<> parseInfixEquation(ParsedEquation& parsedInfix);
+  /**
+   * @brief Tokenises, parses, and validates the infix equation.
+   * On success the output tuple and component shapes are written to the
+   * out-parameters so the filter can create the output array in preflight.
+   */
+  Result<> parseAndValidate(std::vector<usize>& outTupleShape, std::vector<usize>& outComponentShape);
 
-  static Result<ArrayCalculatorParser::ParsedEquation> ToRPN(const std::string& unparsedInfixExpression, std::vector<CalculatorItem::Pointer> infixEquation);
+  /**
+   * @brief Evaluates the already-parsed equation and writes the result into
+   * the output array at @p outputPath inside @p dataStructure.
+   */
+  Result<> evaluateInto(DataStructure& dataStructure, const DataPath& outputPath, NumericType scalarType, CalculatorParameter::AngleUnits units);
 
-  friend class ArrayCalculator;
-
-protected:
-  std::vector<std::string> getRegularExpressionMatches();
-  Result<> parseNumericValue(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix, double number);
-  Result<> parseMinusSign(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix, int loopIdx);
-  Result<> parseIndexOperator(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix);
-  Result<> parseArray(std::string token, std::vector<CalculatorItem::Pointer>& parsedInfix);
-  Result<> checkForAmbiguousArrayName(const std::string& strItem, std::string warningMsg);
+  /**
+   * @brief Pure lexer -- splits an equation string into tokens.
+   */
+  static std::vector<Token> tokenize(const std::string& equation);
 
 private:
   const DataStructure& m_DataStructure;
-  DataStructure m_TemporaryDataStructure; // data structure for holding the temporary calculator array items
+  DataStructure m_TempDataStructure;
   DataPath m_SelectedGroupPath;
   std::string m_InfixEquation;
   bool m_IsPreflight;
-
-  std::map<std::string, std::shared_ptr<CalculatorItem>> m_SymbolMap;
-
-  void createSymbolMap();
+  usize m_ScratchCounter = 0;
 };
 
-/**
- * @class
- */
+// ---------------------------------------------------------------------------
+// Top-level algorithm class invoked by ArrayCalculatorFilter::executeImpl()
+// ---------------------------------------------------------------------------
 class SIMPLNXCORE_EXPORT ArrayCalculator
 {
 public:
