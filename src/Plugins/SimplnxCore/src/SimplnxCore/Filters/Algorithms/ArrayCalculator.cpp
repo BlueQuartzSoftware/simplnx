@@ -1,6 +1,7 @@
 #include "ArrayCalculator.hpp"
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
@@ -9,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <stack>
 
 using namespace nx::core;
 
@@ -218,6 +220,30 @@ void wrapFunctionArguments(std::vector<ParsedItem>& items)
 
   items.swap(out);
 }
+
+// ---------------------------------------------------------------------------
+// Functor to copy a Float64Array result into the output DataArray of any
+// numeric type, performing static_cast on each element.
+// ---------------------------------------------------------------------------
+struct CopyResultFunctor
+{
+  template <typename T>
+  void operator()(DataStructure& ds, const DataPath& outputPath, const Float64Array* resultArray, bool isScalar)
+  {
+    auto& output = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+    if(isScalar && resultArray->getSize() == 1)
+    {
+      output.fill(static_cast<T>(resultArray->at(0)));
+    }
+    else
+    {
+      for(usize i = 0; i < output.getSize(); i++)
+      {
+        output[i] = static_cast<T>(resultArray->at(i));
+      }
+    }
+  }
+};
 
 } // anonymous namespace
 
@@ -1129,12 +1155,99 @@ Result<> ArrayCalculatorParser::parse()
   }
 
   // === Convert ParsedItems to RPN using shunting-yard ===
-  // (This will be fully implemented in Task 1e. For now, store the
-  //  parsed items so that parseAndValidate can return shapes.)
-
-  // For now, build a simple RpnItem list from the parsed items.
-  // Task 1e will replace this with proper shunting-yard conversion.
   m_RpnItems.clear();
+  std::vector<ParsedItem> opStack;
+
+  for(const auto& item : items)
+  {
+    switch(item.kind)
+    {
+    case ParsedItem::Kind::Value: {
+      m_RpnItems.push_back(RpnItem{RpnItem::Type::Value, item.value, nullptr, -1});
+      break;
+    }
+
+    case ParsedItem::Kind::LParen: {
+      opStack.push_back(item);
+      break;
+    }
+
+    case ParsedItem::Kind::RParen: {
+      // Pop operators to output until we find the matching LParen
+      while(!opStack.empty() && opStack.back().kind != ParsedItem::Kind::LParen)
+      {
+        const auto& top = opStack.back();
+        m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, top.op, -1});
+        opStack.pop_back();
+      }
+      if(opStack.empty())
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses),
+                               fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
+      }
+      // Discard the LParen
+      opStack.pop_back();
+      break;
+    }
+
+    case ParsedItem::Kind::Comma: {
+      // Pop operators to output until we find the LParen (but don't discard it)
+      while(!opStack.empty() && opStack.back().kind != ParsedItem::Kind::LParen)
+      {
+        const auto& top = opStack.back();
+        m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, top.op, -1});
+        opStack.pop_back();
+      }
+      break;
+    }
+
+    case ParsedItem::Kind::Operator: {
+      const OperatorDef* incomingOp = item.isNegativePrefix ? &getUnaryNegativeOp() : item.op;
+      int incomingPrec = incomingOp->precedence;
+      bool isLeftAssoc = (incomingOp->associativity == OperatorDef::Left);
+
+      while(!opStack.empty() && opStack.back().kind == ParsedItem::Kind::Operator)
+      {
+        const auto& topItem = opStack.back();
+        const OperatorDef* topOp = topItem.isNegativePrefix ? &getUnaryNegativeOp() : topItem.op;
+        int topPrec = topOp->precedence;
+
+        if(topPrec > incomingPrec || (topPrec == incomingPrec && isLeftAssoc))
+        {
+          m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, -1});
+          opStack.pop_back();
+        }
+        else
+        {
+          break;
+        }
+      }
+
+      opStack.push_back(item);
+      break;
+    }
+
+    case ParsedItem::Kind::ComponentExtract: {
+      m_RpnItems.push_back(RpnItem{RpnItem::Type::ComponentExtract, CalcValue{CalcValue::Kind::Number, 0}, nullptr, item.componentIndex});
+      break;
+    }
+
+    } // end switch
+  }
+
+  // Pop remaining operators from the stack
+  while(!opStack.empty())
+  {
+    const auto& top = opStack.back();
+    if(top.kind == ParsedItem::Kind::LParen)
+    {
+      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses),
+                             fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
+    }
+    const OperatorDef* topOp = top.isNegativePrefix ? &getUnaryNegativeOp() : top.op;
+    m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, -1});
+    opStack.pop_back();
+  }
 
   return result;
 }
@@ -1155,9 +1268,200 @@ Result<> ArrayCalculatorParser::parseAndValidate(std::vector<usize>& outTupleSha
 }
 
 // ---------------------------------------------------------------------------
-Result<> ArrayCalculatorParser::evaluateInto(DataStructure& /*dataStructure*/, const DataPath& /*outputPath*/, NumericType /*scalarType*/, CalculatorParameter::AngleUnits /*units*/)
+Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const DataPath& outputPath, NumericType scalarType, CalculatorParameter::AngleUnits units)
 {
-  return MakeErrorResult(-1, "Not yet implemented");
+  // 1. Parse (which now populates m_RpnItems via shunting-yard)
+  Result<> parseResult = parse();
+  if(parseResult.invalid())
+  {
+    return parseResult;
+  }
+
+  // 2. Walk the RPN items using an evaluation stack
+  std::stack<CalcValue> evalStack;
+
+  for(const auto& rpnItem : m_RpnItems)
+  {
+    switch(rpnItem.type)
+    {
+    case RpnItem::Type::Value: {
+      evalStack.push(rpnItem.value);
+      break;
+    }
+
+    case RpnItem::Type::Operator: {
+      const OperatorDef* op = rpnItem.op;
+      if(op == nullptr)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: null operator in RPN evaluation.");
+      }
+
+      if(op->numArgs == 1)
+      {
+        // Unary operator / 1-arg function
+        if(evalStack.empty())
+        {
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for unary operator.");
+        }
+        CalcValue operand = evalStack.top();
+        evalStack.pop();
+
+        auto* operandArr = m_TempDataStructure.getDataAs<Float64Array>(operand.arrayId);
+        if(operandArr == nullptr)
+        {
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find operand array during evaluation.");
+        }
+
+        auto tupleShape = operandArr->getTupleShape();
+        auto compShape = operandArr->getComponentShape();
+        auto* resultArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), tupleShape, compShape);
+
+        usize totalSize = operandArr->getSize();
+        for(usize i = 0; i < totalSize; i++)
+        {
+          double val = operandArr->at(i);
+
+          // Handle trig angle unit conversions
+          if(op->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
+          {
+            val = val * (std::numbers::pi / 180.0);
+          }
+
+          double res = op->unaryOp(val);
+
+          if(op->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
+          {
+            res = res * (180.0 / std::numbers::pi);
+          }
+
+          (*resultArr)[i] = res;
+        }
+
+        evalStack.push(CalcValue{operand.kind, resultArr->getId()});
+      }
+      else if(op->numArgs == 2)
+      {
+        // Binary operator / 2-arg function
+        if(evalStack.size() < 2)
+        {
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for binary operator.");
+        }
+        CalcValue rightVal = evalStack.top();
+        evalStack.pop();
+        CalcValue leftVal = evalStack.top();
+        evalStack.pop();
+
+        auto* leftArr = m_TempDataStructure.getDataAs<Float64Array>(leftVal.arrayId);
+        auto* rightArr = m_TempDataStructure.getDataAs<Float64Array>(rightVal.arrayId);
+        if(leftArr == nullptr || rightArr == nullptr)
+        {
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find operand arrays during evaluation.");
+        }
+
+        // Determine output shape: use array operand's shape (broadcast scalars)
+        std::vector<usize> outTupleShape;
+        std::vector<usize> outCompShape;
+        if(leftVal.kind == CalcValue::Kind::Array)
+        {
+          outTupleShape = leftArr->getTupleShape();
+          outCompShape = leftArr->getComponentShape();
+        }
+        else
+        {
+          outTupleShape = rightArr->getTupleShape();
+          outCompShape = rightArr->getComponentShape();
+        }
+
+        usize numTuples = 1;
+        for(auto d : outTupleShape)
+        {
+          numTuples *= d;
+        }
+        usize numComps = 1;
+        for(auto d : outCompShape)
+        {
+          numComps *= d;
+        }
+        usize totalSize = numTuples * numComps;
+
+        auto* resultArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), outTupleShape, outCompShape);
+
+        for(usize i = 0; i < totalSize; i++)
+        {
+          double lv = (leftVal.kind == CalcValue::Kind::Array) ? leftArr->at(i) : leftArr->at(0);
+          double rv = (rightVal.kind == CalcValue::Kind::Array) ? rightArr->at(i) : rightArr->at(0);
+          (*resultArr)[i] = op->binaryOp(lv, rv);
+        }
+
+        CalcValue::Kind resultKind = (leftVal.kind == CalcValue::Kind::Array || rightVal.kind == CalcValue::Kind::Array) ? CalcValue::Kind::Array : CalcValue::Kind::Number;
+        evalStack.push(CalcValue{resultKind, resultArr->getId()});
+      }
+      else
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), fmt::format("Internal error: operator '{}' has unsupported numArgs={}.", op->token, op->numArgs));
+      }
+      break;
+    }
+
+    case RpnItem::Type::ComponentExtract: {
+      if(evalStack.empty())
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for component extraction.");
+      }
+      CalcValue operand = evalStack.top();
+      evalStack.pop();
+
+      auto* operandArr = m_TempDataStructure.getDataAs<Float64Array>(operand.arrayId);
+      if(operandArr == nullptr)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find operand array for component extraction.");
+      }
+
+      usize numComps = operandArr->getNumberOfComponents();
+      usize numTuples = operandArr->getNumberOfTuples();
+      int compIdx = rpnItem.componentIndex;
+
+      if(compIdx < 0 || static_cast<usize>(compIdx) >= numComps)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange),
+                               fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
+      }
+
+      auto* newArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), operandArr->getTupleShape(), std::vector<usize>{1});
+      for(usize t = 0; t < numTuples; ++t)
+      {
+        (*newArr)[t] = operandArr->at(t * numComps + static_cast<usize>(compIdx));
+      }
+
+      evalStack.push(CalcValue{operand.kind, newArr->getId()});
+      break;
+    }
+
+    } // end switch
+  }
+
+  // 3. Final result
+  if(evalStack.size() != 1)
+  {
+    return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation),
+                           fmt::format("Internal error: evaluation stack has {} items remaining; expected exactly 1.", evalStack.size()));
+  }
+
+  CalcValue finalVal = evalStack.top();
+  evalStack.pop();
+
+  auto* resultArr = m_TempDataStructure.getDataAs<Float64Array>(finalVal.arrayId);
+  if(resultArr == nullptr)
+  {
+    return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find final result array.");
+  }
+
+  // 4. Copy/cast result into the output array
+  DataType outputDataType = ConvertNumericTypeToDataType(scalarType);
+  bool isScalar = (finalVal.kind == CalcValue::Kind::Number);
+  ExecuteDataFunction(CopyResultFunctor{}, outputDataType, dataStructure, outputPath, resultArr, isScalar);
+
+  return parseResult;
 }
 
 // ---------------------------------------------------------------------------
@@ -1183,5 +1487,6 @@ const std::atomic_bool& ArrayCalculator::getCancel()
 // ---------------------------------------------------------------------------
 Result<> ArrayCalculator::operator()()
 {
-  return MakeErrorResult(-1, "Not yet implemented");
+  ArrayCalculatorParser parser(m_DataStructure, m_InputValues->SelectedGroup, m_InputValues->InfixEquation, false);
+  return parser.evaluateInto(m_DataStructure, m_InputValues->CalculatedArray, m_InputValues->ScalarType, m_InputValues->Units);
 }
