@@ -965,6 +965,29 @@ Result<> ArrayCalculatorParser::parse()
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidSymbol), fmt::format("Unknown operator symbol '{}'.", tok.text));
       }
+
+      // Check if the operator symbol is also the name of an array
+      if(m_IsPreflight)
+      {
+        bool arrayExists = false;
+        if(!m_SelectedGroupPath.empty())
+        {
+          arrayExists = ContainsDataArrayName(m_DataStructure, m_SelectedGroupPath, tok.text);
+        }
+        if(!arrayExists)
+        {
+          arrayExists = !findArraysByName(m_DataStructure, tok.text).empty();
+        }
+        if(arrayExists)
+        {
+          result.warnings().push_back(
+              Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                      fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
+                                  "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
+                                  tok.text, tok.text)});
+        }
+      }
+
       ParsedItem pi;
       pi.kind = ParsedItem::Kind::Operator;
       pi.op = opDef;
@@ -1053,7 +1076,206 @@ Result<> ArrayCalculatorParser::parse()
   wrapFunctionArguments(items);
 
   // === Step 7: Validation ===
-  // 7a: Check matched parentheses
+
+  // 7a-1: Check for function/unary operators: opening/closing paren, argument count, empty args
+  for(size_t i = 0; i < items.size(); ++i)
+  {
+    const auto& item = items[i];
+    if(item.kind == ParsedItem::Kind::Operator && item.op != nullptr && item.op->kind == OperatorDef::Function)
+    {
+      // A function operator must be followed by LParen
+      if(i + 1 >= items.size() || items[i + 1].kind != ParsedItem::Kind::LParen)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoOpeningParen),
+                               fmt::format("The operator/function '{}' does not have a valid opening parenthesis.", item.op->token));
+      }
+
+      // Find the matching RParen and count commas/values at depth 1
+      int depth = 0;
+      bool foundClose = false;
+      size_t closeIdx = 0;
+      int commaCount = 0;
+      bool hasValueInside = false;
+      for(size_t j = i + 1; j < items.size(); ++j)
+      {
+        if(items[j].kind == ParsedItem::Kind::LParen)
+        {
+          ++depth;
+        }
+        else if(items[j].kind == ParsedItem::Kind::RParen)
+        {
+          --depth;
+          if(depth == 0)
+          {
+            foundClose = true;
+            closeIdx = j;
+            break;
+          }
+        }
+        else if(items[j].kind == ParsedItem::Kind::Comma && depth == 1)
+        {
+          ++commaCount;
+        }
+        else if(depth >= 1 && (items[j].kind == ParsedItem::Kind::Value || (items[j].kind == ParsedItem::Kind::Operator && items[j].op != nullptr)))
+        {
+          hasValueInside = true;
+        }
+      }
+      if(!foundClose)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoClosingParen),
+                               fmt::format("The operator/function '{}' does not have a valid closing parenthesis.", item.op->token));
+      }
+
+      // Check for empty function call: func() with no values or commas inside
+      if(!hasValueInside && commaCount == 0)
+      {
+        // For 2-arg functions with empty parens: NotEnoughArguments
+        if(item.op->numArgs == 2)
+        {
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments),
+                                 fmt::format("The function '{}' requires {} arguments, but none were provided.", item.op->token, item.op->numArgs));
+        }
+        // For 1-arg functions with empty parens: NoNumericArguments
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments),
+                               fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
+      }
+
+      // Check for commas in the empty-value case: func(,) -- commas but no real values
+      if(!hasValueInside && commaCount > 0)
+      {
+        if(item.op->numArgs == 1)
+        {
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::TooManyArguments),
+                                 fmt::format("The function '{}' requires {} argument, but more were provided.", item.op->token, item.op->numArgs));
+        }
+        // For 2-arg functions: NoNumericArguments (commas but no values)
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments),
+                               fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
+      }
+
+      // Argument count: numArgs from OperatorDef, commaCount gives (numArgs-1)
+      int providedArgs = commaCount + 1;
+      if(item.op->numArgs == 1 && commaCount > 0)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::TooManyArguments),
+                               fmt::format("The function '{}' requires {} argument, but {} were provided.", item.op->token, item.op->numArgs, providedArgs));
+      }
+      if(item.op->numArgs == 2 && commaCount < 1 && hasValueInside)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments),
+                               fmt::format("The function '{}' requires {} arguments, but only {} was provided.", item.op->token, item.op->numArgs, providedArgs));
+      }
+    }
+  }
+
+  // 7a-1b: Check for commas inside non-function parentheses (NoPrecedingUnaryOperator)
+  for(size_t i = 0; i < items.size(); ++i)
+  {
+    if(items[i].kind == ParsedItem::Kind::Comma)
+    {
+      // Walk backwards to find the opening paren at the same depth, and check if preceded by a function
+      int depth = 0;
+      bool foundFunction = false;
+      for(int j = static_cast<int>(i) - 1; j >= 0; --j)
+      {
+        if(items[j].kind == ParsedItem::Kind::RParen)
+        {
+          ++depth;
+        }
+        else if(items[j].kind == ParsedItem::Kind::LParen)
+        {
+          if(depth == 0)
+          {
+            // Found the opening paren; check if preceded by a function
+            if(j > 0 && items[j - 1].kind == ParsedItem::Kind::Operator && items[j - 1].op != nullptr && items[j - 1].op->kind == OperatorDef::Function)
+            {
+              foundFunction = true;
+            }
+            break;
+          }
+          --depth;
+        }
+      }
+      if(!foundFunction)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoPrecedingUnaryOperator),
+                               "A comma was found in parentheses without a preceding function operator.");
+      }
+    }
+  }
+
+  // 7a-2: Check for binary operators missing left or right operands
+  for(size_t i = 0; i < items.size(); ++i)
+  {
+    const auto& item = items[i];
+    if(!isBinaryOp(item))
+    {
+      continue;
+    }
+    // Check left: the item before must be a value or RParen (something that produces a value)
+    bool hasLeft = false;
+    if(i > 0)
+    {
+      const auto& prev = items[i - 1];
+      if(prev.kind == ParsedItem::Kind::Value || prev.kind == ParsedItem::Kind::RParen)
+      {
+        hasLeft = true;
+      }
+    }
+    if(!hasLeft)
+    {
+      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoLeftValue),
+                             fmt::format("The binary operator '{}' does not have a valid left-hand value.", item.op->token));
+    }
+    // Check right: the item after must be a value, LParen, or unary operator (something that produces a value)
+    bool hasRight = false;
+    if(i + 1 < items.size())
+    {
+      const auto& next = items[i + 1];
+      if(next.kind == ParsedItem::Kind::Value || next.kind == ParsedItem::Kind::LParen)
+      {
+        hasRight = true;
+      }
+      else if(next.kind == ParsedItem::Kind::Operator && next.op != nullptr)
+      {
+        hasRight = true; // Could be a unary prefix or function
+      }
+    }
+    if(!hasRight)
+    {
+      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoRightValue),
+                             fmt::format("The binary operator '{}' does not have a valid right-hand value.", item.op->token));
+    }
+  }
+
+  // 7a-3: Check for unary negative with no right operand
+  for(size_t i = 0; i < items.size(); ++i)
+  {
+    const auto& item = items[i];
+    if(item.isNegativePrefix)
+    {
+      bool hasRight = false;
+      if(i + 1 < items.size())
+      {
+        const auto& next = items[i + 1];
+        if(next.kind == ParsedItem::Kind::Value || next.kind == ParsedItem::Kind::LParen)
+        {
+          hasRight = true;
+        }
+        else if(next.kind == ParsedItem::Kind::Operator && next.op != nullptr)
+        {
+          hasRight = true; // e.g. -sin(...)
+        }
+      }
+      if(!hasRight)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoRightValue), "The unary negative operator does not have a valid right-hand value.");
+      }
+    }
+  }
+
+  // 7a-4: Check matched parentheses (generic, after operator-specific checks)
   {
     int parenDepth = 0;
     for(const auto& item : items)
