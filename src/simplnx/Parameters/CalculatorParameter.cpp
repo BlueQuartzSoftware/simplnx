@@ -21,7 +21,7 @@ constexpr StringLiteral k_SelectedGroup = "selected_group";
 } // namespace
 
 CalculatorParameter::CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
-: MutableDataParameter(name, humanName, helpText, Category::Required)
+: ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 {
 }
@@ -107,7 +107,7 @@ typename CalculatorParameter::ValueType CalculatorParameter::defaultString() con
   return m_DefaultValue;
 }
 
-Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const std::any& value) const
+Result<> CalculatorParameter::validate(const std::any& value) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   [[maybe_unused]] const auto& structValue = GetAnyRef<ValueType>(value);
@@ -121,13 +121,6 @@ Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const
   // path is silently accepted -- the parser will handle any issues.
 
   return {};
-}
-
-Result<std::any> CalculatorParameter::resolve(DataStructure& dataStructure, const std::any& value) const
-{
-  const auto& structValue = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(structValue.m_SelectedGroup);
-  return {{object}};
 }
 
 namespace SIMPLConversion

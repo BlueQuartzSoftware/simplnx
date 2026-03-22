@@ -1,15 +1,15 @@
 #pragma once
 
 #include "simplnx/DataStructure/DataPath.hpp"
-#include "simplnx/Filter/MutableDataParameter.hpp"
 #include "simplnx/Filter/ParameterTraits.hpp"
+#include "simplnx/Filter/ValueParameter.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <string>
 
 namespace nx::core
 {
-class SIMPLNX_EXPORT CalculatorParameter : public MutableDataParameter
+class SIMPLNX_EXPORT CalculatorParameter : public ValueParameter
 {
 public:
   enum AngleUnits : uint8
@@ -78,16 +78,7 @@ public:
    * @param value
    * @return
    */
-  Result<> validate(const DataStructure& dataStructure, const std::any& value) const override;
-
-  /**
-   * @brief Takes the value and a mutable DataStructure and attempts store the actual derived DataObject in the std::any.
-   * Returns any warnings/errors.
-   * @param dataStructure
-   * @param value
-   * @return
-   */
-  Result<std::any> resolve(DataStructure& dataStructure, const std::any& value) const override;
+  Result<> validate(const std::any& value) const override;
 
 protected:
   /**
