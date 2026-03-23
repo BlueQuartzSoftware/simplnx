@@ -11,6 +11,7 @@
 
 #include <atomic>
 #include <functional>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -159,7 +160,7 @@ struct SIMPLNXCORE_EXPORT RpnItem
 
   CalcValue value;
   const OperatorDef* op = nullptr;
-  int componentIndex = -1;
+  usize componentIndex = std::numeric_limits<usize>::max();
 };
 
 // ---------------------------------------------------------------------------

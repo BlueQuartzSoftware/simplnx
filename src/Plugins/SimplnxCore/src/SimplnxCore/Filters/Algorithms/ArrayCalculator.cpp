@@ -38,7 +38,7 @@ struct ParsedItem
 
   CalcValue value{CalcValue::Kind::Number, 0};
   const OperatorDef* op = nullptr;
-  int componentIndex = -1;
+  usize componentIndex = std::numeric_limits<usize>::max();
   bool isNegativePrefix = false;
 };
 
@@ -640,17 +640,18 @@ Result<> ArrayCalculatorParser::parse()
         if(bracketNumbers.size() == 1)
         {
           // [C]: component extraction
-          int compIdx = 0;
+          usize compIdx = 0;
           try
           {
-            compIdx = std::stoi(bracketNumbers[0]);
+            auto parsed = std::stoull(bracketNumbers[0]);
+            compIdx = static_cast<usize>(parsed);
           }
           catch(const std::exception&)
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), fmt::format("Invalid component index '{}'.", bracketNumbers[0]));
           }
 
-          if(compIdx < 0 || static_cast<usize>(compIdx) >= numComponents)
+          if(compIdx >= numComponents)
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange),
                                    fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
@@ -664,7 +665,7 @@ Result<> ArrayCalculatorParser::parse()
             {
               for(usize t = 0; t < numTuples; ++t)
               {
-                (*newArr)[t] = (*tempArr)[t * numComponents + static_cast<usize>(compIdx)];
+                (*newArr)[t] = (*tempArr)[t * numComponents + compIdx];
               }
             }
             prevItem.value.arrayId = newArr->getId();
@@ -674,23 +675,23 @@ Result<> ArrayCalculatorParser::parse()
         else if(bracketNumbers.size() == 2)
         {
           // [T, C]: tuple+component extraction
-          int tupleIdx = 0;
-          int compIdx = 0;
+          usize tupleIdx = 0;
+          usize compIdx = 0;
           try
           {
-            tupleIdx = std::stoi(bracketNumbers[0]);
-            compIdx = std::stoi(bracketNumbers[1]);
+            tupleIdx = static_cast<usize>(std::stoull(bracketNumbers[0]));
+            compIdx = static_cast<usize>(std::stoull(bracketNumbers[1]));
           }
           catch(const std::exception&)
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), fmt::format("Invalid tuple/component index in '[{}, {}]'.", bracketNumbers[0], bracketNumbers[1]));
           }
 
-          if(tupleIdx < 0 || static_cast<usize>(tupleIdx) >= numTuples)
+          if(tupleIdx >= numTuples)
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::TupleOutOfRange), fmt::format("Tuple index {} is out of range for array with {} tuples.", tupleIdx, numTuples));
           }
-          if(compIdx < 0 || static_cast<usize>(compIdx) >= numComponents)
+          if(compIdx >= numComponents)
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange),
                                    fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
@@ -699,7 +700,7 @@ Result<> ArrayCalculatorParser::parse()
           double extractedValue = 0.0;
           if(!m_IsPreflight)
           {
-            extractedValue = (*tempArr)[static_cast<usize>(tupleIdx) * numComponents + static_cast<usize>(compIdx)];
+            extractedValue = (*tempArr)[tupleIdx * numComponents + compIdx];
           }
           DataObject::IdType id = createScalarInTemp(extractedValue);
           prevItem.value = CalcValue{CalcValue::Kind::Number, id};
@@ -716,10 +717,10 @@ Result<> ArrayCalculatorParser::parse()
         {
           return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), "Component extraction on sub-expression must have exactly one index: [C].");
         }
-        int compIdx = 0;
+        usize compIdx = 0;
         try
         {
-          compIdx = std::stoi(bracketNumbers[0]);
+          compIdx = static_cast<usize>(std::stoull(bracketNumbers[0]));
         }
         catch(const std::exception&)
         {
@@ -1398,7 +1399,7 @@ Result<> ArrayCalculatorParser::parse()
     switch(item.kind)
     {
     case ParsedItem::Kind::Value: {
-      m_RpnItems.push_back(RpnItem{RpnItem::Type::Value, item.value, nullptr, -1});
+      m_RpnItems.push_back(RpnItem{RpnItem::Type::Value, item.value, nullptr, std::numeric_limits<usize>::max()});
       break;
     }
 
@@ -1412,7 +1413,7 @@ Result<> ArrayCalculatorParser::parse()
       while(!opStack.empty() && opStack.back().kind != ParsedItem::Kind::LParen)
       {
         const auto& top = opStack.back();
-        m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, top.op, -1});
+        m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, top.op, std::numeric_limits<usize>::max()});
         opStack.pop_back();
       }
       if(opStack.empty())
@@ -1430,7 +1431,7 @@ Result<> ArrayCalculatorParser::parse()
       while(!opStack.empty() && opStack.back().kind != ParsedItem::Kind::LParen)
       {
         const auto& top = opStack.back();
-        m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, top.op, -1});
+        m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, top.op, std::numeric_limits<usize>::max()});
         opStack.pop_back();
       }
       break;
@@ -1449,7 +1450,7 @@ Result<> ArrayCalculatorParser::parse()
 
         if(topPrec > incomingPrec || (topPrec == incomingPrec && isLeftAssoc))
         {
-          m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, -1});
+          m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, std::numeric_limits<usize>::max()});
           opStack.pop_back();
         }
         else
@@ -1480,7 +1481,7 @@ Result<> ArrayCalculatorParser::parse()
                              fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
     }
     const OperatorDef* topOp = top.isNegativePrefix ? &getUnaryNegativeOp() : top.op;
-    m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, -1});
+    m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, std::numeric_limits<usize>::max()});
     opStack.pop_back();
   }
 
@@ -1654,9 +1655,9 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
 
       usize numComps = operandArr->getNumberOfComponents();
       usize numTuples = operandArr->getNumberOfTuples();
-      int compIdx = rpnItem.componentIndex;
+      usize compIdx = rpnItem.componentIndex;
 
-      if(compIdx < 0 || static_cast<usize>(compIdx) >= numComps)
+      if(compIdx >= numComps)
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange),
                                fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
@@ -1665,7 +1666,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
       auto* newArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), operandArr->getTupleShape(), std::vector<usize>{1});
       for(usize t = 0; t < numTuples; ++t)
       {
-        (*newArr)[t] = operandArr->at(t * numComps + static_cast<usize>(compIdx));
+        (*newArr)[t] = operandArr->at(t * numComps + compIdx);
       }
 
       evalStack.push(CalcValue{operand.kind, newArr->getId()});
