@@ -155,12 +155,14 @@ struct SIMPLNXCORE_EXPORT RpnItem
   {
     Value,
     Operator,
-    ComponentExtract
+    ComponentExtract,
+    TupleComponentExtract
   } type;
 
   CalcValue value;
   const OperatorDef* op = nullptr;
   usize componentIndex = std::numeric_limits<usize>::max();
+  usize tupleIndex = std::numeric_limits<usize>::max();
 };
 
 // ---------------------------------------------------------------------------

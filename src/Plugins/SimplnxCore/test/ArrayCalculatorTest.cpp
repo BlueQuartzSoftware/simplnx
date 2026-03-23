@@ -1323,3 +1323,47 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Multi-word Array Names")
 
   UnitTest::CheckArraysInheritTupleDims(ds);
 }
+
+TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Tuple Component Extraction")
+{
+  UnitTest::LoadPlugins();
+  DataStructure ds = ::createDataStructure();
+  ArrayCalculatorFilter filter;
+
+  // MultiComponent Array1 has 10 tuples, 3 components, values 0,1,2,3,...,29
+  // (ArrayA + ArrayB) at tuple 2, component 1 = 2*(2*3+1) = 14
+
+  SECTION("(expr)[T, C] produces scalar")
+  {
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              k_AttributeMatrixPath, "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[2, 1]", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+
+    REQUIRE_NOTHROW(ds.getDataRefAs<Float64Array>(k_AttributeArrayPath));
+    const auto& outputArray = ds.getDataRefAs<Float64Array>(k_AttributeArrayPath);
+    // Scalar result broadcast to AM shape (10 tuples)
+    double expected = 2.0 * (2 * 3 + 1); // tuple 2, comp 1, doubled = 14
+    for(usize i = 0; i < outputArray.getNumberOfTuples(); i++)
+    {
+      REQUIRE(UnitTest::CloseEnough<double>(outputArray.at(i), expected, 0.01));
+    }
+  }
+
+  SECTION("(expr)[T, C] out of bounds tuple")
+  {
+    Arguments args;
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              k_AttributeMatrixPath, "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[100, 0]", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
+    auto result = filter.execute(ds, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
+    REQUIRE(result.result.errors()[0].code == static_cast<int32>(CalculatorErrorCode::TupleOutOfRange));
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(ds);
+}

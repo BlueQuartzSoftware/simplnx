@@ -33,12 +33,14 @@ struct ParsedItem
     LParen,
     RParen,
     Comma,
-    ComponentExtract
+    ComponentExtract,
+    TupleComponentExtract
   } kind;
 
   CalcValue value{CalcValue::Kind::Number, 0};
   const OperatorDef* op = nullptr;
   usize componentIndex = std::numeric_limits<usize>::max();
+  usize tupleIndex = std::numeric_limits<usize>::max();
   bool isNegativePrefix = false;
 };
 
@@ -707,24 +709,48 @@ Result<> ArrayCalculatorParser::parse()
       }
       else if(prevItem.kind == ParsedItem::Kind::RParen)
       {
-        // Case B: )[C] -- component extraction on sub-expression result
-        if(bracketNumbers.size() != 1)
+        // Case B: )[C] or )[T, C] -- extraction on sub-expression result
+        if(bracketNumbers.size() == 1)
         {
-          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), "Component extraction on sub-expression must have exactly one index: [C].");
-        }
-        usize compIdx = 0;
-        try
-        {
-          compIdx = static_cast<usize>(std::stoull(bracketNumbers[0]));
-        } catch(const std::exception&)
-        {
-          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), fmt::format("Invalid component index '{}'.", bracketNumbers[0]));
-        }
+          // )[C]: component extraction
+          usize compIdx = 0;
+          try
+          {
+            compIdx = static_cast<usize>(std::stoull(bracketNumbers[0]));
+          } catch(const std::exception&)
+          {
+            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), fmt::format("Invalid component index '{}'.", bracketNumbers[0]));
+          }
 
-        ParsedItem ce;
-        ce.kind = ParsedItem::Kind::ComponentExtract;
-        ce.componentIndex = compIdx;
-        items.push_back(ce);
+          ParsedItem ce;
+          ce.kind = ParsedItem::Kind::ComponentExtract;
+          ce.componentIndex = compIdx;
+          items.push_back(ce);
+        }
+        else if(bracketNumbers.size() == 2)
+        {
+          // )[T, C]: tuple+component extraction (produces scalar)
+          usize tupleIdx = 0;
+          usize compIdx = 0;
+          try
+          {
+            tupleIdx = static_cast<usize>(std::stoull(bracketNumbers[0]));
+            compIdx = static_cast<usize>(std::stoull(bracketNumbers[1]));
+          } catch(const std::exception&)
+          {
+            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), fmt::format("Invalid tuple/component index in '[{}, {}]'.", bracketNumbers[0], bracketNumbers[1]));
+          }
+
+          ParsedItem tce;
+          tce.kind = ParsedItem::Kind::TupleComponentExtract;
+          tce.tupleIndex = tupleIdx;
+          tce.componentIndex = compIdx;
+          items.push_back(tce);
+        }
+        else
+        {
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), "Sub-expression index must be [C] or [T, C].");
+        }
       }
       else
       {
@@ -1334,21 +1360,31 @@ Result<> ArrayCalculatorParser::parse()
     return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), "The expression does not have any arguments that simplify down to a number.");
   }
 
-  // Check if there is a ComponentExtract item in the parsed list.
-  // If so, the final output will be single-component regardless of the
-  // input array's component shape.
+  // Check if there is a ComponentExtract or TupleComponentExtract item in the parsed list.
+  // ComponentExtract produces a single-component array.
+  // TupleComponentExtract produces a scalar (single tuple, single component).
   bool hasComponentExtract = false;
+  bool hasTupleComponentExtract = false;
   for(const auto& item : items)
   {
     if(item.kind == ParsedItem::Kind::ComponentExtract)
     {
       hasComponentExtract = true;
-      break;
+    }
+    if(item.kind == ParsedItem::Kind::TupleComponentExtract)
+    {
+      hasTupleComponentExtract = true;
     }
   }
 
   // Store the parsed shape info for use by parseAndValidate()
-  if(hasArray)
+  if(hasTupleComponentExtract)
+  {
+    // TupleComponentExtract produces a scalar
+    m_ParsedTupleShape = {1};
+    m_ParsedComponentShape = {1};
+  }
+  else if(hasArray)
   {
     if(tupleShapesMatch)
     {
@@ -1442,6 +1478,15 @@ Result<> ArrayCalculatorParser::parse()
 
     case ParsedItem::Kind::ComponentExtract: {
       m_RpnItems.push_back(RpnItem{RpnItem::Type::ComponentExtract, CalcValue{CalcValue::Kind::Number, 0}, nullptr, item.componentIndex});
+      break;
+    }
+
+    case ParsedItem::Kind::TupleComponentExtract: {
+      RpnItem tce;
+      tce.type = RpnItem::Type::TupleComponentExtract;
+      tce.tupleIndex = item.tupleIndex;
+      tce.componentIndex = item.componentIndex;
+      m_RpnItems.push_back(tce);
       break;
     }
 
@@ -1645,6 +1690,40 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
       }
 
       evalStack.push(CalcValue{operand.kind, newArr->getId()});
+      break;
+    }
+
+    case RpnItem::Type::TupleComponentExtract: {
+      if(evalStack.empty())
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for tuple+component extraction.");
+      }
+      CalcValue operand = evalStack.top();
+      evalStack.pop();
+
+      auto* operandArr = m_TempDataStructure.getDataAs<Float64Array>(operand.arrayId);
+      if(operandArr == nullptr)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find operand array for tuple+component extraction.");
+      }
+
+      usize numComps = operandArr->getNumberOfComponents();
+      usize numTuples = operandArr->getNumberOfTuples();
+      usize tupleIdx = rpnItem.tupleIndex;
+      usize compIdx = rpnItem.componentIndex;
+
+      if(tupleIdx >= numTuples)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::TupleOutOfRange), fmt::format("Tuple index {} is out of range for array with {} tuples.", tupleIdx, numTuples));
+      }
+      if(compIdx >= numComps)
+      {
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
+      }
+
+      double value = operandArr->at(tupleIdx * numComps + compIdx);
+      DataObject::IdType scalarId = createScalarInTemp(value);
+      evalStack.push(CalcValue{CalcValue::Kind::Number, scalarId});
       break;
     }
 
