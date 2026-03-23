@@ -27,6 +27,23 @@ OIMAnalysis can create EBSD data sampled on a hexagonal grid. The user can look 
 
 If the user's .ang files are hexagonal grid files then they will need to run the {ref}`Convert EDAX Hex Grid to Square Grid (.ang)<OrientationAnalysis/ConvertHexGridToSquareGridFilter:Description>` filter to first convert the input files square gridded files.
 
+
+### Note on .ang file Data Ordering
+
+These are the order of the fields for each line in the data section of the .ang file.
+```text
+phi1
+Phi
+phi2
+x pos
+y pos
+image quality
+confidence index
+phase
+SEM Signal
+Fit of Solution
+```
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
