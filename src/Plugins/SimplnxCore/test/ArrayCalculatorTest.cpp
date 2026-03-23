@@ -95,8 +95,8 @@ IFilter::ExecuteResult createAndExecuteArrayCalculatorFilter(const std::string& 
 }
 
 // -----------------------------------------------------------------------------
-void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition,
-             const int* expectedNumberOfTuples = nullptr, const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
+void runTest(const std::string& equation, const DataPath& targetArrayPath, int32 expectedErrorCondition, CalculatorWarningCode expectedWarningCondition, const int* expectedNumberOfTuples = nullptr,
+             const double* expectedValue = nullptr, CalculatorParameter::AngleUnits units = CalculatorParameter::AngleUnits::Radians)
 {
   std::cout << "  Testing equation: ==>" << equation << "<==" << std::endl;
 
@@ -1270,9 +1270,8 @@ TEST_CASE("SimplnxCore::ArrayCalculatorFilter: Sub-expression Component Access")
     // Sum = 2*values = [0,2,4,6,8,10,...,58]
     // Component 0 extraction: for each tuple t, take element at (t*3 + 0) = 2*(t*3)
     Arguments args;
-    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key,
-                        std::make_any<CalculatorParameter::ValueType>(
-                            CalculatorParameter::ValueType{k_AttributeMatrixPath, "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[0]", CalculatorParameter::Radians}));
+    args.insertOrAssign(ArrayCalculatorFilter::k_CalculatorParameter_Key, std::make_any<CalculatorParameter::ValueType>(CalculatorParameter::ValueType{
+                                                                              k_AttributeMatrixPath, "(\"MultiComponent Array1\" + \"MultiComponent Array2\")[0]", CalculatorParameter::Radians}));
     args.insertOrAssign(ArrayCalculatorFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(NumericType::float64));
     args.insertOrAssign(ArrayCalculatorFilter::k_CalculatedArray_Key, std::make_any<DataPath>(k_AttributeArrayPath));
     auto result = filter.execute(ds, args);

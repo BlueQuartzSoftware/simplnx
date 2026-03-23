@@ -252,8 +252,7 @@ struct CopyResultFunctor
 // ---------------------------------------------------------------------------
 const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
 {
-  static const std::vector<OperatorDef> s_Registry = []()
-  {
+  static const std::vector<OperatorDef> s_Registry = []() {
     std::vector<OperatorDef> reg;
     reg.reserve(23);
 
@@ -645,16 +644,14 @@ Result<> ArrayCalculatorParser::parse()
           {
             auto parsed = std::stoull(bracketNumbers[0]);
             compIdx = static_cast<usize>(parsed);
-          }
-          catch(const std::exception&)
+          } catch(const std::exception&)
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), fmt::format("Invalid component index '{}'.", bracketNumbers[0]));
           }
 
           if(compIdx >= numComponents)
           {
-            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange),
-                                   fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
+            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
           }
 
           if(numComponents > 1)
@@ -681,8 +678,7 @@ Result<> ArrayCalculatorParser::parse()
           {
             tupleIdx = static_cast<usize>(std::stoull(bracketNumbers[0]));
             compIdx = static_cast<usize>(std::stoull(bracketNumbers[1]));
-          }
-          catch(const std::exception&)
+          } catch(const std::exception&)
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), fmt::format("Invalid tuple/component index in '[{}, {}]'.", bracketNumbers[0], bracketNumbers[1]));
           }
@@ -693,8 +689,7 @@ Result<> ArrayCalculatorParser::parse()
           }
           if(compIdx >= numComponents)
           {
-            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange),
-                                   fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
+            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
           }
 
           double extractedValue = 0.0;
@@ -721,8 +716,7 @@ Result<> ArrayCalculatorParser::parse()
         try
         {
           compIdx = static_cast<usize>(std::stoull(bracketNumbers[0]));
-        }
-        catch(const std::exception&)
+        } catch(const std::exception&)
         {
           return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidComponent), fmt::format("Invalid component index '{}'.", bracketNumbers[0]));
         }
@@ -749,8 +743,7 @@ Result<> ArrayCalculatorParser::parse()
       try
       {
         numValue = std::stod(tok.text);
-      }
-      catch(const std::exception&)
+      } catch(const std::exception&)
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), fmt::format("Invalid numeric value '{}'.", tok.text));
       }
@@ -775,11 +768,10 @@ Result<> ArrayCalculatorParser::parse()
         }
         if(arrayExists)
         {
-          result.warnings().push_back(
-              Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
-                      fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a number."
-                                  "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
-                                  tok.text, tok.text)});
+          result.warnings().push_back(Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                                              fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a number."
+                                                          "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
+                                                          tok.text, tok.text)});
         }
       }
       break;
@@ -802,11 +794,10 @@ Result<> ArrayCalculatorParser::parse()
           }
           if(arrayExists)
           {
-            result.warnings().push_back(
-                Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
-                        fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
-                                    "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
-                                    tok.text, tok.text)});
+            result.warnings().push_back(Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                                                fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
+                                                            "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
+                                                            tok.text, tok.text)});
           }
         }
 
@@ -838,11 +829,10 @@ Result<> ArrayCalculatorParser::parse()
           }
           if(arrayExists)
           {
-            result.warnings().push_back(
-                Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
-                        fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a built-in constant."
-                                    "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
-                                    tok.text, tok.text)});
+            result.warnings().push_back(Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                                                fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a built-in constant."
+                                                            "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
+                                                            tok.text, tok.text)});
           }
         }
       }
@@ -869,8 +859,7 @@ Result<> ArrayCalculatorParser::parse()
           auto foundPaths = findArraysByName(m_DataStructure, tok.text);
           if(foundPaths.empty())
           {
-            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::UnrecognizedItem),
-                                   fmt::format("An unrecognized or invalid item '{}' was found in the chosen infix expression.", tok.text));
+            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::UnrecognizedItem), fmt::format("An unrecognized or invalid item '{}' was found in the chosen infix expression.", tok.text));
           }
           if(foundPaths.size() > 1)
           {
@@ -883,10 +872,9 @@ Result<> ArrayCalculatorParser::parse()
               }
               pathsList += p.toString();
             }
-            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::AmbiguousArrayName),
-                                   fmt::format("Array name '{}' is ambiguous. Multiple arrays found: [{}]."
-                                               "\nPlease use double quotes with the full path (e.g. \"Path/To/{}\") to disambiguate.",
-                                               tok.text, pathsList, tok.text));
+            return MakeErrorResult(static_cast<int>(CalculatorErrorCode::AmbiguousArrayName), fmt::format("Array name '{}' is ambiguous. Multiple arrays found: [{}]."
+                                                                                                          "\nPlease use double quotes with the full path (e.g. \"Path/To/{}\") to disambiguate.",
+                                                                                                          tok.text, pathsList, tok.text));
           }
           const auto* dataArray = m_DataStructure.getDataAs<IDataArray>(foundPaths[0]);
           if(dataArray == nullptr)
@@ -981,11 +969,10 @@ Result<> ArrayCalculatorParser::parse()
         }
         if(arrayExists)
         {
-          result.warnings().push_back(
-              Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
-                      fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
-                                  "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
-                                  tok.text, tok.text)});
+          result.warnings().push_back(Warning{static_cast<int>(CalculatorWarningCode::AmbiguousNameWarning),
+                                              fmt::format("Item '{}' in the infix expression is the name of an array, but it is currently being used as a mathematical operator."
+                                                          "\nTo treat this item as an array name, please add double quotes around the item (i.e. \"{}\").",
+                                                          tok.text, tok.text)});
         }
       }
 
@@ -1087,8 +1074,7 @@ Result<> ArrayCalculatorParser::parse()
       // A function operator must be followed by LParen
       if(i + 1 >= items.size() || items[i + 1].kind != ParsedItem::Kind::LParen)
       {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoOpeningParen),
-                               fmt::format("The operator/function '{}' does not have a valid opening parenthesis.", item.op->token));
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoOpeningParen), fmt::format("The operator/function '{}' does not have a valid opening parenthesis.", item.op->token));
       }
 
       // Find the matching RParen and count commas/values at depth 1
@@ -1124,8 +1110,7 @@ Result<> ArrayCalculatorParser::parse()
       }
       if(!foundClose)
       {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoClosingParen),
-                               fmt::format("The operator/function '{}' does not have a valid closing parenthesis.", item.op->token));
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoClosingParen), fmt::format("The operator/function '{}' does not have a valid closing parenthesis.", item.op->token));
       }
 
       // Check for empty function call: func() with no values or commas inside
@@ -1138,8 +1123,7 @@ Result<> ArrayCalculatorParser::parse()
                                  fmt::format("The function '{}' requires {} arguments, but none were provided.", item.op->token, item.op->numArgs));
         }
         // For 1-arg functions with empty parens: NoNumericArguments
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments),
-                               fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
       }
 
       // Check for commas in the empty-value case: func(,) -- commas but no real values
@@ -1151,8 +1135,7 @@ Result<> ArrayCalculatorParser::parse()
                                  fmt::format("The function '{}' requires {} argument, but more were provided.", item.op->token, item.op->numArgs));
         }
         // For 2-arg functions: NoNumericArguments (commas but no values)
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments),
-                               fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoNumericArguments), fmt::format("The function '{}' does not have any arguments that simplify down to a number.", item.op->token));
       }
 
       // Argument count: numArgs from OperatorDef, commaCount gives (numArgs-1)
@@ -1200,8 +1183,7 @@ Result<> ArrayCalculatorParser::parse()
       }
       if(!foundFunction)
       {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoPrecedingUnaryOperator),
-                               "A comma was found in parentheses without a preceding function operator.");
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NoPrecedingUnaryOperator), "A comma was found in parentheses without a preceding function operator.");
       }
     }
   }
@@ -1226,8 +1208,7 @@ Result<> ArrayCalculatorParser::parse()
     }
     if(!hasLeft)
     {
-      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoLeftValue),
-                             fmt::format("The binary operator '{}' does not have a valid left-hand value.", item.op->token));
+      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoLeftValue), fmt::format("The binary operator '{}' does not have a valid left-hand value.", item.op->token));
     }
     // Check right: the item after must be a value, LParen, or unary operator (something that produces a value)
     bool hasRight = false;
@@ -1245,8 +1226,7 @@ Result<> ArrayCalculatorParser::parse()
     }
     if(!hasRight)
     {
-      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoRightValue),
-                             fmt::format("The binary operator '{}' does not have a valid right-hand value.", item.op->token));
+      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::OperatorNoRightValue), fmt::format("The binary operator '{}' does not have a valid right-hand value.", item.op->token));
     }
   }
 
@@ -1297,8 +1277,7 @@ Result<> ArrayCalculatorParser::parse()
     }
     if(parenDepth != 0)
     {
-      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses),
-                             fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
+      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses), fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
     }
   }
 
@@ -1328,13 +1307,11 @@ Result<> ArrayCalculatorParser::parse()
           {
             if(!arrayCompShape.empty() && arrayCompShape != cs)
             {
-              return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InconsistentCompDims),
-                                     "Attribute Array symbols in the infix expression have mismatching component dimensions.");
+              return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InconsistentCompDims), "Attribute Array symbols in the infix expression have mismatching component dimensions.");
             }
             if(arrayNumTuples != 0 && nt != arrayNumTuples)
             {
-              return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InconsistentTuples),
-                                     "Attribute Array symbols in the infix expression have mismatching number of tuples.");
+              return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InconsistentTuples), "Attribute Array symbols in the infix expression have mismatching number of tuples.");
             }
             if(!arrayTupleShape.empty() && arrayTupleShape != ts)
             {
@@ -1477,8 +1454,7 @@ Result<> ArrayCalculatorParser::parse()
     const auto& top = opStack.back();
     if(top.kind == ParsedItem::Kind::LParen)
     {
-      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses),
-                             fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
+      return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses), fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
     }
     const OperatorDef* topOp = top.isNegativePrefix ? &getUnaryNegativeOp() : top.op;
     m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, std::numeric_limits<usize>::max()});
@@ -1659,8 +1635,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
 
       if(compIdx >= numComps)
       {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange),
-                               fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
+        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
       }
 
       auto* newArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), operandArr->getTupleShape(), std::vector<usize>{1});
@@ -1679,8 +1654,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
   // 3. Final result
   if(evalStack.size() != 1)
   {
-    return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation),
-                           fmt::format("Internal error: evaluation stack has {} items remaining; expected exactly 1.", evalStack.size()));
+    return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), fmt::format("Internal error: evaluation stack has {} items remaining; expected exactly 1.", evalStack.size()));
   }
 
   CalcValue finalVal = evalStack.top();
