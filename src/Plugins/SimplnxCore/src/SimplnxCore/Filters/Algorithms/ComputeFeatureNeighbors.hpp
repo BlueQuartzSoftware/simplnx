@@ -11,38 +11,21 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  ComputeFeatureNeighborsInputValues inputValues;
-  inputValues.BoundaryCellsName = filterArgs.value<DataObjectNameParameter::ValueType>(boundary_cells_name);
-  inputValues.CellFeatureArrayPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(cell_feature_array_path);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(feature_ids_path);
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(input_image_geometry_path);
-  inputValues.NeighborListName = filterArgs.value<DataObjectNameParameter::ValueType>(neighbor_list_name);
-  inputValues.NumberOfNeighborsName = filterArgs.value<DataObjectNameParameter::ValueType>(number_of_neighbors_name);
-  inputValues.SharedSurfaceAreaListName = filterArgs.value<DataObjectNameParameter::ValueType>(shared_surface_area_list_name);
-  inputValues.StoreBoundaryCells = filterArgs.value<BoolParameter::ValueType>(store_boundary_cells);
-  inputValues.StoreSurfaceFeatures = filterArgs.value<BoolParameter::ValueType>(store_surface_features);
-  inputValues.SurfaceFeaturesName = filterArgs.value<DataObjectNameParameter::ValueType>(surface_features_name);
-  return ComputeFeatureNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
-
-*/
-
 namespace nx::core
 {
 
 struct SIMPLNXCORE_EXPORT ComputeFeatureNeighborsInputValues
 {
-  DataObjectNameParameter::ValueType BoundaryCellsName;
+  DataPath BoundaryCellsPath;
   AttributeMatrixSelectionParameter::ValueType CellFeatureArrayPath;
   ArraySelectionParameter::ValueType FeatureIdsPath;
   GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  DataObjectNameParameter::ValueType NeighborListName;
-  DataObjectNameParameter::ValueType NumberOfNeighborsName;
-  DataObjectNameParameter::ValueType SharedSurfaceAreaListName;
+  DataPath NeighborListPath;
+  DataPath NumberOfNeighborsPath;
+  DataPath SharedSurfaceAreaListPath;
   BoolParameter::ValueType StoreBoundaryCells;
   BoolParameter::ValueType StoreSurfaceFeatures;
-  DataObjectNameParameter::ValueType SurfaceFeaturesName;
+  DataPath SurfaceFeaturesPath;
 };
 
 /**
