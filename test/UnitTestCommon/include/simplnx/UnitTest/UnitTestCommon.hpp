@@ -767,7 +767,7 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
     if(exemplary.size() != 0 && computed.size() != 0)
     {
       INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
-                           computedPath.toString(), computed.size()));
+                       computedPath.toString(), computed.size()));
       REQUIRE(exemplary.size() == computed.size());
       std::sort(exemplary.begin(), exemplary.end());
       std::sort(computed.begin(), computed.end());
