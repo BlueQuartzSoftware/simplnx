@@ -102,7 +102,7 @@ struct ComputeFeatureNeighborsFunctor
      * in a real world dataset.
      */
     const std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
-    const std::function<void(int64, int64, int64)> processFrameCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
+    const auto processFrameCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
       int8 numDiffNeighbors = 0;
 
       const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
@@ -294,7 +294,7 @@ struct ComputeFeatureNeighborsFunctor
     // Process Planes for 2D and 3D (Stack) Images
     if constexpr(!Is1DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, SingleVoxelImage>())
     {
-      const std::function<void(int64, int64, int64, std::vector<FaceNeighborType>&)> processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex,
+      const auto processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex,
                                                                                                            const std::vector<FaceNeighborType>& validFaces) -> void {
         int8 numDiffNeighbors = 0;
 
