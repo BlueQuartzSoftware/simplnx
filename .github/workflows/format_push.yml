@@ -16,4 +16,4 @@ jobs:
         uses: ammaraskar/gcc-problem-matcher@a141586609e2a558729b99a8c574c048f7f56204
       - name: Check Formatting
         run: |
-          python3 scripts/clang_format.py --format-version 13
+          python3 scripts/clang_format.py --format-version 15
