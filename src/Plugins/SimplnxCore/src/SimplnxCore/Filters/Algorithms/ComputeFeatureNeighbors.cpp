@@ -302,7 +302,7 @@ struct ComputeFeatureNeighborsFunctor
         const int32 feature = featureIds.getValue(voxelIndex);
         if(feature > 0)
         {
-          if constexpr(ProcessSurfaceFeaturesV &&IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
+          if constexpr(ProcessSurfaceFeaturesV && IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
           {
             surfaceFeatures->setValue(feature, true);
           }
