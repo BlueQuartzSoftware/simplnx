@@ -16,6 +16,18 @@ struct ImageDimensionState
   static constexpr bool HasEmptyXDim = EmptyXV;
   static constexpr bool HasEmptyYDim = EmptyYV;
   static constexpr bool HasEmptyZDim = EmptyZV;
+
+  static constexpr bool Is1DImageDimsState()
+  {
+    return (HasEmptyXDim == true && HasEmptyYDim == true && HasEmptyZDim == false) || (HasEmptyXDim == true && HasEmptyYDim == false && HasEmptyZDim == true) ||
+           (HasEmptyXDim == false && HasEmptyYDim == true && HasEmptyZDim == true);
+  }
+
+  static constexpr bool Is2DImageDimsState()
+  {
+    return (HasEmptyXDim == true && HasEmptyYDim == false && HasEmptyZDim == false) || (HasEmptyXDim == false && HasEmptyYDim == true && HasEmptyZDim == false) ||
+           (HasEmptyXDim == false && HasEmptyYDim == false && HasEmptyZDim == true);
+  }
 };
 
 using Image3D = ImageDimensionState<false, false, false>;
@@ -31,22 +43,6 @@ template <class ActualT, class ExpectedT>
 constexpr bool IsExpectedImageDimsState()
 {
   return ActualT::HasEmptyXDim == ExpectedT::HasEmptyXDim && ActualT::HasEmptyYDim == ExpectedT::HasEmptyYDim && ActualT::HasEmptyZDim == ExpectedT::HasEmptyZDim;
-}
-
-template <class ActualT>
-constexpr bool Is1DImageDimsState()
-{
-  return (ActualT::HasEmptyXDim == true && ActualT::HasEmptyYDim == true && ActualT::HasEmptyZDim == false) ||
-         (ActualT::HasEmptyXDim == true && ActualT::HasEmptyYDim == false && ActualT::HasEmptyZDim == true) ||
-         (ActualT::HasEmptyXDim == false && ActualT::HasEmptyYDim == true && ActualT::HasEmptyZDim == true);
-}
-
-template <class ActualT>
-constexpr bool Is2DImageDimsState()
-{
-  return (ActualT::HasEmptyXDim == true && ActualT::HasEmptyYDim == false && ActualT::HasEmptyZDim == false) ||
-         (ActualT::HasEmptyXDim == false && ActualT::HasEmptyYDim == true && ActualT::HasEmptyZDim == false) ||
-         (ActualT::HasEmptyXDim == false && ActualT::HasEmptyYDim == false && ActualT::HasEmptyZDim == true);
 }
 
 template <bool ProcessSurfaceFeaturesV, bool ProcessBoundaryCellsV>
@@ -109,7 +105,7 @@ struct ComputeFeatureNeighborsFunctor
       const int32 feature = featureIds.getValue(voxelIndex);
       if(feature > 0)
       {
-        if constexpr(ProcessSurfaceFeaturesV && !Is1DImageDimsState<ImageDimensionStateT>())
+        if constexpr(ProcessSurfaceFeaturesV && !ImageDimensionStateT::Is1DImageDimsState())
         {
           surfaceFeatures->setValue(feature, true);
         }
@@ -175,7 +171,7 @@ struct ComputeFeatureNeighborsFunctor
        */
 
       processFrameCell(0, 0, 0);
-      if constexpr(ProcessSurfaceFeaturesV && Is1DImageDimsState<ImageDimensionStateT>())
+      if constexpr(ProcessSurfaceFeaturesV && ImageDimensionStateT::Is1DImageDimsState())
       {
         // Since the frame cell function is shared between corners and edges
         // 1D case for border feature flagging must be disabled to prevent
@@ -193,7 +189,7 @@ struct ComputeFeatureNeighborsFunctor
       {
         processFrameCell(dims[2] - 1, dims[1] - 1, dims[0] - 1); // If 2D the dims in empty dimension is 1 so this line effectively preforms for all cases
 
-        if constexpr(ProcessSurfaceFeaturesV && Is1DImageDimsState<ImageDimensionStateT>())
+        if constexpr(ProcessSurfaceFeaturesV && ImageDimensionStateT::Is1DImageDimsState())
         {
           // Since the frame cell function is shared between corners and edges
           // 1D case for border feature flagging must be disabled to prevent
@@ -209,7 +205,7 @@ struct ComputeFeatureNeighborsFunctor
           surfaceFeatures->setValue(feature, true);
         }
 
-        if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
+        if constexpr(!ImageDimensionStateT::Is1DImageDimsState())
         {
           if constexpr(!IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>())
           {
@@ -235,13 +231,13 @@ struct ComputeFeatureNeighborsFunctor
 
     // Case 0: Process Edges
     // X Edges
-    if constexpr((Is2DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, XImage1D>() ||
+    if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyXImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, XImage1D>() ||
                  IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
     {
       for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
       {
         processFrameCell(0, 0, xIndex);
-        if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
+        if constexpr(!ImageDimensionStateT::Is1DImageDimsState())
         {
           if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
           {
@@ -254,13 +250,13 @@ struct ComputeFeatureNeighborsFunctor
     }
 
     // Y Edges
-    if constexpr((Is2DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, YImage1D>() ||
+    if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyYImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, YImage1D>() ||
                  IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
     {
       for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
       {
         processFrameCell(0, yIndex, 0);
-        if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
+        if constexpr(!ImageDimensionStateT::Is1DImageDimsState())
         {
           if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
           {
@@ -273,13 +269,13 @@ struct ComputeFeatureNeighborsFunctor
     }
 
     // Z Edges
-    if constexpr((Is2DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, ZImage1D>() ||
+    if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !IsExpectedImageDimsState<ImageDimensionStateT, EmptyZImage2D>()) || IsExpectedImageDimsState<ImageDimensionStateT, ZImage1D>() ||
                  IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
     {
       for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
       {
         processFrameCell(zIndex, 0, 0);
-        if constexpr(!Is1DImageDimsState<ImageDimensionStateT>())
+        if constexpr(!ImageDimensionStateT::Is1DImageDimsState())
         {
           if constexpr(IsExpectedImageDimsState<ImageDimensionStateT, Image3D>())
           {
@@ -292,10 +288,9 @@ struct ComputeFeatureNeighborsFunctor
     }
 
     // Process Planes for 2D and 3D (Stack) Images
-    if constexpr(!Is1DImageDimsState<ImageDimensionStateT>() && !IsExpectedImageDimsState<ImageDimensionStateT, SingleVoxelImage>())
+    if constexpr(!ImageDimensionStateT::Is1DImageDimsState() && !IsExpectedImageDimsState<ImageDimensionStateT, SingleVoxelImage>())
     {
-      const auto processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex,
-                                                                                                           const std::vector<FaceNeighborType>& validFaces) -> void {
+      const auto processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex, const std::vector<FaceNeighborType>& validFaces) -> void {
         int8 numDiffNeighbors = 0;
 
         const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
