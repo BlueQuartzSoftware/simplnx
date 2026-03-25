@@ -455,16 +455,21 @@ DataObject::IdType ArrayCalculatorParser::createScalarInTemp(double value)
 // ---------------------------------------------------------------------------
 DataObject::IdType ArrayCalculatorParser::copyArrayToTemp(const IDataArray& sourceArray)
 {
+  using EmptyDataStoreType = EmptyDataStore<float64>;
+  using DataStoreType = DataStore<float64>;
+
   auto tupleShape = sourceArray.getTupleShape();
   auto compShape = sourceArray.getComponentShape();
   std::string scratchName = nextScratchName();
 
-  auto* destArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, scratchName, tupleShape, compShape);
-
-  if(!m_IsPreflight)
+  if(m_IsPreflight)
   {
-    ExecuteDataFunction(CopyToFloat64Functor{}, sourceArray.getDataType(), sourceArray, *destArr);
+    auto* destArr = Float64Array::CreateWithStore<EmptyDataStoreType>(m_TempDataStructure, scratchName, tupleShape, compShape);
+    return destArr->getId();
   }
+
+  auto* destArr = Float64Array::CreateWithStore<DataStoreType>(m_TempDataStructure, scratchName, tupleShape, compShape);
+  ExecuteDataFunction(CopyToFloat64Functor{}, sourceArray.getDataType(), sourceArray, *destArr);
 
   return destArr->getId();
 }
