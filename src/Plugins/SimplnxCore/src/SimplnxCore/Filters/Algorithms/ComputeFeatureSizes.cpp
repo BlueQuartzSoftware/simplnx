@@ -83,15 +83,8 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
      * For these two cases the following code would BREAK, so do not enable.
      **/
 
-    // if x dimension has a size of 1, then xSpacing = 1; else xSpacing = spacing[0]
-    const float64 xSpacing = (static_cast<float64>(spacing[0]) * static_cast<float64>(xDimSize > 1ULL)) + (1.0f * static_cast<float64>(xDimSize < 2ULL));
-    // if y dimension has a size of 1, then ySpacing = 1; else ySpacing = spacing[1]
-    const float64 ySpacing = (static_cast<float64>(spacing[1]) * static_cast<float64>(yDimSize > 1ULL)) + (1.0f * static_cast<float64>(yDimSize < 2ULL));
-    // if z dimension has a size of 1, then zSpacing = 1; else zSpacing = spacing[2]
-    const float64 zSpacing = (static_cast<float64>(spacing[2]) * static_cast<float64>(zDimSize > 1ULL)) + (1.0f * static_cast<float64>(zDimSize < 2ULL));
-
     // Calculate the area of a single voxel
-    const float64 voxelArea = xSpacing * ySpacing * zSpacing;
+    const float64 voxelArea = static_cast<float64>(spacing[0]) * static_cast<float64>(spacing[1]) * static_cast<float64>(spacing[2]);
 
     msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
     // Process each feature storing feature voxel counts, areas, and equivalent circular diameter
