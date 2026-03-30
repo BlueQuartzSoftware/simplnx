@@ -12,9 +12,9 @@ This **Filter** will remove **Features** that have been flagged by another **Fil
 
 The *Selected Operation* parameter provides the following choices:
 
-- **Remove**: Removes the flagged **Features** from the geometry and coarsens remaining features to fill the gaps.
-- **Extract**: Extracts the flagged **Features** into a new separate geometry without removing them from the original.
-- **Extract then Remove**: Extracts the flagged **Features** into a new geometry and then removes them from the original geometry.
+- **Remove [0]**: Removes the flagged **Features** from the geometry and coarsens remaining features to fill the gaps.
+- **Extract [1]**: Extracts the flagged **Features** into a new separate geometry without removing them from the original.
+- **Extract then Remove [2]**: Extracts the flagged **Features** into a new geometry and then removes them from the original geometry.
 
 ## WARNING: NeighborList Removal
 

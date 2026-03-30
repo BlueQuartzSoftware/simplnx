@@ -14,16 +14,16 @@ Additionally, the user may opt to use a mask; points for which the mask are fals
 
 The *Sampling Grid Type* parameter controls how the target grid is defined:
 
-- **Manual**: The user specifies the grid dimensions directly. The filter creates a new **Image Geometry** with those dimensions to use as the sampling grid.
-- **Use Existing Image Geometry**: The user selects a pre-existing **Image Geometry** from the data structure to use as the sampling grid.
+- **Manual [0]**: The user specifies the grid dimensions directly. The filter creates a new **Image Geometry** with those dimensions to use as the sampling grid.
+- **Use Existing Image Geometry [1]**: The user selects a pre-existing **Image Geometry** from the data structure to use as the sampling grid.
 
 ### Out of Bounds Handling
 
 The *Out of Bounds Handling* parameter provides the following choices:
 
-- **Silent**: Silently uses the user-supplied out-of-bounds value. This is the default.
-- **Warning with Count**: Emits a filter warning after execution containing the number of out-of-bounds values encountered.
-- **Error at First Instance**: Emits a filter error at the first out-of-bounds value encountered.
+- **Silent [0]**: Silently uses the user-supplied out-of-bounds value. This is the default.
+- **Warning with Count [1]**: Emits a filter warning after execution containing the number of out-of-bounds values encountered.
+- **Error at First Instance [2]**: Emits a filter error at the first out-of-bounds value encountered.
 
 The default selection is `Silent`, but it is mostly provided as a way to preserve existing functionality. What follows are a few use cases we had in mind when adding this functionality, organized by handling type:
 

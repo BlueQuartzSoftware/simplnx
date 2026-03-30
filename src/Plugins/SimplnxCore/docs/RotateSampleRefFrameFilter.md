@@ -14,8 +14,8 @@ This **Filter** will rotate the *spatial reference frame* around a user defined 
 
 The *Rotation Representation* parameter selects how the rotation is specified:
 
-- **Axis Angle**: The rotation is defined by a unit axis vector (x, y, z) and an angle in degrees. This is the most common representation for single-axis rotations.
-- **Rotation Matrix**: The rotation is defined as a 3x3 rotation matrix entered directly by the user.
+- **Axis Angle [0]**: The rotation is defined by a unit axis vector (x, y, z) and an angle in degrees. This is the most common representation for single-axis rotations.
+- **Rotation Matrix [1]**: The rotation is defined as a 3x3 rotation matrix entered directly by the user.
 
 The equivalent rotation matrix for the above rotation would be the following:
 

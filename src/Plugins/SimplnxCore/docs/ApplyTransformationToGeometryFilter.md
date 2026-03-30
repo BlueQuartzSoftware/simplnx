@@ -108,9 +108,9 @@ The **Translate Geometry To Global Origin Before Transformation** option must be
 
 When transforming an **Image Geometry**, the *Resampling or Interpolation* parameter controls how cell data values are assigned in the newly created grid:
 
-- **Nearest Neighbor Resampling**: Each output cell takes the value of the nearest input cell. This is fast and preserves sharp boundaries, but may produce a blocky appearance.
-- **Linear Interpolation**: Each output cell value is computed using trilinear interpolation from the surrounding input cells. This produces smoother results but may blur sharp features.
-- **No Interpolation**: The transformation is applied without any resampling of cell data. Use this option when the transformation does not change the grid topology (e.g., integer translations that align exactly with the existing grid).
+- **Nearest Neighbor Resampling [0]**: Each output cell takes the value of the nearest input cell. This is fast and preserves sharp boundaries, but may produce a blocky appearance.
+- **Linear Interpolation [1]**: Each output cell value is computed using trilinear interpolation from the surrounding input cells. This produces smoother results but may blur sharp features.
+- **No Interpolation [2]**: The transformation is applied without any resampling of cell data. Use this option when the transformation does not change the grid topology (e.g., integer translations that align exactly with the existing grid).
 
 ## Saving the final transformation Matrix.
 

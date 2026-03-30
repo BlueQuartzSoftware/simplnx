@@ -48,8 +48,8 @@ This setting is *crucial* to the correct interpretation of the binary data, so t
 
 The *Endian* parameter provides the following choices:
 
-- **Little**: Little endian byte order (least significant byte first). Used by Intel/AMD x86 and x86-64 architectures.
-- **Big**: Big endian byte order (most significant byte first). Used by network protocols, older RISC architectures, and some scientific instruments.
+- **Little [0]**: Little endian byte order (least significant byte first). Used by Intel/AMD x86 and x86-64 architectures.
+- **Big [1]**: Big endian byte order (most significant byte first). Used by network protocols, older RISC architectures, and some scientific instruments.
 
 ### Skip Header Bytes
 

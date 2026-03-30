@@ -58,16 +58,16 @@ The *Image Layout* parameter controls how the pole figures are arranged in the o
 
 The available layout choices are:
 
-- **Horizontal**: Pole figures are arranged in a single horizontal row.
-- **Vertical**: Pole figures are arranged in a single vertical column.
-- **Square**: Pole figures are arranged in a square grid.
+- **Horizontal [0]**: Pole figures are arranged in a single horizontal row.
+- **Vertical [1]**: Pole figures are arranged in a single vertical column.
+- **Square [2]**: Pole figures are arranged in a square grid.
 
 ### Pole Figure Type
 
 The *Pole Figure Type* parameter selects the rendering method for the pole figure:
 
-- **Color Intensity**: Generates a continuous color intensity map using a modified Lambert square interpolation onto the unit circle.
-- **Discrete**: Generates a discrete point-based pole figure by marking each pixel that received at least one orientation count.
+- **Color Intensity [0]**: Generates a continuous color intensity map using a modified Lambert square interpolation onto the unit circle.
+- **Discrete [1]**: Generates a discrete point-based pole figure by marking each pixel that received at least one orientation count.
 
 % Auto generated parameter table will be inserted here
 

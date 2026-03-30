@@ -25,8 +25,8 @@ Example Surface Mesh being sliced with a 2.0 slice spacing.
 
 The *Slice Range* parameter controls which portion of the geometry is sliced:
 
-- **Full Range**: Slices across the entire extent of the geometry along the slicing direction.
-- **User Defined Range**: Allows specifying custom start and end values for the slicing range, restricting slices to a subregion of the geometry.
+- **Full Range [0]**: Slices across the entire extent of the geometry along the slicing direction.
+- **User Defined Range [1]**: Allows specifying custom start and end values for the slicing range, restricting slices to a subregion of the geometry.
 
 % Auto generated parameter table will be inserted here
 

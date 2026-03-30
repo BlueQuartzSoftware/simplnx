@@ -17,8 +17,8 @@ The input geometries can be of any type. The *Moving* geometry is translated in 
 
 The *Alignment Type* parameter controls how the two geometries are aligned:
 
-- **Origin**: Aligns geometries by translating the moving geometry so that its minimum coordinate point (origin) matches the minimum coordinate point of the target geometry.
-- **Centroid**: Aligns geometries by translating the moving geometry so that its centroid (center of mass) matches the centroid of the target geometry.
+- **Origin [0]**: Aligns geometries by translating the moving geometry so that its minimum coordinate point (origin) matches the minimum coordinate point of the target geometry.
+- **Centroid [1]**: Aligns geometries by translating the moving geometry so that its centroid (center of mass) matches the centroid of the target geometry.
 
 % Auto generated parameter table will be inserted here
 

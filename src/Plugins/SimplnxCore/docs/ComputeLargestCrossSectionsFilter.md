@@ -12,9 +12,9 @@ This **Filter** calculates the largest cross-sectional area on a user-defined pl
 
 The *Plane of Interest* parameter selects the plane along which cross-sections are computed. The filter iterates through all slices perpendicular to the remaining axis:
 
-- **XY**: Cross-sections are taken on planes perpendicular to the Z axis. Each Z slice is one cross-section.
-- **XZ**: Cross-sections are taken on planes perpendicular to the Y axis. Each Y slice is one cross-section.
-- **YZ**: Cross-sections are taken on planes perpendicular to the X axis. Each X slice is one cross-section.
+- **XY [0]**: Cross-sections are taken on planes perpendicular to the Z axis. Each Z slice is one cross-section.
+- **XZ [1]**: Cross-sections are taken on planes perpendicular to the Y axis. Each Y slice is one cross-section.
+- **YZ [2]**: Cross-sections are taken on planes perpendicular to the X axis. Each X slice is one cross-section.
 
 % Auto generated parameter table will be inserted here
 

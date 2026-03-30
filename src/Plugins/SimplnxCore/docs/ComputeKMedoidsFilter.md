@@ -14,12 +14,12 @@ This **Filter** applies the k medoids algorithm to an **Attribute Array**.  K me
 
 The *Distance Metric* parameter determines how distances between data points are measured when assigning points to clusters and selecting medoids:
 
-- **Euclidean**: Standard straight-line distance between two points in the data space.
-- **Squared Euclidean**: The square of the Euclidean distance. Avoids a square root computation and gives extra weight to larger differences.
-- **Manhattan**: Sum of the absolute differences along each dimension (also known as L1 or city-block distance).
-- **Cosine**: One minus the cosine similarity between two points. Measures the angle between vectors, making it invariant to magnitude.
-- **Pearson**: One minus the Pearson correlation coefficient. Measures the linear correlation between two points, normalized by their standard deviations.
-- **Squared Pearson**: The square of the Pearson distance metric.
+- **Euclidean [0]**: Standard straight-line distance between two points in the data space.
+- **Squared Euclidean [1]**: The square of the Euclidean distance. Avoids a square root computation and gives extra weight to larger differences.
+- **Manhattan [2]**: Sum of the absolute differences along each dimension (also known as L1 or city-block distance).
+- **Cosine [3]**: One minus the cosine similarity between two points. Measures the angle between vectors, making it invariant to magnitude.
+- **Pearson [4]**: One minus the Pearson correlation coefficient. Measures the linear correlation between two points, normalized by their standard deviations.
+- **Squared Pearson [5]**: The square of the Pearson distance metric.
 
 This **Filter** uses the *Voronoi iteration* algorithm to produce the clustering.  The algorithm is iterative and proceeds as follows:
 

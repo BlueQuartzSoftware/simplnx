@@ -15,9 +15,9 @@ This filter also has an option to mirror the resulting geometry in the chosen di
 
 The *Direction* parameter selects the axis along which the input geometries are appended onto the destination geometry:
 
-- **X**: Appends geometries along the X axis. The input and destination geometries must have matching Y and Z dimensions.
-- **Y**: Appends geometries along the Y axis. The input and destination geometries must have matching X and Z dimensions.
-- **Z**: Appends geometries along the Z axis. The input and destination geometries must have matching X and Y dimensions.
+- **X [0]**: Appends geometries along the X axis. The input and destination geometries must have matching Y and Z dimensions.
+- **Y [1]**: Appends geometries along the Y axis. The input and destination geometries must have matching X and Z dimensions.
+- **Z [2]**: Appends geometries along the Z axis. The input and destination geometries must have matching X and Y dimensions.
 
 ### X Direction Examples
 

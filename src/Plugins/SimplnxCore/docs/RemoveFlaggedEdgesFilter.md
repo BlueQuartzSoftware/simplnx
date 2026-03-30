@@ -16,15 +16,15 @@ For each of the vertex and edge data attribute matrices, the user can select to 
 
 The *Vertex Data Handling* parameter controls which vertex data arrays are transferred to the reduced geometry:
 
-- **Copy Selected Vertex Data**: Copies only the vertex arrays selected by the user into the new geometry.
-- **Copy All Vertex Data**: Copies all arrays from the vertex attribute matrix into the new geometry.
+- **Copy Selected Vertex Data [0]**: Copies only the vertex arrays selected by the user into the new geometry.
+- **Copy All Vertex Data [1]**: Copies all arrays from the vertex attribute matrix into the new geometry.
 
 ### Edge Data Handling
 
 The *Edge Data Handling* parameter controls which edge data arrays are transferred to the reduced geometry:
 
-- **Copy Selected Edge Data**: Copies only the edge arrays selected by the user into the new geometry.
-- **Copy All Edge Data**: Copies all arrays from the edge attribute matrix into the new geometry.
+- **Copy Selected Edge Data [0]**: Copies only the edge arrays selected by the user into the new geometry.
+- **Copy All Edge Data [1]**: Copies all arrays from the edge attribute matrix into the new geometry.
 
 *Note:* Since it cannot be known before run time how many **Edges** will be removed, the new **Edge Geometry** and all associated **Edge** data to be copied will be initialized to have size 0.
 

@@ -42,9 +42,9 @@ filling the surrounding overscan area.
 
 When *Process Data Slice-By-Slice* is enabled, the *Slice-By-Slice Plane* parameter selects the plane along which the volume is scanned one slice at a time:
 
-- **XY**: Processes the volume slice by slice along the Z axis, scanning each XY plane independently.
-- **XZ**: Processes the volume slice by slice along the Y axis, scanning each XZ plane independently.
-- **YZ**: Processes the volume slice by slice along the X axis, scanning each YZ plane independently.
+- **XY [0]**: Processes the volume slice by slice along the Z axis, scanning each XY plane independently.
+- **XZ [1]**: Processes the volume slice by slice along the Y axis, scanning each XZ plane independently.
+- **YZ [2]**: Processes the volume slice by slice along the X axis, scanning each YZ plane independently.
 
 % Auto generated parameter table will be inserted here
 

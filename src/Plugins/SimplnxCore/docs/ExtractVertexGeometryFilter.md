@@ -17,8 +17,8 @@ creating a vertex if the mask value = TRUE.
 
 The *Array Handling* parameter controls how the selected cell arrays are transferred to the new **Vertex Geometry**:
 
-- **Copy Attribute Arrays**: Creates copies of the selected arrays in the new vertex geometry, leaving the originals intact in the source geometry.
-- **Move Attribute Arrays**: Moves the selected arrays to the new vertex geometry, removing them from their original location.
+- **Copy Attribute Arrays [0]**: Creates copies of the selected arrays in the new vertex geometry, leaving the originals intact in the source geometry.
+- **Move Attribute Arrays [1]**: Moves the selected arrays to the new vertex geometry, removing them from their original location.
 
 % Auto generated parameter table will be inserted here
 

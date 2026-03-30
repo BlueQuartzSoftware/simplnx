@@ -39,10 +39,10 @@ with tuples for the output arrays set to 2 & 1 and split dimension set to 1 prod
 
 The *Output Container* parameter controls where the resulting split arrays are placed:
 
-- **New Data Group**: Creates a new **DataGroup** to hold the split arrays.
-- **Existing Data Group**: Places the split arrays into an existing **DataGroup** selected by the user.
-- **New Attribute Matrix**: Creates a new **Attribute Matrix** to hold the split arrays.
-- **Existing Attribute Matrix**: Places the split arrays into an existing **Attribute Matrix** selected by the user.
+- **New Data Group [0]**: Creates a new **DataGroup** to hold the split arrays.
+- **Existing Data Group [1]**: Places the split arrays into an existing **DataGroup** selected by the user.
+- **New Attribute Matrix [2]**: Creates a new **Attribute Matrix** to hold the split arrays.
+- **Existing Attribute Matrix [3]**: Places the split arrays into an existing **Attribute Matrix** selected by the user.
 
 An optional flag allows you to delete the original input array after splitting.
 

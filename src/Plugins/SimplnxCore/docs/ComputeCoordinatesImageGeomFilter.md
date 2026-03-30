@@ -12,9 +12,9 @@ This **Filter** produces one or two arrays that stores implicit image informatio
 
 The *Output Array(s) Type* parameter controls which arrays are produced by the filter:
 
-- **Physical Coordinates**: Outputs a single 3-component array containing the physical (spatial) XYZ coordinates of the center of each cell, computed from the geometry's origin and spacing.
-- **Indices**: Outputs a single 3-component array containing the integer ijk grid indices of each cell.
-- **Both**: Outputs both the physical coordinates array and the indices array.
+- **Physical Coordinates [0]**: Outputs a single 3-component array containing the physical (spatial) XYZ coordinates of the center of each cell, computed from the geometry's origin and spacing.
+- **Indices [1]**: Outputs a single 3-component array containing the integer ijk grid indices of each cell.
+- **Both [2]**: Outputs both the physical coordinates array and the indices array.
 
 The arrays follow the following cell parsing scheme: `0,0,0 -> 1,0,0 -> 2,0,0 -> ... n,0,0 -> 0,1,0 -> 1,1,0 -> 2,1,0 -> ... n,n,0 -> 0,0,1 -> 1,0,1 -> 2,0,1 -> ... n,n,n`.
 

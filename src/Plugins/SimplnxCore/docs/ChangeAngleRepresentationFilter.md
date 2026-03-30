@@ -12,8 +12,8 @@ This **Filter** will multiply the values of every **Element** by a factor to con
 
 The *Conversion Type* parameter selects the direction of the angle conversion:
 
-- **Degrees to Radians**: Multiplies each value by π/180, converting angles expressed in degrees to their equivalent in radians.
-- **Radians to Degrees**: Multiplies each value by 180/π, converting angles expressed in radians to their equivalent in degrees.
+- **Degrees to Radians [0]**: Multiplies each value by π/180, converting angles expressed in degrees to their equivalent in radians.
+- **Radians to Degrees [1]**: Multiplies each value by 180/π, converting angles expressed in radians to their equivalent in degrees.
 
 ### Example Usage
 

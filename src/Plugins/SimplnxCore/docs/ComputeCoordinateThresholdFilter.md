@@ -12,8 +12,8 @@ This filter produces a mask that marks cells that fall inside or outside a given
 
 The *Coordinate Container Shape* parameter selects the shape used to define the threshold region:
 
-- **Rectangle**: Uses an axis-aligned rectangular box (bounding box) defined by minimum and maximum coordinate values along each axis. Cells are flagged based on whether their coordinates fall within this box.
-- **Sphere**: Uses a spherical region defined by a center point and a radius. Cells are flagged based on whether their coordinates satisfy the sphere equation (see the **Sphere Bounding Type** section below for details).
+- **Rectangle [0]**: Uses an axis-aligned rectangular box (bounding box) defined by minimum and maximum coordinate values along each axis. Cells are flagged based on whether their coordinates fall within this box.
+- **Sphere [1]**: Uses a spherical region defined by a center point and a radius. Cells are flagged based on whether their coordinates satisfy the sphere equation (see the **Sphere Bounding Type** section below for details).
 
 This filter has a check at runtime (during the execute phase, before individual mask value determination begins) that will return a warning (not error) if the bounds don't intersect any cells in the geometry. The intention of this is to alert the user that the mask will contain the same value throughout to allow the user to adapt the pipeline/parameters accordingly. When this check causes early bailout and warning, the mask will still be filled with outside bounds flag at every value. `ImageGeom` is the exception to this as it has checks done at preflight to prevent this from occurring.
 

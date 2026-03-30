@@ -34,8 +34,8 @@ The key properties that make the transpose of a rotation matrix equivalent to it
 
 The *Interpolation Type* parameter controls the interpolation method used when resampling the image data:
 
-- **Nearest Neighbor**: Uses the value of the nearest voxel when resampling. Preserves original values but may produce blocky results.
-- **Linear Interpolation**: Computes a weighted average of surrounding voxels when resampling. Produces smoother results but may introduce new values.
+- **Nearest Neighbor [0]**: Uses the value of the nearest voxel when resampling. Preserves original values but may produce blocky results.
+- **Linear Interpolation [1]**: Computes a weighted average of surrounding voxels when resampling. Produces smoother results but may introduce new values.
 
 % Auto generated parameter table will be inserted here
 

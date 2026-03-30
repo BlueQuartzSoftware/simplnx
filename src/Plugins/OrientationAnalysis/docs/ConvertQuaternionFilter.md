@@ -14,8 +14,8 @@ For Example if the user has imported quaternion data in the form of Scalar-Vecto
 
 The *Conversion Type* parameter selects the target quaternion component ordering:
 
-- **To Scalar Vector ( w, [x, y, z] )**: Converts quaternions to scalar-vector ordering where the scalar component (w) comes first, followed by the vector components (x, y, z).
-- **To Vector Scalar ( [x, y, z], w )**: Converts quaternions to vector-scalar ordering where the vector components (x, y, z) come first, followed by the scalar component (w). This is the internal ordering expected by DREAM3D-NX.
+- **To Scalar Vector ( w, [x, y, z] ) [0]**: Converts quaternions to scalar-vector ordering where the scalar component (w) comes first, followed by the vector components (x, y, z).
+- **To Vector Scalar ( [x, y, z], w ) [1]**: Converts quaternions to vector-scalar ordering where the vector components (x, y, z) come first, followed by the scalar component (w). This is the internal ordering expected by DREAM3D-NX.
 
 % Auto generated parameter table will be inserted here
 

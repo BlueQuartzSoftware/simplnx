@@ -43,11 +43,11 @@ The *CSV* file with Write Neighbor Data checked:
 
 The *Delimiter* parameter selects the character used to separate values within each row of the output CSV file:
 
-- **Space**: Values are separated by a single space character.
-- **Semicolon**: Values are separated by a semicolon (`;`).
-- **Comma**: Values are separated by a comma (`,`). This is the standard CSV delimiter.
-- **Colon**: Values are separated by a colon (`:`).
-- **Tab**: Values are separated by a tab character.
+- **Space [0]**: Values are separated by a single space character.
+- **Semicolon [1]**: Values are separated by a semicolon (`;`).
+- **Comma [2]**: Values are separated by a comma (`,`). This is the standard CSV delimiter.
+- **Colon [3]**: Values are separated by a colon (`:`).
+- **Tab [4]**: Values are separated by a tab character.
 
 % Auto generated parameter table will be inserted here
 

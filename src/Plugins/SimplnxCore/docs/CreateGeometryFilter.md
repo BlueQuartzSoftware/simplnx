@@ -111,8 +111,8 @@ A **Hexahedral Geometry** is a *mesh-like* **Geometry**, consisting of a collect
 
 The *Array Handling* parameter controls how the input **Attribute Arrays** (vertex list, element connectivity, etc.) are transferred to the new **Geometry**:
 
-- **Copy Attribute Arrays**: The input arrays are copied into the new **Geometry**. The original arrays remain in the **Data Structure** and are unaffected by any subsequent geometric operations.
-- **Move Attribute Arrays**: The input arrays are moved into the new **Geometry**. The original array paths are removed from the **Data Structure**, reducing memory usage when the originals are no longer needed.
+- **Copy Attribute Arrays [0]**: The input arrays are copied into the new **Geometry**. The original arrays remain in the **Data Structure** and are unaffected by any subsequent geometric operations.
+- **Move Attribute Arrays [1]**: The input arrays are moved into the new **Geometry**. The original array paths are removed from the **Data Structure**, reducing memory usage when the originals are no longer needed.
 
 This **Filter** will validate that the arrays selected to define a **Geometry** "make sense", given the above information for how **Geometries** are stored in **DREAM3D-NX** (for example, no dimension for an **Image** may be less than or equal to zero, no bounds arrays for a **Rectilinear Grid** may have less than two values, and no **Vertex** Ids stored in a shared **Element** list may be larger than the total number of **Vertices** in the shared **Vertex** list).  The checks that require accessing the actual array values (as opposed to just descriptive information) will be performed at run time.  By default, these checks will only produce warnings, allowing the **Pipeline** to continue; the user may opt to change these warnings to errors by selecting the *Treat Geometry Warnings as Errors* option.
 

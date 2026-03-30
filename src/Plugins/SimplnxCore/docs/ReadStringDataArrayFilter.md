@@ -48,12 +48,12 @@ If the input file has a single string per line then the delimiter does not matte
 
 The *Delimiter* parameter provides the following choices:
 
-- **, (comma)**: Values are separated by a comma character.
-- **; (semicolon)**: Values are separated by a semicolon character.
-- **  (space)**: Values are separated by a space character.
-- **: (colon)**: Values are separated by a colon character.
-- **\t (Tab)**: Values are separated by a tab character.
-- **New Line**: Each value occupies its own line; the newline character acts as the delimiter.
+- **, (comma) [0]**: Values are separated by a comma character.
+- **; (semicolon) [1]**: Values are separated by a semicolon character.
+- **  (space) [2]**: Values are separated by a space character.
+- **: (colon) [3]**: Values are separated by a colon character.
+- **\t (Tab) [4]**: Values are separated by a tab character.
+- **New Line [5]**: Each value occupies its own line; the newline character acts as the delimiter.
 
 % Auto generated parameter table will be inserted here
 

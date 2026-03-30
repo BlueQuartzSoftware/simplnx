@@ -70,11 +70,11 @@ as the filter is reading data directly into an array.
 
 The *Delimiter* parameter provides the following choices:
 
-- **, (comma)**: Values are separated by a comma character.
-- **; (semicolon)**: Values are separated by a semicolon character.
-- **  (space)**: Values are separated by a space character.
-- **: (colon)**: Values are separated by a colon character.
-- **\t (Tab)**: Values are separated by a tab character.
+- **, (comma) [0]**: Values are separated by a comma character.
+- **; (semicolon) [1]**: Values are separated by a semicolon character.
+- **  (space) [2]**: Values are separated by a space character.
+- **: (colon) [3]**: Values are separated by a colon character.
+- **\t (Tab) [4]**: Values are separated by a tab character.
 
 % Auto generated parameter table will be inserted here
 

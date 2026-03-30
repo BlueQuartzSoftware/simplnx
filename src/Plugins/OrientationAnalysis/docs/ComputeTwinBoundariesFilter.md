@@ -12,8 +12,8 @@ This **Filter** identifies all **Triangles** between neighboring **Features** th
 
 The *Output Type for Twin Boundaries Array* parameter controls the data type used to store the twin boundary identification result:
 
-- **boolean**: Stores the twin boundary flag as a boolean array (true if the **Triangle** is a twin boundary, false otherwise).
-- **uint8**: Stores the twin boundary flag as an unsigned 8-bit integer array (1 if the **Triangle** is a twin boundary, 0 otherwise).
+- **boolean [0]**: Stores the twin boundary flag as a boolean array (true if the **Triangle** is a twin boundary, false otherwise).
+- **uint8 [1]**: Stores the twin boundary flag as an unsigned 8-bit integer array (1 if the **Triangle** is a twin boundary, 0 otherwise).
 
 % Auto generated parameter table will be inserted here
 

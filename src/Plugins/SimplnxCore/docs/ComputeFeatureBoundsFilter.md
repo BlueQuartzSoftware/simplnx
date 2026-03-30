@@ -14,8 +14,8 @@ This filter calculates the bounding boxes for each feature given Feature Ids and
 
 The *Output Array(s) Type* parameter controls how the bounding box data is stored in the output:
 
-- **Split**: Produces two separate 3-component `float32` arrays — one for the minimum (lower) bound and one for the maximum (upper) bound of each feature's bounding box. Best for visualization and cases where min and max bounds need to be handled independently.
-- **Unified**: Produces a single 6-component `float32` array containing all bounds data in the format min-x, min-y, min-z, max-x, max-y, max-z. Best for passing bounding box data to other simplnx filters and internal calculations.
+- **Split [0]**: Produces two separate 3-component `float32` arrays — one for the minimum (lower) bound and one for the maximum (upper) bound of each feature's bounding box. Best for visualization and cases where min and max bounds need to be handled independently.
+- **Unified [1]**: Produces a single 6-component `float32` array containing all bounds data in the format min-x, min-y, min-z, max-x, max-y, max-z. Best for passing bounding box data to other simplnx filters and internal calculations.
 
 | Geometry Type | Expected Feature ID Length|
 |---------------|---------------------------|

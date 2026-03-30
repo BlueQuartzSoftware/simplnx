@@ -33,20 +33,20 @@ Euler_0,Euler_1,Euler_2
 
 The *Delimiter* parameter selects the character used to separate values within each row:
 
-- **Space**: Values are separated by a single space character.
-- **Semicolon**: Values are separated by a semicolon (`;`).
-- **Comma**: Values are separated by a comma (`,`). This is the standard CSV delimiter.
-- **Colon**: Values are separated by a colon (`:`).
-- **Tab**: Values are separated by a tab character.
+- **Space [0]**: Values are separated by a single space character.
+- **Semicolon [1]**: Values are separated by a semicolon (`;`).
+- **Comma [2]**: Values are separated by a comma (`,`). This is the standard CSV delimiter.
+- **Colon [3]**: Values are separated by a colon (`:`).
+- **Tab [4]**: Values are separated by a tab character.
 
 ### Header and Index Options
 
 The *Header and Index Options* parameter controls whether column headers and/or a row index are written to the output file:
 
-- **Neither**: No headers or index columns are written; only data values are output.
-- **Headers**: Column headers (array names) are written as the first row of the file.
-- **Index**: A zero-based row index column is prepended to each data row.
-- **Both**: Both column headers (first row) and a row index column are included.
+- **Neither [0]**: No headers or index columns are written; only data values are output.
+- **Headers [1]**: Column headers (array names) are written as the first row of the file.
+- **Index [2]**: A zero-based row index column is prepended to each data row.
+- **Both [3]**: Both column headers (first row) and a row index column are included.
 
 % Auto generated parameter table will be inserted here
 

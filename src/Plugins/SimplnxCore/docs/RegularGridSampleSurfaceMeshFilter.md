@@ -12,8 +12,8 @@ This **Filter** "samples" a triangulated surface mesh onto a regular grid (Image
 
 The *Use existing geometry* parameter controls how the target **Image Geometry** is provided:
 
-- **Create geometry**: Creates a new **Image Geometry** with user-specified dimensions, spacing, and origin for sampling the surface mesh.
-- **Use existing geometry**: Uses a pre-existing **Image Geometry** from the data structure as the sampling grid.
+- **Create geometry [0]**: Creates a new **Image Geometry** with user-specified dimensions, spacing, and origin for sampling the surface mesh.
+- **Use existing geometry [1]**: Uses a pre-existing **Image Geometry** from the data structure as the sampling grid.
 
 ### Algorithm
 

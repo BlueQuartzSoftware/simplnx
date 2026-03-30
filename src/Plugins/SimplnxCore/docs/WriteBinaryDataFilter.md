@@ -12,8 +12,8 @@ This **Filter** accepts DataArray(s) as input, extracts the data, and writes eac
 
 The *Endianess* parameter controls the byte order used when writing numeric values to the binary file:
 
-- **Little Endian**: The least significant byte is stored first. This is the native byte order for x86 and ARM processors and is the most common choice for files consumed on modern desktop systems.
-- **Big Endian**: The most significant byte is stored first. This byte order is used by some network protocols and legacy systems.
+- **Little Endian [0]**: The least significant byte is stored first. This is the native byte order for x86 and ARM processors and is the most common choice for files consumed on modern desktop systems.
+- **Big Endian [1]**: The most significant byte is stored first. This byte order is used by some network protocols and legacy systems.
 
 % Auto generated parameter table will be inserted here
 

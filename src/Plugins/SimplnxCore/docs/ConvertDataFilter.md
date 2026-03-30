@@ -12,17 +12,17 @@ This **Filter** converts attribute data from one primitive type to another by us
 
 The *Scalar Type* parameter selects the target primitive data type for the converted array:
 
-- **int8**: Signed 8-bit integer (-128 to 127)
-- **uint8**: Unsigned 8-bit integer (0 to 255)
-- **int16**: Signed 16-bit integer (-32,768 to 32,767)
-- **uint16**: Unsigned 16-bit integer (0 to 65,535)
-- **int32**: Signed 32-bit integer (-2,147,483,648 to 2,147,483,647)
-- **uint32**: Unsigned 32-bit integer (0 to 4,294,967,295)
-- **int64**: Signed 64-bit integer
-- **uint64**: Unsigned 64-bit integer
-- **float32**: 32-bit floating point
-- **float64**: 64-bit floating point (double precision)
-- **boolean**: Boolean (0 = false, any non-zero value = true)
+- **int8 [0]**: Signed 8-bit integer (-128 to 127)
+- **uint8 [1]**: Unsigned 8-bit integer (0 to 255)
+- **int16 [2]**: Signed 16-bit integer (-32,768 to 32,767)
+- **uint16 [3]**: Unsigned 16-bit integer (0 to 65,535)
+- **int32 [4]**: Signed 32-bit integer (-2,147,483,648 to 2,147,483,647)
+- **uint32 [5]**: Unsigned 32-bit integer (0 to 4,294,967,295)
+- **int64 [6]**: Signed 64-bit integer
+- **uint64 [7]**: Unsigned 64-bit integer
+- **float32 [8]**: 32-bit floating point
+- **float64 [9]**: 64-bit floating point (double precision)
+- **boolean [10]**: Boolean (0 = false, any non-zero value = true)
 
 **This Filter is here for convenience and should be used with great care and understanding of the input and output data. This Filter should rarely be required, and if the user thinks that they require this Filter then a detailed examination of all the data involved should be undertaken to avoid possible undefined behaviors.**
 

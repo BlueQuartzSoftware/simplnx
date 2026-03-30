@@ -51,8 +51,8 @@ would remain removed and not "grow back".
 
 The *Operation* parameter selects which morphological operation to apply:
 
-- **Dilate**: Grows bad data regions by one **Cell** per iteration. Any **Cell** neighboring a bad **Cell** has its *Feature Id* changed to 0.
-- **Erode**: Shrinks bad data regions by one **Cell** per iteration. Each bad **Cell** is assigned the *Feature Id* of the majority of its neighbors.
+- **Dilate [0]**: Grows bad data regions by one **Cell** per iteration. Any **Cell** neighboring a bad **Cell** has its *Feature Id* changed to 0.
+- **Erode [1]**: Shrinks bad data regions by one **Cell** per iteration. Each bad **Cell** is assigned the *Feature Id* of the majority of its neighbors.
 
 ## WARNING: Feature Data Will Become Invalid
 

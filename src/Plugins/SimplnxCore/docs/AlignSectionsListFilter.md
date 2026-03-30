@@ -12,8 +12,8 @@ This **Filter** will apply the precalculated cell shifts to each section of an I
 
 The *Input Array Type* parameter controls how the shift values in the input arrays are interpreted:
 
-- **Relative**: Each shift value is a relative offset between adjacent sections. The shift for section N describes how far section N has moved compared to section N-1. These values are internally converted to cumulative shifts before being applied.
-- **Cumulative**: Each shift value is an absolute (cumulative) offset measured from a fixed reference point. The shift for section N describes how far section N has moved from that reference.
+- **Relative [0]**: Each shift value is a relative offset between adjacent sections. The shift for section N describes how far section N has moved compared to section N-1. These values are internally converted to cumulative shifts before being applied.
+- **Cumulative [1]**: Each shift value is an absolute (cumulative) offset measured from a fixed reference point. The shift for section N describes how far section N has moved from that reference.
 
 ## Handling User Created Shifts File
 

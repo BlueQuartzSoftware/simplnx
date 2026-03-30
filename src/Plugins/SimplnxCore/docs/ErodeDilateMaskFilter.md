@@ -29,8 +29,8 @@ The example images below were generated **AFTER** the execution of the filter an
 
 The *Operation* parameter selects which morphological operation to apply to the mask:
 
-- **Dilate**: Expands the masked (true) regions by one **Cell** per iteration. Any **Cell** neighboring a false **Cell** is changed to true.
-- **Erode**: Shrinks the masked (true) regions by one **Cell** per iteration. True **Cells** that have at least one false neighbor are changed to false.
+- **Dilate [0]**: Expands the masked (true) regions by one **Cell** per iteration. Any **Cell** neighboring a false **Cell** is changed to true.
+- **Erode [1]**: Shrinks the masked (true) regions by one **Cell** per iteration. True **Cells** that have at least one false neighbor are changed to false.
 
 % Auto generated parameter table will be inserted here
 
