@@ -35,7 +35,16 @@ with tuples for the output arrays set to 2 & 1 and split dimension set to 1 prod
 ```
 
 
-If you choose *Existing Data Group or Existing Attribute Matrix* the split arrays are placed into a pre‑existing container.  Otherwise the filter can create a *new* Data Group or *new* Attribute Matrix to hold the results.  An optional flag allows you to delete the original input array after splitting.
+### Output Container
+
+The *Output Container* parameter controls where the resulting split arrays are placed:
+
+- **New Data Group [0]**: Creates a new **DataGroup** to hold the split arrays.
+- **Existing Data Group [1]**: Places the split arrays into an existing **DataGroup** selected by the user.
+- **New Attribute Matrix [2]**: Creates a new **Attribute Matrix** to hold the split arrays.
+- **Existing Attribute Matrix [3]**: Places the split arrays into an existing **Attribute Matrix** selected by the user.
+
+An optional flag allows you to delete the original input array after splitting.
 
 **Looking to split by _components_ instead?**  
 

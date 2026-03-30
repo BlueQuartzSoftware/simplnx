@@ -30,6 +30,13 @@ The key properties that make the transpose of a rotation matrix equivalent to it
 - **Preservation of Dot Product**: The rotation does not change the dot product between vectors, preserving angles and lengths.
 - **Orthonormal Rows and Columns**: The rows (and columns) of a rotation matrix are orthonormal, meaning they have unit length and are perpendicular to each other. This property ensures that multiplying the matrix by its transpose results in the identity matrix, indicating that the transpose is indeed the inverse.
 
+### Interpolation Type
+
+The *Interpolation Type* parameter controls the interpolation method used when resampling the image data:
+
+- **Nearest Neighbor [0]**: Uses the value of the nearest voxel when resampling. Preserves original values but may produce blocky results.
+- **Linear Interpolation [1]**: Computes a weighted average of surrounding voxels when resampling. Produces smoother results but may introduce new values.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -8,6 +8,14 @@ Statistics
 
 This **Filter** produces one or two arrays that stores implicit image information (indices and physical coordinates of each point) as explicit cell level data. The produced arrays are in XYZ component format and stored as X by Y by Z, starting from the origin. The intention behind this filter is primarily for output compatibility and readability.
 
+### Output Array(s) Type
+
+The *Output Array(s) Type* parameter controls which arrays are produced by the filter:
+
+- **Physical Coordinates [0]**: Outputs a single 3-component array containing the physical (spatial) XYZ coordinates of the center of each cell, computed from the geometry's origin and spacing.
+- **Indices [1]**: Outputs a single 3-component array containing the integer ijk grid indices of each cell.
+- **Both [2]**: Outputs both the physical coordinates array and the indices array.
+
 The arrays follow the following cell parsing scheme: `0,0,0 -> 1,0,0 -> 2,0,0 -> ... n,0,0 -> 0,1,0 -> 1,1,0 -> 2,1,0 -> ... n,n,0 -> 0,0,1 -> 1,0,1 -> 2,0,1 -> ... n,n,n`.
 
 The printed output will look something like this:

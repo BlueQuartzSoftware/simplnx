@@ -18,6 +18,13 @@ The user has the option to *Use Mask Array*, which allows the user to set a bool
 
 After all the **Features** have been identified, a **Feature Attribute Matrix** is created for the **Features** and each **Feature** is flagged as *Active* in a boolean array in the matrix.
 
+### Neighbor Scheme
+
+The *Neighbor Scheme* parameter provides the following choices:
+
+- **Face Neighbors [0]**: Only the 6 face-sharing neighbors of a voxel are considered during segmentation.
+- **All Connected Neighbors [1]**: All 26 neighbors connected by a face, edge, or vertex are considered during segmentation.
+
 ## Note on Neighbor Scheme
 
 Historically DREAM.3D version 6.x has used *only* the 6 face neighbors of a voxel. This release introduces the option

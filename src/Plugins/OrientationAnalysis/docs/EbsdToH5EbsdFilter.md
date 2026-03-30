@@ -16,8 +16,10 @@ In order to work with orientation data, DREAM3D-NX needs to read the data from a
 
 Due to different experimental setups, the definition of the _bottom_ slice or the **Z=0** slice can be different. The user should verify that the proper button box is checked for their data set.
 
-+ **Low to High** This means that the file with the lowest index, closest to zero (0), will be considered the Z=0 slice.
-+ **High to Low** This means that the file with the highest index, farthest from zero (0), will be considered the Z=0 slice.
+The *Stacking Order* parameter provides the following choices:
+
+- **Low to High [0]**: The file with the lowest index, closest to zero (0), will be considered the Z=0 slice.
+- **High To Low [1]**: The file with the highest index, farthest from zero (0), will be considered the Z=0 slice.
 
 ### Z Resolution
 
@@ -40,6 +42,15 @@ The user needs to click the _Set Reference Frame_ button to set the proper refer
 | No Sample Transform | Edax/HKL Sample Transform |
 |--|--|
 |  ![No Transform or Unknown Manufacturer or HEDM Data](Images/EbsdToH5Ebsd_NoUnknown_HEDM_RefFrame.png) | ![TSL or HKL Transform](Images/EbsdToH5Ebsd_EDAX_HKL_RefFrame.png)  |
+
+### Reference Frame Options
+
+The *Reference Frame Options* parameter provides the following choices:
+
+- **Edax - TSL [0]**: Apply the sample and Euler reference frame transformations for EDAX/TSL systems (180 @ <010>, 90 @ <001>).
+- **Oxford - CTF [1]**: Apply the sample and Euler reference frame transformations for Oxford/HKL systems (180 @ <010>, 0 @ <001>).
+- **No/Unknown Transformation [2]**: Apply no reference frame transformation (0 @ <001>, 0 @ <001>).
+- **HEDM - IceNine [3]**: Apply the reference frame transformations for HEDM IceNine data (0 @ <001>, 0 @ <001>).
 
 ### Preset Transformations
 

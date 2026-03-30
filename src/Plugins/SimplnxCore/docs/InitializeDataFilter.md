@@ -8,6 +8,22 @@ Processing (Cleanup)
 
 This **Filter** allows the user to define the data set in a _DataArray_.
 
+### Initialization Type
+
+The *Initialization Type* parameter provides the following choices:
+
+- **Fill Value [0]**: Copies a user-supplied constant value (or per-component values) into every tuple in the array.
+- **Incremental [1]**: Fills the array starting from a user-supplied value and applying a fixed step (increment or decrement) to each successive tuple.
+- **Random [2]**: Generates random values across the full scalar type range. An optional fixed seed can be supplied for reproducibility.
+- **Random With Range [3]**: Generates random values within a user-specified minimum/maximum range per component.
+
+### Step Operation
+
+The *Step Operation* parameter (used with **Incremental** initialization) provides the following choices:
+
+- **Addition [0]**: Adds the step value to the previous tuple's value at each successive tuple.
+- **Subtraction [1]**: Subtracts the step value from the previous tuple's value at each successive tuple.
+
 This **Filter** provides several ways to do this:
 
 - Fill Value:

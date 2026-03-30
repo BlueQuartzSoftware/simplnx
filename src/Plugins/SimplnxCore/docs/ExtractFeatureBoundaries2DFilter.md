@@ -15,13 +15,13 @@ The algorithm scans the Feature IDs array and identifies boundaries where adjace
 - **Shared Vertex List**: 3D coordinates of all unique vertices at feature boundaries
 - **Shared Edge List**: Connectivity pairs defining line segments between vertices
 
-### Z Value Caveats
+### Z Value Source
 
-The filter provides three options for setting the Z coordinate of the generated vertices:
+The *Z Value Source* parameter provides the following choices:
 
-1. **Use min z value from Image geometry**: Uses the origin Z value of the input Image Geometry
-2. **Use max z value from Image geometry**: Uses the origin Z plus the spacing times the Z dimension
-3. **Use Custom z Offset**: Allows specifying a custom Z value for all vertices
+- **Use min z value from Image geometry [0]**: Uses the origin Z value of the input Image Geometry as the Z coordinate for all generated vertices.
+- **Use max z value from Image geometry [1]**: Uses the origin Z plus the spacing times the Z dimension as the Z coordinate for all generated vertices.
+- **Use Custom z Offset [2]**: Allows the user to specify an arbitrary Z coordinate value for all generated vertices.
 
 ### Algorithm Details
 

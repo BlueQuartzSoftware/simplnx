@@ -8,10 +8,14 @@ Processing (Image)
 
 This **Filter** allows the user to select a *flattening* method for turning an array of RGB or RGBa values into grayscale values.
 
-+ Luminosity: The **luminosity** method is a more sophisticated version of the average method. It also averages the values, but it forms a weighted average to account for human perception. We   re more sensitive to green than other colors, so green is weighted most heavily. The default formula for luminosity is BT709 Greyscale: Red: 0.2125 Green: 0.7154 Blue: 0.0721. The user can set the weightings to what ever values they would like.
-+ Average  (R + G + B) / 3
-+ Lightness (max(R, G, B) + min(R, G, B)) / 2
-+ Color Channel: The user selects a specific R|G|B channel to use as the GrayScale values.
+### Conversion Algorithm
+
+The *Conversion Algorithm* parameter provides the following choices:
+
+- **Luminosity [0]**: A weighted average of RGB channels that accounts for human perception (more sensitive to green). Uses the BT709 formula by default: Red: 0.2125, Green: 0.7154, Blue: 0.0721. The user can set custom weightings.
+- **Average [1]**: Computes a simple arithmetic average of R, G, and B channel values: (R + G + B) / 3.
+- **Lightness [2]**: Averages the maximum and minimum channel values: (max(R, G, B) + min(R, G, B)) / 2.
+- **SingleChannel [3]**: The user selects a specific R, G, or B channel to use directly as the grayscale values.
 
 The user can select 1 or more image data arrays which are assumed to be multi-component arrays of unsigned 8 bit values. The user can create a new AttributeMatrix if they want to store all the newly created arrays in a separate AttributeMatrix.
 

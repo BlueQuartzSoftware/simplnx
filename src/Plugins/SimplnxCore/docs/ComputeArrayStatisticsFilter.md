@@ -39,6 +39,16 @@ The user is creating the destination Attribute Matrix inside the `DataContainer`
 ![Images/Compute_Array_Statistics_2.png](Images/Compute_Array_Statistics_2.png)
 The user is creating the destination Attribute Matrix inside the `Statistics` group which was created by filter #2 in the pipeline.
 
+### Feature Range Type
+
+The *Feature Range Type* parameter provides the following choices:
+
+- **None [0]**: No feature-based range is applied; statistics are computed over the entire array without range constraints.
+- **Ignore Feature 0 [1]**: Excludes Feature Id 0 (the invalid/background feature) from statistics calculations.
+- **Shrink To Fit [2]**: Automatically determines the minimum and maximum Feature Ids present and uses that as the range, removing empty entries.
+- **Padded Custom Range [3]**: Uses a user-specified range and pads with generated/filled values for Feature Ids below the minimum and above the maximum actually present in the data.
+- **Minimum Size in Custom Range [4]**: Uses a user-specified range but clamps to the actual min/max Feature Ids if the specified bounds exceed them, avoiding padding.
+
 ## Ranges Breakdown
 
 The ranges feature was added to primarily offer the following functionality:

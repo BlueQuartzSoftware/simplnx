@@ -14,6 +14,17 @@ where \f$ a \f$ is the average distance between point \f$ i \f$ and all other po
 
 The silhouette can be used to determine how well a particular clustering has performed, such as k means or k medoids.
 
+### Distance Metric
+
+The *Distance Metric* parameter controls how the distance between two points is calculated when computing silhouette values:
+
+- **Euclidean [0]**: Standard straight-line distance between two points.
+- **Squared Euclidean [1]**: Square of the Euclidean distance, avoiding the square root computation.
+- **Manhattan [2]**: Sum of the absolute differences of coordinates (L1 / city-block distance).
+- **Cosine [3]**: Measures the cosine of the angle between two vectors.
+- **Pearson [4]**: Correlation-based distance derived from the Pearson correlation coefficient.
+- **Squared Pearson [5]**: Square of the Pearson distance.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

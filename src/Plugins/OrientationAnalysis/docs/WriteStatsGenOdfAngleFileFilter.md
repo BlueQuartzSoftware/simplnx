@@ -54,13 +54,13 @@ There are 5 columns of data which are the 3 Euler Angles, the Weight Value and t
 
 ### Delimiter
 
-Choice of delimiter is as follows:
+The *Delimiter* parameter provides the following choices:
 
-    0 = , (comma)
-    1 = ; (semicolon)
-    2 = (space)   <==== DEFAULT VALUE
-    3 = : (colon)
-    4 = \t (tab)
+- **, (comma) [0]**: Uses a comma as the column separator.
+- **; (semicolon) [1]**: Uses a semicolon as the column separator.
+- **(space) [2]**: Uses a space as the column separator. This is the default value.
+- **: (colon) [3]**: Uses a colon as the column separator.
+- **\t (tab) [4]**: Uses a tab character as the column separator.
 
 % Auto generated parameter table will be inserted here
 

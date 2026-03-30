@@ -91,6 +91,17 @@ This caveat is ONLY for image geometries.  Multiple transformations can be appli
 
 ## Transformation Information
 
+### Transformation Type
+
+The *Transformation Type* parameter provides the following choices:
+
+- **No Transform [0]**: Applies an identity transformation; the geometry is unchanged.
+- **Pre-Computed Transformation Matrix (4x4) [1]**: Uses a 4x4 transformation matrix supplied as an Attribute Array in row major order.
+- **Manual Transformation Matrix [2]**: Uses a manually entered 4x4 transformation matrix.
+- **Rotation [3]**: Rotates about a supplied axis-angle <x,y,z> with the angle specified in degrees.
+- **Translation [4]**: Translates the geometry by the supplied (x, y, z) values.
+- **Scale [5]**: Scales the geometry by the supplied (x, y, z) values.
+
 The user may select from a variety of options for the type of transformation to apply:
 
 | Enum Value | Transformation Type                | Representation                                                                       |
@@ -103,6 +114,14 @@ The user may select from a variety of options for the type of transformation to 
 | 5          | Scale                              | Scaling by the supplied (x, y, z) values                                             |
 
 The **Translate Geometry To Global Origin Before Transformation** option must be selected if the user wants to translate their volume to (0, 0, 0), apply the transform, and then translate the volume back to its original location.
+
+### Resampling or Interpolation (Image Geometry Only)
+
+When transforming an **Image Geometry**, the *Resampling or Interpolation* parameter controls how cell data values are assigned in the newly created grid:
+
+- **Nearest Neighbor Resampling [0]**: Each output cell takes the value of the nearest input cell. This is fast and preserves sharp boundaries, but may produce a blocky appearance.
+- **Linear Interpolation [1]**: Each output cell value is computed using trilinear interpolation from the surrounding input cells. This produces smoother results but may blur sharp features.
+- **No Interpolation [2]**: The transformation is applied without any resampling of cell data. Use this option when the transformation does not change the grid topology (e.g., integer translations that align exactly with the existing grid).
 
 ## Saving the final transformation Matrix.
 

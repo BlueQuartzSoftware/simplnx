@@ -8,6 +8,13 @@ Orientation Analysis (Conversion)
 
 This **Filter** will multiply the values of every **Element** by a factor to convert *degrees to radians* or *radians to degrees*.  The user needs to know the units of their data in order to use this **Filter** properly.
 
+### Conversion Type
+
+The *Conversion Type* parameter selects the direction of the angle conversion:
+
+- **Degrees to Radians [0]**: Multiplies each value by π/180, converting angles expressed in degrees to their equivalent in radians.
+- **Radians to Degrees [1]**: Multiplies each value by 180/π, converting angles expressed in radians to their equivalent in degrees.
+
 ### Example Usage
 
 2D data files that are in *HKL*'s .ctf format use degrees. 3D data files in *HKL*'s .ctf format use radians. All files in *TSL*'s .ang format use radians. If other file types are used, determine the units before running this **Filter**.

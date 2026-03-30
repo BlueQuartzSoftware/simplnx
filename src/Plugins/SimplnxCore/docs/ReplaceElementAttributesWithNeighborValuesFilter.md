@@ -11,6 +11,13 @@ user. Then, for each of those **Cells**, their neighboring **Cells** are checked
 maximum or minimum value. The attributes of the neighbor with the maximum/minimum value are then reassigned to the
 reference **Cell**.
 
+### Comparison Operator
+
+The *Comparison Operator* parameter selects how each cell value is compared to the threshold:
+
+- **< [Less Than] [0]**: Targets **Cells** whose value is less than the threshold. The replacement neighbor is the one with the highest value among neighbors that exceed the threshold.
+- **> [Greater Than] [1]**: Targets **Cells** whose value is greater than the threshold. The replacement neighbor is the one with the lowest value among neighbors that fall below the threshold.
+
 *Note:* By default, the **Filter** will run only one iteration of the cleanup. If the user selects the *Loop Until Gone*
 option, then the **Filter** will run iteratively until no **Cells** exist that meet the users criteria. So, if a **Cell**
 meets the threshold and so are all of its neighbors, then that **Cell** will not be changed during that iteration and

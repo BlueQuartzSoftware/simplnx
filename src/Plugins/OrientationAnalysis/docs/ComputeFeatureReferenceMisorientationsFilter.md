@@ -17,6 +17,13 @@ undergone plastic deformation and the amount of lattice rotation developed is of
 it may be more reasonable to use the orientation *near the center* of the **Feature** as it may 
 not have rotated and thus serve as a better *reference orientation*.
 
+### Reference Orientation
+
+The *Reference Orientation* parameter provides the following choices:
+
+- **Average Feature Orientation [0]**: Uses the average orientation of the **Feature** as the reference orientation for misorientation calculations.
+- **Orientation Farthest from Feature Boundary [1]**: Uses the orientation of the **Cell** that is furthest from the boundary of the **Feature** (nearest to its Euclidean center) as the reference orientation.
+
 ## IPF Colors <001> Direction
 
 This is the data set's IPF colors by the <001> direction which shows the reader the relative

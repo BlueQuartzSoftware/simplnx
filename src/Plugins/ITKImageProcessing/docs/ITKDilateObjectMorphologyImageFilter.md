@@ -14,6 +14,15 @@ If a pixel's value is equal to the object value and the pixel is adjacent to a n
 
 - BinaryDilateImageFilter
 
+### Kernel Type
+
+The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+
+- **Annulus [0]**: A ring-shaped structuring element.
+- **Ball [1]**: A spherical structuring element (default). Most commonly used for general morphological operations.
+- **Box [2]**: A rectangular/cuboid structuring element.
+- **Cross [3]**: A cross-shaped structuring element.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

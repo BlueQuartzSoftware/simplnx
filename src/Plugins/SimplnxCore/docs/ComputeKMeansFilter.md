@@ -10,6 +10,17 @@ DREAM3D Review (Clustering)
 
 This **Filter** applies the k means algorithm to an **Attribute Array**.  K means is a *clustering algorithm* that assigns to each point of the **Attribute Array** a *cluster Id*.  The user must specify the number of clusters in which to partition the array.  Specifically, a k means partitioning is a *Voronoi tesselation*; an optimal solution to the k means problem is such that each point in the data set is associated with the cluster that has the closest mean.  This partitioning is the one that minimizes the within cluster variance (i.e., minimizes the within cluster sum of squares differences).  The user may select from several distance metrics: *Euclidean*, *Squared Euclidean*, *Manhattan*, *Cosine*, *Pearson*, and *Squared Pearson*.
 
+### Distance Metric
+
+The *Distance Metric* parameter determines how distances between data points are measured when assigning points to clusters:
+
+- **Euclidean [0]**: Standard straight-line distance between two points in the data space.
+- **Squared Euclidean [1]**: The square of the Euclidean distance. Avoids a square root computation and gives extra weight to larger differences.
+- **Manhattan [2]**: Sum of the absolute differences along each dimension (also known as L1 or city-block distance).
+- **Cosine [3]**: One minus the cosine similarity between two points. Measures the angle between vectors, making it invariant to magnitude.
+- **Pearson [4]**: One minus the Pearson correlation coefficient. Measures the linear correlation between two points, normalized by their standard deviations.
+- **Squared Pearson [5]**: The square of the Pearson distance metric.
+
 Optimal solutions to the k means partitioning problem are computationally difficult; this **Filter** used *Lloyd's algorithm* to approximate the solution.  Lloyd's algorithm is an iterative algorithm that proceeds as follows:
 
 1. Choose k points at random to serve as the initial cluster "means"

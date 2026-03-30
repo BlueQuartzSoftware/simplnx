@@ -47,6 +47,12 @@ would remove the single **Cells** and reduce the pores by one **Cell**. If this 
 operation, then the pores would grow by one **Cell** and return to near their original size, while the single **Cells**
 would remain removed and not "grow back".
 
+### Operation
+
+The *Operation* parameter selects which morphological operation to apply:
+
+- **Dilate [0]**: Grows bad data regions by one **Cell** per iteration. Any **Cell** neighboring a bad **Cell** has its *Feature Id* changed to 0.
+- **Erode [1]**: Shrinks bad data regions by one **Cell** per iteration. Each bad **Cell** is assigned the *Feature Id* of the majority of its neighbors.
 
 ## WARNING: Feature Data Will Become Invalid
 

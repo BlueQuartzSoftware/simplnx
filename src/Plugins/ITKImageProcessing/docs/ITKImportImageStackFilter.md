@@ -25,33 +25,46 @@ The filter will create a new Image Geometry. The user can optionally override th
 
 When setting a custom origin, the user can choose whether to place the origin at the corner of the geometry (default) or at the center of the geometry.
 
-The **Origin & Spacing Processing Order** parameter controls when origin and spacing overrides are applied relative to the Processing Order above:
+### Origin & Spacing Processing
 
-- **Preprocessed**: Origin and spacing are applied before the image cropping step, so the order becomes:
-  1. Read image
-  2. Set origin and spacing values
-  3. Crop image
-  4. Resample image
-  5. Convert to grayscale
-  6. Flip image in X or Y
-- **Postprocessed**: Origin and spacing are applied after the image flipping step, so the order becomes:
-  1. Read image
-  2. Crop image
-  3. Resample image
-  4. Convert to grayscale
-  5. Flip image in X or Y
-  6. Set origin and spacing values
+The *Origin & Spacing Processing* parameter provides the following choices:
+
+- **Preprocessed [0]**: Origin and spacing overrides are applied before the image cropping step.
+- **Postprocessed [1]**: Origin and spacing overrides are applied after the image flipping step.
+
+When **Preprocessed** is selected, the processing order becomes:
+
+1. Read image
+2. Set origin and spacing values
+3. Crop image
+4. Resample image
+5. Convert to grayscale
+6. Flip image in X or Y
+
+When **Postprocessed** is selected, the processing order becomes:
+
+1. Read image
+2. Crop image
+3. Resample image
+4. Convert to grayscale
+5. Flip image in X or Y
+6. Set origin and spacing values
 
 ### Resampling Caveats
 
 The user can decide to scale the images as they are being read in by turning on the Scale Images option, and setting a scale value. A scale value of 10.0 resamples the images in the stack to one-tenth the number of pixels, a scale value of 200.0 resamples the images in the stack to double the number of pixels. The default scale value is 100.0.
 
+### Output Data Type
+
+The *Output Data Type* parameter provides the following choices:
+
+- **uint8 [0]**: Convert image data to 8-bit unsigned integer.
+- **uint16 [1]**: Convert image data to 16-bit unsigned integer.
+- **uint32 [2]**: Convert image data to 32-bit unsigned integer.
+
 ### Data Type Conversion
 
-The user can optionally convert the image data to a different data type by enabling the "Set Image Data Type" option. Supported output data types include:
-- uint8
-- uint16
-- uint32
+The user can optionally convert the image data to a different data type by enabling the "Set Image Data Type" option.
 
 ### Cropping Caveats
 
