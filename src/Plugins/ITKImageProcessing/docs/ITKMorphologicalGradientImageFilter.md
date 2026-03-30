@@ -10,6 +10,15 @@ ITKMathematicalMorphology (MathematicalMorphology)
 
 The structuring element is assumed to be composed of binary values (zero or one). Only elements of the structuring element having values > 0 are candidates for affecting the center pixel.* MorphologyImageFilter , GrayscaleFunctionDilateImageFilter , BinaryDilateImageFilter
 
+### Kernel Type
+
+The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+
+- **Annulus**: A ring-shaped structuring element.
+- **Ball**: A spherical structuring element (default). Most commonly used for general morphological operations.
+- **Box**: A rectangular/cuboid structuring element.
+- **Cross**: A cross-shaped structuring element.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

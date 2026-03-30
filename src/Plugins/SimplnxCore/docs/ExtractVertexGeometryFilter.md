@@ -13,6 +13,13 @@ creating a vertex if the mask value = TRUE.
 
 ![Example showing the use of a Mask array to only generate specific points.](Images/ExtractVertexGeometry_1.png)
 
+### Array Handling
+
+The *Array Handling* parameter controls how the selected cell arrays are transferred to the new **Vertex Geometry**:
+
+- **Copy Attribute Arrays**: Creates copies of the selected arrays in the new vertex geometry, leaving the originals intact in the source geometry.
+- **Move Attribute Arrays**: Moves the selected arrays to the new vertex geometry, removing them from their original location.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

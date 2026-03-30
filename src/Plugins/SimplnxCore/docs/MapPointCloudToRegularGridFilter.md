@@ -6,15 +6,24 @@ Sampling (Mapping)
 
 ## Description
 
-This **Filter** determines, for a user-defined grid, in which voxel each point in a **Vertex Geometry** lies.  The user can either construct a sampling grid by specifying the dimensions, or select a pre-existing **Image Geometry** to use as the sampling grid.  The voxel indices that each point lies in are stored on the vertices.  
+This **Filter** determines, for a user-defined grid, in which voxel each point in a **Vertex Geometry** lies.  The user can either construct a sampling grid by specifying the dimensions, or select a pre-existing **Image Geometry** to use as the sampling grid.  The voxel indices that each point lies in are stored on the vertices.
 
 Additionally, the user may opt to use a mask; points for which the mask are false are ignored when computing voxel indices (instead, they are initialized to voxel 0).
 
-One of the features provided to the user is control over the value used when a point is Out-of-Bounds. The three options are:
+### Sampling Grid Type
 
-- `Silent`: (default) Will silently use the user supplied value
-- `Warning with Count`: Will emit a filer warning that contains the number of out-of-bounds values were encountered.
-- `Error at First Instance`: Will emit a filter error at the out-of-bounds value that is encountered.
+The *Sampling Grid Type* parameter controls how the target grid is defined:
+
+- **Manual**: The user specifies the grid dimensions directly. The filter creates a new **Image Geometry** with those dimensions to use as the sampling grid.
+- **Use Existing Image Geometry**: The user selects a pre-existing **Image Geometry** from the data structure to use as the sampling grid.
+
+### Out of Bounds Handling
+
+The *Out of Bounds Handling* parameter provides the following choices:
+
+- **Silent**: Silently uses the user-supplied out-of-bounds value. This is the default.
+- **Warning with Count**: Emits a filter warning after execution containing the number of out-of-bounds values encountered.
+- **Error at First Instance**: Emits a filter error at the first out-of-bounds value encountered.
 
 The default selection is `Silent`, but it is mostly provided as a way to preserve existing functionality. What follows are a few use cases we had in mind when adding this functionality, organized by handling type:
 

@@ -11,6 +11,14 @@ This **Filter** will save images based on an array that represents grayscale, RG
 An example of a **Filter** that produces color data that can be used as input to this **Filter**
 is the {ref}`Generate IFP Colors <OrientationAnalysis/ComputeIPFColorsFilter:Description>` **Filter**, which will generate RGB values for each voxel in the volume.
 
+### Plane
+
+The *Plane* parameter controls which orthogonal plane is used when writing a 3D volume as a series of 2D image slices:
+
+- **XY**: Write image slices along the XY plane (normal to Z axis).
+- **XZ**: Write image slices along the XZ plane (normal to Y axis).
+- **YZ**: Write image slices along the YZ plane (normal to X axis).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -39,6 +39,16 @@ The *CSV* file with Write Neighbor Data checked:
     4,1,886
     5,26,61,224,278,454,786,923,1119,1137,1478,1517,1525,1651,1812,1814,2227,2233,2731,2750,2907,2930,3175,3548,3619,4492,4791,5010
 
+### Delimiter
+
+The *Delimiter* parameter selects the character used to separate values within each row of the output CSV file:
+
+- **Space**: Values are separated by a single space character.
+- **Semicolon**: Values are separated by a semicolon (`;`).
+- **Comma**: Values are separated by a comma (`,`). This is the standard CSV delimiter.
+- **Colon**: Values are separated by a colon (`:`).
+- **Tab**: Values are separated by a tab character.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -6,15 +6,7 @@ Core (IO/Read)
 
 ## Description
 
-This **Filter** allows the user to import a plain text file containing the contents of a single Attribute Array. The delimeters can be one of the following:
-
-    + comma
-    + semicolon
-    + space
-    + colon
-    + tab
-
-The filter does not care about how many values per line but only about reading the proper number of values from 
+This **Filter** allows the user to import a plain text file containing the contents of a single Attribute Array. The filter does not care about how many values per line but only about reading the proper number of values from 
 the file.
 
 ## Use Cases
@@ -74,15 +66,15 @@ as the filter is reading data directly into an array.
 | 8 |        Float 32 bit |
 | 9 |       Double 64 bit |
 
-### Delimeter Types
+### Delimiter
 
-| Value | Type |
-|--|------|
-| 0 | comma |
-| 1 | semicolon |
-| 2 | space |
-| 3 | colon |
-| 4 | tab |
+The *Delimiter* parameter provides the following choices:
+
+- **, (comma)**: Values are separated by a comma character.
+- **; (semicolon)**: Values are separated by a semicolon character.
+- **  (space)**: Values are separated by a space character.
+- **: (colon)**: Values are separated by a colon character.
+- **\t (Tab)**: Values are separated by a tab character.
 
 % Auto generated parameter table will be inserted here
 

@@ -18,6 +18,19 @@ This is the same data, but with the option to convert the data to the Fundamenta
 
 Note the coloring used in the previous images is via an IPF-Z <001> Coloring.
 
+### Input Orientation Type
+
+The *Input Orientation Type* parameter specifies the orientation representation of the input array:
+
+- **Euler Angles**: Three-component (phi1, Phi, phi2) Bunge Euler angle representation.
+- **Orientation Matrix**: Nine-component (3x3) rotation matrix in row-major format.
+- **Quaternions**: Four-component quaternion in vector-scalar ordering ([x, y, z], w).
+- **Axis Angle**: Four-component axis-angle representation ([x, y, z], Angle).
+- **Rodrigues Vectors**: Four-component Rodrigues vector ([x, y, z], w) where the vector is normalized and the length is stored as the last component.
+- **Homochoric**: Three-component homochoric vector [x, y, z].
+- **Cubochoric**: Three-component cubochoric vector [x, y, z].
+- **Stereographic**: Three-component stereographic projection vector [x, y, z].
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

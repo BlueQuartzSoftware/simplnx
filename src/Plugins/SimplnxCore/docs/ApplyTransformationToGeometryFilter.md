@@ -104,6 +104,14 @@ The user may select from a variety of options for the type of transformation to 
 
 The **Translate Geometry To Global Origin Before Transformation** option must be selected if the user wants to translate their volume to (0, 0, 0), apply the transform, and then translate the volume back to its original location.
 
+### Resampling or Interpolation (Image Geometry Only)
+
+When transforming an **Image Geometry**, the *Resampling or Interpolation* parameter controls how cell data values are assigned in the newly created grid:
+
+- **Nearest Neighbor Resampling**: Each output cell takes the value of the nearest input cell. This is fast and preserves sharp boundaries, but may produce a blocky appearance.
+- **Linear Interpolation**: Each output cell value is computed using trilinear interpolation from the surrounding input cells. This produces smoother results but may blur sharp features.
+- **No Interpolation**: The transformation is applied without any resampling of cell data. Use this option when the transformation does not change the grid topology (e.g., integer translations that align exactly with the existing grid).
+
 ## Saving the final transformation Matrix.
 
 There is an option to save the final transformation matrix into its own array. The format of the output DataArray is a

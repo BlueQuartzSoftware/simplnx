@@ -46,6 +46,11 @@ This parameter tells the program which byte is *most significant* for multibyte 
 
 This setting is *crucial* to the correct interpretation of the binary data, so the user must be aware of how their binary data was encoded.
 
+The *Endian* parameter provides the following choices:
+
+- **Little**: Little endian byte order (least significant byte first). Used by Intel/AMD x86 and x86-64 architectures.
+- **Big**: Big endian byte order (most significant byte first). Used by network protocols, older RISC architectures, and some scientific instruments.
+
 ### Skip Header Bytes
 
 If the raw binary file you are reading has a *header* before the actual data begins, the user can instruct the **Filter** to skip this header portion of the file. The user needs to know how lond the header is in bytes. Another way to use this value is if the user wants to read data out of the interior of a file by skipping a defined number of bytes.

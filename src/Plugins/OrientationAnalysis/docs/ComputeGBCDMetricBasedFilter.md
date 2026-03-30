@@ -42,6 +42,19 @@ Then, the directions are given as [ sin &theta; &times; cos &phi; , sin &theta; 
 ## Feedback
 
 In the case of any questions, suggestions, bugs, etc.,  please feel free to email the author of this **Filter** at kglowinski *at* ymail.com
+
+### Limiting Distances
+
+The *Limiting Distances* parameter selects the maximum angular deviations used when selecting boundary segments. The choices are pairs of (misorientation radius, plane-inclination radius):
+
+- **3 deg. Misorientations; 7 deg. Plane Inclinations**: Use a 3-degree misorientation radius and a 7-degree plane-inclination radius.
+- **5 deg. Misorientations; 5 deg. Plane Inclinations**: Use a 5-degree radius for both misorientations and plane inclinations.
+- **5 deg. Misorientations; 7 deg. Plane Inclinations**: Use a 5-degree misorientation radius and a 7-degree plane-inclination radius.
+- **5 deg. Misorientations; 8 deg. Plane Inclinations**: Use a 5-degree misorientation radius and an 8-degree plane-inclination radius.
+- **6 deg. Misorientations; 7 deg. Plane Inclinations**: Use a 6-degree misorientation radius and a 7-degree plane-inclination radius.
+- **7 deg. Misorientations; 7 deg. Plane Inclinations**: Use a 7-degree radius for both misorientations and plane inclinations.
+- **8 deg. Misorientations; 8 deg. Plane Inclinations**: Use an 8-degree radius for both misorientations and plane inclinations.
+
 % Auto generated parameter table will be inserted here
 
 ## References

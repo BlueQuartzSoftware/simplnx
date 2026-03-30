@@ -38,6 +38,14 @@ filling the surrounding overscan area.
 | ![Small IN100 IPF Map](Images/Small_IN100.png) | Good dataset to use this filter                                              |
 | ![APTR IPF Colors](Images/aptr12_001_0.png)    | NOT** a good data set to use because there is **no** overscan of the sample. |
 
+### Slice-By-Slice Plane
+
+When *Process Data Slice-By-Slice* is enabled, the *Slice-By-Slice Plane* parameter selects the plane along which the volume is scanned one slice at a time:
+
+- **XY**: Processes the volume slice by slice along the Z axis, scanning each XY plane independently.
+- **XZ**: Processes the volume slice by slice along the Y axis, scanning each XZ plane independently.
+- **YZ**: Processes the volume slice by slice along the X axis, scanning each YZ plane independently.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

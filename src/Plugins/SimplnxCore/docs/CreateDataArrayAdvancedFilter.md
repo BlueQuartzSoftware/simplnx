@@ -8,6 +8,22 @@ Core (Generation)
 
 This **Filter** creates a **Data Array** of any primitive type with any set of component dimensions.  The array is initialized to a user defined value or with random values within a specified range.
 
+### Initialization Type
+
+The *Initialization Type* parameter selects how the array values are populated:
+
+- **Fill Value**: Every element in the array is set to the same user-supplied value (or per-component values when using the semicolon-separated notation).
+- **Incremental**: Values are filled in sequence starting from a user-supplied starting value, stepping by a fixed amount using the chosen *Step Operation*.
+- **Random**: Each element is assigned a uniformly random value over the full range of the selected data type. An optional seed can be supplied for reproducibility.
+- **Random With Range**: Each element is assigned a uniformly random value within a user-specified minimum and maximum range. An optional seed can be supplied for reproducibility.
+
+### Step Operation
+
+The *Step Operation* parameter is active when *Initialization Type* is set to **Incremental**. It controls whether each successive value increases or decreases:
+
+- **Addition**: Each successive element value is the previous value plus the step amount (ascending sequence).
+- **Subtraction**: Each successive element value is the previous value minus the step amount (descending sequence).
+
 When initializing a multicomponent array square bracket notation can be used to specify different initialization values for each component. For example say that I want to intialize a 2 component array where the first component is 0 and the second component is 1 we would use the following input string for the *Initialization Value*
 
     0;1

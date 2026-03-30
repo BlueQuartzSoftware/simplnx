@@ -11,6 +11,14 @@ destination **ImageGeometry** objects must have the same dimensions in the direc
 
 This filter also has an option to mirror the resulting geometry in the chosen direction.  If the X direction is chosen, it will mirror the positions of the YZ planes.  If the Y direction is chosen, it will mirror the positions of the XZ planes.  If the Z direction is chosen, it will mirror the positions of the XY planes.
 
+### Direction
+
+The *Direction* parameter selects the axis along which the input geometries are appended onto the destination geometry:
+
+- **X**: Appends geometries along the X axis. The input and destination geometries must have matching Y and Z dimensions.
+- **Y**: Appends geometries along the Y axis. The input and destination geometries must have matching X and Z dimensions.
+- **Z**: Appends geometries along the Z axis. The input and destination geometries must have matching X and Y dimensions.
+
 ### X Direction Examples
 
 #### Example 1 (X)

@@ -8,6 +8,13 @@ IO (Output) (Write) (Export) (Binary)
 
 This **Filter** accepts DataArray(s) as input, extracts the data, and writes each array to a separate binary file in the specified output directory
 
+### Endianess
+
+The *Endianess* parameter controls the byte order used when writing numeric values to the binary file:
+
+- **Little Endian**: The least significant byte is stored first. This is the native byte order for x86 and ARM processors and is the most common choice for files consumed on modern desktop systems.
+- **Big Endian**: The most significant byte is stored first. This byte order is used by some network protocols and legacy systems.
+
 % Auto generated parameter table will be inserted here
 
 ## License & Copyright

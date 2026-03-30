@@ -65,6 +65,14 @@ The user can set the weightings to what ever values they would like.
     Unspecified = 100U
     Unknown = 101U
 
+### Output Data Type
+
+The *Output Data Type* parameter controls the numeric type used to store the imported image data:
+
+- **uint8**: Read image data as unsigned 8-bit integers (0–255).
+- **uint16**: Read image data as unsigned 16-bit integers (0–65535).
+- **uint32**: Read image data as unsigned 32-bit integers (0–4294967295).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

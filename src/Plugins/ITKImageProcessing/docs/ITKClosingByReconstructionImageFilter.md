@@ -25,6 +25,15 @@ Applications", Second Edition, Springer, 2003.
 
 - GrayscaleMorphologicalClosingImageFilter
 
+### Kernel Type
+
+The *Kernel Type* parameter selects the structuring element used for the morphological operation:
+
+- **Annulus**: A ring-shaped structuring element.
+- **Ball**: A spherical structuring element (default). Most commonly used for general morphological operations.
+- **Box**: A rectangular/cuboid structuring element.
+- **Cross**: A cross-shaped structuring element.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

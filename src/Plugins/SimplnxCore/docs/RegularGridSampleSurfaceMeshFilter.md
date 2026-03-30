@@ -8,6 +8,13 @@ Sampling (Resolution)
 
 This **Filter** "samples" a triangulated surface mesh onto a regular grid (Image Geometry) using scanline rasterization. The user can either create a new Image Geometry by specifying dimensions, spacing, and origin, or use an existing Image Geometry. The filter assigns a **Feature Id** (or part number) to each voxel based on which region of the surface mesh the voxel falls within.
 
+### Use existing geometry
+
+The *Use existing geometry* parameter controls how the target **Image Geometry** is provided:
+
+- **Create geometry**: Creates a new **Image Geometry** with user-specified dimensions, spacing, and origin for sampling the surface mesh.
+- **Use existing geometry**: Uses a pre-existing **Image Geometry** from the data structure as the sampling grid.
+
 ### Algorithm
 
 The sampling is performed using the following scanline rasterization approach:

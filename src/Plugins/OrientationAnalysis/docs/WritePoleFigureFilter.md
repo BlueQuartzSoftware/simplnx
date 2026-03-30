@@ -50,11 +50,24 @@ data that went into the creation: Number of points, which hemisphere, Phase Name
 
 ### Image Layout
 
-The 3 pole figures can be laid out in a Square, Horizontal row or vertical column. Supporting information (including the color bar legend for color pole figures) will also be printed on the image.
+The *Image Layout* parameter controls how the pole figures are arranged in the output image. Supporting information (including the color bar legend for color pole figures) will also be printed on the image.
 
 | Colorized Intensity | Discrete |
 |--------------------|----------|
 | ![Example Pole Figure Using Square Layout](Images/PoleFigure_Example.png) | ![Example Pole Figure Using Square Layout](Images/Pole_Figure_Discrete_Example.png) |
+
+The available layout choices are:
+
+- **Horizontal**: Pole figures are arranged in a single horizontal row.
+- **Vertical**: Pole figures are arranged in a single vertical column.
+- **Square**: Pole figures are arranged in a square grid.
+
+### Pole Figure Type
+
+The *Pole Figure Type* parameter selects the rendering method for the pole figure:
+
+- **Color Intensity**: Generates a continuous color intensity map using a modified Lambert square interpolation onto the unit circle.
+- **Discrete**: Generates a discrete point-based pole figure by marking each pixel that received at least one orientation count.
 
 % Auto generated parameter table will be inserted here
 

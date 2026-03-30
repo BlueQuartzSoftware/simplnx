@@ -10,6 +10,13 @@ Internally DREAM3D-NX assumes that a quaternion is laid out in the order such th
 
 For Example if the user has imported quaternion data in the form of Scalar-Vector then they would run this filter using a conversion type of **ToVectorScalar** and using the generated quaternions in subsequent filters. If the user wanted to then write out the Quaternions in the Scalar-Vector form then could add this filter again to the end of the pipeline (but before writing out data) to convert the Vector-Scalar quaternions array (assuming something modified the array).
 
+### Conversion Type
+
+The *Conversion Type* parameter selects the target quaternion component ordering:
+
+- **To Scalar Vector ( w, [x, y, z] )**: Converts quaternions to scalar-vector ordering where the scalar component (w) comes first, followed by the vector components (x, y, z).
+- **To Vector Scalar ( [x, y, z], w )**: Converts quaternions to vector-scalar ordering where the vector components (x, y, z) come first, followed by the scalar component (w). This is the internal ordering expected by DREAM3D-NX.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

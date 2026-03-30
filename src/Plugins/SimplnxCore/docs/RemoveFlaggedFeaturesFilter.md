@@ -8,11 +8,13 @@ Processing (Cleanup)
 
 This **Filter** will remove **Features** that have been flagged by another **Filter** from the structure.  The **Filter** requires that the user point to a boolean array at the **Feature** level that tells the **Filter** whether the **Feature** should remain in the structure.  If the boolean array is *false* for a **Feature**, then all **Cells** that belong to that **Feature** are temporarily *unassigned*. Optionally, after all *undesired* **Features** are removed, the remaining **Features** are isotropically coarsened to fill in the gaps left by the removed **Features**.
 
-| Operation | Meaning |
-|-----------|---------|
-| 0 | Remove features. |
-| 1 | Extract features into new geometry. |
-| 2 | Extract features and then remove them. |
+### Selected Operation
+
+The *Selected Operation* parameter provides the following choices:
+
+- **Remove**: Removes the flagged **Features** from the geometry and coarsens remaining features to fill the gaps.
+- **Extract**: Extracts the flagged **Features** into a new separate geometry without removing them from the original.
+- **Extract then Remove**: Extracts the flagged **Features** into a new geometry and then removes them from the original geometry.
 
 ## WARNING: NeighborList Removal
 
