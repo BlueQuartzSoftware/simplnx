@@ -12,6 +12,32 @@ The following table lists the various orientation representations that are suppo
 is capable of converting between any representation with some caveats. The Input and
 Output Orientation Type are represented as a zero based index into the combo box widget.
 
+### Input Orientation Type
+
+The *Input Orientation Type* parameter provides the following choices:
+
+- **Euler Angles [0]**: Three-component Euler angle representation (phi1, Phi, phi2).
+- **Orientation Matrix [1]**: Nine-component 3x3 orientation matrix in row major format.
+- **Quaternion [2]**: Four-component quaternion representation ([x, y, z], w).
+- **Axis Angle [3]**: Four-component axis-angle representation ([x, y, z], Angle in degrees).
+- **Rodrigues Vector [4]**: Four-component Rodrigues vector ([x, y, z], w).
+- **Homochoric [5]**: Three-component homochoric vector ([x, y, z]).
+- **Cubochoric [6]**: Three-component cubochoric vector ([x, y, z]).
+- **Stereographic Projection [7]**: Three-component stereographic projection vector ([x, y, z]).
+
+### Output Orientation Type
+
+The *Output Orientation Type* parameter provides the following choices:
+
+- **Euler Angles [0]**: Three-component Euler angle representation (phi1, Phi, phi2).
+- **Orientation Matrix [1]**: Nine-component 3x3 orientation matrix in row major format.
+- **Quaternion [2]**: Four-component quaternion representation ([x, y, z], w).
+- **Axis Angle [3]**: Four-component axis-angle representation ([x, y, z], Angle in degrees).
+- **Rodrigues Vector [4]**: Four-component Rodrigues vector ([x, y, z], w).
+- **Homochoric [5]**: Three-component homochoric vector ([x, y, z]).
+- **Cubochoric [6]**: Three-component cubochoric vector ([x, y, z]).
+- **Stereographic Projection [7]**: Three-component stereographic projection vector ([x, y, z]).
+
 ### Orientation Representation Enumeration Index
 
 | Enumeration Index | Orientation Representation |

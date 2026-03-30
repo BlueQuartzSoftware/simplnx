@@ -11,6 +11,13 @@ Euler Angles or an Euler Angle and a Reference Axis-Angle.
 
 Use the Orientation Utility to compute an input Axis-Angle if you only have another representation.
 
+### Computation Type
+
+The *Computation Type* parameter provides the following choices:
+
+- **Use Arrays [0]**: Computes the misorientation between corresponding Euler Angles in two input arrays, producing one misorientation value per tuple.
+- **Use Reference Axis Angle [1]**: Computes the misorientation between each Euler Angle in a single input array and a user-supplied reference axis-angle orientation.
+
 ## Compute by Arrays
 
 If 2 Euler Arrays are used then the output is an array with the same number of Tuples as the input

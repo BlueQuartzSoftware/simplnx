@@ -91,6 +91,17 @@ This caveat is ONLY for image geometries.  Multiple transformations can be appli
 
 ## Transformation Information
 
+### Transformation Type
+
+The *Transformation Type* parameter provides the following choices:
+
+- **No Transform [0]**: Applies an identity transformation; the geometry is unchanged.
+- **Pre-Computed Transformation Matrix (4x4) [1]**: Uses a 4x4 transformation matrix supplied as an Attribute Array in row major order.
+- **Manual Transformation Matrix [2]**: Uses a manually entered 4x4 transformation matrix.
+- **Rotation [3]**: Rotates about a supplied axis-angle <x,y,z> with the angle specified in degrees.
+- **Translation [4]**: Translates the geometry by the supplied (x, y, z) values.
+- **Scale [5]**: Scales the geometry by the supplied (x, y, z) values.
+
 The user may select from a variety of options for the type of transformation to apply:
 
 | Enum Value | Transformation Type                | Representation                                                                       |

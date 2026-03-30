@@ -25,16 +25,24 @@ The user can optionally override the origin and spacing (length units per pixel)
 
 When setting a custom origin, the user can choose whether to place the origin at the corner of the geometry (default) or at the center of the geometry by enabling the "Put Input Origin at the Center of Geometry" option.
 
-The **Origin & Spacing Processing Order** parameter controls when origin and spacing overrides are applied:
-- **Preprocessed**: Origin and spacing are applied before any cropping operations
-- **Postprocessed**: Origin and spacing are applied after cropping operations
+### Origin & Spacing Processing
+
+The *Origin & Spacing Processing* parameter provides the following choices:
+
+- **Preprocessed [0]**: Origin and spacing overrides are applied before any cropping operations.
+- **Postprocessed [1]**: Origin and spacing overrides are applied after cropping operations.
+
+### Output Data Type
+
+The *Output Data Type* parameter provides the following choices:
+
+- **uint8 [0]**: Convert image data to 8-bit unsigned integer.
+- **uint16 [1]**: Convert image data to 16-bit unsigned integer.
+- **uint32 [2]**: Convert image data to 32-bit unsigned integer.
 
 ### Data Type Conversion
 
-The user can optionally convert the image data to a different data type by enabling the "Set Image Data Type" option. Supported output data types include:
-- uint8
-- uint16
-- uint32
+The user can optionally convert the image data to a different data type by enabling the "Set Image Data Type" option.
 
 ### Cropping Caveats
 

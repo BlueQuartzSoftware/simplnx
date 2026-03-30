@@ -8,14 +8,16 @@ Sampling (Interpolation)
 
 This **Filter** interpolates the values of arrays stored in a **Vertex Geometry** (point cloud) onto a user-selected **Image Geometry** (regular grid). For each point in the cloud, the filter applies a kernel centered on the point's voxel and accumulates weighted contributions into every voxel the kernel overlaps. The result is a single interpolated value per voxel per array, computed as a weighted average of all contributions.
 
+### Interpolation Technique
+
+The *Interpolation Technique* parameter provides the following choices:
+
+- **Uniform [0]**: Every voxel within the kernel radius receives equal weight (1.0).
+- **Gaussian [1]**: Voxel weights fall off with distance from the kernel center according to a Gaussian function, controlled by user-specified sigma values in each dimension.
+
 ### Kernel
 
-The user defines the (x, y, z) radii of a kernel in *real space units*. The kernel can be initialized to one of two modes:
-
-- **Uniform** – Every voxel within the kernel radius receives equal weight (1.0).
-- **Gaussian** - Voxel weights fall off with distance from the center according to a Gaussian function controlled by user-specified *sigmas* in each dimension.
-
-The kernel radii are converted to voxel units based on the spacing of the **Image Geometry**. If the kernel radius in a given dimension is smaller than the voxel spacing, the kernel has a zero extent in that dimension (i.e., each point only affects its own voxel along that axis).
+The user defines the (x, y, z) radii of a kernel in *real space units*. The kernel radii are converted to voxel units based on the spacing of the **Image Geometry**. If the kernel radius in a given dimension is smaller than the voxel spacing, the kernel has a zero extent in that dimension (i.e., each point only affects its own voxel along that axis).
 
 ### Algorithm
 

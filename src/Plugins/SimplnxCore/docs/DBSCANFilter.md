@@ -149,6 +149,25 @@ This can obviously be caused by large datasets, but it can be mitigated with som
 **If your algorithm spends more time in "cluster expansion pass:" than "Identifying Qualifying Independent Clusters".** See output window.
 There are many datasets that this is normal in such as `No Structure` from **Examples**. This typically happens when `Minimum Points` is too high. This results in too few Core grids being identified. Since few clusters are able to be formed, most of the time is spent in iterative loops expanding the clusters rather than just preforming the early merges in the Core grid step.
 
+### Parse Order
+
+The *Parse Order* parameter provides the following choices:
+
+- **Low Density First [0]**: Processes lower-density grid voxels first; deterministic and typically the fastest option.
+- **Random [1]**: Processes grid voxels in a non-deterministic random order using a time-based seed.
+- **Seeded Random [2]**: Processes grid voxels in a deterministic random order using a user-supplied seed for reproducibility.
+
+### Distance Metric
+
+The *Distance Metric* parameter provides the following choices:
+
+- **Euclidean [0]**: Uses the standard straight-line (L2) distance between points.
+- **Squared Euclidean [1]**: Uses the squared L2 distance, avoiding the square-root computation for faster calculations.
+- **Manhattan [2]**: Uses the L1 (taxicab) distance, summing absolute differences per component.
+- **Cosine [3]**: Uses the cosine distance, measuring the angular dissimilarity between points.
+- **Pearson [4]**: Uses the Pearson correlation distance, measuring linear correlation dissimilarity.
+- **Squared Pearson [5]**: Uses the squared Pearson correlation distance.
+
 ## Note on Randomness
 
 The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Three parse order options are available: *Low Density First* (deterministic, no seed needed), *Random* (non-deterministic, uses a time-based seed), and *Seeded Random* (deterministic, uses a user-supplied seed value for reproducibility). Low Density First produced identical results faster in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.

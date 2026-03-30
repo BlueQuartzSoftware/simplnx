@@ -10,6 +10,15 @@ This **Filter** generates a partition grid and assigns partition IDs for every v
 
 If the **Filter** determines that any voxel/node of the original geometry is out-of-bounds compared to the generated partition grid, the **Out-Of-Bounds Cell ID** will be used as the partition ID in the output partition IDs array.
 
+### Partitioning Mode
+
+The *Partitioning Mode* parameter provides the following choices:
+
+- **Basic (0) [0]**: Creates a partition grid exactly the same size as the input geometry, divided into a specified number of cells per axis.
+- **Advanced (1) [1]**: Creates a custom-sized partition grid that the input geometry may or may not fit within, using an explicit origin and cell length.
+- **Bounding Box (2) [2]**: Creates a custom-sized partition grid defined by minimum and maximum grid coordinates.
+- **Existing Partition Grid (3) [3]**: Uses a partition grid from a previous run of the Partition Geometry filter.
+
 ## Partitioning Modes
 
 There are four available partitioning modes to choose from: **1. Basic**, **2. Advanced**, **3. Bounding Box**, and **4. Existing Partition Grid**

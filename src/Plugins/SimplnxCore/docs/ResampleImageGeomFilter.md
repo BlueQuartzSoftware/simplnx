@@ -8,6 +8,14 @@ Sampling (Resample)
 
 This **Filter** changes the **Cell** spacing/resolution based on inputs from the user. There are several resampling modes:
 
+### Resampling Mode
+
+The *Resampling Mode* parameter provides the following choices:
+
+- **Spacing (0) [0]**: The entered values are the desired new spacings (not multiples of the current resolution). The number of cells in the volume will change accordingly.
+- **Scaling (1) [1]**: The entered values are the desired scaling factor for each dimension, expressed as percentages.
+- **Exact Dimensions (2) [2]**: The entered values are the desired cell dimensions of the resampled geometry.
+
 ## WARNING: NeighborList Removal
 
 If the option to "Renumber Features" is turn ON and the Cell Feature AttributeMatrix contains any *NeighborList* data arrays, those arrays will be **REMOVED** because those lists are now invalid. Re-run the *Find Neighbors* filter to re-create the lists.
