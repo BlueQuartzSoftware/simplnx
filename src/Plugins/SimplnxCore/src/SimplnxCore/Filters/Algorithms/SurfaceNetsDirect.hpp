@@ -33,16 +33,16 @@ struct SIMPLNXCORE_EXPORT SurfaceNetsInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT SurfaceNets
+class SIMPLNXCORE_EXPORT SurfaceNetsDirect
 {
 public:
-  SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SurfaceNetsInputValues* inputValues);
-  ~SurfaceNets() noexcept;
+  SurfaceNetsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SurfaceNetsInputValues* inputValues);
+  ~SurfaceNetsDirect() noexcept;
 
-  SurfaceNets(const SurfaceNets&) = delete;
-  SurfaceNets(SurfaceNets&&) noexcept = delete;
-  SurfaceNets& operator=(const SurfaceNets&) = delete;
-  SurfaceNets& operator=(SurfaceNets&&) noexcept = delete;
+  SurfaceNetsDirect(const SurfaceNetsDirect&) = delete;
+  SurfaceNetsDirect(SurfaceNetsDirect&&) noexcept = delete;
+  SurfaceNetsDirect& operator=(const SurfaceNetsDirect&) = delete;
+  SurfaceNetsDirect& operator=(SurfaceNetsDirect&&) noexcept = delete;
 
   Result<> operator()();
 

@@ -1,6 +1,6 @@
 #include "ComputeSurfaceAreaToVolumeFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/ComputeSurfaceAreaToVolume.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeSurfaceAreaToVolumeDirect.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -147,7 +147,7 @@ Result<> ComputeSurfaceAreaToVolumeFilter::executeImpl(DataStructure& dataStruct
   inputValues.SphericityArrayName = inputValues.NumCellsArrayPath.replaceName(filterArgs.value<std::string>(k_SphericityArrayName_Key));
   inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
-  return ComputeSurfaceAreaToVolume(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeSurfaceAreaToVolumeDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

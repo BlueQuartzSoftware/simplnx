@@ -1,6 +1,6 @@
 #include "MultiThresholdObjectsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/MultiThresholdObjects.hpp"
+#include "SimplnxCore/Filters/Algorithms/MultiThresholdObjectsDirect.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -245,7 +245,7 @@ Result<> MultiThresholdObjectsFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.UseCustomFalseValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomFalseValue);
   inputValues.UseCustomTrueValue = filterArgs.value<BoolParameter::ValueType>(k_UseCustomTrueValue);
 
-  return MultiThresholdObjects(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return MultiThresholdObjectsDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

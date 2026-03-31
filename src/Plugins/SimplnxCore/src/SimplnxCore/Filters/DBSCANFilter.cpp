@@ -1,6 +1,6 @@
 #include "DBSCANFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/DBSCAN.hpp"
+#include "SimplnxCore/Filters/Algorithms/DBSCANDirect.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -69,7 +69,7 @@ Parameters DBSCANFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Random Number Seed Parameters"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
-      k_ParseOrderIndex_Key, "Parse Order", "Whether to use random or low density first for parse order. See Documentation for further detail", to_underlying(DBSCAN::ParseOrder::LowDensityFirst),
+      k_ParseOrderIndex_Key, "Parse Order", "Whether to use random or low density first for parse order. See Documentation for further detail", to_underlying(DBSCANDirect::ParseOrder::LowDensityFirst),
       ChoicesParameter::Choices{"Low Density First", "Random", "Seeded Random"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SeedValue_Key, "Seed Value", "The seed fed into the random generator", std::mt19937::default_seed));
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "DBSCAN SeedValue"));
@@ -100,9 +100,9 @@ Parameters DBSCANFilter::parameters() const
       std::make_unique<DataGroupCreationParameter>(k_FeatureAMPath_Key, "Cluster Attribute Matrix", "The complete path to the attribute matrix in which to store to hold Cluster Data", DataPath{}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
-  params.linkParameters(k_ParseOrderIndex_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::Random)));
-  params.linkParameters(k_ParseOrderIndex_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::SeededRandom)));
-  params.linkParameters(k_ParseOrderIndex_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(DBSCAN::ParseOrder::SeededRandom)));
+  params.linkParameters(k_ParseOrderIndex_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(DBSCANDirect::ParseOrder::Random)));
+  params.linkParameters(k_ParseOrderIndex_Key, k_SeedValue_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(DBSCANDirect::ParseOrder::SeededRandom)));
+  params.linkParameters(k_ParseOrderIndex_Key, k_SeedArrayName_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(DBSCANDirect::ParseOrder::SeededRandom)));
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
 
   return params;
@@ -183,7 +183,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   }
 
   // For caching seed run to run
-  if(static_cast<DBSCAN::ParseOrder>(filterArgs.value<ChoicesParameter::ValueType>(k_ParseOrderIndex_Key)) != DBSCAN::ParseOrder::LowDensityFirst)
+  if(static_cast<DBSCANDirect::ParseOrder>(filterArgs.value<ChoicesParameter::ValueType>(k_ParseOrderIndex_Key)) != DBSCANDirect::ParseOrder::LowDensityFirst)
   {
     auto createAction = std::make_unique<CreateArrayAction>(DataType::uint64, std::vector<usize>{1}, std::vector<usize>{1}, DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}));
     resultOutputActions.value().appendAction(std::move(createAction));
@@ -204,12 +204,12 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   }
 
   auto seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
-  if(static_cast<DBSCAN::ParseOrder>(filterArgs.value<ChoicesParameter::ValueType>(k_ParseOrderIndex_Key)) != DBSCAN::ParseOrder::SeededRandom)
+  if(static_cast<DBSCANDirect::ParseOrder>(filterArgs.value<ChoicesParameter::ValueType>(k_ParseOrderIndex_Key)) != DBSCANDirect::ParseOrder::SeededRandom)
   {
     seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   }
 
-  if(static_cast<DBSCAN::ParseOrder>(filterArgs.value<ChoicesParameter::ValueType>(k_ParseOrderIndex_Key)) != DBSCAN::ParseOrder::LowDensityFirst)
+  if(static_cast<DBSCANDirect::ParseOrder>(filterArgs.value<ChoicesParameter::ValueType>(k_ParseOrderIndex_Key)) != DBSCANDirect::ParseOrder::LowDensityFirst)
   {
     // Store Seed Value in Top Level Array
     dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
@@ -227,7 +227,7 @@ Result<> DBSCANFilter::executeImpl(DataStructure& dataStructure, const Arguments
   inputValues.ParseOrder = filterArgs.value<ChoicesParameter::ValueType>(k_ParseOrderIndex_Key);
   inputValues.Seed = filterArgs.value<std::mt19937_64::result_type>(k_SeedValue_Key);
 
-  return DBSCAN(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return DBSCANDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

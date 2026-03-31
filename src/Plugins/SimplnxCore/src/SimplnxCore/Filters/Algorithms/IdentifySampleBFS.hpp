@@ -23,20 +23,20 @@ struct SIMPLNXCORE_EXPORT IdentifySampleInputValues
 };
 
 /**
- * @class IdentifySample
+ * @class IdentifySampleBFS
  * @brief This algorithm implements support code for the IdentifySampleFilter
  */
 
-class SIMPLNXCORE_EXPORT IdentifySample
+class SIMPLNXCORE_EXPORT IdentifySampleBFS
 {
 public:
-  IdentifySample(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, IdentifySampleInputValues* inputValues);
-  ~IdentifySample() noexcept;
+  IdentifySampleBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, IdentifySampleInputValues* inputValues);
+  ~IdentifySampleBFS() noexcept;
 
-  IdentifySample(const IdentifySample&) = delete;
-  IdentifySample(IdentifySample&&) noexcept = delete;
-  IdentifySample& operator=(const IdentifySample&) = delete;
-  IdentifySample& operator=(IdentifySample&&) noexcept = delete;
+  IdentifySampleBFS(const IdentifySampleBFS&) = delete;
+  IdentifySampleBFS(IdentifySampleBFS&&) noexcept = delete;
+  IdentifySampleBFS& operator=(const IdentifySampleBFS&) = delete;
+  IdentifySampleBFS& operator=(IdentifySampleBFS&&) noexcept = delete;
 
   Result<> operator()();
 

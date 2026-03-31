@@ -21,7 +21,7 @@
   inputValues.OutputDataArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(output_data_array_name);
   inputValues.UseCustomFalseValue = filterArgs.value<BoolParameter::ValueType>(use_custom_false_value);
   inputValues.UseCustomTrueValue = filterArgs.value<BoolParameter::ValueType>(use_custom_true_value);
-  return MultiThresholdObjects(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return MultiThresholdObjectsDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 
 */
 
@@ -40,20 +40,20 @@ struct SIMPLNXCORE_EXPORT MultiThresholdObjectsInputValues
 };
 
 /**
- * @class MultiThresholdObjects
+ * @class MultiThresholdObjectsDirect
  * @brief This algorithm implements support code for the MultiThresholdObjectsFilter
  */
 
-class SIMPLNXCORE_EXPORT MultiThresholdObjects
+class SIMPLNXCORE_EXPORT MultiThresholdObjectsDirect
 {
 public:
-  MultiThresholdObjects(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MultiThresholdObjectsInputValues* inputValues);
-  ~MultiThresholdObjects() noexcept;
+  MultiThresholdObjectsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, MultiThresholdObjectsInputValues* inputValues);
+  ~MultiThresholdObjectsDirect() noexcept;
 
-  MultiThresholdObjects(const MultiThresholdObjects&) = delete;
-  MultiThresholdObjects(MultiThresholdObjects&&) noexcept = delete;
-  MultiThresholdObjects& operator=(const MultiThresholdObjects&) = delete;
-  MultiThresholdObjects& operator=(MultiThresholdObjects&&) noexcept = delete;
+  MultiThresholdObjectsDirect(const MultiThresholdObjectsDirect&) = delete;
+  MultiThresholdObjectsDirect(MultiThresholdObjectsDirect&&) noexcept = delete;
+  MultiThresholdObjectsDirect& operator=(const MultiThresholdObjectsDirect&) = delete;
+  MultiThresholdObjectsDirect& operator=(MultiThresholdObjectsDirect&&) noexcept = delete;
 
   Result<> operator()();
 

@@ -189,7 +189,7 @@ set(AlgorithmList
   ComputeArrayHistogramByFeature
   ComputeArrayStatistics
   ComputeBiasedFeatures
-  ComputeBoundaryCells
+  ComputeBoundaryCellsDirect
   ComputeBoundingBoxStats
   ComputeCoordinatesImageGeom
   ComputeCoordinateThreshold
@@ -199,21 +199,21 @@ set(AlgorithmList
   ComputeFeatureBounds
   ComputeFeatureCentroids
   ComputeFeatureClustering
-  ComputeFeatureNeighbors
+  ComputeFeatureNeighborsDirect
   ComputeFeaturePhases
   ComputeFeaturePhasesBinary
   ComputeFeatureRect
   ComputeFeatureSizes
   ComputeGroupingDensity
   ComputeKMeans
-  ComputeKMedoids
+  ComputeKMedoidsDirect
   ComputeLargestCrossSections
   ComputeMomentInvariants2D
   ComputeNeighborhoods
   ComputeNeighborListStatistics
 #  ComputeNumFeatures
-  ComputeSurfaceAreaToVolume
-  ComputeSurfaceFeatures
+  ComputeSurfaceAreaToVolumeDirect
+  ComputeSurfaceFeaturesDirect
 #  ComputeTriangleAreas
   ComputeTriangleGeomCentroids
   ComputeTriangleGeomVolumes
@@ -239,7 +239,7 @@ set(AlgorithmList
   CropEdgeGeometry
   CropImageGeometry
   CropVertexGeometry
-  DBSCAN
+  DBSCANDirect
  # DeleteData
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
@@ -250,12 +250,12 @@ set(AlgorithmList
   ExtractPipelineToFile
   ExtractVertexGeometry
   FeatureFaceCurvature
-  FillBadData
+  FillBadDataBFS
   FindNRingNeighbors
   FlyingEdges3D
   HierarchicalSmooth
   IdentifyDuplicateVertices
-  IdentifySample
+  IdentifySampleBFS
   InitializeData
   InitializeImageGeomCellData
   InterpolatePointCloudToRegularGrid
@@ -265,14 +265,14 @@ set(AlgorithmList
   LaplacianSmoothing
   MapPointCloudToRegularGrid
 #  MoveData
-  MultiThresholdObjects
+  MultiThresholdObjectsDirect
   NearestPointFuseRegularGrids
   PadImageGeometry
   PartitionGeometry
   PointSampleEdgeGeometry
   ExtractFeatureBoundaries2D
   PointSampleTriangleGeometry
-  QuickSurfaceMesh
+  QuickSurfaceMeshDirect
   ReadBinaryCTNorthstar
   ReadCSVFile
   ReadDeformKeyFileV12
@@ -310,7 +310,7 @@ set(AlgorithmList
   SliceTriangleGeometry
   SplitDataArrayByComponent
   SplitDataArrayByTuple
-  SurfaceNets
+  SurfaceNetsDirect
   TriangleCentroid
   TriangleDihedralAngle
   TriangleNormal

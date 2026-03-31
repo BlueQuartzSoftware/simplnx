@@ -28,16 +28,16 @@ struct SIMPLNXCORE_EXPORT DBSCANInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT DBSCAN
+class SIMPLNXCORE_EXPORT DBSCANDirect
 {
 public:
-  DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues);
-  ~DBSCAN() noexcept;
+  DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues);
+  ~DBSCANDirect() noexcept;
 
-  DBSCAN(const DBSCAN&) = delete;
-  DBSCAN(DBSCAN&&) noexcept = delete;
-  DBSCAN& operator=(const DBSCAN&) = delete;
-  DBSCAN& operator=(DBSCAN&&) noexcept = delete;
+  DBSCANDirect(const DBSCANDirect&) = delete;
+  DBSCANDirect(DBSCANDirect&&) noexcept = delete;
+  DBSCANDirect& operator=(const DBSCANDirect&) = delete;
+  DBSCANDirect& operator=(DBSCANDirect&&) noexcept = delete;
 
   enum ParseOrder
   {

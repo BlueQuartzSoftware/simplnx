@@ -23,17 +23,17 @@ struct ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckInputValues
 /**
  * @class
  */
-class ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheck
+class ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckWorklist
 {
 public:
-  BadDataNeighborOrientationCheck(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+  BadDataNeighborOrientationCheckWorklist(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                   BadDataNeighborOrientationCheckInputValues* inputValues);
-  ~BadDataNeighborOrientationCheck() noexcept;
+  ~BadDataNeighborOrientationCheckWorklist() noexcept;
 
-  BadDataNeighborOrientationCheck(const BadDataNeighborOrientationCheck&) = delete;
-  BadDataNeighborOrientationCheck(BadDataNeighborOrientationCheck&&) noexcept = delete;
-  BadDataNeighborOrientationCheck& operator=(const BadDataNeighborOrientationCheck&) = delete;
-  BadDataNeighborOrientationCheck& operator=(BadDataNeighborOrientationCheck&&) noexcept = delete;
+  BadDataNeighborOrientationCheckWorklist(const BadDataNeighborOrientationCheckWorklist&) = delete;
+  BadDataNeighborOrientationCheckWorklist(BadDataNeighborOrientationCheckWorklist&&) noexcept = delete;
+  BadDataNeighborOrientationCheckWorklist& operator=(const BadDataNeighborOrientationCheckWorklist&) = delete;
+  BadDataNeighborOrientationCheckWorklist& operator=(BadDataNeighborOrientationCheckWorklist&&) noexcept = delete;
 
   Result<> operator()();
 

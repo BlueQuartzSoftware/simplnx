@@ -1,4 +1,4 @@
-#include "MultiThresholdObjects.hpp"
+#include "MultiThresholdObjectsDirect.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -220,7 +220,7 @@ struct ThresholdSetFunctor
 } // namespace
 
 // -----------------------------------------------------------------------------
-MultiThresholdObjects::MultiThresholdObjects(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+MultiThresholdObjectsDirect::MultiThresholdObjectsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                              MultiThresholdObjectsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -230,10 +230,10 @@ MultiThresholdObjects::MultiThresholdObjects(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-MultiThresholdObjects::~MultiThresholdObjects() noexcept = default;
+MultiThresholdObjectsDirect::~MultiThresholdObjectsDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> MultiThresholdObjects::operator()()
+Result<> MultiThresholdObjectsDirect::operator()()
 {
   auto thresholdsObject = m_InputValues->ArrayThresholdsObject;
   auto maskArrayName = m_InputValues->OutputDataArrayName;

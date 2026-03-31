@@ -1,6 +1,6 @@
 #include "ComputeFeatureNeighborsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/ComputeFeatureNeighbors.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeFeatureNeighborsDirect.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -189,7 +189,7 @@ Result<> ComputeFeatureNeighborsFilter::executeImpl(DataStructure& dataStructure
   inputValues.SharedSurfaceAreaListPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SharedSurfaceAreaName_Key));
   inputValues.SurfaceFeaturesPath = inputValues.CellFeatureArrayPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceFeaturesName_Key));
 
-  return ComputeFeatureNeighbors(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeFeatureNeighborsDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

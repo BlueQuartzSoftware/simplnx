@@ -21,16 +21,16 @@ struct SIMPLNXCORE_EXPORT ComputeBoundaryCellsInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT ComputeBoundaryCells
+class SIMPLNXCORE_EXPORT ComputeBoundaryCellsDirect
 {
 public:
-  ComputeBoundaryCells(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundaryCellsInputValues* inputValues);
-  ~ComputeBoundaryCells() noexcept;
+  ComputeBoundaryCellsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundaryCellsInputValues* inputValues);
+  ~ComputeBoundaryCellsDirect() noexcept;
 
-  ComputeBoundaryCells(const ComputeBoundaryCells&) = delete;
-  ComputeBoundaryCells(ComputeBoundaryCells&&) noexcept = delete;
-  ComputeBoundaryCells& operator=(const ComputeBoundaryCells&) = delete;
-  ComputeBoundaryCells& operator=(ComputeBoundaryCells&&) noexcept = delete;
+  ComputeBoundaryCellsDirect(const ComputeBoundaryCellsDirect&) = delete;
+  ComputeBoundaryCellsDirect(ComputeBoundaryCellsDirect&&) noexcept = delete;
+  ComputeBoundaryCellsDirect& operator=(const ComputeBoundaryCellsDirect&) = delete;
+  ComputeBoundaryCellsDirect& operator=(ComputeBoundaryCellsDirect&&) noexcept = delete;
 
   Result<> operator()();
 

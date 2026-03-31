@@ -1,5 +1,5 @@
 #include "BadDataNeighborOrientationCheckFilter.hpp"
-#include "OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheck.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/BadDataNeighborOrientationCheckWorklist.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -135,7 +135,7 @@ Result<> BadDataNeighborOrientationCheckFilter::executeImpl(DataStructure& dataS
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
 
-  return BadDataNeighborOrientationCheck(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return BadDataNeighborOrientationCheckWorklist(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

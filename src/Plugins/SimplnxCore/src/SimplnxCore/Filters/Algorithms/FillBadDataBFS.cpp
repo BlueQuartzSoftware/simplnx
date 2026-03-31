@@ -1,4 +1,4 @@
-#include "FillBadData.hpp"
+#include "FillBadDataBFS.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -13,7 +13,7 @@
 using namespace nx::core;
 
 // =============================================================================
-// FillBadData Algorithm Overview
+// FillBadDataBFS Algorithm Overview
 // =============================================================================
 //
 // This file implements an optimized algorithm for filling bad data (voxels with
@@ -53,7 +53,7 @@ namespace
 // @param outputDataStore The data array to update
 // @param neighbors The neighbor assignments (index of the neighbor to copy from)
 template <typename T>
-void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int32>& neighbors)
+void FillBadDataBFSUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int32>& neighbors)
 {
   usize start = 0;
   usize stop = outputDataStore.getNumberOfTuples();
@@ -88,14 +88,14 @@ void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractD
 // -----------------------------------------------------------------------------
 // Functor for type-dispatched tuple updates
 // -----------------------------------------------------------------------------
-// Allows the FillBadDataUpdateTuples function to be called with runtime type dispatch
-struct FillBadDataUpdateTuplesFunctor
+// Allows the FillBadDataBFSUpdateTuples function to be called with runtime type dispatch
+struct FillBadDataBFSUpdateTuplesFunctor
 {
   template <typename T>
   void operator()(const Int32AbstractDataStore& featureIds, IDataArray* outputIDataArray, const std::vector<int32>& neighbors)
   {
     auto& outputStore = outputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    FillBadDataUpdateTuples(featureIds, outputStore, neighbors);
+    FillBadDataBFSUpdateTuples(featureIds, outputStore, neighbors);
   }
 };
 } // namespace
@@ -258,10 +258,10 @@ void ChunkAwareUnionFind::flatten()
 }
 
 // =============================================================================
-// FillBadData Implementation
+// FillBadDataBFS Implementation
 // =============================================================================
 
-FillBadData::FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FillBadDataInputValues* inputValues)
+FillBadDataBFS::FillBadDataBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FillBadDataInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -270,10 +270,10 @@ FillBadData::FillBadData(DataStructure& dataStructure, const IFilter::MessageHan
 }
 
 // -----------------------------------------------------------------------------
-FillBadData::~FillBadData() noexcept = default;
+FillBadDataBFS::~FillBadDataBFS() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& FillBadData::getCancel() const
+const std::atomic_bool& FillBadDataBFS::getCancel() const
 {
   return m_ShouldCancel;
 }
@@ -305,7 +305,7 @@ const std::atomic_bool& FillBadData::getCancel() const
 // @param dims Image dimensions [X, Y, Z]
 // @return Result indicating success or a slab-read failure
 // =============================================================================
-Result<> FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64, 3>& dims)
+Result<> FillBadDataBFS::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64, 3>& dims)
 {
   int64 nextLabel = -1;
   const usize slabSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
@@ -407,7 +407,7 @@ Result<> FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, Chunk
 // @param unionFind Union-Find structure containing label equivalences
 // @param smallRegions Unused in current implementation (kept for interface compatibility)
 // =============================================================================
-void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::unordered_set<int64>& smallRegions)
+void FillBadDataBFS::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::unordered_set<int64>& smallRegions)
 {
   // Flatten the union-find structure to:
   // 1. Compress all paths (make every label point directly to root)
@@ -436,8 +436,8 @@ void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::
 // @param maxPhase Maximum existing phase value (for new phase assignment)
 // @return Result indicating success or a slab read/write failure
 // =============================================================================
-Result<> FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
-                                           const std::unordered_set<int64>& /*smallRegions*/, ChunkAwareUnionFind& unionFind, usize maxPhase) const
+Result<> FillBadDataBFS::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
+                                              const std::unordered_set<int64>& /*smallRegions*/, ChunkAwareUnionFind& unionFind, usize maxPhase) const
 {
   // Collect the total size of each unique root label's connected component
   std::unordered_map<int64, uint64> rootSizes;
@@ -533,7 +533,7 @@ Result<> FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsSto
 // @param dims Image dimensions [X, Y, Z]
 // @param numFeatures Number of features in the dataset
 // =============================================================================
-void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures) const
+void FillBadDataBFS::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore, const std::array<int64, 3>& dims, usize numFeatures) const
 {
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
   const usize totalPoints = featureIdsStore.getNumberOfTuples();
@@ -652,11 +652,11 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
       auto* oldCellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
 
       // Use the type-dispatched update function to handle all data types
-      ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, oldCellArray->getDataType(), featureIdsStore, oldCellArray, neighbors);
+      ExecuteDataFunction(FillBadDataBFSUpdateTuplesFunctor{}, oldCellArray->getDataType(), featureIdsStore, oldCellArray, neighbors);
     }
 
     // Update FeatureIds array last to finalize the iteration
-    FillBadDataUpdateTuples<int32>(featureIdsStore, featureIdsStore, neighbors);
+    FillBadDataBFSUpdateTuples<int32>(featureIdsStore, featureIdsStore, neighbors);
 
     // Send throttled progress update (max 1 per second)
     throttledMessenger.sendThrottledMessage([iteration, count]() { return fmt::format("  Iteration {}: {} voxels remaining to fill", iteration, count); });
@@ -678,7 +678,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 //
 // @return Result indicating success or failure
 // =============================================================================
-Result<> FillBadData::operator()() const
+Result<> FillBadDataBFS::operator()() const
 {
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath)->getDataStoreRef();
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);

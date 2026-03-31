@@ -1,4 +1,4 @@
-#include "DBSCAN.hpp"
+#include "DBSCANDirect.hpp"
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
@@ -18,7 +18,7 @@ namespace
  * Implementation derived from: https://yliu.site/pub/GDCF_PR2019.pdf
  * Citation:
  * Thapana Boonchoo, Xiang Ao, Yang Liu, Weizhong Zhao, Fuzhen Zhuang, Qing He,
- * Grid-based DBSCAN: Indexing and inference,
+ * Grid-based DBSCANDirect: Indexing and inference,
  * https://doi.org/10.1016/j.patcog.2019.01.034.
  *
  * Definitions:
@@ -716,7 +716,7 @@ public:
   {
   }
 
-  Result<> cluster(usize minPoints, DBSCAN::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
+  Result<> cluster(usize minPoints, DBSCANDirect::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
   {
     m_MessageHelper.sendMessage(" - Identifying core grids...");
     // Identify Core Grids
@@ -742,11 +742,11 @@ public:
     m_MessageHelper.sendMessage(" - Sorting grids according to supplied parse order...");
     switch(parseOrder)
     {
-    case DBSCAN::ParseOrder::LowDensityFirst: {
+    case DBSCANDirect::ParseOrder::LowDensityFirst: {
       QuickSortGrids(coreGridIds, 0, coreGridIds.size() - 1);
       break;
     }
-    case DBSCAN::ParseOrder::Random: {
+    case DBSCANDirect::ParseOrder::Random: {
       std::mt19937_64 gen(seed);
       std::uniform_real_distribution<float64> dist(0, 1);
 
@@ -762,7 +762,7 @@ public:
 
       break;
     }
-    case DBSCAN::SeededRandom: {
+    case DBSCANDirect::SeededRandom: {
       std::mt19937_64 gen(seed);
       std::uniform_real_distribution<float64> dist(0, 1);
 
@@ -1046,7 +1046,7 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
   }
 
   messageHelper.sendMessage("Clustering:");
-  Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
+  Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCANDirect::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
   if(result.invalid() || !result.warnings().empty())
   {
     // If the result has warnings in it the cluster forest is
@@ -1063,7 +1063,7 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
   return algorithm.label(featureIds.getDataStoreRef());
 }
 
-struct DBSCANFunctor
+struct DBSCANDirectFunctor
 {
   template <typename T>
   Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
@@ -1089,7 +1089,7 @@ struct DBSCANFunctor
 } // namespace
 
 // -----------------------------------------------------------------------------
-DBSCAN::DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues)
+DBSCANDirect::DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -1098,10 +1098,10 @@ DBSCAN::DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesg
 }
 
 // -----------------------------------------------------------------------------
-DBSCAN::~DBSCAN() noexcept = default;
+DBSCANDirect::~DBSCANDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> DBSCAN::operator()()
+Result<> DBSCANDirect::operator()()
 {
   MessageHelper messageHelper(m_MessageHandler);
 
@@ -1120,7 +1120,7 @@ Result<> DBSCAN::operator()()
     return MakeErrorResult(-54060, message);
   }
 
-  Result<> result = ExecuteDataFunction(DBSCANFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds, messageHelper, m_ShouldCancel);
+  Result<> result = ExecuteDataFunction(DBSCANDirectFunctor{}, clusteringArray.getDataType(), m_InputValues, clusteringArray, maskCompare, featureIds, messageHelper, m_ShouldCancel);
   if(result.invalid())
   {
     return result;

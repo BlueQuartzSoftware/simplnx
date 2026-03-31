@@ -32,20 +32,20 @@ struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
   MultiArraySelectionParameter::ValueType CreatedDataArrayPaths;
 };
 
-class SIMPLNXCORE_EXPORT QuickSurfaceMesh
+class SIMPLNXCORE_EXPORT QuickSurfaceMeshDirect
 {
 public:
   using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
   using TriStore = AbstractDataStore<IGeometry::SharedTriList::value_type>;
   using MeshIndexType = IGeometry::MeshIndexType;
 
-  QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~QuickSurfaceMesh() noexcept;
+  QuickSurfaceMeshDirect(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  ~QuickSurfaceMeshDirect() noexcept;
 
-  QuickSurfaceMesh(const QuickSurfaceMesh&) = delete;
-  QuickSurfaceMesh(QuickSurfaceMesh&&) noexcept = delete;
-  QuickSurfaceMesh& operator=(const QuickSurfaceMesh&) = delete;
-  QuickSurfaceMesh& operator=(QuickSurfaceMesh&&) noexcept = delete;
+  QuickSurfaceMeshDirect(const QuickSurfaceMeshDirect&) = delete;
+  QuickSurfaceMeshDirect(QuickSurfaceMeshDirect&&) noexcept = delete;
+  QuickSurfaceMeshDirect& operator=(const QuickSurfaceMeshDirect&) = delete;
+  QuickSurfaceMeshDirect& operator=(QuickSurfaceMeshDirect&&) noexcept = delete;
 
   Result<> operator()();
 

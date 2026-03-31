@@ -83,19 +83,19 @@ struct SIMPLNXCORE_EXPORT FillBadDataInputValues
 };
 
 /**
- * @class FillBadData
+ * @class FillBadDataBFS
 
  */
-class SIMPLNXCORE_EXPORT FillBadData
+class SIMPLNXCORE_EXPORT FillBadDataBFS
 {
 public:
-  FillBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FillBadDataInputValues* inputValues);
-  ~FillBadData() noexcept;
+  FillBadDataBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FillBadDataInputValues* inputValues);
+  ~FillBadDataBFS() noexcept;
 
-  FillBadData(const FillBadData&) = delete;
-  FillBadData(FillBadData&&) noexcept = delete;
-  FillBadData& operator=(const FillBadData&) = delete;
-  FillBadData& operator=(FillBadData&&) noexcept = delete;
+  FillBadDataBFS(const FillBadDataBFS&) = delete;
+  FillBadDataBFS(FillBadDataBFS&&) noexcept = delete;
+  FillBadDataBFS& operator=(const FillBadDataBFS&) = delete;
+  FillBadDataBFS& operator=(FillBadDataBFS&&) noexcept = delete;
 
   Result<> operator()() const;
 

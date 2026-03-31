@@ -1,4 +1,4 @@
-#include "ComputeSurfaceFeatures.hpp"
+#include "ComputeSurfaceFeaturesDirect.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -181,7 +181,7 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
 } // namespace
 
 // -----------------------------------------------------------------------------
-ComputeSurfaceFeatures::ComputeSurfaceFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+ComputeSurfaceFeaturesDirect::ComputeSurfaceFeaturesDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                ComputeSurfaceFeaturesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -191,10 +191,10 @@ ComputeSurfaceFeatures::ComputeSurfaceFeatures(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-ComputeSurfaceFeatures::~ComputeSurfaceFeatures() noexcept = default;
+ComputeSurfaceFeaturesDirect::~ComputeSurfaceFeaturesDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> ComputeSurfaceFeatures::operator()()
+Result<> ComputeSurfaceFeaturesDirect::operator()()
 {
 
   const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;

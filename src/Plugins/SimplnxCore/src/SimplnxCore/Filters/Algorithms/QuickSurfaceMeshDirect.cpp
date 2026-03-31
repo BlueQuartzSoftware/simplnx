@@ -1,4 +1,4 @@
-#include "QuickSurfaceMesh.hpp"
+#include "QuickSurfaceMeshDirect.hpp"
 #include "TupleTransfer.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -65,7 +65,7 @@ using EdgeMap = std::unordered_map<EdgeType, IGeometry::MeshIndexType, EdgeHashe
 // -----------------------------------------------------------------------------
 struct GenerateTripleLinesImpl
 {
-  using MeshIndexType = typename QuickSurfaceMesh::MeshIndexType;
+  using MeshIndexType = typename QuickSurfaceMeshDirect::MeshIndexType;
 
   GenerateTripleLinesImpl(ImageGeom* imageGeom, Int32AbstractDataStore& featureIdsStore, VertexMap& vertexMapRef, EdgeMap& edgeMapRef)
   : origin(imageGeom->getOrigin())
@@ -225,17 +225,17 @@ private:
 };
 
 // -----------------------------------------------------------------------------
-void GetGridCoordinates(const IGridGeometry* grid, size_t x, size_t y, size_t z, QuickSurfaceMesh::VertexStore& verts, IGeometry::MeshIndexType nodeIndex)
+void GetGridCoordinates(const IGridGeometry* grid, size_t x, size_t y, size_t z, QuickSurfaceMeshDirect::VertexStore& verts, IGeometry::MeshIndexType nodeIndex)
 {
   nx::core::Point3D<float64> tmpCoords = grid->getPlaneCoords(x, y, z);
-  verts[nodeIndex] = static_cast<QuickSurfaceMesh::VertexStore::value_type>(tmpCoords[0]);
-  verts[nodeIndex + 1] = static_cast<QuickSurfaceMesh::VertexStore::value_type>(tmpCoords[1]);
-  verts[nodeIndex + 2] = static_cast<QuickSurfaceMesh::VertexStore::value_type>(tmpCoords[2]);
+  verts[nodeIndex] = static_cast<QuickSurfaceMeshDirect::VertexStore::value_type>(tmpCoords[0]);
+  verts[nodeIndex + 1] = static_cast<QuickSurfaceMeshDirect::VertexStore::value_type>(tmpCoords[1]);
+  verts[nodeIndex + 2] = static_cast<QuickSurfaceMeshDirect::VertexStore::value_type>(tmpCoords[2]);
 }
 
 // -----------------------------------------------------------------------------
-void FlipProblemVoxelCase1(Int32AbstractDataStore& featureIds, QuickSurfaceMesh::MeshIndexType v1, QuickSurfaceMesh::MeshIndexType v2, QuickSurfaceMesh::MeshIndexType v3,
-                           QuickSurfaceMesh::MeshIndexType v4, QuickSurfaceMesh::MeshIndexType v5, QuickSurfaceMesh::MeshIndexType v6)
+void FlipProblemVoxelCase1(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3,
+                           QuickSurfaceMeshDirect::MeshIndexType v4, QuickSurfaceMeshDirect::MeshIndexType v5, QuickSurfaceMeshDirect::MeshIndexType v6)
 {
   auto val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
@@ -258,8 +258,8 @@ void FlipProblemVoxelCase1(Int32AbstractDataStore& featureIds, QuickSurfaceMesh:
 }
 
 // -----------------------------------------------------------------------------
-void FlipProblemVoxelCase2(Int32AbstractDataStore& featureIds, QuickSurfaceMesh::MeshIndexType v1, QuickSurfaceMesh::MeshIndexType v2, QuickSurfaceMesh::MeshIndexType v3,
-                           QuickSurfaceMesh::MeshIndexType v4)
+void FlipProblemVoxelCase2(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3,
+                           QuickSurfaceMeshDirect::MeshIndexType v4)
 {
   auto val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
@@ -298,7 +298,7 @@ void FlipProblemVoxelCase2(Int32AbstractDataStore& featureIds, QuickSurfaceMesh:
 }
 
 // -----------------------------------------------------------------------------
-void FlipProblemVoxelCase3(Int32AbstractDataStore& featureIds, QuickSurfaceMesh::MeshIndexType v1, QuickSurfaceMesh::MeshIndexType v2, QuickSurfaceMesh::MeshIndexType v3)
+void FlipProblemVoxelCase3(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3)
 {
   auto val = static_cast<float>(k_Distribution(k_Generator)); // Random remaining position.
 
@@ -314,7 +314,7 @@ void FlipProblemVoxelCase3(Int32AbstractDataStore& featureIds, QuickSurfaceMesh:
 } // namespace
 
 // -----------------------------------------------------------------------------
-QuickSurfaceMesh::QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
+QuickSurfaceMeshDirect::QuickSurfaceMeshDirect(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -324,10 +324,10 @@ QuickSurfaceMesh::QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMes
 }
 
 // -----------------------------------------------------------------------------
-QuickSurfaceMesh::~QuickSurfaceMesh() noexcept = default;
+QuickSurfaceMeshDirect::~QuickSurfaceMeshDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> QuickSurfaceMesh::operator()()
+Result<> QuickSurfaceMeshDirect::operator()()
 {
   // Get the ImageGeometry
   auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
@@ -480,7 +480,7 @@ Result<> QuickSurfaceMesh::operator()()
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::correctProblemVoxels()
+void QuickSurfaceMeshDirect::correctProblemVoxels()
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Correcting Problem Voxels");
 
@@ -651,7 +651,7 @@ void QuickSurfaceMesh::correctProblemVoxels()
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount)
+void QuickSurfaceMeshDirect::determineActiveNodes(std::vector<MeshIndexType>& nodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount)
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Determining active Nodes");
 
@@ -954,7 +954,7 @@ void QuickSurfaceMesh::determineActiveNodes(std::vector<MeshIndexType>& nodeIds,
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount)
+void QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount)
 {
   if(m_ShouldCancel)
   {
@@ -1009,8 +1009,8 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
   auto& nodeTypes = m_DataStructure.getDataAs<Int8Array>(m_InputValues->NodeTypesDataPath)->getDataStoreRef();
   nodeTypes.resizeTuples({nodeCount});
 
-  QuickSurfaceMesh::VertexStore& vertex = triangleGeom->getVertices()->getDataStoreRef();
-  QuickSurfaceMesh::TriStore& triangle = triangleGeom->getFaces()->getDataStoreRef();
+  QuickSurfaceMeshDirect::VertexStore& vertex = triangleGeom->getVertices()->getDataStoreRef();
+  QuickSurfaceMeshDirect::TriStore& triangle = triangleGeom->getFaces()->getDataStoreRef();
 
   ownerLists.resize(nodeCount);
 
@@ -1554,7 +1554,7 @@ void QuickSurfaceMesh::createNodesAndTriangles(std::vector<MeshIndexType>& m_Nod
 }
 
 // -----------------------------------------------------------------------------
-void QuickSurfaceMesh::generateTripleLines()
+void QuickSurfaceMeshDirect::generateTripleLines()
 {
   if(m_ShouldCancel)
   {

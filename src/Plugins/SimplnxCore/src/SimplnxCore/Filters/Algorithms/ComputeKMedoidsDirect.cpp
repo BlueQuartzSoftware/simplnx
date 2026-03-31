@@ -1,4 +1,4 @@
-#include "ComputeKMedoids.hpp"
+#include "ComputeKMedoidsDirect.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
@@ -15,7 +15,7 @@ template <typename T>
 class KMedoidsTemplate
 {
 public:
-  KMedoidsTemplate(ComputeKMedoids* filter, const IDataArray* inputIDataArray, IDataArray* medoidsIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray,
+  KMedoidsTemplate(ComputeKMedoidsDirect* filter, const IDataArray* inputIDataArray, IDataArray* medoidsIDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray,
                    usize numClusters, Int32AbstractDataStore& fIds, ClusterUtilities::DistanceMetric distMetric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_InputArray(inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
@@ -90,7 +90,7 @@ public:
 private:
   using DataArrayT = DataArray<T>;
   using AbstractDataStoreT = AbstractDataStore<T>;
-  ComputeKMedoids* m_Filter;
+  ComputeKMedoidsDirect* m_Filter;
   const AbstractDataStoreT& m_InputArray;
   AbstractDataStoreT& m_Medoids;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
@@ -182,7 +182,7 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-ComputeKMedoids::ComputeKMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues)
+ComputeKMedoidsDirect::ComputeKMedoidsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -191,22 +191,22 @@ ComputeKMedoids::ComputeKMedoids(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-ComputeKMedoids::~ComputeKMedoids() noexcept = default;
+ComputeKMedoidsDirect::~ComputeKMedoidsDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-void ComputeKMedoids::updateProgress(const std::string& message)
+void ComputeKMedoidsDirect::updateProgress(const std::string& message)
 {
   m_MessageHandler(IFilter::Message::Type::Info, message);
 }
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeKMedoids::getCancel()
+const std::atomic_bool& ComputeKMedoidsDirect::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ComputeKMedoids::operator()()
+Result<> ComputeKMedoidsDirect::operator()()
 {
   auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;

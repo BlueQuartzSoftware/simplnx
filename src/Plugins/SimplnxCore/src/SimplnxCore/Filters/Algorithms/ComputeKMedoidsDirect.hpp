@@ -24,16 +24,16 @@ struct SIMPLNXCORE_EXPORT KMedoidsInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT ComputeKMedoids
+class SIMPLNXCORE_EXPORT ComputeKMedoidsDirect
 {
 public:
-  ComputeKMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues);
-  ~ComputeKMedoids() noexcept;
+  ComputeKMedoidsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues);
+  ~ComputeKMedoidsDirect() noexcept;
 
-  ComputeKMedoids(const ComputeKMedoids&) = delete;
-  ComputeKMedoids(ComputeKMedoids&&) noexcept = delete;
-  ComputeKMedoids& operator=(const ComputeKMedoids&) = delete;
-  ComputeKMedoids& operator=(ComputeKMedoids&&) noexcept = delete;
+  ComputeKMedoidsDirect(const ComputeKMedoidsDirect&) = delete;
+  ComputeKMedoidsDirect(ComputeKMedoidsDirect&&) noexcept = delete;
+  ComputeKMedoidsDirect& operator=(const ComputeKMedoidsDirect&) = delete;
+  ComputeKMedoidsDirect& operator=(ComputeKMedoidsDirect&&) noexcept = delete;
 
   Result<> operator()();
   void updateProgress(const std::string& message);

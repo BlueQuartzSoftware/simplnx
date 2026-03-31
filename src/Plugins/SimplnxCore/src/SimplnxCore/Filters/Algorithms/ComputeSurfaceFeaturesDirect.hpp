@@ -24,20 +24,20 @@ struct SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesInputValues
 };
 
 /**
- * @class ComputeSurfaceFeatures
+ * @class ComputeSurfaceFeaturesDirect
  * @brief This algorithm implements support code for the ComputeSurfaceFeaturesFilter
  */
 
-class SIMPLNXCORE_EXPORT ComputeSurfaceFeatures
+class SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesDirect
 {
 public:
-  ComputeSurfaceFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeSurfaceFeaturesInputValues* inputValues);
-  ~ComputeSurfaceFeatures() noexcept;
+  ComputeSurfaceFeaturesDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeSurfaceFeaturesInputValues* inputValues);
+  ~ComputeSurfaceFeaturesDirect() noexcept;
 
-  ComputeSurfaceFeatures(const ComputeSurfaceFeatures&) = delete;
-  ComputeSurfaceFeatures(ComputeSurfaceFeatures&&) noexcept = delete;
-  ComputeSurfaceFeatures& operator=(const ComputeSurfaceFeatures&) = delete;
-  ComputeSurfaceFeatures& operator=(ComputeSurfaceFeatures&&) noexcept = delete;
+  ComputeSurfaceFeaturesDirect(const ComputeSurfaceFeaturesDirect&) = delete;
+  ComputeSurfaceFeaturesDirect(ComputeSurfaceFeaturesDirect&&) noexcept = delete;
+  ComputeSurfaceFeaturesDirect& operator=(const ComputeSurfaceFeaturesDirect&) = delete;
+  ComputeSurfaceFeaturesDirect& operator=(ComputeSurfaceFeaturesDirect&&) noexcept = delete;
 
   Result<> operator()();
 

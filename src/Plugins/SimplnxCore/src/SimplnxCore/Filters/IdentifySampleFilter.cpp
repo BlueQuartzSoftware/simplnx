@@ -1,6 +1,6 @@
 #include "IdentifySampleFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/IdentifySample.hpp"
+#include "SimplnxCore/Filters/Algorithms/IdentifySampleBFS.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
@@ -110,7 +110,7 @@ Result<> IdentifySampleFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.InputImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
-  return IdentifySample(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return IdentifySampleBFS(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

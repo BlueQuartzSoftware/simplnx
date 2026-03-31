@@ -1,4 +1,4 @@
-#include "SurfaceNets.hpp"
+#include "SurfaceNetsDirect.hpp"
 #include "TupleTransfer.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -88,7 +88,7 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
 }
 } // namespace
 // -----------------------------------------------------------------------------
-SurfaceNets::SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SurfaceNetsInputValues* inputValues)
+SurfaceNetsDirect::SurfaceNetsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, SurfaceNetsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -97,16 +97,16 @@ SurfaceNets::SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHan
 }
 
 // -----------------------------------------------------------------------------
-SurfaceNets::~SurfaceNets() noexcept = default;
+SurfaceNetsDirect::~SurfaceNetsDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& SurfaceNets::getCancel()
+const std::atomic_bool& SurfaceNetsDirect::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> SurfaceNets::operator()()
+Result<> SurfaceNetsDirect::operator()()
 {
   // Get the ImageGeometry
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);

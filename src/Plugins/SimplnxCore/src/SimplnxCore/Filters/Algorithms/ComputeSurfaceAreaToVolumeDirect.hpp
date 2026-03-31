@@ -22,16 +22,16 @@ struct SIMPLNXCORE_EXPORT ComputeSurfaceAreaToVolumeInputValues
 /**
  * @class
  */
-class SIMPLNXCORE_EXPORT ComputeSurfaceAreaToVolume
+class SIMPLNXCORE_EXPORT ComputeSurfaceAreaToVolumeDirect
 {
 public:
-  ComputeSurfaceAreaToVolume(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeSurfaceAreaToVolumeInputValues* inputValues);
-  ~ComputeSurfaceAreaToVolume() noexcept;
+  ComputeSurfaceAreaToVolumeDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeSurfaceAreaToVolumeInputValues* inputValues);
+  ~ComputeSurfaceAreaToVolumeDirect() noexcept;
 
-  ComputeSurfaceAreaToVolume(const ComputeSurfaceAreaToVolume&) = delete;
-  ComputeSurfaceAreaToVolume(ComputeSurfaceAreaToVolume&&) noexcept = delete;
-  ComputeSurfaceAreaToVolume& operator=(const ComputeSurfaceAreaToVolume&) = delete;
-  ComputeSurfaceAreaToVolume& operator=(ComputeSurfaceAreaToVolume&&) noexcept = delete;
+  ComputeSurfaceAreaToVolumeDirect(const ComputeSurfaceAreaToVolumeDirect&) = delete;
+  ComputeSurfaceAreaToVolumeDirect(ComputeSurfaceAreaToVolumeDirect&&) noexcept = delete;
+  ComputeSurfaceAreaToVolumeDirect& operator=(const ComputeSurfaceAreaToVolumeDirect&) = delete;
+  ComputeSurfaceAreaToVolumeDirect& operator=(ComputeSurfaceAreaToVolumeDirect&&) noexcept = delete;
 
   Result<> operator()();
 

@@ -1,4 +1,4 @@
-#include "ComputeBoundaryCells.hpp"
+#include "ComputeBoundaryCellsDirect.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -7,7 +7,7 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-ComputeBoundaryCells::ComputeBoundaryCells(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundaryCellsInputValues* inputValues)
+ComputeBoundaryCellsDirect::ComputeBoundaryCellsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundaryCellsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -16,16 +16,16 @@ ComputeBoundaryCells::ComputeBoundaryCells(DataStructure& dataStructure, const I
 }
 
 // -----------------------------------------------------------------------------
-ComputeBoundaryCells::~ComputeBoundaryCells() noexcept = default;
+ComputeBoundaryCellsDirect::~ComputeBoundaryCellsDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeBoundaryCells::getCancel()
+const std::atomic_bool& ComputeBoundaryCellsDirect::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ComputeBoundaryCells::operator()()
+Result<> ComputeBoundaryCellsDirect::operator()()
 {
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 udims = imageGeometry.getDimensions();

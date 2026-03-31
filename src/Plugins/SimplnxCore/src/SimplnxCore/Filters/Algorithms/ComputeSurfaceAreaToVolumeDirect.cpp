@@ -1,4 +1,4 @@
-#include "ComputeSurfaceAreaToVolume.hpp"
+#include "ComputeSurfaceAreaToVolumeDirect.hpp"
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -9,7 +9,7 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-ComputeSurfaceAreaToVolume::ComputeSurfaceAreaToVolume(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+ComputeSurfaceAreaToVolumeDirect::ComputeSurfaceAreaToVolumeDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                        ComputeSurfaceAreaToVolumeInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -19,16 +19,16 @@ ComputeSurfaceAreaToVolume::ComputeSurfaceAreaToVolume(DataStructure& dataStruct
 }
 
 // -----------------------------------------------------------------------------
-ComputeSurfaceAreaToVolume::~ComputeSurfaceAreaToVolume() noexcept = default;
+ComputeSurfaceAreaToVolumeDirect::~ComputeSurfaceAreaToVolumeDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeSurfaceAreaToVolume::getCancel()
+const std::atomic_bool& ComputeSurfaceAreaToVolumeDirect::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ComputeSurfaceAreaToVolume::operator()()
+Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 {
   // Input Cell Data
   auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);

@@ -1,6 +1,6 @@
 #include "SurfaceNetsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/SurfaceNets.hpp"
+#include "SimplnxCore/Filters/Algorithms/SurfaceNetsDirect.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
@@ -227,6 +227,6 @@ Result<> SurfaceNetsFilter::executeImpl(DataStructure& dataStructure, const Argu
   }
   inputValues.CreatedDataArrayPaths = createdDataPaths;
 
-  return SurfaceNets(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return SurfaceNetsDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

@@ -1,4 +1,4 @@
-#include "BadDataNeighborOrientationCheck.hpp"
+#include "BadDataNeighborOrientationCheckWorklist.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -12,7 +12,7 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-BadDataNeighborOrientationCheck::BadDataNeighborOrientationCheck(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+BadDataNeighborOrientationCheckWorklist::BadDataNeighborOrientationCheckWorklist(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                  BadDataNeighborOrientationCheckInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -22,16 +22,16 @@ BadDataNeighborOrientationCheck::BadDataNeighborOrientationCheck(DataStructure& 
 }
 
 // -----------------------------------------------------------------------------
-BadDataNeighborOrientationCheck::~BadDataNeighborOrientationCheck() noexcept = default;
+BadDataNeighborOrientationCheckWorklist::~BadDataNeighborOrientationCheckWorklist() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& BadDataNeighborOrientationCheck::getCancel()
+const std::atomic_bool& BadDataNeighborOrientationCheckWorklist::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> BadDataNeighborOrientationCheck::operator()()
+Result<> BadDataNeighborOrientationCheckWorklist::operator()()
 {
   const float misorientationTolerance = m_InputValues->MisorientationTolerance * numbers::pi_v<float> / 180.0f;
 

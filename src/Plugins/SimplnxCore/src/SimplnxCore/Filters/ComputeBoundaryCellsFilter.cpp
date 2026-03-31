@@ -1,6 +1,6 @@
 #include "ComputeBoundaryCellsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/ComputeBoundaryCells.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeBoundaryCellsDirect.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -126,7 +126,7 @@ Result<> ComputeBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, c
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
   inputValues.BoundaryCellsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
 
-  return ComputeBoundaryCells(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeBoundaryCellsDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

@@ -1,6 +1,6 @@
 #include "QuickSurfaceMeshFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/QuickSurfaceMesh.hpp"
+#include "SimplnxCore/Filters/Algorithms/QuickSurfaceMeshDirect.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CopyArrayInstanceAction.hpp"
@@ -235,7 +235,7 @@ Result<> QuickSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const
   }
   inputValues.CreatedDataArrayPaths = createdDataPaths;
 
-  return nx::core::QuickSurfaceMesh(dataStructure, &inputValues, shouldCancel, messageHandler)();
+  return nx::core::QuickSurfaceMeshDirect(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }
 
 namespace
