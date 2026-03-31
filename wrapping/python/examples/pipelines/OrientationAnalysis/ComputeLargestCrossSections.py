@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -11,9 +11,9 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-nx_filter = cxor.ReadH5EbsdFilter()
+nx_filter = nxor.ReadH5EbsdFilter()
 
-h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
+h5ebsdParameter = nxor.ReadH5EbsdFileParameter.ValueType()
 h5ebsdParameter.euler_representation=0
 h5ebsdParameter.end_slice=117
 h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
@@ -56,7 +56,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = cxor.ConvertOrientationsFilter()
+nx_filter = nxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -69,7 +69,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.EBSDSegmentFeaturesFilter()
+nx_filter = nxor.EBSDSegmentFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

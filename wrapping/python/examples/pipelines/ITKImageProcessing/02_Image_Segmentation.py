@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -24,7 +24,7 @@ generated_file_list_value.increment_index = 1
 generated_file_list_value.padding_digits = 2
 
 # Instantiate Filter
-nx_filter = cxitk.ITKImportImageStackFilter()
+nx_filter = nxitk.ITKImportImageStackFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

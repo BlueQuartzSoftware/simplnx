@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -42,7 +42,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.ComputeAvgOrientationsFilter()
+nx_filter = nxor.ComputeAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -58,7 +58,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = cxor.ComputeFeatureNeighborMisorientationsFilter()
+nx_filter = nxor.ComputeFeatureNeighborMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -74,7 +74,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxor.ComputeSchmidsFilter()
+nx_filter = nxor.ComputeSchmidsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -96,7 +96,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = cxor.ComputeFeatureReferenceMisorientationsFilter()
+nx_filter = nxor.ComputeFeatureReferenceMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -115,7 +115,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = cxor.ComputeKernelAvgMisorientationsFilter()
+nx_filter = nxor.ComputeKernelAvgMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

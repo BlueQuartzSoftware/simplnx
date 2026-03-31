@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -104,7 +104,7 @@ ensemble_info_parameter.append(["Hexagonal-High 6/mmm", "Primary", "Phase 1"])
 ensemble_info_parameter.append(["Cubic-High m-3m", "Primary", "Phase 2"])
 
 # Instantiate Filter
-nx_filter = cxor.CreateEnsembleInfoFilter()
+nx_filter = nxor.CreateEnsembleInfoFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -118,7 +118,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxor.ComputeIPFColorsFilter()
+nx_filter = nxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -135,7 +135,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriterFilter()
+nx_filter = nxitk.ITKImageWriterFilter()
 # Output file path for Filter 7
 output_file_path = nxtest.get_data_directory() / "Output/Import_ASCII/IPF.png"
 

@@ -1,4 +1,4 @@
-#include <CxPybind/CxPybind.hpp>
+#include <NxPybind/NxPybind.hpp>
 
 #include <OrientationAnalysis/OrientationAnalysisPlugin.hpp>
 
@@ -8,7 +8,7 @@
 #include "OrientationAnalysis/OrientationAnalysisFilterBinding.hpp"
 
 using namespace nx::core;
-using namespace nx::core::CxPybind;
+using namespace nx::core::NxPybind;
 namespace py = pybind11;
 
 using namespace pybind11::literals;

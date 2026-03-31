@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -12,7 +12,7 @@ data_structure = nx.DataStructure()
 # Filter 1
 # Instantiate Filter
 
-filter_parameter = cxor.ReadH5EbsdFileParameter.ValueType()
+filter_parameter = nxor.ReadH5EbsdFileParameter.ValueType()
 filter_parameter.euler_representation=0
 filter_parameter.end_slice=117
 filter_parameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
@@ -20,7 +20,7 @@ filter_parameter.input_file_path=str(nxtest.get_data_directory() / "Output/Recon
 filter_parameter.start_slice=6
 filter_parameter.use_recommended_transform=True
 
-nx_filter = cxor.ReadH5EbsdFilter()
+nx_filter = nxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -60,7 +60,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = cxor.ConvertOrientationsFilter()
+nx_filter = nxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -74,7 +74,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.AlignSectionsMisorientationFilter()
+nx_filter = nxor.AlignSectionsMisorientationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -116,7 +116,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = cxor.BadDataNeighborOrientationCheckFilter()
+nx_filter = nxor.BadDataNeighborOrientationCheckFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -132,7 +132,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = cxor.NeighborOrientationCorrelationFilter()
+nx_filter = nxor.NeighborOrientationCorrelationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -150,7 +150,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
 # Instantiate Filter
-nx_filter = cxor.EBSDSegmentFeaturesFilter()
+nx_filter = nxor.EBSDSegmentFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -184,7 +184,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 11
 # Instantiate Filter
-nx_filter = cxor.ComputeAvgOrientationsFilter()
+nx_filter = nxor.ComputeAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -220,7 +220,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 13
 # Instantiate Filter
-nx_filter = cxor.MergeTwinsFilter()
+nx_filter = nxor.MergeTwinsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -361,7 +361,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 21
 # Instantiate Filter
-nx_filter = cxor.ComputeIPFColorsFilter()
+nx_filter = nxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

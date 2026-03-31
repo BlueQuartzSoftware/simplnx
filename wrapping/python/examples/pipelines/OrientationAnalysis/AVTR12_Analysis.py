@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -11,7 +11,7 @@ data_structure = nx.DataStructure()
 
 # Filter 1
 # Instantiate Filter
-nx_filter = cxor.ReadCtfDataFilter()
+nx_filter = nxor.ReadCtfDataFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -64,7 +64,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.ConvertOrientationsFilter()
+nx_filter = nxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -91,7 +91,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxor.ComputeIPFColorsFilter()
+nx_filter = nxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -106,7 +106,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 7
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriterFilter()
+nx_filter = nxitk.ITKImageWriterFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -120,7 +120,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 8
 # Instantiate Filter
-nx_filter = cxor.ComputeIPFColorsFilter()
+nx_filter = nxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -136,7 +136,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 9
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriterFilter()
+nx_filter = nxitk.ITKImageWriterFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -150,7 +150,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 10
 # Instantiate Filter
-nx_filter = cxor.ComputeIPFColorsFilter()
+nx_filter = nxor.ComputeIPFColorsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -165,7 +165,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 11
 # Instantiate Filter
-nx_filter = cxitk.ITKImageWriterFilter()
+nx_filter = nxitk.ITKImageWriterFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -179,7 +179,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 12
 # Instantiate Filter
-nx_filter = cxor.EBSDSegmentFeaturesFilter()
+nx_filter = nxor.EBSDSegmentFeaturesFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -244,7 +244,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 16
 # Instantiate Filter
-nx_filter = cxor.ComputeAvgOrientationsFilter()
+nx_filter = nxor.ComputeAvgOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -260,7 +260,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 17
 # Instantiate Filter
-nx_filter = cxor.ComputeKernelAvgMisorientationsFilter()
+nx_filter = nxor.ComputeKernelAvgMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -306,7 +306,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 20
 # Instantiate Filter
-nx_filter = cxor.ComputeFeatureReferenceMisorientationsFilter()
+nx_filter = nxor.ComputeFeatureReferenceMisorientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

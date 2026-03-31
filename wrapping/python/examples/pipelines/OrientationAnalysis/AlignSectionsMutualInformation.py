@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -12,7 +12,7 @@ data_structure = nx.DataStructure()
 # Filter 1
 
 # Create the ReadH5EbsdFileParameter and assign values to it.
-h5ebsdParameter = cxor.ReadH5EbsdFileParameter.ValueType()
+h5ebsdParameter = nxor.ReadH5EbsdFileParameter.ValueType()
 h5ebsdParameter.euler_representation=0
 h5ebsdParameter.end_slice=117
 h5ebsdParameter.selected_array_names=["Confidence Index", "EulerAngles", "Fit", "Image Quality", "Phases", "SEM Signal", "X Position", "Y Position"]
@@ -21,7 +21,7 @@ h5ebsdParameter.start_slice=1
 h5ebsdParameter.use_recommended_transform=True
 
 # Instantiate Filter
-nx_filter = cxor.ReadH5EbsdFilter()
+nx_filter = nxor.ReadH5EbsdFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -61,7 +61,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 3
 # Instantiate Filter
-nx_filter = cxor.ConvertOrientationsFilter()
+nx_filter = nxor.ConvertOrientationsFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -74,7 +74,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 4
 # Instantiate Filter
-nx_filter = cxor.AlignSectionsMutualInformationFilter()
+nx_filter = nxor.AlignSectionsMutualInformationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,

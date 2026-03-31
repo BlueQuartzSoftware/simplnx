@@ -853,7 +853,7 @@ list(APPEND SIMPLNX_GENERATED_HEADERS
 # Generate Python-Bindings Supporting Files
 set(SIMPLNX_GENERATED_PYTHON_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/SimplnxPython.hpp)
 set(SIMPLNX_PYTHON_MODULE "simplnx")
-configure_file(${simplnx_SOURCE_DIR}/wrapping/python/CxPybind/SimplnxPython.hpp.in ${SIMPLNX_GENERATED_PYTHON_HEADER})
+configure_file(${simplnx_SOURCE_DIR}/wrapping/python/NxPybind/SimplnxPython.hpp.in ${SIMPLNX_GENERATED_PYTHON_HEADER})
 
 list(APPEND SIMPLNX_GENERATED_HEADERS
   ${SIMPLNX_GENERATED_PYTHON_HEADER}

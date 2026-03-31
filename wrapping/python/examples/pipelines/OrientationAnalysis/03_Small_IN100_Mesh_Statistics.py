@@ -1,7 +1,7 @@
 import simplnx as nx
 
-import itkimageprocessing as cxitk
-import orientationanalysis as cxor
+import itkimageprocessing as nxitk
+import orientationanalysis as nxor
 import simplnx_test_dirs as nxtest
 
 import numpy as np
@@ -54,7 +54,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 5
 # Instantiate Filter
-nx_filter = cxor.ComputeFaceIPFColoringFilter()
+nx_filter = nxor.ComputeFaceIPFColoringFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
@@ -70,7 +70,7 @@ nxtest.check_filter_result(nx_filter, result)
 
 # Filter 6
 # Instantiate Filter
-nx_filter = cxor.ComputeFeatureFaceMisorientationFilter()
+nx_filter = nxor.ComputeFeatureFaceMisorientationFilter()
 # Execute Filter with Parameters
 result = nx_filter.execute(
     data_structure=data_structure,
