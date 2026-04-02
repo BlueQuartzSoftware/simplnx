@@ -163,7 +163,7 @@ Result<> MapPointCloudToRegularGrid::operator()()
       return ProcessVertices<ErrorType, true>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->OutOfBoundsValue);
     }
     default: {
-      return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handing Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})", m_InputValues->OutOfBoundsHandling,
+      return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handling Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})", m_InputValues->OutOfBoundsHandling,
                                                                  k_SilentMode, k_SilentModeIndex, k_WarningMode, k_WarningModeIndex, k_ErrorMode, k_ErrorModeIndex));
     }
     }
@@ -182,7 +182,7 @@ Result<> MapPointCloudToRegularGrid::operator()()
       return ProcessVertices<ErrorType, false>(m_MessageHandler, vertices, image, voxelIndices, maskCompare, m_InputValues->OutOfBoundsValue);
     }
     default: {
-      return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handing Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})", m_InputValues->OutOfBoundsHandling,
+      return MakeErrorResult(k_InvalidHandlingValue, fmt::format("Unexpected Out of Bounds Handling Option. Received : {}. Expected: {} ({}), {} ({}), {} ({})", m_InputValues->OutOfBoundsHandling,
                                                                  k_SilentMode, k_SilentModeIndex, k_WarningMode, k_WarningModeIndex, k_ErrorMode, k_ErrorModeIndex));
     }
     }

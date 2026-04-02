@@ -128,7 +128,7 @@ Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& jso
     }
     if(!json[key].is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", prefix.view(), key));
     }
   }
 

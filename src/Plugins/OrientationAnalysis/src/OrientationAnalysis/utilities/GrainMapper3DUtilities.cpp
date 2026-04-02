@@ -238,13 +238,13 @@ nx::core::Result<> GrainMapperReader::readAbsorptionHeader(hid_t fileId)
   herr_t error = H5Lite::readVectorDataset(gid, Constants::k_ExtentName, extents);
   if(error < 0)
   {
-    return MakeErrorResult(-38603, "GrainMapperReader: Error reading data set /LabDCT/Extent");
+    return MakeErrorResult(-38603, "GrainMapperReader: Error reading data set /AbsorptionCT/Extent");
   }
 
   error = H5Lite::readVectorDataset(gid, Constants::k_SpacingName, m_AbsorptionCTSpacing);
   if(error < 0)
   {
-    return MakeErrorResult(-38604, "GrainMapperReader: Error reading data set /LabDCT/Spacing");
+    return MakeErrorResult(-38604, "GrainMapperReader: Error reading data set /AbsorptionCT/Spacing");
   }
 
   m_AbsorptionCTDimensions = std::vector<size_t>{static_cast<size_t>(extents[0] / m_AbsorptionCTSpacing[0]), static_cast<size_t>(extents[1] / m_AbsorptionCTSpacing[1]),

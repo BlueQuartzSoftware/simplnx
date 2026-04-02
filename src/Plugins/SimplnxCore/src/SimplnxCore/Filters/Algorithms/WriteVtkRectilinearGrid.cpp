@@ -55,12 +55,12 @@ Result<> WriteVtkRectilinearGrid::operator()()
   writeCoordsResults = writeCoords<float32>(outputFile, "Y_COORDINATES", "float", dims[1] + 1, origin[1] - res[1] * 0.5f, res[1]);
   if(writeCoordsResults.invalid())
   {
-    return MergeResults(writeCoordsResults, MakeErrorResult(-2076, fmt::format("Error writing Y Coordinates in vtk file %s'\n ", m_InputValues->OutputFile.string())));
+    return MergeResults(writeCoordsResults, MakeErrorResult(-2076, fmt::format("Error writing Y Coordinates in vtk file '{}'\n ", m_InputValues->OutputFile.string())));
   }
   writeCoordsResults = writeCoords<float32>(outputFile, "Z_COORDINATES", "float", dims[2] + 1, origin[2] - res[2] * 0.5f, res[2]);
   if(writeCoordsResults.invalid())
   {
-    return MergeResults(writeCoordsResults, MakeErrorResult(-2077, fmt::format("Error writing Z Coordinates in vtk file %s'\n ", m_InputValues->OutputFile.string())));
+    return MergeResults(writeCoordsResults, MakeErrorResult(-2077, fmt::format("Error writing Z Coordinates in vtk file '{}'\n ", m_InputValues->OutputFile.string())));
   }
 
   // Write the data arrays

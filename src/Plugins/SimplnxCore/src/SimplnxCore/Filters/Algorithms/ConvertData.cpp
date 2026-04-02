@@ -1,5 +1,6 @@
 #include "ConvertData.hpp"
 
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -127,7 +128,7 @@ Result<> ConvertData(DataStructure& dataStructure, const ConvertDataInputValues*
   }
   default: {
     return MakeErrorResult(
-        -399, fmt::format("Error Converting DataArray '{}' from type {} to type {}", inputArray.getName(), static_cast<int>(inputArray.getDataType()), static_cast<int>(inputValues->ScalarType)));
+        -399, fmt::format("Error Converting DataArray '{}' from type '{}' to type '{}'", inputArray.getName(), DataTypeToString(inputArray.getDataType()), DataTypeToString(inputValues->ScalarType)));
   }
   }
   return {};

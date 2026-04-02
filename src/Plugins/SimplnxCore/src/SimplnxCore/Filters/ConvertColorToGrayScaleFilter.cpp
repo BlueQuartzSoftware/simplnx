@@ -111,7 +111,7 @@ IFilter::PreflightResult ConvertColorToGrayScaleFilter::preflightImpl(const Data
   {
     if(pColorWeightsValue[0] < 0.0F || pColorWeightsValue[1] < 0.0F || pColorWeightsValue[2] < 0.0F)
     {
-      return {MakeErrorResult<OutputActions>(-10704, "1 of more of the Color Weight values have a negative value. This is not allowed.")};
+      return {MakeErrorResult<OutputActions>(-10704, "One or more of the Color Weight values is negative. All weights must be zero or positive.")};
     }
 
     float colorWeightSum = pColorWeightsValue[0] + pColorWeightsValue[1] + pColorWeightsValue[2];

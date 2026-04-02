@@ -23,7 +23,7 @@ struct OEMEbsdScanSelectionFilterParameterConverter
 
     if(!json1.is_string())
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("OEMEbsdScanSelectionParameter json '{}' is not an string", json1.dump()));
+      return MakeErrorResult<ValueType>(-1, fmt::format("OEMEbsdScanSelectionParameter json '{}' is not a string", json1.dump()));
     }
     if(!json2.is_array())
     {

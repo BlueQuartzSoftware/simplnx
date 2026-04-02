@@ -1213,7 +1213,7 @@ Result<> ComputeArrayStatistics::operator()()
     return ExecuteNeighborFunction(ComputeArrayStatisticsByFeatureFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, arrays, numFeatures, m_InputValues, m_ShouldCancel, messageHelper);
   }
   default: {
-    return MakeErrorResult(-506670, fmt::format("Unknown feature id range controls option selected!", trueMin, trueMax));
+    return MakeErrorResult(-506670, fmt::format("Unknown feature id range controls option selected. Feature ID range was {} to {}.", trueMin, trueMax));
   }
   }
   if(trueMin > trueMax)

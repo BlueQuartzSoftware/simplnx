@@ -99,7 +99,7 @@ public:
     const auto phases = m_Reader->getPhaseVector();
     if(phases.empty())
     {
-      return MakeErrorResult(-8971, fmt::format("'{}' did not parse any phases from from the .h5 file '{}' for scan '{}'", m_Reader->getNameOfClass(), scanName, m_Reader->getFileName()));
+      return MakeErrorResult(-8971, fmt::format("'{}' did not parse any phases from the .h5 file '{}' for scan '{}'", m_Reader->getNameOfClass(), scanName, m_Reader->getFileName()));
     }
 
     // These arrays are purposely created using the AngFile constant names for BOTH the Oim and the Esprit readers!
