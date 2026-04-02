@@ -3,17 +3,23 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/ImageDimensionalUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
 
 namespace
 {
+template <typename ImageDimsStateT>
 struct IdentifySampleFunctor
 {
   template <typename T>
   void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
+    MessageHelper messageHelper(messageHandler);
+    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+
     ShapeType cDims = {1};
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
@@ -39,60 +45,57 @@ struct IdentifySampleFunctor
     // In this loop over the data we are finding the biggest contiguous set of GoodVoxels and calling that the 'sample'  All GoodVoxels that do not touch the 'sample'
     // are flipped to be called 'bad' voxels or 'not sample'
     float threshold = 0.0f;
-    for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
+    for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
     {
-      if(shouldCancel)
+      const int64 zStride = dims[0] * dims[1] * zIndex;
+      for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
       {
-        return;
-      }
-      const float percentIncrement = static_cast<float>(voxelIndex) / static_cast<float>(totalPoints) * 100.0f;
-      if(percentIncrement > threshold)
-      {
-        messageHandler(IFilter::Message::Type::Info, fmt::format("Completed: {}", percentIncrement));
-        threshold = threshold + 5.0f;
-        if(threshold < percentIncrement)
+        const int64 yStride = dims[0] * yIndex;
+        throttledMessenger.sendThrottledMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
+        if(shouldCancel)
         {
-          threshold = percentIncrement;
+          return;
         }
-      }
-
-      if(!checked[voxelIndex] && goodVoxels.getValue(voxelIndex))
-      {
-        currentVList.push_back(voxelIndex);
-        usize count = 0;
-        while(count < currentVList.size())
+        for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
         {
-          int64 index = currentVList[count];
-          int64 xIdx = index % dims[0];
-          int64 yIdx = (index / dims[0]) % dims[1];
-          int64 zIdx = index / (dims[0] * dims[1]);
-          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-          for(const auto& faceIndex : faceNeighborInternalIdx)
-          {
-            if(!isValidFaceNeighbor[faceIndex])
-            {
-              continue;
-            }
-            neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
+          int64 voxelIndex = zStride + yStride + xIndex;
 
-            if(!checked[neighborPoint] && goodVoxels.getValue(neighborPoint))
-            {
-              currentVList.push_back(neighborPoint);
-              checked[neighborPoint] = true;
-            }
-          }
-          count++;
-        }
-        if(static_cast<int64>(currentVList.size()) >= biggestBlock)
-        {
-          biggestBlock = currentVList.size();
-          sample.assign(totalPoints, false);
-          for(int64 j = 0; j < biggestBlock; j++)
+          if(!checked[voxelIndex] && goodVoxels.getValue(voxelIndex))
           {
-            sample[currentVList[j]] = true;
+            currentVList.push_back(voxelIndex);
+            usize count = 0;
+            while(count < currentVList.size())
+            {
+              int64 index = currentVList[count];
+              std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+              for(const auto& faceIndex : faceNeighborInternalIdx)
+              {
+                if(!isValidFaceNeighbor[faceIndex])
+                {
+                  continue;
+                }
+                neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
+
+                if(!checked[neighborPoint] && goodVoxels.getValue(neighborPoint))
+                {
+                  currentVList.push_back(neighborPoint);
+                  checked[neighborPoint] = true;
+                }
+              }
+              count++;
+            }
+            if(static_cast<int64>(currentVList.size()) >= biggestBlock)
+            {
+              biggestBlock = currentVList.size();
+              sample.assign(totalPoints, false);
+              for(int64 j = 0; j < biggestBlock; j++)
+              {
+                sample[currentVList[j]] = true;
+              }
+            }
+            currentVList.clear();
           }
         }
-        currentVList.clear();
       }
     }
     for(int64 i = 0; i < totalPoints; i++)
@@ -110,43 +113,22 @@ struct IdentifySampleFunctor
     threshold = 0.0F;
     if(fillHoles)
     {
-      messageHandler(IFilter::Message::Type::Info, fmt::format("Filling holes in sample..."));
+      messageHelper.sendMessage("Filling holes in sample...");
 
-      bool touchesBoundary = false;
-      for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
-      {
-        if(shouldCancel)
-        {
-          return;
-        }
-        const float percentIncrement = static_cast<float>(voxelIndex) / static_cast<float>(totalPoints) * 100.0f;
-        if(percentIncrement > threshold)
-        {
-          threshold = threshold + 5.0f;
-          if(threshold < percentIncrement)
-          {
-            threshold = percentIncrement;
-          }
-        }
+      // Corners
+      const auto processCornerCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
+        const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
 
         if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
         {
           currentVList.push_back(voxelIndex);
           usize count = 0;
-          touchesBoundary = false;
           while(count < currentVList.size())
           {
             int64 index = currentVList[count];
-            int64 xIdx = index % dims[0];
-            int64 yIdx = (index / dims[0]) % dims[1];
-            int64 zIdx = index / (dims[0] * dims[1]);
-            if(xIdx == 0 || xIdx == (dims[0] - 1) || yIdx == 0 || yIdx == (dims[1] - 1) || zIdx == 0 || zIdx == (dims[2] - 1))
-            {
-              touchesBoundary = true;
-            }
             // Loop over the 6 face neighbors of the voxel
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-            for(const auto& faceIndex : faceNeighborInternalIdx)
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+            for(const auto faceIndex : faceNeighborInternalIdx) // trivially copyable
             {
               if(!isValidFaceNeighbor[faceIndex])
               {
@@ -162,14 +144,138 @@ struct IdentifySampleFunctor
             }
             count++;
           }
-          if(!touchesBoundary)
+          currentVList.clear();
+        }
+      };
+      ImageDimensionalUtilities::ProcessCorners<ImageDimsStateT>(processCornerCell, dims);
+
+      // Edges
+      if constexpr(!ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimsStateT, ImageDimensionalUtilities::SingleVoxelImage>())
+      {
+        const auto processEdgeCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
+          const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
+
+          if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
           {
-            for(int64_t j : currentVList)
+            currentVList.push_back(voxelIndex);
+            usize count = 0;
+            while(count < currentVList.size())
             {
-              goodVoxels.setValue(j, true);
+              int64 index = currentVList[count];
+              // Loop over the 6 face neighbors of the voxel
+              std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+              for(const auto faceIndex : faceNeighborInternalIdx) // trivially copyable
+              {
+                if(!isValidFaceNeighbor[faceIndex])
+                {
+                  continue;
+                }
+                neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
+
+                if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
+                {
+                  currentVList.push_back(neighborPoint);
+                  checked[neighborPoint] = true;
+                }
+              }
+              count++;
+            }
+            if constexpr(ImageDimsStateT::Is1DImageDimsState())
+            {
+              for(int64_t j : currentVList)
+              {
+                goodVoxels.setValue(j, true);
+              }
+            }
+            currentVList.clear();
+          }
+        };
+        ImageDimensionalUtilities::ProcessEdges<ImageDimsStateT>(processEdgeCell, dims);
+      }
+
+      // Faces
+      if constexpr(!ImageDimsStateT::Is1DImageDimsState() && !ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimsStateT, ImageDimensionalUtilities::SingleVoxelImage>())
+      {
+        const auto processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex, const std::vector<FaceNeighborType>& validFaces) -> void {
+          const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
+
+          if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
+          {
+            currentVList.push_back(voxelIndex);
+            usize count = 0;
+            while(count < currentVList.size())
+            {
+              int64 index = currentVList[count];
+              for(const auto faceIndex : validFaces) // trivially copyable
+              {
+                neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
+
+                if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
+                {
+                  currentVList.push_back(neighborPoint);
+                  checked[neighborPoint] = true;
+                }
+              }
+              count++;
+            }
+            if constexpr(ImageDimsStateT::Is2DImageDimsState())
+            {
+              for(int64_t j : currentVList)
+              {
+                goodVoxels.setValue(j, true);
+              }
+            }
+            currentVList.clear();
+          }
+        };
+        ImageDimensionalUtilities::ProcessFaces<ImageDimsStateT>(processFaceCell, dims);
+      }
+
+      if constexpr(ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimsStateT, ImageDimensionalUtilities::Image3D>())
+      {
+        for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
+        {
+          const int64 zStride = dims[0] * dims[1] * zIndex;
+          for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
+          {
+            const int64 yStride = dims[0] * yIndex;
+            throttledMessenger.sendThrottledMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
+            if(shouldCancel)
+            {
+              return;
+            }
+            for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
+            {
+              int64 voxelIndex = zStride + yStride + xIndex;
+
+              if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
+              {
+                currentVList.push_back(voxelIndex);
+                usize count = 0;
+                while(count < currentVList.size())
+                {
+                  int64 index = currentVList[count];
+                  // Loop over the 6 face neighbors of the voxel
+                  for(const auto faceIndex : faceNeighborInternalIdx) // Trivially Copyable
+                  {
+                    neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
+
+                    if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
+                    {
+                      currentVList.push_back(neighborPoint);
+                      checked[neighborPoint] = true;
+                    }
+                  }
+                  count++;
+                }
+                for(int64_t j : currentVList)
+                {
+                  goodVoxels.setValue(j, true);
+                }
+                currentVList.clear();
+              }
             }
           }
-          currentVList.clear();
         }
       }
     }
@@ -387,6 +493,57 @@ struct IdentifySampleSliceBySliceFunctor
     }
   }
 };
+
+template <template <typename> class FunctorT, class... ArgsT>
+void ProcessVoxels(const DataType& dataType, const ImageGeom* imageGeom, ArgsT&&... args)
+{
+  const bool xDimEmpty = imageGeom->getNumXCells() == 1;
+  const bool yDimEmpty = imageGeom->getNumYCells() == 1;
+  const bool zDimEmpty = imageGeom->getNumZCells() == 1;
+  const uint8 emptyDimCount = static_cast<uint8>(xDimEmpty) + static_cast<uint8>(yDimEmpty) + static_cast<uint8>(zDimEmpty);
+
+  // Treat dimensions of 1 as flat for image geom
+  if(emptyDimCount == 0)
+  {
+    return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::Image3D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+  }
+  if(emptyDimCount == 1)
+  {
+    if(zDimEmpty)
+    {
+      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::EmptyZImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    }
+    if(yDimEmpty)
+    {
+      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::EmptyYImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    }
+    if(xDimEmpty)
+    {
+      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::EmptyXImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    }
+  }
+  if(emptyDimCount == 2)
+  {
+    if(xDimEmpty && yDimEmpty)
+    {
+      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::ZImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    }
+    if(xDimEmpty && zDimEmpty)
+    {
+      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::YImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    }
+    if(yDimEmpty && zDimEmpty)
+    {
+      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::XImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    }
+  }
+  if(emptyDimCount == 3)
+  {
+    return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::SingleVoxelImage>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+  }
+
+  return;
+}
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -414,7 +571,7 @@ Result<> IdentifySample::operator()()
   }
   else
   {
-    ExecuteDataFunction(IdentifySampleFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
+    ProcessVoxels<IdentifySampleFunctor>(inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
   }
 
   return {};
