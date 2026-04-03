@@ -118,13 +118,11 @@ Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& bi
 
   if(binRangesStore.size() < numBins * 2)
   {
-    return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1, binRangesStore.size(),
-                                               __FILE__, __LINE__));
+    return MakeErrorResult(-23761, fmt::format("GenerateHistogram: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}", numBins + 1, binRangesStore.size()));
   }
   if(histogramCountsStore.size() < numBins)
   {
-    return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}. {}:{}", __func__, numBins,
-                                               histogramCountsStore.size(), __FILE__, __LINE__));
+    return MakeErrorResult(-23762, fmt::format("GenerateHistogram: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}", numBins, histogramCountsStore.size()));
   }
 
   const float32 increment = CalculateIncrement(rangeMinMax.first, rangeMinMax.second, numBins);
@@ -136,7 +134,7 @@ Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& bi
   {
     if(shouldCancel)
     {
-      return MakeErrorResult(-23763, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
+      return MakeErrorResult(-23763, "GenerateHistogram: Signal Interrupt Received.");
     }
     const auto bin = CalculateBin(static_cast<Type>(inputStore[i]), rangeMinMax.first, increment);
     if((bin >= 0) && (bin < numBins))
@@ -151,7 +149,7 @@ Result<> GenerateHistogram(const InputContainer& inputStore, RangesContainer& bi
 
   if(overflow > 0)
   {
-    return MakeWarningVoidResult(-23764, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow.load(), __FILE__, __LINE__));
+    return MakeWarningVoidResult(-23764, fmt::format("GenerateHistogram: Overflow detected: overflow count {}", overflow.load()));
   }
 
   return {};
@@ -185,19 +183,18 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
   usize numComp = inputStore.getNumberOfComponents();
   if(componentIndex > numComp)
   {
-    return MakeErrorResult(-23765, fmt::format("HistogramUtilities::{}: supplied component index is larger than component size of input array. Needed: x < {} | Currently: {}. {}:{}", __func__,
-                                               numComp, componentIndex, __FILE__, __LINE__));
+    return MakeErrorResult(-23765, fmt::format("GenerateHistogramAtComponent: supplied component index is larger than component size of input array. Needed: x < {} | Currently: {}", numComp,
+                                               componentIndex));
   }
 
   if(binRangesStore.size() < numBins + 1)
   {
-    return MakeErrorResult(-23761, fmt::format("HistogramUtilities::{}: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}. {}:{}", __func__, numBins + 1, binRangesStore.size(),
-                                               __FILE__, __LINE__));
+    return MakeErrorResult(-23761, fmt::format("GenerateHistogramAtComponent: binRangesStore is too small to hold ranges. Needed: {} | Current Size: {}", numBins + 1, binRangesStore.size()));
   }
   if(histogramCountsStore.size() < numBins)
   {
-    return MakeErrorResult(-23762, fmt::format("HistogramUtilities::{}: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}. {}:{}", __func__, numBins,
-                                               histogramCountsStore.size(), __FILE__, __LINE__));
+    return MakeErrorResult(-23762, fmt::format("GenerateHistogramAtComponent: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}", numBins,
+                                               histogramCountsStore.size()));
   }
 
   const float32 increment = CalculateIncrement(rangeMinMax.first, rangeMinMax.second, numBins);
@@ -209,7 +206,7 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
   {
     if(shouldCancel)
     {
-      return MakeErrorResult(-23763, fmt::format("HistogramUtilities::{}: Signal Interrupt Received. {}:{}", __func__, __FILE__, __LINE__));
+      return MakeErrorResult(-23763, "GenerateHistogramAtComponent: Signal Interrupt Received.");
     }
     const auto bin = CalculateBin(inputStore[i * numComp + componentIndex], rangeMinMax.first, increment);
     if((bin >= 0) && (bin < numBins))
@@ -224,7 +221,7 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
 
   if(overflow > 0)
   {
-    return MakeWarningVoidResult(-23764, fmt::format("HistogramUtilities::{}: Overflow detected: overflow count {}. {}:{}", __func__, overflow.load(), __FILE__, __LINE__));
+    return MakeWarningVoidResult(-23764, fmt::format("GenerateHistogramAtComponent: Overflow detected: overflow count {}", overflow.load()));
   }
 
   return {};
@@ -256,8 +253,8 @@ struct GenerateHistogramFunctor
     // check range ordering : should be min, max
     if(rangeMinMax.first > rangeMinMax.second)
     {
-      return MakeErrorResult(-23760, fmt::format("GenerateHistogramFunctor::{}: The range min value is larger than the max value. Min value: {} | Max Value: {}. {}:{}", __func__, rangeMinMax.first,
-                                                 rangeMinMax.second, __FILE__, __LINE__));
+      return MakeErrorResult(-23760, fmt::format("GenerateHistogramFunctor: The range min value is larger than the max value. Min value: {} | Max Value: {}", rangeMinMax.first,
+                                                 rangeMinMax.second));
     }
 
     return GenerateHistogram(inputStore, binRangesArray->template getIDataStoreRefAs<AbstractDataStore<Type>>(),

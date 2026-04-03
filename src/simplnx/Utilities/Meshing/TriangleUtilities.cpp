@@ -314,8 +314,8 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
   usize numComp = idsStore.getNumberOfComponents();
   if(numComp > 2 || numComp == 0)
   {
-    return MakeErrorResult(-65770, fmt::format("MeshingUtilities::{} invalid ID array supplied. The ID array must have 1 or 2 components, supplied array components: {}.\n  {}:{}", __func__, numComp,
-                                               __FILE__, __LINE__));
+    return MakeErrorResult(-65770, fmt::format("MeshingUtilities::RepairTriangleWinding: invalid ID array supplied. The ID array must have 1 or 2 components, supplied array components: {}.",
+                                               numComp));
   }
 
   // Get max group and (feature id != 0)

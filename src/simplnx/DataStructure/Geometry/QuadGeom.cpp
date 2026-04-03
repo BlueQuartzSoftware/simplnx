@@ -190,7 +190,7 @@ Result<> QuadGeom::findElementSizes(bool recalculate)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2630, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2630, "QuadGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
 
@@ -217,7 +217,7 @@ Result<> QuadGeom::findElementsContainingVert(bool recalculate)
     {
       m_CellContainingVertDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2631, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid dynamic list array.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2631, "QuadGeom Error: Unable to find or create a valid dynamic list array.");
     }
   }
 
@@ -250,7 +250,7 @@ Result<> QuadGeom::findElementNeighbors(bool recalculate)
     {
       m_CellNeighborsDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2632, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a dynamic list array.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2632, "QuadGeom Error: Unable to find or create a dynamic list array.");
     }
   }
 
@@ -279,7 +279,7 @@ Result<> QuadGeom::findElementCentroids(bool recalculate)
     {
       m_CellCentroidsDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2633, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2633, "QuadGeom Error: Unable to find or create a valid element centroids array or data store.");
     }
   }
 
@@ -325,7 +325,7 @@ Result<> QuadGeom::findEdges(bool recalculate)
     {
       m_EdgeDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2634, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid shared edges array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2634, "QuadGeom Error: Unable to find or create a valid shared edges array or data store.");
     }
   }
 
@@ -353,7 +353,7 @@ Result<> QuadGeom::findUnsharedEdges(bool recalculate)
     {
       m_UnsharedEdgeListId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2635, fmt::format("{}({}) QuadGeom::{} Error: Unable to find or create a valid unshared edges array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2635, "QuadGeom Error: Unable to find or create a valid unshared edges array or data store.");
     }
   }
 

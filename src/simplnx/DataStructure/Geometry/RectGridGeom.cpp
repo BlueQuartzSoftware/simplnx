@@ -321,7 +321,7 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-1834, fmt::format("{}({}) RectGridGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-1834, "RectGridGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
 
@@ -329,19 +329,19 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
   if(xBnds == nullptr)
   {
     // Used to be error code `-1`
-    return MakeErrorResult(-1830, fmt::format("{}({}) RectGridGeom::{} Error: No valid X Bounds Array", __FILE__, __LINE__, __func__));
+    return MakeErrorResult(-1830, "RectGridGeom Error: No valid X Bounds Array");
   }
   const auto* yBnds = getYBounds();
   if(yBnds == nullptr)
   {
     // Used to be error code `-1`
-    return MakeErrorResult(-1831, fmt::format("{}({}) RectGridGeom::{} Error: No valid Y Bounds Array", __FILE__, __LINE__, __func__));
+    return MakeErrorResult(-1831, "RectGridGeom Error: No valid Y Bounds Array");
   }
   const auto* zBnds = getZBounds();
   if(zBnds == nullptr)
   {
     // Used to be error code `-1`
-    return MakeErrorResult(-1832, fmt::format("{}({}) RectGridGeom::{} Error: No valid Z Bounds Array", __FILE__, __LINE__, __func__));
+    return MakeErrorResult(-1832, "RectGridGeom Error: No valid Z Bounds Array");
   }
   float32 xRes = 0.0f;
   float32 yRes = 0.0f;
@@ -361,8 +361,8 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
           m_ElementSizesId.reset();
           // Used to be error code `-1`
           return MakeErrorResult(
-              -1833, fmt::format("{}({}) RectGridGeom::{} Error: Found voxel with a spacing of zero or less.\nX-Index: {} | X-Spacing: {}\nY-Index: {} | Y-Spacing: {}\nZ-Index: {} | Z-Spacing: {}",
-                                 __FILE__, __LINE__, __func__, x, xRes, y, yRes, z, zRes));
+              -1833, fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less.\nX-Index: {} | X-Spacing: {}\nY-Index: {} | Y-Spacing: {}\nZ-Index: {} | Z-Spacing: {}", x, xRes, y,
+                                 yRes, z, zRes));
         }
         sizeArray->setValue((m_Dimensions[0] * m_Dimensions[1] * z) + (m_Dimensions[0] * y) + x, zRes * yRes * xRes);
       }

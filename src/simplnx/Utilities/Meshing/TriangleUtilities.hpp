@@ -141,8 +141,8 @@ Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceList::store_ty
   }
   else
   {
-    return MakeErrorResult(-65771, fmt::format("MeshingUtilities::{} invalid ID array supplied. The ID array must have 1 or 2 components, supplied array components: {}.\n  {}:{}", __func__,
-                                               idsStore.getNumberOfComponents(), __FILE__, __LINE__));
+    return MakeErrorResult(-65771, fmt::format("MeshingUtilities::CalculateFeatureVolumes: invalid ID array supplied. The ID array must have 1 or 2 components, supplied array components: {}.",
+                                               idsStore.getNumberOfComponents()));
   }
 
   return {};
