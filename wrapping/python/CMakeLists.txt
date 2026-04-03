@@ -209,13 +209,15 @@ if(SIMPLNX_PY_ENABLE_INSTALL)
   endif()
 endif()
 
-message(STATUS "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Bin/simplnx_utilities.py")
 #-------------------------------------------------------------------------------
-# Copy the Pipeline to Python Code utilities
+# Copy the Pipeline to Python Code utilities at build time
 #-------------------------------------------------------------------------------
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/utils/simplnx_utilities.py 
-      DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/."
-    )
+add_custom_target(CopySimplnxUtilities ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${CMAKE_CURRENT_SOURCE_DIR}/utils/simplnx_utilities.py"
+    "$<TARGET_FILE_DIR:simplnx>/simplnx_utilities.py"
+  COMMENT "Copying simplnx_utilities.py to build output"
+)
 
 
 #-------------------------------------------------------------------------------
