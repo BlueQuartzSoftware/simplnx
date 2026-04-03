@@ -15,6 +15,7 @@ set(SIMPLNX_PYTHON_TESTS
   "pipeline" 
   "read_csv_file"
   "neighbor_list"
+  "pipeline_to_python"
 #  "read_esprit_data"
 )
 
