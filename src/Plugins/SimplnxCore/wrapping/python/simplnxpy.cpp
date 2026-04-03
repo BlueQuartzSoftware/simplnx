@@ -1633,6 +1633,21 @@ PYBIND11_MODULE(simplnx, mod)
   pipelineFilter.def("set_args", [internals](PipelineFilter& self, py::dict& args) { self.setArguments(ConvertDictToArgs(*internals, self.getParameters(), args)); }, "args"_a);
   pipelineFilter.def("get_filter", [](PipelineFilter& self) { return self.getFilter(); }, py::return_value_policy::reference_internal);
   pipelineFilter.def(
+      "get_parameter_uuids",
+      [](const PipelineFilter& self) {
+        py::dict result;
+        const Parameters& params = self.getParameters();
+        for(const auto& [name, value] : self.getArguments())
+        {
+          if(params.contains(name))
+          {
+            result[name.c_str()] = params.at(name).getRef().uuid().str();
+          }
+        }
+        return result;
+      },
+      "Returns a dict mapping argument names to their parameter type UUID strings");
+  pipelineFilter.def(
       "name",
       [](const PipelineFilter& self) {
         const IFilter* filter_ = self.getFilter();
