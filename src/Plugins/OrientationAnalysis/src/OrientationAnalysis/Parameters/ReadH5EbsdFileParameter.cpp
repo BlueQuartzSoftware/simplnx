@@ -212,7 +212,7 @@ Result<> ReadH5EbsdFileParameter::validate(const std::any& valueRef) const
   const auto& value = GetAnyRef<ValueType>(valueRef);
   if(value.inputFilePath.empty())
   {
-    errors.push_back({-2000, fmt::format("The input file path for the H5EbsdFile was empty.", value.startSlice, value.endSlice)});
+    errors.push_back({-2000, "The input file path for the H5EbsdFile was empty."});
     return {nonstd::make_unexpected(std::move(errors))};
   }
 

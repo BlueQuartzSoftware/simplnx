@@ -147,7 +147,7 @@ IFilter::PreflightResult DBSCANFilter::preflightImpl(const DataStructure& dataSt
   }
   if(pMinPointsValue <= 0)
   {
-    return MakePreflightErrorResult(-7585, fmt::format("Minimum Points value {} must be greater than 0.0.", pEpsilonValue));
+    return MakePreflightErrorResult(-7585, fmt::format("Minimum Points value {} must be greater than 0.", pMinPointsValue));
   }
 
   nx::core::Result<OutputActions> resultOutputActions;

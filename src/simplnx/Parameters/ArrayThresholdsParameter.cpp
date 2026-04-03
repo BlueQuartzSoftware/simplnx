@@ -118,6 +118,7 @@ Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructu
     }
     if(!foundMatch)
     {
+      compStr.erase(compStr.size() - 4); // Remove trailing " or "
       return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_TupleShapeValue,
                                          fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, dataPath.toString(), compStr));
     }

@@ -92,7 +92,7 @@ IFilter::PreflightResult ErodeDilateCoordinationNumberFilter::preflightImpl(cons
 
   if(pCoordinationNumberValue < 0 || pCoordinationNumberValue > 6)
   {
-    MakeErrorResult(-16800, fmt::format("Coordination Number must be between 0 and 6. Current Value: {}", pCoordinationNumberValue));
+    return {MakeErrorResult<OutputActions>(-16800, fmt::format("Coordination Number must be between 0 and 6. Current value: {}", pCoordinationNumberValue))};
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
