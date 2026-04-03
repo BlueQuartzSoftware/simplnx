@@ -12,6 +12,7 @@
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Utilities/MD5.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -298,14 +299,14 @@ Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeo
   // Make sure the geometry dimensions are the same
   if(baselineDims != outputDims)
   {
-    return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output: {} Baseline: {}", fmt::join(outputDims, ", "), fmt::join(baselineDims, ", ")));
+    return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output: {} Baseline: {}", StringUtilities::formatDimensions3D(outputDims), StringUtilities::formatDimensions3D(baselineDims)));
   }
   // Make sure the tuple shape is the same
   ShapeType baselineTupleShape = baselineDataArray->getIDataStoreRef().getTupleShape();
   ShapeType outputTupleShape = outputDataArray->getIDataStoreRef().getTupleShape();
   if(baselineTupleShape != outputTupleShape)
   {
-    return MakeErrorResult(-16, fmt::format("Tuple Shape does not Match. Output: {} Baseline: {}", fmt::join(outputTupleShape, ", "), fmt::join(baselineTupleShape, ", ")));
+    return MakeErrorResult(-16, fmt::format("Tuple Shape does not Match. Output: {} Baseline: {}", StringUtilities::formatTupleShape3D(outputTupleShape), StringUtilities::formatTupleShape3D(baselineTupleShape)));
   }
 
   // Make sure the component shape is the same

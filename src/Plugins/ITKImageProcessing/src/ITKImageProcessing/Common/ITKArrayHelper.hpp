@@ -13,6 +13,7 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <itkCastImageFilter.h>
 #include <itkImage.h>
@@ -571,10 +572,9 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
   if(!nx::core::ITK::DoDimensionsMatch(dataStore, imageGeom) && !nx::core::ITK::DoTuplesMatch(dataStore, imageGeom))
   {
 
-    std::string errMessage = fmt::format("DataArray '{}' tuple dimensions '{}' do not match Image Geometry '{}' with dimensions 'XYZ={}' and the total number of ImageGeometry Cells {} does not match "
-                                         "the total number of DataArray tuples {}.",
-                                         inputArrayPath.toString(), fmt::join(dataStore.getTupleShape(), ", "), imageGeomPath.toString(), fmt::join(imageGeom.getDimensions(), ", "),
-                                         imageGeom.getNumberOfCells(), dataStore.getNumberOfTuples());
+    std::string errMessage = fmt::format("DataArray '{}' dimensions ({}) do not match Image Geometry '{}' dimensions ({}).", inputArrayPath.toString(),
+                                         StringUtilities::formatTupleShape3D(dataStore.getTupleShape()), imageGeomPath.toString(),
+                                         StringUtilities::formatDimensions3D(imageGeom.getDimensions()));
     return MakeErrorResult<OutputActions>(nx::core::ITK::Constants::k_ImageGeometryDimensionMismatch, errMessage);
   }
 

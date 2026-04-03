@@ -538,4 +538,118 @@ inline std::string GenerateIndexString(int32 index, int32 maxIndex)
   return numStr;
 }
 
+/**
+ * @brief Formats a dimension container with axis labels (e.g., "X=128, Y=256, Z=64").
+ *
+ * Labels are assigned based on dimensionality using the convention that X is always
+ * the fastest-moving dimension:
+ *   1D: X
+ *   2D: Y, X (slowest to fastest)
+ *   3D: Z, Y, X
+ *   4D: T, Z, Y, X
+ *   5D: M, T, Z, Y, X
+ *   6D: N, M, T, Z, Y, X
+ *   7D+: A, B, C, ... (alphabetical fallback)
+ *
+ * Values are displayed slowest-to-fastest by default. When reverseDims is true the
+ * values are reversed before labeling, which is useful when converting an XYZ-ordered
+ * container (like ImageGeom::getDimensions()) for comparison against ZYX-ordered data.
+ *
+ * @tparam ContainerT Any indexable container with operator[] and size() (SizeVec3, ShapeType, std::array, etc.)
+ * @param dims The dimension values
+ * @param reverseDims If true, reverse the values before applying labels
+ * @return Formatted string, e.g., "Z=64, Y=256, X=128"
+ */
+template <typename ContainerT>
+inline std::string formatDimensions(const ContainerT& dims, bool reverseDims = false)
+{
+  constexpr std::string_view k_KnownLabels = "NMTZYX";
+  const usize numDims = dims.size();
+
+  if(numDims == 0)
+  {
+    return "";
+  }
+
+  // Build ordered values
+  std::vector<usize> ordered(numDims);
+  for(usize i = 0; i < numDims; i++)
+  {
+    ordered[i] = reverseDims ? dims[numDims - 1 - i] : dims[i];
+  }
+
+  // Build labels (slowest to fastest)
+  std::vector<char> labels(numDims);
+  if(numDims <= k_KnownLabels.size())
+  {
+    // Use known labels: for N dims, take the rightmost N characters of "NMTZYX"
+    usize offset = k_KnownLabels.size() - numDims;
+    for(usize i = 0; i < numDims; i++)
+    {
+      labels[i] = k_KnownLabels[offset + i];
+    }
+  }
+  else
+  {
+    // Alphabetical fallback for > 6 dimensions
+    for(usize i = 0; i < numDims; i++)
+    {
+      labels[i] = static_cast<char>('A' + i);
+    }
+  }
+
+  std::string result;
+  for(usize i = 0; i < numDims; i++)
+  {
+    if(i > 0)
+    {
+      result += ", ";
+    }
+    result += fmt::format("{}={}", labels[i], ordered[i]);
+  }
+  return result;
+}
+
+/**
+ * @brief Formats a 3D geometry dimension container (e.g., from ImageGeom::getDimensions()).
+ * Input is expected in XYZ order (fastest to slowest). Output displays as "Z=, Y=, X="
+ * (slowest to fastest) by default, matching the standard dimension reporting convention.
+ *
+ * @tparam ContainerT Any indexable container with operator[] and size()
+ * @param dims The dimension values in XYZ order
+ * @param reverseDims If true, treats input as ZYX order instead
+ * @return Formatted string, e.g., "Z=64, Y=256, X=128"
+ */
+template <typename ContainerT>
+inline std::string formatDimensions3D(const ContainerT& dims, bool reverseDims = false)
+{
+  if(dims.size() != 3)
+  {
+    return fmt::format("Expected 3 dimensions but got {}", dims.size());
+  }
+  // ImageGeom::getDimensions() returns XYZ — reverse to ZYX for slowest-to-fastest display
+  return formatDimensions(dims, !reverseDims);
+}
+
+/**
+ * @brief Formats a 3D tuple shape container (e.g., from IDataArray::getTupleShape()).
+ * Input is expected in ZYX order (slowest to fastest). Output displays as "Z=, Y=, X="
+ * (slowest to fastest) by default, matching the storage order.
+ *
+ * @tparam ContainerT Any indexable container with operator[] and size()
+ * @param shape The tuple shape values in ZYX order
+ * @param reverseDims If true, reverses values before labeling (e.g., to display XYZ-first)
+ * @return Formatted string, e.g., "Z=64, Y=256, X=128"
+ */
+template <typename ContainerT>
+inline std::string formatTupleShape3D(const ContainerT& shape, bool reverseDims = false)
+{
+  if(shape.size() != 3)
+  {
+    return fmt::format("Expected 3 dimensions but got {}", shape.size());
+  }
+  // getTupleShape() returns ZYX — already slowest-to-fastest, no reversal needed by default
+  return formatDimensions(shape, reverseDims);
+}
+
 } // namespace nx::core::StringUtilities

@@ -15,6 +15,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <itkImageFileWriter.h>
 #include <itkImageSeriesWriter.h>
@@ -349,7 +350,10 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
 
   if(!ITK::DoDimensionsMatch(imageArrayStore, imageGeom))
   {
-    return {MakeErrorResult<OutputActions>(-25600, "Image Array dimensions must match ImageGeometry")};
+    return {MakeErrorResult<OutputActions>(
+        -25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
+                            StringUtilities::formatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
+                            StringUtilities::formatDimensions3D(imageGeom.getDimensions())))};
   }
 
   if(fillChar.size() > 1)
