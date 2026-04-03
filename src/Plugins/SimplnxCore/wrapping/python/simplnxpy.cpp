@@ -1635,16 +1635,16 @@ PYBIND11_MODULE(simplnx, mod)
   pipelineFilter.def(
       "get_parameter_uuids",
       [](const PipelineFilter& self) {
-        py::dict result;
+        py::dict uuidDict;
         const Parameters& params = self.getParameters();
         for(const auto& [name, value] : self.getArguments())
         {
           if(params.contains(name))
           {
-            result[name.c_str()] = params.at(name).getRef().uuid().str();
+            uuidDict[name.c_str()] = params.at(name).getRef().uuid().str();
           }
         }
-        return result;
+        return uuidDict;
       },
       "Returns a dict mapping argument names to their parameter type UUID strings");
   pipelineFilter.def(
