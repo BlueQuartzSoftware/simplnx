@@ -602,6 +602,11 @@ Result<> ComputeGBPDMetricBased::operator()()
 
   for(usize featureFaceIdx = 0; featureFaceIdx < numFaceFeatures; featureFaceIdx++)
   {
+    if(getCancel())
+    {
+      return {};
+    }
+
     const int32 feature1 = featureFaceLabels[2 * featureFaceIdx];
     const int32 feature2 = featureFaceLabels[2 * featureFaceIdx + 1];
 

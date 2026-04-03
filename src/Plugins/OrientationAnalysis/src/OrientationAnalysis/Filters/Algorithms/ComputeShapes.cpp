@@ -207,6 +207,11 @@ void ComputeShapes::findMoments()
   size_t zStride = 0, yStride = 0;
   for(size_t i = 0; i < zPoints; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     zStride = i * xPoints * yPoints;
     for(size_t j = 0; j < yPoints; j++)
     {
@@ -286,6 +291,11 @@ void ComputeShapes::findMoments()
   double o3 = 0.0, vol5 = 0.0, omega3 = 0.0;
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     // calculating the modified volume for the omega3 value
     vol5 = volumes[featureId] * konst3;
     volumes[featureId] = volumes[featureId] * konst2;
@@ -405,6 +415,11 @@ void ComputeShapes::findMoments2D()
   size_t yStride = 0;
   for(size_t yPoint = 0; yPoint < yPoints; yPoint++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     yStride = yPoint * xPoints;
     for(size_t xPoint = 0; xPoint < xPoints; xPoint++)
     {
@@ -436,6 +451,11 @@ void ComputeShapes::findMoments2D()
   double konst2 = static_cast<double>(spacing[0] * spacing[1]);
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     // Eq. 12 Moment matrix. Omega 2
     // Eq. 11 Omega 2
     // E1. 13 Omega 1
@@ -459,6 +479,11 @@ void ComputeShapes::findAxes()
   constexpr double multiplier = 1.0 / (4.0 * std::numbers::pi);
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     double r1 = m_FeatureEigenVals[3 * featureId];
     double r2 = m_FeatureEigenVals[3 * featureId + 1];
     double r3 = m_FeatureEigenVals[3 * featureId + 2];
@@ -525,6 +550,11 @@ void ComputeShapes::findAxes2D()
 
   for(size_t i = 1; i < numfeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     Ixx = m_FeatureMoments[i * 6 + 0];
     Iyy = m_FeatureMoments[i * 6 + 1];
     Ixy = m_FeatureMoments[i * 6 + 2];
@@ -573,6 +603,11 @@ void ComputeShapes::findAxisEulers()
   size_t numfeatures = centroids.getNumberOfTuples();
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     // insert principal unit vectors into rotation matrix representing Feature reference frame within the sample reference frame
     // (Note that the 3 directions are actually the long axis and the 1 direction is actually the short axis)
     /* clang-format off */
@@ -609,6 +644,11 @@ void ComputeShapes::findAxisEulers2D()
 
   for(size_t featureId = 1; featureId < numfeatures; featureId++)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     double Ixx = m_FeatureMoments[featureId * 6 + 0];
     double Iyy = m_FeatureMoments[featureId * 6 + 1];
     double Ixy = m_FeatureMoments[featureId * 6 + 2];

@@ -199,6 +199,10 @@ Result<> ComputeFeatureClustering::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
     {
 
@@ -226,6 +230,10 @@ Result<> ComputeFeatureClustering::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
     {
       for(auto value : clusters[i])
@@ -251,6 +259,10 @@ Result<> ComputeFeatureClustering::operator()()
   {
     for(usize i = 1; i < totalFeatures; i++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
       if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
       {
         if(maskCompare->isTrue(i))
@@ -275,6 +287,10 @@ Result<> ComputeFeatureClustering::operator()()
   {
     for(usize i = 1; i < totalFeatures; i++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
       if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
       {
         for(usize j = 0; j < clusters[i].size(); j++)

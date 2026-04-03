@@ -51,6 +51,11 @@ Result<> ConditionalSetValue::operator()()
   MessageHelper messageHelper(m_MessageHandler);
   messageHelper.sendMessage("Starting ConditionalSetValue...");
 
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
   if(m_InputValues->UseConditional)
   {
     DataObject& inputDataObject = m_DataStructure.getDataRef(m_InputValues->SelectedArrayPath);

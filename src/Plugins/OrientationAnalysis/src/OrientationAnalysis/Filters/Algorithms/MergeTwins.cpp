@@ -119,6 +119,11 @@ void MergeTwins::groupFeaturesExecute()
 
   while(featureSeed >= 0)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     bool m_PatchGrouping = false;
     parentCount++;
     featureSeed = getSeed(parentCount);
@@ -221,6 +226,11 @@ Result<> MergeTwins::operator()()
   usize totalPoints = featureIds.getNumberOfTuples();
   for(usize k = 0; k < totalPoints; k++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     int32 featureName = featureIds[k];
     cellParentIds[k] = featureParentIds[featureName];
     if(featureParentIds[featureName] > numParents)

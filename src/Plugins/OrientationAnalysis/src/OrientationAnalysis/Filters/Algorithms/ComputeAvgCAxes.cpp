@@ -85,6 +85,11 @@ Result<> ComputeAvgCAxes::operator()()
   // Loop over each cell
   for(usize i = 0; i < totalPoints; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     int32 currentFeatureId = featureIds[i];
     // If the featureId for a given cell is valid ( > 0) then analyze that value
     if(currentFeatureId > 0)
@@ -147,6 +152,11 @@ Result<> ComputeAvgCAxes::operator()()
 
   for(size_t i = 1; i < totalFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     const usize tupleIndex = i * 3;
     float32 avgCAxesValue = avgCAxes[tupleIndex];
     if(std::isnan(avgCAxesValue))

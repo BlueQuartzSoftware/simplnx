@@ -63,6 +63,10 @@ Result<> ComputeBoundaryCells::operator()()
 
   for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     progressMessenger.sendProgressMessage(1);
     kStride = dims[0] * dims[1] * zIdx;
     for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)

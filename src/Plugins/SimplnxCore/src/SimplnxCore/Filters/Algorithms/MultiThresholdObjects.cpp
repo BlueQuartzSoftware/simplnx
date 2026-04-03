@@ -260,6 +260,10 @@ Result<> MultiThresholdObjects::operator()()
 
   for(const std::shared_ptr<IArrayThreshold>& threshold : thresholdSet)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     const IArrayThreshold* thresholdPtr = threshold.get();
     if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {

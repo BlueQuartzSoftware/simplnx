@@ -60,6 +60,10 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
 
   for(int64_t ring = 0; ring < m_InputValues->Ring; ++ring)
   {
+    if(shouldCancel)
+    {
+      return {};
+    }
     throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Find N-Ring Neighbors: Processing ring {} of {}", ring + 1, m_InputValues->Ring); });
 
     // Make a copy of the 1 Ring Triangles that we just found so that we can use those triangles as the

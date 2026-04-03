@@ -62,6 +62,11 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
 
   for(usize i = 1; i < totalFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     usize listLength = neighborList[i].size();
     F1Lists[i].assign(listLength, 0.0f);
     F1sPtLists[i].assign(listLength, 0.0f);

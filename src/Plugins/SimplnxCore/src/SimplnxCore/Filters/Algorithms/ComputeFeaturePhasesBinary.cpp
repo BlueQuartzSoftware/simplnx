@@ -47,6 +47,10 @@ Result<> ComputeFeaturePhasesBinary::operator()()
 
   for(usize i = 0; i < totalPoints; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     featurePhasesStoreRef[featureIdsStoreRef[i]] = goodVoxelsMask->isTrue(i);
     progressMessenger.sendProgressMessage(1);
   }

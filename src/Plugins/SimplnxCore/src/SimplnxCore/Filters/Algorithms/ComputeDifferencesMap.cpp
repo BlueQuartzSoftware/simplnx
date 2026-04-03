@@ -58,6 +58,11 @@ Result<> ComputeDifferencesMap::operator()()
   auto* secondInputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SecondInputArrayPath);
   auto* differenceMapArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->DifferenceMapArrayPath);
 
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
   ExecuteDataFunction(ExecuteFindDifferenceMapFunctor{}, firstInputArray->getDataType(), firstInputArray, secondInputArray, differenceMapArray);
 
   return {};

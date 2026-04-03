@@ -389,7 +389,15 @@ Result<> AlignGeometries::operator()()
   if(alignmentType == 0)
   {
     FloatVec3 movingOrigin = extractOrigin(moving);
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     FloatVec3 targetOrigin = extractOrigin(target);
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
 
     float translation[3] = {targetOrigin[0] - movingOrigin[0], targetOrigin[1] - movingOrigin[1], targetOrigin[2] - movingOrigin[2]};
     translateGeometry(moving, translation);
@@ -397,7 +405,15 @@ Result<> AlignGeometries::operator()()
   else if(alignmentType == 1)
   {
     FloatVec3 movingCentroid = extractCentroid(moving);
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     FloatVec3 targetCentroid = extractCentroid(target);
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
 
     float translation[3] = {targetCentroid[0] - movingCentroid[0], targetCentroid[0] - movingCentroid[0], targetCentroid[0] - movingCentroid[0]};
     translateGeometry(moving, translation);

@@ -62,6 +62,11 @@ Result<> ComputeBoundaryStrengths::operator()()
 
   for(usize i = 0; i < numTriangles; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     gName1 = surfaceMeshFaceLabels[i * 2];
     gName2 = surfaceMeshFaceLabels[i * 2 + 1];
     if(gName1 > 0 && gName2 > 0)

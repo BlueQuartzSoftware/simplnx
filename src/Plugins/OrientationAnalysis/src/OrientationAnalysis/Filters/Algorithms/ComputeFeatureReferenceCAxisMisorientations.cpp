@@ -109,6 +109,11 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
    */
   for(int64 plane = 0; plane < zPoints; plane++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     for(int64 row = 0; row < yPoints; row++)
     {
       for(int64 col = 0; col < xPoints; col++)
@@ -165,6 +170,11 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   // average C Axis Misorientation for each feature
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     // Compute the average value of the misorientations between each feature's cell
     // and the average C-Axis for that feature
     featAvgCAxisMis[featureId] = avgMisorientations[featureId] / static_cast<float32>(counts[featureId]);
@@ -175,6 +185,11 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   std::vector<double> stdevs(totalFeatures, 0.0);
   for(usize cellIdx = 0; cellIdx < totalPoints; cellIdx++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     const int32 featureId = featureIds[cellIdx];
     double diff = cellRefCAxisMis.getValue(cellIdx) - featAvgCAxisMis.getValue(featureId);
     stdevs[featureId] += (diff * diff);
@@ -183,6 +198,11 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
   // Finish computing the standard deviation in this loop
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     featStdevCAxisMis[featureId] = std::sqrt(stdevs[featureId] / static_cast<double>(counts[featureId]));
   }
 

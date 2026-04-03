@@ -152,6 +152,10 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   // Transfer the data from the old SharedVertexList to the new VertexList
   for(MeshIndexType vertIndex = 0; vertIndex < numVerts; vertIndex++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     MeshIndexType mappedIndex = vertNewIndex[vertIndex];
     if(mappedIndex != notSeen)
     {
@@ -169,6 +173,10 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   // Transfer the data from the old SharedTriangleList to the new TriangleList
   for(MeshIndexType triIndex = 0; triIndex < numTris; triIndex++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     MeshIndexType mappedIndex = triNewIndex[triIndex];
     if(mappedIndex != notSeen)
     {

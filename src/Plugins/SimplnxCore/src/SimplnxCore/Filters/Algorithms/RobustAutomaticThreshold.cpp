@@ -57,6 +57,11 @@ Result<> RobustAutomaticThreshold::operator()()
   const auto& gradientStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->GradientArrayPath)->getDataStoreRef();
   auto& maskStoreRef = m_DataStructure.getDataAs<BoolArray>(m_InputValues->InputArrayPath.replaceName(m_InputValues->CreatedMaskName))->getDataStoreRef();
 
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
   ExecuteNeighborFunction(FindThresholdFunctor{}, inputArray->getDataType(), inputArray, gradientStoreRef, maskStoreRef);
 
   return {};

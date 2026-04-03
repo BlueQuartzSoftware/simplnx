@@ -80,6 +80,10 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   // Start looping over the regular grid data (This could be either an Image Geometry or a Rectilinear Grid geometry (in theory)
   for(int64 zIdx = 0; zIdx < zPoints; zIdx++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
 
     int64 zStride = zIdx * xPoints * yPoints;
     for(int64 yIdx = 0; yIdx < yPoints; yIdx++)
