@@ -13,6 +13,7 @@
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
@@ -108,7 +109,7 @@ IFilter::PreflightResult ComputeLargestCrossSectionsFilter::preflightImpl(const 
   SizeVec3 dims = imageGeom.getDimensions();
   if(dims[0] <= 1 || dims[1] <= 1 || dims[2] <= 1)
   {
-    return MakePreflightErrorResult(-3710, fmt::format("Image Geometry at path '{}' is not 3D.  The dimensions are ({}, {}, {})", pImageGeometryPath.toString(), dims[0], dims[1], dims[2]));
+    return MakePreflightErrorResult(-3710, fmt::format("Image Geometry at path '{}' is not 3D. The dimensions are ({})", pImageGeometryPath.toString(), StringUtilities::formatDimensions3D(dims)));
   }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

@@ -11,6 +11,7 @@
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/format.h>
 
@@ -124,8 +125,8 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     if(parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
       auto* attrMatrixPtr = dynamic_cast<AttributeMatrix*>(parentObjectPtr);
-      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrixPtr->getShape(), " x "));
-      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", fmt::join(store->getTupleShape(), " x "));
+      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", StringUtilities::formatDimensions(attrMatrixPtr->getShape()));
+      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", StringUtilities::formatDimensions(store->getTupleShape()));
       return MakeErrorResult(-268,
                              fmt::format("CreateArray: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
                                          "dimensions or the same total number of tuples.\n{}\n{}",
