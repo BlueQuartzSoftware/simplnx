@@ -2,15 +2,30 @@
 
 #include "OrientationAnalysis/Filters/Algorithms/ConvertOrientations.hpp"
 
-#include <EbsdLib/LaueOps/LaueOps.h>
-
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/FilterUtilities.hpp"
+
+#include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <iostream>
 
 using namespace nx::core;
+
+namespace
+{
+struct CopyDataFunctor
+{
+  template <typename T>
+  void operator()(const IDataArray* srcIArray, IDataArray* destIArray)
+  {
+    const auto& srcArray = srcIArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& destArray = destIArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    destArray.copyFrom(0, srcArray, 0, srcArray.getNumberOfTuples());
+  }
+};
+} // namespace
 
 // -----------------------------------------------------------------------------
 ConvertOrientationsToVertexGeometry::ConvertOrientationsToVertexGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -96,6 +111,21 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
     vertices.setComponent(i, 0, static_cast<float32>(st[0]));
     vertices.setComponent(i, 1, static_cast<float32>(st[1]));
     vertices.setComponent(i, 2, static_cast<float32>(st[2]));
+  }
+
+  // Copy over the DataArrays to the new Vertex Geometry
+  ShapeType verticesTupleShape = vertices.getTupleShape();
+  DataPath vertexAttrMatrixPath = m_InputValues->OutputVertexGeometryPath.createChildPath(m_InputValues->OutputVertexAttrMatrixName);
+  for(const auto& sourceDataPath : m_InputValues->DataPathCopySources)
+  {
+    auto* sourceDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(sourceDataPath);
+    DataPath destinationDataPath = vertexAttrMatrixPath.createChildPath(sourceDataArrayPtr->getName());
+    auto* destinationDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destinationDataPath);
+    ExecuteDataFunction(CopyDataFunctor{}, sourceDataArrayPtr->getDataType(), sourceDataArrayPtr, destinationDataArrayPtr);
+    // auto& destinationDataArray = m_DataStructure.getDataRefAs<IDataArray>(destinationDataPath);
+    // This does not resize anything (at least it had better not), but is
+    // a round-about way to set the Tuple Shape on the destination array
+    destinationDataArrayPtr->resizeTuples(verticesTupleShape);
   }
 
   return {};

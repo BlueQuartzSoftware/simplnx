@@ -1663,6 +1663,7 @@ inline void CheckArraysInheritTupleDims(const DataStructure& dataStructure, cons
     REQUIRE(daPathsOpt.has_value());
     for(const auto& daPath : daPathsOpt.value())
     {
+      INFO(fmt::format("AttributeMatrix: {}  Array: '{}'", amPath.toString(), daPath.toString()));
       const auto& arr = dataStructure.getDataAs<IArray>(daPath);
       REQUIRE(attrMatrix.getShape() == arr->getTupleShape());
     }

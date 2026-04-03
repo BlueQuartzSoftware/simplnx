@@ -60,19 +60,32 @@ const DataPath k_FeatureAttrMatPath = k_ImageDataContainerPath.createChildPath("
 const std::string k_AvgQuatsName = "Computed AvgQuats";
 const std::string k_AvgEulersName = "Computed AvgEulerAngles";
 
+const std::string k_ComputedWatsonAvgQuatsName = "Computed Watson AvgQuats";
+const std::string k_ComputedWatsonAvgEulersName = "Computed Watson AvgEulerAngles";
+const std::string k_ComputedWatsonKappasName = "Computed Watson Kappas";
+
+const std::string k_ComputedVMFAvgQuatsName = "Computed VMF AvgQuats";
+const std::string k_ComputedVMFAvgEulersName = "Computed VMF AvgEulerAngles";
+const std::string k_ComputedVMFKappasName = "Computed VMF Kappas";
+
 const std::string k_Exemplar_AvgQuatsName = "AvgQuats";
 const std::string k_Exemplar_AvgEulersName = "AvgEulerAngles";
 
+const std::string k_Exemplar_WatsonAvgQuatsName = "Watson Avg Quats";
+const std::string k_Exemplar_WatsonAvgEulersName = "Watson Avg EulerAngles";
+
+const std::string k_Exemplar_VMFAvgQuatsName = "vMF Avg Quats";
+const std::string k_Exemplar_VMFAvgEulersName = "vMF Avg EulerAngles";
 } // namespace compute_avg_orientation
 
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ComputeAvgOrientation.tar.gz", "7_ComputeAvgOrientation");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ComputeAvgOrientation_v2.tar.gz", "7_ComputeAvgOrientation_v2");
 
   // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/7_ComputeAvgOrientation/7_ComputeAvgOrientation.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarFilePath = fs::path(fmt::format("{}/7_ComputeAvgOrientation_v2/7_ComputeAvgOrientation_v2.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -84,9 +97,21 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations", "[OrientationAnalysis][
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(compute_avg_orientation::k_PhasesPath));
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(compute_avg_orientation::k_QuatsPath));
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(compute_avg_orientation::k_CrystalStructuresPath));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_AvgQuatsArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_AvgQuatsName));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_AvgEulerAnglesArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_AvgEulersName));
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(compute_avg_orientation::k_FeatureAttrMatPath));
+
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseRodriguesAverage_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesQuatsArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_AvgQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesAvgEulerArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_AvgEulersName));
+
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseWatson_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgQuatsArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_ComputedWatsonAvgQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgEulerArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_ComputedWatsonAvgEulersName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_ComputedWatsonKappasName));
+
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseVonMisesFisher_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgQuatsArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_ComputedVMFAvgQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgEulerArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_ComputedVMFAvgEulersName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherKappaArrayName_Key, std::make_any<std::string>(compute_avg_orientation::k_ComputedVMFKappasName));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -100,15 +125,41 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations", "[OrientationAnalysis][
   WriteTestDataStructure(dataStructure, fmt::format("{}/compute_average_orientations.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  DataPath computedAvgEulersPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_AvgEulersName);
-  DataPath exemplarAvgEulersPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_Exemplar_AvgEulersName);
+  {
+    DataPath computedAvgEulersPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_AvgEulersName);
+    DataPath exemplarAvgEulersPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_Exemplar_AvgEulersName);
 
-  UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, computedAvgEulersPath, exemplarAvgEulersPath, 5.0E-7f, false);
+    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, computedAvgEulersPath, exemplarAvgEulersPath, 5.0E-7f, false);
 
-  DataPath computedAvgQuatsPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_AvgQuatsName);
-  DataPath exemplarAvgQuatsPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_Exemplar_AvgQuatsName);
+    DataPath computedAvgQuatsPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_AvgQuatsName);
+    DataPath exemplarAvgQuatsPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_Exemplar_AvgQuatsName);
 
-  UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, computedAvgQuatsPath, exemplarAvgQuatsPath, 5.0E-7f, false);
+    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, computedAvgQuatsPath, exemplarAvgQuatsPath, 5.0E-7f, false);
+  }
+
+  {
+    DataPath computedAvgEulersPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_ComputedWatsonAvgEulersName);
+    DataPath exemplarAvgEulersPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_Exemplar_WatsonAvgEulersName);
+
+    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, computedAvgEulersPath, exemplarAvgEulersPath, 5.0E-7f, false);
+
+    DataPath computedAvgQuatsPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_ComputedWatsonAvgQuatsName);
+    DataPath exemplarAvgQuatsPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_Exemplar_WatsonAvgQuatsName);
+
+    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, computedAvgQuatsPath, exemplarAvgQuatsPath, 5.0E-7f, false);
+  }
+
+  {
+    DataPath computedAvgEulersPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_ComputedVMFAvgEulersName);
+    DataPath exemplarAvgEulersPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_Exemplar_VMFAvgEulersName);
+
+    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, computedAvgEulersPath, exemplarAvgEulersPath, 5.0E-7f, false);
+
+    DataPath computedAvgQuatsPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_ComputedVMFAvgQuatsName);
+    DataPath exemplarAvgQuatsPath = compute_avg_orientation::k_FeatureAttrMatPath.createChildPath(compute_avg_orientation::k_Exemplar_VMFAvgQuatsName);
+
+    UnitTest::CompareFloatArraysWithNans<float32>(dataStructure, computedAvgQuatsPath, exemplarAvgQuatsPath, 5.0E-7f, false);
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

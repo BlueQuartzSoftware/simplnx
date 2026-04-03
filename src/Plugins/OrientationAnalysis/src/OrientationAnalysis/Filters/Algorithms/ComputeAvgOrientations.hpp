@@ -22,8 +22,22 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeAvgOrientationsInputValues
   DataPath cellPhasesArrayPath;
   DataPath cellQuatsArrayPath;
   DataPath crystalStructuresArrayPath;
+
+  bool useRodriguesAverage;
+  bool useVonMisesAverage;
+  bool useWatsonAverage;
   DataPath avgQuatsArrayPath;
   DataPath avgEulerAnglesArrayPath;
+
+  DataPath VMFQuatsArrayPath;
+  DataPath VMFEulerAnglesArrayPath;
+  DataPath VMFKappaArrayPath;
+
+  DataPath WatsonQuatsArrayPath;
+  DataPath WatsonEulerAnglesArrayPath;
+  DataPath WatsonKappaArrayPath;
+
+  uint32 RandomSeed = 43514;
 };
 
 /**
@@ -42,12 +56,24 @@ public:
 
   Result<> operator()();
 
+  void sendThreadSafeProgressMessage(usize counter);
+
 protected:
 private:
   DataStructure& m_DataStructure;
   const IFilter::MessageHandler& m_MessageHandler;
   const std::atomic_bool& m_ShouldCancel;
   const ComputeAvgOrientationsInputValues* m_InputValues = nullptr;
+
+  Result<> computeRodriguesAverage();
+  Result<> computeVmfWatsonAverage();
+
+  // Thread safe Progress Message
+  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
+  mutable std::mutex m_ProgressMessage_Mutex;
+  size_t m_NumberOfFeatures = 0;
+  size_t m_ProgressCounter = 0;
+  size_t m_LastProgressInt = 0;
 };
 
 } // namespace nx::core
