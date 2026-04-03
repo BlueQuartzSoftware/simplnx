@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "SimplnxCore/utils/VtkUtilities.hpp"
@@ -31,6 +32,9 @@ const std::atomic_bool& WriteVtkRectilinearGrid::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteVtkRectilinearGrid::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing VTK Rectilinear Grid file...");
+
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 res = imageGeom.getSpacing();

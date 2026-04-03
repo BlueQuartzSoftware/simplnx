@@ -1,6 +1,7 @@
 #include "ComputeFeatureRect.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -61,6 +62,12 @@ Result<> ComputeFeatureRect::operator()()
   const usize yDim = imageDims[1];
   const usize zDim = imageDims[2];
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(zDim);
+  progressHelper.setProgressMessageTemplate("Computing Feature Rect: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   usize index = 0;
   // Store the coordinates in the corners array
   for(uint32 z = 0; z < zDim; z++)
@@ -104,6 +111,7 @@ Result<> ComputeFeatureRect::operator()()
         }
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

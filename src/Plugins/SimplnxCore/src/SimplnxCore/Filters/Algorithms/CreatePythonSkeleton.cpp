@@ -3,6 +3,7 @@
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -27,6 +28,9 @@ const std::atomic_bool& CreatePythonSkeleton::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CreatePythonSkeleton::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting CreatePythonSkeleton...");
+
   if(m_InputValues->useExistingPlugin)
   {
     return nx::core::WritePythonFiltersToPlugin(m_InputValues->pluginInputDir, m_InputValues->filterNames);

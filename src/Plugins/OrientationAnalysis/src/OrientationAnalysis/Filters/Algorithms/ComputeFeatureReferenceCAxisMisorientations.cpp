@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Core/EbsdDataArray.hpp>
 #include <EbsdLib/Core/Orientation.hpp>
@@ -97,6 +98,12 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 
   const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(zPoints);
+  progressHelper.setProgressMessageTemplate("Compute Feature Reference C-Axis Misorientations: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   /* **************************************************************************
    * Loop over all cells in the ImageGeometry
    */
@@ -151,16 +158,13 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
         }
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   // Loop over all the features from the feature attribute matrix and compute the
   // average C Axis Misorientation for each feature
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
-    if(featureId % 1000 == 0)
-    {
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working On Feature {} of {}", featureId, totalFeatures));
-    }
     // Compute the average value of the misorientations between each feature's cell
     // and the average C-Axis for that feature
     featAvgCAxisMis[featureId] = avgMisorientations[featureId] / static_cast<float32>(counts[featureId]);

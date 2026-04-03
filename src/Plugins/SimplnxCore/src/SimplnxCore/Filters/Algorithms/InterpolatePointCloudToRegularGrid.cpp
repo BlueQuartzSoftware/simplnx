@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <cmath>
 #include <limits>
@@ -196,8 +197,11 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
   std::vector<std::vector<float64>> copyWeightSum(numCopyArrays, std::vector<float64>(numVoxels, 0.0));
 
   // Main vertex loop
-  usize progIncrement = numVerts / 100;
-  usize prog = 1;
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(numVerts);
+  progressHelper.setProgressMessageTemplate("Interpolate Point Cloud: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   for(usize i = 0; i < numVerts; i++)
   {
@@ -284,16 +288,11 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       }
     }
 
-    if(i > prog)
-    {
-      usize progressInt = static_cast<usize>((static_cast<float64>(i) / static_cast<float64>(numVerts)) * 100.0);
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Interpolating Point Cloud || {}% Completed", progressInt));
-      prog += progIncrement;
-    }
+    progressMessenger.sendProgressMessage(1);
   }
 
   // Finalization pass - write outputs
-  m_MessageHandler(IFilter::Message::Type::Info, "Writing interpolated results...");
+  messageHelper.sendMessage("Interpolate Point Cloud: Writing interpolated results...");
 
   for(usize a = 0; a < numInterpArrays; a++)
   {

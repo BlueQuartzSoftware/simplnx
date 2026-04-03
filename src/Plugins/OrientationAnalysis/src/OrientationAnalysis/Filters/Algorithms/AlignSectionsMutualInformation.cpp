@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -35,6 +36,10 @@ Result<> AlignSectionsMutualInformation::operator()()
   {
     return {};
   }
+
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Aligning Sections by Mutual Information...");
+
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 
   return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
@@ -84,6 +89,12 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
     misorientations[i].assign(dims[1], 0.0f);
   }
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(dims[2] - 1);
+  progressHelper.setProgressMessageTemplate("Align Sections Mutual Information: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   if(m_InputValues->StoreAlignmentShifts)
   {
     auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
@@ -95,7 +106,6 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       {
         return {};
       }
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       float32 minDisorientation = std::numeric_limits<float32>::max();
       int64 slice = (dims[2] - 1) - iter;
@@ -211,13 +221,13 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       relativeShiftsStore[yIndex] = newYShift;
       cumulativeShiftsStore[xIndex] = xShifts[iter];
       cumulativeShiftsStore[yIndex] = yShifts[iter];
+      progressMessenger.sendProgressMessage(1);
     }
   }
   else
   {
     for(int64 iter = 1; iter < dims[2]; iter++)
     {
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining Shifts: Slice {}/{} complete", iter, dims[2]));
 
       float32 minDisorientation = std::numeric_limits<float32>::max();
       int64 slice = (dims[2] - 1) - iter;
@@ -324,6 +334,7 @@ Result<> AlignSectionsMutualInformation::findShifts(std::vector<int64>& xShifts,
       }
       xShifts[iter] = xShifts[iter - 1] + newXShift;
       yShifts[iter] = yShifts[iter - 1] + newYShift;
+      progressMessenger.sendProgressMessage(1);
     }
   }
 
@@ -357,9 +368,14 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
   std::vector<int64_t> voxelList(initialVoxelsListSize, -1);
   int64_t neighborPoints[4] = {-dims[0], -1, 1, dims[0]};
 
+  MessageHelper formFeatMessageHelper(m_MessageHandler);
+  auto formFeatProgressHelper = formFeatMessageHelper.createProgressMessageHelper();
+  formFeatProgressHelper.setMaxProgresss(dims[2]);
+  formFeatProgressHelper.setProgressMessageTemplate("Identifying Features: {:.1f}% Complete");
+  auto formFeatProgressMessenger = formFeatProgressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(int64_t slice = 0; slice < dims[2]; slice++)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Identifying Features: Slice {}/{} complete", slice, dims[2]));
 
     int64 startPoint = slice * dims[0] * dims[1];
     int64 endPoint = (slice + 1) * dims[0] * dims[1];
@@ -458,5 +474,6 @@ void AlignSectionsMutualInformation::formFeaturesSections(std::vector<int32>& mi
       }
     }
     featureCounts[slice] = featureCount;
+    formFeatProgressMessenger.sendProgressMessage(1);
   }
 }

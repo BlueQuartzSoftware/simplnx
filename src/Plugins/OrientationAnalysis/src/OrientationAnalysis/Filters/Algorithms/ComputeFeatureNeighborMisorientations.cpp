@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -49,6 +50,12 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
   size_t totalFeatures = inFeaturePhases.getNumberOfTuples();
 
   std::vector<std::vector<float>> tempMisorientationLists(totalFeatures);
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalFeatures - 1);
+  progressHelper.setProgressMessageTemplate("Compute Feature Neighbor Misorientations: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   usize quatIndex = 0;
   for(size_t i = 1; i < totalFeatures; i++)
   {
@@ -99,6 +106,7 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       }
       tempMisoList = 0;
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   // Output Variables

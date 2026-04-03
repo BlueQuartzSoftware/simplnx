@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 using namespace nx::core;
@@ -54,6 +55,9 @@ const std::atomic_bool& SplitDataArrayByComponent::getCancel()
 Result<> SplitDataArrayByComponent::operator()()
 {
   auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
+
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Splitting data array '{}' by component...", m_InputValues->InputArrayPath.getTargetName()));
 
   ExecuteDataFunction(SplitArraysFunctor{}, inputArray->getDataType(), m_DataStructure, inputArray, m_InputValues);
 

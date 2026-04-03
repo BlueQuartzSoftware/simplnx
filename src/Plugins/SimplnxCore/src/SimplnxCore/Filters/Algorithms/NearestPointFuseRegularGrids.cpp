@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -156,6 +157,8 @@ const std::atomic_bool& NearestPointFuseRegularGrids::getCancel()
 // -----------------------------------------------------------------------------
 Result<> NearestPointFuseRegularGrids::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   auto& refImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ReferenceGeometryPath);
   auto& sampleImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SamplingGeometryPath);
   auto& sampleAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SamplingCellAttributeMatrixPath);
@@ -171,6 +174,7 @@ Result<> NearestPointFuseRegularGrids::operator()()
   }
 
   // Copy according to  calculated values
+  messageHelper.sendMessage("Fusing regular grids by nearest point...");
   ParallelTaskAlgorithm taskRunner;
   auto sampleVoxelArrays = sampleAM.findAllChildrenOfType<IArray>();
   for(const auto& array : sampleVoxelArrays)

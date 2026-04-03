@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -27,6 +28,9 @@ const std::atomic_bool& WriteGBCDTriangleData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteGBCDTriangleData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing GBCD Triangle Data...");
+
   auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
   auto& faceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceNormalsArrayPath);
   auto& faceAreas = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceAreasArrayPath);

@@ -12,6 +12,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -275,6 +276,9 @@ ComputeCoordinateThreshold::~ComputeCoordinateThreshold() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeCoordinateThreshold::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Coordinate Threshold...");
+
   std::function<uint8(float32, float32, float32)> f_IsInBounds;
   switch(static_cast<BoundsType>(m_InputValues->ShapeType))
   {

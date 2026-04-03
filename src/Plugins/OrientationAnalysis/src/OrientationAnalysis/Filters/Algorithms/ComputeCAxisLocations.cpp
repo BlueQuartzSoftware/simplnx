@@ -3,6 +3,7 @@
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
@@ -67,6 +68,12 @@ Result<> ComputeCAxisLocations::operator()()
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Compute C-Axis Locations: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   usize index = 0;
   for(size_t i = 0; i < totalPoints; i++)
   {
@@ -96,6 +103,7 @@ Result<> ComputeCAxisLocations::operator()()
       cAxisLocation[index + 1] = NAN;
       cAxisLocation[index + 2] = NAN;
     }
+    progressMessenger.sendProgressMessage(1);
   }
   return result;
 }

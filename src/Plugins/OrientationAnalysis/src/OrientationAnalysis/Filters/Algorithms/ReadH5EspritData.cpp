@@ -3,6 +3,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -20,6 +21,9 @@ ReadH5EspritData::~ReadH5EspritData() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadH5EspritData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading H5 Esprit data...");
+
   return execute();
 }
 

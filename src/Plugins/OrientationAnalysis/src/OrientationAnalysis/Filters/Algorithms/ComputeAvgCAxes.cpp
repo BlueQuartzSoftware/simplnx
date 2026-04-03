@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
@@ -75,6 +76,12 @@ Result<> ComputeAvgCAxes::operator()()
 
   std::vector<int32> counter(totalFeatures, 0);
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Compute Avg C-Axes: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   // Loop over each cell
   for(usize i = 0; i < totalPoints; i++)
   {
@@ -135,6 +142,7 @@ Result<> ComputeAvgCAxes::operator()()
       value = avgCAxes[cAxesIndex + 2] + c1[2];
       avgCAxes[cAxesIndex + 2] = value;
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   for(size_t i = 1; i < totalFeatures; i++)

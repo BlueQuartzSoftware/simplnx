@@ -1,6 +1,7 @@
 #include "ReadCSVFile.hpp"
 
 #include "simplnx/Utilities/FileUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -42,6 +43,9 @@ Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& 
                                const std::vector<CSVType>& columnDataTypes, const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const ShapeType& tupleDims,
                                const std::vector<char>& delimiters, bool consecutiveDelimiters, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler)
 {
+  MessageHelper messageHelper(msgHandler);
+  messageHelper.sendMessage(fmt::format("Reading CSV file: {}", inputFilePath));
+
   auto headers = columnHeaders;
   headers = FileUtilities::CSV::RemoveIllegalCharacters(headers);
 

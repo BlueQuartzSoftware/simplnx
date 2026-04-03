@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -54,7 +55,11 @@ Result<> ComputeTriangleGeomCentroids::operator()()
   auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
   std::vector<std::set<MeshIndexType>> vertexSets(numFeatures);
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Gathering unique vertices for {} triangles", numTriangles));
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(numTriangles);
+  progressHelper.setProgressMessageTemplate("Gathering Triangle Vertices: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   for(MeshIndexType i = 0; i < numTriangles; i++)
   {
@@ -72,9 +77,13 @@ Result<> ComputeTriangleGeomCentroids::operator()()
       vertexSets[faceLabel1].insert(triangles[3 * i + 1]);
       vertexSets[faceLabel1].insert(triangles[3 * i + 2]);
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing centroids for {} features", numFeatures));
+  progressHelper.resetProgress();
+  progressHelper.setMaxProgresss(numFeatures);
+  progressHelper.setProgressMessageTemplate("Computing Triangle Geom Centroids: {:.1f}% Complete");
+  auto progressMessenger2 = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   for(MeshIndexType i = 0; i < numFeatures; i++)
   {
@@ -103,6 +112,7 @@ Result<> ComputeTriangleGeomCentroids::operator()()
       }
     }
     vertexSets[i].clear();
+    progressMessenger2.sendProgressMessage(1);
   }
   return {};
 }

@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -419,6 +420,8 @@ const std::atomic_bool& ReadVtkStructuredPoints::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReadVtkStructuredPoints::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading VTK structured points file...");
   return readFile();
 }
 

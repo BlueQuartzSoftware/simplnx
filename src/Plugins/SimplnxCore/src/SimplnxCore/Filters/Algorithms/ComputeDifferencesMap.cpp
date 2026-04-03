@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 namespace
@@ -50,6 +51,8 @@ ComputeDifferencesMap::~ComputeDifferencesMap() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeDifferencesMap::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Differences Map...");
 
   auto* firstInputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FirstInputArrayPath);
   auto* secondInputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SecondInputArrayPath);

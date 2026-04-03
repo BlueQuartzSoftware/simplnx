@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -81,6 +82,8 @@ const std::atomic_bool& CombineStlFiles::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CombineStlFiles::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   DataStructure tempDataStructure;
   std::vector<fs::path> paths;
   const std::string ext(".stl");
@@ -106,6 +109,11 @@ Result<> CombineStlFiles::operator()()
   activeArray[0] = 0;
   auto fileListStrArray = m_DataStructure.getDataRefAs<StringArray>(fileListPath);
 
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(paths.size());
+  progressHelper.setProgressMessageTemplate("CombineStlFiles Reading: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   int32 currentIndex = 1;
   for(const auto& filePath : paths)
   {
@@ -129,6 +137,7 @@ Result<> CombineStlFiles::operator()()
     {
       return executeResult.result;
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   usize totalTriangles = 0;
@@ -172,6 +181,11 @@ Result<> CombineStlFiles::operator()()
   usize vertexLabelOffset = 0;
 
   m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Moving final triangle geometry data..."));
+
+  progressHelper.resetProgress();
+  progressHelper.setMaxProgresss(stlGeometries.size());
+  progressHelper.setProgressMessageTemplate("CombineStlFiles Merging: {:.1f}% Complete");
+  auto mergeProgressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   // Loop over each temp geometry and copy the data into the destination geometry
   for(auto* currentGeometry : stlGeometries)
@@ -221,6 +235,7 @@ Result<> CombineStlFiles::operator()()
     vertexOffset += currentGeomNumVertices * 3;
     faceNormalsOffset += curFaceNormals.getSize();
     fileIndex++;
+    mergeProgressMessenger.sendProgressMessage(1);
   }
   taskRunner.wait(); // This will spill over if the number of geometries to processes does not divide evenly by the number of threads.
 

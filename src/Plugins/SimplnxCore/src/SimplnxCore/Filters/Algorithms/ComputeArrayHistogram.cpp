@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -44,6 +45,12 @@ Result<> ComputeArrayHistogram::operator()()
   const int32 numBins = m_InputValues->NumberOfBins;
   const std::vector<DataPath> selectedArrayPaths = m_InputValues->SelectedArrayPaths;
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(selectedArrayPaths.size());
+  progressHelper.setProgressMessageTemplate("Computing Array Histogram: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   ParallelTaskAlgorithm taskRunner;
 
   std::atomic<usize> overflow = 0;
@@ -82,6 +89,7 @@ Result<> ComputeArrayHistogram::operator()()
       const std::string arrayName = inputData->getName();
       ComputeArrayHistogram::updateProgress(fmt::format("{} values not categorized into bin for array {}", overflow.load(), arrayName));
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   taskRunner.wait();

@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fstream>
@@ -827,6 +828,9 @@ Result<> ReadDeformKeyFileV12::operator()(bool allocate)
    * have been passed in within inputValues are not valid as they have
    * not been created.
    */
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Reading DEFORM key file: {}", m_InputValues->InputFilePath.string()));
+
   std::ifstream inStream(m_InputValues->InputFilePath, std::ios_base::binary);
   if(!inStream.is_open())
   {

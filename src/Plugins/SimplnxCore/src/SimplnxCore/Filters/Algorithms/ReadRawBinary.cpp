@@ -41,6 +41,7 @@
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -116,6 +117,9 @@ Result<> ReadRawBinary::operator()()
 // -----------------------------------------------------------------------------
 Result<> ReadRawBinary::execute()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading raw binary data...");
+
   if(m_ShouldCancel)
   {
     return {};

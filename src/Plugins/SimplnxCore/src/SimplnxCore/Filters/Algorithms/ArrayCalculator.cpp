@@ -33,6 +33,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <regex>
@@ -209,9 +210,17 @@ Result<> ArrayCalculator::operator()()
   }
 
   // Execute the RPN expression
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+
   DataPath temporaryCalculatedArrayPath = DataPath({m_InputValues->CalculatedArray.getTargetName() + "_TEMPORARY"});
   std::stack<ICalculatorArray::Pointer> executionStack;
   int totalItems = rpn.size();
+
+  progressHelper.setMaxProgresss(totalItems);
+  progressHelper.setProgressMessageTemplate("ArrayCalculator: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(int rpnCount = 0; rpnCount < totalItems; rpnCount++)
   {
     m_MessageHandler({IFilter::Message::Type::Info, "Computing Operator " + StringUtilities::number(rpnCount + 1) + "/" + StringUtilities::number(totalItems)});
@@ -230,6 +239,8 @@ Result<> ArrayCalculator::operator()()
 
       rpnOperator->calculate(parser.m_TemporaryDataStructure, m_InputValues->Units, temporaryCalculatedArrayPath, executionStack);
     }
+
+    progressMessenger.sendProgressMessage(1);
 
     if(getCancel())
     {

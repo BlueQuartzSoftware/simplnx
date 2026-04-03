@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 #include <algorithm>
@@ -363,6 +364,9 @@ RegularGridSampleSurfaceMesh::~RegularGridSampleSurfaceMesh() noexcept = default
 // -----------------------------------------------------------------------------
 Result<> RegularGridSampleSurfaceMesh::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Sampling surface mesh onto regular grid...");
+
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryOutputPath);
 

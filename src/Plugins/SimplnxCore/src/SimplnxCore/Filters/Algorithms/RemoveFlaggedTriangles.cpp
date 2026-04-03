@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -82,6 +83,9 @@ const std::atomic_bool& RemoveFlaggedTriangles::getCancel()
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedTriangles::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Removing flagged triangles...");
+
   // Remove Triangles from reduced according to removeTrianglesIndex
   const auto& originalTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometry);
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;

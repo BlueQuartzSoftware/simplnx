@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -32,6 +33,9 @@ WriteDREAM3D::~WriteDREAM3D() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> WriteDREAM3D::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing DREAM3D file...");
+
   auto atomicFileResult = AtomicFile::Create(m_InputValues->ExportFilePath);
   if(atomicFileResult.invalid())
   {

@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -59,6 +60,9 @@ ReadStringDataArray::~ReadStringDataArray() noexcept = default;
 
 Result<> ReadStringDataArray::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading string data array...");
+
   auto& data = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->outputArrayPath);
   char delimiter = nx::core::CsvParser::IndexToDelimiter(m_InputValues->delimiterIndex);
 

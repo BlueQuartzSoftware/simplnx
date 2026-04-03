@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -32,6 +33,8 @@ Result<> LabelTriangleGeometry::operator()()
   std::vector<uint32> triangleCounts = {0, 0};
   auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
 
+  MessageHelper messageHelper(m_MessageHandler);
+
   {
     usize numTris = triangle.getNumberOfFaces();
 
@@ -44,6 +47,11 @@ Result<> LabelTriangleGeometry::operator()()
     const TriangleGeom::ElementDynamicList* triangleNeighborsPtr = triangle.getElementNeighbors();
 
     auto& regionIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdsPath)->getDataStoreRef();
+
+    auto progressHelper = messageHelper.createProgressMessageHelper();
+    progressHelper.setMaxProgresss(numTris);
+    progressHelper.setProgressMessageTemplate("Label Triangle Geometry: {:.1f}% Complete");
+    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
     usize chunkSize = 1000;
     std::vector<int32> triList(chunkSize, -1);
@@ -89,6 +97,7 @@ Result<> LabelTriangleGeometry::operator()()
         regionCount++;
         triangleCounts.push_back(0);
       }
+      progressMessenger.sendProgressMessage(1);
     }
 
     // Resize the Triangle Region AttributeMatrix

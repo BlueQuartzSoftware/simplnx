@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -20,6 +21,8 @@ EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> EBSDSegmentFeatures::operator()()
 {
+  m_MessageHelper.sendMessage("Segmenting Features by EBSD Misorientation...");
+
   this->m_NeighborScheme = m_InputValues->NeighborScheme;
   auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
 

@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -151,6 +152,10 @@ Result<> CombineAttributeArrays::operator()()
   {
     return {};
   }
+
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("CombineAttributeArrays: Combining attribute arrays...");
+
   std::vector<DataObject*> inputArrays;
   for(const auto& dataPath : m_InputValues->SelectedDataArrayPaths)
   {

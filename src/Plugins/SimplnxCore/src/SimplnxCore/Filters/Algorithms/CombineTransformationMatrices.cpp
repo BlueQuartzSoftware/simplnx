@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <Eigen/Dense>
 
@@ -82,6 +83,9 @@ const std::atomic_bool& CombineTransformationMatrices::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CombineTransformationMatrices::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("CombineTransformationMatrices: Combining transformation matrices...");
+
   auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->OutputPath);
   auto pathsIter = m_InputValues->SelectedPaths.begin();
 

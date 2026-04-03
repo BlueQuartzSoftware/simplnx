@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include "EbsdLib/Core/EbsdLibConstants.h"
@@ -118,6 +119,8 @@ ComputeFZQuaternions::~ComputeFZQuaternions() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeFZQuaternions::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Fundamental Zone Quaternions...");
 
   Int32Array& phaseArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   Float32Array& quatArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputQuatsArrayPath);

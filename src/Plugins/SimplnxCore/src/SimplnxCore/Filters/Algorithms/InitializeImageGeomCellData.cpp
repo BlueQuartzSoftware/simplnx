@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <chrono>
 #include <limits>
@@ -157,6 +158,12 @@ Result<> InitializeImageGeomCellData::operator()()
 
   std::array<usize, 3> dims = imageGeom.getDimensions().toArray();
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(cellArrayPaths.size());
+  progressHelper.setProgressMessageTemplate("Initialize Image Geom Cell Data: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(const DataPath& path : cellArrayPaths)
   {
     auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(path);
@@ -165,6 +172,7 @@ Result<> InitializeImageGeomCellData::operator()()
 
     // Avoid the exact same seeding for each array
     seed++;
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

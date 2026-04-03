@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <reproc++/drain.hpp>
@@ -36,6 +37,9 @@ const std::atomic_bool& ExecuteProcess::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExecuteProcess::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting ExecuteProcess...");
+
   auto absPath = m_InputValues->LogFile;
   if(!absPath.is_absolute())
   {

@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -83,7 +84,11 @@ Result<> ComputeLargestCrossSections::operator()()
     stride3 = inPlane1 * inPlane2;
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Cross Section for {} planes", outPlane));
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(outPlane);
+  progressHelper.setProgressMessageTemplate("Computing Largest Cross Sections: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   for(size_t i = 0; i < outPlane; i++)
   {
@@ -109,6 +114,7 @@ Result<> ComputeLargestCrossSections::operator()()
         largestCrossSectStore[g] = area;
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
   return {};
 }

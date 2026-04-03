@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -146,6 +147,9 @@ Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 // -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("ApplyTransformationToGeometry: Beginning transformation...");
+
   if(!m_InputValues->RemoveOriginalGeometry)
   {
     return MakeErrorResult(-84500, fmt::format("Keeping the original geometry is not supported."));

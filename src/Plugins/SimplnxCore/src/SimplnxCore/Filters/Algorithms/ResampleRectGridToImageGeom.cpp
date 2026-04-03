@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
@@ -30,6 +31,8 @@ const std::atomic_bool& ResampleRectGridToImageGeom::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ResampleRectGridToImageGeom::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   const auto& rectGridGeom = m_DataStructure.getDataRefAs<RectGridGeom>(m_InputValues->RectilinearGridPath);
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   imageGeom.setUnits(rectGridGeom.getUnits());
@@ -70,7 +73,7 @@ Result<> ResampleRectGridToImageGeom::operator()()
     const auto& srcArray = m_DataStructure.getDataRefAs<IArray>(srcArrayPath);
     const std::string srcName = srcArray.getName();
     auto& destDataArray = dynamic_cast<IArray&>(destCellDataAM.at(srcName));
-    m_MessageHandler(fmt::format("Resample Rect Grid To Image Geom || Copying Data Array {}", srcName));
+    messageHelper.sendMessage(fmt::format("Resample Rect Grid To Image Geom || Copying Data Array {}", srcName));
 
     CopyFromArray::RunParallelMapRectToImage(destDataArray, taskRunner, srcArray, origin, imageGeomDims, imageGeomSpacing, rectGridDims, xGridValues, yGridValues, zGridValues);
   }

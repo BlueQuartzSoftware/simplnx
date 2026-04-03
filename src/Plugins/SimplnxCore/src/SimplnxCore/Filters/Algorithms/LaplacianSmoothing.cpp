@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -72,13 +73,18 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
   std::vector<double> deltaArray(numberOfVertices * 3);
   double dlta = 0.0;
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(static_cast<usize>(m_InputValues->pIterationSteps));
+  progressHelper.setProgressMessageTemplate("Laplacian Smoothing: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(int32_t q = 0; q < m_InputValues->pIterationSteps; q++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
     // Compute the Deltas for each point
     for(IGeometry::MeshIndexType i = 0; i < numEdges; i++)
     {
@@ -124,7 +130,6 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       {
         return {};
       }
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {} of {}", q, m_InputValues->pIterationSteps));
       // Compute the Delta's
       for(IGeometry::MeshIndexType i = 0; i < numEdges; i++)
       {
@@ -160,6 +165,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
         numConnections[i] = 0; // reset for next iteration
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

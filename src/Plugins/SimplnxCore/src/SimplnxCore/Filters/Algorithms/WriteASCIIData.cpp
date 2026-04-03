@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
 
 #include <filesystem>
@@ -39,6 +40,9 @@ WriteASCIIData::~WriteASCIIData() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> WriteASCIIData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing ASCII data...");
+
   auto headerOption = m_InputValues->HeaderOptionIndex;
   bool includeHeaders = false;
   bool includeIndex = false;

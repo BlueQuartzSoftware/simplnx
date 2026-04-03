@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -182,6 +183,9 @@ const std::atomic_bool& CropEdgeGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CropEdgeGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+
   DataPath destEdgeGeomPath = m_InputValues->destEdgeGeomPath;
   if(m_InputValues->removeOriginalGeometry)
   {
@@ -225,6 +229,10 @@ Result<> CropEdgeGeometry::operator()()
   std::vector<bool> edgesMask(numEdges, false);
   std::vector<bool> vertexReferenced(numVertices, false);
   std::unordered_map<uint64, std::tuple<float32, float32, float32>> interpolatedValuesMap;
+
+  progressHelper.setMaxProgresss(numEdges);
+  progressHelper.setProgressMessageTemplate("CropEdgeGeometry: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   for(usize i = 0; i < numEdges; ++i)
   {
@@ -302,6 +310,7 @@ Result<> CropEdgeGeometry::operator()()
       vertexReferenced[v1] = true;
       edgesMask[i] = true;
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   // Tally up the number of vertices referenced and edges kept

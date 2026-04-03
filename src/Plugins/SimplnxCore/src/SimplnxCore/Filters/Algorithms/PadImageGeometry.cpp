@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -98,6 +99,7 @@ const std::atomic_bool& PadImageGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> PadImageGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
 
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
@@ -152,7 +154,7 @@ Result<> PadImageGeometry::operator()()
 
     auto& newDataArray = dynamic_cast<IDataArray&>(destCellDataAM.at(srcName));
 
-    m_MessageHandler(fmt::format("Padding Volume || Copying Data Array {}", srcName));
+    messageHelper.sendMessage(fmt::format("Padding Volume || Copying Data Array {}", srcName));
     ExecuteParallelFunction<PadImageGeomDataArray>(oldDataArray.getDataType(), taskRunner, oldDataArray, newDataArray, srcImageGeom, m_InputValues, m_ShouldCancel);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

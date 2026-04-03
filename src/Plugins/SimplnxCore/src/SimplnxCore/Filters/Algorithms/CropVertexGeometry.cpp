@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -63,6 +64,12 @@ Result<> CropVertexGeometry::operator()()
   std::vector<int64> croppedPoints;
   croppedPoints.reserve(numVerts);
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(numVerts);
+  progressHelper.setProgressMessageTemplate("CropVertexGeometry: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(int64 i = 0; i < numVerts; i++)
   {
     if(m_ShouldCancel)
@@ -73,6 +80,7 @@ Result<> CropVertexGeometry::operator()()
     {
       croppedPoints.push_back(i);
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   croppedPoints.shrink_to_fit();

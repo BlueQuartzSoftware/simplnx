@@ -3,6 +3,7 @@
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
 
 #include <filesystem>
@@ -25,6 +26,9 @@ WriteFeatureDataCSV::~WriteFeatureDataCSV() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> WriteFeatureDataCSV::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing Feature Data CSV file...");
+
   auto atomicFileResult = AtomicFile::Create(m_InputValues->FeatureDataFile);
   if(atomicFileResult.invalid())
   {

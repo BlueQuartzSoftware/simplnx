@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -231,6 +232,9 @@ const std::atomic_bool& CreateColorMap::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CreateColorMap::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting CreateColorMap...");
+
   const IDataArray& selectedIDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedDataArrayPath);
 
   auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(m_InputValues->PresetName);

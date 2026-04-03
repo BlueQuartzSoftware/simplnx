@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/IArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 using namespace nx::core;
@@ -29,6 +30,9 @@ const std::atomic_bool& AppendImageGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> AppendImageGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("AppendImageGeometry: Beginning geometry append...");
+
   Result<> results = {};
 
   auto& destGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DestinationGeometryPath);
@@ -62,6 +66,12 @@ Result<> AppendImageGeometry::operator()()
   DataStructure tmpDataStructure;
 
   ParallelTaskAlgorithm taskRunner;
+  usize totalArrays = newCellData->getSize();
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalArrays);
+  progressHelper.setProgressMessageTemplate("AppendImageGeometry: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(const auto& [dataId, dataObject] : *newCellData)
   {
     if(getCancel())
@@ -165,6 +175,7 @@ Result<> AppendImageGeometry::operator()()
       CopyFromArray::RunParallelAppend(*destDataArray, taskRunner, inputDataArrays, inputTupleShapes, originalDestGeomDimsVec, newDestGeomDimsVec, m_InputValues->Direction,
                                        m_InputValues->MirrorGeometry);
     }
+    progressMessenger.sendProgressMessage(1);
   }
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 

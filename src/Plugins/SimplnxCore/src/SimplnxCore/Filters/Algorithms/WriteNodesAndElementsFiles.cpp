@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/SIMPLNXVersion.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <algorithm>
@@ -108,6 +109,9 @@ void WriteNodesAndElementsFiles::sendMessage(const std::string& message)
 // -----------------------------------------------------------------------------
 Result<> WriteNodesAndElementsFiles::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing Nodes and Elements files...");
+
   auto& iNodeGeometry = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
   auto geomType = iNodeGeometry.getGeomType();
   UInt64Array* cellsArray = nullptr;

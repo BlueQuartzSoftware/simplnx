@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/IO/HKL/CtfFields.h>
@@ -234,9 +235,14 @@ Result<> EbsdToH5Ebsd::operator()()
     int64_t biggestXDim = 0;
     int64_t biggestYDim = 0;
     int32_t totalSlicesImported = 0;
+    MessageHelper messageHelper(m_MessageHandler);
+    auto progressHelper = messageHelper.createProgressMessageHelper();
+    progressHelper.setMaxProgresss(fileList.size());
+    progressHelper.setProgressMessageTemplate("EBSD to H5EBSD: {:.1f}% Complete");
+    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
     for(const auto& ebsdFName : fileList)
     {
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting File: '{}'", ebsdFName));
 
       err = fileImporter->importFile(fileId, z, ebsdFName);
       if(err < 0)
@@ -258,6 +264,7 @@ Result<> EbsdToH5Ebsd::operator()()
 
       indices.push_back(static_cast<int32_t>(z));
       ++z;
+      progressMessenger.sendProgressMessage(1);
       if(getCancel())
       {
         return {};

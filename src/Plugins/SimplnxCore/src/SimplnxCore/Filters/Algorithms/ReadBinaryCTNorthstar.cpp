@@ -3,6 +3,7 @@
 #include "simplnx/Common/ScopeGuard.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -138,6 +139,9 @@ const std::atomic_bool& ReadBinaryCTNorthstar::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReadBinaryCTNorthstar::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading binary CT data files...");
+
   Result<> result = ReadBinaryCTFiles(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
   if(result.invalid())
   {

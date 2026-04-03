@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include "SimplnxCore/SurfaceNets/MMCellFlag.h"
 #include "SimplnxCore/SurfaceNets/MMCellMap.h"
@@ -148,6 +149,12 @@ Result<> SurfaceNets::operator()()
   auto& nodeTypes = m_DataStructure.getDataAs<Int8Array>(m_InputValues->NodeTypesDataPath)->getDataStoreRef();
   nodeTypes.resizeTuples({static_cast<usize>(nodeCount)});
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(nodeCount);
+  progressHelper.setProgressMessageTemplate("Surface Nets - Processing Vertices: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   Point3Df position = {0.0f, 0.0f, 0.0f};
 
   std::array<int, 3> vertCellIndex = {0, 0, 0};
@@ -161,6 +168,7 @@ Result<> SurfaceNets::operator()()
     cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());
     MMCellMap::Cell* currentCellPtr = cellMapPtr->getCell(vertCellIndex.data());
     nodeTypes[static_cast<usize>(vertIndex)] = static_cast<int8>(currentCellPtr->flag.numJunctions());
+    progressMessenger.sendProgressMessage(1);
   }
 
   usize triangleCount = 0;
@@ -221,6 +229,11 @@ Result<> SurfaceNets::operator()()
     auto createdPath = m_InputValues->CreatedDataArrayPaths[i + numSelectedCellArrayPaths];
     ::AddFeatureTupleTransferInstance(m_DataStructure, selectedPath, createdPath, m_InputValues->FeatureIdsArrayPath, tupleTransferFunctions);
   }
+
+  progressHelper.resetProgress();
+  progressHelper.setMaxProgresss(nodeCount);
+  progressHelper.setProgressMessageTemplate("Surface Nets - Generating Triangles: {:.1f}% Complete");
+  auto progressMessenger2 = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   usize faceIndex = 0;
   //   Create temporary storage for cell quads which are constructed around edges
@@ -412,6 +425,7 @@ Result<> SurfaceNets::operator()()
       }
       faceIndex++;
     }
+    progressMessenger2.sendProgressMessage(1);
   }
 
   // Now run through the FaceLabels to make them consistent with Quick Surface Mesh

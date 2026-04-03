@@ -3,6 +3,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
@@ -52,6 +53,12 @@ Result<> ComputeBoundaryStrengths::operator()()
   LD = LD.normalize();
 
   bool emitLaueClassWarning = false;
+
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(numTriangles);
+  progressHelper.setProgressMessageTemplate("Compute Boundary Strengths: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   for(usize i = 0; i < numTriangles; i++)
   {
@@ -112,6 +119,7 @@ Result<> ComputeBoundaryStrengths::operator()()
     f1sPts[2 * i + 1] = F1spt_2;
     f7s[2 * i] = F7_1;
     f7s[2 * i + 1] = F7_2;
+    progressMessenger.sendProgressMessage(1);
   }
 
   if(emitLaueClassWarning)

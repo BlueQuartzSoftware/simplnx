@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
@@ -59,6 +60,9 @@ const std::atomic_bool& CreateEnsembleInfo::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CreateEnsembleInfo::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Creating Ensemble Info...");
+
   AttributeMatrix& cellEnsembleAttributeMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellEnsembleAttributeMatrixName);
   UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixName.createChildPath(m_InputValues->CrystalStructuresArrayName));
   UInt32Array& phaseTypes = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixName.createChildPath(m_InputValues->PhaseTypesArrayName));

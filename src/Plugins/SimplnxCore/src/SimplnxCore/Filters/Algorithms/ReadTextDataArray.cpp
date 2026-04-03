@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 
 #include <filesystem>
@@ -38,6 +39,9 @@ ReadTextDataArray::~ReadTextDataArray() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadTextDataArray::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading text data array...");
+
   const auto& inputFilePath = m_InputValues->InputFile;
   auto skipLines = m_InputValues->SkipLineCount;
   auto choiceIndex = m_InputValues->DelimiterIndex;

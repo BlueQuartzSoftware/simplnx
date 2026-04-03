@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
@@ -249,6 +250,8 @@ const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReplaceElementAttributesWithNeighborValues::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Replacing element attributes with neighbor values...");
 
   auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);

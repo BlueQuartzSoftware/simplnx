@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -49,6 +50,9 @@ RobustAutomaticThreshold::~RobustAutomaticThreshold() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> RobustAutomaticThreshold::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing robust automatic threshold...");
+
   const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
   const auto& gradientStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->GradientArrayPath)->getDataStoreRef();
   auto& maskStoreRef = m_DataStructure.getDataAs<BoolArray>(m_InputValues->InputArrayPath.replaceName(m_InputValues->CreatedMaskName))->getDataStoreRef();

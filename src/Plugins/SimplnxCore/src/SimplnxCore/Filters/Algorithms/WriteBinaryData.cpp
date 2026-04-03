@@ -3,6 +3,7 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/OStreamUtilities.hpp"
 
 #include <filesystem>
@@ -44,6 +45,9 @@ WriteBinaryData::~WriteBinaryData() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> WriteBinaryData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing binary data...");
+
   const auto endianess = static_cast<endian>(m_InputValues->EndianIndex);
   auto selectedDataArrayPaths = m_InputValues->InputDataArrayPaths;
   for(const auto& selectedArrayPath : selectedDataArrayPaths)

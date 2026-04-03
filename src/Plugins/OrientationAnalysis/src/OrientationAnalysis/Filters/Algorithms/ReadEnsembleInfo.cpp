@@ -5,6 +5,7 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
@@ -70,6 +71,9 @@ const std::atomic_bool& ReadEnsembleInfo::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReadEnsembleInfo::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading Ensemble Info...");
+
   return readFile();
 }
 

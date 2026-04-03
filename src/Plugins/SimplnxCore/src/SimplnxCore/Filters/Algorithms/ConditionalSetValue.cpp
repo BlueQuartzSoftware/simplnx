@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 using namespace nx::core;
@@ -47,6 +48,9 @@ ConditionalSetValue::~ConditionalSetValue() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ConditionalSetValue::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting ConditionalSetValue...");
+
   if(m_InputValues->UseConditional)
   {
     DataObject& inputDataObject = m_DataStructure.getDataRef(m_InputValues->SelectedArrayPath);

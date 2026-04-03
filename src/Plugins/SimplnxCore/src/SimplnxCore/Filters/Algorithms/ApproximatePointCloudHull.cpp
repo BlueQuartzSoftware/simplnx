@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -109,9 +110,11 @@ Result<> ApproximatePointCloudHull::operator()()
   int64 multiplier[3] = {1, static_cast<int64>(samplingGrid->getNumXCells()), static_cast<int64>(samplingGrid->getNumXCells() * samplingGrid->getNumYCells())};
   std::vector<std::vector<int64>> vertsInVoxels(samplingGrid->getNumberOfCells());
 
-  int64 progIncrement = numVerts / 100;
-  int64 prog = 1;
-  int64 progressInt = 0;
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(numVerts);
+  progressHelper.setProgressMessageTemplate("Mapping Vertices to Voxels: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   for(int64 v = 0; v < numVerts; v++)
   {
@@ -120,24 +123,18 @@ Result<> ApproximatePointCloudHull::operator()()
     auto k = static_cast<int64>(std::floor((*verts)[3 * v + 2] * inverseResolution[2]) - static_cast<float>(bboxMin[2]));
     int64 index = i * multiplier[0] + j * multiplier[1] + k * multiplier[2];
     vertsInVoxels[index].push_back(v);
-
-    if(v > prog)
-    {
-      progressInt = static_cast<int64>((static_cast<float>(v) / numVerts) * 100.0f);
-      std::string ss = fmt::format("Mapping Vertices to Voxels || {}% Complete", progressInt);
-      // notifyStatusMessage(ss);
-      prog = prog + progIncrement;
-    }
+    progressMessenger.sendProgressMessage(1);
   }
 
   std::vector<float> tmpVerts;
   int64 neighborhood[78] = {1,  0, 0,  -1, 0, 0, 0, 1, 0,  0, -1, 0, 0, 0,  1,  0, 0, -1, 1, 1, 0,  -1, 1,  0, 1, -1, 0,  -1, -1, 0, 1,  0, 1,  1,  0,  -1, -1, 0,  1,
                             -1, 0, -1, 0,  1, 1, 0, 1, -1, 0, -1, 1, 0, -1, -1, 1, 1, 1,  1, 1, -1, 1,  -1, 1, 1, -1, -1, -1, 1,  1, -1, 1, -1, -1, -1, 1,  -1, -1, -1};
 
-  progIncrement = (dims[0] * dims[1] * dims[2]) / 100;
-  prog = 1;
-  progressInt = 0;
-  int64 counter = 0;
+  progressHelper.resetProgress();
+  progressHelper.setMaxProgresss(dims[2]);
+  progressHelper.setProgressMessageTemplate("Trimming Interior Voxels: {:.1f}% Complete");
+  auto trimProgressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   int64 vertCounter = 0;
   float xAvg = 0.0f;
   float yAvg = 0.0f;
@@ -145,6 +142,10 @@ Result<> ApproximatePointCloudHull::operator()()
 
   for(int64 z = 0; z < dims[2]; z++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     for(int64 y = 0; y < dims[1]; y++)
     {
       for(int64 x = 0; x < dims[0]; x++)
@@ -152,7 +153,6 @@ Result<> ApproximatePointCloudHull::operator()()
         usize index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
         if(vertsInVoxels[index].empty())
         {
-          counter++;
           continue;
         }
 
@@ -190,17 +190,9 @@ Result<> ApproximatePointCloudHull::operator()()
           yAvg = 0.0f;
           zAvg = 0.0f;
         }
-
-        if(counter > prog)
-        {
-          progressInt = static_cast<int64>((static_cast<float>(counter) / (dims[0] * dims[1] * dims[2])) * 100.0f);
-          std::string ss = fmt::format("Trimming Interior Voxels || {}% Complete", progressInt);
-          // notifyStatusMessage(ss);
-          prog = prog + progIncrement;
-        }
-        counter++;
       }
     }
+    trimProgressMessenger.sendProgressMessage(1);
   }
 
   auto* hull = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);

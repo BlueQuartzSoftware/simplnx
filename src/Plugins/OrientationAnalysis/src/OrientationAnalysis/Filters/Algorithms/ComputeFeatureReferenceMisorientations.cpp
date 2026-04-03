@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -110,6 +111,12 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
   std::vector<float> avgMisorientationSums(totalFeatures, 0.0F);
   std::vector<float> avgMisorientationCounts(totalFeatures, 0.0F);
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalVoxels);
+  progressHelper.setProgressMessageTemplate("Compute Feature Reference Misorientations: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   featureReferenceMisorientations.fill(0.0f); // Fill all values with Zeros.
   for(int64_t voxelIdx = 0; voxelIdx < totalVoxels; voxelIdx++)
   {
@@ -141,6 +148,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
       avgMisorientationCounts[idx]++;
       avgMisorientationSums[idx] = avgMisorientationSums[idx] + featureReferenceMisorientations[voxelIdx];
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   // Update the avgReferenceMisorientation output array

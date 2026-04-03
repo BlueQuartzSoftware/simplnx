@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/SIMPLNXVersion.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/IO/TSL/AngConstants.h>
@@ -73,6 +74,9 @@ const std::atomic_bool& WriteINLFile::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteINLFile::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing INL File...");
+
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
   Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());

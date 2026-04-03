@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
@@ -36,24 +37,19 @@ struct IdentifySampleFunctor
     std::vector<bool> sample(totalPoints, false);
     int64 biggestBlock = 0;
 
+    MessageHelper messageHelper(messageHandler);
+    auto progressHelper = messageHelper.createProgressMessageHelper();
+    progressHelper.setMaxProgresss(static_cast<usize>(totalPoints));
+    progressHelper.setProgressMessageTemplate("Identify Sample: Finding Largest Region: {:.1f}% Complete");
+    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
     // In this loop over the data we are finding the biggest contiguous set of GoodVoxels and calling that the 'sample'  All GoodVoxels that do not touch the 'sample'
     // are flipped to be called 'bad' voxels or 'not sample'
-    float threshold = 0.0f;
     for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
       if(shouldCancel)
       {
         return;
-      }
-      const float percentIncrement = static_cast<float>(voxelIndex) / static_cast<float>(totalPoints) * 100.0f;
-      if(percentIncrement > threshold)
-      {
-        messageHandler(IFilter::Message::Type::Info, fmt::format("Completed: {}", percentIncrement));
-        threshold = threshold + 5.0f;
-        if(threshold < percentIncrement)
-        {
-          threshold = percentIncrement;
-        }
       }
 
       if(!checked[voxelIndex] && goodVoxels.getValue(voxelIndex))
@@ -94,6 +90,7 @@ struct IdentifySampleFunctor
         }
         currentVList.clear();
       }
+      progressMessenger.sendProgressMessage(1);
     }
     for(int64 i = 0; i < totalPoints; i++)
     {
@@ -107,10 +104,12 @@ struct IdentifySampleFunctor
 
     // In this loop we are going to 'close' all the 'holes' inside the region already identified as the 'sample' if the user chose to do so.
     // This is done by flipping all 'bad' voxel features that do not touch the outside of the sample (i.e. they are fully contained inside the 'sample').
-    threshold = 0.0F;
     if(fillHoles)
     {
-      messageHandler(IFilter::Message::Type::Info, fmt::format("Filling holes in sample..."));
+      progressHelper.resetProgress();
+      progressHelper.setMaxProgresss(static_cast<usize>(totalPoints));
+      progressHelper.setProgressMessageTemplate("Identify Sample: Filling Holes: {:.1f}% Complete");
+      auto fillProgressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
       bool touchesBoundary = false;
       for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
@@ -118,15 +117,6 @@ struct IdentifySampleFunctor
         if(shouldCancel)
         {
           return;
-        }
-        const float percentIncrement = static_cast<float>(voxelIndex) / static_cast<float>(totalPoints) * 100.0f;
-        if(percentIncrement > threshold)
-        {
-          threshold = threshold + 5.0f;
-          if(threshold < percentIncrement)
-          {
-            threshold = percentIncrement;
-          }
         }
 
         if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
@@ -171,6 +161,7 @@ struct IdentifySampleFunctor
           }
           currentVList.clear();
         }
+        fillProgressMessenger.sendProgressMessage(1);
       }
     }
     checked.clear();
@@ -229,13 +220,18 @@ struct IdentifySampleSliceBySliceFunctor
       break;
     }
 
+    MessageHelper messageHelper(messageHandler);
+    auto progressHelper = messageHelper.createProgressMessageHelper();
+    progressHelper.setMaxProgresss(static_cast<usize>(fixedDim));
+    progressHelper.setProgressMessageTemplate("Identify Sample (Slice-by-Slice): {:.1f}% Complete");
+    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
     for(int64 fixedIdx = 0; fixedIdx < fixedDim; ++fixedIdx) // Process each slice
     {
       if(shouldCancel)
       {
         return;
       }
-      messageHandler(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
 
       std::vector<bool> checked(planeDim1 * planeDim2, false);
       std::vector<bool> sample(planeDim1 * planeDim2, false);
@@ -384,6 +380,7 @@ struct IdentifySampleSliceBySliceFunctor
           }
         }
       }
+      progressMessenger.sendProgressMessage(1);
     }
   }
 };

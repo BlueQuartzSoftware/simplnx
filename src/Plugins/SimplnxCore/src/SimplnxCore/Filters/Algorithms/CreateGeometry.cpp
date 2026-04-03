@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <fmt/format.h>
 
@@ -77,6 +78,9 @@ CreateGeometry::~CreateGeometry() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> CreateGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting CreateGeometry...");
+
   auto geometryPath = m_InputValues->OutputGeometryPath;
   auto geometryType = m_InputValues->GeometryTypeIndex;
   auto treatWarningsAsErrors = m_InputValues->WarningsAsErrors;

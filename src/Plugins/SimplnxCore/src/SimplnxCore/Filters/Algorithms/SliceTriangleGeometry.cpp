@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -84,6 +85,12 @@ Result<> SliceTriangleGeometry::operator()()
     triRegionIds->fill(0);
   }
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(numEdges);
+  progressHelper.setProgressMessageTemplate("Slice Triangle Geometry: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(usize i = 0; i < numEdges; i++)
   {
     edges[2 * i] = 2 * i;
@@ -99,6 +106,7 @@ Result<> SliceTriangleGeometry::operator()()
     {
       (*triRegionIds)[i] = sliceTriangleResult.RegionIds[i];
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   Result<> result = GeometryUtilities::EliminateDuplicateNodes<EdgeGeom>(edgeGeom);

@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -29,6 +30,12 @@ Result<> ComputeBoundaryElementFractions::operator()()
   usize totalPoints = featureIds.getNumberOfTuples();
   usize numFeatures = boundaryCellFractions.getNumberOfTuples();
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Computing Boundary Element Fractions: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   std::vector<float32> surfVoxCounts(numFeatures, 0);
   std::vector<float32> voxCounts(numFeatures, 0);
 
@@ -40,6 +47,7 @@ Result<> ComputeBoundaryElementFractions::operator()()
     {
       surfVoxCounts[gnum]++;
     }
+    progressMessenger.sendProgressMessage(1);
   }
   for(usize i = 1; i < numFeatures; i++)
   {

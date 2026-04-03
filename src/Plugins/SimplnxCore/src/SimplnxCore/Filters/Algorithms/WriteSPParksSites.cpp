@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <fstream>
 
@@ -100,6 +101,9 @@ const std::atomic_bool& WriteSPParksSites::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteSPParksSites::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing SPParks Sites file...");
+
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
   Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());

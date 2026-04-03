@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -55,6 +56,8 @@ RemoveFlaggedVertices::~RemoveFlaggedVertices() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedVertices::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   const VertexGeom& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->InputVertexGeometryPath);
   const std::string vertexDataName = vertexGeom.getVertexAttributeMatrixDataPath().getTargetName();
 
@@ -80,7 +83,7 @@ Result<> RemoveFlaggedVertices::operator()()
   reducedVertexGeom.resizeVertexList(numVerticesToKeep);
   reducedVertexGeom.getVertexAttributeMatrix()->resizeTuples(tDims);
 
-  m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying vertices to reduced geometry")});
+  messageHelper.sendMessage("Copying vertices to reduced geometry");
 
   size_t keepIndex = 0;
   // Loop over each vertex and only copy the vertices that were *NOT* flagged for removal
@@ -107,7 +110,7 @@ Result<> RemoveFlaggedVertices::operator()()
     const DataPath destinationPath = reducedVertexGeom.getVertexAttributeMatrixDataPath().createChildPath(src.getName());
 
     auto& dest = m_DataStructure.getDataRefAs<IDataArray>(destinationPath);
-    m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName())});
+    messageHelper.sendMessage(fmt::format("Copying source array '{}' to reduced geometry vertex data.", src.getName()));
 
     ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src.getDataType(), src, dest, maskCompare, numVerticesToKeep);
   }

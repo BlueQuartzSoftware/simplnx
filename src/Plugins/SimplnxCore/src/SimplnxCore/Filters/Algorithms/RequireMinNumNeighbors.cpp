@@ -5,6 +5,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
@@ -57,6 +58,9 @@ RequireMinNumNeighbors::~RequireMinNumNeighbors() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> RequireMinNumNeighbors::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Requiring minimum number of neighbors...");
+
   // If running on a single phase, validate that the user has not entered a phase number
   // that is not in the system ; the filter would not crash otherwise, but the user should
   // be notified of unanticipated behavior ; this cannot be done in the dataCheck since

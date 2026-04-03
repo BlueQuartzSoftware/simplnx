@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -62,6 +63,9 @@ ReverseTriangleWinding::~ReverseTriangleWinding() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReverseTriangleWinding::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reversing triangle winding...");
+
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->InputTriangleGeometryPath);
 
   ParallelDataAlgorithm dataAlg;

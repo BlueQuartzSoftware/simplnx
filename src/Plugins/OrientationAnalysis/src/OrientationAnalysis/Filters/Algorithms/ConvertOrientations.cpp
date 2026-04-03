@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
@@ -209,6 +210,9 @@ ConvertOrientations::~ConvertOrientations() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ConvertOrientations::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Converting Orientations...");
+
   using ValidateInputDataFunctionType = std::function<void(float32*)>;
 
   DataPath outputDataPath = m_InputValues->InputOrientationArrayPath.replaceName(m_InputValues->OutputOrientationArrayName);

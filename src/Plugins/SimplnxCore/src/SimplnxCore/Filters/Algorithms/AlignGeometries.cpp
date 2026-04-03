@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -375,6 +376,8 @@ AlignGeometries::~AlignGeometries() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> AlignGeometries::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("AlignGeometries: Aligning geometries...");
 
   auto movingGeometryPath = m_InputValues->InputMovingGeometryPath;
   auto targetGeometryPath = m_InputValues->InputTargetGeometryPath;

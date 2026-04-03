@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -20,6 +21,8 @@ WriteAvizoRectilinearCoordinate::~WriteAvizoRectilinearCoordinate() noexcept = d
 // -----------------------------------------------------------------------------
 Result<> WriteAvizoRectilinearCoordinate::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing Avizo Rectilinear Coordinate file...");
   return AvizoWriter::execute();
 }
 

@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -30,6 +31,9 @@ Result<> TriangleNormal::operator()()
 
   DataPath pNormalsArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pNormalsName);
   auto& normalsRef = m_DataStructure.getDataAs<Float64Array>(pNormalsArrayPath)->getDataStoreRef();
+
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Computing Triangle Normals for {} triangles...", triangleGeom.getNumberOfFaces()));
 
   // Parallel algorithm to calculate normals
   ParallelDataAlgorithm dataAlg;

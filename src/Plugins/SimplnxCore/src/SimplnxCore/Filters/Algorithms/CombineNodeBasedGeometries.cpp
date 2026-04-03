@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/SIMPLNXVersion.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/ConcatenateDataArrays.hpp"
@@ -383,6 +384,9 @@ void CombineNodeBasedGeometries::sendMessage(const std::string& message)
 // -----------------------------------------------------------------------------
 Result<> CombineNodeBasedGeometries::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("CombineNodeBasedGeometries: Beginning geometry combination...");
+
   CombineVertexElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
   CombineEdgeElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);
   CombineFaceElements(m_DataStructure, m_InputValues->OutputGeometryPath, m_InputValues->InputGeometryPaths, m_MessageHandler, m_ShouldCancel);

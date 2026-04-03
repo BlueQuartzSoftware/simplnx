@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -196,6 +197,8 @@ ComputeSurfaceFeatures::~ComputeSurfaceFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeSurfaceFeatures::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Surface Features...");
 
   const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;
   const auto pFeatureGeometryPathValue = m_InputValues->InputImageGeometryPath;

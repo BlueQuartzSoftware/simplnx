@@ -5,6 +5,7 @@
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -187,6 +188,11 @@ const std::atomic_bool& ConvertColorToGrayScale::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertColorToGrayScale::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(m_InputValues->InputDataArrayPaths.size());
+  progressHelper.setProgressMessageTemplate("ConvertColorToGrayScale: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   auto outputPathIter = m_InputValues->OutputDataArrayPaths.begin();
   for(const auto& arrayPath : m_InputValues->InputDataArrayPaths)
@@ -249,6 +255,7 @@ Result<> ConvertColorToGrayScale::operator()()
       }
       break;
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

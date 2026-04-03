@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <chrono>
 #include <ctime>
@@ -21,6 +22,8 @@ WriteAvizoUniformCoordinate::~WriteAvizoUniformCoordinate() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> WriteAvizoUniformCoordinate::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing Avizo Uniform Coordinate file...");
   return AvizoWriter::execute();
 }
 

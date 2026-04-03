@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
@@ -47,9 +48,17 @@ Result<> ErodeDilateMask::operator()()
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(dims[2]);
+  progressHelper.setProgressMessageTemplate("ErodeDilateMask: {:.1f}% Complete");
+
   for(int32_t iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {}", iteration));
+
+    progressHelper.resetProgress();
+    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
     for(size_t j = 0; j < totalPoints; j++)
     {
@@ -90,6 +99,7 @@ Result<> ErodeDilateMask::operator()()
           }
         }
       }
+      progressMessenger.sendProgressMessage(1);
     }
     for(size_t j = 0; j < totalPoints; j++)
     {

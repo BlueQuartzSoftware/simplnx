@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
@@ -169,6 +170,9 @@ void MergeTwins::groupFeaturesExecute()
 // -----------------------------------------------------------------------------
 Result<> MergeTwins::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Merging Twins...");
+
   Result result = {};
 
   m_Generator = std::mt19937_64(std::mt19937::default_seed);

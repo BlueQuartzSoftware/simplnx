@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Utilities/EbsdStringUtils.hpp>
@@ -94,6 +95,9 @@ const std::atomic_bool& ConvertQuaternion::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertQuaternion::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Converting Quaternions...");
+
   const auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->QuaternionDataArrayPath);
 
   ParallelDataAlgorithm dataAlg;

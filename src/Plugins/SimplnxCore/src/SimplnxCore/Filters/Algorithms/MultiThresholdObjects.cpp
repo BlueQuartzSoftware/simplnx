@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ArrayThreshold.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <algorithm>
 
@@ -250,6 +251,13 @@ Result<> MultiThresholdObjects::operator()()
   DataPath maskArrayPath = (*thresholdsObject.getRequiredPaths().begin()).replaceName(maskArrayName);
   int32_t err = 0;
   ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
+
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(thresholdSet.size());
+  progressHelper.setProgressMessageTemplate("Multi Threshold Objects: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(const std::shared_ptr<IArrayThreshold>& threshold : thresholdSet)
   {
     const IArrayThreshold* thresholdPtr = threshold.get();
@@ -265,6 +273,7 @@ Result<> MultiThresholdObjects::operator()()
                           thresholdsObject.isInverted(), trueValue, falseValue);
       firstValueFound = true;
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

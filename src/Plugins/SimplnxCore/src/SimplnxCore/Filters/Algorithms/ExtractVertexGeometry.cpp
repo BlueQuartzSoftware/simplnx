@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -129,6 +130,12 @@ Result<> ExtractVertexGeometry::operator()()
   // of each cell and then set that into the new VertexGeometry
   m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Generating vertex geometry"));
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalCells);
+  progressHelper.setProgressMessageTemplate("ExtractVertexGeometry: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   IGeometry::SharedVertexList& vertices = vertexGeometry.getVerticesRef();
   auto& verticesDataStore = vertices.getDataStoreRef();
   usize vertIdx = 0;
@@ -148,6 +155,7 @@ Result<> ExtractVertexGeometry::operator()()
       const Point3D<float32> coords = inputGeometry.getCoordsf(idx);
       verticesDataStore.setTuple(idx, coords.toArray());
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Copying cell data to vertex geometry"));

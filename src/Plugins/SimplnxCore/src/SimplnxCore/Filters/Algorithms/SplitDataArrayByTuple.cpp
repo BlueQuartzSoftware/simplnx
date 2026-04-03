@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -221,6 +222,9 @@ const std::atomic_bool& SplitDataArrayByTuple::getCancel()
 // -----------------------------------------------------------------------------
 Result<> SplitDataArrayByTuple::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Splitting data array '{}' by tuple...", m_InputValues->InputArrayPath.getTargetName()));
+
   const auto& inputDataArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->InputArrayPath);
   std::string arrayTypeName = inputDataArray.getTypeName();
   switch(inputDataArray.getArrayType())

@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -210,6 +211,7 @@ Result<> ScalarSegmentFeatures::operator()()
   }
 
   // Run the segmentation algorithm
+  m_MessageHelper.sendMessage("Running Scalar Segmentation...");
   execute(gridGeom);
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)

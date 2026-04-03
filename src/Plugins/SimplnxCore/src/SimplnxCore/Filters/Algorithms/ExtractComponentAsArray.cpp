@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 namespace
@@ -84,6 +85,9 @@ const std::atomic_bool& ExtractComponentAsArray::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExtractComponentAsArray::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting ExtractComponentAsArray...");
+
   /* baseArrayRef CANNOT be const because it can either be the original array [can be const] OR the resized array [can't be const]*/
   /* tempArrayRef CANNOT be const because the functor has to be capable of handling both cases of remove components*/
   const bool moveComponentsToNewArrayBool = m_InputValues->MoveComponentsToNewArray;

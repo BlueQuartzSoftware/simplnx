@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -45,6 +46,9 @@ Result<> ComputeBiasedFeatures::operator()()
 // -----------------------------------------------------------------------------
 Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+
   const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
   AbstractDataStore<int32>* phasesStorePtr = nullptr;
@@ -77,6 +81,10 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
   {
     numPhases = *std::max_element(phasesStorePtr->begin(), phasesStorePtr->end());
   }
+  progressHelper.setMaxProgresss(numPhases);
+  progressHelper.setProgressMessageTemplate("Computing Biased Features: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(int32 iter = 1; iter <= numPhases; iter++)
   {
     if(m_InputValues->CalcByPhase)
@@ -177,6 +185,8 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
       }
     }
 
+    progressMessenger.sendProgressMessage(1);
+
     if(getCancel())
     {
       return {};
@@ -208,7 +218,14 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
     return MakeErrorResult(-54900, message);
   }
 
+  MessageHelper messageHelper2D(m_MessageHandler);
+  auto progressHelper2D = messageHelper2D.createProgressMessageHelper();
+
   const usize size = centroidsStore.getNumberOfTuples();
+
+  progressHelper2D.setMaxProgresss(size);
+  progressHelper2D.setProgressMessageTemplate("Computing Biased Features 2D: {:.1f}% Complete");
+  auto progressMessenger2D = progressHelper2D.createProgressMessenger(std::chrono::milliseconds(1000));
 
   std::vector<float32> coords = {0.0f, 0.0f, 0.0f, 0.0f};
 
@@ -301,6 +318,8 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
         boundBox[sideToMove] = coords[sideToMove];
       }
     }
+
+    progressMessenger2D.sendProgressMessage(1);
 
     if(getCancel())
     {

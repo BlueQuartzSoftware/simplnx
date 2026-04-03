@@ -4,6 +4,7 @@
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <unordered_set>
 
@@ -179,6 +180,8 @@ Result<> Silhouette::operator()()
     std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
     return MakeErrorResult(-54080, message);
   }
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Silhouette values...");
   RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray,
                                                              m_DataStructure.getDataAs<Float64Array>(m_InputValues->SilhouetteArrayPath)->getDataStoreRef(), maskCompare, uniqueIds.size(), featureIds,
                                                              m_InputValues->DistanceMetric);

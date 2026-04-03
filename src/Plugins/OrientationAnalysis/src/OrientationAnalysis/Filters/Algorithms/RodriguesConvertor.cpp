@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -72,6 +73,9 @@ const std::atomic_bool& RodriguesConvertor::getCancel()
 // -----------------------------------------------------------------------------
 Result<> RodriguesConvertor::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Converting Rodrigues Vectors...");
+
   const auto& input = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->RodriguesDataArrayPath);
   auto& output = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputDataArrayPath);
 

@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/EbsdLibVersion.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -53,6 +54,12 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
 
   bool emitLaueClassWarning = false;
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalFeatures - 1);
+  progressHelper.setProgressMessageTemplate("Compute Slip Transmission Metrics: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(usize i = 1; i < totalFeatures; i++)
   {
     usize listLength = neighborList[i].size();
@@ -93,6 +100,7 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
       F1sPtLists[i][j] = F1sPt;
       F7Lists[i][j] = F7;
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   auto& F1L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1ListArrayName);

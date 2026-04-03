@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -82,6 +83,9 @@ Result<> TriangleCentroid::operator()()
 
   const DataPath pCentroidsPath = m_InputValues->TriangleGeometryDataPath.createChildPath(faceAttributeMatrix.getName()).createChildPath(m_InputValues->CentroidsArrayName);
   auto& centroidsStore = m_DataStructure.getDataAs<Float64Array>(pCentroidsPath)->getDataStoreRef();
+
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Computing Triangle Centroids for {} triangles...", triangleGeom->getNumberOfFaces()));
 
   // Parallel algorithm to calculate the centroids
   ParallelDataAlgorithm dataAlg;

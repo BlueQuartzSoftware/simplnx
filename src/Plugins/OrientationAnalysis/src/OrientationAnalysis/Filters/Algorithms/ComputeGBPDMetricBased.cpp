@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -372,7 +373,8 @@ Result<> ComputeGBPDMetricBased::operator()()
   auto ballVolume = static_cast<float64>(nSym) * 2.0 * (1.0 - std::cos(limitDist));
 
   // ------------------------------ generation of sampling points ----------------------------------
-  m_MessageHandler(IFilter::Message::Type::Info, "Generating sampling points");
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("GBPD Metric Based: Generating sampling points...");
 
   // generate "Golden Section Spiral", see http://www.softimageblog.com/archives/115
   const int numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts; // here we generate points on the whole sphere
@@ -582,7 +584,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, "Selecting triangles corresponding to Phase Of Interest");
+    messageHelper.sendMessage("Selecting triangles corresponding to Phase Of Interest...");
     if(i + triChunkSize >= numMeshTriangles)
     {
       triChunkSize = numMeshTriangles - i;
@@ -641,7 +643,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
+    messageHelper.sendMessage(fmt::format("Determining GBPD values ({}%)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;

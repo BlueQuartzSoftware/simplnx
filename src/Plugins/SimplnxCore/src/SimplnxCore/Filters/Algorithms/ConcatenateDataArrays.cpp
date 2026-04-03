@@ -1,6 +1,7 @@
 #include "ConcatenateDataArrays.hpp"
 
 #include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -26,6 +27,9 @@ const std::atomic_bool& ConcatenateDataArrays::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConcatenateDataArrays::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting ConcatenateDataArrays...");
+
   const auto& outputDataArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->OutputArrayPath);
   std::string arrayTypeName = outputDataArray.getTypeName();
   switch(outputDataArray.getArrayType())

@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -27,6 +28,10 @@ Result<> AlignSectionsList::operator()()
   {
     return {};
   }
+
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("AlignSectionsList: Aligning sections from list...");
+
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
 
   return execute(imageGeom.getDimensions(), m_InputValues->ImageGeometryPath);

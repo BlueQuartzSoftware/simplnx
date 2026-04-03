@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
@@ -51,11 +52,18 @@ Result<> ComputeBoundaryCells::operator()()
     ignoreFeatureZeroVal = -1;
   }
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(dims[2]);
+  progressHelper.setProgressMessageTemplate("Computing Boundary Cells: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   int64 kStride = 0;
   int64 jStride = 0;
 
   for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
   {
+    progressMessenger.sendProgressMessage(1);
     kStride = dims[0] * dims[1] * zIdx;
     for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
     {

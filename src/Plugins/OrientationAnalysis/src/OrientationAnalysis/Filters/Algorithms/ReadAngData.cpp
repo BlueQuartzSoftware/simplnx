@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
@@ -27,6 +28,9 @@ ReadAngData::~ReadAngData() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadAngData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading ANG data...");
+
   ebsdlib::AngReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();

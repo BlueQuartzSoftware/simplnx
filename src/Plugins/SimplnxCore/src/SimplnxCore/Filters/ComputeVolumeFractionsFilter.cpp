@@ -7,6 +7,7 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
 
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
@@ -111,11 +112,22 @@ Result<> ComputeVolumeFractionsFilter::executeImpl(DataStructure& dataStructure,
   usize totalPoints = cellPhases.getNumberOfTuples();
   usize totalEnsembles = volFractions.getNumberOfTuples();
 
+  MessageHelper messageHelper(messageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Computing Volume Fractions: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   std::vector<usize> ensembleElements(totalEnsembles, 0);
   // Calculate the total number of elements in each Ensemble
   for(usize index = 0; index < totalPoints; index++)
   {
+    if(shouldCancel)
+    {
+      return {};
+    }
     ensembleElements[cellPhases[index]]++;
+    progressMessenger.sendProgressMessage(1);
   }
   // Calculate the Volume Fraction
   for(usize index = 0; index < totalEnsembles; index++)

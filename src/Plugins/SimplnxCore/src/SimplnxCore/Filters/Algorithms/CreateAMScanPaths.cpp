@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <Eigen/Dense>
 
@@ -380,6 +381,12 @@ Result<> CreateAMScanPaths::operator()()
 
   using LineSegmentsType = std::vector<LineSegment>;
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(numCADRegions);
+  progressHelper.setProgressMessageTemplate("CreateAMScanPaths: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   // Loop on every Region
   // Parallelize over the regions?
   for(int32 regionId = 0; regionId < numCADRegions; regionId++)
@@ -447,6 +454,7 @@ Result<> CreateAMScanPaths::operator()()
       }
       currentSliceId++;
     }
+    progressMessenger.sendProgressMessage(1);
   }
   return {};
 }

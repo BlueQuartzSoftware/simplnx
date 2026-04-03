@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -152,6 +153,9 @@ const std::atomic_bool& PartitionGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> PartitionGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Partitioning geometry...");
+
   auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
 
   DataPath partitionGridGeomPath;

@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <map>
 #include <set>
@@ -42,6 +43,12 @@ Result<> ComputeFeaturePhases::operator()()
   std::map<int32, int32> featureMap;
   std::set<int32> warnFeatures;
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Computing Feature Phases: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(usize i = 0; i < totalPoints; i++)
   {
     if(m_ShouldCancel)
@@ -58,6 +65,7 @@ Result<> ComputeFeaturePhases::operator()()
       warnFeatures.insert(gnum);
     }
     featurePhases[gnum] = cellPhases[i];
+    progressMessenger.sendProgressMessage(1);
   }
 
   Result<> result;

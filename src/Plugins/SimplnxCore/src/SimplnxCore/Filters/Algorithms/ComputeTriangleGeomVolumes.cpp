@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -30,6 +31,9 @@ const std::atomic_bool& ComputeTriangleGeomVolumes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeTriangleGeomVolumes::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Triangle Geometry Volumes...");
+
   using MeshIndexType = IGeometry::MeshIndexType;
   using SharedVertexListType = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
 

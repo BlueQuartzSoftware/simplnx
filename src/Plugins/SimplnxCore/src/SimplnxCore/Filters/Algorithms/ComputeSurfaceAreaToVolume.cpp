@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -70,10 +71,15 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   neighborOffset[4] = xPoints;            // +Y
   neighborOffset[5] = xPoints * yPoints;  // +Z
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(zPoints);
+  progressHelper.setProgressMessageTemplate("Computing Surface Area to Volume: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   // Start looping over the regular grid data (This could be either an Image Geometry or a Rectilinear Grid geometry (in theory)
   for(int64 zIdx = 0; zIdx < zPoints; zIdx++)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Z Slice: '{}'", zIdx));
 
     int64 zStride = zIdx * xPoints * yPoints;
     for(int64 yIdx = 0; yIdx < yPoints; yIdx++)
@@ -139,6 +145,7 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
         featureSurfaceArea[featureId] = featureSurfaceArea[featureId] + onSurface;
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   const float32 thirdRootPi = std::pow(nx::core::Constants::k_PiF, 0.333333f);

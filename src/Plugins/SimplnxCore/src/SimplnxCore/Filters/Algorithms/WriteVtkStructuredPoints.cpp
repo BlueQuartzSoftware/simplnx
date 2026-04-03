@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "SimplnxCore/utils/VtkUtilities.hpp"
@@ -32,6 +33,9 @@ const std::atomic_bool& WriteVtkStructuredPoints::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteVtkStructuredPoints::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing VTK Structured Points file...");
+
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();

@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include "oless/oless.h"
 #include "oless/pole.h"
@@ -241,6 +242,8 @@ const std::atomic_bool& ReadZeissTxmFile::getCancel() const
 // -----------------------------------------------------------------------------
 Result<> ReadZeissTxmFile::operator()() const
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading Zeiss TXM file...");
 
   Result<ZeissTxmHeaderMetadata> metadataResult = ReadHeaderMetaData(m_InputValues->TxmDataFile.string());
   if(metadataResult.invalid())

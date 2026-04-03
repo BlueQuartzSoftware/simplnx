@@ -1,6 +1,7 @@
 #include "FindNRingNeighbors.hpp"
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <sstream>
 
@@ -54,8 +55,13 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
   // Add our seed triangle
   m_NRingTriangles.insert(triangleId);
 
+  MessageHelper messageHelper(mesgHandler);
+  auto throttledMessenger = messageHelper.createThrottledMessenger(std::chrono::milliseconds(1000));
+
   for(int64_t ring = 0; ring < m_InputValues->Ring; ++ring)
   {
+    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Find N-Ring Neighbors: Processing ring {} of {}", ring + 1, m_InputValues->Ring); });
+
     // Make a copy of the 1 Ring Triangles that we just found so that we can use those triangles as the
     // seed triangles for the 2 Ring triangles
     UniqueFaceIds_t lcvTriangles(m_NRingTriangles);

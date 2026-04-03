@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
@@ -98,6 +99,9 @@ CropImageGeometry::~CropImageGeometry() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> CropImageGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting CropImageGeometry...");
+
   auto srcImagePath = m_InputValues->InputImageGeometryPath;
   auto destImagePath = m_InputValues->OutputImageGeometryPath;
   const auto featureIdsArrayPath = m_InputValues->FeatureIdsPath;

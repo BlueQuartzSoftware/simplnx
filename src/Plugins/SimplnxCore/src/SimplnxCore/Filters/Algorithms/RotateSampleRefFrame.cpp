@@ -2,6 +2,7 @@
 
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -72,6 +73,8 @@ Result<> RotateSampleRefFrame::operator()()
 
   ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
+  MessageHelper messageHelper(m_MessageHandler);
+
   // The actual rotating of the dataStructure arrays is done in parallel where parallel here
   // refers to the cropping of each DataArray being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
@@ -81,6 +84,8 @@ Result<> RotateSampleRefFrame::operator()()
 
   const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
 
+  usize arrayCount = 0;
+  usize totalArrays = srcCellDataAM.getSize();
   for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {
     if(m_ShouldCancel)
@@ -90,7 +95,8 @@ Result<> RotateSampleRefFrame::operator()()
 
     const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
     auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
-    m_MessageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
+    arrayCount++;
+    messageHelper.sendMessage(fmt::format("Rotating Volume || Copying Data Array {} ({}/{})", srcDataObject->getName(), arrayCount, totalArrays));
 
     ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, rotationMatrix,
                                                                                             m_InputValues->SliceBySlice, &filterProgressCallback);

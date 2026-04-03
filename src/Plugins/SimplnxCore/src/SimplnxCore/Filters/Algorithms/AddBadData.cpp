@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <random>
 
@@ -42,6 +43,9 @@ const std::atomic_bool& AddBadData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> AddBadData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+
   std::mt19937 generator(m_InputValues->SeedValue); // Standard mersenne_twister_engine seeded
   std::uniform_real_distribution<float32> distribution(0.0F, 1.0F);
 
@@ -53,6 +57,11 @@ Result<> AddBadData::operator()()
 
   float32 random = 0.0f;
   const size_t totalPoints = GBEuclideanDistances.getSize();
+
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("AddBadData: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(size_t i = 0; i < totalPoints; ++i)
   {
     if(m_InputValues->BoundaryNoise && GBEuclideanDistances[i] < 1)
@@ -77,6 +86,7 @@ Result<> AddBadData::operator()()
         }
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

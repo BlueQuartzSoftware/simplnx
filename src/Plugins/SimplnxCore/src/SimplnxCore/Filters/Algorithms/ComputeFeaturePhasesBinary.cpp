@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -38,9 +39,16 @@ Result<> ComputeFeaturePhasesBinary::operator()()
 
   usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Computing Feature Phases Binary: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(usize i = 0; i < totalPoints; i++)
   {
     featurePhasesStoreRef[featureIdsStoreRef[i]] = goodVoxelsMask->isTrue(i);
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

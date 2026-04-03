@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <cmath>
 #include <filesystem>
@@ -67,6 +68,9 @@ const std::atomic_bool& WriteGBCDGMTFile::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteGBCDGMTFile::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing GBCD GMT File...");
+
   auto gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
   auto crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 

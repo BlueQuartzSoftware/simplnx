@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -59,6 +60,9 @@ ChangeAngleRepresentation::~ChangeAngleRepresentation() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ChangeAngleRepresentation::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("ChangeAngleRepresentation: Converting angle representation...");
+
   auto& angles = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AnglesArrayPath)->getDataStoreRef();
 
   float conversionFactor = 1.0f;

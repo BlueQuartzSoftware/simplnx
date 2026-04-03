@@ -3,6 +3,7 @@
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 class QFile;
@@ -36,6 +37,9 @@ const std::atomic_bool& WriteStatsGenOdfAngleFile::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteStatsGenOdfAngleFile::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing StatsGen ODF Angle File...");
+
   Result<> results;
 
   // Make sure any directory path is also available as the user may have just typed

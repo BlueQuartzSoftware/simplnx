@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -119,6 +120,9 @@ ComputeCoordinatesImageGeom::~ComputeCoordinatesImageGeom() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeCoordinatesImageGeom::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Coordinates for Image Geometry...");
+
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
 
   usize zPoints = imageGeom.getNumZCells();

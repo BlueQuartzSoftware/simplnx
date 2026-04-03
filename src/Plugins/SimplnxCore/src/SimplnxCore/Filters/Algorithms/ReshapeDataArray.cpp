@@ -1,5 +1,7 @@
 #include "ReshapeDataArray.hpp"
 
+#include "simplnx/Utilities/MessageHelper.hpp"
+
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
@@ -23,6 +25,9 @@ const std::atomic_bool& ReshapeDataArray::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReshapeDataArray::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reshaping data array...");
+
   auto outputArrayPath = m_InputValues->InputArrayPath.getParent().createChildPath(fmt::format(".{}", m_InputValues->InputArrayPath.getTargetName()));
   auto& outputArray = m_DataStructure.getDataRefAs<IArray>(outputArrayPath);
 

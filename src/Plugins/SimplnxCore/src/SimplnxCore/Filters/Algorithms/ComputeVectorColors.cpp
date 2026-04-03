@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <Eigen/Dense>
 
@@ -52,6 +53,12 @@ Result<> ComputeVectorColors::operator()()
   auto& cellVectorColors = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->CellVectorColorsArrayPath)->getDataStoreRef();
 
   usize totalPoints = vectors.getNumberOfTuples();
+
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Computing Vector Colors: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   usize index;
   // Write the Vector Coloring Cell Data
@@ -129,6 +136,7 @@ Result<> ComputeVectorColors::operator()()
       cellVectorColors[index + 1] = RgbColor::dGreen(argb);
       cellVectorColors[index + 2] = RgbColor::dBlue(argb);
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

@@ -1,6 +1,7 @@
 #include "UncertainRegularGridSampleSurfaceMesh.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <random>
 
@@ -36,6 +37,12 @@ void UncertainRegularGridSampleSurfaceMesh::generatePoints(std::vector<Point3Df>
 
   points.reserve(dims[0] * dims[1] * dims[2]);
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(dims[2]);
+  progressHelper.setProgressMessageTemplate("Generating Sample Points: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   std::mt19937 generator(m_InputValues->SeedValue); // Standard mersenne_twister_engine seeded
   std::uniform_real_distribution<float32> distribution(0.0F, 1.0F);
 
@@ -53,6 +60,7 @@ void UncertainRegularGridSampleSurfaceMesh::generatePoints(std::vector<Point3Df>
                             ((static_cast<float>(k) + 0.5f) * spacing[2]) + (uncertainty[2] * randomZ) + origin[2]);
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
 }
 

@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <algorithm>
@@ -127,6 +128,9 @@ const std::atomic_bool& ComputeFeatureCentroids::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureCentroids::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Feature Centroids...");
+
   // Input Cell Data
 
   const auto* featureIdsPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);

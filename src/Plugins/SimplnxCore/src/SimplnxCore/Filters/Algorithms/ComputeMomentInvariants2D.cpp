@@ -3,6 +3,7 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -363,6 +364,9 @@ const std::atomic_bool& ComputeMomentInvariants2D::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeMomentInvariants2D::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing 2D Moment Invariants...");
+
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 volDims = imageGeom.getDimensions();
 

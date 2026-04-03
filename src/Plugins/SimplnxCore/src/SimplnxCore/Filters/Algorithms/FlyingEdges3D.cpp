@@ -2,6 +2,7 @@
 
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/FlyingEdges.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -47,6 +48,9 @@ const std::atomic_bool& FlyingEdges3D::getCancel()
 // -----------------------------------------------------------------------------
 Result<> FlyingEdges3D::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Flying Edges 3D: Starting isosurface extraction...");
+
   const auto& image = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->imageGeomPath);
   float64 isoVal = m_InputValues->isoVal;
   const auto* iDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->contouringArrayPath);
@@ -59,6 +63,8 @@ Result<> FlyingEdges3D::operator()()
   auto& normAM = m_DataStructure.getDataRefAs<AttributeMatrix>(normAMPath);
 
   ExecuteNeighborFunction(ExecuteFlyingEdgesFunctor{}, iDataArray->getDataType(), image, iDataArray, isoVal, triangleGeom, normalsStore, normAM);
+
+  messageHelper.sendMessage("Flying Edges 3D: Isosurface extraction complete.");
 
   return {};
 }

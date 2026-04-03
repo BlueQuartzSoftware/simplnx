@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
@@ -77,6 +78,12 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   usize hexNeighborListSize = 0;
   uint32 xtalPhase1 = 0;
   uint32 xtalPhase2 = 0;
+
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalFeatures - 1);
+  progressHelper.setProgressMessageTemplate("Compute Feature Neighbor C-Axis Misalignments: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   // Loop over every feature
   for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
@@ -165,6 +172,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     }
 
     cAxisMisalignmentList.setList(featureIdx, {currentMisalignmentList.begin(), currentMisalignmentList.end()});
+    progressMessenger.sendProgressMessage(1);
   }
 
   return result;

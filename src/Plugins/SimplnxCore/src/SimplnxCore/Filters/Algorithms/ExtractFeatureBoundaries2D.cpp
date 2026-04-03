@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/GeometryUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <atomic>
@@ -496,6 +497,8 @@ const std::atomic_bool& ExtractFeatureBoundaries2D::getCancel() const
 // -----------------------------------------------------------------------------
 Result<> ExtractFeatureBoundaries2D::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   // Get references to the input/output geometries and feature IDs array
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
   auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->OutputEdgeGeometryPath);

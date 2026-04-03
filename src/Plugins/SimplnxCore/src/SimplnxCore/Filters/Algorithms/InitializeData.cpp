@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 
 #include <chrono>
@@ -525,10 +526,14 @@ const std::atomic_bool& InitializeData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> InitializeData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Initialize Data: Filling array values...");
 
   auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
 
   ExecuteDataFunction(::FillArrayFunctor{}, iDataArray.getDataType(), iDataArray, *m_InputValues);
+
+  messageHelper.sendMessage("Initialize Data: Complete.");
 
   return {};
 }

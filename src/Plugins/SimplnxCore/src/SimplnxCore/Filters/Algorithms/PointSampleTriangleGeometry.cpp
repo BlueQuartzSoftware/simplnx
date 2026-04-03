@@ -37,6 +37,7 @@
 
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -55,6 +56,8 @@ PointSampleTriangleGeometry::~PointSampleTriangleGeometry() noexcept = default;
 
 Result<> PointSampleTriangleGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   DataPath triangleGeometryDataPath = m_Inputs->pTriangleGeometry;
   auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(triangleGeometryDataPath);
   auto numTris = static_cast<int64_t>(triangle.getNumberOfFaces());
@@ -74,10 +77,10 @@ Result<> PointSampleTriangleGeometry::operator()()
   // really is a massively idiotic oversight; hack the equivalent using the unary_op constructor
   std::discrete_distribution<size_t> triangle_distribution(numTris, -0.5, -0.5 + static_cast<double>(numTris), [&faceAreasStore](double index) { return faceAreasStore[static_cast<size_t>(index)]; });
 
-  int64_t progIncrement = m_Inputs->pNumberOfSamples / 100;
-  int64_t prog = 1;
-  int64_t progressInt = 0;
-  int64_t counter = 0;
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(static_cast<usize>(m_Inputs->pNumberOfSamples));
+  progressHelper.setProgressMessageTemplate("Sampling Triangles: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
   std::vector<Point3Df> faceVerts = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
 
@@ -161,14 +164,7 @@ Result<> PointSampleTriangleGeometry::operator()()
       tupleTransferFunctions[dataVectorIndex]->pointSampleTransfer(randomTri, curVertex);
     }
 
-    if(counter > prog)
-    {
-      progressInt = static_cast<int64_t>((static_cast<float>(counter) / static_cast<float>(m_Inputs->pNumberOfSamples)) * 100.0f);
-      std::string ss = fmt::format("Sampling Triangles || {}% Completed", progressInt);
-      m_MessageHandler(IFilter::Message::Type::Info, ss);
-      prog = prog + progIncrement;
-    }
-    counter++;
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

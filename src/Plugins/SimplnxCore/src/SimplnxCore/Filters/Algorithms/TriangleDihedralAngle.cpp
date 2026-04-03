@@ -4,6 +4,7 @@
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <algorithm>
@@ -114,6 +115,9 @@ Result<> TriangleDihedralAngle::operator()()
   const AttributeMatrix* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
   const DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pMinDihedralAnglesName);
   auto& dihedralAnglesRef = m_DataStructure.getDataAs<Float64Array>(dihedralAnglesArrayPath)->getDataStoreRef();
+
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Computing Triangle Dihedral Angles for {} triangles...", triangleGeom.getNumberOfFaces()));
 
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0ULL, static_cast<size_t>(triangleGeom.getNumberOfFaces()));

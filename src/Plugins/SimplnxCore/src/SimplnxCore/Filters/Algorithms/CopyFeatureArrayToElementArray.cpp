@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -66,6 +67,12 @@ CopyFeatureArrayToElementArray::~CopyFeatureArrayToElementArray() noexcept = def
 // -----------------------------------------------------------------------------
 Result<> CopyFeatureArrayToElementArray::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(m_InputValues->SelectedFeatureArrayPaths.size());
+  progressHelper.setProgressMessageTemplate("CopyFeatureArrayToElementArray: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
 
   for(const auto& selectedFeatureArrayPath : m_InputValues->SelectedFeatureArrayPaths)
@@ -84,6 +91,7 @@ Result<> CopyFeatureArrayToElementArray::operator()()
     dataAlg.setRange(0, featureIds.getNumberOfTuples());
     ExecuteParallelFunction<::CopyFeatureArrayToElementArrayImpl>(selectedFeatureArray->getDataType(), dataAlg, selectedFeatureArray, featureIds.getDataStoreRef(),
                                                                   m_DataStructure.getDataAs<IDataArray>(createdArrayPath), m_ShouldCancel);
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

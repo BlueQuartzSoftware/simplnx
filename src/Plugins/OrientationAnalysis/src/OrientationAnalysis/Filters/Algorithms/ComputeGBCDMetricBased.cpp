@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -415,7 +416,8 @@ Result<> ComputeGBCDMetricBased::operator()()
   }
 
   // ------------------------------ generation of sampling points ----------------------------------
-  m_MessageHandler(IFilter::Message::Type::Info, "Generating sampling points");
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("GBCD Metric Based: Generating sampling points...");
 
   // generate "Golden Section Spiral", see http://www.softimageblog.com/archives/115
   const int32 numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts; // here we generate points on the whole sphere
@@ -484,8 +486,8 @@ Result<> ComputeGBCDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Step 1/2: Selecting Triangles with the Specified Misorientation ({}% completed)",
-                                                               static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(numMeshTriangles))));
+    messageHelper.sendMessage(
+        fmt::format("Step 1/2: Selecting Triangles with the Specified Misorientation ({}% completed)", static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(numMeshTriangles))));
     if(i + triChunkSize >= numMeshTriangles)
     {
       triChunkSize = numMeshTriangles - i;
@@ -545,8 +547,8 @@ Result<> ComputeGBCDMetricBased::operator()()
     {
       return {};
     }
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Step 2/2: Computing Distribution Values at the Section of Interest ({}% completed)",
-                                                               static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
+    messageHelper.sendMessage(fmt::format("Step 2/2: Computing Distribution Values at the Section of Interest ({}% completed)",
+                                          static_cast<int32>(100.0 * static_cast<float64>(i) / static_cast<float64>(samplePtsX.size()))));
     if(i + pointsChunkSize >= samplePtsX.size())
     {
       pointsChunkSize = samplePtsX.size() - i;

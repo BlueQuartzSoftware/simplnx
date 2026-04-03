@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>
@@ -29,6 +30,8 @@ CAxisSegmentFeatures::~CAxisSegmentFeatures() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> CAxisSegmentFeatures::operator()()
 {
+  m_MessageHelper.sendMessage("Segmenting Features by C-Axis Misorientation...");
+
   this->m_NeighborScheme = m_InputValues->NeighborScheme;
   auto* imageGeometry = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);

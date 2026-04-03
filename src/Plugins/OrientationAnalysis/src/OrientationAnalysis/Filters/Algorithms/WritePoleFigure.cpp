@@ -17,6 +17,7 @@
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/IntersectionUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/RTree.hpp"
@@ -658,6 +659,9 @@ const std::atomic_bool& WritePoleFigure::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WritePoleFigure::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing Pole Figures...");
+
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
   // Ensure the complete path to the output file exists or can be created

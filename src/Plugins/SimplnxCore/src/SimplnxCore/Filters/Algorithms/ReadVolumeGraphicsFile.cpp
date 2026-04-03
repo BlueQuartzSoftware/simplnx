@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 namespace fs = std::filesystem;
@@ -46,6 +47,7 @@ Result<> ReadVolumeGraphicsFile::operator()()
     return MakeErrorResult(k_VolBinaryAllocateMismatch, fmt::format("Binary file size ({}) is smaller than the number of allocated bytes ({}).", filesize, allocatedBytes));
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Reading Data from .vol File.....");
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading Data from .vol File...");
   return ImportFromBinaryFile(m_InputValues->VGDataFile, *densityArray);
 }

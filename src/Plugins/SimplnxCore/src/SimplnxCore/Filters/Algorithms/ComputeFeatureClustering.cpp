@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <random>
 
@@ -130,6 +131,9 @@ const std::atomic_bool& ComputeFeatureClustering::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureClustering::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& featurePhasesStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
   const auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
@@ -189,14 +193,14 @@ Result<> ComputeFeatureClustering::operator()()
 
   clusters.resize(totalFeatures);
 
+  progressHelper.setMaxProgresss(totalFeatures);
+  progressHelper.setProgressMessageTemplate("Computing Feature Clustering: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(usize i = 1; i < totalFeatures; i++)
   {
     if(featurePhasesStore[i] == m_InputValues->PhaseNumber)
     {
-      if(i % 1000 == 0)
-      {
-        m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working on Feature {} of {}", i, totalPptFeatures));
-      }
 
       x = centroidsStore[3 * i];
       y = centroidsStore[3 * i + 1];
@@ -217,6 +221,7 @@ Result<> ComputeFeatureClustering::operator()()
         }
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   for(usize i = 1; i < totalFeatures; i++)

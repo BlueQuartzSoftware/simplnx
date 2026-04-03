@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
@@ -46,6 +47,9 @@ ReadChannel5Data::~ReadChannel5Data() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadChannel5Data::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading Channel 5 data...");
+
   ebsdlib::CprReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();

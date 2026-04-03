@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Orientation/Euler.hpp>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
@@ -117,6 +118,9 @@ const std::atomic_bool& ComputeShapes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeShapes::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Shapes...");
+
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->FeatureAttributeMatrixPath, featureIds, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())

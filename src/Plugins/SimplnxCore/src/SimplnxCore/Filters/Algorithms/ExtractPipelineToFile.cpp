@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 
 #include <nlohmann/json.hpp>
@@ -28,6 +29,9 @@ ExtractPipelineToFile::~ExtractPipelineToFile() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ExtractPipelineToFile::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting ExtractPipelineToFile...");
+
   const auto importFile = m_InputValues->InputFilePath;
   auto outputFile = m_InputValues->OutputFilePath;
 

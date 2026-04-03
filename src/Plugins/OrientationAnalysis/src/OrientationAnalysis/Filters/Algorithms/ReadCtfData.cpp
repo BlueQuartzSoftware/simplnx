@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/IO/HKL/CtfConstants.h>
 #include <EbsdLib/Math/EbsdLibMath.h>
@@ -32,6 +33,9 @@ const std::atomic_bool& ReadCtfData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReadCtfData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading CTF data...");
+
   ebsdlib::CtfReader reader;
   reader.setFileName(m_InputValues->InputFile.string());
   const int32_t err = reader.readFile();

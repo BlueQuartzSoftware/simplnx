@@ -1,6 +1,7 @@
 #include "ReadHDF5Dataset.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5DataStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
@@ -27,6 +28,9 @@ ReadHDF5Dataset::~ReadHDF5Dataset() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadHDF5Dataset::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading HDF5 dataset...");
+
   auto pSelectedAttributeMatrixValue = m_InputValues->ImportHdf5Object.parent;
   auto inputFile = m_InputValues->ImportHdf5Object.inputFile;
   fs::path inputFilePath(inputFile);

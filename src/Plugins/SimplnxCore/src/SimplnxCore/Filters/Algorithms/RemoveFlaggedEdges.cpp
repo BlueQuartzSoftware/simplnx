@@ -5,6 +5,7 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -83,6 +84,9 @@ const std::atomic_bool& RemoveFlaggedEdges::getCancel()
 // -----------------------------------------------------------------------------
 Result<> RemoveFlaggedEdges::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Removing flagged edges...");
+
   // Remove Edges from reduced according to removeEdgesIndex
   const auto& originalEdgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->EdgeGeometry);
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;

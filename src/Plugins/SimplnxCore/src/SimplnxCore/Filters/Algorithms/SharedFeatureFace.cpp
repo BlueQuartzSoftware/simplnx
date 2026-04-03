@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <map>
@@ -152,6 +153,12 @@ Result<> SharedFeatureFace::operator()()
   std::vector<std::pair<int32, int32>> faceLabelVector;
   faceLabelVector.emplace_back(0, 0);
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Shared Feature Face: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   // Loop through all the Triangles and figure out how many triangles we have in each one.
   for(usize t = 0; t < totalPoints; ++t)
   {
@@ -183,6 +190,7 @@ Result<> SharedFeatureFace::operator()()
       faceSizeMap[faceId64]++;
       surfaceMeshFeatureFaceIds[t] = faceIdMap[faceId64];
     }
+    progressMessenger.sendProgressMessage(1);
   }
   if(m_ShouldCancel)
   {

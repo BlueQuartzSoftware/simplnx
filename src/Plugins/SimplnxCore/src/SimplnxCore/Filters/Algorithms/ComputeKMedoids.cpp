@@ -4,6 +4,7 @@
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <random>
 
@@ -208,6 +209,9 @@ const std::atomic_bool& ComputeKMedoids::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeKMedoids::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing K-Medoids Clustering...");
+
   auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   try

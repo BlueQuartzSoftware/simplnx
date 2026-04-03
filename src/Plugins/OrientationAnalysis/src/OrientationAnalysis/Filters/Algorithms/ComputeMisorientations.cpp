@@ -1,6 +1,7 @@
 #include "ComputeMisorientations.hpp"
 
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include "simplnx/Common/Constants.hpp"
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -127,6 +128,9 @@ ComputeMisorientations::~ComputeMisorientations() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeMisorientations::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Misorientations...");
+
   Result<> result;
 
   if(m_InputValues->ComputationType == compute_misorientations_constants::k_UseArraysIndex)

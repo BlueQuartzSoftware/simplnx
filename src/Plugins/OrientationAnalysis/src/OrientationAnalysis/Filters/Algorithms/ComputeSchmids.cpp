@@ -3,6 +3,7 @@
 #include "OrientationAnalysis/utilities/OrientationUtilities.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -72,6 +73,12 @@ Result<> ComputeSchmids::operator()()
     direction.normalize();
   }
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalFeatures - 1);
+  progressHelper.setProgressMessageTemplate("Compute Schmids: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(size_t i = 1; i < totalFeatures; i++)
   {
     uint32_t laueClass = crystalStructures[featurePhases[i]];
@@ -102,6 +109,7 @@ Result<> ComputeSchmids::operator()()
     poleArrays[3 * i + 1] = static_cast<int32>(crystalLoading[1] * 100.0);
     poleArrays[3 * i + 2] = static_cast<int32>(crystalLoading[2] * 100.0);
     slipSystems[i] = slipSystem;
+    progressMessenger.sendProgressMessage(1);
   }
 
   return {};

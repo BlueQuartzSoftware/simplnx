@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
 #include "simplnx/Utilities/Math/GeometryMath.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -332,6 +333,9 @@ const std::atomic_bool& ComputeTwinBoundaries::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeTwinBoundaries::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Twin Boundaries...");
+
   const auto& crystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
 
   bool allPhasesCubic = true;

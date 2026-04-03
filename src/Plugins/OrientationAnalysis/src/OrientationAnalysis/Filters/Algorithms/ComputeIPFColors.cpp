@@ -4,6 +4,7 @@
 #include "simplnx/Common/RgbColor.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
@@ -141,6 +142,8 @@ ComputeIPFColors::~ComputeIPFColors() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeIPFColors::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing IPF Colors...");
 
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 

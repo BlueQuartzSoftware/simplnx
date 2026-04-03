@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <iostream>
 
@@ -29,6 +30,9 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
   {
     return {};
   }
+
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Converting Orientations to Vertex Geometry...");
 
   DataStructure tmpDs;
 

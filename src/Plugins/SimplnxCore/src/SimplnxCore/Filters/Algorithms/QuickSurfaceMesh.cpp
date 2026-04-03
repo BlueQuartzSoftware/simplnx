@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelData3DAlgorithm.hpp"
 
 #include <array>
@@ -329,6 +330,8 @@ QuickSurfaceMesh::~QuickSurfaceMesh() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> QuickSurfaceMesh::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   // Get the ImageGeometry
   auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
 
@@ -351,6 +354,7 @@ Result<> QuickSurfaceMesh::operator()()
 
   if(m_InputValues->FixProblemVoxels)
   {
+    messageHelper.sendMessage("Correcting problem voxels...");
     correctProblemVoxels();
   }
   if(m_ShouldCancel)
@@ -358,6 +362,7 @@ Result<> QuickSurfaceMesh::operator()()
     return {};
   }
 
+  messageHelper.sendMessage("Determining active nodes...");
   determineActiveNodes(nodeIds, nodeCount, triangleCount);
   if(m_ShouldCancel)
   {
@@ -377,6 +382,7 @@ Result<> QuickSurfaceMesh::operator()()
     Result<> result = nx::core::ResizeAndReplaceDataArray(m_DataStructure, dataPath, tupleShape, nx::core::IDataAction::Mode::Execute);
   }
 
+  messageHelper.sendMessage("Creating nodes and triangles...");
   createNodesAndTriangles(nodeIds, nodeCount, triangleCount);
   if(m_ShouldCancel)
   {

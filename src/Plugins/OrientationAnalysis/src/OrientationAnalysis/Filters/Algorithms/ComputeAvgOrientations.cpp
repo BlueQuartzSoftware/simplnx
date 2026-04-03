@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
@@ -88,6 +89,12 @@ Result<> ComputeAvgOrientations::operator()()
   // Get the Identity Quaternion
   static const ebsdlib::QuatF identityQuat(0.0f, 0.0f, 0.0f, 1.0f);
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(totalPoints);
+  progressHelper.setProgressMessageTemplate("Compute Avg Orientations: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(size_t i = 0; i < totalPoints; i++)
   {
     if(m_ShouldCancel)
@@ -115,6 +122,7 @@ Result<> ComputeAvgOrientations::operator()()
 
       UpdateQuaternionArray(avgQuats, curAvgQuat, currentFeatureId);
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   for(size_t featureId = 1; featureId < totalFeatures; featureId++)

@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
@@ -81,6 +82,11 @@ Result<> ErodeDilateCoordinationNumber::operator()()
   bool keepGoing = true;
   int32 counter = 1;
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(dims[2]);
+  progressHelper.setProgressMessageTemplate("ErodeDilateCoordinationNumber: {:.1f}% Complete");
+
   while(counter > 0 && keepGoing)
   {
     counter = 0;
@@ -88,6 +94,9 @@ Result<> ErodeDilateCoordinationNumber::operator()()
     {
       keepGoing = false;
     }
+
+    progressHelper.resetProgress();
+    auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
 
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
@@ -158,6 +167,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           }
         }
       }
+      progressMessenger.sendProgressMessage(1);
     }
     for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
     {

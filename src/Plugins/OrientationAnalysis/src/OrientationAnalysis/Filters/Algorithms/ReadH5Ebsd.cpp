@@ -11,6 +11,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/Core/EbsdMacros.h>
@@ -266,6 +267,9 @@ ReadH5Ebsd::~ReadH5Ebsd() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadH5Ebsd::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading H5EBSD data...");
+
   // Get the Size and Spacing of the Volume
   ebsdlib::H5EbsdVolumeInfo::Pointer volumeInfoReader = ebsdlib::H5EbsdVolumeInfo::New();
   volumeInfoReader->setFileName(m_InputValues->inputFilePath);

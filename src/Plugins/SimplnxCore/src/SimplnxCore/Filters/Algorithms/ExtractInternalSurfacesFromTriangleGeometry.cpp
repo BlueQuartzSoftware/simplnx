@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <limits>
 #include <unordered_map>
@@ -94,6 +95,12 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   MeshIndexType currentNewTriIndex = 0;
   MeshIndexType currentNewVertIndex = 0;
 
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(numTris);
+  progressHelper.setProgressMessageTemplate("ExtractInternalSurfaces: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   // Loop over all the triangles mapping the triangle and the vertices to the new array locations
   for(MeshIndexType triIndex = 0; triIndex < numTris; triIndex++)
   {
@@ -124,6 +131,8 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
         currentNewVertIndex++;
       }
     }
+
+    progressMessenger.sendProgressMessage(1);
 
     if(m_ShouldCancel)
     {

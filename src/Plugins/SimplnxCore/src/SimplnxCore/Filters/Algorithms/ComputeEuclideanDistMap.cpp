@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
@@ -459,6 +460,9 @@ const std::atomic_bool& ComputeEuclideanDistMap::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeEuclideanDistMap::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Euclidean Distance Map...");
+
   if(m_InputValues->CalcManhattanDist)
   {
     findDistanceMap<int32>(m_DataStructure, m_InputValues);

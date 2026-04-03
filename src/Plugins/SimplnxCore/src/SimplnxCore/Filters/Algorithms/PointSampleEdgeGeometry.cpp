@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
@@ -144,6 +145,8 @@ PointSampleEdgeGeometry::~PointSampleEdgeGeometry() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> PointSampleEdgeGeometry::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+
   auto& edgeGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->ScanVectorGeometryPath);
   auto numEdges = edgeGeom.getNumberOfEdges();
 
@@ -162,7 +165,7 @@ Result<> PointSampleEdgeGeometry::operator()()
   }
 
   // --- Step 1: Count how many total sample points to generate ---
-  m_MessageHandler(IFilter::Message::Type::Info, "Computing total sampling points...");
+  messageHelper.sendMessage("Computing total sampling points...");
   usize numVertices = 0;
 
   auto& edgeVertices = edgeGeom.getVerticesRef();
@@ -182,7 +185,7 @@ Result<> PointSampleEdgeGeometry::operator()()
     numVertices += result.value();
   }
 
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Total sampling points: {}", numVertices));
+  messageHelper.sendMessage(fmt::format("Total sampling points: {}", numVertices));
 
   // Resize the vertex geometry and the vertex attribute matrix
   auto& vertices = vertexGeom.getVerticesRef();
@@ -191,7 +194,11 @@ Result<> PointSampleEdgeGeometry::operator()()
   vertexAttrMatrix.resizeTuples({numVertices});
 
   // --- Step 2: Generate and write each sampled point ---
-  m_MessageHandler(IFilter::Message::Type::Info, "Generating sampled points along edge geometry...");
+  messageHelper.sendMessage("Generating sampled points along edge geometry...");
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(static_cast<usize>(numEdges));
+  progressHelper.setProgressMessageTemplate("Sampling Edges: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
   int64 vertCount = 0;
   for(int64 i = 0; i < numEdges; i++)
   {
@@ -200,11 +207,12 @@ Result<> PointSampleEdgeGeometry::operator()()
       return {};
     }
     sampleEdge(i, edgeVertices, edges, m_InputValues->ScanVectorSamplingRes, vertices, vertexEdgeIdsDataArrayPtr, cumulativeSampleDistArrayPtr, vertCount);
+    progressMessenger.sendProgressMessage(1);
   }
 
   usize maxEdgeId = *std::max_element(vertexEdgeIdsDataStore.begin(), vertexEdgeIdsDataStore.end());
 
-  m_MessageHandler(IFilter::Message::Type::Info, "Copying Edge Data to Vertex Geometry...");
+  messageHelper.sendMessage("Copying Edge Data to Vertex Geometry...");
   const DataPath vertexAttrMatPath = vertexGeom.getVertexAttributeMatrixDataPath();
   for(const auto& selectedArrayPath : m_InputValues->pSelectedDataArrayPaths)
   {
@@ -218,7 +226,7 @@ Result<> PointSampleEdgeGeometry::operator()()
                                                  vertexEdgeIdsDataPath.toString(), maxEdgeId, selectedEdgeArray->getNumberOfTuples(), selectedArrayPath.toString()));
     }
 
-    m_MessageHandler(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into vertex array '{}'...", createdArrayPath.toString())});
+    messageHelper.sendMessage(fmt::format("Copying data into vertex array '{}'...", createdArrayPath.toString()));
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, createdVertexArray->getNumberOfTuples());
     ExecuteParallelFunction<::CopyEdgeDataToVertexData>(selectedEdgeArray->getDataType(), dataAlg, selectedEdgeArray, createdVertexArray, vertexEdgeIdsDataStore, m_ShouldCancel);

@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5DataStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
@@ -292,6 +293,9 @@ Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader& reader, hid_t 
 // -----------------------------------------------------------------------------
 Result<> ReadGrainMapper3D::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading GrainMapper3D data...");
+
   GrainMapperReader reader(m_InputValues->InputFile.string(), m_InputValues->ReadDctData, m_InputValues->ReadAbsorptionData);
 
   hid_t fileId = H5Support::H5Utilities::openFile(m_InputValues->InputFile.string(), true);

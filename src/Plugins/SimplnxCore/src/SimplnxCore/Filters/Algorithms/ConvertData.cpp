@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 using namespace nx::core;
@@ -155,6 +156,9 @@ const std::atomic_bool& ConvertData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Starting ConvertData...");
+
   DataType inputArrayType = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SelectedArrayPath)->getDataType();
   switch(inputArrayType)
   {

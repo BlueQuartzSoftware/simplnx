@@ -3,6 +3,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelData2DAlgorithm.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
@@ -318,7 +319,8 @@ Result<> ComputeGBCDPoleFigure::operator()()
   float32 yRes = 2.0f / static_cast<float32>(yPoints);
   float32 zRes = (xRes + yRes) / 2.0F;
 
-  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Intensity Plot for phase {}", m_InputValues->PhaseOfInterest)});
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage(fmt::format("Generating Intensity Plot for phase {}", m_InputValues->PhaseOfInterest));
 
   typename IParallelAlgorithm::AlgorithmArrays algArrays;
   algArrays.push_back(&poleFigure);

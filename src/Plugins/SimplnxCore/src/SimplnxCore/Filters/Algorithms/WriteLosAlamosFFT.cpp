@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 #include <fstream>
 
@@ -62,8 +63,12 @@ Result<> WriteLosAlamosFFT::operator()()
 
   float phi1 = 0.0f, phi = 0.0f, phi2 = 0.0f;
 
-  auto start = std::chrono::steady_clock::now();
-  usize total = dims[0] * dims[1] * dims[2];
+  MessageHelper messageHelper(m_MessageHandler);
+  auto progressHelper = messageHelper.createProgressMessageHelper();
+  progressHelper.setMaxProgresss(dims[2]);
+  progressHelper.setProgressMessageTemplate("Writing Los Alamos FFT: {:.1f}% Complete");
+  auto progressMessenger = progressHelper.createProgressMessenger(std::chrono::milliseconds(1000));
+
   for(usize z = 0; z < dims[2]; ++z)
   {
     for(usize y = 0; y < dims[1]; ++y)
@@ -71,11 +76,6 @@ Result<> WriteLosAlamosFFT::operator()()
       for(usize x = 0; x < dims[0]; ++x)
       {
         usize index = (z * dims[0] * dims[1]) + (dims[0] * y) + x;
-        if(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count() > 1000)
-        {
-          m_MessageHandler(fmt::format("Writing in progress: {} of {} written. Percentage: {}%", index, total, static_cast<uint32>((static_cast<float64>(index) / total) * 100.0)));
-          start = std::chrono::steady_clock::now();
-        }
 
         phi1 = cellEulerAngles[index * 3] * 180.0f * Constants::k_1OverPiF;
         phi = cellEulerAngles[index * 3 + 1] * 180.0f * Constants::k_1OverPiF;
@@ -84,6 +84,7 @@ Result<> WriteLosAlamosFFT::operator()()
                             cellPhases.getValue(index));
       }
     }
+    progressMessenger.sendProgressMessage(1);
   }
 
   file.flush();

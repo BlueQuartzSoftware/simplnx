@@ -6,6 +6,7 @@
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
@@ -485,6 +486,9 @@ const std::atomic_bool& WriteStlFile::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteStlFile::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Writing STL file...");
+
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
   const ::VertexStore& vertices = triangleGeom.getVertices()->getDataStoreRef();
   const ::TriStore& triangles = triangleGeom.getFaces()->getDataStoreRef();

@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 
 using namespace nx::core;
 
@@ -17,6 +18,9 @@ ReadH5OimData::~ReadH5OimData() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ReadH5OimData::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Reading H5 OIM data...");
+
   return execute();
 }
 

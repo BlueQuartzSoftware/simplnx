@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -730,6 +731,9 @@ ComputeBoundingBoxStats::~ComputeBoundingBoxStats() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeBoundingBoxStats::operator()()
 {
+  MessageHelper messageHelper(m_MessageHandler);
+  messageHelper.sendMessage("Computing Bounding Box Stats...");
+
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
   auto& unifiedArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->UnifiedPath).getDataStoreRef();
   auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputPath);
