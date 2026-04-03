@@ -352,7 +352,7 @@ Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeo
     [[fallthrough]];
   }
   default: {
-    return MakeErrorResult(-100, "");
+    return MakeErrorResult(-100, "Unsupported data type for image comparison. Boolean arrays are not supported.");
   }
   }
 }

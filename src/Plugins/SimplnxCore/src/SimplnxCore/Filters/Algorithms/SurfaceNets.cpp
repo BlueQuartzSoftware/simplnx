@@ -122,7 +122,7 @@ Result<> SurfaceNets::operator()()
   MMSurfaceNet surfaceNet(triangleGeomPtr->getVerticesRef().getDataStoreRef(), m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath), gridDimensions.data(), voxelSize.data());
   if(!surfaceNet.getCellMap()->valid())
   {
-    return MakeErrorResult(-843870, fmt::format("Could not allocate SurfaceNets internal Data Structures"));
+    return MakeErrorResult(-843870, fmt::format("Could not allocate SurfaceNets internal data structures for grid geometry at path '{}'.", m_InputValues->GridGeomDataPath.toString()));
   }
 
   // Use current parameters to relax the SurfaceNet

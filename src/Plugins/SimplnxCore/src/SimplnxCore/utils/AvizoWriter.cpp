@@ -37,7 +37,7 @@ Result<> AvizoWriter::execute()
   FILE* outputFile = fopen(m_InputValues->OutputFile.string().c_str(), "wb");
   if(outputFile == nullptr)
   {
-    return MakeErrorResult(-5830, fmt::format("Error creating output file {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-5830, fmt::format("Error creating output file '{}'. Check that the directory exists and you have write permissions.", m_InputValues->OutputFile.string()));
   }
 
   Result<> headerResult = generateHeader(outputFile);

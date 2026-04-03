@@ -142,11 +142,15 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
         {
           if(!calculatedComponentShape.empty() && calculatedComponentShape != array1->getArray()->getComponentShape())
           {
-            return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentCompDims), "Attribute Array symbols in the infix expression have mismatching component dimensions");
+            return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentCompDims),
+                                               fmt::format("Attribute Array '{}' has component dimensions {} which do not match the previously encountered component dimensions {} in the expression.",
+                                                           array1->getArray()->getName(), fmt::join(array1->getArray()->getComponentShape(), "x"), fmt::join(calculatedComponentShape, "x")));
           }
           if(!calculatedTupleShape.empty() && calculatedNumOfTuples != array1->getArray()->getNumberOfTuples())
           {
-            return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentTuples), "Attribute Array symbols in the infix expression have mismatching number of tuples");
+            return MakePreflightErrorResult(static_cast<int>(CalculatorItem::ErrorCode::InconsistentTuples),
+                                               fmt::format("Attribute Array '{}' has {} tuples which does not match the previously encountered tuple count of {} in the expression.",
+                                                           array1->getArray()->getName(), array1->getArray()->getNumberOfTuples(), calculatedNumOfTuples));
           }
           if(!calculatedTupleShape.empty() && calculatedTupleShape != tupleShape)
           {

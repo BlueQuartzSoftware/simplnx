@@ -404,7 +404,7 @@ Result<> RemoveFlaggedFeatures::operator()()
     DataPath featureGroupPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();
     if(!RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures->getNumberOfTuples(), m_MessageHandler, m_ShouldCancel))
     {
-      return MakeErrorResult(-45434, "The removal has failed!");
+      return MakeErrorResult(-45434, fmt::format("Failed to remove inactive objects from feature group at path '{}'.", featureGroupPath.toString()));
     }
   }
 

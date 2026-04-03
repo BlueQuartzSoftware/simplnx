@@ -1080,7 +1080,7 @@ struct DBSCANFunctor
     }
     else
     {
-      return MakeErrorResult(-54060, "Input components invalid. Only 2 or 3 accepted.");
+      return MakeErrorResult(-54060, fmt::format("Input array has {} components but only 2 or 3 are accepted.", inputArray.getNumberOfComponents()));
     }
 
     return {};

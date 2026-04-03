@@ -154,7 +154,7 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
   auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
   if(vertexAM == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-58556, "Could not find vertex data AttributeMatrix in selected Vertex Geometry"), {}};
+    return {MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())), {}};
   }
   auto tupleShape = vertexAM->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());

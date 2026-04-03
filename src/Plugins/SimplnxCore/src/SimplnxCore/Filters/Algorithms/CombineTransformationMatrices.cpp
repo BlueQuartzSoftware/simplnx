@@ -89,7 +89,8 @@ Result<> CombineTransformationMatrices::operator()()
   const auto& array2 = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter++);
   if(array1.getDataType() != array2.getDataType())
   {
-    return MakeErrorResult(-89750, "DataType mismatch");
+    return MakeErrorResult(-89750, fmt::format("DataType mismatch: array '{}' has type {} but array '{}' has type {}.", array1.getName(), DataTypeToString(array1.getDataType()), array2.getName(),
+                                               DataTypeToString(array2.getDataType())));
   }
   // Combine first two matrices: second * first
   ExecuteDataFunction(MatrixOperationFunctor{}, array1.getDataType(), array2, array1, outputArray);
