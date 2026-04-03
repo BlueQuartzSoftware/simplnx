@@ -121,7 +121,7 @@ IFilter::PreflightResult ReadStringDataArrayFilter::preflightImpl(const DataStru
       {
         if(floatValue == 0)
         {
-          return MakePreflightErrorResult(-77603, "Tuple dimension cannot be zero");
+          return MakePreflightErrorResult(-77603, fmt::format("Tuple dimension at index {} cannot be zero", tupleDims.size()));
         }
 
         tupleDims.push_back(static_cast<usize>(floatValue));

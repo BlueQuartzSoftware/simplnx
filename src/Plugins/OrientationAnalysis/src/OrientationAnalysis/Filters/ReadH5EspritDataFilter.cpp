@@ -122,7 +122,7 @@ IFilter::PreflightResult ReadH5EspritDataFilter::preflightImpl(const DataStructu
 
   if(pZSpacingValue <= 0)
   {
-    return MakePreflightErrorResult(-9680, "The Z Spacing field contains a value that is non-positive.  The Z Spacing field must be set to a positive value.");
+    return MakePreflightErrorResult(-9680, fmt::format("The Z Spacing field contains a value ({}) that is non-positive.  The Z Spacing field must be set to a positive value.", pZSpacingValue));
   }
   if(pSelectedScanNamesValue.scanNames.empty())
   {

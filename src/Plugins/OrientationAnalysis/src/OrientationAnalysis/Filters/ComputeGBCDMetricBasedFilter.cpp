@@ -148,7 +148,7 @@ IFilter::PreflightResult ComputeGBCDMetricBasedFilter::preflightImpl(const DataS
 
   if(pMisorientationRotationValue[3] <= 0.0f || pMisorientationRotationValue[3] > 180.0f)
   {
-    return MakePreflightErrorResult(-7230, "The misorientation angle should be in the range (0, 180] degrees");
+    return MakePreflightErrorResult(-7230, fmt::format("The misorientation angle ({}) should be in the range (0, 180] degrees", pMisorientationRotationValue[3]));
   }
 
   if(pMisorientationRotationValue[0] == 0.0f && pMisorientationRotationValue[1] == 0.0f && pMisorientationRotationValue[2] == 0.0f)
@@ -158,7 +158,7 @@ IFilter::PreflightResult ComputeGBCDMetricBasedFilter::preflightImpl(const DataS
 
   if(pNumSamplePtsValue < 1)
   {
-    return MakePreflightErrorResult(-7232, "The number of sampling points must be greater than zero");
+    return MakePreflightErrorResult(-7232, fmt::format("The number of sampling points ({}) must be greater than zero", pNumSamplePtsValue));
   }
 
   // Set some reasonable value, but allow user to use more if they know what they're doing
@@ -174,7 +174,7 @@ IFilter::PreflightResult ComputeGBCDMetricBasedFilter::preflightImpl(const DataS
 
   if(pPhaseOfInterestValue <= 0)
   {
-    return MakePreflightErrorResult(-7235, "The phase of interest must be greater than 0");
+    return MakePreflightErrorResult(-7235, fmt::format("The phase of interest ({}) must be greater than 0", pPhaseOfInterestValue));
   }
 
   const auto numEnsembles = static_cast<int>(dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue).getNumberOfTuples());

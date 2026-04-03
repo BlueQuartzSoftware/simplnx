@@ -186,12 +186,12 @@ Result<> DynamicTableInfo::validate(const TableDataType& table) const
 
   if(!m_RowsInfo.validate(dims->numRows))
   {
-    return MakeErrorResult(-2, "Invalid number of rows");
+    return MakeErrorResult(-2, fmt::format("Invalid number of rows: got {}, expected at least {}", dims->numRows, m_RowsInfo.getMinSize()));
   }
 
   if(!m_ColsInfo.validate(dims->numCols))
   {
-    return MakeErrorResult(-3, "Invalid number of columns");
+    return MakeErrorResult(-3, fmt::format("Invalid number of columns: got {}, expected at least {}", dims->numCols, m_ColsInfo.getMinSize()));
   }
 
   return {};
