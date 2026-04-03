@@ -91,21 +91,20 @@ Result<> INodeGeom0dIO::WriteNodeGeom0dData(DataStructureWriter& dataStructureWr
     result = datasetWriter.writeSpan(nx::core::HDF5::DatasetIO::DimsType{numVerts, 1}, nonstd::span<const int64>{indices});
     if(result.invalid())
     {
-      std::string ss = "Failed to write indices to dataset";
-      return MakeErrorResult(result.errors()[0].code, ss);
+      return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write vertex indices for geometry '{}'", geometry.getName()));
     }
   }
 
   result = groupWriter.writeScalarAttribute(IOConstants::k_H5_UNITS, nx::core::to_underlying(geometry.getUnits()));
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, "Failed to write geometry units");
+    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write geometry units for '{}'", geometry.getName()));
   }
 
   result = WriteDataId(groupWriter, geometry.getVertexAttributeMatrixId(), IOConstants::k_VertexDataTag);
   if(result.invalid())
   {
-    return MakeErrorResult(result.errors()[0].code, "Failed to write vertex attribute matrix");
+    return MakeErrorResult(result.errors()[0].code, fmt::format("Failed to write vertex attribute matrix for geometry '{}'", geometry.getName()));
   }
 
   return {};

@@ -534,13 +534,13 @@ nx::core::Result<> DatasetIO::readIntoSpan(nonstd::span<T> data) const
   hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
-    return MakeErrorResult(-1001, "DatasetReader error: Unsupported span data type.");
+    return MakeErrorResult(-1001, fmt::format("DatasetReader error: Unsupported span data type for dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
   }
 
   hid_t fileSpaceId = H5Dget_space(datasetId);
   if(fileSpaceId < 0)
   {
-    return MakeErrorResult(-1002, "DatasetReader error: Unable to open the dataspace.");
+    return MakeErrorResult(-1002, fmt::format("DatasetReader error: Unable to open the dataspace for dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
   }
 
   hsize_t totalElements;
@@ -898,7 +898,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
   hid_t dataType = HdfTypeForPrimitive<T>();
   if(dataType == -1)
   {
-    return MakeErrorResult(-1, "DataType was unknown");
+    return MakeErrorResult(-1, fmt::format("DataType was unknown when writing dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
   }
 
   std::vector<hsize_t> hDims(dims.size());
@@ -923,12 +923,12 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
         error = H5Dwrite(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
         if(error < 0)
         {
-          returnError = MakeErrorResult(error, "Error Writing Attribute");
+          returnError = MakeErrorResult(error, fmt::format("Error writing data to dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
         }
       }
       else
       {
-        returnError = MakeErrorResult(datasetId, "Error Creating Dataset");
+        returnError = MakeErrorResult(datasetId, fmt::format("Error creating dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
       }
     }
     /* Close the dataspace. */
@@ -940,7 +940,7 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
   }
   else
   {
-    returnError = MakeErrorResult(dataspaceId, "Error Opening Dataspace");
+    returnError = MakeErrorResult(dataspaceId, fmt::format("Error opening dataspace for dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
   }
   return returnError;
 }
