@@ -34,6 +34,10 @@ Result<> ComputeBoundaryElementFractions::operator()()
 
   for(usize j = 0; j < totalPoints; j++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     int32 gnum = featureIds[j];
     voxCounts[gnum]++;
     if(boundaryCells[j] > 0)

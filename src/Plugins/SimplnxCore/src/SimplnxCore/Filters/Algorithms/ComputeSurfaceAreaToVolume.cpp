@@ -74,6 +74,10 @@ Result<> ComputeSurfaceAreaToVolume::operator()()
   for(int64 zIdx = 0; zIdx < zPoints; zIdx++)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Z Slice: '{}'", zIdx));
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
 
     int64 zStride = zIdx * xPoints * yPoints;
     for(int64 yIdx = 0; yIdx < yPoints; yIdx++)

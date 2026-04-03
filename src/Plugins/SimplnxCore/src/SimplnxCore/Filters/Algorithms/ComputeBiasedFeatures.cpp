@@ -97,6 +97,10 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
 
     for(usize i = 1; i < size; i++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
       if(surfaceFeatures->isTrue(i) && (!m_InputValues->CalcByPhase || (*phasesStorePtr)[i] == iter))
       {
         int32 sideToMove = 0;
@@ -148,6 +152,10 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
     }
     for(usize j = 1; j < size; j++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
       if(!m_InputValues->CalcByPhase || (*phasesStorePtr)[j] == iter)
       {
         if(centroidsStore[3 * j] <= boundBox[0])

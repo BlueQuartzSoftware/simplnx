@@ -218,6 +218,11 @@ Result<> ComputeFeatureBounds::operator()()
 
   const auto& geom = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->GeometryPath);
 
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
   std::vector<float32> bounds = ExecuteComputeBounds(geom, featureIds, numFeatures);
   if(bounds.empty())
   {

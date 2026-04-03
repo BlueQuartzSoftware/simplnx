@@ -74,6 +74,11 @@ Result<> ComputeSchmids::operator()()
 
   for(size_t i = 1; i < totalFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     uint32_t laueClass = crystalStructures[featurePhases[i]];
     if(laueClass >= ebsdlib::CrystalStructure::LaueGroupEnd)
     {

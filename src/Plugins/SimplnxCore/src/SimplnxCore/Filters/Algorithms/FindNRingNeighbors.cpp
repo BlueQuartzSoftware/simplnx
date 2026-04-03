@@ -56,6 +56,11 @@ Result<> FindNRingNeighbors::operator()(const IFilter::MessageHandler& mesgHandl
 
   for(int64_t ring = 0; ring < m_InputValues->Ring; ++ring)
   {
+    if(shouldCancel)
+    {
+      return {};
+    }
+
     // Make a copy of the 1 Ring Triangles that we just found so that we can use those triangles as the
     // seed triangles for the 2 Ring triangles
     UniqueFaceIds_t lcvTriangles(m_NRingTriangles);

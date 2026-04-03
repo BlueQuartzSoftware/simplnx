@@ -159,6 +159,10 @@ Result<> InitializeImageGeomCellData::operator()()
 
   for(const DataPath& path : cellArrayPaths)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(path);
 
     ExecuteNeighborFunction(InitializeArrayFunctor{}, iDataArray.getDataType(), iDataArray, dims, xMin, xMax, yMin, yMax, zMin, zMax, initType, initValue, initRange, seed); // NO BOOL
