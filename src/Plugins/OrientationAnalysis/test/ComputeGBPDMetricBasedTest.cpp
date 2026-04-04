@@ -9,6 +9,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
+#include <algorithm>
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -33,6 +34,49 @@ const DataPath k_FeatureFaceLabelsPath = k_TriangleDataContainerPath.createChild
 const DataPath k_AvgEulerAnglesPath = k_SmallIN100Path.createChildPath(k_Grain_Data).createChildPath(k_AvgEulerAngles);
 const DataPath k_PhasesPath = k_SmallIN100Path.createChildPath(k_Grain_Data).createChildPath(k_Phases);
 const DataPath k_CrystalStructuresPath = k_SmallIN100Path.createChildPath(k_Phase_Data).createChildPath(k_CrystalStructures);
+
+/**
+ * @brief Compares two float32 DataArrays after sorting their tuples, so that row ordering does not affect the comparison.
+ * This is needed because the GBPD output row order depends on EbsdLib symmetry operator ordering, which may change between versions.
+ */
+void CompareSortedArrays(const DataStructure& dataStructure, const DataPath& exemplarPath, const DataPath& computedPath)
+{
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(exemplarPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(computedPath));
+  const auto& exemplarArray = dataStructure.getDataRefAs<DataArray<float32>>(exemplarPath);
+  const auto& computedArray = dataStructure.getDataRefAs<DataArray<float32>>(computedPath);
+  REQUIRE(exemplarArray.getNumberOfTuples() == computedArray.getNumberOfTuples());
+  REQUIRE(exemplarArray.getNumberOfComponents() == computedArray.getNumberOfComponents());
+
+  const usize numTuples = exemplarArray.getNumberOfTuples();
+  const usize numComps = exemplarArray.getNumberOfComponents();
+
+  auto extractAndSort = [numTuples, numComps](const DataArray<float32>& arr) {
+    std::vector<std::vector<float32>> rows(numTuples, std::vector<float32>(numComps));
+    for(usize i = 0; i < numTuples; i++)
+    {
+      for(usize c = 0; c < numComps; c++)
+      {
+        rows[i][c] = arr[i * numComps + c];
+      }
+    }
+    std::sort(rows.begin(), rows.end());
+    return rows;
+  };
+
+  auto exemplarRows = extractAndSort(exemplarArray);
+  auto computedRows = extractAndSort(computedArray);
+
+  for(usize i = 0; i < numTuples; i++)
+  {
+    for(usize c = 0; c < numComps; c++)
+    {
+      float32 diff = std::fabs(exemplarRows[i][c] - computedRows[i][c]);
+      INFO(fmt::format("Sorted row {}, comp {}: exemplar={}, computed={}", i, c, exemplarRows[i][c], computedRows[i][c]));
+      REQUIRE(diff < UnitTest::EPSILON);
+    }
+  }
+}
 
 const DataPath k_ExemplarDistributionPath({"6_6_distribution"});
 const DataPath k_ExemplarErrorPath({"6_6_errors"});
@@ -157,9 +201,9 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/Compute_GBPD_Metric_Based.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  // compare results
-  UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarDistributionPath, k_ComputedDistributionPath);
-  UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarErrorPath, k_ComputedErrorPath);
+  // compare results (sorted to be independent of symmetry operator ordering)
+  CompareSortedArrays(dataStructure, k_ExemplarDistributionPath, k_ComputedDistributionPath);
+  CompareSortedArrays(dataStructure, k_ExemplarErrorPath, k_ComputedErrorPath);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
