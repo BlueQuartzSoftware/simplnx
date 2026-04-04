@@ -573,8 +573,7 @@ Result<OutputActions> DataCheckImpl(const DataStructure& dataStructure, const Da
   {
 
     std::string errMessage = fmt::format("DataArray '{}' dimensions ({}) do not match Image Geometry '{}' dimensions ({}).", inputArrayPath.toString(),
-                                         StringUtilities::formatTupleShape3D(dataStore.getTupleShape()), imageGeomPath.toString(),
-                                         StringUtilities::formatDimensions3D(imageGeom.getDimensions()));
+                                         StringUtilities::formatTupleShape3D(dataStore.getTupleShape()), imageGeomPath.toString(), StringUtilities::formatDimensions3D(imageGeom.getDimensions()));
     return MakeErrorResult<OutputActions>(nx::core::ITK::Constants::k_ImageGeometryDimensionMismatch, errMessage);
   }
 

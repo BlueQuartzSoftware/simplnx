@@ -127,9 +127,8 @@ IFilter::PreflightResult ComputeFeatureNeighborMisorientationsFilter::preflightI
   const auto* avgQuats = dataStructure.getDataAs<Float32Array>(pAvgQuatsArrayPathValue);
   if(avgQuats->getNumberOfComponents() != 4)
   {
-    return {MakeErrorResult<OutputActions>(-34500,
-                                           fmt::format("Input Average Quaternions array at path '{}' has {} components but 4 are required.", pAvgQuatsArrayPathValue.toString(),
-                                                       avgQuats->getNumberOfComponents()))};
+    return {MakeErrorResult<OutputActions>(
+        -34500, fmt::format("Input Average Quaternions array at path '{}' has {} components but 4 are required.", pAvgQuatsArrayPathValue.toString(), avgQuats->getNumberOfComponents()))};
   }
 
   const auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue);

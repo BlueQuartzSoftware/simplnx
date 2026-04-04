@@ -155,8 +155,8 @@ IFilter::PreflightResult AlignSectionsMutualInformationFilter::preflightImpl(con
 
   if(imageGeom.getNumXCells() <= 1 || imageGeom.getNumYCells() <= 1 || imageGeom.getNumZCells() <= 1)
   {
-    return MakePreflightErrorResult(-3541, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({})",
-                                                       StringUtilities::formatDimensions3D(imageGeom.getDimensions())));
+    return MakePreflightErrorResult(
+        -3541, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({})", StringUtilities::formatDimensions3D(imageGeom.getDimensions())));
   }
 
   std::vector<DataPath> dataArrayPaths = {pQuatsArrayPathValue, pCellPhasesArrayPathValue, pGoodVoxelsArrayPathValue};

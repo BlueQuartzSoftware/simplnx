@@ -183,8 +183,8 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
   usize numComp = inputStore.getNumberOfComponents();
   if(componentIndex > numComp)
   {
-    return MakeErrorResult(-23765, fmt::format("GenerateHistogramAtComponent: supplied component index is larger than component size of input array. Needed: x < {} | Currently: {}", numComp,
-                                               componentIndex));
+    return MakeErrorResult(-23765,
+                           fmt::format("GenerateHistogramAtComponent: supplied component index is larger than component size of input array. Needed: x < {} | Currently: {}", numComp, componentIndex));
   }
 
   if(binRangesStore.size() < numBins + 1)
@@ -193,8 +193,7 @@ Result<> GenerateHistogramAtComponent(const AbstractDataStore<Type>& inputStore,
   }
   if(histogramCountsStore.size() < numBins)
   {
-    return MakeErrorResult(-23762, fmt::format("GenerateHistogramAtComponent: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}", numBins,
-                                               histogramCountsStore.size()));
+    return MakeErrorResult(-23762, fmt::format("GenerateHistogramAtComponent: histogramCountsStore is too small to hold counts. Needed: {} | Current Size: {}", numBins, histogramCountsStore.size()));
   }
 
   const float32 increment = CalculateIncrement(rangeMinMax.first, rangeMinMax.second, numBins);
@@ -253,8 +252,7 @@ struct GenerateHistogramFunctor
     // check range ordering : should be min, max
     if(rangeMinMax.first > rangeMinMax.second)
     {
-      return MakeErrorResult(-23760, fmt::format("GenerateHistogramFunctor: The range min value is larger than the max value. Min value: {} | Max Value: {}", rangeMinMax.first,
-                                                 rangeMinMax.second));
+      return MakeErrorResult(-23760, fmt::format("GenerateHistogramFunctor: The range min value is larger than the max value. Min value: {} | Max Value: {}", rangeMinMax.first, rangeMinMax.second));
     }
 
     return GenerateHistogram(inputStore, binRangesArray->template getIDataStoreRefAs<AbstractDataStore<Type>>(),

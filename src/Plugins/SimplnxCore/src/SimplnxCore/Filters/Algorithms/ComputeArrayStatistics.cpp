@@ -606,7 +606,7 @@ Result<> FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arr
     auto* array0Ptr = dynamic_cast<DataArray<uint64>*>(arrays[0]);
     if(array0Ptr == nullptr)
     {
-      return MakeErrorResult(-563501,fmt::format("Could not cast 'Length' array at path '{}' to UInt64Array.", inputValues->LengthArrayName.toString()));
+      return MakeErrorResult(-563501, fmt::format("Could not cast 'Length' array at path '{}' to UInt64Array.", inputValues->LengthArrayName.toString()));
     }
     const auto val = static_cast<uint64>(data.size());
     array0Ptr->initializeTuple(0, val);
@@ -621,7 +621,7 @@ Result<> FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arr
       auto* array1Ptr = dynamic_cast<DataArray<T>*>(arrays[1]);
       if(array1Ptr == nullptr)
       {
-        return MakeErrorResult(-563501,fmt::format("Could not cast 'Minimum' array at path '{}' to the expected type.", inputValues->MinimumArrayName.toString()));
+        return MakeErrorResult(-563501, fmt::format("Could not cast 'Minimum' array at path '{}' to the expected type.", inputValues->MinimumArrayName.toString()));
       }
       array1Ptr->initializeTuple(0, minMaxValues.first);
     }
@@ -630,7 +630,7 @@ Result<> FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arr
       auto* array2Ptr = dynamic_cast<DataArray<T>*>(arrays[2]);
       if(array2Ptr == nullptr)
       {
-        return MakeErrorResult(-563501,fmt::format("Could not cast 'Maximum' array at path '{}' to the expected type.", inputValues->MaximumArrayName.toString()));
+        return MakeErrorResult(-563501, fmt::format("Could not cast 'Maximum' array at path '{}' to the expected type.", inputValues->MaximumArrayName.toString()));
       }
       array2Ptr->initializeTuple(0, minMaxValues.second);
     }
@@ -645,7 +645,7 @@ Result<> FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arr
       auto* array6Ptr = dynamic_cast<Float32Array*>(arrays[7]);
       if(array6Ptr == nullptr)
       {
-       return MakeErrorResult(-563501,fmt::format("Could not cast 'Summation' array at path '{}' to Float32Array.", inputValues->SummationArrayName.toString()));
+        return MakeErrorResult(-563501, fmt::format("Could not cast 'Summation' array at path '{}' to Float32Array.", inputValues->SummationArrayName.toString()));
       }
       array6Ptr->initializeTuple(0, sumMeanValues.first);
     }
@@ -654,7 +654,7 @@ Result<> FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arr
       auto* array3Ptr = dynamic_cast<Float32Array*>(arrays[3]);
       if(array3Ptr == nullptr)
       {
-        return MakeErrorResult(-563501,fmt::format("Could not cast 'Mean' array at path '{}' to Float32Array.", inputValues->MeanArrayName.toString()));
+        return MakeErrorResult(-563501, fmt::format("Could not cast 'Mean' array at path '{}' to Float32Array.", inputValues->MeanArrayName.toString()));
       }
       array3Ptr->initializeTuple(0, sumMeanValues.second);
     }
@@ -663,7 +663,7 @@ Result<> FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arr
       auto* array5Ptr = dynamic_cast<Float32Array*>(arrays[6]);
       if(array5Ptr == nullptr)
       {
-        return MakeErrorResult(-563501,fmt::format("Could not cast 'Standard Deviation' array at path '{}' to Float32Array.", inputValues->StdDeviationArrayName.toString()));
+        return MakeErrorResult(-563501, fmt::format("Could not cast 'Standard Deviation' array at path '{}' to Float32Array.", inputValues->StdDeviationArrayName.toString()));
       }
       const float32 val = StatisticsCalculations::FindStdDeviation(data, sumMeanValues);
       array5Ptr->initializeTuple(0, val);

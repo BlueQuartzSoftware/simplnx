@@ -350,10 +350,9 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
 
   if(!ITK::DoDimensionsMatch(imageArrayStore, imageGeom))
   {
-    return {MakeErrorResult<OutputActions>(
-        -25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
-                            StringUtilities::formatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
-                            StringUtilities::formatDimensions3D(imageGeom.getDimensions())))};
+    return {MakeErrorResult<OutputActions>(-25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
+                                                               StringUtilities::formatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
+                                                               StringUtilities::formatDimensions3D(imageGeom.getDimensions())))};
   }
 
   if(fillChar.size() > 1)

@@ -223,12 +223,11 @@ Result<std::vector<float32>> ColorTableUtilities::ExtractControlPoints(const std
 
   if(!found)
   {
-    return MakeErrorResult<std::vector<float32>>(-36782, fmt::format("ColorTableUtilities::ExtractControlPoints: Found the object for name '{}' in the JSON Table, but no 'RGBPoints' found",
-                                                                     presetName));
+    return MakeErrorResult<std::vector<float32>>(-36782,
+                                                 fmt::format("ColorTableUtilities::ExtractControlPoints: Found the object for name '{}' in the JSON Table, but no 'RGBPoints' found", presetName));
   }
 
-  return MakeErrorResult<std::vector<float32>>(
-      -36783, fmt::format("ColorTableUtilities::ExtractControlPoints: Unable to find the object for name '{}' in the JSON Table", presetName));
+  return MakeErrorResult<std::vector<float32>>(-36783, fmt::format("ColorTableUtilities::ExtractControlPoints: Unable to find the object for name '{}' in the JSON Table", presetName));
 }
 
 std::string ColorTableUtilities::GetDefaultRGBPresetName()

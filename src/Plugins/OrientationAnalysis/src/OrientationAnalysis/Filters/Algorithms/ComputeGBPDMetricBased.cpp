@@ -319,8 +319,8 @@ Result<> ComputeGBPDMetricBased::operator()()
 
   if(crystalStructures[m_InputValues->PhaseOfInterest] > 10)
   {
-    return MakeErrorResult(-8325, fmt::format("Unsupported CrystalStructure value {} for phase index {}.", static_cast<uint32>(crystalStructures[m_InputValues->PhaseOfInterest]),
-                                              m_InputValues->PhaseOfInterest));
+    return MakeErrorResult(
+        -8325, fmt::format("Unsupported CrystalStructure value {} for phase index {}.", static_cast<uint32>(crystalStructures[m_InputValues->PhaseOfInterest]), m_InputValues->PhaseOfInterest));
   }
 
   // -------------------- check if directories are ok and if output files can be opened -----------

@@ -360,9 +360,9 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
         {
           m_ElementSizesId.reset();
           // Used to be error code `-1`
-          return MakeErrorResult(
-              -1833, fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less.\nX-Index: {} | X-Spacing: {}\nY-Index: {} | Y-Spacing: {}\nZ-Index: {} | Z-Spacing: {}", x, xRes, y,
-                                 yRes, z, zRes));
+          return MakeErrorResult(-1833,
+                                 fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less.\nX-Index: {} | X-Spacing: {}\nY-Index: {} | Y-Spacing: {}\nZ-Index: {} | Z-Spacing: {}",
+                                             x, xRes, y, yRes, z, zRes));
         }
         sizeArray->setValue((m_Dimensions[0] * m_Dimensions[1] * z) + (m_Dimensions[0] * y) + x, zRes * yRes * xRes);
       }
