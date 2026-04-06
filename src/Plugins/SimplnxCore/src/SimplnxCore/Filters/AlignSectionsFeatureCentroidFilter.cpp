@@ -147,7 +147,7 @@ IFilter::PreflightResult AlignSectionsFeatureCentroidFilter::preflightImpl(const
 
   if(pReferenceSliceValue < 0)
   {
-    return MakePreflightErrorResult(k_OutOfRangeReferenceSliceValue, "Reference Slice value must be ZERO or greater.");
+    return MakePreflightErrorResult(k_OutOfRangeReferenceSliceValue, fmt::format("Reference Slice value ({}) must be ZERO or greater.", pReferenceSliceValue));
   }
 
   std::vector<DataPath> dataPaths;

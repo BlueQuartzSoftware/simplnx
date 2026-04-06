@@ -167,7 +167,8 @@ IFilter::PreflightResult AlignSectionsMisorientationFilter::preflightImpl(const 
   const auto* quats = dataStructure.getDataAs<Float32Array>(pQuatsArrayPath);
   if(quats->getNumberOfComponents() != 4)
   {
-    return MakePreflightErrorResult(::k_InputComponentCountError, fmt::format("Quaternion Array does not have 4 components."));
+    return MakePreflightErrorResult(::k_InputComponentCountError,
+                                    fmt::format("Quaternion Array at path '{}' has {} components but 4 are required.", pQuatsArrayPath.toString(), quats->getNumberOfComponents()));
   }
   dataPaths.push_back(pQuatsArrayPath);
 

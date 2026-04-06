@@ -209,7 +209,7 @@ Result<> PartitionGeometry::operator()()
     break;
   }
   default: {
-    return MakeErrorResult(-3012, "Unable to partition geometry - Unknown geometry type detected.");
+    return MakeErrorResult(-3012, fmt::format("Unable to partition geometry at path '{}' - Unknown geometry type detected.", m_InputValues->InputGeometryToPartition.toString()));
   }
   }
 

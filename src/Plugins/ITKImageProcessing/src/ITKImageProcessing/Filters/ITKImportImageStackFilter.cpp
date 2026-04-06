@@ -592,7 +592,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
 
         if(spacingZ <= 0)
         {
-          return MakePreflightErrorResult(-23521, fmt::format("Invalid Z spacing. The Z spacing must be greater than zero to apply physical cropping."));
+          return MakePreflightErrorResult(-23521, fmt::format("Invalid Z spacing ({}). The Z spacing must be greater than zero to apply physical cropping.", spacingZ));
         }
 
         if(zMinPhys < originZ || zMinPhys > (static_cast<float32>(zDim) * spacingZ + originZ))

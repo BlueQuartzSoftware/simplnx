@@ -130,7 +130,7 @@ Result<> VertexGeom::findElementSizes(bool recalculate)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2730, fmt::format("{}({}) VertexGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2730, "VertexGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
 

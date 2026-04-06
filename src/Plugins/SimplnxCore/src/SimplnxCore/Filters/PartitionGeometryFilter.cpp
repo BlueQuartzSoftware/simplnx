@@ -603,15 +603,15 @@ Result<> PartitionGeometryFilter::dataCheckAdvancedMode(const SizeVec3& numOfPar
 
   if(lengthPerPartition.getX() < 0)
   {
-    return MakeErrorResult(-3003, fmt::format("{}: Length Per Partition - The X value cannot be negative.", humanName()));
+    return MakeErrorResult(-3003, fmt::format("{}: Length Per Partition - The X value ({}) cannot be negative.", humanName(), lengthPerPartition.getX()));
   }
   if(lengthPerPartition.getY() < 0)
   {
-    return MakeErrorResult(-3004, fmt::format("{}: Length Per Partition - The Y value cannot be negative.", humanName()));
+    return MakeErrorResult(-3004, fmt::format("{}: Length Per Partition - The Y value ({}) cannot be negative.", humanName(), lengthPerPartition.getY()));
   }
   if(lengthPerPartition.getZ() < 0)
   {
-    return MakeErrorResult(-3005, fmt::format("{}: Length Per Partition - The Z value cannot be negative.", humanName()));
+    return MakeErrorResult(-3005, fmt::format("{}: Length Per Partition - The Z value ({}) cannot be negative.", humanName(), lengthPerPartition.getZ()));
   }
 
   result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix);
@@ -636,17 +636,17 @@ Result<> PartitionGeometryFilter::dataCheckBoundingBoxMode(const SizeVec3& numOf
 
   if(llCoord.getX() > urCoord.getX())
   {
-    return MakeErrorResult(-3006, fmt::format("{}: Lower Left Coordinate - X value is larger than the upper right coordinate X value.", humanName()));
+    return MakeErrorResult(-3006, fmt::format("{}: Lower Left Coordinate - X value ({}) is larger than the upper right coordinate X value ({}).", humanName(), llCoord.getX(), urCoord.getX()));
   }
 
   if(llCoord.getY() > urCoord.getY())
   {
-    return MakeErrorResult(-3007, fmt::format("{}: Lower Left Coordinate - Y value is larger than the upper right coordinate Y value.", humanName()));
+    return MakeErrorResult(-3007, fmt::format("{}: Lower Left Coordinate - Y value ({}) is larger than the upper right coordinate Y value ({}).", humanName(), llCoord.getY(), urCoord.getY()));
   }
 
   if(llCoord.getZ() > urCoord.getZ())
   {
-    return MakeErrorResult(-3008, fmt::format("{}: Lower Left Coordinate - Z value is larger than the upper right coordinate Z value.", humanName()));
+    return MakeErrorResult(-3008, fmt::format("{}: Lower Left Coordinate - Z value ({}) is larger than the upper right coordinate Z value ({}).", humanName(), llCoord.getZ(), urCoord.getZ()));
   }
 
   result = dataCheckPartitioningScheme<GeomType>(geometryToPartition, attrMatrix);
@@ -695,17 +695,17 @@ Result<> PartitionGeometryFilter::DataCheckNumberOfPartitions(const SizeVec3& nu
 {
   if(numberOfPartitionsPerAxis.getX() <= 0)
   {
-    return MakeErrorResult(-3012, "Number of Partitions Per Axis: The X dimension must be greater than 0.");
+    return MakeErrorResult(-3012, fmt::format("Number of Partitions Per Axis: The X dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis.getX()));
   }
 
   if(numberOfPartitionsPerAxis.getY() <= 0)
   {
-    return MakeErrorResult(-3013, "Number of Partitions Per Axis: The Y dimension must be greater than 0.");
+    return MakeErrorResult(-3013, fmt::format("Number of Partitions Per Axis: The Y dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis.getY()));
   }
 
   if(numberOfPartitionsPerAxis.getZ() <= 0)
   {
-    return MakeErrorResult(-3014, "Number of Partitions Per Axis: The Z dimension must be greater than 0.");
+    return MakeErrorResult(-3014, fmt::format("Number of Partitions Per Axis: The Z dimension ({}) must be greater than 0.", numberOfPartitionsPerAxis.getZ()));
   }
 
   return {};

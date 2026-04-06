@@ -219,30 +219,30 @@ Result<> CropGeometryParameter::validate(const std::any& value) const
   {
     if(cropValues.xBoundVoxels[0] > cropValues.xBoundVoxels[1])
     {
-      return MakeErrorResult(k_InvalidBounds, "Invalid X bounds");
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid X bounds: min ({}) is greater than max ({})", cropValues.xBoundVoxels[0], cropValues.xBoundVoxels[1]));
     }
     if(cropValues.yBoundVoxels[0] > cropValues.yBoundVoxels[1])
     {
-      return MakeErrorResult(k_InvalidBounds, "Invalid Y bounds");
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Y bounds: min ({}) is greater than max ({})", cropValues.yBoundVoxels[0], cropValues.yBoundVoxels[1]));
     }
     if(cropValues.zBoundVoxels[0] > cropValues.zBoundVoxels[1])
     {
-      return MakeErrorResult(k_InvalidBounds, "Invalid Z bounds");
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Z bounds: min ({}) is greater than max ({})", cropValues.zBoundVoxels[0], cropValues.zBoundVoxels[1]));
     }
   }
   else if(cropValues.type == CropValues::TypeEnum::PhysicalSubvolume)
   {
     if(cropValues.xBoundPhysical[0] > cropValues.xBoundPhysical[1])
     {
-      return MakeErrorResult(k_InvalidBounds, "Invalid X bounds");
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid X bounds: min ({}) is greater than max ({})", cropValues.xBoundPhysical[0], cropValues.xBoundPhysical[1]));
     }
     if(cropValues.yBoundPhysical[0] > cropValues.yBoundPhysical[1])
     {
-      return MakeErrorResult(k_InvalidBounds, "Invalid Y bounds");
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Y bounds: min ({}) is greater than max ({})", cropValues.yBoundPhysical[0], cropValues.yBoundPhysical[1]));
     }
     if(cropValues.zBoundPhysical[0] > cropValues.zBoundPhysical[1])
     {
-      return MakeErrorResult(k_InvalidBounds, "Invalid Z bounds");
+      return MakeErrorResult(k_InvalidBounds, fmt::format("Invalid Z bounds: min ({}) is greater than max ({})", cropValues.zBoundPhysical[0], cropValues.zBoundPhysical[1]));
     }
   }
 

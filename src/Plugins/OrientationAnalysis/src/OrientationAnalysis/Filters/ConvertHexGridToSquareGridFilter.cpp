@@ -146,7 +146,7 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
   }
   else if(inputPath.extension() != ("." + ebsdlib::Ang::FileExt))
   {
-    return MakePreflightErrorResult(-44602, "The file extension was not detected correctly");
+    return MakePreflightErrorResult(-44602, fmt::format("The file extension '{}' was not detected correctly for file '{}'", inputPath.extension().string(), inputPath.string()));
   }
 
   if(!fs::exists(inputPath))

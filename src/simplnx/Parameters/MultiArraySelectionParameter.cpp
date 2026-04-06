@@ -173,6 +173,7 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       }
       if(!foundMatch)
       {
+        compStr.erase(compStr.size() - 4); // Remove trailing " or "
         errors.push_back(
             Error{nx::core::FilterParameter::Constants::k_Validate_TupleShapeValue, fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, path.toString(), compStr)});
       }

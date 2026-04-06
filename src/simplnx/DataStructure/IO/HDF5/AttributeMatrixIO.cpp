@@ -37,7 +37,7 @@ Result<> AttributeMatrixIO::readData(DataStructureReader& structureReader, const
 
   if(tupleShape.empty())
   {
-    return MakeErrorResult(-1550, fmt::format("Failed to read AttributeMatrix tuple shape"));
+    return MakeErrorResult(-1550, fmt::format("Failed to read AttributeMatrix tuple shape for '{}'", objectName));
   }
   auto* dataObject = data_type::Import(structureReader.getDataStructure(), objectName, tupleShape, importId, parentId);
 

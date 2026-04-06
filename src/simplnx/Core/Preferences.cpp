@@ -32,7 +32,7 @@ constexpr int32 k_FileDoesNotExist_Code = -586;
 constexpr int32 k_FileCouldNotOpen_Code = -587;
 constexpr int32 k_JsonParseError_Code = -588;
 
-constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to the parent directory when saving Preferences";
+constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to create the parent directory when saving Preferences. Check that the path is valid and writable.";
 constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not exist";
 constexpr StringLiteral k_FileCouldNotOpen_Message = "Could not open Preferences file";
 constexpr StringLiteral k_JsonParseError_Message = "Parsing the JSON Preferences file failed.";

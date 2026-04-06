@@ -212,7 +212,7 @@ Result<> TetrahedralGeom::findElementSizes(bool recalculate)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2130, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2130, "TetrahedralGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
 
@@ -238,7 +238,7 @@ Result<> TetrahedralGeom::findElementsContainingVert(bool recalculate)
     {
       m_CellContainingVertDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2131, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid dynamic list array.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2131, "TetrahedralGeom Error: Unable to find or create a valid dynamic list array.");
     }
   }
 
@@ -271,7 +271,7 @@ Result<> TetrahedralGeom::findElementNeighbors(bool recalculate)
     {
       m_CellNeighborsDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2132, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a dynamic list array.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2132, "TetrahedralGeom Error: Unable to find or create a dynamic list array.");
     }
   }
 
@@ -301,7 +301,7 @@ Result<> TetrahedralGeom::findElementCentroids(bool recalculate)
     {
       m_CellCentroidsDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2133, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2133, "TetrahedralGeom Error: Unable to find or create a valid element centroids array or data store.");
     }
   }
 
@@ -353,7 +353,7 @@ Result<> TetrahedralGeom::findEdges(bool recalculate)
     {
       m_EdgeDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2134, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid shared edges array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2134, "TetrahedralGeom Error: Unable to find or create a valid shared edges array or data store.");
     }
   }
 
@@ -379,7 +379,7 @@ Result<> TetrahedralGeom::findFaces(bool recalculate)
     {
       m_FaceListId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2135, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid shared faces array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2135, "TetrahedralGeom Error: Unable to find or create a valid shared faces array or data store.");
     }
   }
 
@@ -406,7 +406,7 @@ Result<> TetrahedralGeom::findUnsharedEdges(bool recalculate)
     {
       m_UnsharedEdgeListId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2136, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid unshared edges array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2136, "TetrahedralGeom Error: Unable to find or create a valid unshared edges array or data store.");
     }
   }
 
@@ -433,7 +433,7 @@ Result<> TetrahedralGeom::findUnsharedFaces(bool recalculate)
     {
       m_UnsharedFaceListId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2137, fmt::format("{}({}) TetrahedralGeom::{} Error: Unable to find or create a valid unshared faces array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2137, "TetrahedralGeom Error: Unable to find or create a valid unshared faces array or data store.");
     }
   }
 

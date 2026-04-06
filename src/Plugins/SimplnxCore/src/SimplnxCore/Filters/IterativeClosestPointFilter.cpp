@@ -93,7 +93,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
 
   if(numIterations < 1)
   {
-    auto ss = fmt::format("Must perform at least 1 iterations");
+    auto ss = fmt::format("Must perform at least 1 iteration. Current value: {}", numIterations);
     return {MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
   }
 

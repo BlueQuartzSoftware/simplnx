@@ -157,8 +157,7 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   {
     m_ElementSizesId.reset();
     // Used to be error code `-1`
-    return MakeErrorResult(-1530, fmt::format("{}({}) ImageGeom::{} Error: Invalid spacing detected. X-Spacing: {}, Y-Spacing: {}, Z-Spacing: {}", __FILE__, __LINE__, __func__, m_Spacing[0],
-                                              m_Spacing[1], m_Spacing[2]));
+    return MakeErrorResult(-1530, fmt::format("ImageGeom Error: Invalid spacing detected. X-Spacing: {}, Y-Spacing: {}, Z-Spacing: {}", m_Spacing[0], m_Spacing[1], m_Spacing[2]));
   }
 
   uint32 emptyDimsCount = 0;
@@ -167,9 +166,8 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   emptyDimsCount += static_cast<uint32>(m_Dimensions[2] == 1);
   if(emptyDimsCount > 1)
   {
-    return MakeErrorResult(-1531,
-                           fmt::format("{}({}) ImageGeom::{} Error: Unable to calculate element sizes.\nImage has 2 or more dimensions equal to 1.\nX-Dimension: {}, Y-Dimension: {}, Z-Dimension: {}",
-                                       __FILE__, __LINE__, __func__, m_Dimensions[0], m_Dimensions[1], m_Dimensions[2]));
+    return MakeErrorResult(
+        -1531, fmt::format("ImageGeom Error: Unable to calculate element sizes.\nImage has 2 or more dimensions equal to 1.\nDimensions: {}", StringUtilities::formatDimensions3D(m_Dimensions)));
   }
 
   // if x dimension has a size of 1 then xSpacing = 1; else xSpacing = spacing[0]
@@ -191,7 +189,7 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-1532, fmt::format("{}({}) ImageGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-1532, "ImageGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
     m_ElementSizesId = voxelSizes->getId();
   }

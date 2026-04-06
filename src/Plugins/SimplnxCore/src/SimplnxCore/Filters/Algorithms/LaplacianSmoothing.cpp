@@ -45,7 +45,7 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
 
   if(nodeGeom1DRef.getVertices() == nullptr)
   {
-    return MakeErrorResult(-559, "Error finding TriangleGeom vertices.");
+    return MakeErrorResult(-559, fmt::format("Error finding vertices for geometry at path '{}'.", m_InputValues->pTriangleGeometryDataPath.toString()));
   }
 
   Float32AbstractDataStore& vertDataStoreRef = nodeGeom1DRef.getVertices()->getDataStoreRef();

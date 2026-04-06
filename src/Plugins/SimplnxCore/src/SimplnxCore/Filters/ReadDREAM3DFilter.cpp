@@ -10,6 +10,7 @@
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <fmt/core.h>
 #include <nlohmann/json.hpp>
 
 namespace
@@ -84,7 +85,7 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   auto fileReader = nx::core::HDF5::FileIO::ReadFile(importData.FilePath);
   if(!fileReader.isValid())
   {
-    return {MakeErrorResult<OutputActions>(k_FailedOpenFileIOError, "Failed to open the HDF5 file at the specified path.")};
+    return {MakeErrorResult<OutputActions>(k_FailedOpenFileIOError, fmt::format("Failed to open the HDF5 file at the specified path: '{}'", importData.FilePath.string()))};
   }
 
   Result<OutputActions> result;

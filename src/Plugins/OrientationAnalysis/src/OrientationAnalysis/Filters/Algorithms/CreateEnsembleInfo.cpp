@@ -97,7 +97,7 @@ Result<> CreateEnsembleInfo::operator()()
     std::string phaseName = m_InputValues->Ensemble[i][2];
     if(phaseName.empty())
     {
-      return MakeErrorResult(-10008, fmt::format("Phase name cannot be empty")); // The phase name was not found
+      return MakeErrorResult(-10008, fmt::format("Phase name cannot be empty for phase index {}.", i + 1)); // The phase name was not found
     }
 
     phaseNames[i + 1] = phaseName;

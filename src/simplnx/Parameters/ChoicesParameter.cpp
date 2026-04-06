@@ -91,7 +91,8 @@ Result<> ChoicesParameter::validateIndex(ValueType index) const
 
   if(index >= m_Choices.size())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_OutOfRange_Error, fmt::format("{}Value '{}' must be less than {}", prefix, index, m_Choices.size()));
+    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_OutOfRange_Error,
+                                     fmt::format("{}Value '{}' must be less than {}. Valid choices are: [{}]", prefix, index, m_Choices.size(), fmt::join(m_Choices, ", ")));
   }
 
   return {};

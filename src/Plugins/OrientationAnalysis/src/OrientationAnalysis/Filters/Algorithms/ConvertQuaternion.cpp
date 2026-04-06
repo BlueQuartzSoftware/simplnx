@@ -1,5 +1,6 @@
 #include "ConvertQuaternion.hpp"
 
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -113,7 +114,8 @@ Result<> ConvertQuaternion::operator()()
   }
   else
   {
-    return MakeErrorResult(-74836, fmt::format("The input and output arrays must be either Float32 or Float64 type"));
+    return MakeErrorResult(-74836, fmt::format("The input quaternion array at path '{}' has data type '{}', but must be either Float32 or Float64.", m_InputValues->QuaternionDataArrayPath.toString(),
+                                               DataTypeToString(iDataArray.getDataType())));
   }
   return {};
 }

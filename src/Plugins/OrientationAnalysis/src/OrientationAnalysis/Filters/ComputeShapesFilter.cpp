@@ -115,7 +115,7 @@ IFilter::PreflightResult ComputeShapesFilter::preflightImpl(const DataStructure&
   const AttributeMatrix* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(featureAttrMatrixPath);
   if(featureAttrMatrix == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attibute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
+    return {MakeErrorResult<OutputActions>(-12801, fmt::format("Could not find selected cell feature Attribute Matrix at path '{}'", featureAttrMatrixPath.toString()))};
   }
 
   ShapeType tupleShape = featureAttrMatrix->getShape();

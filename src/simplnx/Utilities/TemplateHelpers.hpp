@@ -126,7 +126,7 @@
   }                                                                                                                                                                                                    \
   else                                                                                                                                                                                                 \
   {                                                                                                                                                                                                    \
-    result = nx::core::MakeErrorResult(-1, "help");                                                                                                                                                    \
+    result = nx::core::MakeErrorResult(-1, "The input array data type is not supported by this operation.");                                                                                           \
     /*  observableObj->setErrorConditionWithPrefix(TemplateHelpers::Errors::UnsupportedDataType, #templateName, "The input array was of unsupported type"); */                                         \
   }
 

@@ -117,14 +117,14 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
     return {MakeErrorResult<OutputActions>(-76234, fmt::format("At least one type of noise must be selected"))};
   }
 
-  if(pPoissonVolFractionValue > 1.0 && pPoissonVolFractionValue < 0.0)
+  if(pPoissonVolFractionValue > 1.0 || pPoissonVolFractionValue < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(-76235, fmt::format("Value must be between 0-1 inclusive. You selected: {}", pPoissonVolFractionValue))};
+    return {MakeErrorResult<OutputActions>(-76235, fmt::format("Poisson Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pPoissonVolFractionValue))};
   }
 
-  if(pBoundaryVolFractionValue > 1.0 && pBoundaryVolFractionValue < 0.0)
+  if(pBoundaryVolFractionValue > 1.0 || pBoundaryVolFractionValue < 0.0)
   {
-    return {MakeErrorResult<OutputActions>(-76236, fmt::format("Value must be between 0-1 inclusive. You selected: {}", pBoundaryVolFractionValue))};
+    return {MakeErrorResult<OutputActions>(-76236, fmt::format("Boundary Volume Fraction must be between 0 and 1 inclusive. Current value: {}", pBoundaryVolFractionValue))};
   }
 
   auto* imgGeomPtr = dataStructure.getDataAs<ImageGeom>(pImageGeometryPathValue);

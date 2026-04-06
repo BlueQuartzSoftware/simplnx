@@ -172,7 +172,7 @@ Result<> GeneratedFileListParameter::validate(const std::any& valueRef) const
 
     if(value.startIndex > value.endIndex)
     {
-      return nx::core::MakeErrorResult(-4002, fmt::format("{}startIndex must be less than or equal to endIndex.", prefix));
+      return nx::core::MakeErrorResult(-4002, fmt::format("{}startIndex ({}) must be less than or equal to endIndex ({}).", prefix, value.startIndex, value.endIndex));
     }
     // Generate the file list
     auto fileList = value.generate();

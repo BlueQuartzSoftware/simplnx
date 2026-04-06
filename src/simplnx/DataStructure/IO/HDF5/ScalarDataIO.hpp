@@ -41,8 +41,7 @@ public:
     ScalarData<T>* scalar = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer[0], parentId);
     if(scalar == nullptr)
     {
-      std::string ss = "Failed to read ScalarData. No data imported";
-      return MakeErrorResult(-459, ss);
+      return MakeErrorResult(-459, fmt::format("Failed to read ScalarData '{}'. No data imported", scalarName));
     }
 
     return {};
@@ -65,7 +64,7 @@ public:
     Result<> h5Result = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
     if(h5Result.invalid())
     {
-      return MakeErrorResult(-460, "Failed to write ScalarData");
+      return MakeErrorResult(-460, fmt::format("Failed to write ScalarData '{}'", scalarData.getName()));
     }
     return WriteObjectAttributes(dataStructureWriter, scalarData, datasetWriter, importable);
   }

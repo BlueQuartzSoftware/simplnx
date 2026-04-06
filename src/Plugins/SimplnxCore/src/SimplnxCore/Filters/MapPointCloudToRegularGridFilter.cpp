@@ -63,7 +63,7 @@ Result<> CreateRegularGrid(DataStructure& dataStructure, const Arguments& filter
   const auto* mask = useMask ? dataStructure.getDataAs<BoolArray>(maskArrayPath)->getDataStore() : nullptr;
   if(useMask && mask == nullptr)
   {
-    return MakeErrorResult(k_MaskSelectedArrayInvalid, "Use Mask was selected but mask array doesn't exist.");
+    return MakeErrorResult(k_MaskSelectedArrayInvalid, fmt::format("Use Mask was selected but the mask array at path '{}' could not be found or is not a BoolArray.", maskArrayPath.toString()));
   }
 
   // Find the largest/smallest (x,y,z) dimensions of the incoming data to be used to define the maximum dimensions for the regular grid

@@ -109,7 +109,7 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
 
   if(minAllowedFeatureSize < 0)
   {
-    std::string ss = fmt::format("The minimum Feature size (%1) must be 0 or positive", minAllowedFeatureSize);
+    std::string ss = fmt::format("The minimum Feature size ({}) must be 0 or positive", minAllowedFeatureSize);
     return {MakeErrorResult<OutputActions>(-k_BadMinAllowedFeatureSize, ss)};
   }
 

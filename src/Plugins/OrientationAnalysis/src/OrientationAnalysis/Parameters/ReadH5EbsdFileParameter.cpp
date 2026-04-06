@@ -128,7 +128,7 @@ Result<std::any> ReadH5EbsdFileParameter::fromJsonImpl(const nlohmann::json& jso
     }
     if(!json[key].is_boolean())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), key));
+      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a boolean", prefix.view(), key));
     }
   }
 
@@ -212,7 +212,7 @@ Result<> ReadH5EbsdFileParameter::validate(const std::any& valueRef) const
   const auto& value = GetAnyRef<ValueType>(valueRef);
   if(value.inputFilePath.empty())
   {
-    errors.push_back({-2000, fmt::format("The input file path for the H5EbsdFile was empty.", value.startSlice, value.endSlice)});
+    errors.push_back({-2000, "The input file path for the H5EbsdFile was empty."});
     return {nonstd::make_unexpected(std::move(errors))};
   }
 

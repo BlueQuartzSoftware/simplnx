@@ -134,7 +134,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
 
   if(!pPadXDim && !pPadYDim && !pPadZDim)
   {
-    return {MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to crop!")};
+    return {MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to pad!")};
   }
 
   Result<OutputActions> resultOutputActions;

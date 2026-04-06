@@ -1,5 +1,6 @@
 #include "ReadHDF5Dataset.hpp"
 
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5DataStore.hpp"
@@ -95,7 +96,7 @@ Result<> ReadHDF5Dataset::operator()()
     }
     default: {
       return MakeErrorResult(-21001,
-                             fmt::format("The selected dataset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, fmt::underlying(type)));
+                             fmt::format("The selected dataset '{}' with type '{}' is not a supported type for importing. Please select a different data set", datasetPath, DataTypeToString(type)));
     }
     }
     if(fillArrayResults.invalid())

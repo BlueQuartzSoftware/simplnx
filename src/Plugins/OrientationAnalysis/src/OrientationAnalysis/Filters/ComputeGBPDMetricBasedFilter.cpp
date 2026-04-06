@@ -130,7 +130,7 @@ IFilter::PreflightResult ComputeGBPDMetricBasedFilter::preflightImpl(const DataS
 
   if(pNumSamplePtsValue < 1)
   {
-    return MakePreflightErrorResult(-8320, "The number of sampling points must be greater than zero");
+    return MakePreflightErrorResult(-8320, fmt::format("The number of sampling points ({}) must be greater than zero", pNumSamplePtsValue));
   }
 
   // Set some reasonable value, but allow user to use more if they know what they're doing
@@ -146,7 +146,7 @@ IFilter::PreflightResult ComputeGBPDMetricBasedFilter::preflightImpl(const DataS
 
   if(pPhaseOfInterestValue <= 0)
   {
-    return MakePreflightErrorResult(-8323, "The phase of interest must be greater than 0");
+    return MakePreflightErrorResult(-8323, fmt::format("The phase of interest ({}) must be greater than 0", pPhaseOfInterestValue));
   }
 
   const auto numEnsembles = static_cast<int>(dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue).getNumberOfTuples());

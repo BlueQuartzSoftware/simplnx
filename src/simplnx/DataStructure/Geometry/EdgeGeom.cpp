@@ -153,7 +153,7 @@ Result<> EdgeGeom::findElementSizes(bool recalculate)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2430, fmt::format("{}({}) EdgeGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2430, "EdgeGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
 
@@ -196,7 +196,7 @@ Result<> EdgeGeom::findElementsContainingVert(bool recalculate)
     {
       m_CellContainingVertDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2431, fmt::format("{}({}) EdgeGeom::{} Error: Unable to find or create a valid dynamic list array.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2431, "EdgeGeom Error: Unable to find or create a valid dynamic list array.");
     }
   }
 
@@ -228,7 +228,7 @@ Result<> EdgeGeom::findElementNeighbors(bool recalculate)
     {
       m_CellNeighborsDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2432, fmt::format("{}({}) EdgeGeom::{} Error: Unable to find or create a dynamic list array.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2432, "EdgeGeom Error: Unable to find or create a dynamic list array.");
     }
   }
 
@@ -257,7 +257,7 @@ Result<> EdgeGeom::findElementCentroids(bool recalculate)
     {
       m_CellCentroidsDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2433, fmt::format("{}({}) EdgeGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2433, "EdgeGeom Error: Unable to find or create a valid element centroids array or data store.");
     }
   }
 

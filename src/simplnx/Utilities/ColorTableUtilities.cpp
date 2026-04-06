@@ -204,7 +204,7 @@ Result<std::vector<float32>> ColorTableUtilities::ExtractControlPoints(const std
 {
   if(presetName.empty())
   {
-    return MakeErrorResult<std::vector<float32>>(-36781, fmt::format("{}({}): Function {}: Search argument is empty!", __FILE__, __LINE__, "ColorTableUtilities::ExtractControlPoints"));
+    return MakeErrorResult<std::vector<float32>>(-36781, "ColorTableUtilities::ExtractControlPoints: Search argument is empty!");
   }
 
   bool found = false;
@@ -223,12 +223,11 @@ Result<std::vector<float32>> ColorTableUtilities::ExtractControlPoints(const std
 
   if(!found)
   {
-    return MakeErrorResult<std::vector<float32>>(-36782, fmt::format("{}({}): Function {}: Found the object for name '{}' in the JSON Table, but no 'RGBPoints' found", __FILE__, __LINE__,
-                                                                     "ColorTableUtilities::ExtractControlPoints", presetName));
+    return MakeErrorResult<std::vector<float32>>(-36782,
+                                                 fmt::format("ColorTableUtilities::ExtractControlPoints: Found the object for name '{}' in the JSON Table, but no 'RGBPoints' found", presetName));
   }
 
-  return MakeErrorResult<std::vector<float32>>(
-      -36783, fmt::format("{}({}): Function {}: Unable to find the object for name '{}' in the JSON Table", __FILE__, __LINE__, "ColorTableUtilities::ExtractControlPoints", presetName));
+  return MakeErrorResult<std::vector<float32>>(-36783, fmt::format("ColorTableUtilities::ExtractControlPoints: Unable to find the object for name '{}' in the JSON Table", presetName));
 }
 
 std::string ColorTableUtilities::GetDefaultRGBPresetName()

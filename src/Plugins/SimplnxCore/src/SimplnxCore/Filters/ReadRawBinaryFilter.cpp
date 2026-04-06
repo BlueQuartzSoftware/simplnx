@@ -107,7 +107,7 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 
   if(pNumberOfComponentsValue < 1)
   {
-    return {MakeErrorResult<OutputActions>(k_RbrZeroComponentsError, "The number of components must be positive.")};
+    return {MakeErrorResult<OutputActions>(k_RbrZeroComponentsError, fmt::format("The number of components ({}) must be positive.", pNumberOfComponentsValue))};
   }
 
   const auto& rowData = pTupleDimsValue.at(0);

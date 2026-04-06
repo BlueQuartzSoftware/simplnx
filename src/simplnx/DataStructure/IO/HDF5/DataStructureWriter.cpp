@@ -56,7 +56,7 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
   GroupIO dataStructureGroup = file.openGroup(Constants::k_DataStructureTag);
   if(!dataStructureGroup.isValid())
   {
-    return MakeErrorResult(-5, "Failed to open top-level DataStructure group");
+    return MakeErrorResult(-5, fmt::format("Failed to open top-level DataStructure group in file '{}'", file.getFilePath().string()));
   }
 
   const std::string& targetName = dataPath[0];

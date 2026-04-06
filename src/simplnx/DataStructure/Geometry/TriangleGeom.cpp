@@ -190,7 +190,7 @@ Result<> TriangleGeom::findElementSizes(bool recalculate)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2230, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid element sizes array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2230, "TriangleGeom Error: Unable to find or create a valid element sizes array or data store.");
     }
   }
 
@@ -216,7 +216,7 @@ Result<> TriangleGeom::findElementsContainingVert(bool recalculate)
     {
       m_CellContainingVertDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2231, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid dynamic list array.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2231, "TriangleGeom Error: Unable to find or create a valid dynamic list array.");
     }
   }
 
@@ -248,7 +248,7 @@ Result<> TriangleGeom::findElementNeighbors(bool recalculate)
     {
       m_CellNeighborsDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2232, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a dynamic list array.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2232, "TriangleGeom Error: Unable to find or create a dynamic list array.");
     }
   }
 
@@ -278,7 +278,7 @@ Result<> TriangleGeom::findElementCentroids(bool recalculate)
   {
     m_CellCentroidsDataArrayId.reset();
     // Used to be error code `-1`
-    return MakeErrorResult(-2233, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid element centroids array or data store.", __FILE__, __LINE__, __func__));
+    return MakeErrorResult(-2233, "TriangleGeom Error: Unable to find or create a valid element centroids array or data store.");
   }
 
   GeometryHelpers::Topology::FindElementCentroids(getFaces(), getVertices(), triangleCentroids);
@@ -322,7 +322,7 @@ Result<> TriangleGeom::findEdges(bool recalculate)
     {
       m_EdgeDataArrayId.reset();
       // Used to be error code `-1`
-      return MakeErrorResult(-2234, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid shared edges array or data store.", __FILE__, __LINE__, __func__));
+      return MakeErrorResult(-2234, "TriangleGeom Error: Unable to find or create a valid shared edges array or data store.");
     }
   }
 
@@ -350,7 +350,7 @@ Result<> TriangleGeom::findUnsharedEdges(bool recalculate)
   {
     m_UnsharedEdgeListId.reset();
     // Used to be error code `-1`
-    return MakeErrorResult(-2235, fmt::format("{}({}) TriangleGeom::{} Error: Unable to find or create a valid unshared edges array or data store.", __FILE__, __LINE__, __func__));
+    return MakeErrorResult(-2235, "TriangleGeom Error: Unable to find or create a valid unshared edges array or data store.");
   }
 
   GeometryHelpers::Connectivity::Find2DUnsharedEdges(getFaces(), unsharedEdgeList);

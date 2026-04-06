@@ -237,7 +237,7 @@ public:
     auto* vertexAttributeMatrix = AttributeMatrix::Create(dataStructure, m_VertexDataName, vertexTupleShape, geometry2d->getId());
     if(vertexAttributeMatrix == nullptr)
     {
-      return MakeErrorResult(-5512, fmt::format("CreateGeometry2DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
+      return MakeErrorResult(-5512, fmt::format("{}CreateGeometry2DAction: Failed to create attribute matrix: '{}'", prefix, vertexDataPath.toString()));
     }
     geometry2d->setVertexAttributeMatrix(*vertexAttributeMatrix);
 

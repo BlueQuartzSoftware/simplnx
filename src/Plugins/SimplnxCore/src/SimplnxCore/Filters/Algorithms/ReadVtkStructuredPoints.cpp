@@ -739,7 +739,8 @@ Result<> ReadVtkStructuredPoints::readFile()
     {
       if(cellDims[0] * cellDims[1] * cellDims[2] != numValues)
       {
-        return MakeErrorResult(to_underlying(ErrorCodes::MismatchedCellsAndTuplesErr), "Number of cells does not match number of tuples in the Attribute Matrix");
+        return MakeErrorResult(to_underlying(ErrorCodes::MismatchedCellsAndTuplesErr),
+                               fmt::format("Number of cells ({}) does not match number of tuples ({}) in the Attribute Matrix.", cellDims[0] * cellDims[1] * cellDims[2], numValues));
       }
       m_CurrentSectionType = CurrentSectionType::Cell;
       m_CurrentGeomDims = cellDims;
@@ -755,7 +756,8 @@ Result<> ReadVtkStructuredPoints::readFile()
     {
       if(pointDims[0] * pointDims[1] * pointDims[2] != numValues)
       {
-        return MakeErrorResult(to_underlying(ErrorCodes::MismatchedPointsAndTuplesErr), "Number of points does not match number of tuples in the Attribute Matrix");
+        return MakeErrorResult(to_underlying(ErrorCodes::MismatchedPointsAndTuplesErr),
+                               fmt::format("Number of points ({}) does not match number of tuples ({}) in the Attribute Matrix.", pointDims[0] * pointDims[1] * pointDims[2], numValues));
       }
       m_CurrentSectionType = CurrentSectionType::Point;
       m_CurrentGeomDims = pointDims;

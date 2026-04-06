@@ -146,7 +146,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   std::shared_ptr<H5EbsdReaderType> ebsdReader = std::dynamic_pointer_cast<H5EbsdReaderType>(H5EbsdReaderType::New());
   if(nullptr == ebsdReader)
   {
-    return {nx::core::MakeErrorResult(-50006, fmt::format("Error instantiating H5EbsdVolumeReader"))};
+    return {nx::core::MakeErrorResult(-50006, fmt::format("Error instantiating H5EbsdVolumeReader for file '{}'.", mInputValues->inputFilePath))};
   }
   ebsdReader->setFileName(mInputValues->inputFilePath);
   nx::core::Result<> result = LoadInfo<H5EbsdReaderType, PhaseType>(mInputValues, dataStructure, ebsdReader);
@@ -377,7 +377,7 @@ Result<> ReadH5Ebsd::operator()()
       auto filter = filterList->createFilter(k_RotateSampleRefFrameFilterHandle);
       if(nullptr == filter)
       {
-        return MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter"));
+        return MakeErrorResult(-50010, fmt::format("Error creating RotateSampleRefFrame filter. Ensure the SimplnxCore plugin is loaded."));
       }
       Arguments args;
 
