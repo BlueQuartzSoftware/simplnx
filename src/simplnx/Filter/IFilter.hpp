@@ -245,7 +245,7 @@ public:
    * @param json
    * @return Result<Arguments>
    */
-  Result<Arguments> fromJson(const nlohmann::json& json) const;
+  virtual Result<Arguments> fromJson(const nlohmann::json& json) const;
 
   /**
    * @brief Returns the set of default arguments for this filter.
