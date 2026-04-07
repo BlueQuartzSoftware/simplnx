@@ -19,13 +19,15 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Common/ScopeGuard.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
-#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -41,9 +43,9 @@ namespace
 const fs::path k_TestOutput = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "Output.bin";
 const DataPath k_CreatedArrayPath = DataPath({"Test_Array"});
 
-constexpr int32 k_RbrNumComponentsError = -392;
-constexpr int32 k_RbrWrongType = -393;
-constexpr int32 k_RbrSkippedTooMuch = -395;
+constexpr int32 k_RbrWrongType = -78707;
+constexpr int32 k_RbrSkippedTooMuch = -78706;
+constexpr int32 k_RbrFileTooSmall = -78708;
 
 // -----------------------------------------------------------------------------
 Arguments CreateFilterArguments(NumericType scalarType, usize N, usize file_size, usize skipBytes)
@@ -52,10 +54,9 @@ Arguments CreateFilterArguments(NumericType scalarType, usize N, usize file_size
 
   args.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_TestOutput));
   args.insertOrAssign(ReadRawBinaryFilter::k_ScalarType_Key, std::make_any<NumericType>(scalarType));
-
+  args.insertOrAssign(ReadRawBinaryFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{static_cast<float64>(file_size)}}));
-
-  args.insertOrAssign(ReadRawBinaryFilter::k_NumberOfComponents_Key, std::make_any<uint64>(N));
+  args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{static_cast<float64>(N)}}));
   args.insertOrAssign(ReadRawBinaryFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
   args.insertOrAssign(ReadRawBinaryFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(skipBytes));
   args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
@@ -209,7 +210,7 @@ void TestCase3_Execute()
 
   const std::vector<Error>& errors = preflightResult.outputActions.errors();
   REQUIRE(errors.size() == 1);
-  REQUIRE(errors[0].code == k_RbrNumComponentsError);
+  REQUIRE(errors[0].code == k_RbrFileTooSmall);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -406,4 +407,174 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case5)", "[SimplnxCore][ReadRawBinar
   TestCase5_TestPrimitives<uint64>(NumericType::uint64);
   TestCase5_TestPrimitives<float32>(NumericType::float32);
   TestCase5_TestPrimitives<float64>(NumericType::float64);
+}
+
+// Case6: Tests placing the output array inside an existing AttributeMatrix with AdvancedOptions disabled
+TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case6_AMPlacement)", "[SimplnxCore][ReadRawBinaryFilter]")
+{
+  UnitTest::LoadPlugins();
+  fs::create_directories(k_TestOutput.parent_path());
+
+  constexpr usize xDim = 10;
+  constexpr usize yDim = 20;
+  constexpr usize zDim = 5;
+  constexpr usize tupleCount = xDim * yDim * zDim;
+  constexpr usize numComp = 1;
+  constexpr usize dataArraySize = tupleCount * numComp;
+
+  std::vector<int32> exemplaryData(dataArraySize);
+  std::iota(exemplaryData.begin(), exemplaryData.end(), static_cast<int32>(0));
+
+  auto fileGuard = MakeScopeGuard([]() noexcept { fs::remove(k_TestOutput); });
+  REQUIRE(CreateTestDataFile<int32>(exemplaryData));
+
+  // Create a DataStructure with an ImageGeom and cell data AttributeMatrix
+  DataStructure dataStructure;
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, "ImageGeom");
+  imageGeom->setDimensions({xDim, yDim, zDim});
+  AttributeMatrix* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {zDim, yDim, xDim}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  DataPath outputPath = DataPath({"ImageGeom", "CellData", "BinaryData"});
+
+  Arguments args;
+  args.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_TestOutput));
+  args.insertOrAssign(ReadRawBinaryFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int32));
+  args.insertOrAssign(ReadRawBinaryFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.0}}));
+  args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{static_cast<float64>(numComp)}}));
+  args.insertOrAssign(ReadRawBinaryFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
+  args.insertOrAssign(ReadRawBinaryFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, outputPath);
+
+  ReadRawBinaryFilter filter;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int32>>(outputPath));
+  const auto& createdData = dataStructure.getDataRefAs<DataArray<int32>>(outputPath);
+  REQUIRE(createdData.getNumberOfTuples() == tupleCount);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Case7: Tests reading a file with multi-dimensional component dimensions (e.g., 3x3 tensor)
+TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case7_MultiCompDims)", "[SimplnxCore][ReadRawBinaryFilter]")
+{
+  UnitTest::LoadPlugins();
+  fs::create_directories(k_TestOutput.parent_path());
+
+  // 3x3 tensor = 9 components per tuple, 100 tuples
+  constexpr usize tupleCount = 100;
+  constexpr usize numComp = 9; // 3x3
+  constexpr usize dataArraySize = tupleCount * numComp;
+
+  std::vector<float32> exemplaryData(dataArraySize);
+  std::iota(exemplaryData.begin(), exemplaryData.end(), static_cast<float32>(0));
+
+  auto fileGuard = MakeScopeGuard([]() noexcept { fs::remove(k_TestOutput); });
+  REQUIRE(CreateTestDataFile<float32>(exemplaryData));
+
+  ReadRawBinaryFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_TestOutput));
+  args.insertOrAssign(ReadRawBinaryFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::float32));
+  args.insertOrAssign(ReadRawBinaryFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{static_cast<float64>(tupleCount)}}));
+  args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{3.0, 3.0}}));
+  args.insertOrAssign(ReadRawBinaryFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
+  args.insertOrAssign(ReadRawBinaryFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
+
+  DataStructure dataStructure;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(k_CreatedArrayPath));
+  const auto& createdData = dataStructure.getDataRefAs<DataArray<float32>>(k_CreatedArrayPath);
+  REQUIRE(createdData.getNumberOfTuples() == tupleCount);
+  REQUIRE(createdData.getNumberOfComponents() == numComp);
+
+  const auto& store = createdData.getDataStoreRef();
+  bool isSame = true;
+  for(usize i = 0; i < dataArraySize; ++i)
+  {
+    if(store[i] != exemplaryData[i])
+    {
+      isSame = false;
+      break;
+    }
+  }
+  REQUIRE(isSame);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Case8: Tests that preflight fails when the file is too small for the requested dimensions
+TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case8_FileTooSmall)", "[SimplnxCore][ReadRawBinaryFilter]")
+{
+  UnitTest::LoadPlugins();
+  fs::create_directories(k_TestOutput.parent_path());
+
+  constexpr usize actualTuples = 100;
+  constexpr usize requestedTuples = 200;
+
+  std::vector<int32> exemplaryData(actualTuples);
+  std::iota(exemplaryData.begin(), exemplaryData.end(), static_cast<int32>(0));
+
+  auto fileGuard = MakeScopeGuard([]() noexcept { fs::remove(k_TestOutput); });
+  REQUIRE(CreateTestDataFile<int32>(exemplaryData));
+
+  ReadRawBinaryFilter filter;
+  Arguments args = CreateFilterArguments(NumericType::int32, 1, requestedTuples, 0);
+
+  DataStructure dataStructure;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  const std::vector<Error>& errors = preflightResult.outputActions.errors();
+  REQUIRE(errors.size() == 1);
+  REQUIRE(errors[0].code == k_RbrFileTooSmall);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Case9: Tests that preflight fails when output path is not inside an AttributeMatrix and AdvancedOptions is false
+TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case9_NoAMNoTupleDims)", "[SimplnxCore][ReadRawBinaryFilter]")
+{
+  UnitTest::LoadPlugins();
+  fs::create_directories(k_TestOutput.parent_path());
+
+  std::vector<int32> exemplaryData(100);
+  std::iota(exemplaryData.begin(), exemplaryData.end(), static_cast<int32>(0));
+
+  auto fileGuard = MakeScopeGuard([]() noexcept { fs::remove(k_TestOutput); });
+  REQUIRE(CreateTestDataFile<int32>(exemplaryData));
+
+  ReadRawBinaryFilter filter;
+  Arguments args;
+  args.insertOrAssign(ReadRawBinaryFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_TestOutput));
+  args.insertOrAssign(ReadRawBinaryFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int32));
+  args.insertOrAssign(ReadRawBinaryFilter::k_AdvancedOptions_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ReadRawBinaryFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.0}}));
+  args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.0}}));
+  args.insertOrAssign(ReadRawBinaryFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
+  args.insertOrAssign(ReadRawBinaryFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
+
+  DataStructure dataStructure;
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+
+  const std::vector<Error>& errors = preflightResult.outputActions.errors();
+  REQUIRE(errors.size() == 1);
+  REQUIRE(errors[0].code == -78703);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
