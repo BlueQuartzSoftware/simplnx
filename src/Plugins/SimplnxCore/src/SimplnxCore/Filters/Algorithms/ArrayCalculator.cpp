@@ -28,7 +28,8 @@ struct ParsedItem
 {
   enum class Kind
   {
-    Value,
+    Scalar,
+    ArrayRef,
     Operator,
     LParen,
     RParen,
@@ -37,11 +38,22 @@ struct ParsedItem
     TupleComponentExtract
   } kind;
 
-  CalcValue value{CalcValue::Kind::Number, 0};
+  // Scalar
+  float64 scalarValue = 0.0;
+
+  // ArrayRef: metadata for validation (no data allocated)
+  DataPath arrayPath;
+  DataType sourceDataType = DataType::float64;
+  std::vector<usize> arrayTupleShape;
+  std::vector<usize> arrayCompShape;
+
+  // Operator
   const OperatorDef* op = nullptr;
+  bool isNegativePrefix = false;
+
+  // ComponentExtract / TupleComponentExtract
   usize componentIndex = std::numeric_limits<usize>::max();
   usize tupleIndex = std::numeric_limits<usize>::max();
-  bool isNegativePrefix = false;
 };
 
 // ---------------------------------------------------------------------------
@@ -229,25 +241,291 @@ void wrapFunctionArguments(std::vector<ParsedItem>& items)
 // ---------------------------------------------------------------------------
 struct CopyResultFunctor
 {
+  // Full array copy (non-float64 output)
   template <typename T>
-  void operator()(DataStructure& ds, const DataPath& outputPath, const Float64Array* resultArray, bool isScalar)
+  void operator()(DataStructure& ds, const DataPath& outputPath, const Float64Array* resultArray, bool /*unused*/)
   {
     auto& output = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
-    if(isScalar && resultArray->getSize() == 1)
+    for(usize i = 0; i < output.getSize(); i++)
     {
-      output.fill(static_cast<T>(resultArray->at(0)));
+      output[i] = static_cast<T>(resultArray->at(i));
     }
-    else
-    {
-      for(usize i = 0; i < output.getSize(); i++)
-      {
-        output[i] = static_cast<T>(resultArray->at(i));
-      }
-    }
+  }
+
+  // Scalar fill
+  template <typename T>
+  void operator()(DataStructure& ds, const DataPath& outputPath, float64 scalarValue)
+  {
+    auto& output = ds.getDataRefAs<DataArray<T>>(outputPath);
+    output.fill(static_cast<T>(scalarValue));
   }
 };
 
 } // anonymous namespace
+
+// ===========================================================================
+// CalcBuffer implementation
+// ===========================================================================
+
+CalcBuffer::CalcBuffer(CalcBuffer&& other) noexcept
+: m_Storage(other.m_Storage)
+, m_BorrowedArray(other.m_BorrowedArray)
+, m_TempDS(other.m_TempDS)
+, m_ArrayId(other.m_ArrayId)
+, m_OwnedArray(other.m_OwnedArray)
+, m_OutputArray(other.m_OutputArray)
+, m_IsScalar(other.m_IsScalar)
+{
+  other.m_TempDS = nullptr;
+  other.m_BorrowedArray = nullptr;
+  other.m_OwnedArray = nullptr;
+  other.m_OutputArray = nullptr;
+}
+
+CalcBuffer& CalcBuffer::operator=(CalcBuffer&& other) noexcept
+{
+  if(this != &other)
+  {
+    // Clean up current state
+    if(m_Storage == Storage::Owned && m_TempDS != nullptr)
+    {
+      m_TempDS->removeData(m_ArrayId);
+    }
+
+    m_Storage = other.m_Storage;
+    m_BorrowedArray = other.m_BorrowedArray;
+    m_TempDS = other.m_TempDS;
+    m_ArrayId = other.m_ArrayId;
+    m_OwnedArray = other.m_OwnedArray;
+    m_OutputArray = other.m_OutputArray;
+    m_IsScalar = other.m_IsScalar;
+
+    other.m_TempDS = nullptr;
+    other.m_BorrowedArray = nullptr;
+    other.m_OwnedArray = nullptr;
+    other.m_OutputArray = nullptr;
+  }
+  return *this;
+}
+
+CalcBuffer::~CalcBuffer()
+{
+  if(m_Storage == Storage::Owned && m_TempDS != nullptr)
+  {
+    m_TempDS->removeData(m_ArrayId);
+  }
+}
+
+CalcBuffer CalcBuffer::borrow(const Float64Array& source)
+{
+  CalcBuffer buf;
+  buf.m_Storage = Storage::Borrowed;
+  buf.m_BorrowedArray = &source;
+  buf.m_IsScalar = false;
+  return buf;
+}
+
+CalcBuffer CalcBuffer::convertFrom(DataStructure& tempDS, const IDataArray& source, const std::string& name)
+{
+  std::vector<usize> tupleShape = source.getTupleShape();
+  std::vector<usize> compShape = source.getComponentShape();
+  Float64Array* destArr = Float64Array::CreateWithStore<Float64DataStore>(tempDS, name, tupleShape, compShape);
+
+  ExecuteDataFunction(CopyToFloat64Functor{}, source.getDataType(), source, *destArr);
+
+  CalcBuffer buf;
+  buf.m_Storage = Storage::Owned;
+  buf.m_TempDS = &tempDS;
+  buf.m_ArrayId = destArr->getId();
+  buf.m_OwnedArray = destArr;
+  buf.m_IsScalar = false;
+  return buf;
+}
+
+CalcBuffer CalcBuffer::scalar(DataStructure& tempDS, float64 value, const std::string& name)
+{
+  Float64Array* arr = Float64Array::CreateWithStore<Float64DataStore>(tempDS, name, std::vector<usize>{1}, std::vector<usize>{1});
+  (*arr)[0] = value;
+
+  CalcBuffer buf;
+  buf.m_Storage = Storage::Owned;
+  buf.m_TempDS = &tempDS;
+  buf.m_ArrayId = arr->getId();
+  buf.m_OwnedArray = arr;
+  buf.m_IsScalar = true;
+  return buf;
+}
+
+CalcBuffer CalcBuffer::allocate(DataStructure& tempDS, const std::string& name, std::vector<usize> tupleShape, std::vector<usize> compShape)
+{
+  Float64Array* arr = Float64Array::CreateWithStore<Float64DataStore>(tempDS, name, tupleShape, compShape);
+
+  CalcBuffer buf;
+  buf.m_Storage = Storage::Owned;
+  buf.m_TempDS = &tempDS;
+  buf.m_ArrayId = arr->getId();
+  buf.m_OwnedArray = arr;
+  buf.m_IsScalar = false;
+  return buf;
+}
+
+CalcBuffer CalcBuffer::wrapOutput(DataArray<float64>& outputArray)
+{
+  CalcBuffer buf;
+  buf.m_Storage = Storage::OutputDirect;
+  buf.m_OutputArray = &outputArray;
+  buf.m_IsScalar = false;
+  return buf;
+}
+
+float64 CalcBuffer::read(usize index) const
+{
+  switch(m_Storage)
+  {
+  case Storage::Borrowed:
+    return m_BorrowedArray->at(index);
+  case Storage::Owned:
+    return m_OwnedArray->at(index);
+  case Storage::OutputDirect:
+    return m_OutputArray->at(index);
+  }
+  return 0.0;
+}
+
+void CalcBuffer::write(usize index, float64 value)
+{
+  switch(m_Storage)
+  {
+  case Storage::Owned:
+    (*m_OwnedArray)[index] = value;
+    return;
+  case Storage::OutputDirect:
+    (*m_OutputArray)[index] = value;
+    return;
+  case Storage::Borrowed:
+    return; // read-only — should not be called
+  }
+}
+
+void CalcBuffer::fill(float64 value)
+{
+  switch(m_Storage)
+  {
+  case Storage::Owned:
+    m_OwnedArray->fill(value);
+    return;
+  case Storage::OutputDirect:
+    m_OutputArray->fill(value);
+    return;
+  case Storage::Borrowed:
+    return; // read-only
+  }
+}
+
+usize CalcBuffer::size() const
+{
+  switch(m_Storage)
+  {
+  case Storage::Borrowed:
+    return m_BorrowedArray->getSize();
+  case Storage::Owned:
+    return m_OwnedArray->getSize();
+  case Storage::OutputDirect:
+    return m_OutputArray->getSize();
+  }
+  return 0;
+}
+
+usize CalcBuffer::numTuples() const
+{
+  switch(m_Storage)
+  {
+  case Storage::Borrowed:
+    return m_BorrowedArray->getNumberOfTuples();
+  case Storage::Owned:
+    return m_OwnedArray->getNumberOfTuples();
+  case Storage::OutputDirect:
+    return m_OutputArray->getNumberOfTuples();
+  }
+  return 0;
+}
+
+usize CalcBuffer::numComponents() const
+{
+  switch(m_Storage)
+  {
+  case Storage::Borrowed:
+    return m_BorrowedArray->getNumberOfComponents();
+  case Storage::Owned:
+    return m_OwnedArray->getNumberOfComponents();
+  case Storage::OutputDirect:
+    return m_OutputArray->getNumberOfComponents();
+  }
+  return 0;
+}
+
+std::vector<usize> CalcBuffer::tupleShape() const
+{
+  switch(m_Storage)
+  {
+  case Storage::Borrowed:
+    return m_BorrowedArray->getTupleShape();
+  case Storage::Owned:
+    return m_OwnedArray->getTupleShape();
+  case Storage::OutputDirect:
+    return m_OutputArray->getTupleShape();
+  }
+  return {};
+}
+
+std::vector<usize> CalcBuffer::compShape() const
+{
+  switch(m_Storage)
+  {
+  case Storage::Borrowed:
+    return m_BorrowedArray->getComponentShape();
+  case Storage::Owned:
+    return m_OwnedArray->getComponentShape();
+  case Storage::OutputDirect:
+    return m_OutputArray->getComponentShape();
+  }
+  return {};
+}
+
+bool CalcBuffer::isScalar() const
+{
+  return m_IsScalar;
+}
+
+bool CalcBuffer::isOwned() const
+{
+  return m_Storage == Storage::Owned;
+}
+
+bool CalcBuffer::isOutputDirect() const
+{
+  return m_Storage == Storage::OutputDirect;
+}
+
+void CalcBuffer::markAsScalar()
+{
+  m_IsScalar = true;
+}
+
+const Float64Array& CalcBuffer::array() const
+{
+  switch(m_Storage)
+  {
+  case Storage::Borrowed:
+    return *m_BorrowedArray;
+  case Storage::Owned:
+    return *m_OwnedArray;
+  case Storage::OutputDirect:
+    return *m_OutputArray;
+  }
+  // Should never reach here; return owned as fallback
+  return *m_OwnedArray;
+}
 
 // ---------------------------------------------------------------------------
 // getOperatorRegistry
@@ -302,11 +580,10 @@ const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
 // ---------------------------------------------------------------------------
 // ArrayCalculatorParser
 // ---------------------------------------------------------------------------
-ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight, const std::atomic_bool& shouldCancel)
+ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, const std::atomic_bool& shouldCancel)
 : m_DataStructure(dataStructure)
 , m_SelectedGroupPath(selectedGroupPath)
 , m_InfixEquation(infixEquation)
-, m_IsPreflight(isPreflight)
 , m_ShouldCancel(shouldCancel)
 {
 }
@@ -437,42 +714,6 @@ std::vector<Token> ArrayCalculatorParser::tokenize(const std::string& equation)
   }
 
   return tokens;
-}
-
-// ---------------------------------------------------------------------------
-std::string ArrayCalculatorParser::nextScratchName()
-{
-  return "_calc_" + std::to_string(m_ScratchCounter++);
-}
-
-// ---------------------------------------------------------------------------
-DataObject::IdType ArrayCalculatorParser::createScalarInTemp(double value)
-{
-  auto* arr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), std::vector<usize>{1}, std::vector<usize>{1});
-  (*arr)[0] = value;
-  return arr->getId();
-}
-
-// ---------------------------------------------------------------------------
-DataObject::IdType ArrayCalculatorParser::copyArrayToTemp(const IDataArray& sourceArray)
-{
-  using EmptyDataStoreType = EmptyDataStore<float64>;
-  using DataStoreType = DataStore<float64>;
-
-  auto tupleShape = sourceArray.getTupleShape();
-  auto compShape = sourceArray.getComponentShape();
-  std::string scratchName = nextScratchName();
-
-  if(m_IsPreflight)
-  {
-    auto* destArr = Float64Array::CreateWithStore<EmptyDataStoreType>(m_TempDataStructure, scratchName, tupleShape, compShape);
-    return destArr->getId();
-  }
-
-  auto* destArr = Float64Array::CreateWithStore<DataStoreType>(m_TempDataStructure, scratchName, tupleShape, compShape);
-  ExecuteDataFunction(CopyToFloat64Functor{}, sourceArray.getDataType(), sourceArray, *destArr);
-
-  return destArr->getId();
 }
 
 // ---------------------------------------------------------------------------
@@ -632,17 +873,19 @@ Result<> ArrayCalculatorParser::parse()
 
       ParsedItem& prevItem = items.back();
 
-      if(prevItem.kind == ParsedItem::Kind::Value && prevItem.value.kind == CalcValue::Kind::Array)
+      if(prevItem.kind == ParsedItem::Kind::ArrayRef)
       {
         // Case A: Array[C] or Array[T, C]
-        auto* tempArr = m_TempDataStructure.getDataAs<Float64Array>(prevItem.value.arrayId);
-        if(tempArr == nullptr)
+        usize numComponents = 1;
+        for(usize d : prevItem.arrayCompShape)
         {
-          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find temporary array for bracket indexing.");
+          numComponents *= d;
         }
-
-        usize numComponents = tempArr->getNumberOfComponents();
-        usize numTuples = tempArr->getNumberOfTuples();
+        usize numTuples = 1;
+        for(usize d : prevItem.arrayTupleShape)
+        {
+          numTuples *= d;
+        }
 
         if(bracketNumbers.size() == 1)
         {
@@ -662,20 +905,11 @@ Result<> ArrayCalculatorParser::parse()
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
           }
 
-          if(numComponents > 1)
-          {
-            // Create new single-component array by extracting component C
-            auto* newArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), tempArr->getTupleShape(), std::vector<usize>{1});
-            if(!m_IsPreflight)
-            {
-              for(usize t = 0; t < numTuples; ++t)
-              {
-                (*newArr)[t] = (*tempArr)[t * numComponents + compIdx];
-              }
-            }
-            prevItem.value.arrayId = newArr->getId();
-          }
-          // If already single-component, leave as-is
+          // Emit a ComponentExtract after the ArrayRef
+          ParsedItem ce;
+          ce.kind = ParsedItem::Kind::ComponentExtract;
+          ce.componentIndex = compIdx;
+          items.push_back(ce);
         }
         else if(bracketNumbers.size() == 2)
         {
@@ -700,13 +934,11 @@ Result<> ArrayCalculatorParser::parse()
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComponents));
           }
 
-          double extractedValue = 0.0;
-          if(!m_IsPreflight)
-          {
-            extractedValue = (*tempArr)[tupleIdx * numComponents + compIdx];
-          }
-          DataObject::IdType id = createScalarInTemp(extractedValue);
-          prevItem.value = CalcValue{CalcValue::Kind::Number, id};
+          ParsedItem tce;
+          tce.kind = ParsedItem::Kind::TupleComponentExtract;
+          tce.tupleIndex = tupleIdx;
+          tce.componentIndex = compIdx;
+          items.push_back(tce);
         }
         else
         {
@@ -779,15 +1011,13 @@ Result<> ArrayCalculatorParser::parse()
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), fmt::format("Invalid numeric value '{}'.", tok.text));
       }
-      DataObject::IdType id = createScalarInTemp(numValue);
 
       ParsedItem pi;
-      pi.kind = ParsedItem::Kind::Value;
-      pi.value = CalcValue{CalcValue::Kind::Number, id};
+      pi.kind = ParsedItem::Kind::Scalar;
+      pi.scalarValue = numValue;
       items.push_back(pi);
 
       // Ambiguous name warning
-      if(m_IsPreflight)
       {
         bool arrayExists = false;
         if(!m_SelectedGroupPath.empty())
@@ -813,7 +1043,6 @@ Result<> ArrayCalculatorParser::parse()
       const OperatorDef* opDef = findOperatorByToken(tok.text);
       if(opDef != nullptr)
       {
-        if(m_IsPreflight)
         {
           bool arrayExists = false;
           if(!m_SelectedGroupPath.empty())
@@ -840,15 +1069,13 @@ Result<> ArrayCalculatorParser::parse()
       }
       else if(tok.text == "pi" || tok.text == "e")
       {
-        double constValue = (tok.text == "pi") ? std::numbers::pi : std::numbers::e;
-        DataObject::IdType id = createScalarInTemp(constValue);
+        float64 constValue = (tok.text == "pi") ? std::numbers::pi : std::numbers::e;
 
         ParsedItem pi;
-        pi.kind = ParsedItem::Kind::Value;
-        pi.value = CalcValue{CalcValue::Kind::Number, id};
+        pi.kind = ParsedItem::Kind::Scalar;
+        pi.scalarValue = constValue;
         items.push_back(pi);
 
-        if(m_IsPreflight)
         {
           bool arrayExists = false;
           if(!m_SelectedGroupPath.empty())
@@ -879,11 +1106,13 @@ Result<> ArrayCalculatorParser::parse()
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::UnrecognizedItem), fmt::format("Could not access array '{}' in selected group.", tok.text));
           }
-          DataObject::IdType id = copyArrayToTemp(*dataArray);
 
           ParsedItem pi;
-          pi.kind = ParsedItem::Kind::Value;
-          pi.value = CalcValue{CalcValue::Kind::Array, id};
+          pi.kind = ParsedItem::Kind::ArrayRef;
+          pi.arrayPath = arrayPath;
+          pi.sourceDataType = dataArray->getDataType();
+          pi.arrayTupleShape = dataArray->getTupleShape();
+          pi.arrayCompShape = dataArray->getComponentShape();
           items.push_back(pi);
         }
         else
@@ -913,11 +1142,13 @@ Result<> ArrayCalculatorParser::parse()
           {
             return MakeErrorResult(static_cast<int>(CalculatorErrorCode::UnrecognizedItem), fmt::format("Could not access array '{}'.", tok.text));
           }
-          DataObject::IdType id = copyArrayToTemp(*dataArray);
 
           ParsedItem pi;
-          pi.kind = ParsedItem::Kind::Value;
-          pi.value = CalcValue{CalcValue::Kind::Array, id};
+          pi.kind = ParsedItem::Kind::ArrayRef;
+          pi.arrayPath = foundPaths[0];
+          pi.sourceDataType = dataArray->getDataType();
+          pi.arrayTupleShape = dataArray->getTupleShape();
+          pi.arrayCompShape = dataArray->getComponentShape();
           items.push_back(pi);
         }
       }
@@ -966,11 +1197,13 @@ Result<> ArrayCalculatorParser::parse()
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidArrayName), fmt::format("The item '\"{}\"' is not a valid array path in the DataStructure.", tok.text));
       }
-      DataObject::IdType id = copyArrayToTemp(*dataArray);
 
       ParsedItem pi;
-      pi.kind = ParsedItem::Kind::Value;
-      pi.value = CalcValue{CalcValue::Kind::Array, id};
+      pi.kind = ParsedItem::Kind::ArrayRef;
+      pi.arrayPath = quotedPath;
+      pi.sourceDataType = dataArray->getDataType();
+      pi.arrayTupleShape = dataArray->getTupleShape();
+      pi.arrayCompShape = dataArray->getComponentShape();
       items.push_back(pi);
       break;
     }
@@ -988,7 +1221,6 @@ Result<> ArrayCalculatorParser::parse()
       }
 
       // Check if the operator symbol is also the name of an array
-      if(m_IsPreflight)
       {
         bool arrayExists = false;
         if(!m_SelectedGroupPath.empty())
@@ -1135,7 +1367,7 @@ Result<> ArrayCalculatorParser::parse()
         {
           ++commaCount;
         }
-        else if(depth >= 1 && (items[j].kind == ParsedItem::Kind::Value || (items[j].kind == ParsedItem::Kind::Operator && items[j].op != nullptr)))
+        else if(depth >= 1 && (items[j].kind == ParsedItem::Kind::Scalar || items[j].kind == ParsedItem::Kind::ArrayRef || (items[j].kind == ParsedItem::Kind::Operator && items[j].op != nullptr)))
         {
           hasValueInside = true;
         }
@@ -1233,7 +1465,8 @@ Result<> ArrayCalculatorParser::parse()
     if(i > 0)
     {
       const auto& prev = items[i - 1];
-      if(prev.kind == ParsedItem::Kind::Value || prev.kind == ParsedItem::Kind::RParen)
+      if(prev.kind == ParsedItem::Kind::Scalar || prev.kind == ParsedItem::Kind::ArrayRef || prev.kind == ParsedItem::Kind::RParen || prev.kind == ParsedItem::Kind::ComponentExtract ||
+         prev.kind == ParsedItem::Kind::TupleComponentExtract)
       {
         hasLeft = true;
       }
@@ -1247,7 +1480,7 @@ Result<> ArrayCalculatorParser::parse()
     if(i + 1 < items.size())
     {
       const auto& next = items[i + 1];
-      if(next.kind == ParsedItem::Kind::Value || next.kind == ParsedItem::Kind::LParen)
+      if(next.kind == ParsedItem::Kind::Scalar || next.kind == ParsedItem::Kind::ArrayRef || next.kind == ParsedItem::Kind::LParen)
       {
         hasRight = true;
       }
@@ -1272,7 +1505,7 @@ Result<> ArrayCalculatorParser::parse()
       if(i + 1 < items.size())
       {
         const auto& next = items[i + 1];
-        if(next.kind == ParsedItem::Kind::Value || next.kind == ParsedItem::Kind::LParen)
+        if(next.kind == ParsedItem::Kind::Scalar || next.kind == ParsedItem::Kind::ArrayRef || next.kind == ParsedItem::Kind::LParen)
         {
           hasRight = true;
         }
@@ -1321,42 +1554,57 @@ Result<> ArrayCalculatorParser::parse()
   bool hasNumericValue = false;
   bool tupleShapesMatch = true;
 
-  for(const auto& item : items)
+  for(size_t vi = 0; vi < items.size(); ++vi)
   {
-    if(item.kind == ParsedItem::Kind::Value)
+    const auto& item = items[vi];
+    if(item.kind == ParsedItem::Kind::Scalar || item.kind == ParsedItem::Kind::ArrayRef)
     {
       hasNumericValue = true;
-      if(item.value.kind == CalcValue::Kind::Array)
+    }
+    if(item.kind == ParsedItem::Kind::ArrayRef)
+    {
+      std::vector<usize> ts = item.arrayTupleShape;
+      std::vector<usize> cs = item.arrayCompShape;
+
+      // If this ArrayRef is immediately followed by ComponentExtract or
+      // TupleComponentExtract, adjust the effective shape accordingly.
+      if(vi + 1 < items.size() && items[vi + 1].kind == ParsedItem::Kind::ComponentExtract)
       {
-        auto* arr = m_TempDataStructure.getDataAs<Float64Array>(item.value.arrayId);
-        if(arr != nullptr)
+        cs = {1};
+      }
+      else if(vi + 1 < items.size() && items[vi + 1].kind == ParsedItem::Kind::TupleComponentExtract)
+      {
+        // TupleComponentExtract reduces to a scalar — skip this array from
+        // shape consistency checks entirely (it won't contribute shape).
+        continue;
+      }
+
+      usize nt = 1;
+      for(usize d : ts)
+      {
+        nt *= d;
+      }
+
+      if(hasArray)
+      {
+        if(!arrayCompShape.empty() && arrayCompShape != cs)
         {
-          auto ts = arr->getTupleShape();
-          auto cs = arr->getComponentShape();
-          usize nt = arr->getNumberOfTuples();
-
-          if(hasArray)
-          {
-            if(!arrayCompShape.empty() && arrayCompShape != cs)
-            {
-              return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InconsistentCompDims), "Attribute Array symbols in the infix expression have mismatching component dimensions.");
-            }
-            if(arrayNumTuples != 0 && nt != arrayNumTuples)
-            {
-              return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InconsistentTuples), "Attribute Array symbols in the infix expression have mismatching number of tuples.");
-            }
-            if(!arrayTupleShape.empty() && arrayTupleShape != ts)
-            {
-              tupleShapesMatch = false;
-            }
-          }
-
-          hasArray = true;
-          arrayTupleShape = ts;
-          arrayCompShape = cs;
-          arrayNumTuples = nt;
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InconsistentCompDims), "Attribute Array symbols in the infix expression have mismatching component dimensions.");
+        }
+        if(arrayNumTuples != 0 && nt != arrayNumTuples)
+        {
+          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InconsistentTuples), "Attribute Array symbols in the infix expression have mismatching number of tuples.");
+        }
+        if(!arrayTupleShape.empty() && arrayTupleShape != ts)
+        {
+          tupleShapesMatch = false;
         }
       }
+
+      hasArray = true;
+      arrayTupleShape = ts;
+      arrayCompShape = cs;
+      arrayNumTuples = nt;
     }
   }
 
@@ -1417,8 +1665,20 @@ Result<> ArrayCalculatorParser::parse()
   {
     switch(item.kind)
     {
-    case ParsedItem::Kind::Value: {
-      m_RpnItems.push_back(RpnItem{RpnItem::Type::Value, item.value, nullptr, std::numeric_limits<usize>::max()});
+    case ParsedItem::Kind::Scalar: {
+      RpnItem rpn;
+      rpn.type = RpnItem::Type::Scalar;
+      rpn.scalarValue = item.scalarValue;
+      m_RpnItems.push_back(rpn);
+      break;
+    }
+
+    case ParsedItem::Kind::ArrayRef: {
+      RpnItem rpn;
+      rpn.type = RpnItem::Type::ArrayRef;
+      rpn.arrayPath = item.arrayPath;
+      rpn.sourceDataType = item.sourceDataType;
+      m_RpnItems.push_back(rpn);
       break;
     }
 
@@ -1432,7 +1692,10 @@ Result<> ArrayCalculatorParser::parse()
       while(!opStack.empty() && opStack.back().kind != ParsedItem::Kind::LParen)
       {
         const auto& top = opStack.back();
-        m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, top.op, std::numeric_limits<usize>::max()});
+        RpnItem rpn;
+        rpn.type = RpnItem::Type::Operator;
+        rpn.op = top.op;
+        m_RpnItems.push_back(rpn);
         opStack.pop_back();
       }
       if(opStack.empty())
@@ -1450,7 +1713,10 @@ Result<> ArrayCalculatorParser::parse()
       while(!opStack.empty() && opStack.back().kind != ParsedItem::Kind::LParen)
       {
         const auto& top = opStack.back();
-        m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, top.op, std::numeric_limits<usize>::max()});
+        RpnItem rpn;
+        rpn.type = RpnItem::Type::Operator;
+        rpn.op = top.op;
+        m_RpnItems.push_back(rpn);
         opStack.pop_back();
       }
       break;
@@ -1469,7 +1735,10 @@ Result<> ArrayCalculatorParser::parse()
 
         if(topPrec > incomingPrec || (topPrec == incomingPrec && isLeftAssoc))
         {
-          m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, std::numeric_limits<usize>::max()});
+          RpnItem rpn;
+          rpn.type = RpnItem::Type::Operator;
+          rpn.op = topOp;
+          m_RpnItems.push_back(rpn);
           opStack.pop_back();
         }
         else
@@ -1483,16 +1752,19 @@ Result<> ArrayCalculatorParser::parse()
     }
 
     case ParsedItem::Kind::ComponentExtract: {
-      m_RpnItems.push_back(RpnItem{RpnItem::Type::ComponentExtract, CalcValue{CalcValue::Kind::Number, 0}, nullptr, item.componentIndex});
+      RpnItem rpn;
+      rpn.type = RpnItem::Type::ComponentExtract;
+      rpn.componentIndex = item.componentIndex;
+      m_RpnItems.push_back(rpn);
       break;
     }
 
     case ParsedItem::Kind::TupleComponentExtract: {
-      RpnItem tce;
-      tce.type = RpnItem::Type::TupleComponentExtract;
-      tce.tupleIndex = item.tupleIndex;
-      tce.componentIndex = item.componentIndex;
-      m_RpnItems.push_back(tce);
+      RpnItem rpn;
+      rpn.type = RpnItem::Type::TupleComponentExtract;
+      rpn.tupleIndex = item.tupleIndex;
+      rpn.componentIndex = item.componentIndex;
+      m_RpnItems.push_back(rpn);
       break;
     }
 
@@ -1508,7 +1780,10 @@ Result<> ArrayCalculatorParser::parse()
       return MakeErrorResult(static_cast<int>(CalculatorErrorCode::MismatchedParentheses), fmt::format("One or more parentheses are mismatched in the chosen infix expression '{}'.", m_InfixEquation));
     }
     const OperatorDef* topOp = top.isNegativePrefix ? &getUnaryNegativeOp() : top.op;
-    m_RpnItems.push_back(RpnItem{RpnItem::Type::Operator, CalcValue{CalcValue::Kind::Number, 0}, topOp, std::numeric_limits<usize>::max()});
+    RpnItem rpn;
+    rpn.type = RpnItem::Type::Operator;
+    rpn.op = topOp;
+    m_RpnItems.push_back(rpn);
     opStack.pop_back();
   }
 
@@ -1533,26 +1808,66 @@ Result<> ArrayCalculatorParser::parseAndValidate(std::vector<usize>& outTupleSha
 // ---------------------------------------------------------------------------
 Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const DataPath& outputPath, NumericType scalarType, CalculatorParameter::AngleUnits units)
 {
-  // 1. Parse (which now populates m_RpnItems via shunting-yard)
+  // 1. Parse (populates m_RpnItems via shunting-yard)
   Result<> parseResult = parse();
   if(parseResult.invalid())
   {
     return parseResult;
   }
 
-  // 2. Walk the RPN items using an evaluation stack
-  std::stack<CalcValue> evalStack;
+  // 2. Create local temp DataStructure for intermediate arrays
+  DataStructure tempDS;
+  usize scratchCounter = 0;
+  auto nextScratchName = [&scratchCounter]() -> std::string {
+    return "_calc_" + std::to_string(scratchCounter++);
+  };
 
-  for(const auto& rpnItem : m_RpnItems)
+  // 3. Pre-scan RPN to find the index of the last operator/extract item
+  //    for the OutputDirect optimization
+  DataType outputDataType = ConvertNumericTypeToDataType(scalarType);
+  bool outputIsFloat64 = (outputDataType == DataType::float64);
+  int64 lastOpIndex = -1;
+  for(int64 idx = static_cast<int64>(m_RpnItems.size()) - 1; idx >= 0; --idx)
+  {
+    RpnItem::Type t = m_RpnItems[static_cast<usize>(idx)].type;
+    if(t == RpnItem::Type::Operator || t == RpnItem::Type::ComponentExtract || t == RpnItem::Type::TupleComponentExtract)
+    {
+      lastOpIndex = idx;
+      break;
+    }
+  }
+
+  // 4. Walk the RPN items using a CalcBuffer evaluation stack
+  std::stack<CalcBuffer> evalStack;
+
+  for(usize rpnIdx = 0; rpnIdx < m_RpnItems.size(); ++rpnIdx)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
+
+    const RpnItem& rpnItem = m_RpnItems[rpnIdx];
+    bool isLastOp = (static_cast<int64>(rpnIdx) == lastOpIndex);
+
     switch(rpnItem.type)
     {
-    case RpnItem::Type::Value: {
-      evalStack.push(rpnItem.value);
+    case RpnItem::Type::Scalar: {
+      evalStack.push(CalcBuffer::scalar(tempDS, rpnItem.scalarValue, nextScratchName()));
+      break;
+    }
+
+    case RpnItem::Type::ArrayRef: {
+      if(rpnItem.sourceDataType == DataType::float64)
+      {
+        const auto& sourceArray = m_DataStructure.getDataRefAs<Float64Array>(rpnItem.arrayPath);
+        evalStack.push(CalcBuffer::borrow(sourceArray));
+      }
+      else
+      {
+        const auto& sourceArray = m_DataStructure.getDataRefAs<IDataArray>(rpnItem.arrayPath);
+        evalStack.push(CalcBuffer::convertFrom(tempDS, sourceArray, nextScratchName()));
+      }
       break;
     }
 
@@ -1565,103 +1880,101 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
 
       if(op->numArgs == 1)
       {
-        // Unary operator / 1-arg function
         if(evalStack.empty())
         {
           return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for unary operator.");
         }
-        CalcValue operand = evalStack.top();
+        CalcBuffer operand = std::move(evalStack.top());
         evalStack.pop();
 
-        auto* operandArr = m_TempDataStructure.getDataAs<Float64Array>(operand.arrayId);
-        if(operandArr == nullptr)
-        {
-          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find operand array during evaluation.");
-        }
+        std::vector<usize> resultTupleShape = operand.tupleShape();
+        std::vector<usize> resultCompShape = operand.compShape();
+        usize totalSize = operand.size();
 
-        auto tupleShape = operandArr->getTupleShape();
-        auto compShape = operandArr->getComponentShape();
-        auto* resultArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), tupleShape, compShape);
+        CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath))
+                                                          : CalcBuffer::allocate(tempDS, nextScratchName(), resultTupleShape, resultCompShape);
 
-        usize totalSize = operandArr->getSize();
         for(usize i = 0; i < totalSize; i++)
         {
-          double val = operandArr->at(i);
+          float64 val = operand.read(i);
 
-          // Handle trig angle unit conversions
           if(op->trigMode == OperatorDef::ForwardTrig && units == CalculatorParameter::AngleUnits::Degrees)
           {
             val = val * (std::numbers::pi / 180.0);
           }
 
-          double res = op->unaryOp(val);
+          float64 res = op->unaryOp(val);
 
           if(op->trigMode == OperatorDef::InverseTrig && units == CalculatorParameter::AngleUnits::Degrees)
           {
             res = res * (180.0 / std::numbers::pi);
           }
 
-          (*resultArr)[i] = res;
+          result.write(i, res);
         }
 
-        evalStack.push(CalcValue{operand.kind, resultArr->getId()});
+        bool wasScalar = operand.isScalar();
+        if(wasScalar)
+        {
+          result.markAsScalar();
+        }
+        // operand destroyed here, RAII cleans up
+        evalStack.push(std::move(result));
       }
       else if(op->numArgs == 2)
       {
-        // Binary operator / 2-arg function
         if(evalStack.size() < 2)
         {
           return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for binary operator.");
         }
-        CalcValue rightVal = evalStack.top();
+        CalcBuffer right = std::move(evalStack.top());
         evalStack.pop();
-        CalcValue leftVal = evalStack.top();
+        CalcBuffer left = std::move(evalStack.top());
         evalStack.pop();
 
-        auto* leftArr = m_TempDataStructure.getDataAs<Float64Array>(leftVal.arrayId);
-        auto* rightArr = m_TempDataStructure.getDataAs<Float64Array>(rightVal.arrayId);
-        if(leftArr == nullptr || rightArr == nullptr)
-        {
-          return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find operand arrays during evaluation.");
-        }
-
-        // Determine output shape: use array operand's shape (broadcast scalars)
+        // Determine output shape: use the array operand's shape (broadcast scalars)
         std::vector<usize> outTupleShape;
         std::vector<usize> outCompShape;
-        if(leftVal.kind == CalcValue::Kind::Array)
+        if(!left.isScalar())
         {
-          outTupleShape = leftArr->getTupleShape();
-          outCompShape = leftArr->getComponentShape();
+          outTupleShape = left.tupleShape();
+          outCompShape = left.compShape();
         }
         else
         {
-          outTupleShape = rightArr->getTupleShape();
-          outCompShape = rightArr->getComponentShape();
+          outTupleShape = right.tupleShape();
+          outCompShape = right.compShape();
         }
 
-        usize numTuples = 1;
-        for(auto d : outTupleShape)
+        usize totalSize = 1;
+        for(usize d : outTupleShape)
         {
-          numTuples *= d;
+          totalSize *= d;
         }
-        usize numComps = 1;
-        for(auto d : outCompShape)
+        for(usize d : outCompShape)
         {
-          numComps *= d;
+          totalSize *= d;
         }
-        usize totalSize = numTuples * numComps;
 
-        auto* resultArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), outTupleShape, outCompShape);
+        CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath))
+                                                          : CalcBuffer::allocate(tempDS, nextScratchName(), outTupleShape, outCompShape);
+
+        bool leftIsScalar = left.isScalar();
+        bool rightIsScalar = right.isScalar();
 
         for(usize i = 0; i < totalSize; i++)
         {
-          double lv = (leftVal.kind == CalcValue::Kind::Array) ? leftArr->at(i) : leftArr->at(0);
-          double rv = (rightVal.kind == CalcValue::Kind::Array) ? rightArr->at(i) : rightArr->at(0);
-          (*resultArr)[i] = op->binaryOp(lv, rv);
+          float64 lv = left.read(leftIsScalar ? 0 : i);
+          float64 rv = right.read(rightIsScalar ? 0 : i);
+          result.write(i, op->binaryOp(lv, rv));
         }
 
-        CalcValue::Kind resultKind = (leftVal.kind == CalcValue::Kind::Array || rightVal.kind == CalcValue::Kind::Array) ? CalcValue::Kind::Array : CalcValue::Kind::Number;
-        evalStack.push(CalcValue{resultKind, resultArr->getId()});
+        if(leftIsScalar && rightIsScalar)
+        {
+          result.markAsScalar();
+        }
+        // left and right destroyed here, RAII cleans up owned temps
+        evalStack.push(std::move(result));
       }
       else
       {
@@ -1675,17 +1988,11 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for component extraction.");
       }
-      CalcValue operand = evalStack.top();
+      CalcBuffer operand = std::move(evalStack.top());
       evalStack.pop();
 
-      auto* operandArr = m_TempDataStructure.getDataAs<Float64Array>(operand.arrayId);
-      if(operandArr == nullptr)
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find operand array for component extraction.");
-      }
-
-      usize numComps = operandArr->getNumberOfComponents();
-      usize numTuples = operandArr->getNumberOfTuples();
+      usize numComps = operand.numComponents();
+      usize numTuples = operand.numTuples();
       usize compIdx = rpnItem.componentIndex;
 
       if(compIdx >= numComps)
@@ -1693,13 +2000,15 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
       }
 
-      auto* newArr = Float64Array::CreateWithStore<Float64DataStore>(m_TempDataStructure, nextScratchName(), operandArr->getTupleShape(), std::vector<usize>{1});
+      CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath))
+                                                        : CalcBuffer::allocate(tempDS, nextScratchName(), operand.tupleShape(), std::vector<usize>{1});
+
       for(usize t = 0; t < numTuples; ++t)
       {
-        (*newArr)[t] = operandArr->at(t * numComps + compIdx);
+        result.write(t, operand.read(t * numComps + compIdx));
       }
 
-      evalStack.push(CalcValue{operand.kind, newArr->getId()});
+      evalStack.push(std::move(result));
       break;
     }
 
@@ -1708,17 +2017,11 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
       {
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::NotEnoughArguments), "Not enough arguments for tuple+component extraction.");
       }
-      CalcValue operand = evalStack.top();
+      CalcBuffer operand = std::move(evalStack.top());
       evalStack.pop();
 
-      auto* operandArr = m_TempDataStructure.getDataAs<Float64Array>(operand.arrayId);
-      if(operandArr == nullptr)
-      {
-        return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find operand array for tuple+component extraction.");
-      }
-
-      usize numComps = operandArr->getNumberOfComponents();
-      usize numTuples = operandArr->getNumberOfTuples();
+      usize numComps = operand.numComponents();
+      usize numTuples = operand.numTuples();
       usize tupleIdx = rpnItem.tupleIndex;
       usize compIdx = rpnItem.componentIndex;
 
@@ -1731,34 +2034,51 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
       }
 
-      double value = operandArr->at(tupleIdx * numComps + compIdx);
-      DataObject::IdType scalarId = createScalarInTemp(value);
-      evalStack.push(CalcValue{CalcValue::Kind::Number, scalarId});
+      float64 value = operand.read(tupleIdx * numComps + compIdx);
+      // operand destroyed, RAII cleans up
+      evalStack.push(CalcBuffer::scalar(tempDS, value, nextScratchName()));
       break;
     }
 
     } // end switch
   }
 
-  // 3. Final result
+  // 5. Final result
   if(evalStack.size() != 1)
   {
     return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), fmt::format("Internal error: evaluation stack has {} items remaining; expected exactly 1.", evalStack.size()));
   }
 
-  CalcValue finalVal = evalStack.top();
+  CalcBuffer finalResult = std::move(evalStack.top());
   evalStack.pop();
 
-  auto* resultArr = m_TempDataStructure.getDataAs<Float64Array>(finalVal.arrayId);
-  if(resultArr == nullptr)
+  // 6. Copy/cast result into the output array (checked in order, first match wins)
+  if(finalResult.isScalar())
   {
-    return MakeErrorResult(static_cast<int>(CalculatorErrorCode::InvalidEquation), "Internal error: could not find final result array.");
+    // Fill entire output with the scalar value
+    float64 scalarVal = finalResult.read(0);
+    ExecuteDataFunction(CopyResultFunctor{}, outputDataType, dataStructure, outputPath, scalarVal);
   }
-
-  // 4. Copy/cast result into the output array
-  DataType outputDataType = ConvertNumericTypeToDataType(scalarType);
-  bool isScalar = (finalVal.kind == CalcValue::Kind::Number);
-  ExecuteDataFunction(CopyResultFunctor{}, outputDataType, dataStructure, outputPath, resultArr, isScalar);
+  else if(finalResult.isOutputDirect())
+  {
+    // Data is already in the output array — nothing to do
+  }
+  else if(outputIsFloat64)
+  {
+    // Direct float64-to-float64 copy via operator[] (no type cast)
+    auto& outputArray = dataStructure.getDataRefAs<DataArray<float64>>(outputPath);
+    usize totalSize = finalResult.size();
+    for(usize i = 0; i < totalSize; i++)
+    {
+      outputArray[i] = finalResult.read(i);
+    }
+  }
+  else
+  {
+    // Type-casting copy via CopyResultFunctor
+    const Float64Array& resultArray = finalResult.array();
+    ExecuteDataFunction(CopyResultFunctor{}, outputDataType, dataStructure, outputPath, &resultArray, false);
+  }
 
   return parseResult;
 }
@@ -1786,6 +2106,6 @@ const std::atomic_bool& ArrayCalculator::getCancel()
 // ---------------------------------------------------------------------------
 Result<> ArrayCalculator::operator()()
 {
-  ArrayCalculatorParser parser(m_DataStructure, m_InputValues->SelectedGroup, m_InputValues->InfixEquation, false, m_ShouldCancel);
+  ArrayCalculatorParser parser(m_DataStructure, m_InputValues->SelectedGroup, m_InputValues->InfixEquation, m_ShouldCancel);
   return parser.evaluateInto(m_DataStructure, m_InputValues->CalculatedArray, m_InputValues->ScalarType, m_InputValues->Units);
 }

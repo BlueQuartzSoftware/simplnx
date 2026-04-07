@@ -2,6 +2,7 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -133,34 +134,124 @@ struct SIMPLNXCORE_EXPORT OperatorDef
 };
 
 // ---------------------------------------------------------------------------
-// A value that lives on the evaluation stack (either a scalar or an array)
+// RAII sentinel for temporary Float64Arrays in the evaluator.
+// Move-only. When an Owned CalcBuffer is destroyed, it removes its
+// DataArray from the scratch DataStructure via removeData().
 // ---------------------------------------------------------------------------
-struct SIMPLNXCORE_EXPORT CalcValue
+class SIMPLNXCORE_EXPORT CalcBuffer
 {
-  enum class Kind
-  {
-    Number,
-    Array
-  } kind;
+public:
+  // --- Factory methods ---
 
-  DataObject::IdType arrayId;
+  /**
+   * @brief Zero-copy reference to an existing Float64Array in the real DataStructure.
+   * Read-only. Destructor: no-op.
+   */
+  static CalcBuffer borrow(const Float64Array& source);
+
+  /**
+   * @brief Allocate a temp Float64Array in tempDS and convert source data from any numeric type.
+   * Owned. Destructor: removes the temp array from tempDS.
+   */
+  static CalcBuffer convertFrom(DataStructure& tempDS, const IDataArray& source, const std::string& name);
+
+  /**
+   * @brief Allocate a 1-element temp Float64Array with the given scalar value.
+   * Owned. Destructor: removes the temp array from tempDS.
+   */
+  static CalcBuffer scalar(DataStructure& tempDS, float64 value, const std::string& name);
+
+  /**
+   * @brief Allocate an empty temp Float64Array with the given shape.
+   * Owned. Destructor: removes the temp array from tempDS.
+   */
+  static CalcBuffer allocate(DataStructure& tempDS, const std::string& name, std::vector<usize> tupleShape, std::vector<usize> compShape);
+
+  /**
+   * @brief Wrap the output DataArray<float64> for direct writing.
+   * Not owned. Destructor: no-op.
+   */
+  static CalcBuffer wrapOutput(DataArray<float64>& outputArray);
+
+  // --- Move-only, non-copyable ---
+  CalcBuffer(CalcBuffer&& other) noexcept;
+  CalcBuffer& operator=(CalcBuffer&& other) noexcept;
+  ~CalcBuffer();
+
+  CalcBuffer(const CalcBuffer&) = delete;
+  CalcBuffer& operator=(const CalcBuffer&) = delete;
+
+  // --- Element access ---
+  float64 read(usize index) const;
+  void write(usize index, float64 value);
+  void fill(float64 value);
+
+  // --- Metadata ---
+  usize size() const;
+  usize numTuples() const;
+  usize numComponents() const;
+  std::vector<usize> tupleShape() const;
+  std::vector<usize> compShape() const;
+  bool isScalar() const;
+  bool isOwned() const;
+  bool isOutputDirect() const;
+  void markAsScalar();
+
+  // --- Access underlying array (for final copy to non-float64 output) ---
+  const Float64Array& array() const;
+
+private:
+  CalcBuffer() = default;
+
+  enum class Storage
+  {
+    Borrowed,
+    Owned,
+    OutputDirect
+  };
+
+  Storage m_Storage = Storage::Owned;
+
+  // Borrowed: const pointer to source Float64Array in real DataStructure
+  const Float64Array* m_BorrowedArray = nullptr;
+
+  // Owned: pointer to temp Float64Array + reference to its DataStructure for cleanup
+  DataStructure* m_TempDS = nullptr;
+  DataObject::IdType m_ArrayId = 0;
+  Float64Array* m_OwnedArray = nullptr;
+
+  // OutputDirect: writable pointer to output DataArray<float64>
+  DataArray<float64>* m_OutputArray = nullptr;
+
+  bool m_IsScalar = false;
 };
 
 // ---------------------------------------------------------------------------
-// A single item in the RPN (reverse-polish notation) evaluation sequence
+// A single item in the RPN (reverse-polish notation) evaluation sequence.
+// Data-free: stores DataPath references and scalar values, not DataObject IDs.
 // ---------------------------------------------------------------------------
 struct SIMPLNXCORE_EXPORT RpnItem
 {
   enum class Type
   {
-    Value,
+    Scalar,
+    ArrayRef,
     Operator,
     ComponentExtract,
     TupleComponentExtract
   } type;
 
-  CalcValue value;
+  // Scalar
+  float64 scalarValue = 0.0;
+
+  // ArrayRef
+  DataPath arrayPath;
+  DataType sourceDataType = DataType::float64;
+
+  // Operator
   const OperatorDef* op = nullptr;
+
+  // ComponentExtract / TupleComponentExtract
   usize componentIndex = std::numeric_limits<usize>::max();
   usize tupleIndex = std::numeric_limits<usize>::max();
 };
@@ -188,7 +279,7 @@ struct SIMPLNXCORE_EXPORT ArrayCalculatorInputValues
 class SIMPLNXCORE_EXPORT ArrayCalculatorParser
 {
 public:
-  ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight, const std::atomic_bool& shouldCancel);
+  ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, const std::atomic_bool& shouldCancel);
   ~ArrayCalculatorParser() noexcept = default;
 
   ArrayCalculatorParser(const ArrayCalculatorParser&) = delete;
@@ -214,48 +305,19 @@ public:
    */
   static std::vector<Token> tokenize(const std::string& equation);
 
-  // Expose temp DataStructure for evaluator (Task 1e will use this)
-  DataStructure& getTempDataStructure()
-  {
-    return m_TempDataStructure;
-  }
-
 private:
   /**
    * @brief Runs the full parsing pipeline (tokenize, merge identifiers,
    * resolve, bracket indexing, minus disambiguation, wrap function args,
-   * validate) and populates m_ParsedItems.
+   * validate) and populates m_RpnItems.
    */
   Result<> parse();
 
-  /**
-   * @brief Creates a unique scratch name for temporary arrays.
-   */
-  std::string nextScratchName();
-
-  /**
-   * @brief Creates a Float64Array in m_TempDataStructure from a source
-   * IDataArray, converting all values to double.  When m_IsPreflight is
-   * true the array is allocated but data is not copied.
-   * @return the DataObject::IdType of the newly created array
-   */
-  DataObject::IdType copyArrayToTemp(const IDataArray& sourceArray);
-
-  /**
-   * @brief Creates a 1-element Float64Array in m_TempDataStructure with the
-   * given scalar value.
-   * @return the DataObject::IdType of the newly created array
-   */
-  DataObject::IdType createScalarInTemp(double value);
-
   const DataStructure& m_DataStructure;
-  DataStructure m_TempDataStructure;
   DataPath m_SelectedGroupPath;
   std::string m_InfixEquation;
-  bool m_IsPreflight;
-  usize m_ScratchCounter = 0;
 
-  // Populated by parse(); consumed by evaluateInto() (Task 1e)
+  // Populated by parse(); consumed by evaluateInto()
   std::vector<RpnItem> m_RpnItems;
 
   // Shape info determined during validation

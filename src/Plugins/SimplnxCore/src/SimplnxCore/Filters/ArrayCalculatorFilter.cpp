@@ -85,7 +85,7 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
 
   // Parse and validate the expression
   const std::atomic_bool m_ShouldCancel(false);
-  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.m_Equation, true, m_ShouldCancel);
+  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.m_Equation, m_ShouldCancel);
   std::vector<usize> calculatedTupleShape;
   std::vector<usize> calculatedComponentShape;
   Result<> parseResult = parser.parseAndValidate(calculatedTupleShape, calculatedComponentShape);
