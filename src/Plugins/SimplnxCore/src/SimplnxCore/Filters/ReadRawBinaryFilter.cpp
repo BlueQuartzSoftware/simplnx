@@ -3,9 +3,11 @@
 #include "SimplnxCore/Filters/Algorithms/ReadRawBinary.hpp"
 
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -67,17 +69,39 @@ Parameters ReadRawBinaryFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The input binary file path", fs::path(), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Input Numeric Type", "Data type of the binary data", NumericType::int8));
-
-  DynamicTableInfo tableInfo;
-  tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo{1, "Value {}"});
-  tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo({"Dim 0"}));
-  params.insert(
-      std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Dimensions", "Slowest to Fastest Dimensions (ZYX for example)", DynamicTableInfo::TableDataType{{1.0}}, tableInfo));
-  params.insert(std::make_unique<UInt64Parameter>(k_NumberOfComponents_Key, "Number of Components", "The number of values at each tuple", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_Endian_Key, "Endian", "The endianness of the data", 0, ChoicesParameter::Choices{"Little", "Big"}));
   params.insert(std::make_unique<UInt64Parameter>(k_SkipHeaderBytes_Key, "Skip Header Bytes", "Number of bytes to skip before reading data", 0));
+
+  params.insertSeparator(Parameters::Separator{"Tuple Dimensions"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(
+      k_AdvancedOptions_Key, "Set Tuple Dimensions [not required if creating inside an existing Attribute Matrix]",
+      "This allows the user to set the tuple dimensions directly rather than just inheriting them. This option is NOT required if you are creating the Data Array in an Attribute Matrix", true));
+
+  {
+    DynamicTableInfo tableInfo;
+    tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
+    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "TUPLE DIM {}"));
+    const DynamicTableInfo::TableDataType defaultTable{{1.0F}};
+    params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Tuple Dimensions (Slowest to Fastest Dimensions)",
+                                                          "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", defaultTable, tableInfo));
+  }
+
+  params.insertSeparator(Parameters::Separator{"Component Dimensions"});
+  {
+    DynamicTableInfo tableInfo;
+    tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
+    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "COMP DIM {}"));
+    const DynamicTableInfo::TableDataType defaultTable{{1.0F}};
+    params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Component Dimensions.", defaultTable,
+                                                          tableInfo));
+  }
+
+  params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedAttributeArrayPath_Key, "Output Attribute Array", "The complete path to the created Attribute Array",
                                                          DataPath(std::vector<std::string>{"Imported Array"})));
+
+  // Associate the Linkable Parameter(s) to the children parameters that they control
+  params.linkParameters(k_AdvancedOptions_Key, k_TupleDims_Key, true);
 
   return params;
 }
@@ -85,7 +109,12 @@ Parameters ReadRawBinaryFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ReadRawBinaryFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Change 1: k_NumberOfComponents_Key ("number_of_components") UInt64Parameter
+  //            replaced with k_CompDims_Key ("component_dimensions") DynamicTableParameter
+  // Change 2: Added k_AdvancedOptions_Key ("set_tuple_dimensions") BoolParameter
 }
 
 //------------------------------------------------------------------------------
