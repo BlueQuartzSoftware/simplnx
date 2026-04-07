@@ -274,7 +274,25 @@ constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayP
 //------------------------------------------------------------------------------
 Result<Arguments> ReadRawBinaryFilter::fromJson(const nlohmann::json& json) const
 {
-  // Delegate to base class for now; Task 6 will implement version migration
+  auto version = json.value("parameters_version", 1);
+  if(version < 2)
+  {
+    nlohmann::json migrated = json;
+    // Convert old UInt64 "number_of_components" to new DynamicTable "component_dimensions"
+    if(migrated.contains("number_of_components"))
+    {
+      uint64 numComp = migrated["number_of_components"].get<uint64>();
+      migrated["component_dimensions"] = DynamicTableParameter::ValueType{{static_cast<double>(numComp)}};
+      migrated.erase("number_of_components");
+    }
+    // Add default for new parameter
+    if(!migrated.contains("set_tuple_dimensions"))
+    {
+      migrated["set_tuple_dimensions"] = true;
+    }
+    migrated["parameters_version"] = 2;
+    return IFilter::fromJson(migrated);
+  }
   return IFilter::fromJson(json);
 }
 
@@ -286,7 +304,20 @@ Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
-  // Note: k_NumberOfComponentsKey from SIMPL is migrated to k_CompDims_Key via fromJson() version migration
+
+  // Convert old integer NumberOfComponents to DynamicTable component_dimensions
+  if(json.contains(SIMPL::k_NumberOfComponentsKey))
+  {
+    try
+    {
+      uint64 numComp = json[SIMPL::k_NumberOfComponentsKey].get<uint64>();
+      args.insertOrAssign(k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{static_cast<double>(numComp)}}));
+    } catch(const nlohmann::json::exception& e)
+    {
+      results.push_back(MakeErrorResult(-1, fmt::format("Failed to convert NumberOfComponents from SIMPL JSON: {}", e.what())));
+    }
+  }
+
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_EndianKey, k_Endian_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, SIMPL::k_SkipHeaderBytesKey, k_SkipHeaderBytes_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeArrayPathKey, k_CreatedAttributeArrayPath_Key));
