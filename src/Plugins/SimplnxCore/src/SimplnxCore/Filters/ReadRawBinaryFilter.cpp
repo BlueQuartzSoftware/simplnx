@@ -17,19 +17,13 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <filesystem>
+#include <numeric>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace nx::core
 {
-constexpr int32 k_RbrZeroComponentsError = -391;
-constexpr int32 k_RbrNumComponentsError = -392;
-constexpr int32 k_RbrWrongType = -393;
-constexpr int32 k_RbrEmptyFile = -394;
-constexpr int32 k_RbrSkippedTooMuch = -395;
-constexpr int32 k_RbrTupleDimsInconsistent = -397;
-
 //------------------------------------------------------------------------------
 std::string ReadRawBinaryFilter::name() const
 {
@@ -129,74 +123,111 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pScalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
-  auto pNumberOfComponentsValue = filterArgs.value<uint64>(k_NumberOfComponents_Key);
   auto pSkipHeaderBytesValue = filterArgs.value<uint64>(k_SkipHeaderBytes_Key);
   auto pCreatedAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
-  auto pTupleDimsValue = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
+  auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
+  auto pCompDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_CompDims_Key);
+  auto pTupleDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
-  if(pNumberOfComponentsValue < 1)
+  // Validate component dimensions
+  const std::vector<double>& compDimsRow = pCompDimsData.at(0);
+  ShapeType compDims;
+  compDims.reserve(compDimsRow.size());
+  for(size_t idx = 0; idx < compDimsRow.size(); idx++)
   {
-    return {MakeErrorResult<OutputActions>(k_RbrZeroComponentsError, fmt::format("The number of components ({}) must be positive.", pNumberOfComponentsValue))};
+    if(compDimsRow[idx] == 0)
+    {
+      return {MakeErrorResult<OutputActions>(-78701, fmt::format("Component dimension at index {} cannot be 0", idx))};
+    }
+    compDims.push_back(static_cast<usize>(compDimsRow[idx]));
   }
-
-  const auto& rowData = pTupleDimsValue.at(0);
-  ShapeType tupleDims;
-  for(auto floatValue : rowData)
-  {
-    tupleDims.push_back(static_cast<usize>(floatValue));
-  }
+  usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());
 
   Result<OutputActions> resultOutputActions;
 
+  // Resolve tuple dimensions (AttributeMatrix-aware)
+  ShapeType tupleDims;
+  auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(pCreatedAttributeArrayPathValue.getParent());
+
+  if(parentAM != nullptr)
+  {
+    tupleDims = parentAM->getShape();
+    if(useDims)
+    {
+      resultOutputActions.warnings().push_back(
+          {-78702, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. "
+                   "The Attribute Matrix tuples will override your custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
+    }
+  }
+  else
+  {
+    if(!useDims)
+    {
+      return {MakeErrorResult<OutputActions>(-78703, fmt::format("The DataArray to be created '{}' is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. "
+                                                                 "Check Set Tuple Dimensions to set the dimensions.",
+                                                                 pCreatedAttributeArrayPathValue.toString()))};
+    }
+    const std::vector<double>& tupleDimsRow = pTupleDimsData.at(0);
+    tupleDims.reserve(tupleDimsRow.size());
+    for(size_t idx = 0; idx < tupleDimsRow.size(); idx++)
+    {
+      if(tupleDimsRow[idx] == 0)
+      {
+        return {MakeErrorResult<OutputActions>(-78704, fmt::format("Tuple dimension at index {} cannot be 0", idx))};
+      }
+      tupleDims.push_back(static_cast<usize>(tupleDimsRow[idx]));
+    }
+  }
+
+  usize numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
+
+  // Validate file size
   usize inputFileSize = fs::file_size(pInputFileValue);
   if(inputFileSize == 0)
   {
-    return {MakeErrorResult<OutputActions>(k_RbrEmptyFile, fmt::format("File '{}' is empty.", pInputFileValue.string()))};
+    return {MakeErrorResult<OutputActions>(-78705, fmt::format("File '{}' is empty.", pInputFileValue.string()))};
+  }
+
+  if(pSkipHeaderBytesValue >= inputFileSize)
+  {
+    return {MakeErrorResult<OutputActions>(-78706, fmt::format("Skip Header Bytes ({}) is greater than or equal to the file size ({}) for file '{}'.", pSkipHeaderBytesValue, inputFileSize,
+                                                               pInputFileValue.string()))};
   }
 
   usize totalBytesToRead = inputFileSize - pSkipHeaderBytesValue;
-  if(totalBytesToRead <= 0)
-  {
-    return {MakeErrorResult<OutputActions>(k_RbrSkippedTooMuch, fmt::format("More bytes have been skipped than exist in file '{}'.", pInputFileValue.string()))};
-  }
-
   usize typeSize = GetNumericTypeSize(pScalarTypeValue);
 
-  // Sanity check the chosen scalar type and the total bytes in the data file
   if(totalBytesToRead % typeSize != 0)
   {
     return {MakeErrorResult<OutputActions>(
-        k_RbrWrongType,
-        fmt::format(
-            "After skipping {} bytes, the data to be read in file '{}' does not convert into an exact number of elements using the chosen scalar type. Are you sure this is the correct scalar type?",
-            pSkipHeaderBytesValue, pInputFileValue.string()))};
+        -78707, fmt::format("After skipping {} bytes, the data in file '{}' does not convert into an exact number of elements using the chosen scalar type '{}'. "
+                            "Are you sure this is the correct scalar type?",
+                            pSkipHeaderBytesValue, pInputFileValue.string(), DataTypeToString(ConvertNumericTypeToDataType(pScalarTypeValue))))};
   }
 
-  usize totalElements = totalBytesToRead / typeSize;
+  // Validate data fits
+  usize totalElementsInFile = totalBytesToRead / typeSize;
+  usize requiredElements = numTuples * numComponents;
 
-  // Sanity check the chosen number of components and the number of elements in the data file
-  if(totalElements % pNumberOfComponentsValue != 0)
+  if(requiredElements > totalElementsInFile)
   {
     return {MakeErrorResult<OutputActions>(
-        k_RbrNumComponentsError,
-        fmt::format("After skipping {} bytes, the data in file '{}' does not convert into an exact number of tuples using the chosen components.  Are you sure this is the correct component number?",
-                    std::to_string(pSkipHeaderBytesValue), pInputFileValue.string()))};
+        -78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
+                            "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}.",
+                            requiredElements, numTuples, numComponents, totalElementsInFile))};
   }
 
-  // Create the CreateArray action and add it to the resultOutputActions object
+  if(requiredElements < totalElementsInFile)
   {
-    auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), tupleDims, std::vector<usize>{pNumberOfComponentsValue}, pCreatedAttributeArrayPathValue);
+    resultOutputActions.warnings().push_back(
+        {-78709, fmt::format("Only a subset of the file data will be read. Required elements: {} (tuples: {} x components: {}). Available elements in file: {}.", requiredElements, numTuples,
+                             numComponents, totalElementsInFile)});
+  }
 
+  // Create output array action
+  {
+    auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(pScalarTypeValue), tupleDims, compDims, pCreatedAttributeArrayPathValue);
     resultOutputActions.value().appendAction(std::move(action));
-  }
-
-  usize numTuples = totalElements / pNumberOfComponentsValue;
-  size_t tupleCountFromTable = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<size_t>(1), std::multiplies<>());
-  if(numTuples != tupleCountFromTable)
-  {
-    const std::string warningMessage = fmt::format("Total Tuples based on file '{}' does not match total tuples entered. '{}'. Reading a subsection of the file.", numTuples, tupleCountFromTable);
-
-    resultOutputActions.warnings().push_back({k_RbrTupleDimsInconsistent, warningMessage});
   }
 
   return {std::move(resultOutputActions)};
@@ -210,7 +241,15 @@ Result<> ReadRawBinaryFilter::executeImpl(DataStructure& dataStructure, const Ar
 
   inputValues.inputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   inputValues.scalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
-  inputValues.numberOfComponentsValue = filterArgs.value<uint64>(k_NumberOfComponents_Key);
+  auto compDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_CompDims_Key);
+  const std::vector<double>& compDimsRow = compDimsData.at(0);
+  ShapeType compDims;
+  compDims.reserve(compDimsRow.size());
+  for(size_t idx = 0; idx < compDimsRow.size(); idx++)
+  {
+    compDims.push_back(static_cast<usize>(compDimsRow[idx]));
+  }
+  inputValues.componentDimsValue = compDims;
   inputValues.endianValue = filterArgs.value<ChoicesParameter::ValueType>(k_Endian_Key);
   inputValues.skipHeaderBytesValue = filterArgs.value<uint64>(k_SkipHeaderBytes_Key);
   inputValues.createdAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
@@ -232,6 +271,13 @@ constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayP
 } // namespace SIMPL
 } // namespace
 
+//------------------------------------------------------------------------------
+Result<Arguments> ReadRawBinaryFilter::fromJson(const nlohmann::json& json) const
+{
+  // Delegate to base class for now; Task 6 will implement version migration
+  return IFilter::fromJson(json);
+}
+
 Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = ReadRawBinaryFilter().getDefaultArguments();
@@ -240,7 +286,7 @@ Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
 
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumberOfComponents_Key));
+  // Note: k_NumberOfComponentsKey from SIMPL is migrated to k_CompDims_Key via fromJson() version migration
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_EndianKey, k_Endian_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToIntFilterParameterConverter<uint64>>(args, json, SIMPL::k_SkipHeaderBytesKey, k_SkipHeaderBytes_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeArrayPathKey, k_CreatedAttributeArrayPath_Key));

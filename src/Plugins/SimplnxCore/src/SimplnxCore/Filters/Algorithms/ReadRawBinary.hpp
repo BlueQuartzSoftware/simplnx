@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
+#include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -13,7 +14,7 @@ struct SIMPLNXCORE_EXPORT ReadRawBinaryInputValues
 {
   FileSystemPathParameter::ValueType inputFileValue;
   NumericType scalarTypeValue;
-  uint64 numberOfComponentsValue;
+  ShapeType componentDimsValue;
   ChoicesParameter::ValueType endianValue;
   uint64 skipHeaderBytesValue;
   DataPath createdAttributeArrayPathValue;
