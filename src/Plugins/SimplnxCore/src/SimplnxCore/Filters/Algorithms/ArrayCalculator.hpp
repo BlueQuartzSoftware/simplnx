@@ -188,7 +188,7 @@ struct SIMPLNXCORE_EXPORT ArrayCalculatorInputValues
 class SIMPLNXCORE_EXPORT ArrayCalculatorParser
 {
 public:
-  ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight);
+  ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight, const std::atomic_bool& shouldCancel);
   ~ArrayCalculatorParser() noexcept = default;
 
   ArrayCalculatorParser(const ArrayCalculatorParser&) = delete;
@@ -261,6 +261,7 @@ private:
   // Shape info determined during validation
   std::vector<usize> m_ParsedTupleShape;
   std::vector<usize> m_ParsedComponentShape;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 // ---------------------------------------------------------------------------

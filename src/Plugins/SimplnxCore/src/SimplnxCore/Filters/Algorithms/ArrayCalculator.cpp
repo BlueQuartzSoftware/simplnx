@@ -302,11 +302,12 @@ const std::vector<OperatorDef>& nx::core::getOperatorRegistry()
 // ---------------------------------------------------------------------------
 // ArrayCalculatorParser
 // ---------------------------------------------------------------------------
-ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight)
+ArrayCalculatorParser::ArrayCalculatorParser(const DataStructure& dataStructure, const DataPath& selectedGroupPath, const std::string& infixEquation, bool isPreflight, const std::atomic_bool& shouldCancel)
 : m_DataStructure(dataStructure)
 , m_SelectedGroupPath(selectedGroupPath)
 , m_InfixEquation(infixEquation)
 , m_IsPreflight(isPreflight)
+, m_ShouldCancel(shouldCancel)
 {
 }
 
@@ -1544,6 +1545,10 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
 
   for(const auto& rpnItem : m_RpnItems)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     switch(rpnItem.type)
     {
     case RpnItem::Type::Value: {
@@ -1781,6 +1786,6 @@ const std::atomic_bool& ArrayCalculator::getCancel()
 // ---------------------------------------------------------------------------
 Result<> ArrayCalculator::operator()()
 {
-  ArrayCalculatorParser parser(m_DataStructure, m_InputValues->SelectedGroup, m_InputValues->InfixEquation, false);
+  ArrayCalculatorParser parser(m_DataStructure, m_InputValues->SelectedGroup, m_InputValues->InfixEquation, false, m_ShouldCancel);
   return parser.evaluateInto(m_DataStructure, m_InputValues->CalculatedArray, m_InputValues->ScalarType, m_InputValues->Units);
 }

@@ -84,7 +84,8 @@ IFilter::PreflightResult ArrayCalculatorFilter::preflightImpl(const DataStructur
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Parse and validate the expression
-  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.m_Equation, true);
+  const std::atomic_bool m_ShouldCancel(false);
+  ArrayCalculatorParser parser(dataStructure, pInfixEquationValue.m_SelectedGroup, pInfixEquationValue.m_Equation, true, m_ShouldCancel);
   std::vector<usize> calculatedTupleShape;
   std::vector<usize> calculatedComponentShape;
   Result<> parseResult = parser.parseAndValidate(calculatedTupleShape, calculatedComponentShape);
