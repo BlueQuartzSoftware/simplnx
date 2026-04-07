@@ -65,6 +65,8 @@ Parameters ReadRawBinaryFilter::parameters() const
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Input Numeric Type", "Data type of the binary data", NumericType::int8));
   params.insert(std::make_unique<ChoicesParameter>(k_Endian_Key, "Endian", "The endianness of the data", 0, ChoicesParameter::Choices{"Little", "Big"}));
   params.insert(std::make_unique<UInt64Parameter>(k_SkipHeaderBytes_Key, "Skip Header Bytes", "Number of bytes to skip before reading data", 0));
+  params.insert(std::make_unique<BoolParameter>(k_AllowPartialFilling_Key, "Allow Partial Filling of Array",
+                                                 "When enabled, the filter will read as much data as available and leave the remaining array elements default-initialized to 0", false));
 
   params.insertSeparator(Parameters::Separator{"Tuple Dimensions"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
@@ -125,11 +127,25 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   auto pScalarTypeValue = filterArgs.value<NumericType>(k_ScalarType_Key);
   auto pSkipHeaderBytesValue = filterArgs.value<uint64>(k_SkipHeaderBytes_Key);
   auto pCreatedAttributeArrayPathValue = filterArgs.value<DataPath>(k_CreatedAttributeArrayPath_Key);
-  auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
+  bool useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
+  bool allowPartialFilling = filterArgs.value<bool>(k_AllowPartialFilling_Key);
   auto pCompDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_CompDims_Key);
   auto pTupleDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
-  // Validate component dimensions
+  Result<OutputActions> resultOutputActions;
+  std::vector<PreflightValue> preflightUpdatedValues;
+
+  std::string scalarTypeString = DataTypeToString(ConvertNumericTypeToDataType(pScalarTypeValue));
+  usize typeSize = GetNumericTypeSize(pScalarTypeValue);
+
+  // ---- Check 1: File is empty ----
+  usize inputFileSize = fs::file_size(pInputFileValue);
+  if(inputFileSize == 0)
+  {
+    return {MakeErrorResult<OutputActions>(-78705, fmt::format("File '{}' is empty.", pInputFileValue.string()))};
+  }
+
+  // ---- Check 7: Component dimensions contain zero ----
   const std::vector<double>& compDimsRow = pCompDimsData.at(0);
   ShapeType compDims;
   compDims.reserve(compDimsRow.size());
@@ -143,14 +159,13 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   }
   usize numComponents = std::accumulate(compDims.begin(), compDims.end(), static_cast<usize>(1), std::multiplies<>());
 
-  Result<OutputActions> resultOutputActions;
-
-  // Resolve tuple dimensions (AttributeMatrix-aware)
+  // ---- Check 8/9/10: Resolve tuple dimensions (AttributeMatrix-aware) ----
   ShapeType tupleDims;
   auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(pCreatedAttributeArrayPathValue.getParent());
 
   if(parentAM != nullptr)
   {
+    // Check 10: AM parent + user dims checked — warn that AM shape overrides
     tupleDims = parentAM->getShape();
     if(useDims)
     {
@@ -161,12 +176,14 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   }
   else
   {
+    // Check 9: Not in AM + dims unchecked — error
     if(!useDims)
     {
       return {MakeErrorResult<OutputActions>(-78703, fmt::format("The DataArray to be created '{}' is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. "
                                                                  "Check Set Tuple Dimensions to set the dimensions.",
                                                                  pCreatedAttributeArrayPathValue.toString()))};
     }
+    // Check 8: Tuple dimensions contain zero
     const std::vector<double>& tupleDimsRow = pTupleDimsData.at(0);
     tupleDims.reserve(tupleDimsRow.size());
     for(size_t idx = 0; idx < tupleDimsRow.size(); idx++)
@@ -181,44 +198,46 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 
   usize numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
 
-  // Validate file size
-  usize inputFileSize = fs::file_size(pInputFileValue);
-  if(inputFileSize == 0)
-  {
-    return {MakeErrorResult<OutputActions>(-78705, fmt::format("File '{}' is empty.", pInputFileValue.string()))};
-  }
-
+  // ---- Check 2: Skip header bytes >= file size ----
   if(pSkipHeaderBytesValue >= inputFileSize)
   {
     return {MakeErrorResult<OutputActions>(
         -78706, fmt::format("Skip Header Bytes ({}) is greater than or equal to the file size ({}) for file '{}'.", pSkipHeaderBytesValue, inputFileSize, pInputFileValue.string()))};
   }
 
-  usize totalBytesToRead = inputFileSize - pSkipHeaderBytesValue;
-  usize typeSize = GetNumericTypeSize(pScalarTypeValue);
-
-  if(totalBytesToRead % typeSize != 0)
-  {
-    return {MakeErrorResult<OutputActions>(-78707, fmt::format("After skipping {} bytes, the data in file '{}' does not convert into an exact number of elements using the chosen scalar type '{}'. "
-                                                               "Are you sure this is the correct scalar type?",
-                                                               pSkipHeaderBytesValue, pInputFileValue.string(), DataTypeToString(ConvertNumericTypeToDataType(pScalarTypeValue))))};
-  }
-
-  // Validate data fits
-  usize totalElementsInFile = totalBytesToRead / typeSize;
+  // ---- Data-fit checks (4/5/6/11) ----
+  usize availableBytes = inputFileSize - pSkipHeaderBytesValue;
+  usize availableElements = availableBytes / typeSize;
+  usize remainderBytes = availableBytes % typeSize;
   usize requiredElements = numTuples * numComponents;
 
-  if(requiredElements > totalElementsInFile)
+  // Check 11: Remainder bytes warning (available bytes not evenly divisible by type size)
+  if(remainderBytes != 0)
   {
-    return {MakeErrorResult<OutputActions>(-78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
-                                                               "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}.",
-                                                               requiredElements, numTuples, numComponents, totalElementsInFile))};
+    resultOutputActions.warnings().push_back(
+        {-78707, fmt::format("{} bytes remain after reading whole {} elements from file '{}'. Verify the scalar type is correct.", remainderBytes, scalarTypeString, pInputFileValue.string())});
   }
 
-  if(requiredElements < totalElementsInFile)
+  // Check 4: File doesn't have enough data for the requested array
+  if(requiredElements > availableElements)
+  {
+    if(!allowPartialFilling)
+    {
+      return {MakeErrorResult<OutputActions>(
+          -78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
+                              "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}. "
+                              "Enable 'Allow Partial Filling of Array' to read available data and default-initialize the remainder.",
+                              requiredElements, numTuples, numComponents, availableElements))};
+    }
+    resultOutputActions.warnings().push_back(
+        {-78710, fmt::format("The file contains only {} of the {} required elements. The remaining elements will be default-initialized to 0.", availableElements, requiredElements)});
+  }
+
+  // Check 6: Only a subset of the file data will be read
+  if(requiredElements < availableElements)
   {
     resultOutputActions.warnings().push_back({-78709, fmt::format("Only a subset of the file data will be read. Required elements: {} (tuples: {} x components: {}). Available elements in file: {}.",
-                                                                  requiredElements, numTuples, numComponents, totalElementsInFile)});
+                                                                  requiredElements, numTuples, numComponents, availableElements)});
   }
 
   // Create output array action
@@ -227,7 +246,26 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  return {std::move(resultOutputActions)};
+  // Build preflight summary
+  std::string summary = fmt::format("Reading {} tuples of {} with {} component(s) into '{}'.", numTuples, scalarTypeString, numComponents, pCreatedAttributeArrayPathValue.toString());
+
+  if(requiredElements < availableElements)
+  {
+    summary += fmt::format(" Only {} of {} available elements will be read from the file.", requiredElements, availableElements);
+  }
+  else if(requiredElements > availableElements && allowPartialFilling)
+  {
+    summary += fmt::format(" The file contains only {} of the {} required elements. The remaining elements will be default-initialized to 0.", availableElements, requiredElements);
+  }
+
+  if(remainderBytes != 0)
+  {
+    summary += fmt::format(" Note: {} bytes remain after reading whole {} elements — verify the scalar type is correct.", remainderBytes, scalarTypeString);
+  }
+
+  preflightUpdatedValues.push_back({"Read Summary", summary});
+
+  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
@@ -255,19 +293,6 @@ Result<> ReadRawBinaryFilter::executeImpl(DataStructure& dataStructure, const Ar
   return ReadRawBinary(dataStructure, inputValues, shouldCancel, messageHandler)();
 }
 
-namespace
-{
-namespace SIMPL
-{
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_EndianKey = "Endian";
-constexpr StringLiteral k_SkipHeaderBytesKey = "SkipHeaderBytes";
-constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
-} // namespace SIMPL
-} // namespace
-
 //------------------------------------------------------------------------------
 Result<Arguments> ReadRawBinaryFilter::fromJson(const nlohmann::json& json) const
 {
@@ -282,16 +307,33 @@ Result<Arguments> ReadRawBinaryFilter::fromJson(const nlohmann::json& json) cons
       migrated["component_dimensions"] = DynamicTableParameter::ValueType{{static_cast<double>(numComp)}};
       migrated.erase("number_of_components");
     }
-    // Add default for new parameter
+    // Add defaults for new parameters
     if(!migrated.contains("set_tuple_dimensions"))
     {
       migrated["set_tuple_dimensions"] = true;
+    }
+    if(!migrated.contains("allow_partial_filling"))
+    {
+      migrated["allow_partial_filling"] = false;
     }
     migrated["parameters_version"] = 2;
     return IFilter::fromJson(migrated);
   }
   return IFilter::fromJson(json);
 }
+
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_InputFileKey = "InputFile";
+constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteral k_EndianKey = "Endian";
+constexpr StringLiteral k_SkipHeaderBytesKey = "SkipHeaderBytes";
+constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
+} // namespace SIMPL
+} // namespace
 
 Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
 {

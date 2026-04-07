@@ -59,6 +59,7 @@ Arguments CreateFilterArguments(NumericType scalarType, usize N, usize file_size
   args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{static_cast<float64>(N)}}));
   args.insertOrAssign(ReadRawBinaryFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
   args.insertOrAssign(ReadRawBinaryFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(skipBytes));
+  args.insertOrAssign(ReadRawBinaryFilter::k_AllowPartialFilling_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
 
   return args;
@@ -140,10 +141,12 @@ void TestCase1_TestPrimitives(NumericType scalarType)
 }
 
 // -----------------------------------------------------------------------------
-// Case2: This tests when the wrong scalar type is selected. (The total number of bytes in the file does not evenly divide by the scalar type size).
+// Case2: This tests when the wrong scalar type is selected. The file has 10000001 bytes of int8,
+// but the user requests 10000001 tuples of int16 (requiring 20000002 bytes). The "file too small"
+// error fires because the requested array needs more data than the file contains.
 void TestCase2_Execute()
 {
-  constexpr usize dataArraySize = 10000001; // We need the data array size to not be divisible by 2 (int16 byte size)
+  constexpr usize dataArraySize = 10000001; // Odd count ensures remainder when dividing by int16 size
   constexpr usize skipHeaderBytes = 0;
   constexpr usize N = 1;
   constexpr NumericType scalarType = NumericType::int16;
@@ -172,7 +175,7 @@ void TestCase2_Execute()
 
   const std::vector<Error>& errors = preflightResult.outputActions.errors();
   REQUIRE(errors.size() == 1);
-  REQUIRE(errors[0].code == k_RbrWrongType);
+  REQUIRE(errors[0].code == k_RbrFileTooSmall);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -445,6 +448,7 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case6_AMPlacement)", "[SimplnxCore][
   args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{static_cast<float64>(numComp)}}));
   args.insertOrAssign(ReadRawBinaryFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
   args.insertOrAssign(ReadRawBinaryFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ReadRawBinaryFilter::k_AllowPartialFilling_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, outputPath);
 
   ReadRawBinaryFilter filter;
@@ -487,6 +491,7 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case7_MultiCompDims)", "[SimplnxCore
   args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{3.0, 3.0}}));
   args.insertOrAssign(ReadRawBinaryFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
   args.insertOrAssign(ReadRawBinaryFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ReadRawBinaryFilter::k_AllowPartialFilling_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
 
   DataStructure dataStructure;
@@ -566,6 +571,7 @@ TEST_CASE("SimplnxCore::ReadRawBinaryFilter(Case9_NoAMNoTupleDims)", "[SimplnxCo
   args.insertOrAssign(ReadRawBinaryFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.0}}));
   args.insertOrAssign(ReadRawBinaryFilter::k_Endian_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(endian::little)));
   args.insertOrAssign(ReadRawBinaryFilter::k_SkipHeaderBytes_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(ReadRawBinaryFilter::k_AllowPartialFilling_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadRawBinaryFilter::k_CreatedAttributeArrayPath_Key, k_CreatedArrayPath);
 
   DataStructure dataStructure;

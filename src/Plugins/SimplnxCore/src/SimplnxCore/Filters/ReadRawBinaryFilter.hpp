@@ -36,6 +36,7 @@ public:
   static constexpr StringLiteral k_CompDims_Key = "component_dimensions";
   static constexpr StringLiteral k_Endian_Key = "endian_index";
   static constexpr StringLiteral k_SkipHeaderBytes_Key = "skip_header_bytes";
+  static constexpr StringLiteral k_AllowPartialFilling_Key = "allow_partial_filling";
   static constexpr StringLiteral k_CreatedAttributeArrayPath_Key = "created_attribute_array_path";
 
   /**
