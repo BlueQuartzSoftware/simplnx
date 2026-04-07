@@ -687,7 +687,8 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("373be1f8-31cf-49f6-aa5d-e356f4f3f261").value(),
                                               std::vector<std::string>{"use_existing_group", "selected_attribute_matrix_path", "created_data_group_path", ""}},
     // ReadRawBinaryFilter
-    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("dd159366-5f12-42db-af6d-a33592ae8a89").value(), std::vector<std::string>{"tuple_dimensions", "component_dimensions"}},
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("dd159366-5f12-42db-af6d-a33592ae8a89").value(),
+                                              std::vector<std::string>{"tuple_dimensions", "component_dimensions", "allow_partial_filling"}},
     // PadImageGeometryFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("1a003f19-aa26-406c-bbef-061f508fc422").value(), std::vector<std::string>{"output_image_geometry_path"}},
     // MultiThresholdObjectsFilter
