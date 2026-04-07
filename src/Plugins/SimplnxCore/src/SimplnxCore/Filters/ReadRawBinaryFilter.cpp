@@ -154,9 +154,9 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
     tupleDims = parentAM->getShape();
     if(useDims)
     {
-      resultOutputActions.warnings().push_back(
-          {-78702, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. "
-                   "The Attribute Matrix tuples will override your custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
+      resultOutputActions.warnings().push_back({-78702,
+                                                "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. "
+                                                "The Attribute Matrix tuples will override your custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
   else
@@ -190,8 +190,8 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 
   if(pSkipHeaderBytesValue >= inputFileSize)
   {
-    return {MakeErrorResult<OutputActions>(-78706, fmt::format("Skip Header Bytes ({}) is greater than or equal to the file size ({}) for file '{}'.", pSkipHeaderBytesValue, inputFileSize,
-                                                               pInputFileValue.string()))};
+    return {MakeErrorResult<OutputActions>(
+        -78706, fmt::format("Skip Header Bytes ({}) is greater than or equal to the file size ({}) for file '{}'.", pSkipHeaderBytesValue, inputFileSize, pInputFileValue.string()))};
   }
 
   usize totalBytesToRead = inputFileSize - pSkipHeaderBytesValue;
@@ -199,10 +199,9 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 
   if(totalBytesToRead % typeSize != 0)
   {
-    return {MakeErrorResult<OutputActions>(
-        -78707, fmt::format("After skipping {} bytes, the data in file '{}' does not convert into an exact number of elements using the chosen scalar type '{}'. "
-                            "Are you sure this is the correct scalar type?",
-                            pSkipHeaderBytesValue, pInputFileValue.string(), DataTypeToString(ConvertNumericTypeToDataType(pScalarTypeValue))))};
+    return {MakeErrorResult<OutputActions>(-78707, fmt::format("After skipping {} bytes, the data in file '{}' does not convert into an exact number of elements using the chosen scalar type '{}'. "
+                                                               "Are you sure this is the correct scalar type?",
+                                                               pSkipHeaderBytesValue, pInputFileValue.string(), DataTypeToString(ConvertNumericTypeToDataType(pScalarTypeValue))))};
   }
 
   // Validate data fits
@@ -211,17 +210,15 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
 
   if(requiredElements > totalElementsInFile)
   {
-    return {MakeErrorResult<OutputActions>(
-        -78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
-                            "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}.",
-                            requiredElements, numTuples, numComponents, totalElementsInFile))};
+    return {MakeErrorResult<OutputActions>(-78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
+                                                               "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}.",
+                                                               requiredElements, numTuples, numComponents, totalElementsInFile))};
   }
 
   if(requiredElements < totalElementsInFile)
   {
-    resultOutputActions.warnings().push_back(
-        {-78709, fmt::format("Only a subset of the file data will be read. Required elements: {} (tuples: {} x components: {}). Available elements in file: {}.", requiredElements, numTuples,
-                             numComponents, totalElementsInFile)});
+    resultOutputActions.warnings().push_back({-78709, fmt::format("Only a subset of the file data will be read. Required elements: {} (tuples: {} x components: {}). Available elements in file: {}.",
+                                                                  requiredElements, numTuples, numComponents, totalElementsInFile)});
   }
 
   // Create output array action
