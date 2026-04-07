@@ -11,6 +11,7 @@
 #include <cmath>
 #include <numbers>
 #include <stack>
+#include <stdexcept>
 
 using namespace nx::core;
 
@@ -403,7 +404,7 @@ void CalcBuffer::write(usize index, float64 value)
     (*m_OutputArray)[index] = value;
     return;
   case Storage::Borrowed:
-    return; // read-only — should not be called
+    throw std::runtime_error("CalcBuffer::write() called on a read-only Borrowed buffer");
   }
 }
 
@@ -418,7 +419,7 @@ void CalcBuffer::fill(float64 value)
     m_OutputArray->fill(value);
     return;
   case Storage::Borrowed:
-    return; // read-only
+    throw std::runtime_error("CalcBuffer::fill() called on a read-only Borrowed buffer");
   }
 }
 
@@ -523,8 +524,7 @@ const Float64Array& CalcBuffer::array() const
   case Storage::OutputDirect:
     return *m_OutputArray;
   }
-  // Should never reach here; return owned as fallback
-  return *m_OwnedArray;
+  throw std::runtime_error("CalcBuffer::array() called on buffer with unknown storage mode");
 }
 
 // ---------------------------------------------------------------------------
@@ -1818,9 +1818,7 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
   // 2. Create local temp DataStructure for intermediate arrays
   DataStructure tempDS;
   usize scratchCounter = 0;
-  auto nextScratchName = [&scratchCounter]() -> std::string {
-    return "_calc_" + std::to_string(scratchCounter++);
-  };
+  auto nextScratchName = [&scratchCounter]() -> std::string { return "_calc_" + std::to_string(scratchCounter++); };
 
   // 3. Pre-scan RPN to find the index of the last operator/extract item
   //    for the OutputDirect optimization
@@ -1891,8 +1889,8 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
         std::vector<usize> resultCompShape = operand.compShape();
         usize totalSize = operand.size();
 
-        CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath))
-                                                          : CalcBuffer::allocate(tempDS, nextScratchName(), resultTupleShape, resultCompShape);
+        CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath)) :
+                                                            CalcBuffer::allocate(tempDS, nextScratchName(), resultTupleShape, resultCompShape);
 
         for(usize i = 0; i < totalSize; i++)
         {
@@ -1956,8 +1954,8 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
           totalSize *= d;
         }
 
-        CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath))
-                                                          : CalcBuffer::allocate(tempDS, nextScratchName(), outTupleShape, outCompShape);
+        CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath)) :
+                                                            CalcBuffer::allocate(tempDS, nextScratchName(), outTupleShape, outCompShape);
 
         bool leftIsScalar = left.isScalar();
         bool rightIsScalar = right.isScalar();
@@ -2000,8 +1998,8 @@ Result<> ArrayCalculatorParser::evaluateInto(DataStructure& dataStructure, const
         return MakeErrorResult(static_cast<int>(CalculatorErrorCode::ComponentOutOfRange), fmt::format("Component index {} is out of range for array with {} components.", compIdx, numComps));
       }
 
-      CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath))
-                                                        : CalcBuffer::allocate(tempDS, nextScratchName(), operand.tupleShape(), std::vector<usize>{1});
+      CalcBuffer result = (isLastOp && outputIsFloat64) ? CalcBuffer::wrapOutput(dataStructure.getDataRefAs<DataArray<float64>>(outputPath)) :
+                                                          CalcBuffer::allocate(tempDS, nextScratchName(), operand.tupleShape(), std::vector<usize>{1});
 
       for(usize t = 0; t < numTuples; ++t)
       {
