@@ -66,7 +66,7 @@ Parameters ReadRawBinaryFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_Endian_Key, "Endian", "The endianness of the data", 0, ChoicesParameter::Choices{"Little", "Big"}));
   params.insert(std::make_unique<UInt64Parameter>(k_SkipHeaderBytes_Key, "Skip Header Bytes", "Number of bytes to skip before reading data", 0));
   params.insert(std::make_unique<BoolParameter>(k_AllowPartialFilling_Key, "Allow Partial Filling of Array",
-                                                 "When enabled, the filter will read as much data as available and leave the remaining array elements default-initialized to 0", false));
+                                                "When enabled, the filter will read as much data as available and leave the remaining array elements default-initialized to 0", false));
 
   params.insertSeparator(Parameters::Separator{"Tuple Dimensions"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
@@ -76,7 +76,7 @@ Parameters ReadRawBinaryFilter::parameters() const
   {
     DynamicTableInfo tableInfo;
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
-    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "TUPLE DIM {}"));
+    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, ""));
     const DynamicTableInfo::TableDataType defaultTable{{1.0F}};
     params.insert(std::make_unique<DynamicTableParameter>(k_TupleDims_Key, "Data Array Tuple Dimensions (Slowest to Fastest Dimensions)",
                                                           "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", defaultTable, tableInfo));
@@ -86,7 +86,7 @@ Parameters ReadRawBinaryFilter::parameters() const
   {
     DynamicTableInfo tableInfo;
     tableInfo.setRowsInfo(DynamicTableInfo::StaticVectorInfo(1));
-    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, "COMP DIM {}"));
+    tableInfo.setColsInfo(DynamicTableInfo::DynamicVectorInfo(1, ""));
     const DynamicTableInfo::TableDataType defaultTable{{1.0F}};
     params.insert(std::make_unique<DynamicTableParameter>(k_CompDims_Key, "Data Array Component Dimensions (Slowest to Fastest Dimensions)", "Slowest to Fastest Component Dimensions.", defaultTable,
                                                           tableInfo));
@@ -223,11 +223,10 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   {
     if(!allowPartialFilling)
     {
-      return {MakeErrorResult<OutputActions>(
-          -78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
-                              "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}. "
-                              "Enable 'Allow Partial Filling of Array' to read available data and default-initialize the remainder.",
-                              requiredElements, numTuples, numComponents, availableElements))};
+      return {MakeErrorResult<OutputActions>(-78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
+                                                                 "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}. "
+                                                                 "Enable 'Allow Partial Filling of Array' to read available data and default-initialize the remainder.",
+                                                                 requiredElements, numTuples, numComponents, availableElements))};
     }
     resultOutputActions.warnings().push_back(
         {-78710, fmt::format("The file contains only {} of the {} required elements. The remaining elements will be default-initialized to 0.", availableElements, requiredElements)});
