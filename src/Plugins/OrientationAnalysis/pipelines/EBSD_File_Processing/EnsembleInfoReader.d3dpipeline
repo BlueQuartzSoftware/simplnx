@@ -60,8 +60,12 @@
           "value": "Data/OrientationAnalysis/quats.raw",
           "version": 1
         },
-        "number_of_components": {
-          "value": 4,
+        "component_dimensions": {
+          "value": [
+            [
+              4.0
+            ]
+          ],
           "version": 1
         },
         "parameters_version": 1,

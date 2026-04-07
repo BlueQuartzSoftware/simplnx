@@ -6,9 +6,9 @@ IO (Input)
 
 ## Description
 
-This **Filter** is designed to read data stored in files on the users system in *binary* form. The data file should **not** have any type of header before the data in the file. The user should know exactly how the data is stored in the file and properly define this in the user interface. Not correctly identifying the type of data can cause serious issues since this **Filter**  is simply reading the data into a pre-allocated array interpreted as the user defines.
+This **Filter** is designed to read data stored in files on the users system in *binary* form. The data file should **not** have any type of header before the data in the file (or the header must be skipped using the *Skip Header Bytes* parameter). The user should know exactly how the data is stored in the file and properly define this in the user interface. Not correctly identifying the type of data can cause serious issues since this **Filter** is simply reading the data into a pre-allocated array interpreted as the user defines.
 
-This **Filter**  will error out and block the **Pipeline** from running if the total number of bytes that would need to be read from the file is larger than the actual file itself. The user can use an input file that is actually **larger** than the number of bytes required by the **Filter**; in this case, the **Filter**  will only read the first part of the file unless an amount of bytes to skip is set.
+This **Filter** will error out and block the **Pipeline** from running if the total number of bytes that would need to be read from the file is larger than the actual file itself. The user can use an input file that is actually **larger** than the number of bytes required by the **Filter**; in this case, the **Filter** will only read the first part of the file unless an amount of bytes to skip is set.
 
 ### Scalar Type
 
@@ -29,9 +29,23 @@ The types of data that can be read with this **Filter** include:
 
 ---
 
-### Number of Components
+### Tuple Dimensions
 
-This parameter tells the program how many values are present for each *tuple*. For example, a grayscale image would typically have just a single value of type unsigned 8 bit integer at every pixel/voxel. A color image will have at least 3 components for red (R), breen (G) and blue (B), and sometimes 4 values if the alpha (A) channel is also stored. Euler angles are typically stored as a 3 component vector of 32 bit floating point values.
+The tuple dimensions define the shape of the output **Data Array**. For example, a 3D volume with 100 x 200 x 50 voxels would have tuple dimensions of `50, 200, 100` (slowest to fastest, i.e., Z, Y, X).
+
+When creating the output array inside an **Attribute Matrix**, the tuple dimensions are automatically inherited from the Attribute Matrix shape. In this case, the *Set Tuple Dimensions* checkbox can be unchecked to hide the tuple dimensions entry table.
+
+If the output array is **not** inside an Attribute Matrix, then the user **must** check *Set Tuple Dimensions* and provide the dimensions explicitly.
+
+### Component Dimensions
+
+This parameter tells the program how many values are present for each *tuple* and how they are organized. The component dimensions are specified as a table of values (slowest to fastest dimension).
+
+Examples:
+
+- **Scalar data**: A single component dimension of `1`. A grayscale image would typically have just a single value of type unsigned 8 bit integer at every pixel/voxel.
+- **Vector data**: A single component dimension of `3`. A color image has 3 components for red (R), green (G) and blue (B). Euler angles are also typically stored as 3 component vectors of 32 bit floating point values.
+- **Multi-dimensional components**: Multiple component dimensions such as `3, 3` for a 3x3 tensor (9 total components per tuple).
 
 ### Endian
 
@@ -53,7 +67,15 @@ The *Endian* parameter provides the following choices:
 
 ### Skip Header Bytes
 
-If the raw binary file you are reading has a *header* before the actual data begins, the user can instruct the **Filter** to skip this header portion of the file. The user needs to know how lond the header is in bytes. Another way to use this value is if the user wants to read data out of the interior of a file by skipping a defined number of bytes.
+If the raw binary file you are reading has a *header* before the actual data begins, the user can instruct the **Filter** to skip this header portion of the file. The user needs to know how long the header is in bytes. Another way to use this value is if the user wants to read data out of the interior of a file by skipping a defined number of bytes.
+
+### Output Placement
+
+The output array can be placed in two ways:
+
+1. **Inside an Attribute Matrix**: Select an output path that is a child of an existing Attribute Matrix (e.g., `ImageGeom/CellData/MyArray`). The tuple dimensions are inherited from the Attribute Matrix automatically. The file must contain at least enough data to fill the array (tuples x components x scalar type size bytes, after skipping any header bytes).
+
+2. **Standalone**: Select an output path that is not inside an Attribute Matrix (e.g., `MyArray`). The user must provide explicit tuple dimensions via the *Set Tuple Dimensions* checkbox and table.
 
 % Auto generated parameter table will be inserted here
 

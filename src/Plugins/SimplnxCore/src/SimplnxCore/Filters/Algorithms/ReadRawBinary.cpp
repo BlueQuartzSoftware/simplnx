@@ -36,6 +36,8 @@
 
 #include "ReadRawBinary.hpp"
 
+#include <numeric>
+
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/Common/SimplnxConstants.hpp"
 #include "simplnx/Common/Types.hpp"
@@ -122,10 +124,11 @@ Result<> ReadRawBinary::execute()
   }
   auto* binaryIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues.createdAttributeArrayPathValue);
 
-  if(binaryIDataArray->getNumberOfComponents() != static_cast<usize>(m_InputValues.numberOfComponentsValue))
+  usize numComponents = std::accumulate(m_InputValues.componentDimsValue.begin(), m_InputValues.componentDimsValue.end(), static_cast<usize>(1), std::multiplies<>());
+  if(binaryIDataArray->getNumberOfComponents() != numComponents)
   {
-    // This was already validated in preflight, so something more fundamental has gone wrong
-    throw std::runtime_error(fmt::format("Failed to acquire DataArray from path '{}' with the correct number of components.", m_InputValues.createdAttributeArrayPathValue.toString()));
+    return MakeErrorResult(-1071, fmt::format("DataArray at path '{}' has {} components but expected {}.", m_InputValues.createdAttributeArrayPathValue.toString(),
+                                              binaryIDataArray->getNumberOfComponents(), numComponents));
   }
 
   const std::string inputFile = m_InputValues.inputFileValue.string();

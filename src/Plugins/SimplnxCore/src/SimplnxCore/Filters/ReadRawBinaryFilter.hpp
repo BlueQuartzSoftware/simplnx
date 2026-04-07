@@ -31,10 +31,12 @@ public:
   // Parameter Keys
   static constexpr StringLiteral k_InputFile_Key = "input_file";
   static constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
+  static constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
   static constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-  static constexpr StringLiteral k_NumberOfComponents_Key = "number_of_components";
+  static constexpr StringLiteral k_CompDims_Key = "component_dimensions";
   static constexpr StringLiteral k_Endian_Key = "endian_index";
   static constexpr StringLiteral k_SkipHeaderBytes_Key = "skip_header_bytes";
+  static constexpr StringLiteral k_AllowPartialFilling_Key = "allow_partial_filling";
   static constexpr StringLiteral k_CreatedAttributeArrayPath_Key = "created_attribute_array_path";
 
   /**
@@ -43,6 +45,13 @@ public:
    * @return Result<Arguments>
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
+
+  /**
+   * @brief Converts JSON to arguments, handling parameter version migration.
+   * @param json
+   * @return Result<Arguments>
+   */
+  Result<Arguments> fromJson(const nlohmann::json& json) const override;
 
   /**
    * @brief Returns the name of the filter.
