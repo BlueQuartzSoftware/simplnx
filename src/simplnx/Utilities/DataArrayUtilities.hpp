@@ -229,7 +229,12 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
   // Skip some bytes if needed
   if(startByte > 0)
   {
-    FSEEK64(inputFilePtr, static_cast<int32>(startByte), SEEK_SET);
+    int result = FSEEK64(inputFilePtr, static_cast<int64>(startByte), SEEK_SET);
+    if(result != 0)
+    {
+      std::fclose(inputFilePtr);
+      return MakeErrorResult(-1002, fmt::format("Failed to seek to byte offset {} in file '{}'", startByte, binaryFilePath.string()));
+    }
   }
 
   const usize numElements = outputDataArray.getSize();
@@ -241,6 +246,12 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
   while(elementCounter < numElements)
   {
     usize elementsRead = std::fread(buffer.data(), sizeof(T), chunkSize, inputFilePtr);
+
+    if(elementsRead == 0)
+    {
+      std::fclose(inputFilePtr);
+      return MakeErrorResult(-1001, fmt::format("Unexpected end of file or read error after reading {} of {} elements from '{}'", elementCounter, numElements, binaryFilePath.string()));
+    }
 
     for(usize i = 0; i < elementsRead; i++)
     {
