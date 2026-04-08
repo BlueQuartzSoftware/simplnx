@@ -88,6 +88,11 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
     const auto& m_GBEuclideanDistances = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
     for(size_t voxelIdx = 0; voxelIdx < totalVoxels; voxelIdx++)
     {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+
       int32_t featureId = featureIds[voxelIdx];
       float32 distance = m_GBEuclideanDistances[voxelIdx];
       if(distance >= m_CenterDistances[featureId])
@@ -113,6 +118,11 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
   featureReferenceMisorientations.fill(0.0f); // Fill all values with Zeros.
   for(int64_t voxelIdx = 0; voxelIdx < totalVoxels; voxelIdx++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     if(featureIds[voxelIdx] > 0 && cellPhases[voxelIdx] > 0)
     {
       // Get the orientation of the current voxel
@@ -147,6 +157,11 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
   avgReferenceMisorientation[0] = 0.0f;
   for(size_t featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     if(avgMisorientationCounts[featureIdx] == 0.0f)
     {
       avgReferenceMisorientation[featureIdx] = 0.0f;

@@ -52,6 +52,11 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
   usize quatIndex = 0;
   for(size_t i = 1; i < totalFeatures; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     quatIndex = i * 4;
 
     ebsdlib::QuatD q1(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);

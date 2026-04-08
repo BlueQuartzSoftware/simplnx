@@ -70,6 +70,11 @@ Result<> ComputeCAxisLocations::operator()()
   usize index = 0;
   for(size_t i = 0; i < totalPoints; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     index = 3 * i;
     const auto crystalStructureType = crystalStructures[cellPhases[i]];
     if(crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low)

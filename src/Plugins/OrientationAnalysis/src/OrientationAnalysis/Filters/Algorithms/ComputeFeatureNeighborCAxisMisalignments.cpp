@@ -81,6 +81,11 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   // Loop over every feature
   for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     // Get the crystal structure of phase 1
     xtalPhase1 = crystalStructures[featurePhases[featureIdx]];
 

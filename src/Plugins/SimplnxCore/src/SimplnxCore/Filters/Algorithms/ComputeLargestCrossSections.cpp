@@ -87,6 +87,10 @@ Result<> ComputeLargestCrossSections::operator()()
 
   for(size_t i = 0; i < outPlane; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     std::fill(featureCounts.begin(), featureCounts.end(), 0.0f);
 
     iStride = i * stride1;
