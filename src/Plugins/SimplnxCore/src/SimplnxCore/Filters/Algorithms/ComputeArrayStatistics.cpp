@@ -207,7 +207,7 @@ public:
         {
           throttledMessenger.sendThrottledMessage([&]() {
             progressCount = 0;
-            return fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float>(tupleIndex) / static_cast<float>(numTuples));
+            return fmt::format("StdDev Calculation Feature/Ensemble [{}-{}]: {:.2f}%", start, end, 100.0f * static_cast<float32>(tupleIndex) / static_cast<float32>(numTuples));
           });
         }
       }
@@ -543,7 +543,7 @@ public:
         {
           if(m_FindMedian)
           {
-            values.push_back(static_cast<float>(m_Source[i]));
+            values.push_back(static_cast<float32>(m_Source[i]));
           }
           if(m_FindNumUniqueValues)
           {
@@ -640,7 +640,7 @@ Result<> FindStatisticsImpl(const ContainerType& data, std::vector<IArray*>& arr
   // Finding the mean depends on the summation.
   if(inputValues->FindSummation || inputValues->FindMean || inputValues->FindStdDeviation)
   {
-    const std::pair<float, float> sumMeanValues = StatisticsCalculations::FindSumMean(data);
+    const std::pair<float32, float32> sumMeanValues = StatisticsCalculations::FindSumMean(data);
     if(inputValues->FindSummation)
     {
       auto* array6Ptr = dynamic_cast<Float32Array*>(arrays[7]);

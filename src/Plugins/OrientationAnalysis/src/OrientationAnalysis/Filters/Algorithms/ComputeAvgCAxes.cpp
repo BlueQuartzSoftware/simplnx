@@ -14,6 +14,11 @@
 using namespace nx::core;
 using namespace nx::core::OrientationUtilities;
 
+namespace
+{
+constexpr usize k_ChunkSize = 4096;
+} // namespace
+
 // -----------------------------------------------------------------------------
 ComputeAvgCAxes::ComputeAvgCAxes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeAvgCAxesInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -35,14 +40,18 @@ const std::atomic_bool& ComputeAvgCAxes::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeAvgCAxes::operator()()
 {
+  // Cache ensemble-level crystal structures locally to avoid per-element OOC overhead
+  const auto& crystalStructuresStoreRef = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
+  const usize numCrystalStructures = crystalStructuresStoreRef.getSize();
+  auto crystalStructuresCache = std::make_unique<uint32[]>(numCrystalStructures);
+  crystalStructuresStoreRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.get(), numCrystalStructures));
 
   // Figure out if all phases are either Hexagonal-Low 6/m or Hexagonal-High 6/mmm Laue Phases
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   bool allPhasesHexagonal = true;
   bool noPhasesHexagonal = true;
-  for(usize i = 1; i < crystalStructures.size(); ++i)
+  for(usize i = 1; i < numCrystalStructures; ++i)
   {
-    const auto crystalStructureType = crystalStructures[i];
+    const auto crystalStructureType = crystalStructuresCache[i];
     const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
     allPhasesHexagonal = allPhasesHexagonal && isHex;
     noPhasesHexagonal = noPhasesHexagonal && !isHex;
@@ -62,87 +71,107 @@ Result<> ComputeAvgCAxes::operator()()
     result.warnings().push_back({-76403, "Non Hexagonal phases were found. All calculations for non Hexagonal phases will be skipped and a NaN value inserted."});
   }
 
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& avgCAxes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath);
+  const auto& featureIdsStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  const auto& quatsStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath)->getDataStoreRef();
+  const auto& cellPhasesStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath)->getDataStoreRef();
+  auto& avgCAxesStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgCAxesArrayPath)->getDataStoreRef();
 
-  const usize totalPoints = featureIds.getNumberOfTuples();
-  const usize totalFeatures = avgCAxes.getNumberOfTuples();
+  const usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
+  const usize totalFeatures = avgCAxesStoreRef.getNumberOfTuples();
+
+  // Cache feature-level avgCAxes locally (random access by featureId in the hot loop)
+  const usize avgCAxesElements = totalFeatures * 3;
+  auto avgCAxesCache = std::make_unique<float32[]>(avgCAxesElements);
+  avgCAxesStoreRef.copyIntoBuffer(0, nonstd::span<float32>(avgCAxesCache.get(), avgCAxesElements));
 
   const Eigen::Vector3d cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3d c1{0.0f, 0.0f, 0.0f};
 
-  std::vector<int32> counter(totalFeatures, 0);
+  auto counter = std::make_unique<int32[]>(totalFeatures);
 
-  // Loop over each cell
-  for(usize i = 0; i < totalPoints; i++)
+  // Allocate chunk buffers for cell-level arrays (sequential access)
+  auto featureIdsChunk = std::make_unique<int32[]>(k_ChunkSize);
+  auto cellPhasesChunk = std::make_unique<int32[]>(k_ChunkSize);
+  auto quatsChunk = std::make_unique<float32[]>(k_ChunkSize * 4);
+
+  // Loop over each cell in chunks to minimize OOC overhead
+  usize tupleIdx = 0;
+  while(tupleIdx < totalPoints)
   {
     if(m_ShouldCancel)
     {
-      return {};
+      return result;
     }
 
-    int32 currentFeatureId = featureIds[i];
-    // If the featureId for a given cell is valid ( > 0) then analyze that value
-    if(currentFeatureId > 0)
+    const usize chunkTuples = std::min(k_ChunkSize, totalPoints - tupleIdx);
+
+    // Bulk-read cell-level data for this chunk
+    featureIdsStoreRef.copyIntoBuffer(tupleIdx, nonstd::span<int32>(featureIdsChunk.get(), chunkTuples));
+    cellPhasesStoreRef.copyIntoBuffer(tupleIdx, nonstd::span<int32>(cellPhasesChunk.get(), chunkTuples));
+    quatsStoreRef.copyIntoBuffer(tupleIdx * 4, nonstd::span<float32>(quatsChunk.get(), chunkTuples * 4));
+
+    for(usize t = 0; t < chunkTuples; t++)
     {
-      const int32 currentCellPhase = cellPhases[i];                          // Get the current cell phase
-      const auto crystalStructureType = crystalStructures[currentCellPhase]; // Get the CrystalStructure, i.e., Laue class of the cell
-      const usize cAxesIndex = 3 * currentFeatureId;
-
-      // Ensure the Laue class is correct, otherwise mark the values with a NaN and continue
-      if(crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_Low)
+      const int32 currentFeatureId = featureIdsChunk[t];
+      // If the featureId for a given cell is valid ( > 0) then analyze that value
+      if(currentFeatureId > 0)
       {
-        avgCAxes[cAxesIndex] = NAN;
-        avgCAxes[cAxesIndex + 1] = NAN;
-        avgCAxes[cAxesIndex + 2] = NAN;
-        continue;
+        const int32 currentCellPhase = cellPhasesChunk[t];                          // Get the current cell phase
+        const auto crystalStructureType = crystalStructuresCache[currentCellPhase]; // Get the CrystalStructure, i.e., Laue class of the cell
+        const usize cAxesIndex = 3 * static_cast<usize>(currentFeatureId);
+
+        // Ensure the Laue class is correct, otherwise mark the values with a NaN and continue
+        if(crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_Low)
+        {
+          avgCAxesCache[cAxesIndex] = NAN;
+          avgCAxesCache[cAxesIndex + 1] = NAN;
+          avgCAxesCache[cAxesIndex + 2] = NAN;
+          continue;
+        }
+
+        counter[currentFeatureId]++; // Increment the count
+        const usize quatOffset = t * 4;
+
+        // Create the 3x3 Orientation Matrix from the Quaternion. This represents a passive rotation matrix
+        ebsdlib::OrientationMatrixDType oMatrix =
+            ebsdlib::QuaternionDType(quatsChunk[quatOffset], quatsChunk[quatOffset + 1], quatsChunk[quatOffset + 2], quatsChunk[quatOffset + 3]).toOrientationMatrix();
+
+        // Convert the passive rotation matrix to an active rotation matrix by taking the transpose
+        // Multiply the active transformation matrix by the C-Axis (as Miller Index). This actively rotates
+        // the crystallographic C-Axis (which is along the <0,0,1> direction) into the physical sample
+        // reference frame
+        c1 = oMatrix.transpose() * cAxis;
+
+        // normalize so that the magnitude is 1
+        c1.normalize();
+
+        // Compute the running average c-axis and normalize the result
+        Eigen::Vector3d curCAxis{0.0f, 0.0f, 0.0f};
+        curCAxis[0] = avgCAxesCache[cAxesIndex] / static_cast<float32>(counter[currentFeatureId]);
+        curCAxis[1] = avgCAxesCache[cAxesIndex + 1] / static_cast<float32>(counter[currentFeatureId]);
+        curCAxis[2] = avgCAxesCache[cAxesIndex + 2] / static_cast<float32>(counter[currentFeatureId]);
+        curCAxis.normalize();
+
+        // Ensure that angle between the current point's sample reference frame C-Axis
+        // and the running average sample C-Axis is positive
+        float64 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
+        if(w < 0.0)
+        {
+          c1 *= -1.0f;
+        }
+
+        // Continue summing up the rotations
+        avgCAxesCache[cAxesIndex] += static_cast<float32>(c1[0]);
+        avgCAxesCache[cAxesIndex + 1] += static_cast<float32>(c1[1]);
+        avgCAxesCache[cAxesIndex + 2] += static_cast<float32>(c1[2]);
       }
-
-      counter[currentFeatureId]++; // Increment the count
-      const usize quatIndex = i * 4;
-
-      // Create the 3x3 Orientation Matrix from the Quaternion. This represents a passive rotation matrix
-      ebsdlib::OrientationMatrixDType oMatrix = ebsdlib::QuaternionDType(quats[quatIndex], quats[quatIndex + 1], quats[quatIndex + 2], quats[quatIndex + 3]).toOrientationMatrix();
-
-      // Convert the passive rotation matrix to an active rotation matrix by taking the transpose
-      // Multiply the active transformation matrix by the C-Axis (as Miller Index). This actively rotates
-      // the crystallographic C-Axis (which is along the <0,0,1> direction) into the physical sample
-      // reference frame
-      c1 = oMatrix.transpose() * cAxis;
-
-      // normalize so that the magnitude is 1
-      c1.normalize();
-
-      // Compute the running average c-axis and normalize the result
-      Eigen::Vector3d curCAxis{0.0f, 0.0f, 0.0f};
-      curCAxis[0] = avgCAxes[cAxesIndex] / static_cast<float32>(counter[currentFeatureId]);
-      curCAxis[1] = avgCAxes[cAxesIndex + 1] / static_cast<float32>(counter[currentFeatureId]);
-      curCAxis[2] = avgCAxes[cAxesIndex + 2] / static_cast<float32>(counter[currentFeatureId]);
-      curCAxis.normalize();
-
-      // Ensure that angle between the current point's sample reference frame C-Axis
-      // and the running average sample C-Axis is positive
-      float64 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
-      if(w < 0.0)
-      {
-        c1 *= -1.0f;
-      }
-
-      // Continue summing up the rotations
-      float value = avgCAxes[cAxesIndex] + c1[0];
-      avgCAxes[cAxesIndex] = value;
-
-      value = avgCAxes[cAxesIndex + 1] + c1[1];
-      avgCAxes[cAxesIndex + 1] = value;
-
-      value = avgCAxes[cAxesIndex + 2] + c1[2];
-      avgCAxes[cAxesIndex + 2] = value;
     }
+
+    tupleIdx += chunkTuples;
   }
 
-  for(size_t i = 1; i < totalFeatures; i++)
+  // Normalize the accumulated c-axis values
+  for(usize i = 1; i < totalFeatures; i++)
   {
     if(m_ShouldCancel)
     {
@@ -150,7 +179,7 @@ Result<> ComputeAvgCAxes::operator()()
     }
 
     const usize tupleIndex = i * 3;
-    float32 avgCAxesValue = avgCAxes[tupleIndex];
+    float32 avgCAxesValue = avgCAxesCache[tupleIndex];
     if(std::isnan(avgCAxesValue))
     {
       continue;
@@ -159,25 +188,20 @@ Result<> ComputeAvgCAxes::operator()()
     // masked out? Maybe?
     if(counter[i] == 0)
     {
-      avgCAxes[tupleIndex] = 0;
-      avgCAxes[tupleIndex + 1] = 0;
-      avgCAxes[tupleIndex + 2] = 1;
+      avgCAxesCache[tupleIndex] = 0;
+      avgCAxesCache[tupleIndex + 1] = 0;
+      avgCAxesCache[tupleIndex + 2] = 1;
     }
     else
     {
-      // Compute the final average c-axis value
-      float value = avgCAxes[3 * i];
-      value /= static_cast<float>(counter[i]);
-      avgCAxes[3 * i] = value;
-
-      value = avgCAxes[3 * i + 1];
-      value /= static_cast<float>(counter[i]);
-      avgCAxes[3 * i + 1] = value;
-
-      value = avgCAxes[3 * i + 2];
-      value /= static_cast<float>(counter[i]);
-      avgCAxes[3 * i + 2] = value;
+      avgCAxesCache[tupleIndex] /= static_cast<float32>(counter[i]);
+      avgCAxesCache[tupleIndex + 1] /= static_cast<float32>(counter[i]);
+      avgCAxesCache[tupleIndex + 2] /= static_cast<float32>(counter[i]);
     }
   }
+
+  // Write cached avgCAxes data back to the store
+  avgCAxesStoreRef.copyFromBuffer(0, nonstd::span<const float32>(avgCAxesCache.get(), avgCAxesElements));
+
   return result;
 }

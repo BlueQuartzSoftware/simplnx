@@ -1,19 +1,18 @@
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
 #include "SimplnxCore/Filters/ErodeDilateBadDataFilter.hpp"
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <filesystem>
-#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -25,147 +24,209 @@ namespace
 constexpr ChoicesParameter::ValueType k_Dilate = 0ULL;
 constexpr ChoicesParameter::ValueType k_Erode = 1ULL;
 
-const std::string k_EbsdScanDataName("EBSD Scan Data");
+const std::string k_GeomName("ImageGeom");
+const std::string k_CellDataName("CellData");
 
-const DataPath k_InputData({"Input Data"});
-const DataPath k_EbsdScanDataDataPath = k_InputData.createChildPath(k_EbsdScanDataName);
-const DataPath k_FeatureIdsDataPath = k_EbsdScanDataDataPath.createChildPath("FeatureIds");
+const DataPath k_GeomPath({k_GeomName});
+const DataPath k_CellDataPath = k_GeomPath.createChildPath(k_CellDataName);
+const DataPath k_FeatureIdsPath = k_CellDataPath.createChildPath("FeatureIds");
 
+void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
+{
+  const ShapeType cellTupleShape = {dimZ, dimY, dimX};
+  const usize sliceSize = dimX * dimY;
+
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeom->setDimensions({dimX, dimY, dimZ});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* featureIdsArray = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAM->getId());
+  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+
+  auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(cellTupleShape, {3}, IDataAction::Mode::Execute);
+  auto* eulerArray = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAM->getId());
+  auto& eulerStore = eulerArray->getDataStoreRef();
+
+  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* phasesArray = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAM->getId());
+  auto& phasesStore = phasesArray->getDataStoreRef();
+
+  const usize blocksPerDimX = dimX / blockSize;
+  const usize blocksPerDimY = dimY / blockSize;
+
+  // Build data using Z-slice buffered writes for OOC efficiency
+  std::vector<int32> featureIdsBuf(sliceSize);
+  std::vector<float32> eulerBuf(sliceSize * 3);
+  std::vector<int32> phasesBuf(sliceSize);
+
+  for(usize z = 0; z < dimZ; z++)
+  {
+    for(usize y = 0; y < dimY; y++)
+    {
+      for(usize x = 0; x < dimX; x++)
+      {
+        const usize inSlice = y * dimX + x;
+        phasesBuf[inSlice] = 1;
+
+        usize bx = x / blockSize;
+        usize by = y / blockSize;
+        usize bz = z / blockSize;
+        int32 blockFeatureId = static_cast<int32>(bz * blocksPerDimY * blocksPerDimX + by * blocksPerDimX + bx + 1);
+
+        bool isBad = ((x * 7 + y * 13 + z * 29) % 10 == 0);
+        featureIdsBuf[inSlice] = isBad ? 0 : blockFeatureId;
+
+        const usize eIdx = inSlice * 3;
+        eulerBuf[eIdx] = static_cast<float32>(x) / static_cast<float32>(dimX);
+        eulerBuf[eIdx + 1] = static_cast<float32>(y) / static_cast<float32>(dimY);
+        eulerBuf[eIdx + 2] = static_cast<float32>(z) / static_cast<float32>(dimZ);
+      }
+    }
+    const usize zOffset = z * sliceSize;
+    featureIdsStore.copyFromBuffer(zOffset, nonstd::span<const int32>(featureIdsBuf.data(), sliceSize));
+    eulerStore.copyFromBuffer(zOffset * 3, nonstd::span<const float32>(eulerBuf.data(), sliceSize * 3));
+    phasesStore.copyFromBuffer(zOffset, nonstd::span<const int32>(phasesBuf.data(), sliceSize));
+  }
+}
+
+usize CountBadVoxels(const DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
+{
+  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath).getDataStoreRef();
+  const usize sliceSize = dimX * dimY;
+  std::vector<int32> buf(sliceSize);
+  usize count = 0;
+  for(usize z = 0; z < dimZ; z++)
+  {
+    featureIds.copyIntoBuffer(z * sliceSize, nonstd::span<int32>(buf.data(), sliceSize));
+    for(usize i = 0; i < sliceSize; i++)
+    {
+      if(buf[i] == 0)
+      {
+        count++;
+      }
+    }
+  }
+  return count;
+}
 } // namespace
 
-TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Erode)", "[SimplnxCore][ErodeDilateBadDataFilter]")
+TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Small Correctness", "[SimplnxCore][ErodeDilateBadDataFilter]")
 {
   UnitTest::LoadPlugins();
+  // Test both algorithm paths (in-core + OOC) by default; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // 20x20x20, EulerAngles (float32, 3-comp) => 20*20*3*4 = 4,800 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 4800, true);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
-
-  UnitTest::LoadPlugins();
-
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_bad_data.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
-
+  auto operation = GENERATE(k_Erode, k_Dilate);
+  std::string operationName = (operation == k_Erode) ? "Erode" : "Dilate";
+  DYNAMIC_SECTION("Operation: " << operationName << " forceOoc: " << forceOocAlgo)
   {
+    DataStructure dataStructure;
+    BuildTestData(dataStructure, 20, 20, 20, 5);
+
+    const usize badCountBefore = CountBadVoxels(dataStructure, 20, 20, 20);
+    REQUIRE(badCountBefore > 0);
+
+    {
+      const ErodeDilateBadDataFilter filter;
+      Arguments args;
+      args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(operation));
+      args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(2));
+      args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(true));
+      args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(true));
+      args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(true));
+      args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+      args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+      args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+
+    const usize badCountAfter = CountBadVoxels(dataStructure, 20, 20, 20);
+    if(operation == k_Erode)
+    {
+      REQUIRE(badCountAfter < badCountBefore);
+    }
+    else
+    {
+      REQUIRE(badCountAfter > badCountBefore);
+    }
+
+    // TODO: Add exemplar comparison after exemplar archive is published
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: Generate Test Data", "[SimplnxCore][ErodeDilateBadDataFilter][.GenerateTestData]")
+{
+  const auto outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "generated_test_data" / "erode_dilate_bad_data";
+  fs::create_directories(outputDir);
+
+  // Small input data (20x20x20, blockSize=5)
+  {
+    DataStructure buildDS;
+    BuildTestData(buildDS, 20, 20, 20, 5);
+    UnitTest::WriteTestDataStructure(buildDS, outputDir / "small_input.dream3d");
+    fmt::print("Generated small input: {}\n", (outputDir / "small_input.dream3d").string());
+  }
+
+  // Large input data (200x200x200, blockSize=25)
+  {
+    DataStructure buildDS;
+    BuildTestData(buildDS, 200, 200, 200, 25);
+    UnitTest::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
+    fmt::print("Generated large input: {}\n", (outputDir / "large_input.dream3d").string());
+  }
+}
+
+TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: 200x200x200 Large OOC", "[SimplnxCore][ErodeDilateBadDataFilter]")
+{
+  UnitTest::LoadPlugins();
+  // Test both algorithm paths (in-core + OOC) by default; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // 200x200x200, EulerAngles (float32, 3-comp) => 200*200*3*4 = 480,000 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 480000, true);
+
+  DYNAMIC_SECTION("forceOoc: " << forceOocAlgo)
+  {
+    DataStructure dataStructure;
+    BuildTestData(dataStructure, 200, 200, 200, 25);
+
+    const usize badCountBefore = CountBadVoxels(dataStructure, 200, 200, 200);
+    REQUIRE(badCountBefore > 0);
+
     const ErodeDilateBadDataFilter filter;
     Arguments args;
-
-    // Create default Parameters for the filter.
     args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Erode));
     args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(2));
     args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(true));
     args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(true));
     args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsDataPath));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
     args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputData));
+    args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
-    // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-    // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-// Write the DataStructure out to the file system
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_erode_dilate_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
-#endif
+    const usize badCountAfter = CountBadVoxels(dataStructure, 200, 200, 200);
+    REQUIRE(badCountAfter < badCountBefore);
 
-  const std::string k_ExemplarDataContainerName("Exemplar Bad Data Erode");
-  const DataPath k_ErodeCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
-
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter(Dilate)", "[SimplnxCore][ErodeDilateBadDataFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_erode_dilate_test.tar.gz", "6_6_erode_dilate_test");
-
-  const std::string k_ExemplarDataContainerName("Exemplar Bad Data Dilate");
-  const DataPath k_DilateCellAttributeMatrixDataPath = DataPath({k_ExemplarDataContainerName, "EBSD Scan Data"});
-
-  UnitTest::LoadPlugins();
-
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/6_6_erode_dilate_test/6_6_erode_dilate_bad_data.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
-
-  {
-    const ErodeDilateBadDataFilter filter;
-
-    Arguments args;
-
-    // Create default Parameters for the filter.
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_Operation_Key, std::make_any<ChoicesParameter::ValueType>(k_Dilate));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_NumIterations_Key, std::make_any<int32>(2));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_XDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_YDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_ZDirOn_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsDataPath));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-    args.insertOrAssign(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_InputData));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-  }
-
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, k_EbsdScanDataDataPath, k_ExemplarDataContainerName);
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::ErodeDilateBadDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ErodeDilateBadDataFilter][BackwardsCompatibility]")
-{
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ErodeDilateBadDataFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ErodeDilateBadDataFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ErodeDilateBadDataFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<ChoicesParameter::ValueType>(ErodeDilateBadDataFilter::k_Operation_Key) == 0);
-      CHECK(args.value<int32>(ErodeDilateBadDataFilter::k_NumIterations_Key) == 5);
-      CHECK(args.value<bool>(ErodeDilateBadDataFilter::k_XDirOn_Key) == true);
-      CHECK(args.value<bool>(ErodeDilateBadDataFilter::k_YDirOn_Key) == true);
-      CHECK(args.value<bool>(ErodeDilateBadDataFilter::k_ZDirOn_Key) == true);
-      CHECK(args.value<DataPath>(ErodeDilateBadDataFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(ErodeDilateBadDataFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
-    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

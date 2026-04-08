@@ -11,7 +11,11 @@
 #include <EbsdLib/Orientation/Quaternion.hpp>
 #include <EbsdLib/Utilities/EbsdStringUtils.hpp>
 
+#include <nonstd/span.hpp>
+
+#include <algorithm>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #ifndef _MSC_VER
@@ -159,22 +163,37 @@ struct StereographicCheck
     }                                                                                                                                                                                                  \
     void operator()(const Range& r) const                                                                                                                                                              \
     {                                                                                                                                                                                                  \
-      InputType inputInstance;                                                                                                                                                                         \
-      size_t inNumComps = m_Input.getNumberOfComponents();                                                                                                                                             \
-      size_t outNumComps = m_Output.getNumberOfComponents();                                                                                                                                           \
-      for(size_t i = r.min(); i < r.max(); ++i)                                                                                                                                                        \
+      static constexpr usize k_ChunkSize = 4096;                                                                                                                                                      \
+      const usize inNumComps = m_Input.getNumberOfComponents();                                                                                                                                       \
+      const usize outNumComps = m_Output.getNumberOfComponents();                                                                                                                                     \
+      const usize totalTuples = r.max() - r.min();                                                                                                                                                    \
+      const usize maxChunkTuples = std::min(k_ChunkSize, totalTuples);                                                                                                                                \
+      auto inBuffer = std::make_unique<T[]>(maxChunkTuples * inNumComps);                                                                                                                              \
+      auto outBuffer = std::make_unique<K[]>(maxChunkTuples * outNumComps);                                                                                                                            \
+      usize tupleIdx = r.min();                                                                                                                                                                       \
+      while(tupleIdx < r.max())                                                                                                                                                                        \
       {                                                                                                                                                                                                \
-        size_t inOffset = i * inNumComps;                                                                                                                                                              \
-        size_t outOffset = i * outNumComps;                                                                                                                                                            \
-        for(size_t c = 0; c < inNumComps; c++)                                                                                                                                                         \
+        const usize chunkTuples = std::min(k_ChunkSize, r.max() - tupleIdx);                                                                                                                          \
+        const usize inElemCount = chunkTuples * inNumComps;                                                                                                                                           \
+        const usize outElemCount = chunkTuples * outNumComps;                                                                                                                                         \
+        m_Input.copyIntoBuffer(tupleIdx* inNumComps, nonstd::span<T>(inBuffer.get(), inElemCount));                                                                                                    \
+        InputType inputInstance;                                                                                                                                                                       \
+        for(usize t = 0; t < chunkTuples; ++t)                                                                                                                                                        \
         {                                                                                                                                                                                              \
-          inputInstance[c] = m_Input[inOffset + c];                                                                                                                                                    \
+          const usize inOff = t * inNumComps;                                                                                                                                                         \
+          const usize outOff = t * outNumComps;                                                                                                                                                       \
+          for(usize c = 0; c < inNumComps; ++c)                                                                                                                                                       \
+          {                                                                                                                                                                                            \
+            inputInstance[c] = inBuffer[inOff + c];                                                                                                                                                    \
+          }                                                                                                                                                                                            \
+          OutputType outputInstance = inputInstance.to##TO_REP();                                                                                                                                      \
+          for(usize c = 0; c < outNumComps; ++c)                                                                                                                                                      \
+          {                                                                                                                                                                                            \
+            outBuffer[outOff + c] = outputInstance[c];                                                                                                                                                 \
+          }                                                                                                                                                                                            \
         }                                                                                                                                                                                              \
-        OutputType outputInstance = inputInstance.to##TO_REP();                                                                                                                                        \
-        for(size_t c = 0; c < outNumComps; c++)                                                                                                                                                        \
-        {                                                                                                                                                                                              \
-          m_Output[outOffset + c] = outputInstance[c];                                                                                                                                                 \
-        }                                                                                                                                                                                              \
+        m_Output.copyFromBuffer(tupleIdx* outNumComps, nonstd::span<const K>(outBuffer.get(), outElemCount));                                                                                          \
+        tupleIdx += chunkTuples;                                                                                                                                                                       \
       }                                                                                                                                                                                                \
     }                                                                                                                                                                                                  \
                                                                                                                                                                                                        \
@@ -214,16 +233,16 @@ Result<> ConvertOrientations::operator()()
   DataPath outputDataPath = m_InputValues->InputOrientationArrayPath.replaceName(m_InputValues->OutputOrientationArrayName);
   auto inputArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputOrientationArrayPath);
   auto outputArray = m_DataStructure.getDataRefAs<Float32Array>(outputDataPath);
-  size_t totalPoints = inputArray.getNumberOfTuples();
+  usize totalPoints = inputArray.getNumberOfTuples();
 
-  const ValidateInputDataFunctionType euCheck = EulerCheck<float>();
-  const ValidateInputDataFunctionType omCheck = OrientationMatrixCheck<float>();
-  const ValidateInputDataFunctionType quCheck = QuaternionCheck<float>();
-  const ValidateInputDataFunctionType axCheck = AxisAngleCheck<float>();
-  const ValidateInputDataFunctionType roCheck = RodriguesCheck<float>();
-  const ValidateInputDataFunctionType hoCheck = HomochoricCheck<float>();
-  const ValidateInputDataFunctionType cuCheck = CubochoricCheck<float>();
-  const ValidateInputDataFunctionType stCheck = StereographicCheck<float>();
+  const ValidateInputDataFunctionType euCheck = EulerCheck<float32>();
+  const ValidateInputDataFunctionType omCheck = OrientationMatrixCheck<float32>();
+  const ValidateInputDataFunctionType quCheck = QuaternionCheck<float32>();
+  const ValidateInputDataFunctionType axCheck = AxisAngleCheck<float32>();
+  const ValidateInputDataFunctionType roCheck = RodriguesCheck<float32>();
+  const ValidateInputDataFunctionType hoCheck = HomochoricCheck<float32>();
+  const ValidateInputDataFunctionType cuCheck = CubochoricCheck<float32>();
+  const ValidateInputDataFunctionType stCheck = StereographicCheck<float32>();
 
   // Allow data-based parallelization
   ParallelDataAlgorithm parallelAlgorithm;

@@ -189,7 +189,9 @@ set(AlgorithmList
   ComputeArrayHistogramByFeature
   ComputeArrayStatistics
   ComputeBiasedFeatures
+  ComputeBoundaryCells
   ComputeBoundaryCellsDirect
+  ComputeBoundaryCellsScanline
   ComputeBoundingBoxStats
   ComputeCoordinatesImageGeom
   ComputeCoordinateThreshold
@@ -199,21 +201,29 @@ set(AlgorithmList
   ComputeFeatureBounds
   ComputeFeatureCentroids
   ComputeFeatureClustering
+  ComputeFeatureNeighbors
   ComputeFeatureNeighborsDirect
+  ComputeFeatureNeighborsScanline
   ComputeFeaturePhases
   ComputeFeaturePhasesBinary
   ComputeFeatureRect
   ComputeFeatureSizes
   ComputeGroupingDensity
   ComputeKMeans
+  ComputeKMedoids
   ComputeKMedoidsDirect
+  ComputeKMedoidsScanline
   ComputeLargestCrossSections
   ComputeMomentInvariants2D
   ComputeNeighborhoods
   ComputeNeighborListStatistics
 #  ComputeNumFeatures
+  ComputeSurfaceAreaToVolume
   ComputeSurfaceAreaToVolumeDirect
+  ComputeSurfaceAreaToVolumeScanline
+  ComputeSurfaceFeatures
   ComputeSurfaceFeaturesDirect
+  ComputeSurfaceFeaturesScanline
 #  ComputeTriangleAreas
   ComputeTriangleGeomCentroids
   ComputeTriangleGeomVolumes
@@ -239,7 +249,9 @@ set(AlgorithmList
   CropEdgeGeometry
   CropImageGeometry
   CropVertexGeometry
+  DBSCAN
   DBSCANDirect
+  DBSCANScanline
  # DeleteData
   ErodeDilateBadData
   ErodeDilateCoordinationNumber
@@ -250,12 +262,16 @@ set(AlgorithmList
   ExtractPipelineToFile
   ExtractVertexGeometry
   FeatureFaceCurvature
+  FillBadData
   FillBadDataBFS
+  FillBadDataCCL
   FindNRingNeighbors
   FlyingEdges3D
   HierarchicalSmooth
   IdentifyDuplicateVertices
+  IdentifySample
   IdentifySampleBFS
+  IdentifySampleCCL
   InitializeData
   InitializeImageGeomCellData
   InterpolatePointCloudToRegularGrid
@@ -265,14 +281,18 @@ set(AlgorithmList
   LaplacianSmoothing
   MapPointCloudToRegularGrid
 #  MoveData
+  MultiThresholdObjects
   MultiThresholdObjectsDirect
+  MultiThresholdObjectsScanline
   NearestPointFuseRegularGrids
   PadImageGeometry
   PartitionGeometry
   PointSampleEdgeGeometry
   ExtractFeatureBoundaries2D
   PointSampleTriangleGeometry
+  QuickSurfaceMesh
   QuickSurfaceMeshDirect
+  QuickSurfaceMeshScanline
   ReadBinaryCTNorthstar
   ReadCSVFile
   ReadDeformKeyFileV12
@@ -310,7 +330,9 @@ set(AlgorithmList
   SliceTriangleGeometry
   SplitDataArrayByComponent
   SplitDataArrayByTuple
+  SurfaceNets
   SurfaceNetsDirect
+  SurfaceNetsScanline
   TriangleCentroid
   TriangleDihedralAngle
   TriangleNormal

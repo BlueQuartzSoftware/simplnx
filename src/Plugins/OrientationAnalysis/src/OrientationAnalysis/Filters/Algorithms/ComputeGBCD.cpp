@@ -29,11 +29,11 @@ class CalculateGBCDImpl
 {
   usize m_TriangleChunkStartIndex;
   usize m_NumBinPerTriangle;
-  Int32Array& m_LabelsArray;
-  Float64Array& m_NormalsArray;
-  Int32Array& m_PhasesArray;
-  Float32Array& m_EulersArray;
-  UInt32Array& m_CrystalStructuresArray;
+  const int32* m_Labels;
+  const float64* m_Normals;
+  const int32* m_PhasesCache;
+  const float32* m_EulersCache;
+  const uint32* m_CrystalStructuresCache;
 
   SizeGBCD& m_SizeGBCD;
   LaueOpsContainerType m_OrientationOps;
@@ -42,14 +42,15 @@ public:
   CalculateGBCDImpl() = delete;
   CalculateGBCDImpl(const CalculateGBCDImpl&) = default;
 
-  CalculateGBCDImpl(usize i, usize numMisoReps, Int32Array& labels, Float64Array& normals, Float32Array& eulers, Int32Array& phases, UInt32Array& crystalStructures, SizeGBCD& sizeGBCD)
+  CalculateGBCDImpl(usize i, usize numMisoReps, const int32* labels, const float64* normals, const float32* eulersCache, const int32* phasesCache, const uint32* crystalStructuresCache,
+                    SizeGBCD& sizeGBCD)
   : m_TriangleChunkStartIndex(i)
   , m_NumBinPerTriangle(numMisoReps)
-  , m_LabelsArray(labels)
-  , m_NormalsArray(normals)
-  , m_PhasesArray(phases)
-  , m_EulersArray(eulers)
-  , m_CrystalStructuresArray(crystalStructures)
+  , m_Labels(labels)
+  , m_Normals(normals)
+  , m_PhasesCache(phasesCache)
+  , m_EulersCache(eulersCache)
+  , m_CrystalStructuresCache(crystalStructuresCache)
   , m_SizeGBCD(sizeGBCD)
   {
     m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
@@ -65,12 +66,6 @@ public:
     std::vector<int32>& gbcdBins = m_SizeGBCD.m_GbcdBins;
     std::vector<bool>& hemiCheck = m_SizeGBCD.m_GbcdHemiCheck; // Definitely do NOT want a raw pointer to vector<bool> because that done in bits, not bytes.
 
-    Int32Array& labels = m_LabelsArray;
-    Float64Array& normals = m_NormalsArray;
-    Int32Array& phases = m_PhasesArray;
-    Float32Array& eulers = m_EulersArray;
-    UInt32Array& crystalStructures = m_CrystalStructuresArray;
-
     int32 feature1 = 0, feature2 = 0;
     int32 inversion = 1;
     float32 g1ea[3] = {0.0f, 0.0f, 0.0f};
@@ -79,9 +74,9 @@ public:
     //  float32 g1s[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, g2s[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
     //  float32 sym1[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, sym2[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
     //  float32 g2t[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}}, dg[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    std::array<float, 3> eulerMis = {0.0f, 0.0f, 0.0f};
-    ebsdlib::Matrix3X1<float> normal;     // = {0.0f, 0.0f, 0.0f};
-    ebsdlib::Matrix3X1<float> xstl1Norm1; // {0.0f, 0.0f, 0.0f};
+    std::array<float32, 3> eulerMis = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X1<float32> normal;     // = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X1<float32> xstl1Norm1; // {0.0f, 0.0f, 0.0f};
     float32 sqCoord[2] = {0.0f, 0.0f}, sqCoordInv[2] = {0.0f, 0.0f};
 
     for(usize triangleIndex = start; triangleIndex < end; triangleIndex++)
@@ -89,8 +84,8 @@ public:
       usize minGbcdBinIndex = (triangleIndex - m_TriangleChunkStartIndex) * m_NumBinPerTriangle;
 
       int32 symCounter = 0;
-      feature1 = labels[2 * triangleIndex];
-      feature2 = labels[2 * triangleIndex + 1];
+      feature1 = m_Labels[2 * triangleIndex];
+      feature2 = m_Labels[2 * triangleIndex + 1];
 
       if(feature1 < 0 || feature2 < 0)
       {
@@ -98,13 +93,13 @@ public:
       }
 
       // Get the normal for the triangle
-      normal[0] = normals[3 * triangleIndex];
-      normal[1] = normals[3 * triangleIndex + 1];
-      normal[2] = normals[3 * triangleIndex + 2];
+      normal[0] = m_Normals[3 * triangleIndex];
+      normal[1] = m_Normals[3 * triangleIndex + 1];
+      normal[2] = m_Normals[3 * triangleIndex + 2];
 
-      if(phases[feature1] == phases[feature2] && phases[feature1] > 0)
+      if(m_PhasesCache[feature1] == m_PhasesCache[feature2] && m_PhasesCache[feature1] > 0)
       {
-        uint32 laueClass1 = crystalStructures[phases[feature1]];
+        uint32 laueClass1 = m_CrystalStructuresCache[m_PhasesCache[feature1]];
         for(int32 q = 0; q < 2; q++)
         {
           if(q == 1)
@@ -118,19 +113,19 @@ public:
           }
           for(int32 m = 0; m < 3; m++)
           {
-            g1ea[m] = eulers[3 * feature1 + m];
-            g2ea[m] = eulers[3 * feature2 + m];
+            g1ea[m] = m_EulersCache[3 * feature1 + m];
+            g2ea[m] = m_EulersCache[3 * feature2 + m];
           }
 
-          ebsdlib::Matrix3X3<float> g1 = ebsdlib::EulerFType(g1ea).toOrientationMatrix().toGMatrix();
-          ebsdlib::Matrix3X3<float> g2 = ebsdlib::EulerFType(g2ea).toOrientationMatrix().toGMatrix();
+          ebsdlib::Matrix3X3<float32> g1 = ebsdlib::EulerFType(g1ea).toOrientationMatrix().toGMatrix();
+          ebsdlib::Matrix3X3<float32> g2 = ebsdlib::EulerFType(g2ea).toOrientationMatrix().toGMatrix();
 
           int32 nSym = m_OrientationOps[laueClass1]->getNumSymOps();
           for(int32 j = 0; j < nSym; j++)
           {
             // rotate g1 by symOp
-            ebsdlib::Matrix3X3<float> sym1 = m_OrientationOps[laueClass1]->getMatSymOpF(j);
-            ebsdlib::Matrix3X3<float> g1s = sym1 * g1;
+            ebsdlib::Matrix3X3<float32> sym1 = m_OrientationOps[laueClass1]->getMatSymOpF(j);
+            ebsdlib::Matrix3X3<float32> g1s = sym1 * g1;
             // get the crystal directions along the triangle normals
             xstl1Norm1 = g1s * normal;
             // get coordinates in square projection of crystal normal parallel to boundary normal
@@ -146,13 +141,13 @@ public:
             for(int32 k = 0; k < nSym; k++)
             {
               // calculate the symmetric misorienation
-              ebsdlib::Matrix3X3<float> sym2 = m_OrientationOps[laueClass1]->getMatSymOpF(k);
+              ebsdlib::Matrix3X3<float32> sym2 = m_OrientationOps[laueClass1]->getMatSymOpF(k);
               // rotate g2 by symOp
-              ebsdlib::Matrix3X3<float> g2s = sym2 * g2;
+              ebsdlib::Matrix3X3<float32> g2s = sym2 * g2;
               // transpose rotated g2
-              ebsdlib::Matrix3X3<float> g2t = g2s.transpose();
+              ebsdlib::Matrix3X3<float32> g2t = g2s.transpose();
               // calculate delta g
-              ebsdlib::Matrix3X3<float> dg = g1s * g2t;
+              ebsdlib::Matrix3X3<float32> dg = g1s * g2t;
               // translate matrix to euler angles
               ebsdlib::OrientationMatrixFType om(dg);
 
@@ -379,7 +374,19 @@ Result<> ComputeGBCD::operator()()
 
   auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayName);
 
+  // Cache feature-level arrays locally to eliminate per-element OOC overhead
+  const usize numEulerElements = eulerAngles.getSize();
+  std::vector<float32> eulersCache(numEulerElements);
+  eulerAngles.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(eulersCache.data(), numEulerElements));
+
+  const usize numPhaseElements = phases.getSize();
+  std::vector<int32> phasesCache(numPhaseElements);
+  phases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(phasesCache.data(), numPhaseElements));
+
+  // Cache ensemble-level arrays (tiny)
   usize totalPhases = crystalStructures.getNumberOfTuples();
+  std::vector<uint32> crystalStructuresCache(totalPhases);
+  crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), totalPhases));
   usize totalFaces = faceLabels.getNumberOfTuples();
   usize triangleChunkSize = 50000;
 
@@ -394,10 +401,23 @@ Result<> ComputeGBCD::operator()()
   MessageHelper messageHelper(m_MessageHandler);
 
   // create an array to hold the total face area for each phase and initialize the array to 0.0
-  std::vector<double> totalFaceArea(totalPhases, 0.0);
+  std::vector<float64> totalFaceArea(totalPhases, 0.0);
   auto startTime = std::chrono::steady_clock::now();
   messageHelper.sendMessage("1/2 Starting GBCD Calculation and Summation Phase");
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+
+  // Pre-allocate chunk buffers for triangle-level arrays
+  const auto& labelsStore = faceLabels.getDataStoreRef();
+  const auto& normalsStore = faceNormals.getDataStoreRef();
+  const auto& areasStore = faceAreas.getDataStoreRef();
+  std::vector<int32> labelsBuf(triangleChunkSize * 2);
+  std::vector<float64> normalsBuf(triangleChunkSize * 3);
+  std::vector<float64> areasBuf(triangleChunkSize);
+
+  // Cache the full GBCD output locally for accumulation — bounded by
+  // totalPhases * totalGBCDBins (bin resolution, not cell count)
+  const usize gbcdTotalElements = gbcd.getSize();
+  std::vector<float64> gbcdBuf(gbcdTotalElements, 0.0);
 
   for(usize i = 0; i < totalFaces; i = i + triangleChunkSize)
   {
@@ -413,27 +433,30 @@ Result<> ComputeGBCD::operator()()
     sizeGbcd.initializeBinsWithValue(-1);
     sizeGbcd.m_GbcdHemiCheck.assign(sizeGbcd.m_GbcdHemiCheck.size(), false);
 
+    // Chunk-read triangle arrays for this iteration
+    labelsStore.copyIntoBuffer(i * 2, nonstd::span<int32>(labelsBuf.data(), triangleChunkSize * 2));
+    normalsStore.copyIntoBuffer(i * 3, nonstd::span<float64>(normalsBuf.data(), triangleChunkSize * 3));
+    areasStore.copyIntoBuffer(i, nonstd::span<float64>(areasBuf.data(), triangleChunkSize));
+
     ParallelDataAlgorithm parallelTask;
     parallelTask.setRange(i, i + triangleChunkSize);
-    parallelTask.execute(CalculateGBCDImpl(i, k_NumMisoReps, faceLabels, faceNormals, eulerAngles, phases, crystalStructures, sizeGbcd));
+    parallelTask.execute(CalculateGBCDImpl(i, k_NumMisoReps, labelsBuf.data() - static_cast<std::ptrdiff_t>(i * 2), normalsBuf.data() - static_cast<std::ptrdiff_t>(i * 3), eulersCache.data(),
+                                           phasesCache.data(), crystalStructuresCache.data(), sizeGbcd));
 
     if(getCancel())
     {
       return {};
     }
 
-    int32 phase = 0;
-    int32 feature = 0;
-    double area = 0.0;
     for(usize j = 0; j < triangleChunkSize; j++)
     {
-      area = faceAreas[i + j];
-      feature = faceLabels[2 * (i + j)];
+      float64 area = areasBuf[j];
+      int32 feature = labelsBuf[2 * j];
       if(feature < 0)
       {
         continue;
       }
-      phase = phases[feature];
+      int32 phase = phasesCache[feature];
       for(usize k = 0; k < k_NumMisoReps; k++)
       {
         usize gbcdBinIdx = (j * k_NumMisoReps) + k;
@@ -446,12 +469,11 @@ Result<> ComputeGBCD::operator()()
             hemisphere = 1;
           }
           usize gbcdIdx = (phase * totalGBCDBins) + (2 * sizeGbcd.m_GbcdBins[gbcdBinIdx] + hemisphere);
-          gbcd[gbcdIdx] += area;
+          gbcdBuf[gbcdIdx] += area;
           totalFaceArea[phase] += area;
         }
       }
     }
-
     throttledMessenger.sendThrottledMessage([&]() {
       auto currentTime = throttledMessenger.getLastTime();
       const usize k_LastTriangleIndex = i + triangleChunkSize;
@@ -464,15 +486,17 @@ Result<> ComputeGBCD::operator()()
 
   messageHelper.sendMessage("2/2 Starting GBCD Normalization Phase");
 
-  for(int32 i = 0; i < totalPhases; i++)
+  // Normalize GBCD in the local buffer, then write back to the DataStore
+  for(usize i = 0; i < totalPhases; i++)
   {
-    const usize k_PhaseShift = i * totalGBCDBins;
-    const double k_MrdFactor = static_cast<double>(totalGBCDBins) / totalFaceArea[i];
-    for(int32 j = 0; j < totalGBCDBins; j++)
+    const usize k_PhaseShift = i * static_cast<usize>(totalGBCDBins);
+    const float64 k_MrdFactor = static_cast<float64>(totalGBCDBins) / totalFaceArea[i];
+    for(usize j = 0; j < static_cast<usize>(totalGBCDBins); j++)
     {
-      gbcd[k_PhaseShift + j] *= k_MrdFactor;
+      gbcdBuf[k_PhaseShift + j] *= k_MrdFactor;
     }
   }
+  gbcd.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(gbcdBuf.data(), gbcdTotalElements));
 
   return {};
 }

@@ -143,9 +143,13 @@ Result<> ReadStlFile::operator()()
 
   fpos_t pos;
 
+  constexpr int32_t k_ProgressStride = 10000;
   for(int32_t t = 0; t < triCount; ++t)
   {
-    throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(t, triCount)); });
+    if(t % k_ProgressStride == 0)
+    {
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Reading {:.2f}% Complete", CalculatePercentComplete(t, triCount)); });
+    }
     if(m_ShouldCancel)
     {
       return {};

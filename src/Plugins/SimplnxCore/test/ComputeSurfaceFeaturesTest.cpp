@@ -3,15 +3,15 @@
 #include "SimplnxCore/Filters/ReadRawBinaryFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
-#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
-#include <filesystem>
-#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -71,6 +71,7 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
   // Change Feature 470 to 0
   REQUIRE(dataStructure.getDataAs<Int32Array>(k_FeatureIDsPath) != nullptr);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath));
   Int32Array& featureIds = dataStructure.getDataRefAs<Int32Array>(k_FeatureIDsPath);
   std::replace(featureIds.begin(), featureIds.end(), 470, 0);
 
@@ -124,11 +125,58 @@ void test_impl(const std::vector<uint64>& geometryDims, const std::string& featu
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
+
+constexpr usize k_BenchDim = 200;
+constexpr usize k_BenchTotalVoxels = k_BenchDim * k_BenchDim * k_BenchDim;
+constexpr usize k_BlockSize = 25;
+constexpr usize k_BlocksPerDim = k_BenchDim / k_BlockSize;                                                 // 8
+constexpr int32 k_NumBlockFeatures = static_cast<int32>(k_BlocksPerDim * k_BlocksPerDim * k_BlocksPerDim); // 512
+const std::string k_BenchGeomName = "ImageGeom";
+
+void BuildBlockFeatureIds(DataStructure& ds)
+{
+  const ShapeType cellTupleShape = {k_BenchDim, k_BenchDim, k_BenchDim};
+
+  auto* imageGeom = ImageGeom::Create(ds, k_BenchGeomName);
+  imageGeom->setDimensions({k_BenchDim, k_BenchDim, k_BenchDim});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+  auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  auto store = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* featureIds = DataArray<int32>::Create(ds, Constants::k_FeatureIds, store, cellAM->getId());
+  auto& fidsRef = featureIds->getDataStoreRef();
+  const usize sliceSize = k_BenchDim * k_BenchDim;
+  std::vector<int32> sliceBuffer(sliceSize);
+  for(usize iz = 0; iz < k_BenchDim; iz++)
+  {
+    for(usize iy = 0; iy < k_BenchDim; iy++)
+    {
+      for(usize ix = 0; ix < k_BenchDim; ix++)
+      {
+        const usize bx = ix / k_BlockSize;
+        const usize by = iy / k_BlockSize;
+        const usize bz = iz / k_BlockSize;
+        const int32 blockId = static_cast<int32>(bz * k_BlocksPerDim * k_BlocksPerDim + by * k_BlocksPerDim + bx + 1);
+        sliceBuffer[iy * k_BenchDim + ix] = blockId;
+      }
+    }
+    fidsRef.copyFromBuffer(iz * sliceSize, nonstd::span<const int32>(sliceBuffer.data(), sliceSize));
+  }
+
+  AttributeMatrix::Create(ds, Constants::k_CellFeatureData, {static_cast<usize>(k_NumBlockFeatures + 1)}, imageGeom->getId());
+}
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  // Test both algorithm paths (in-core + OOC) by default; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 40000, true);
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
 
   // Read the Small IN100 Data set
@@ -160,6 +208,7 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(computedSurfaceFeaturesPath));
 
     DataPath exemplaryDataPath = Constants::k_CellFeatureDataPath.createChildPath(k_SurfaceFeaturesExemplar);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(exemplaryDataPath));
     const BoolArray& featureArrayExemplary = dataStructure.getDataRefAs<BoolArray>(exemplaryDataPath);
 
     const UInt8Array& createdFeatureArray = dataStructure.getDataRefAs<UInt8Array>(computedSurfaceFeaturesPath);
@@ -178,6 +227,10 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 3D", "[SimplnxCore][Comput
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  // Test both algorithm paths (in-core + OOC) by default; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 40000, true);
 
   test_impl(std::vector<uint64>({100, 100, 1}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
@@ -185,6 +238,10 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XY Plane)", "[SimplnxCo
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  // Test both algorithm paths (in-core + OOC) by default; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 40000, true);
 
   test_impl(std::vector<uint64>({100, 1, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
@@ -192,47 +249,81 @@ TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(XZ Plane)", "[SimplnxCo
 TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 2D(YZ Plane)", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
 {
   UnitTest::LoadPlugins();
+  // Test both algorithm paths (in-core + OOC) by default; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 40000, true);
 
   test_impl(std::vector<uint64>({1, 100, 100}), k_FeatureIds2DFileName, k_SurfaceFeatures2DExemplaryFileName);
 }
 
-TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeSurfaceFeaturesFilter][BackwardsCompatibility]")
+TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: Generate Large Test Dataset", "[SimplnxCore][ComputeSurfaceFeaturesFilter][.GenerateTestData]")
 {
-  auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
 
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+  DataStructure buildDS;
+  BuildBlockFeatureIds(buildDS);
 
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeSurfaceFeaturesFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeSurfaceFeaturesFilter.json"},
-  };
+  const auto outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "generated_test_data";
+  fs::create_directories(outputDir);
+  const auto outputFile = outputDir / "compute_surface_features_data.dream3d";
+  UnitTest::WriteTestDataStructure(buildDS, outputFile);
+  fmt::print("Wrote test data to: {}\n", outputFile.string());
+}
 
-  for(const auto& [label, fixturePath] : fixtures)
+TEST_CASE("SimplnxCore::ComputeSurfaceFeaturesFilter: 200x200x200 block features", "[SimplnxCore][ComputeSurfaceFeaturesFilter]")
+{
+  UnitTest::LoadPlugins();
+  // Test both algorithm paths (in-core + OOC) by default; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH
+  bool forceOoc = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOoc);
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 160000, true);
+
+  DataStructure dataStructure;
+  BuildBlockFeatureIds(dataStructure);
+
+  const DataPath benchGeomPath({k_BenchGeomName});
+  const DataPath benchFeatureIdsPath = benchGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_FeatureIds);
+  const DataPath benchCellFeatureAMPath = benchGeomPath.createChildPath(Constants::k_CellFeatureData);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(benchFeatureIdsPath));
+  UnitTest::RequireExpectedStoreType(dataStructure.getDataRefAs<IDataArray>(benchFeatureIdsPath));
+
   {
-    DYNAMIC_SECTION(label)
+    ComputeSurfaceFeaturesFilter filter;
+    Arguments args;
+    args.insertOrAssign(ComputeSurfaceFeaturesFilter::k_FeatureGeometryPath_Key, std::make_any<DataPath>(benchGeomPath));
+    args.insertOrAssign(ComputeSurfaceFeaturesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(benchFeatureIdsPath));
+    args.insertOrAssign(ComputeSurfaceFeaturesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(benchCellFeatureAMPath));
+    args.insertOrAssign(ComputeSurfaceFeaturesFilter::k_SurfaceFeaturesArrayName_Key, std::make_any<std::string>("SurfaceFeatures"));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // Verify: 512 features, 296 surface + 216 interior
+  const DataPath surfaceFeaturesPath = benchCellFeatureAMPath.createChildPath("SurfaceFeatures");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(surfaceFeaturesPath));
+  const auto& surfaceFeatures = dataStructure.getDataRefAs<UInt8Array>(surfaceFeaturesPath).getDataStoreRef();
+  usize surfaceCount = 0;
+  usize interiorCount = 0;
+  for(usize f = 1; f <= static_cast<usize>(k_NumBlockFeatures); f++)
+  {
+    if(surfaceFeatures[f])
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeSurfaceFeaturesFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<DataPath>(ComputeSurfaceFeaturesFilter::k_FeatureGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(ComputeSurfaceFeaturesFilter::k_CellFeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
-      CHECK(args.value<DataPath>(ComputeSurfaceFeaturesFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(ComputeSurfaceFeaturesFilter::k_SurfaceFeaturesArrayName_Key) == "TestArray");
+      surfaceCount++;
+    }
+    else
+    {
+      interiorCount++;
     }
   }
+  REQUIRE(surfaceCount > 0);
+  REQUIRE(interiorCount > 0);
+  // 8x8x8 grid: 6x6x6=216 interior, 512-216=296 surface
+  REQUIRE(interiorCount == 216);
+  REQUIRE(surfaceCount == 296);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -2,32 +2,23 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Utilities/ClusteringUtilities.hpp"
 
 namespace nx::core
 {
-struct SIMPLNXCORE_EXPORT KMedoidsInputValues
-{
-  uint64 InitClusters;
-  ClusterUtilities::DistanceMetric DistanceMetric;
-  DataPath ClusteringArrayPath;
-  DataPath MaskArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath MedoidsArrayPath;
-  uint64 Seed;
-};
+struct KMedoidsInputValues;
 
 /**
- * @class
+ * @class ComputeKMedoidsDirect
+ * @brief In-core algorithm for ComputeKMedoids. Uses direct per-element operator[]
+ * access for distance computation, cluster assignment, and medoid optimization.
+ * Selected by DispatchAlgorithm when all input arrays are backed by in-memory DataStore.
  */
 class SIMPLNXCORE_EXPORT ComputeKMedoidsDirect
 {
 public:
-  ComputeKMedoidsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues);
+  ComputeKMedoidsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const KMedoidsInputValues* inputValues);
   ~ComputeKMedoidsDirect() noexcept;
 
   ComputeKMedoidsDirect(const ComputeKMedoidsDirect&) = delete;
@@ -36,6 +27,7 @@ public:
   ComputeKMedoidsDirect& operator=(ComputeKMedoidsDirect&&) noexcept = delete;
 
   Result<> operator()();
+
   void updateProgress(const std::string& message);
   const std::atomic_bool& getCancel();
 

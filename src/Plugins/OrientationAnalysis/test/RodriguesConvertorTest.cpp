@@ -33,7 +33,7 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter", "[OrientationAnalysis
   // Build up a simple Float32Array and place default data into the array
   Float32Array* quats = UnitTest::CreateTestDataArray<float32>(dataStructure, k_InputArrayName, {4ULL}, {3ULL}, {});
 
-  for(size_t i = 0; i < 12; i++)
+  for(usize i = 0; i < 12; i++)
   {
     (*quats)[i] = static_cast<float32>(i);
   }
@@ -50,10 +50,10 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter", "[OrientationAnalysis
   (*exemplarData)[9] = 0.573462F;
   (*exemplarData)[10] = 0.655386F;
   (*exemplarData)[11] = 12.2066F;
-  (*exemplarData)[12] = 0.517892F;
-  (*exemplarData)[13] = 0.575435F;
-  (*exemplarData)[14] = 0.632979F;
-  (*exemplarData)[15] = 17.37815F;
+  (*exemplarData)[12] = 0.517893F;
+  (*exemplarData)[13] = 0.575437F;
+  (*exemplarData)[14] = 0.632980F;
+  (*exemplarData)[15] = 17.3781F;
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
     const RodriguesConvertorFilter filter;
@@ -73,6 +73,7 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter", "[OrientationAnalysis
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName})));
     auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName}));
 
     UnitTest::CompareDataArrays<float32>(*exemplarData, outputArray);

@@ -1,4 +1,4 @@
-#include "ComputeGBCDPoleFigure.hpp"
+#include "ComputeGBCDPoleFigureDirect.hpp"
 
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Constants.hpp"
@@ -18,27 +18,27 @@ namespace
 class ComputeGBCDPoleFigureImpl
 {
 private:
-  Float64Array& m_PoleFigure;
+  float64* m_PoleFigure;
   std::array<int32, 2> m_Dimensions;
   ebsdlib::LaueOps::Pointer m_OrientOps;
   const std::vector<float32>& m_GbcdDeltas;
   const std::vector<float32>& m_GbcdLimits;
   const std::vector<int32>& m_GbcdSizes;
-  const Float64Array& m_Gbcd;
+  const float64* m_Gbcd;
   int32 m_PhaseOfInterest = 0;
   const std::vector<float32>& m_MisorientationRotation;
 
 public:
-  ComputeGBCDPoleFigureImpl(Float64Array& poleFigureArray, const std::array<int32, 2>& dimensions, const ebsdlib::LaueOps::Pointer& orientOps, const std::vector<float32>& gbcdDeltasArray,
-                            const std::vector<float32>& gbcdLimitsArray, const std::vector<int32>& gbcdSizesArray, const Float64Array& gbcd, int32 phaseOfInterest,
+  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, const ebsdlib::LaueOps::Pointer& orientOps, const std::vector<float32>& gbcdDeltasArray,
+                            const std::vector<float32>& gbcdLimitsArray, const std::vector<int32>& gbcdSizesArray, const float64* gbcdPtr, int32 phaseOfInterest,
                             const std::vector<float32>& misorientationRotation)
-  : m_PoleFigure(poleFigureArray)
+  : m_PoleFigure(poleFigurePtr)
   , m_Dimensions(dimensions)
   , m_OrientOps(orientOps)
   , m_GbcdDeltas(gbcdDeltasArray)
   , m_GbcdLimits(gbcdLimitsArray)
   , m_GbcdSizes(gbcdSizesArray)
-  , m_Gbcd(gbcd)
+  , m_Gbcd(gbcdPtr)
   , m_PhaseOfInterest(phaseOfInterest)
   , m_MisorientationRotation(misorientationRotation)
   {
@@ -47,27 +47,27 @@ public:
 
   void generate(usize xStart, usize xEnd, usize yStart, usize yEnd) const
   {
-    ebsdlib::Matrix3X1<float> vec = {0.0f, 0.0f, 0.0f};
-    ebsdlib::Matrix3X1<float> vec2 = {0.0f, 0.0f, 0.0f};
-    ebsdlib::Matrix3X1<float> rotNormal = {0.0f, 0.0f, 0.0f};
-    ebsdlib::Matrix3X1<float> rotNormal2 = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X1<float32> vec = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X1<float32> vec2 = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X1<float32> rotNormal = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X1<float32> rotNormal2 = {0.0f, 0.0f, 0.0f};
     std::array<float32, 2> sqCoord = {0.0f, 0.0f};
     // float32 dg[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
     // float32 dgt[3][3] = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    ebsdlib::Matrix3X3<float> dg1;   // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    ebsdlib::Matrix3X3<float> dg2;   // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    ebsdlib::Matrix3X3<float> sym1;  // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    ebsdlib::Matrix3X3<float> sym2;  // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    ebsdlib::Matrix3X3<float> sym2t; // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
-    // Matrix3X1<float> misEuler1 = {0.0f, 0.0f, 0.0f};
+    ebsdlib::Matrix3X3<float32> dg1;   // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    ebsdlib::Matrix3X3<float32> dg2;   // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    ebsdlib::Matrix3X3<float32> sym1;  // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    ebsdlib::Matrix3X3<float32> sym2;  // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    ebsdlib::Matrix3X3<float32> sym2t; // = {{0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}};
+    // Matrix3X1<float32> misEuler1 = {0.0f, 0.0f, 0.0f};
 
     float32 misAngle = m_MisorientationRotation[0] * nx::core::Constants::k_PiOver180F;
     nx::core::FloatVec3 normAxis = {m_MisorientationRotation[1], m_MisorientationRotation[2], m_MisorientationRotation[3]};
     normAxis = normAxis.normalize();
     // convert axis angle to matrix representation of misorientation
-    ebsdlib::Matrix3X3<float> dg = ebsdlib::AxisAngleFType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix().toGMatrix();
+    ebsdlib::Matrix3X3<float32> dg = ebsdlib::AxisAngleFType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix().toGMatrix();
     // take inverse of misorientation variable to use for switching symmetry
-    ebsdlib::Matrix3X3<float> dgt = dg.transpose();
+    ebsdlib::Matrix3X3<float32> dgt = dg.transpose();
 
     // get number of symmetry operators
     int32 nSym = m_OrientOps->getNumSymOps();
@@ -233,8 +233,8 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-ComputeGBCDPoleFigure::ComputeGBCDPoleFigure(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                             ComputeGBCDPoleFigureInputValues* inputValues)
+ComputeGBCDPoleFigureDirect::ComputeGBCDPoleFigureDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                         ComputeGBCDPoleFigureInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -243,21 +243,37 @@ ComputeGBCDPoleFigure::ComputeGBCDPoleFigure(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ComputeGBCDPoleFigure::~ComputeGBCDPoleFigure() noexcept = default;
+ComputeGBCDPoleFigureDirect::~ComputeGBCDPoleFigureDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeGBCDPoleFigure::getCancel()
+const std::atomic_bool& ComputeGBCDPoleFigureDirect::getCancel()
 {
   return m_ShouldCancel;
 }
 
 // -----------------------------------------------------------------------------
-Result<> ComputeGBCDPoleFigure::operator()()
+Result<> ComputeGBCDPoleFigureDirect::operator()()
 {
   auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
-  auto crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   DataPath cellIntensityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->CellIntensityArrayName);
-  auto poleFigure = m_DataStructure.getDataRefAs<Float64Array>(cellIntensityArrayPath);
+  auto& poleFigure = m_DataStructure.getDataRefAs<Float64Array>(cellIntensityArrayPath);
+
+  // Cache entire GBCD array locally — this is the in-core (Direct) path
+  // where the full array fits in RAM.
+  const usize gbcdTotalElements = gbcd.getSize();
+  auto gbcdCache = std::make_unique<float64[]>(gbcdTotalElements);
+  gbcd.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float64>(gbcdCache.get(), gbcdTotalElements));
+
+  // Cache crystal structures (ensemble-level, tiny)
+  const usize numCrystalStructures = crystalStructures.getSize();
+  auto crystalStructuresCache = std::make_unique<uint32[]>(numCrystalStructures);
+  crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.get(), numCrystalStructures));
+
+  // Cache pole figure output locally (300x300 = 90,000 elements, tiny)
+  const usize poleFigureSize = poleFigure.getSize();
+  auto poleFigureCache = std::make_unique<float64[]>(poleFigureSize);
+  std::fill(poleFigureCache.get(), poleFigureCache.get() + poleFigureSize, 0.0);
 
   std::vector<float32> gbcdDeltas(5, 0);
   std::vector<float32> gbcdLimits(10, 0);
@@ -309,7 +325,7 @@ Result<> ComputeGBCDPoleFigure::operator()()
   gbcdDeltas[4] = (gbcdLimits[9] - gbcdLimits[4]) / static_cast<float32>(gbcdSizes[4]);
 
   // Get our LaueOps pointer for the selected crystal structure
-  ebsdlib::LaueOps::Pointer orientOps = ebsdlib::LaueOps::GetAllOrientationOps()[crystalStructures[m_InputValues->PhaseOfInterest]];
+  ebsdlib::LaueOps::Pointer orientOps = ebsdlib::LaueOps::GetAllOrientationOps()[crystalStructuresCache[m_InputValues->PhaseOfInterest]];
 
   int32 xPoints = m_InputValues->OutputImageDimension;
   int32 yPoints = m_InputValues->OutputImageDimension;
@@ -320,15 +336,15 @@ Result<> ComputeGBCDPoleFigure::operator()()
 
   m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Intensity Plot for phase {}", m_InputValues->PhaseOfInterest)});
 
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
-  algArrays.push_back(&poleFigure);
-  algArrays.push_back(&gbcd);
-
+  // Use cached raw pointers — no OOC access in hot loop, parallelization is safe
   ParallelData2DAlgorithm dataAlg;
   dataAlg.setRange(0, xPoints, 0, yPoints);
-  dataAlg.requireArraysInMemory(algArrays);
 
-  dataAlg.execute(ComputeGBCDPoleFigureImpl(poleFigure, {xPoints, yPoints}, orientOps, gbcdDeltas, gbcdLimits, gbcdSizes, gbcd, m_InputValues->PhaseOfInterest, m_InputValues->MisorientationRotation));
+  dataAlg.execute(ComputeGBCDPoleFigureImpl(poleFigureCache.get(), {xPoints, yPoints}, orientOps, gbcdDeltas, gbcdLimits, gbcdSizes, gbcdCache.get(), m_InputValues->PhaseOfInterest,
+                                            m_InputValues->MisorientationRotation));
+
+  // Write pole figure results back to the OOC store
+  poleFigure.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(poleFigureCache.get(), poleFigureSize));
 
   return {};
 }

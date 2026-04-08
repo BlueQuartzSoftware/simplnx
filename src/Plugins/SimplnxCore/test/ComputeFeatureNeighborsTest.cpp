@@ -5,6 +5,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -605,226 +606,482 @@ void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool te
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.0: Single Voxel - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = CreateSingleVoxelDataStructure();
 
   ExecuteFilter(dataStructure, true, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.1: Single Voxel - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = CreateSingleVoxelDataStructure();
 
   ExecuteFilter(dataStructure, false, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.2: Single Voxel - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = CreateSingleVoxelDataStructure();
 
   ExecuteFilter(dataStructure, true, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 0.0.3: Single Voxel - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = CreateSingleVoxelDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.0: 1D Z - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DZDataStructure();
 
   ExecuteFilter(dataStructure, true, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.1: 1D Z - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DZDataStructure();
 
   ExecuteFilter(dataStructure, false, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.2: 1D Z - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DZDataStructure();
 
   ExecuteFilter(dataStructure, true, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.0.3: 1D Z - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DZDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.0: 1D Y - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DYDataStructure();
 
   ExecuteFilter(dataStructure, true, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.1: 1D Y - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DYDataStructure();
 
   ExecuteFilter(dataStructure, false, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.2: 1D Y - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DYDataStructure();
 
   ExecuteFilter(dataStructure, true, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.1.3: 1D Y - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DYDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.0: 1D X - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DXDataStructure();
 
   ExecuteFilter(dataStructure, true, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.1: 1D X - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DXDataStructure();
 
   ExecuteFilter(dataStructure, false, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.2: 1D X - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DXDataStructure();
 
   ExecuteFilter(dataStructure, true, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 1.2.3: 1D X - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create1DXDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.0: 2D Empty Z - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyZDataStructure();
 
   ExecuteFilter(dataStructure, true, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.1: 2D Empty Z - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyZDataStructure();
 
   ExecuteFilter(dataStructure, false, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.2: 2D Empty Z - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyZDataStructure();
 
   ExecuteFilter(dataStructure, true, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.3: 2D Empty Z - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyZDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.0: 2D Empty Y - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyYDataStructure();
 
   ExecuteFilter(dataStructure, true, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.1: 2D Empty Y - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyYDataStructure();
 
   ExecuteFilter(dataStructure, false, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.2: 2D Empty Y - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyYDataStructure();
 
   ExecuteFilter(dataStructure, true, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.3: 2D Empty Y - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyYDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.0: 2D Empty X - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyXDataStructure();
 
   ExecuteFilter(dataStructure, true, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.1: 2D Empty X - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyXDataStructure();
 
   ExecuteFilter(dataStructure, false, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.2: 2D Empty X - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyXDataStructure();
 
   ExecuteFilter(dataStructure, true, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.3: 2D Empty X - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create2DEmptyXDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.0: 3D - Full Execution", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create3DDataStructure();
 
   ExecuteFilter(dataStructure, true, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.1: 3D - No Boundary", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create3DDataStructure();
 
   ExecuteFilter(dataStructure, false, true);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.2: 3D - No Surface Features", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create3DDataStructure();
 
   ExecuteFilter(dataStructure, true, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.3: 3D - No Optionals", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   DataStructure dataStructure = Create3DDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -855,6 +1112,12 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.4: 2D Empty X - 
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Legacy: SmallIn100", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
 {
+  UnitTest::LoadPlugins();
+
+  // Test both algorithm paths (in-core + OOC)
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+
   const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));

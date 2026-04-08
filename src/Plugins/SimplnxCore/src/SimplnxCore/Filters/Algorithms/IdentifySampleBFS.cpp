@@ -1,63 +1,92 @@
 #include "IdentifySampleBFS.hpp"
 
+#include "IdentifySample.hpp"
+#include "IdentifySampleCommon.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+
+#include <fmt/format.h>
 
 using namespace nx::core;
 
 namespace
 {
+// =============================================================================
+// IdentifySampleBFSFunctor
+// =============================================================================
+// BFS flood-fill algorithm for identifying the largest connected component of
+// "good" voxels in an image geometry, then optionally filling interior holes.
+//
+// The algorithm has two phases:
+//
+// Phase 1 (Find Largest Component):
+//   BFS flood-fill discovers all connected components of good voxels
+//   (goodVoxels == true). Each component is found by starting BFS from an
+//   unchecked good voxel and expanding to all face-adjacent good neighbors.
+//   The largest component by voxel count is tracked as "the sample". After
+//   all components are found, any good voxels NOT in the largest component
+//   are set to false (they are noise or satellite regions).
+//   Uses O(N) memory: checked + sample vectors (std::vector<bool>, 1 bit each).
+//
+// Phase 2 (Hole Fill, optional):
+//   If fillHoles is true, a second BFS pass runs on bad voxels
+//   (goodVoxels == false). Each connected component of bad voxels is
+//   discovered via BFS. During BFS, a `touchesBoundary` flag tracks whether
+//   any voxel in the component lies on the domain boundary (x/y/z == 0 or
+//   max). If the component does NOT touch the boundary, it is fully enclosed
+//   by the sample and is an interior hole -- all its voxels are set to true.
+//   If it touches the boundary, it is external empty space and left as-is.
+//
+// NOTE: Uses std::vector<bool> (1 bit per voxel) for minimal memory overhead.
+// Fast for in-core data where random access is O(1), but causes chunk
+// thrashing in OOC mode due to BFS visiting neighbors across chunk boundaries.
+// Use IdentifySampleCCL for out-of-core compatible processing.
+// =============================================================================
 struct IdentifySampleBFSFunctor
 {
   template <typename T>
   void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
-    ShapeType cDims = {1};
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     const auto totalPoints = static_cast<int64>(goodVoxelsPtr->getNumberOfTuples());
 
     SizeVec3 udims = imageGeom->getDimensions();
 
-    std::array<int64_t, 3> dims = {
-        static_cast<int64_t>(udims[0]),
-        static_cast<int64_t>(udims[1]),
-        static_cast<int64_t>(udims[2]),
+    std::array<int64, 3> dims = {
+        static_cast<int64>(udims[0]),
+        static_cast<int64>(udims[1]),
+        static_cast<int64>(udims[2]),
     };
 
-    int64_t neighborPoint = 0;
+    int64 neighborPoint = 0;
     std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
     std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
     std::vector<int64> currentVList;
-    std::vector<bool> checked(totalPoints, false);
-    std::vector<bool> sample(totalPoints, false);
+    std::vector<bool> checked(totalPoints, false); // O(N) bits: tracks visited voxels
+    std::vector<bool> sample(totalPoints, false);  // O(N) bits: marks voxels in the largest component
     int64 biggestBlock = 0;
 
-    // In this loop over the data we are finding the biggest contiguous set of GoodVoxels and calling that the 'sample'  All GoodVoxels that do not touch the 'sample'
-    // are flipped to be called 'bad' voxels or 'not sample'
-    float threshold = 0.0f;
+    MessageHelper messageHelper(messageHandler);
+
+    // --- Phase 1: Find the largest contiguous set of good voxels ------------
+    // BFS flood-fill from each unvisited good voxel. Track the largest
+    // connected component found so far.
+    messageHelper.sendMessage("Phase 1: Finding largest connected component of good voxels...");
     for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
     {
       if(shouldCancel)
       {
         return;
       }
-      const float percentIncrement = static_cast<float>(voxelIndex) / static_cast<float>(totalPoints) * 100.0f;
-      if(percentIncrement > threshold)
-      {
-        messageHandler(IFilter::Message::Type::Info, fmt::format("Completed: {}", percentIncrement));
-        threshold = threshold + 5.0f;
-        if(threshold < percentIncrement)
-        {
-          threshold = percentIncrement;
-        }
-      }
-
       if(!checked[voxelIndex] && goodVoxels.getValue(voxelIndex))
       {
+        // Start BFS from this seed voxel to discover one connected component
         currentVList.push_back(voxelIndex);
         usize count = 0;
         while(count < currentVList.size())
@@ -83,6 +112,7 @@ struct IdentifySampleBFSFunctor
           }
           count++;
         }
+        // If this component is the largest found so far, record it as the sample
         if(static_cast<int64>(currentVList.size()) >= biggestBlock)
         {
           biggestBlock = currentVList.size();
@@ -95,6 +125,8 @@ struct IdentifySampleBFSFunctor
         currentVList.clear();
       }
     }
+    // Any good voxels NOT in the largest component are noise/satellites --
+    // set them to false so only the primary sample remains.
     for(int64 i = 0; i < totalPoints; i++)
     {
       if(!sample[i] && goodVoxels.getValue(i))
@@ -105,12 +137,16 @@ struct IdentifySampleBFSFunctor
     sample.clear();
     checked.assign(totalPoints, false);
 
-    // In this loop we are going to 'close' all the 'holes' inside the region already identified as the 'sample' if the user chose to do so.
-    // This is done by flipping all 'bad' voxel features that do not touch the outside of the sample (i.e. they are fully contained inside the 'sample').
-    threshold = 0.0F;
+    // --- Phase 2: Hole fill (optional) ----------------------------------------
+    // BFS on bad voxels (goodVoxels == false). Each connected component of
+    // bad voxels is checked: if any voxel in the component touches a domain
+    // boundary face (x/y/z == 0 or max), the component is external empty
+    // space and is left as-is. If the component is fully enclosed by the
+    // sample (touchesBoundary == false), it is an interior hole and all
+    // its voxels are set to true.
     if(fillHoles)
     {
-      messageHandler(IFilter::Message::Type::Info, fmt::format("Filling holes in sample..."));
+      messageHelper.sendMessage("Phase 2: Filling holes in sample...");
 
       bool touchesBoundary = false;
       for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
@@ -119,18 +155,11 @@ struct IdentifySampleBFSFunctor
         {
           return;
         }
-        const float percentIncrement = static_cast<float>(voxelIndex) / static_cast<float>(totalPoints) * 100.0f;
-        if(percentIncrement > threshold)
-        {
-          threshold = threshold + 5.0f;
-          if(threshold < percentIncrement)
-          {
-            threshold = percentIncrement;
-          }
-        }
-
         if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
         {
+          // BFS from this bad voxel to discover one connected component of
+          // bad data. Track whether any voxel in the component is on a
+          // domain boundary face.
           currentVList.push_back(voxelIndex);
           usize count = 0;
           touchesBoundary = false;
@@ -140,11 +169,11 @@ struct IdentifySampleBFSFunctor
             int64 xIdx = index % dims[0];
             int64 yIdx = (index / dims[0]) % dims[1];
             int64 zIdx = index / (dims[0] * dims[1]);
+            // Check if this voxel lies on any domain boundary face
             if(xIdx == 0 || xIdx == (dims[0] - 1) || yIdx == 0 || yIdx == (dims[1] - 1) || zIdx == 0 || zIdx == (dims[2] - 1))
             {
               touchesBoundary = true;
             }
-            // Loop over the 6 face neighbors of the voxel
             std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
@@ -162,9 +191,11 @@ struct IdentifySampleBFSFunctor
             }
             count++;
           }
+          // If this bad-data component does not touch any boundary, it is
+          // an interior hole -- fill it by setting all voxels to true.
           if(!touchesBoundary)
           {
-            for(int64_t j : currentVList)
+            for(int64 j : currentVList)
             {
               goodVoxels.setValue(j, true);
             }
@@ -176,221 +207,10 @@ struct IdentifySampleBFSFunctor
     checked.clear();
   }
 };
-
-struct IdentifySampleBFSSliceBySliceFunctor
-{
-  enum class Plane
-  {
-    XY,
-    XZ,
-    YZ
-  };
-
-  template <typename T>
-  void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, Plane plane, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
-  {
-    auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
-
-    SizeVec3 uDims = imageGeom->getDimensions();
-    const int64 dimX = static_cast<int64>(uDims[0]);
-    const int64 dimY = static_cast<int64>(uDims[1]);
-    const int64 dimZ = static_cast<int64>(uDims[2]);
-
-    int64 planeDim1, planeDim2, fixedDim;
-    int64 stride1, stride2, fixedStride;
-
-    switch(plane)
-    {
-    case Plane::XY:
-      planeDim1 = dimX;
-      planeDim2 = dimY;
-      fixedDim = dimZ;
-      stride1 = 1;
-      stride2 = dimX;
-      fixedStride = dimX * dimY;
-      break;
-
-    case Plane::XZ:
-      planeDim1 = dimX;
-      planeDim2 = dimZ;
-      fixedDim = dimY;
-      stride1 = 1;
-      stride2 = dimX * dimY;
-      fixedStride = dimX;
-      break;
-
-    case Plane::YZ:
-      planeDim1 = dimY;
-      planeDim2 = dimZ;
-      fixedDim = dimX;
-      stride1 = dimX;
-      stride2 = dimX * dimY;
-      fixedStride = 1;
-      break;
-    }
-
-    for(int64 fixedIdx = 0; fixedIdx < fixedDim; ++fixedIdx) // Process each slice
-    {
-      if(shouldCancel)
-      {
-        return;
-      }
-      messageHandler(IFilter::Message::Type::Info, fmt::format("Slice {}", fixedIdx));
-
-      std::vector<bool> checked(planeDim1 * planeDim2, false);
-      std::vector<bool> sample(planeDim1 * planeDim2, false);
-      std::vector<int64> currentVList;
-      int64 biggestBlock = 0;
-
-      // Identify the largest contiguous set of good voxels in the slice
-      for(int64 p2 = 0; p2 < planeDim2; ++p2)
-      {
-        for(int64 p1 = 0; p1 < planeDim1; ++p1)
-        {
-          int64 planeIndex = p2 * planeDim1 + p1;
-          int64 globalIndex = fixedIdx * fixedStride + p2 * stride2 + p1 * stride1;
-
-          if(!checked[planeIndex] && goodVoxels.getValue(globalIndex))
-          {
-            currentVList.push_back(planeIndex);
-            int64 count = 0;
-
-            while(count < currentVList.size())
-            {
-              int64 localIdx = currentVList[count];
-              int64 localP1 = localIdx % planeDim1;
-              int64 localP2 = localIdx / planeDim1;
-
-              for(int j = 0; j < 4; ++j)
-              {
-                int64 dp1[4] = {0, 0, -1, 1};
-                int64 dp2[4] = {-1, 1, 0, 0};
-
-                int64 neighborP1 = localP1 + dp1[j];
-                int64 neighborP2 = localP2 + dp2[j];
-
-                if(neighborP1 >= 0 && neighborP1 < planeDim1 && neighborP2 >= 0 && neighborP2 < planeDim2)
-                {
-                  int64 neighborIdx = neighborP2 * planeDim1 + neighborP1;
-                  int64 globalNeighborIdx = fixedIdx * fixedStride + neighborP2 * stride2 + neighborP1 * stride1;
-
-                  if(!checked[neighborIdx] && goodVoxels.getValue(globalNeighborIdx))
-                  {
-                    currentVList.push_back(neighborIdx);
-                    checked[neighborIdx] = true;
-                  }
-                }
-              }
-              count++;
-            }
-
-            if(static_cast<int64>(currentVList.size()) > biggestBlock)
-            {
-              biggestBlock = currentVList.size();
-              sample.assign(planeDim1 * planeDim2, false);
-              for(int64 idx : currentVList)
-              {
-                sample[idx] = true;
-              }
-            }
-            currentVList.clear();
-          }
-        }
-      }
-      if(shouldCancel)
-      {
-        return;
-      }
-
-      for(int64 p2 = 0; p2 < planeDim2; ++p2)
-      {
-        for(int64 p1 = 0; p1 < planeDim1; ++p1)
-        {
-          int64 planeIndex = p2 * planeDim1 + p1;
-          int64 globalIndex = fixedIdx * fixedStride + p2 * stride2 + p1 * stride1;
-
-          if(!sample[planeIndex])
-          {
-            goodVoxels.setValue(globalIndex, false);
-          }
-        }
-      }
-      if(shouldCancel)
-      {
-        return;
-      }
-
-      checked.assign(planeDim1 * planeDim2, false);
-      if(fillHoles)
-      {
-        for(int64 p2 = 0; p2 < planeDim2; ++p2)
-        {
-          for(int64 p1 = 0; p1 < planeDim1; ++p1)
-          {
-            int64 planeIndex = p2 * planeDim1 + p1;
-            int64 globalIndex = fixedIdx * fixedStride + p2 * stride2 + p1 * stride1;
-
-            if(!checked[planeIndex] && !goodVoxels.getValue(globalIndex))
-            {
-              currentVList.push_back(planeIndex);
-              int64 count = 0;
-              bool touchesBoundary = false;
-
-              while(count < currentVList.size())
-              {
-                int64 localIdx = currentVList[count];
-                int64 localP1 = localIdx % planeDim1;
-                int64 localP2 = localIdx / planeDim1;
-
-                if(localP1 == 0 || localP1 == planeDim1 - 1 || localP2 == 0 || localP2 == planeDim2 - 1)
-                {
-                  touchesBoundary = true;
-                }
-
-                for(int j = 0; j < 4; ++j)
-                {
-                  int64 dp1[4] = {0, 0, -1, 1};
-                  int64 dp2[4] = {-1, 1, 0, 0};
-
-                  int64 neighborP1 = localP1 + dp1[j];
-                  int64 neighborP2 = localP2 + dp2[j];
-
-                  if(neighborP1 >= 0 && neighborP1 < planeDim1 && neighborP2 >= 0 && neighborP2 < planeDim2)
-                  {
-                    int64 neighborIdx = neighborP2 * planeDim1 + neighborP1;
-                    int64 globalNeighborIdx = fixedIdx * fixedStride + neighborP2 * stride2 + neighborP1 * stride1;
-
-                    if(!checked[neighborIdx] && !goodVoxels.getValue(globalNeighborIdx))
-                    {
-                      currentVList.push_back(neighborIdx);
-                      checked[neighborIdx] = true;
-                    }
-                  }
-                }
-                count++;
-              }
-
-              if(!touchesBoundary)
-              {
-                for(int64 idx : currentVList)
-                {
-                  int64 globalP1 = idx % planeDim1;
-                  int64 globalP2 = idx / planeDim1;
-                  goodVoxels.setValue(fixedIdx * fixedStride + globalP2 * stride2 + globalP1 * stride1, true);
-                }
-              }
-              currentVList.clear();
-            }
-          }
-        }
-      }
-    }
-  }
-};
 } // namespace
 
 // -----------------------------------------------------------------------------
-IdentifySampleBFS::IdentifySampleBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, IdentifySampleInputValues* inputValues)
+IdentifySampleBFS::IdentifySampleBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const IdentifySampleInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -409,8 +229,8 @@ Result<> IdentifySampleBFS::operator()()
 
   if(m_InputValues->SliceBySlice)
   {
-    ExecuteDataFunction(IdentifySampleBFSSliceBySliceFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles,
-                        static_cast<IdentifySampleBFSSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex), m_MessageHandler, m_ShouldCancel);
+    ExecuteDataFunction(IdentifySampleSliceBySliceFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles,
+                        static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex), m_MessageHandler, m_ShouldCancel);
   }
   else
   {

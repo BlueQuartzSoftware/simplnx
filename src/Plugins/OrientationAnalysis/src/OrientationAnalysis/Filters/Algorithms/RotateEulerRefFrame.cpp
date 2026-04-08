@@ -5,84 +5,12 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Orientation/AxisAngle.hpp>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>
 
 using namespace nx::core;
-
-namespace
-{
-
-/**
- * @brief The RotateEulerRefFrameImpl class implements a threaded algorithm that rotates an array of Euler
- * angles about the supplied axis-angle pair.
- */
-class RotateEulerRefFrameImpl
-{
-
-public:
-  RotateEulerRefFrameImpl(Float32Array& data, const FloatVec3& rotAxis, float angle, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
-  : m_CellEulerAngles(data)
-  , m_AxisAngle(rotAxis)
-  , m_Angle(angle)
-  , m_ShouldCancel(shouldCancel)
-  , m_ProgressMessageHelper(progressMessageHelper)
-  {
-  }
-  virtual ~RotateEulerRefFrameImpl() = default;
-
-  void convert(size_t start, size_t end) const
-  {
-    ebsdlib::OrientationMatrixDType om = ebsdlib::AxisAngleDType(m_AxisAngle[0], m_AxisAngle[1], m_AxisAngle[2], m_Angle * nx::core::numbers::pi / 180.0).toOrientationMatrix();
-
-    OrientationUtilities::Matrix3dR rotMat = om.toEigenGMatrix();
-
-    ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
-
-    usize counter = 0;
-    usize counterIncrement = (end - start) / 100;
-    // float ea1 = 0, ea2 = 0, ea3 = 0;
-    for(size_t i = start; i < end; i++)
-    {
-      if(m_ShouldCancel)
-      {
-        return;
-      }
-      if(counter >= counterIncrement)
-      {
-        progressMessenger.sendProgressMessage(counter);
-        counter = 0;
-      }
-
-      om = ebsdlib::EulerDType(m_CellEulerAngles[3 * i + 0], m_CellEulerAngles[3 * i + 1], m_CellEulerAngles[3 * i + 2]).toOrientationMatrix();
-      OrientationUtilities::Matrix3dR gNew = (om * rotMat).colwise().normalized();
-
-      ebsdlib::EulerDType eu = ebsdlib::OrientationMatrixDType(gNew.data()).toEuler();
-      m_CellEulerAngles[3 * i] = eu[0];
-      m_CellEulerAngles[3 * i + 1] = eu[1];
-      m_CellEulerAngles[3 * i + 2] = eu[2];
-      counter++;
-    }
-    progressMessenger.sendProgressMessage(counter);
-  }
-
-  void operator()(const Range& range) const
-  {
-    convert(range.min(), range.max());
-  }
-
-private:
-  Float32Array& m_CellEulerAngles;
-  FloatVec3 m_AxisAngle;
-  float m_Angle = 0.0F;
-  const std::atomic_bool& m_ShouldCancel;
-  ProgressMessageHelper& m_ProgressMessageHelper;
-};
-} // namespace
 
 // -----------------------------------------------------------------------------
 RotateEulerRefFrame::RotateEulerRefFrame(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RotateEulerRefFrameInputValues* inputValues)
@@ -104,25 +32,47 @@ Result<> RotateEulerRefFrame::operator()()
     return {};
   }
 
-  nx::core::Float32Array& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
+  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
+  auto& eulerStore = eulerAngles.getDataStoreRef();
+  const usize totalTuples = eulerAngles.getNumberOfTuples();
 
-  size_t totalElements = eulerAngles.getNumberOfTuples();
-
-  nx::core::FloatVec3 axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
+  FloatVec3 axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
   axis = axis.normalize();
+  const float32 angle = m_InputValues->rotationAxis[3];
 
-  MessageHelper messageHelper(m_MessageHandler);
-  ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
-  progressMessageHelper.setMaxProgresss(totalElements);
-  progressMessageHelper.setProgressMessageTemplate("RotateEulerRefFrame: {:.2f}% complete");
+  ebsdlib::OrientationMatrixDType omRot = ebsdlib::AxisAngleDType(axis[0], axis[1], axis[2], angle * nx::core::numbers::pi / 180.0).toOrientationMatrix();
+  OrientationUtilities::Matrix3dR rotMat = omRot.toEigenGMatrix();
 
-  // Allow data-based parallelization
-  ParallelDataAlgorithm dataAlg;
-  dataAlg.setRange(0, totalElements);
-  dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel, progressMessageHelper));
+  // Process in bounded chunks: read → rotate → write back
+  constexpr usize k_ChunkTuples = 65536;
+  std::vector<float32> buf(k_ChunkTuples * 3);
+
+  for(usize startTup = 0; startTup < totalTuples; startTup += k_ChunkTuples)
+  {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    const usize count = std::min(k_ChunkTuples, totalTuples - startTup);
+    eulerStore.copyIntoBuffer(startTup * 3, nonstd::span<float32>(buf.data(), count * 3));
+
+    for(usize i = 0; i < count; i++)
+    {
+      ebsdlib::OrientationMatrixDType om = ebsdlib::EulerDType(buf[i * 3], buf[i * 3 + 1], buf[i * 3 + 2]).toOrientationMatrix();
+      OrientationUtilities::Matrix3dR gNew = (om * rotMat).colwise().normalized();
+      ebsdlib::EulerDType eu = ebsdlib::OrientationMatrixDType(gNew.data()).toEuler();
+      buf[i * 3] = eu[0];
+      buf[i * 3 + 1] = eu[1];
+      buf[i * 3 + 2] = eu[2];
+    }
+
+    eulerStore.copyFromBuffer(startTup * 3, nonstd::span<const float32>(buf.data(), count * 3));
+  }
+
   return {};
 }
 
+// -----------------------------------------------------------------------------
 bool RotateEulerRefFrame::shouldCancel() const
 {
   return m_ShouldCancel;

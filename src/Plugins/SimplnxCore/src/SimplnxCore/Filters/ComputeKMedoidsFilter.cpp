@@ -1,6 +1,6 @@
 #include "ComputeKMedoidsFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/ComputeKMedoidsDirect.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeKMedoids.hpp"
 
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -197,7 +197,7 @@ Result<> ComputeKMedoidsFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.ClusteringArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   inputValues.FeatureIdsArrayPath = inputValues.ClusteringArrayPath.replaceName(filterArgs.value<std::string>(k_FeatureIdsArrayName_Key));
 
-  return ComputeKMedoidsDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeKMedoids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

@@ -3,6 +3,10 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <memory>
+
 namespace nx::core
 {
 bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects, Int32AbstractDataStore& cellFeatureIds,
@@ -79,19 +83,32 @@ bool RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& feature
         // dataArray->getIDataStore()->resizeTuples(newShape);
       }
 
-      // Loop over all the points and correct all the feature names
+      // Renumber featureIds using chunked bulk I/O
+      constexpr size_t k_ChunkSize = 65536;
       size_t totalPoints = cellFeatureIds.getNumberOfTuples();
       bool featureIdsChanged = false;
-      for(size_t i = 0; i < totalPoints; i++)
+      auto chunkBuf = std::make_unique<int32_t[]>(k_ChunkSize);
+      for(size_t offset = 0; offset < totalPoints; offset += k_ChunkSize)
       {
-        if(cellFeatureIds[i] >= 0 && cellFeatureIds[i] < newNames.size())
-        {
-          cellFeatureIds.setValue(i, static_cast<int32_t>(newNames[cellFeatureIds[i]]));
-          featureIdsChanged = true;
-        }
         if(shouldCancel)
         {
           return false;
+        }
+        size_t count = std::min(k_ChunkSize, totalPoints - offset);
+        cellFeatureIds.copyIntoBuffer(offset, nonstd::span<int32_t>(chunkBuf.get(), count));
+        bool chunkModified = false;
+        for(size_t i = 0; i < count; i++)
+        {
+          if(chunkBuf[i] >= 0 && static_cast<size_t>(chunkBuf[i]) < newNames.size())
+          {
+            chunkBuf[i] = static_cast<int32_t>(newNames[chunkBuf[i]]);
+            chunkModified = true;
+          }
+        }
+        if(chunkModified)
+        {
+          cellFeatureIds.copyFromBuffer(offset, nonstd::span<const int32_t>(chunkBuf.get(), count));
+          featureIdsChanged = true;
         }
       }
 

@@ -253,10 +253,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
       return MakeErrorResult(-1001, fmt::format("Unexpected end of file or read error after reading {} of {} elements from '{}'", elementCounter, numElements, binaryFilePath.string()));
     }
 
-    for(usize i = 0; i < elementsRead; i++)
-    {
-      outputDataArray[i + elementCounter] = buffer[i];
-    }
+    outputDataArray.getDataStoreRef().copyFromBuffer(elementCounter, nonstd::span<const T>(buffer.data(), elementsRead));
 
     elementCounter += elementsRead;
 
@@ -591,9 +588,27 @@ template <class K>
 void AppendData(const K& inputArray, K& destArray, usize offset)
 {
   const usize numElements = inputArray.getNumberOfTuples() * inputArray.getNumberOfComponents();
-  for(usize i = 0; i < numElements; ++i)
+  if constexpr(requires { inputArray.getDataStoreRef(); })
   {
-    destArray.setValue(offset + i, inputArray.at(i));
+    // DataArray path: use bulk I/O for OOC efficiency
+    using ValueType = typename std::remove_reference_t<decltype(inputArray.getDataStoreRef())>::value_type;
+    constexpr usize k_ChunkSize = 65536;
+    auto buffer = std::make_unique<ValueType[]>(std::min(numElements, k_ChunkSize));
+    const auto& srcStore = inputArray.getDataStoreRef();
+    auto& dstStore = destArray.getDataStoreRef();
+    for(usize i = 0; i < numElements; i += k_ChunkSize)
+    {
+      usize count = std::min(k_ChunkSize, numElements - i);
+      srcStore.copyIntoBuffer(i, nonstd::span<ValueType>(buffer.get(), count));
+      dstStore.copyFromBuffer(offset + i, nonstd::span<const ValueType>(buffer.get(), count));
+    }
+  }
+  else
+  {
+    for(usize i = 0; i < numElements; ++i)
+    {
+      destArray.setValue(offset + i, inputArray.at(i));
+    }
   }
 }
 
@@ -625,10 +640,42 @@ Result<> CopyData(const K& inputArray, K& destArray, usize destTupleOffset, usiz
     return MakeErrorResult(-2034, fmt::format("The total number of elements to copy ({}) is larger than the total available elements ({}).", elementsToCopy, availableElements));
   }
 
-  auto srcBegin = inputArray.begin() + (srcTupleOffset * sourceNumComponents);
-  auto srcEnd = srcBegin + (totalSrcTuples * sourceNumComponents);
-  auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);
-  std::copy(srcBegin, srcEnd, dstBegin);
+  const usize numElements = totalSrcTuples * sourceNumComponents;
+  if constexpr(requires { inputArray.getDataStoreRef(); })
+  {
+    const auto& srcStore = inputArray.getDataStoreRef();
+    auto& dstStore = destArray.getDataStoreRef();
+    if(srcStore.getStoreType() == IDataStore::StoreType::OutOfCore || dstStore.getStoreType() == IDataStore::StoreType::OutOfCore)
+    {
+      // OOC path: chunked bulk I/O
+      using ValueType = typename std::remove_reference_t<decltype(srcStore)>::value_type;
+      constexpr usize k_ChunkSize = 65536;
+      auto buffer = std::make_unique<ValueType[]>(std::min(numElements, k_ChunkSize));
+      usize srcStart = srcTupleOffset * sourceNumComponents;
+      usize dstStart = destTupleOffset * numComponents;
+      for(usize offset = 0; offset < numElements; offset += k_ChunkSize)
+      {
+        usize count = std::min(k_ChunkSize, numElements - offset);
+        srcStore.copyIntoBuffer(srcStart + offset, nonstd::span<ValueType>(buffer.get(), count));
+        dstStore.copyFromBuffer(dstStart + offset, nonstd::span<const ValueType>(buffer.get(), count));
+      }
+    }
+    else
+    {
+      // In-core path: single std::copy (zero overhead)
+      auto srcBegin = inputArray.begin() + (srcTupleOffset * sourceNumComponents);
+      auto srcEnd = srcBegin + numElements;
+      auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);
+      std::copy(srcBegin, srcEnd, dstBegin);
+    }
+  }
+  else
+  {
+    auto srcBegin = inputArray.begin() + (srcTupleOffset * sourceNumComponents);
+    auto srcEnd = srcBegin + numElements;
+    auto dstBegin = destArray.begin() + (destTupleOffset * numComponents);
+    std::copy(srcBegin, srcEnd, dstBegin);
+  }
 
   return {};
 }
@@ -661,10 +708,24 @@ Result<> CopyData(const std::vector<T>& src, K& dst, usize dstTupleOffset, usize
     return MakeErrorResult(-2034, fmt::format("The total number of elements to copy ({}) is larger than the total available elements ({}).", elementsToCopy, dstAvailableElems));
   }
 
-  auto srcBegin = src.begin() + (srcTupleOffset * srcNumComponents);
-  auto srcEnd = srcBegin + (totalSrcTuples * srcNumComponents);
-  auto dstBegin = dst.begin() + (dstTupleOffset * dstNumComponents);
-  std::copy(srcBegin, srcEnd, dstBegin);
+  const usize numElements = totalSrcTuples * srcNumComponents;
+  usize srcStart = srcTupleOffset * srcNumComponents;
+  usize dstStart = dstTupleOffset * dstNumComponents;
+  if constexpr(requires { dst.getDataStoreRef(); })
+  {
+    dst.getDataStoreRef().copyFromBuffer(dstStart, nonstd::span<const T>(src.data() + srcStart, numElements));
+  }
+  else if constexpr(requires { dst.copyFromBuffer(dstStart, nonstd::span<const T>(src.data(), 1)); })
+  {
+    dst.copyFromBuffer(dstStart, nonstd::span<const T>(src.data() + srcStart, numElements));
+  }
+  else
+  {
+    auto srcBegin = src.begin() + srcStart;
+    auto srcEnd = srcBegin + numElements;
+    auto dstBegin = dst.begin() + dstStart;
+    std::copy(srcBegin, srcEnd, dstBegin);
+  }
 
   return {};
 }
@@ -875,12 +936,49 @@ Result<> AppendDataX(const std::vector<const K*>& inputArrays, const std::vector
       if(mirror)
       {
         auto numComps = destArray.getNumberOfComponents();
-        for(usize x = 0; x < appendDestXDim / 2; ++x)
+        if constexpr(requires { destArray.getDataStoreRef(); })
         {
-          usize tupleIdx = (z * appendYDim * appendDestXDim) + (y * appendDestXDim) + x;
-          usize endTupleIdx = tupleIdx + 1;
-          usize mirrorTupleIdx = (z * appendYDim * appendDestXDim) + (y * appendDestXDim) + (appendDestXDim - 1 - x);
-          std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
+          if(destArray.getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore)
+          {
+            // OOC path: read entire scanline, reverse tuples in-memory, write back
+            using ValueType = typename std::remove_reference_t<decltype(destArray.getDataStoreRef())>::value_type;
+            usize scanlineElements = appendDestXDim * numComps;
+            auto scanline = std::make_unique<ValueType[]>(scanlineElements);
+            auto& store = destArray.getDataStoreRef();
+            usize rowStart = ((z * appendYDim * appendDestXDim) + (y * appendDestXDim)) * numComps;
+            store.copyIntoBuffer(rowStart, nonstd::span<ValueType>(scanline.get(), scanlineElements));
+            // Reverse tuple order in the buffer
+            for(usize x = 0; x < appendDestXDim / 2; ++x)
+            {
+              usize mirrorX = appendDestXDim - 1 - x;
+              for(usize c = 0; c < numComps; ++c)
+              {
+                std::swap(scanline[x * numComps + c], scanline[mirrorX * numComps + c]);
+              }
+            }
+            store.copyFromBuffer(rowStart, nonstd::span<const ValueType>(scanline.get(), scanlineElements));
+          }
+          else
+          {
+            // In-core path: original swap_ranges
+            for(usize x = 0; x < appendDestXDim / 2; ++x)
+            {
+              usize tupleIdx = (z * appendYDim * appendDestXDim) + (y * appendDestXDim) + x;
+              usize endTupleIdx = tupleIdx + 1;
+              usize mirrorTupleIdx = (z * appendYDim * appendDestXDim) + (y * appendDestXDim) + (appendDestXDim - 1 - x);
+              std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
+            }
+          }
+        }
+        else
+        {
+          for(usize x = 0; x < appendDestXDim / 2; ++x)
+          {
+            usize tupleIdx = (z * appendYDim * appendDestXDim) + (y * appendDestXDim) + x;
+            usize endTupleIdx = tupleIdx + 1;
+            usize mirrorTupleIdx = (z * appendYDim * appendDestXDim) + (y * appendDestXDim) + (appendDestXDim - 1 - x);
+            std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
+          }
         }
       }
     }
@@ -926,16 +1024,60 @@ Result<> AppendDataY(const std::vector<const K*>& inputArrays, const std::vector
   if(mirror)
   {
     auto numComps = destArray.getNumberOfComponents();
-    for(int z = 0; z < appendZDim; ++z)
+    if constexpr(requires { destArray.getDataStoreRef(); })
     {
-      for(int x = 0; x < appendXDim; ++x)
+      if(destArray.getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore)
       {
-        for(int y = 0; y < appendDestYDim / 2; ++y)
+        // OOC path: swap entire rows (scanlines) at once to minimize I/O calls.
+        // Instead of per-tuple swaps (xDim * yDim/2 * zDim calls), this does
+        // yDim/2 * zDim row-sized bulk reads/writes.
+        using ValueType = typename std::remove_reference_t<decltype(destArray.getDataStoreRef())>::value_type;
+        usize rowElements = static_cast<usize>(appendXDim) * numComps;
+        auto rowA = std::make_unique<ValueType[]>(rowElements);
+        auto rowB = std::make_unique<ValueType[]>(rowElements);
+        auto& store = destArray.getDataStoreRef();
+        for(int64 z = 0; z < appendZDim; ++z)
         {
-          usize tupleIdx = (z * appendDestYDim * appendXDim) + (y * appendXDim) + x;
-          usize endTupleIdx = tupleIdx + 1;
-          usize mirrorTupleIdx = (z * appendDestYDim * appendXDim) + ((appendDestYDim - 1 - y) * appendXDim) + x;
-          std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
+          for(usize y = 0; y < appendDestYDim / 2; ++y)
+          {
+            usize mirrorY = appendDestYDim - 1 - y;
+            usize offsetA = (static_cast<usize>(z) * appendDestYDim * static_cast<usize>(appendXDim) + y * static_cast<usize>(appendXDim)) * numComps;
+            usize offsetB = (static_cast<usize>(z) * appendDestYDim * static_cast<usize>(appendXDim) + mirrorY * static_cast<usize>(appendXDim)) * numComps;
+            store.copyIntoBuffer(offsetA, nonstd::span<ValueType>(rowA.get(), rowElements));
+            store.copyIntoBuffer(offsetB, nonstd::span<ValueType>(rowB.get(), rowElements));
+            store.copyFromBuffer(offsetA, nonstd::span<const ValueType>(rowB.get(), rowElements));
+            store.copyFromBuffer(offsetB, nonstd::span<const ValueType>(rowA.get(), rowElements));
+          }
+        }
+      }
+      else
+      {
+        // In-core path: swap entire rows using swap_ranges for efficiency
+        for(int64 z = 0; z < appendZDim; ++z)
+        {
+          for(usize y = 0; y < appendDestYDim / 2; ++y)
+          {
+            usize mirrorY = appendDestYDim - 1 - y;
+            usize rowIdx = static_cast<usize>(z) * appendDestYDim * static_cast<usize>(appendXDim) + y * static_cast<usize>(appendXDim);
+            usize mirrorRowIdx = static_cast<usize>(z) * appendDestYDim * static_cast<usize>(appendXDim) + mirrorY * static_cast<usize>(appendXDim);
+            usize rowElements = static_cast<usize>(appendXDim) * numComps;
+            std::swap_ranges(destArray.begin() + (rowIdx * numComps), destArray.begin() + (rowIdx * numComps + rowElements), destArray.begin() + (mirrorRowIdx * numComps));
+          }
+        }
+      }
+    }
+    else
+    {
+      // Non-DataArray path: swap entire rows
+      for(int64 z = 0; z < appendZDim; ++z)
+      {
+        for(usize y = 0; y < appendDestYDim / 2; ++y)
+        {
+          usize mirrorY = appendDestYDim - 1 - y;
+          usize rowIdx = static_cast<usize>(z) * appendDestYDim * static_cast<usize>(appendXDim) + y * static_cast<usize>(appendXDim);
+          usize mirrorRowIdx = static_cast<usize>(z) * appendDestYDim * static_cast<usize>(appendXDim) + mirrorY * static_cast<usize>(appendXDim);
+          usize rowElements = static_cast<usize>(appendXDim) * numComps;
+          std::swap_ranges(destArray.begin() + (rowIdx * numComps), destArray.begin() + (rowIdx * numComps + rowElements), destArray.begin() + (mirrorRowIdx * numComps));
         }
       }
     }
@@ -967,12 +1109,47 @@ Result<> AppendDataZ(const std::vector<const K*>& inputArrays, const std::vector
     auto appendDestZDim = newDestDims[0];
     auto sliceTupleCount = newDestDims[1] * newDestDims[2];
     auto numComps = destArray.getNumberOfComponents();
-    for(int i = 0; i < appendDestZDim / 2; ++i)
+    if constexpr(requires { destArray.getDataStoreRef(); })
     {
-      usize tupleIdx = i * sliceTupleCount;
-      usize endTupleIdx = tupleIdx + sliceTupleCount;
-      usize mirrorTupleIdx = (appendDestZDim - 1 - i) * sliceTupleCount;
-      std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
+      if(destArray.getDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore)
+      {
+        // OOC path: bulk I/O swap of entire Z-slices
+        using ValueType = typename std::remove_reference_t<decltype(destArray.getDataStoreRef())>::value_type;
+        usize sliceElements = sliceTupleCount * numComps;
+        auto bufA = std::make_unique<ValueType[]>(sliceElements);
+        auto bufB = std::make_unique<ValueType[]>(sliceElements);
+        auto& store = destArray.getDataStoreRef();
+        for(usize i = 0; i < appendDestZDim / 2; ++i)
+        {
+          usize offsetA = i * sliceElements;
+          usize offsetB = (appendDestZDim - 1 - i) * sliceElements;
+          store.copyIntoBuffer(offsetA, nonstd::span<ValueType>(bufA.get(), sliceElements));
+          store.copyIntoBuffer(offsetB, nonstd::span<ValueType>(bufB.get(), sliceElements));
+          store.copyFromBuffer(offsetA, nonstd::span<const ValueType>(bufB.get(), sliceElements));
+          store.copyFromBuffer(offsetB, nonstd::span<const ValueType>(bufA.get(), sliceElements));
+        }
+      }
+      else
+      {
+        // In-core path: original swap_ranges
+        for(int i = 0; i < appendDestZDim / 2; ++i)
+        {
+          usize tupleIdx = i * sliceTupleCount;
+          usize endTupleIdx = tupleIdx + sliceTupleCount;
+          usize mirrorTupleIdx = (appendDestZDim - 1 - i) * sliceTupleCount;
+          std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
+        }
+      }
+    }
+    else
+    {
+      for(int i = 0; i < appendDestZDim / 2; ++i)
+      {
+        usize tupleIdx = i * sliceTupleCount;
+        usize endTupleIdx = tupleIdx + sliceTupleCount;
+        usize mirrorTupleIdx = (appendDestZDim - 1 - i) * sliceTupleCount;
+        std::swap_ranges(destArray.begin() + (tupleIdx * numComps), destArray.begin() + (endTupleIdx * numComps), destArray.begin() + (mirrorTupleIdx * numComps));
+      }
     }
   }
 

@@ -9,25 +9,13 @@
 namespace nx::core
 {
 
-struct ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckInputValues
-{
-  float32 MisorientationTolerance;
-  int32 NumberOfNeighbors;
-  DataPath ImageGeomPath;
-  DataPath QuatsArrayPath;
-  DataPath MaskArrayPath;
-  DataPath CellPhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-};
+struct BadDataNeighborOrientationCheckInputValues;
 
-/**
- * @class
- */
 class ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckWorklist
 {
 public:
   BadDataNeighborOrientationCheckWorklist(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                  BadDataNeighborOrientationCheckInputValues* inputValues);
+                                          const BadDataNeighborOrientationCheckInputValues* inputValues);
   ~BadDataNeighborOrientationCheckWorklist() noexcept;
 
   BadDataNeighborOrientationCheckWorklist(const BadDataNeighborOrientationCheckWorklist&) = delete;
@@ -36,8 +24,6 @@ public:
   BadDataNeighborOrientationCheckWorklist& operator=(BadDataNeighborOrientationCheckWorklist&&) noexcept = delete;
 
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;

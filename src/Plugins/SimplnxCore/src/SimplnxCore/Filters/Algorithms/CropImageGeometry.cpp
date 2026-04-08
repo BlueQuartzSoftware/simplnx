@@ -46,11 +46,16 @@ public:
 protected:
   void convert() const
   {
-    size_t numComps = m_OldCellStore.getNumberOfComponents();
+    usize numComps = m_OldCellStore.getNumberOfComponents();
 
     m_NewCellStore.fill(static_cast<T>(-1));
 
     auto srcDims = m_SrcImageGeom.getDimensions();
+
+    // Copy one X-row at a time using bulk I/O
+    const uint64 rowTuples = m_Bounds[1] - m_Bounds[0];
+    const usize rowElements = rowTuples * numComps;
+    auto rowBuffer = std::make_unique<T[]>(rowElements);
 
     uint64 destTupleIndex = 0;
     for(uint64 zIndex = m_Bounds[4]; zIndex < m_Bounds[5]; zIndex++)
@@ -61,15 +66,10 @@ protected:
       }
       for(uint64 yIndex = m_Bounds[2]; yIndex < m_Bounds[3]; yIndex++)
       {
-        for(uint64 xIndex = m_Bounds[0]; xIndex < m_Bounds[1]; xIndex++)
-        {
-          uint64 srcIndex = (srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex) + xIndex;
-          for(size_t compIndex = 0; compIndex < numComps; compIndex++)
-          {
-            m_NewCellStore.setValue(destTupleIndex * numComps + compIndex, m_OldCellStore.getValue(srcIndex * numComps + compIndex));
-          }
-          destTupleIndex++;
-        }
+        uint64 srcRowStart = (srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex) + m_Bounds[0];
+        m_OldCellStore.copyIntoBuffer(srcRowStart * numComps, nonstd::span<T>(rowBuffer.get(), rowElements));
+        m_NewCellStore.copyFromBuffer(destTupleIndex * numComps, nonstd::span<const T>(rowBuffer.get(), rowElements));
+        destTupleIndex += rowTuples;
       }
     }
   }
@@ -223,7 +223,7 @@ Result<> CropImageGeometry::operator()()
     // so that the updating of the Feature level data can happen. We do a bit of
     // under-the-covers where we actually remove the existing array that preflight
     // created, so we can use the convenience of the DataArray.deepCopy() function.
-    for(size_t index = 0; index < sourceFeatureDataPaths.size(); index++)
+    for(usize index = 0; index < sourceFeatureDataPaths.size(); index++)
     {
       DataObject* dataObject = m_DataStructure.getData(sourceFeatureDataPaths[index]);
       if(dataObject->getDataObjectType() == DataObject::Type::DataArray)

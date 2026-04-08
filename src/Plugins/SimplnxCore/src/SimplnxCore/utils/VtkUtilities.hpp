@@ -127,9 +127,8 @@ std::string TypeForPrimitive(const IFilter::MessageHandler& messageHandler)
   {
     messageHandler(
         IFilter::Message::Type::Info,
-        fmt::format(
-            "You are using 'long int' as a type which is not 32/64 bit safe. It is suggested you use one of the H5SupportTypes defined in <Common/H5SupportTypes.h> such as int32_t or uint32_t.",
-            typeid(T).name()));
+        fmt::format("You are using 'long int' as a type which is not 32/64 bit safe. It is suggested you use one of the H5SupportTypes defined in <Common/H5SupportTypes.h> such as int32 or uint32.",
+                    typeid(T).name()));
   }
   return "";
 }
@@ -225,7 +224,7 @@ struct WriteVtkDataArrayFunctor
     {
       std::string buffer;
       buffer.reserve(k_BufferDumpVal);
-      for(size_t i = 0; i < totalElements; i++)
+      for(usize i = 0; i < totalElements; i++)
       {
         if(i % 20 == 0 && i > 0)
         {
@@ -344,17 +343,17 @@ struct WriteVtkDataFunctor
     }
     else
     {
-      const size_t k_DefaultElementsPerLine = 10;
+      const usize k_DefaultElementsPerLine = 10;
       auto start = std::chrono::steady_clock::now();
       auto numTuples = dataStoreRef.getSize();
-      size_t currentItemCount = 0;
+      usize currentItemCount = 0;
 
-      for(size_t idx = 0; idx < numTuples; idx++)
+      for(usize idx = 0; idx < numTuples; idx++)
       {
         auto now = std::chrono::steady_clock::now();
         if(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count() > 1000)
         {
-          auto string = fmt::format("Processing {}: {}% completed", dataArrayRef.getName(), static_cast<int32>(100 * static_cast<float>(idx) / static_cast<float>(numTuples)));
+          auto string = fmt::format("Processing {}: {}% completed", dataArrayRef.getName(), static_cast<int32>(100 * static_cast<float32>(idx) / static_cast<float32>(numTuples)));
           messageHandler(IFilter::Message::Type::Info, string);
           start = now;
           if(shouldCancel)

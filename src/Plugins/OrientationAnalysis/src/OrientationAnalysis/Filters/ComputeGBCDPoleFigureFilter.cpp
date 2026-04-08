@@ -1,5 +1,8 @@
 #include "ComputeGBCDPoleFigureFilter.hpp"
-#include "OrientationAnalysis/Filters/Algorithms/ComputeGBCDPoleFigure.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ComputeGBCDPoleFigureDirect.hpp"
+#include "OrientationAnalysis/Filters/Algorithms/ComputeGBCDPoleFigureScanline.hpp"
+
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -143,7 +146,8 @@ Result<> ComputeGBCDPoleFigureFilter::executeImpl(DataStructure& dataStructure, 
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.CellIntensityArrayName = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
 
-  return ComputeGBCDPoleFigure(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  auto* gbcdArray = dataStructure.getDataAs<IDataArray>(inputValues.GBCDArrayPath);
+  return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArray}, dataStructure, messageHandler, shouldCancel, &inputValues);
 }
 
 namespace

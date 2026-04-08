@@ -6,6 +6,7 @@
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -16,6 +17,8 @@ using namespace nx::core::Constants;
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
 
@@ -43,6 +46,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
     Arguments args;
     SurfaceNetsFilter const filter;
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(celDataPath));
     auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(celDataPath);
     MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
     for(const auto& child : voxelCellAttrMat)
@@ -51,6 +55,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
       selectedCellArrayPaths.push_back(celDataPath.createChildPath(child.second->getName()));
     }
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath));
     auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath);
     MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
     for(const auto& child : voxelFeatureAttrMat)
@@ -92,6 +97,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
 #endif
   }
   // Check a few things about the generated data.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
@@ -100,7 +106,9 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
   REQUIRE(vertices->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex list and shared triangle list
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath));
   auto& exemplarDataArray = dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName)));
   auto& computedDataArray = dataStructure.getDataRefAs<IDataArray>(computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
   CompareDataArrays<IGeometry::MeshIndexType>(exemplarDataArray, computedDataArray);
   CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
@@ -117,6 +125,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
 
@@ -144,6 +154,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
     Arguments args;
     SurfaceNetsFilter const filter;
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(celDataPath));
     auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(celDataPath);
     MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
     for(const auto& child : voxelCellAttrMat)
@@ -151,6 +162,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
       selectedCellArrayPaths.push_back(celDataPath.createChildPath(child.second->getName()));
     }
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath));
     auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath);
     MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
     for(const auto& child : voxelFeatureAttrMat)
@@ -192,6 +204,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
   }
   // Check a few things about the generated data.
   {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
     TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
     IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
     IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
@@ -200,7 +213,9 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
   }
 
   // Compare the shared vertex list and shared triangle list
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath));
   auto& exemplarDataArray = dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName)));
   auto& computedDataArray = dataStructure.getDataRefAs<IDataArray>(computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
   CompareDataArrays<IGeometry::MeshIndexType>(exemplarDataArray, computedDataArray);
   CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
@@ -217,6 +232,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
 
@@ -244,6 +261,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
     Arguments args;
     SurfaceNetsFilter const filter;
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(celDataPath));
     auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(celDataPath);
     MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
     for(const auto& child : voxelCellAttrMat)
@@ -251,6 +269,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
       selectedCellArrayPaths.push_back(celDataPath.createChildPath(child.second->getName()));
     }
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath));
     auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath);
     MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
     for(const auto& child : voxelFeatureAttrMat)
@@ -291,6 +310,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
 #endif
   }
   // Check a few things about the generated data.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
@@ -299,7 +319,9 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
   REQUIRE(vertices->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex list and shared triangle list
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath));
   auto& exemplarDataArray = dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName)));
   auto& computedDataArray = dataStructure.getDataRefAs<IDataArray>(computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
   CompareDataArrays<IGeometry::MeshIndexType>(exemplarDataArray, computedDataArray);
   CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));
@@ -316,6 +338,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][SurfaceNetsFilter]")
 {
   UnitTest::LoadPlugins();
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "SurfaceNetsTest_v3.tar.gz", "SurfaceNetsTest_v3");
 
@@ -343,6 +367,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
     Arguments args;
     SurfaceNetsFilter const filter;
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(celDataPath));
     auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(celDataPath);
     MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
     for(const auto& child : voxelCellAttrMat)
@@ -350,6 +375,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
       selectedCellArrayPaths.push_back(celDataPath.createChildPath(child.second->getName()));
     }
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath));
     auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath);
     MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
     for(const auto& child : voxelFeatureAttrMat)
@@ -390,6 +416,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
 #endif
   }
   // Check a few things about the generated data.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
@@ -398,7 +425,9 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
   REQUIRE(vertices->getNumberOfTuples() == 319447);
 
   // Compare the shared vertex list and shared triangle list
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath));
   auto& exemplarDataArray = dataStructure.getDataRefAs<IDataArray>(exemplarSharedTriPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName)));
   auto& computedDataArray = dataStructure.getDataRefAs<IDataArray>(computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedFacesListName));
   CompareDataArrays<IGeometry::MeshIndexType>(exemplarDataArray, computedDataArray);
   CompareArrays<float32>(dataStructure, exemplarSharedVertexPath, computedTriangleGeomPath.createChildPath(TriangleGeom::k_SharedVertexListName));

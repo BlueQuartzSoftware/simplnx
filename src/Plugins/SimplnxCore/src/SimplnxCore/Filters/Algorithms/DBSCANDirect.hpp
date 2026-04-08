@@ -2,49 +2,29 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ChoicesParameter.hpp"
-#include "simplnx/Utilities/ClusteringUtilities.hpp"
-
-#include <random>
 
 namespace nx::core
 {
-struct SIMPLNXCORE_EXPORT DBSCANInputValues
-{
-  DataPath ClusteringArrayPath;
-  DataPath MaskArrayPath;
-  DataPath FeatureIdsArrayPath;
-  float32 Epsilon;
-  int32 MinPoints;
-  ClusterUtilities::DistanceMetric DistanceMetric;
-  DataPath FeatureAM;
-  ChoicesParameter::ValueType ParseOrder;
-  std::mt19937_64::result_type Seed;
-};
+struct DBSCANInputValues;
 
 /**
- * @class
+ * @class DBSCANDirect
+ * @brief In-core algorithm for DBSCAN. Uses direct per-element getValue()/operator[]
+ * access for grid construction and canMerge distance computation. Selected by
+ * DispatchAlgorithm when all input arrays are backed by in-memory DataStore.
  */
 class SIMPLNXCORE_EXPORT DBSCANDirect
 {
 public:
-  DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues);
+  DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const DBSCANInputValues* inputValues);
   ~DBSCANDirect() noexcept;
 
   DBSCANDirect(const DBSCANDirect&) = delete;
   DBSCANDirect(DBSCANDirect&&) noexcept = delete;
   DBSCANDirect& operator=(const DBSCANDirect&) = delete;
   DBSCANDirect& operator=(DBSCANDirect&&) noexcept = delete;
-
-  enum ParseOrder
-  {
-    LowDensityFirst,
-    Random,
-    SeededRandom
-  };
 
   Result<> operator()();
 

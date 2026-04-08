@@ -64,11 +64,10 @@ Result<> AppendImageGeometry::operator()()
   ParallelTaskAlgorithm taskRunner;
   for(const auto& [dataId, dataObject] : *newCellData)
   {
-    if(getCancel())
+    if(m_ShouldCancel)
     {
       return {};
     }
-
     const std::string name = dataObject->getName();
 
     auto newDataArrayPath = newCellDataPath.createChildPath(name);

@@ -12,6 +12,8 @@
 #include "simplnx/Utilities/StringInterpretationUtilities.hpp"
 #include "simplnx/Utilities/TemplateHelpers.hpp"
 
+#include <nonstd/span.hpp>
+
 using namespace nx::core;
 
 namespace
@@ -179,7 +181,26 @@ Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure&
   }
 
   auto& featureIdsStore = featureIds.getDataStoreRef();
-  auto [minFeatureId, maxFeatureId] = std::minmax_element(featureIdsStore.begin(), featureIdsStore.end());
+
+  // Use bulk I/O to find min/max instead of per-element iterators.
+  // Per-element iteration on OOC stores incurs ~50-100ns virtual dispatch per
+  // access; at 8M+ elements this takes minutes.  Bulk copyIntoBuffer reads
+  // are a single HDF5 hyperslab op per batch.
+  const usize totalTuples = featureIdsStore.getNumberOfTuples();
+  constexpr usize k_BatchSize = 40000; // roughly one 200x200 Z-slice
+  int32 globalMin = std::numeric_limits<int32>::max();
+  int32 globalMax = std::numeric_limits<int32>::lowest();
+  std::vector<int32> batch(k_BatchSize);
+  for(usize offset = 0; offset < totalTuples; offset += k_BatchSize)
+  {
+    const usize count = std::min(k_BatchSize, totalTuples - offset);
+    featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(batch.data(), count));
+    auto [batchMin, batchMax] = std::minmax_element(batch.begin(), batch.begin() + count);
+    globalMin = std::min(globalMin, *batchMin);
+    globalMax = std::max(globalMax, *batchMax);
+  }
+  const int32* minFeatureId = &globalMin;
+  const int32* maxFeatureId = &globalMax;
 
   if(!ignoreNegativeValues && *minFeatureId < 0)
   {

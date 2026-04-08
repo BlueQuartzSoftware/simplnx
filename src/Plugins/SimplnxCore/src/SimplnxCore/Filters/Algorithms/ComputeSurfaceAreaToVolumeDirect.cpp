@@ -1,16 +1,20 @@
 #include "ComputeSurfaceAreaToVolumeDirect.hpp"
 
+#include "ComputeSurfaceAreaToVolume.hpp"
+
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
+#include <fmt/format.h>
+
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ComputeSurfaceAreaToVolumeDirect::ComputeSurfaceAreaToVolumeDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                                       ComputeSurfaceAreaToVolumeInputValues* inputValues)
+                                                                   const ComputeSurfaceAreaToVolumeInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -22,12 +26,11 @@ ComputeSurfaceAreaToVolumeDirect::ComputeSurfaceAreaToVolumeDirect(DataStructure
 ComputeSurfaceAreaToVolumeDirect::~ComputeSurfaceAreaToVolumeDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeSurfaceAreaToVolumeDirect::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
+/**
+ * @brief Computes surface-area-to-volume ratio using direct Z-Y-X iteration.
+ * In-core path: accumulates per-feature surface area from face-neighbor
+ * comparisons, then divides by voxel volume. Optionally computes sphericity.
+ */
 Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 {
   // Input Cell Data
@@ -52,16 +55,14 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
   SizeVec3 dims = imageGeom.getDimensions();
   FloatVec3 spacing = imageGeom.getSpacing();
 
-  auto xPoints = static_cast<int64_t>(dims[0]);
-  auto yPoints = static_cast<int64_t>(dims[1]);
-  auto zPoints = static_cast<int64_t>(dims[2]);
+  auto xPoints = static_cast<int64>(dims[0]);
+  auto yPoints = static_cast<int64>(dims[1]);
+  auto zPoints = static_cast<int64>(dims[2]);
 
   float32 voxelVol = spacing[0] * spacing[1] * spacing[2];
 
-  std::vector<float> featureSurfaceArea(static_cast<size_t>(numFeatures), 0.0f);
+  std::vector<float32> featureSurfaceArea(static_cast<usize>(numFeatures), 0.0f);
 
-  // This stores an offset to get to a particular index in the array based on
-  // a normal orthogonal cube
   int64 neighborOffset[6] = {0, 0, 0, 0, 0, 0};
   neighborOffset[0] = -xPoints * yPoints; // -Z
   neighborOffset[1] = -xPoints;           // -Y
@@ -70,57 +71,52 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
   neighborOffset[4] = xPoints;            // +Y
   neighborOffset[5] = xPoints * yPoints;  // +Z
 
-  // Start looping over the regular grid data (This could be either an Image Geometry or a Rectilinear Grid geometry (in theory)
   for(int64 zIdx = 0; zIdx < zPoints; zIdx++)
   {
-    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Z Slice: '{}'", zIdx));
     if(m_ShouldCancel)
     {
       return {};
     }
-
     int64 zStride = zIdx * xPoints * yPoints;
     for(int64 yIdx = 0; yIdx < yPoints; yIdx++)
     {
       int64 yStride = yIdx * xPoints;
       for(int64 xIdx = 0; xIdx < xPoints; xIdx++)
       {
-        float onSurface = 0.0f; // Start totalling the surface area
+        float32 onSurface = 0.0f;
         int32 currentFeatureId = featureIdsStoreRef[zStride + yStride + xIdx];
-        // If the current feature ID is not valid (< 1), then just continue;
         if(currentFeatureId < 1)
         {
           continue;
         }
 
-        // Loop over all 6 face neighbors
         for(int32 neighborOffsetIndex = 0; neighborOffsetIndex < 6; neighborOffsetIndex++)
         {
-          if(neighborOffsetIndex == 0 && zIdx == 0) // if we are on the bottom Z Layer, skip
+          if(neighborOffsetIndex == 0 && zIdx == 0)
           {
             continue;
           }
-          if(neighborOffsetIndex == 5 && zIdx == (zPoints - 1)) // if we are on the top Z Layer, skip
+          if(neighborOffsetIndex == 5 && zIdx == (zPoints - 1))
           {
             continue;
           }
-          if(neighborOffsetIndex == 1 && yIdx == 0) // If we are on the first Y row, skip
+          if(neighborOffsetIndex == 1 && yIdx == 0)
           {
             continue;
           }
-          if(neighborOffsetIndex == 4 && yIdx == (yPoints - 1)) // If we are on the last Y row, skip
+          if(neighborOffsetIndex == 4 && yIdx == (yPoints - 1))
           {
             continue;
           }
-          if(neighborOffsetIndex == 2 && xIdx == 0) // If we are on the first X column, skip
+          if(neighborOffsetIndex == 2 && xIdx == 0)
           {
             continue;
           }
-          if(neighborOffsetIndex == 3 && xIdx == (xPoints - 1)) // If we are on the last X column, skip
+          if(neighborOffsetIndex == 3 && xIdx == (xPoints - 1))
           {
             continue;
           }
-          //
+
           int64 neighborIndex = zStride + yStride + xIdx + neighborOffset[neighborOffsetIndex];
 
           if(featureIdsStoreRef[neighborIndex] != currentFeatureId)
@@ -148,18 +144,18 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
   const float32 thirdRootPi = std::pow(nx::core::Constants::k_PiF, 0.333333f);
   for(usize i = 1; i < numFeatures; i++)
   {
-    float featureVolume = voxelVol * numCells[i];
+    float32 featureVolume = voxelVol * numCells[i];
     surfaceAreaVolumeRatio[i] = featureSurfaceArea[i] / featureVolume;
   }
 
-  if(m_InputValues->CalculateSphericity) // Calc the sphericity if requested
+  if(m_InputValues->CalculateSphericity)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
 
     auto& sphericity = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
     for(usize i = 1; i < static_cast<usize>(numFeatures); i++)
     {
-      float featureVolume = voxelVol * numCells[i];
+      float32 featureVolume = voxelVol * numCells[i];
       sphericity[i] = (thirdRootPi * std::pow((6.0f * featureVolume), 0.66666f)) / featureSurfaceArea[i];
     }
   }

@@ -7,6 +7,8 @@
 #include <EbsdLib/IO/HKL/CtfConstants.h>
 #include <EbsdLib/Math/EbsdLibMath.h>
 
+#include <nonstd/span.hpp>
+
 using namespace nx::core;
 
 using FloatVec3Type = std::vector<float>;
@@ -101,94 +103,106 @@ void ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
 {
   const DataPath cellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
   const DataPath cellEnsembleAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellEnsembleAttributeMatrixName);
-  std::vector<size_t> cDims = {1};
 
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
-  const size_t totalCells = imageGeom.getNumberOfCells();
+  const usize totalCells = imageGeom.getNumberOfCells();
 
   // Prepare the Cell Attribute Matrix with the correct number of tuples based on the total Cells being read from the file.
-  std::vector<size_t> tDims = {imageGeom.getNumXCells(), imageGeom.getNumYCells(), imageGeom.getNumZCells()};
+  std::vector<usize> tDims = {imageGeom.getNumXCells(), imageGeom.getNumYCells(), imageGeom.getNumZCells()};
 
   // Copy the Phase Array
   {
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
-    int* phasePtr = reinterpret_cast<int32_t*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
-    for(size_t i = 0; i < totalCells; i++)
-    {
-      targetArray[i] = phasePtr[i];
-    }
+    auto* phasePtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phasePtr, totalCells));
   }
 
   // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
   {
     auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
-    auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
+    const auto* phasePtr = reinterpret_cast<const int32*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
 
-    const auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Euler1));
-    const auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Euler2));
-    const auto* fComp2 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Euler3));
-    cDims[0] = 3;
+    // Cache ensemble-level crystal structures locally
+    const auto& csStore = crystalStructures.getDataStoreRef();
+    const usize numPhases = csStore.getNumberOfTuples();
+    std::vector<uint32> csCache(numPhases);
+    csStore.copyIntoBuffer(0, nonstd::span<uint32>(csCache.data(), numPhases));
+
+    const auto* fComp0 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ctf::Euler1));
+    const auto* fComp1 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ctf::Euler2));
+    const auto* fComp2 = reinterpret_cast<const float*>(reader->getPointerByName(ebsdlib::Ctf::Euler3));
 
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
-    for(size_t i = 0; i < totalCells; i++)
+    auto& eulerStore = cellEulerAngles.getDataStoreRef();
+
+    constexpr usize k_ChunkSize = 65536;
+    std::vector<float32> eulerBuf(k_ChunkSize * 3);
+    for(usize offset = 0; offset < totalCells; offset += k_ChunkSize)
     {
-      cellEulerAngles[3 * i] = fComp0[i];
-      cellEulerAngles[3 * i + 1] = fComp1[i];
-      cellEulerAngles[3 * i + 2] = fComp2[i];
-      if(crystalStructures[cellPhases[i]] == ebsdlib::CrystalStructure::Hexagonal_High && m_InputValues->EdaxHexagonalAlignment)
+      usize count = std::min(k_ChunkSize, totalCells - offset);
+      for(usize i = 0; i < count; i++)
       {
-        cellEulerAngles[3 * i + 2] = cellEulerAngles[3 * i + 2] + 30.0F; // See the documentation for this correction factor
+        float32 e0 = fComp0[offset + i];
+        float32 e1 = fComp1[offset + i];
+        float32 e2 = fComp2[offset + i];
+        if(csCache[phasePtr[offset + i]] == ebsdlib::CrystalStructure::Hexagonal_High && m_InputValues->EdaxHexagonalAlignment)
+        {
+          e2 = e2 + 30.0F; // See the documentation for this correction factor
+        }
+        // Now convert to radians if requested by the user
+        if(m_InputValues->DegreesToRadians)
+        {
+          e0 = e0 * ebsdlib::constants::k_PiOver180F;
+          e1 = e1 * ebsdlib::constants::k_PiOver180F;
+          e2 = e2 * ebsdlib::constants::k_PiOver180F;
+        }
+        eulerBuf[3 * i] = e0;
+        eulerBuf[3 * i + 1] = e1;
+        eulerBuf[3 * i + 2] = e2;
       }
-      // Now convert to radians if requested by the user
-      if(m_InputValues->DegreesToRadians)
-      {
-        cellEulerAngles[3 * i] = cellEulerAngles[3 * i] * ebsdlib::constants::k_PiOver180F;
-        cellEulerAngles[3 * i + 1] = cellEulerAngles[3 * i + 1] * ebsdlib::constants::k_PiOver180F;
-        cellEulerAngles[3 * i + 2] = cellEulerAngles[3 * i + 2] * ebsdlib::constants::k_PiOver180F;
-      }
+      eulerStore.copyFromBuffer(offset * 3, nonstd::span<const float32>(eulerBuf.data(), count * 3));
     }
   }
 
-  cDims[0] = 1;
   {
-    auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Bands));
+    auto* srcPtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Bands));
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Bands));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Error));
+    auto* srcPtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Error));
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Error));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::MAD));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ctf::MAD));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::MAD));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::BC));
+    auto* srcPtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::BC));
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::BC));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::BS));
+    auto* srcPtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::BS));
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::BS));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::X));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ctf::X));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::X));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 
   {
-    auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ctf::Y));
+    auto* srcPtr = reinterpret_cast<float32*>(reader->getPointerByName(ebsdlib::Ctf::Y));
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Y));
-    std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
+    targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(srcPtr, totalCells));
   }
 }

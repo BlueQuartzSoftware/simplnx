@@ -56,26 +56,25 @@ public:
   Result<> operator()();
 
 protected:
-  /**
-   * @brief
-   * @param data
-   * @param args
-   * @param gnum
-   * @param nextSeed
-   * @return int64
-   */
-  int64_t getSeed(int32 gnum, int64 nextSeed) const override;
+  int64 getSeed(int32 gnum, int64 nextSeed) const override;
+  bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
 
   /**
-   * @brief
-   * @param data
-   * @param args
-   * @param referencepoint
-   * @param neighborpoint
-   * @param gnum
-   * @return bool
+   * @brief Checks whether a voxel can participate in EBSD segmentation based on mask and phase.
+   * @param point Linear voxel index.
+   * @return true if the voxel passes mask and phase checks.
    */
-  bool determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const override;
+  bool isValidVoxel(int64 point) const override;
+
+  /**
+   * @brief Determines whether two neighboring voxels belong to the same EBSD segment.
+   * @param point1 First voxel index.
+   * @param point2 Second (neighbor) voxel index.
+   * @return true if both voxels share the same phase and their misorientation is within tolerance.
+   */
+  bool areNeighborsSimilar(int64 point1, int64 point2) const override;
+
+  void prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ) override;
 
 private:
   const EBSDSegmentFeaturesInputValues* m_InputValues = nullptr;
@@ -87,6 +86,20 @@ private:
   FeatureIdsArrayType* m_FeatureIdsArray = nullptr;
 
   std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
+
+  void allocateSliceBuffers(int64 dimX, int64 dimY);
+  void deallocateSliceBuffers();
+
+  // Rolling 2-slot input buffers for OOC optimization.
+  // Pre-loading input data into these avoids per-element OOC overhead
+  // during neighbor comparisons in the CCL algorithm.
+  std::vector<float32> m_QuatBuffer;
+  std::vector<int32> m_PhaseBuffer;
+  std::vector<uint8> m_MaskBuffer;
+  std::vector<uint32> m_CrystalStructuresCache;
+  int64 m_BufSliceSize = 0;
+  int64 m_BufferedSliceZ[2] = {-1, -1};
+  bool m_UseSliceBuffers = false;
 };
 
 } // namespace nx::core

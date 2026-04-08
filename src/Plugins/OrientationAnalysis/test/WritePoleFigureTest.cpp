@@ -30,9 +30,7 @@ const std::string k_ImagePrefix("Discrete Pole Figure");
 template <typename T>
 void CompareComponentsOfArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, usize compIndex)
 {
-  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
-  auto* computedData = dataStructure.getData(computedPath);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
 
   const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
@@ -47,12 +45,19 @@ void CompareComponentsOfArrays(const DataStructure& dataStructure, const DataPat
 
   INFO(fmt::format("Bad Comparison\n  Input Data Array:'{}'\n  Output DataArray: '{}'", exemplaryDataPath.toString(), computedPath.toString()));
 
-  usize start = 0;
-  usize numTuples = exemplaryDataArray.getNumberOfTuples();
-  for(usize i = start; i < numTuples; i++)
+  const usize numTuples = exemplaryDataArray.getNumberOfTuples();
+  const usize totalElements = numTuples * exemplaryNumComp;
+
+  // Bulk-read both arrays into local buffers to avoid per-element OOC overhead
+  std::vector<T> exemplarBuf(totalElements);
+  std::vector<T> generatedBuf(totalElements);
+  exemplaryDataArray.getDataStoreRef().copyIntoBuffer(0, nonstd::span<T>(exemplarBuf.data(), totalElements));
+  generatedDataArray.getDataStoreRef().copyIntoBuffer(0, nonstd::span<T>(generatedBuf.data(), totalElements));
+
+  for(usize i = 0; i < numTuples; i++)
   {
-    auto oldVal = exemplaryDataArray[i * exemplaryNumComp + compIndex];
-    auto newVal = generatedDataArray[i * generatedNumComp + compIndex];
+    auto oldVal = exemplarBuf[i * exemplaryNumComp + compIndex];
+    auto newVal = generatedBuf[i * generatedNumComp + compIndex];
     INFO(fmt::format("Index: {} Comp: {}", i, compIndex));
 
     REQUIRE(oldVal == newVal);

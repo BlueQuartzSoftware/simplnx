@@ -50,9 +50,11 @@ protected:
    * @param yShifts
    * @return Whether the x and y shifts were successfully found
    */
-  Result<> findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) override;
+  Result<> findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts) override;
 
 private:
+  Result<> findShiftsOoc(std::vector<int64>& xShifts, std::vector<int64>& yShifts);
+
   DataStructure& m_DataStructure;
   const AlignSectionsFeatureCentroidInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;

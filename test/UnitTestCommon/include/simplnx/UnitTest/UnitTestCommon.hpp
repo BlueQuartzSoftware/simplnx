@@ -34,6 +34,7 @@
 #include <catch2/catch.hpp>
 
 #include <fmt/format.h>
+#include <nonstd/span.hpp>
 
 #include <algorithm>
 #include <filesystem>
@@ -220,7 +221,7 @@ const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
 
 namespace UnitTest
 {
-inline constexpr float EPSILON = 0.0001;
+inline constexpr float32 EPSILON = 0.0001;
 
 template <class T>
 std::string ComputeMD5Hash(const std::vector<T>& outputDataArray)
@@ -241,16 +242,18 @@ class TestFileSentinel
 {
 public:
   /**
-   * @brief Construct a File Sentinel object that will decompress on construction and remove the
-   * contents on destruction.
+   * @brief Construct a File Sentinel object that will decompress on construction if the
+   * expected top-level output does not already exist, and remove the decompressed
+   * contents on destruction only when no other sentinel still references the same archive.
    *
    * @param testFilesDir The directory where the archive is located
    * @param inputArchiveName The full name of the archive. The location is assumed to be in the TestFiles directory
    * @param expectedTopLevelOutput The name of the decompressed folder or file. WARNING: This assumes
    * that only a single file or single directory are part of the archive. In the case of a directory, the
    * directory itself can have as many subdirectories as needed.
-   * @param decompressFiles Decompress the archive
-   * @param removeTemp delete files that were decompressed
+   * @param decompressFiles Decompress the archive only if the expected top-level output does not already exist
+   * @param removeTemp delete the decompressed contents on destruction (only when this is the last
+   * sentinel referencing the archive, to avoid deleting data while parallel tests still read from it)
    */
   TestFileSentinel(std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles = true, bool removeTemp = true);
 
@@ -273,6 +276,7 @@ private:
   std::string m_ExpectedTopLevelOutput;
   bool m_Decompress;
   bool m_RemoveTemp;
+  std::filesystem::path m_HolderFile; // Per-process holder file inside {expected}.holders/
 };
 
 /**
@@ -305,6 +309,38 @@ private:
   int64 m_OriginalSize;
   bool m_OriginalForceOoc;
 };
+
+/**
+ * @brief Returns the expected IDataStore::StoreType based on current preferences
+ * and whether the OOC plugin is loaded. When forceOocData is true AND the
+ * large data format is registered, expects OutOfCore. Otherwise expects InMemory.
+ */
+inline IDataStore::StoreType ExpectedStoreType()
+{
+  auto* prefs = Application::GetOrCreateInstance()->getPreferences();
+  if(prefs->forceOocData())
+  {
+    auto ioCollection = DataStoreUtilities::GetIOCollection();
+    auto manager = ioCollection->getManager(prefs->largeDataFormat());
+    if(manager != nullptr)
+    {
+      return IDataStore::StoreType::OutOfCore;
+    }
+  }
+  return IDataStore::StoreType::InMemory;
+}
+
+/**
+ * @brief REQUIREs that the given data array's store type matches what is expected
+ * based on the current preferences and plugin state.
+ */
+inline void RequireExpectedStoreType(const IDataArray& array)
+{
+  auto expected = ExpectedStoreType();
+  auto actual = array.getIDataStoreRef().getStoreType();
+  INFO("Array '" << array.getName() << "' StoreType: expected=" << static_cast<int>(expected) << " actual=" << static_cast<int>(actual));
+  REQUIRE(actual == expected);
+}
 
 /**
  * @brief closeEnough
@@ -457,34 +493,16 @@ inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontag
 }
 
 /**
- * @brief Compares two IDataArrays element-by-element using bulk copyIntoBuffer
- *        for OOC-safe, high-performance comparison.
+ * @brief Compares two IDataArrays using bulk copyIntoBuffer for OOC efficiency.
  *
- * Why copyIntoBuffer instead of operator[]:
- *   When arrays are backed by an out-of-core (chunked) DataStore, each call
- *   to operator[] may trigger a chunk load from disk. Comparing millions of
- *   elements one at a time would cause catastrophic chunk thrashing. Instead,
- *   this function reads both arrays in 40,000-element chunks via copyIntoBuffer,
- *   which batches HDF5 I/O and keeps access sequential. This is also safe for
- *   in-memory stores, where copyIntoBuffer is a simple memcpy.
+ * Reads both arrays in 40K-element chunks via copyIntoBuffer instead of
+ * per-element operator[], avoiding per-voxel OOC store overhead.
+ * NaN == NaN is treated as equal for floating-point types.
  *
- * Floating-point comparison semantics:
- *   - NaN == NaN is treated as equal. Many filter outputs legitimately produce
- *     NaN values (e.g., division by zero in optional statistics), and both the
- *     exemplar and generated arrays should agree on which elements are NaN.
- *   - Values within UnitTest::EPSILON of each other are treated as equal,
- *     accommodating floating-point rounding differences across platforms.
- *
- * Error reporting:
- *   On the first mismatched element, the function records the index and both
- *   values, then breaks out of the comparison loop. The mismatch details are
- *   reported via Catch2's UNSCOPED_INFO before the final REQUIRE(!failed).
- *
- * @tparam T The element type (must match the actual DataStore element type)
- * @param left First array (typically the exemplar / golden reference)
- * @param right Second array (typically the generated / computed result)
- * @param start Element index to start comparison from (default 0). Useful when
- *              the first N elements are known to differ (e.g., header/padding).
+ * @tparam T The element type
+ * @param left First array (typically exemplar)
+ * @param right Second array (typically generated)
+ * @param start Element index to start comparison from (default 0)
  */
 template <typename T>
 void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize start = 0)
@@ -495,9 +513,6 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
   REQUIRE(totalSize == newDataStore.getSize());
 
-  // Use 40K-element chunks to balance memory usage against I/O efficiency.
-  // Each chunk is ~160 KB for float32 or ~320 KB for float64, which fits
-  // comfortably in L2 cache and aligns well with typical HDF5 chunk sizes.
   constexpr usize k_ChunkSize = 40000;
   auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
   auto newBuf = std::make_unique<T[]>(k_ChunkSize);
@@ -507,16 +522,12 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
   T failOld = {};
   T failNew = {};
 
-  // Iterate through the arrays in fixed-size chunks, reading both arrays
-  // into local buffers for fast element-wise comparison
   for(usize offset = start; offset < totalSize && !failed; offset += k_ChunkSize)
   {
-    // Handle the last chunk which may be smaller than k_ChunkSize
     const usize count = std::min(k_ChunkSize, totalSize - offset);
     oldDataStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
     newDataStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
 
-    // Compare each element in the current chunk
     for(usize i = 0; i < count; i++)
     {
       const T oldVal = oldBuf[i];
@@ -525,20 +536,17 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
       {
         if constexpr(std::is_floating_point_v<T>)
         {
-          // Special case: NaN == NaN is treated as equal because many filters
-          // produce NaN for undefined results, and both arrays should agree
+          // NaN == NaN is treated as equal
           if(std::isnan(oldVal) && std::isnan(newVal))
           {
             continue;
           }
-          // Allow small floating-point differences within EPSILON tolerance
           float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
           if(diff <= EPSILON)
           {
             continue;
           }
         }
-        // Record the first failure for diagnostic output, then stop
         failed = true;
         failIndex = offset + i;
         failOld = oldVal;
@@ -585,32 +593,50 @@ void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& righ
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
   REQUIRE(startTuple < tupleCount);
   REQUIRE(component < componentCount);
-  T oldVal;
-  T newVal;
-  bool failed = false;
-  for(usize t = startTuple; t < tupleCount; t++)
-  {
-    oldVal = oldDataStore[t * componentCount + component];
-    newVal = newDataStore[t * componentCount + component];
-    if(oldVal != newVal)
-    {
-      UNSCOPED_INFO(fmt::format("tuple=: {}  component=: {}  oldValue != newValue. {} != {}", t, component, oldVal, newVal));
 
-      if constexpr(std::is_floating_point_v<T>)
+  constexpr usize k_ChunkTuples = 40000;
+  const usize chunkElements = k_ChunkTuples * componentCount;
+  auto oldBuf = std::make_unique<T[]>(chunkElements);
+  auto newBuf = std::make_unique<T[]>(chunkElements);
+
+  bool failed = false;
+  usize failTuple = 0;
+  T failOld = {};
+  T failNew = {};
+
+  for(usize tStart = startTuple; tStart < tupleCount && !failed; tStart += k_ChunkTuples)
+  {
+    const usize tCount = std::min(k_ChunkTuples, tupleCount - tStart);
+    const usize elemCount = tCount * componentCount;
+    oldDataStore.copyIntoBuffer(tStart * componentCount, nonstd::span<T>(oldBuf.get(), elemCount));
+    newDataStore.copyIntoBuffer(tStart * componentCount, nonstd::span<T>(newBuf.get(), elemCount));
+
+    for(usize t = 0; t < tCount; t++)
+    {
+      const T oldVal = oldBuf[t * componentCount + component];
+      const T newVal = newBuf[t * componentCount + component];
+      if(oldVal != newVal)
       {
-        float diff = std::fabs(static_cast<float>(oldVal - newVal));
-        if(diff > EPSILON)
+        if constexpr(std::is_floating_point_v<T>)
         {
-          failed = true;
-          break;
+          float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
+          if(diff <= EPSILON)
+          {
+            continue;
+          }
         }
-      }
-      else
-      {
         failed = true;
+        failTuple = tStart + t;
+        failOld = oldVal;
+        failNew = newVal;
+        break;
       }
-      break;
     }
+  }
+
+  if(failed)
+  {
+    UNSCOPED_INFO(fmt::format("tuple=: {}  component=: {}  oldValue != newValue. {} != {}", failTuple, component, failOld, failNew));
   }
   REQUIRE(!failed);
 }
@@ -625,7 +651,6 @@ void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& righ
 template <typename T>
 void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath)
 {
-  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
   INFO(fmt::format("Exemplary Data Array:'{}'\n  Computed DataArray: '{}'\n   bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
@@ -634,19 +659,47 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
   const auto& computedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
   REQUIRE(exemplaryDataArray.getNumberOfTuples() == computedDataArray.getNumberOfTuples());
 
-  usize start = 0;
-  usize end = exemplaryDataArray.getSize();
-  for(usize i = start; i < end; i++)
+  const auto& oldStore = exemplaryDataArray.getDataStoreRef();
+  const auto& newStore = computedDataArray.getDataStoreRef();
+  const usize totalSize = oldStore.getSize();
+
+  constexpr usize k_ChunkSize = 40000;
+  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
+  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
+
+  bool failed = false;
+  usize failIndex = 0;
+  T failOld = {};
+  T failNew = {};
+
+  for(usize offset = 0; offset < totalSize && !failed; offset += k_ChunkSize)
   {
-    auto oldVal = exemplaryDataArray[i];
-    auto newVal = computedDataArray[i];
-    if(oldVal != newVal)
+    const usize count = std::min(k_ChunkSize, totalSize - offset);
+    oldStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
+    newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
+
+    for(usize i = 0; i < count; i++)
     {
-      float diff = std::fabs(static_cast<float>(oldVal - newVal));
-      REQUIRE(diff < EPSILON);
-      break;
+      if(oldBuf[i] != newBuf[i])
+      {
+        float32 diff = std::fabs(static_cast<float32>(oldBuf[i] - newBuf[i]));
+        if(diff >= EPSILON)
+        {
+          failed = true;
+          failIndex = offset + i;
+          failOld = oldBuf[i];
+          failNew = newBuf[i];
+          break;
+        }
+      }
     }
   }
+
+  if(failed)
+  {
+    UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", failIndex, failOld, failNew));
+  }
+  REQUIRE(!failed);
 }
 
 /**
@@ -670,28 +723,57 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
 
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
 
-  usize start = 0;
-  usize end = exemplaryDataArray.getSize();
-  for(usize i = start; i < end; i++)
+  const auto& oldStore = exemplaryDataArray.getDataStoreRef();
+  const auto& newStore = generatedDataArray.getDataStoreRef();
+  const usize totalSize = oldStore.getSize();
+
+  constexpr usize k_ChunkSize = 40000;
+  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
+  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
+
+  bool failed = false;
+  usize failIndex = 0;
+  T failOld = {};
+  T failNew = {};
+
+  for(usize offset = 0; offset < totalSize && !failed; offset += k_ChunkSize)
   {
-    auto oldVal = exemplaryDataArray[i];
-    auto newVal = generatedDataArray[i];
-    if(!checkNans && (std::isnan(newVal) || std::isnan(oldVal)))
+    const usize count = std::min(k_ChunkSize, totalSize - offset);
+    oldStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
+    newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
+
+    for(usize i = 0; i < count; i++)
     {
-      continue;
-    }
-    if(std::isnan(oldVal) && std::isnan(newVal))
-    {
-      // https://stackoverflow.com/questions/38798791/nan-comparison-rule-in-c-c
-      continue;
-    }
-    if(oldVal != newVal)
-    {
-      float diff = std::fabs(static_cast<float>(oldVal - newVal));
-      REQUIRE(diff < epsilon);
-      break;
+      const T oldVal = oldBuf[i];
+      const T newVal = newBuf[i];
+      if(!checkNans && (std::isnan(newVal) || std::isnan(oldVal)))
+      {
+        continue;
+      }
+      if(std::isnan(oldVal) && std::isnan(newVal))
+      {
+        continue;
+      }
+      if(oldVal != newVal)
+      {
+        float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
+        if(diff >= epsilon)
+        {
+          failed = true;
+          failIndex = offset + i;
+          failOld = oldVal;
+          failNew = newVal;
+          break;
+        }
+      }
     }
   }
+
+  if(failed)
+  {
+    UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", failIndex, failOld, failNew));
+  }
+  REQUIRE(!failed);
 }
 
 /**
@@ -735,7 +817,7 @@ void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, 
         }
         if(exemplaryVal != computedVal)
         {
-          float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+          float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
           INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryDataPath.toString(), exemplary.size(),
                            computedPath.toString(), computed.size()));
           INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
@@ -785,7 +867,7 @@ void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborLis
           auto computedVal = computed.at(j);
           if(exemplaryVal != computedVal)
           {
-            float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+            float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
             INFO(fmt::format("Bad Neighborlist Comparison\n  Exemplary NeighborList:'{}'  size:{}\n  Computed NeighborList: '{}' size:{} ", exemplaryList.getDataPaths()[0].toString(),
                              exemplary.size(), computedList.getDataPaths()[0].toString(), computed.size()));
             INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
@@ -834,7 +916,7 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
         auto computedVal = computed.at(j);
         if(exemplaryVal != computedVal)
         {
-          float diff = std::fabs(static_cast<float>(exemplaryVal - computedVal));
+          float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
           INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal));
 
           REQUIRE(diff < EPSILON);
@@ -933,7 +1015,7 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
     T newNumCells = newEltList.numCells;
     if(oldNumCells != newNumCells)
     {
-      float diff = std::fabs(static_cast<float>(oldNumCells - newNumCells));
+      float32 diff = std::fabs(static_cast<float32>(oldNumCells - newNumCells));
       REQUIRE(diff < EPSILON);
     }
     for(T j = 0; j < oldNumCells; ++j)
@@ -942,7 +1024,7 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
       auto newVal = newEltList.cells[j];
       if(oldVal != newVal)
       {
-        float diff = std::fabs(static_cast<float>(oldVal - newVal));
+        float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
         REQUIRE(diff < EPSILON);
       }
     }
@@ -1257,7 +1339,7 @@ inline void CompareDataStructures(const DataStructure& dataStructureA, const Dat
 
 /**
  * @brief Creates a DataArray backed by a DataStore (in memory).
- * @tparam T The primitive type to use, i.e. int8, float, double
+ * @tparam T The primitive type to use, i.e. int8, float32, double
  * @param dataStructure The DataStructure to use
  * @param name The name of the DataArray
  * @param tupleShape  The tuple dimensions of the data. If you want to mimic an image then your shape should be {height, width} slowest to fastest dimension
@@ -1307,7 +1389,7 @@ inline DataStructure CreateDataStructure()
   usize numComponents = 1;
   ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  Float32Array* ci_data = CreateTestDataArray<float>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
+  Float32Array* ci_data = CreateTestDataArray<float32>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
   Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
   Int32Array* phases_data = CreateTestDataArray<int32>(dataStructure, "Phases", tupleShape, {numComponents}, scanData->getId());
   UInt64Array* voxelIndices = CreateTestDataArray<uint64>(dataStructure, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
@@ -1317,7 +1399,7 @@ inline DataStructure CreateDataStructure()
 
   numComponents = 3;
   UInt8Array* ipf_color_data = CreateTestDataArray<uint8>(dataStructure, "IPF Colors", tupleShape, {numComponents}, scanData->getId());
-  Float32Array* euler_data = CreateTestDataArray<float>(dataStructure, "Euler", tupleShape, {numComponents}, scanData->getId());
+  Float32Array* euler_data = CreateTestDataArray<float32>(dataStructure, "Euler", tupleShape, {numComponents}, scanData->getId());
 
   // Add in another group that holds the phase data such as Laue Class, Lattice Constants, etc.
   DataGroup* ensembleGroup = DataGroup::Create(dataStructure, "Phase Data", topLevelGroup->getId());
@@ -1599,7 +1681,7 @@ inline void CompareExemplarToGeneratedData(const DataStructure& dataStructure, c
   }
 }
 
-inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exemplarFile, const std::vector<size_t>& lineIndicesToSkip)
+inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exemplarFile, const std::vector<usize>& lineIndicesToSkip)
 {
   std::vector<std::string> computedLines;
   std::vector<std::string> exemplarLines;
@@ -1613,7 +1695,7 @@ inline void CompareAsciiFiles(std::ifstream& computedFile, std::ifstream& exempl
   }
 
   REQUIRE(computedLines.size() == exemplarLines.size());
-  for(size_t i = 0; i < computedLines.size(); ++i)
+  for(usize i = 0; i < computedLines.size(); ++i)
   {
     if(std::find(begin(lineIndicesToSkip), end(lineIndicesToSkip), i) != std::end(lineIndicesToSkip))
     {

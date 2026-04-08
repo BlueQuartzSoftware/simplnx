@@ -10,6 +10,7 @@
 
 #include <Eigen/Dense>
 
+#include <memory>
 #include <set>
 #include <unordered_set>
 
@@ -193,36 +194,50 @@ usize FindNumEdges(const AbstractDataStore<T>& faceStore, usize numVertices = (d
 template <typename T, typename K>
 void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T, K>* dynamicList, usize numVerts)
 {
-  auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
   const usize numVertsPerElem = elemList->getNumberOfComponents();
+  const auto& elemStore = elemList->getDataStoreRef();
 
   // Allocate the basic structures
   std::vector<T> linkCount(numVerts, 0);
-
-  // Fill out lists with number of references to cells
   std::vector<K> linkLoc(numVerts, static_cast<K>(0));
 
-  // vtkPolyData *pdata = static_cast<vtkPolyData *>(data);
-  // Traverse data to determine number of uses of each point
-  for(usize elemId = 0; elemId < numElems; elemId++)
+  // Use chunked bulk reads instead of per-element operator[] for OOC compatibility
+  constexpr usize k_ChunkElems = 65536;
+  auto chunkBuf = std::make_unique<K[]>(k_ChunkElems * numVertsPerElem);
+
+  // Chunked pass 1: count references to each vertex
+  for(usize start = 0; start < numElems; start += k_ChunkElems)
   {
-    usize offset = elemId * numVertsPerElem;
-    for(usize j = 0; j < numVertsPerElem; j++)
+    usize count = std::min(k_ChunkElems, numElems - start);
+    usize elemCount = count * numVertsPerElem;
+    elemStore.copyIntoBuffer(start * numVertsPerElem, nonstd::span<K>(chunkBuf.get(), elemCount));
+    for(usize i = 0; i < count; i++)
     {
-      ++linkCount[elems[offset + j]];
+      for(usize j = 0; j < numVertsPerElem; j++)
+      {
+        ++linkCount[chunkBuf[i * numVertsPerElem + j]];
+      }
     }
   }
 
   // Now allocate storage for the links
   dynamicList->allocateLists(linkCount);
 
-  for(usize elemId = 0; elemId < numElems; elemId++)
+  // Chunked pass 2: insert cell references
+  for(usize start = 0; start < numElems; start += k_ChunkElems)
   {
-    usize offset = elemId * numVertsPerElem;
-    for(usize j = 0; j < numVertsPerElem; j++)
+    usize count = std::min(k_ChunkElems, numElems - start);
+    usize elemCount = count * numVertsPerElem;
+    elemStore.copyIntoBuffer(start * numVertsPerElem, nonstd::span<K>(chunkBuf.get(), elemCount));
+    for(usize i = 0; i < count; i++)
     {
-      dynamicList->insertCellReference(elems[offset + j], (linkLoc[elems[offset + j]])++, elemId);
+      usize elemId = start + i;
+      for(usize j = 0; j < numVertsPerElem; j++)
+      {
+        K vertId = chunkBuf[i * numVertsPerElem + j];
+        dynamicList->insertCellReference(vertId, (linkLoc[vertId])++, elemId);
+      }
     }
   }
 }
@@ -240,9 +255,9 @@ void FindElementsContainingVert(const DataArray<K>* elemList, DynamicListArray<T
 template <typename T, typename K>
 ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListArray<T, K>* elemsContainingVert, DynamicListArray<T, K>* dynamicList, IGeometry::Type geometryType)
 {
-  auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
   const usize numVertsPerElem = elemList->getNumberOfComponents();
+  const auto& elemStore = elemList->getDataStoreRef();
   usize numSharedVerts = 0;
   std::vector<T> linkCount(numElems, 0);
   ErrorCode err = 0;
@@ -292,68 +307,90 @@ ErrorCode FindElementNeighbors(const DataArray<K>* elemList, const DynamicListAr
   // Reuse this vector for each loop. Avoids re-allocating the memory each time through the loop
   std::vector<K> loop_neighbors(32, 0);
 
-  // Build up the element adjacency list now that we have the element links
-  for(usize t = 0; t < numElems; ++t)
-  {
-    //   qDebug() << "Analyzing Cell " << t << "\n";
-    const usize offset = t * numVertsPerElem;
-    for(usize v = 0; v < numVertsPerElem; ++v)
-    {
-      //   qDebug() << " vert " << v << "\n";
-      T nEs = elemsContainingVert->getNumberOfElements(elems[offset + v]);
-      K* vertIdxs = elemsContainingVert->getElementListPointer(elems[offset + v]);
+  // Buffer for reading a single candidate neighbor element's vertices via bulk I/O
+  auto neighborVertsBuf = std::make_unique<K[]>(numVertsPerElem);
 
-      for(T vt = 0; vt < nEs; ++vt)
+  // Process elements in chunks for the sequential outer read (OOC-friendly bulk I/O)
+  constexpr usize k_ChunkElems = 65536;
+  auto chunkBuf = std::make_unique<K[]>(k_ChunkElems * numVertsPerElem);
+
+  for(usize chunkStart = 0; chunkStart < numElems; chunkStart += k_ChunkElems)
+  {
+    usize chunkCount = std::min(k_ChunkElems, numElems - chunkStart);
+    elemStore.copyIntoBuffer(chunkStart * numVertsPerElem, nonstd::span<K>(chunkBuf.get(), chunkCount * numVertsPerElem));
+
+    for(usize ci = 0; ci < chunkCount; ci++)
+    {
+      usize t = chunkStart + ci;
+      usize localOffset = ci * numVertsPerElem;
+
+      for(usize v = 0; v < numVertsPerElem; v++)
       {
-        if(vertIdxs[vt] == static_cast<K>(t))
+        K vertId = chunkBuf[localOffset + v];
+        T nEs = elemsContainingVert->getNumberOfElements(vertId);
+        K* vertIdxs = elemsContainingVert->getElementListPointer(vertId);
+
+        for(T vt = 0; vt < nEs; vt++)
         {
-          continue;
-        } // This is the same element as our "source"
-        if(visited[vertIdxs[vt]])
-        {
-          continue;
-        } // We already added this element so loop again
-        //      qDebug() << "   Comparing Element " << vertIdxs[vt] << "\n";
-        auto vertCell = elemList->cbegin() + (vertIdxs[vt] * elemList->getNumberOfComponents());
-        usize vCount = 0;
-        // Loop over all the vertex indices of this element and try to match numSharedVerts of them to the current loop element
-        // If there is numSharedVerts match then that element is a neighbor of the source. If there are more than numVertsPerElem
-        // matches then there is a real problem with the mesh and the program is going to return an error.
-        for(usize i = 0; i < numVertsPerElem; i++)
-        {
-          for(usize j = 0; j < numVertsPerElem; j++)
+          if(vertIdxs[vt] == static_cast<K>(t))
           {
-            if(elems[offset + i] == *(vertCell + j))
+            continue; // This is the same element as our "source"
+          }
+          if(visited[vertIdxs[vt]])
+          {
+            continue; // We already added this element so loop again
+          }
+
+          // Read the candidate neighbor element's vertices.
+          // If the candidate is within our current chunk, read from the local buffer;
+          // otherwise perform a single bulk read from the store.
+          K candidateElem = vertIdxs[vt];
+          const K* candidateVerts = nullptr;
+          if(candidateElem >= chunkStart && candidateElem < chunkStart + chunkCount)
+          {
+            candidateVerts = &chunkBuf[(candidateElem - chunkStart) * numVertsPerElem];
+          }
+          else
+          {
+            elemStore.copyIntoBuffer(candidateElem * numVertsPerElem, nonstd::span<K>(neighborVertsBuf.get(), numVertsPerElem));
+            candidateVerts = neighborVertsBuf.get();
+          }
+
+          // Count shared vertices between source element t and the candidate
+          usize vCount = 0;
+          for(usize i = 0; i < numVertsPerElem; i++)
+          {
+            for(usize j = 0; j < numVertsPerElem; j++)
             {
-              vCount++;
+              if(chunkBuf[localOffset + i] == candidateVerts[j])
+              {
+                vCount++;
+              }
             }
           }
-        }
 
-        // So if our vertex match count is numSharedVerts, and we have not visited the element in question then add this element index
-        // into the list of vertex indices as neighbors for the source element.
-        if(vCount == numSharedVerts)
-        {
-          // qDebug() << "       Neighbor: " << vertIdxs[vt] << "\n";
-          // Use the current count of neighbors as the index
-          // into the loop_neighbors vector and place the value of the vertex element at that index
-          loop_neighbors[linkCount[t]] = vertIdxs[vt];
-          ++linkCount[t]; // Increment the count for the next time through
-          if(linkCount[t] >= loop_neighbors.size())
+          // If vertex match count equals numSharedVerts, this candidate is a neighbor
+          if(vCount == numSharedVerts)
           {
-            loop_neighbors.resize(loop_neighbors.size() + 10);
+            loop_neighbors[linkCount[t]] = vertIdxs[vt];
+            ++linkCount[t];
+            if(linkCount[t] >= loop_neighbors.size())
+            {
+              loop_neighbors.resize(loop_neighbors.size() + 10);
+            }
+            visited[vertIdxs[vt]] = true;
           }
-          visited[vertIdxs[vt]] = true; // Set this element as visited so we do NOT add it again
         }
       }
+
+      // Reset all the visited cell indices back to false (zero)
+      for(int64 k = 0; k < linkCount[t]; k++)
+      {
+        visited[loop_neighbors[k]] = false;
+      }
+      // Allocate the array storage for the current element to hold its neighbor list
+      dynamicList->setElementList(t, linkCount[t], &(loop_neighbors[0]));
     }
-    // Reset all the visited cell indexs back to false (zero)
-    for(int64 k = 0; k < linkCount[t]; ++k)
-    {
-      visited[loop_neighbors[k]] = false;
-    }
-    // Allocate the array storage for the current edge to hold its vertex list
-    dynamicList->setElementList(t, linkCount[t], &(loop_neighbors[0]));
   }
 
   return err;

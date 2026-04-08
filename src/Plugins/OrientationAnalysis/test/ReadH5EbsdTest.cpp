@@ -63,13 +63,15 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  // #ifdef SIMPLNX_WRITE_TEST_OUTPUT
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_h5ebsd_test.dream3d", unit_test::k_BinaryTestOutputDir)));
-  // #endif
+#endif
 
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellAttributeMatrix));
     auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellAttributeMatrix);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellEnsembleAttributeMatrixPath));
     auto& cellEnsembleDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(Constants::k_CellEnsembleAttributeMatrixPath);
     std::vector<DataPath> selectedArrays;
 
@@ -89,8 +91,10 @@ TEST_CASE("OrientationAnalysis::ReadH5Ebsd: Valid filter execution", "[Orientati
       {
         continue;
       }
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(arrayPath));
       const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(arrayPath);
       DataType type = generatedDataArray.getDataType();
+      REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(arrayPath));
       auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(arrayPath);
       DataType exemplarType = exemplarDataArray.getDataType();
 

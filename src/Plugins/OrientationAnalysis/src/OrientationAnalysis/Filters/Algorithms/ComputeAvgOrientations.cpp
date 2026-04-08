@@ -8,7 +8,9 @@
 #include <EbsdLib/Core/DirectionalStats.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
 
-#include <iostream>
+#include <nonstd/span.hpp>
+
+#include <memory>
 
 using namespace nx::core;
 
@@ -194,6 +196,7 @@ void UpdateEulerArray(AbstractDataStore<T>& eulerArray, const ebsdlib::Euler<T>&
   eulerArray.setValue(tupleIndex * 3 + 2, euler[2]);
 }
 
+constexpr usize k_ChunkTuples = 65536;
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -368,90 +371,122 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
 {
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  Int32Array& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
-  Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  Float32Array& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
+  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+  auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath);
 
-  UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
 
-  auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgQuatsArrayPath).getDataStoreRef();
-  auto& avgEuler = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgEulerAnglesArrayPath).getDataStoreRef();
+  auto& avgQuatsStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgQuatsArrayPath).getDataStoreRef();
+  auto& avgEulerStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgEulerAnglesArrayPath).getDataStoreRef();
 
-  const size_t totalPoints = featureIds.getNumberOfTuples();
+  const usize totalPoints = featureIds.getNumberOfTuples();
 
-  size_t totalFeatures = avgQuats.getNumberOfTuples();
-  std::vector<float> counts(totalFeatures, 0.0f);
+  const usize totalFeatures = avgQuatsStore.getNumberOfTuples();
+  std::vector<float32> counts(totalFeatures, 0.0f);
 
-  // initialize the output arrays
-  avgQuats.fill(0.0F);
-  // Initialize all Euler Angles to Zero
-  avgEuler.fill(0.0F);
+  // Cache crystal structures locally (ensemble-level, tiny)
+  const usize numPhases = crystalStructuresArray.getNumberOfTuples();
+  std::vector<uint32> crystalStructures(numPhases);
+  crystalStructuresArray.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), numPhases));
+
+  // Local cache for avgQuats (feature-level, manageable)
+  std::vector<float32> localAvgQuats(totalFeatures * 4, 0.0f);
 
   // Get the Identity Quaternion
   static const ebsdlib::QuatF identityQuat(0.0f, 0.0f, 0.0f, 1.0f);
 
-  for(size_t i = 0; i < totalPoints; i++)
+  // Chunked accumulation of cell-level data
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
+  const auto& phasesStore = phases.getDataStoreRef();
+  const auto& quatsStore = quats.getDataStoreRef();
+
+  auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
+  auto phasesBuf = std::make_unique<int32[]>(k_ChunkTuples);
+  auto quatsBuf = std::make_unique<float32[]>(k_ChunkTuples * 4);
+
+  for(usize offset = 0; offset < totalPoints; offset += k_ChunkTuples)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
-    const int32_t currentFeatureId = featureIds[i];
-    const int32_t currentPhase = phases[i];
-    // As long as we have a valid `currentPhase` value which is used as an index
-    // into the CrystalStructures array. We ALWAYS ignore the first value in the
-    // CrystalStructures array. So therefore the `currentPhase` MUST be > 0.
-    // We can use `currentFeatureId = 0` because if someone is just wanting to compute
-    // the average of a bunch of orientations they may have labeled the "FeatureIds = 0"
-    // for all the values. The most important value is the `currentPhase` which for
-    // the grand majority of historical data should be > 0.
-    //    Now in theory someone could absolutely manually import data into an "Ensemble"
-    // Array and NOT have the zero index as `unknown` in which case this check will
-    // fail them and they will not compute anything most likely. The documentation
-    // for the filter should be updated to cover these use-cases.
-    if(currentPhase > 0)
+
+    const usize count = std::min(k_ChunkTuples, totalPoints - offset);
+    featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuf.get(), count));
+    phasesStore.copyIntoBuffer(offset, nonstd::span<int32>(phasesBuf.get(), count));
+    quatsStore.copyIntoBuffer(offset * 4, nonstd::span<float32>(quatsBuf.get(), count * 4));
+
+    for(usize i = 0; i < count; i++)
     {
-      const uint32 xtal = crystalStructures[currentPhase];
-      counts[currentFeatureId] += 1.0f;
-      ebsdlib::QuatF voxQuat(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
-      ebsdlib::QuatF curAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);
-      ebsdlib::QuatF finalAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);
-
-      curAvgQuat = curAvgQuat.scalarDivide(counts[currentFeatureId]);
-
-      if(counts[currentFeatureId] == 1.0f)
+      const int32 currentFeatureId = featureIdBuf[i];
+      const int32 currentPhase = phasesBuf[i];
+      if(currentFeatureId > 0 && currentPhase > 0)
       {
-        curAvgQuat = ebsdlib::QuatF::identity();
-      }
-      voxQuat = orientationOps[xtal]->getNearestQuat(curAvgQuat, voxQuat);
-      curAvgQuat = finalAvgQuat + voxQuat;
+        const uint32 xtal = crystalStructures[currentPhase];
+        counts[currentFeatureId] += 1.0f;
 
-      UpdateQuaternionArray(avgQuats, curAvgQuat, currentFeatureId);
+        const usize qi = i * 4;
+        ebsdlib::QuatF voxQuat(quatsBuf[qi], quatsBuf[qi + 1], quatsBuf[qi + 2], quatsBuf[qi + 3]);
+
+        const usize fi = static_cast<usize>(currentFeatureId) * 4;
+        ebsdlib::QuatF curAvgQuat(localAvgQuats[fi], localAvgQuats[fi + 1], localAvgQuats[fi + 2], localAvgQuats[fi + 3]);
+        ebsdlib::QuatF finalAvgQuat = curAvgQuat;
+
+        curAvgQuat = curAvgQuat.scalarDivide(counts[currentFeatureId]);
+
+        if(counts[currentFeatureId] == 1.0f)
+        {
+          curAvgQuat = ebsdlib::QuatF::identity();
+        }
+        voxQuat = orientationOps[xtal]->getNearestQuat(curAvgQuat, voxQuat);
+        curAvgQuat = finalAvgQuat + voxQuat;
+
+        localAvgQuats[fi] = curAvgQuat.x();
+        localAvgQuats[fi + 1] = curAvgQuat.y();
+        localAvgQuats[fi + 2] = curAvgQuat.z();
+        localAvgQuats[fi + 3] = curAvgQuat.w();
+      }
     }
   }
 
-  for(size_t featureId = 0; featureId < totalFeatures; featureId++)
+  // Second pass: normalize and convert to Euler angles (feature-level only)
+  std::vector<float32> localAvgEuler(totalFeatures * 3, 0.0f);
+
+  for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
 
+    const usize fi = featureId * 4;
     if(counts[featureId] == 0.0f)
     {
-      UpdateQuaternionArray(avgQuats, identityQuat, featureId);
-      continue;
+      localAvgQuats[fi] = identityQuat.x();
+      localAvgQuats[fi + 1] = identityQuat.y();
+      localAvgQuats[fi + 2] = identityQuat.z();
+      localAvgQuats[fi + 3] = identityQuat.w();
     }
 
-    ebsdlib::QuatF curAvgQuat(avgQuats[featureId * 4], avgQuats[featureId * 4 + 1], avgQuats[featureId * 4 + 2], avgQuats[featureId * 4 + 3]);
+    ebsdlib::QuatF curAvgQuat(localAvgQuats[fi], localAvgQuats[fi + 1], localAvgQuats[fi + 2], localAvgQuats[fi + 3]);
     curAvgQuat = curAvgQuat.scalarDivide(counts[featureId]);
-    curAvgQuat = curAvgQuat.normalize().getPositiveOrientation(); // Be sure the Quaterion is in the Northern Hemisphere
-    UpdateQuaternionArray(avgQuats, curAvgQuat, featureId);
+    curAvgQuat = curAvgQuat.normalize().getPositiveOrientation();
+    localAvgQuats[fi] = curAvgQuat.x();
+    localAvgQuats[fi + 1] = curAvgQuat.y();
+    localAvgQuats[fi + 2] = curAvgQuat.z();
+    localAvgQuats[fi + 3] = curAvgQuat.w();
 
-    // Update the value for the average Euler.
     ebsdlib::EulerFType eu = ebsdlib::QuaternionFType(curAvgQuat).toEuler();
-    UpdateEulerArray(avgEuler, eu, featureId);
+    const usize ei = featureId * 3;
+    localAvgEuler[ei] = eu[0];
+    localAvgEuler[ei + 1] = eu[1];
+    localAvgEuler[ei + 2] = eu[2];
   }
+
+  // Write feature-level results back to DataStore
+  avgQuatsStore.copyFromBuffer(0, nonstd::span<const float32>(localAvgQuats.data(), localAvgQuats.size()));
+  avgEulerStore.copyFromBuffer(0, nonstd::span<const float32>(localAvgEuler.data(), localAvgEuler.size()));
 
   return {};
 }

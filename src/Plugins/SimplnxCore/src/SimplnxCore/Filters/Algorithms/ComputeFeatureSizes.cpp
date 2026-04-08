@@ -8,12 +8,16 @@
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 
+#include <nonstd/span.hpp>
+
 #include <cmath>
+#include <memory>
 
 using namespace nx::core;
 
 namespace
 {
+constexpr usize k_ChunkTuples = 65536;
 constexpr int32 k_BadFeatureCount = -78231;
 constexpr uint64 k_MaxVoxelCount = std::numeric_limits<int32>::max();
 /**
@@ -37,17 +41,23 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
 
   msgHelper.sendMessage("Finding Voxel Counts...");
-  // Count and store the number of voxels in each feature
-  for(usize voxelIdx = 0; voxelIdx < numVoxels; voxelIdx++)
+  // Count voxels per feature using chunked bulk I/O
+  auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
+  for(usize offset = 0; offset < numVoxels; offset += k_ChunkTuples)
   {
     if(shouldCancel)
     {
       return {};
     }
 
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Counting || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Counting || {:.2f}% Complete", CalculatePercentComplete(offset, numVoxels)); });
 
-    featureVoxelCounts[featureIds.getValue(voxelIdx)]++;
+    const usize count = std::min(k_ChunkTuples, numVoxels - offset);
+    featureIds.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuf.get(), count));
+    for(usize i = 0; i < count; i++)
+    {
+      featureVoxelCounts[featureIdBuf[i]]++;
+    }
   }
 
   const FloatVec3 spacing = imageGeom.getSpacing();
@@ -195,32 +205,32 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   std::vector<float64> featureCompensators(numFeatures, 0.0);
 
   msgHelper.sendMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
-  // Count and store the number of voxels in each feature
-  for(usize voxelIdx = 0; voxelIdx < numVoxels; voxelIdx++)
+  // Count voxels and sum volumes using chunked bulk I/O
+  auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
+  auto elemSizeBuf = std::make_unique<float32[]>(k_ChunkTuples);
+  for(usize offset = 0; offset < numVoxels; offset += k_ChunkTuples)
   {
     if(shouldCancel)
     {
       return {};
     }
 
-    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(voxelIdx, numVoxels)); });
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format(" - Calculating || {:.2f}% Complete", CalculatePercentComplete(offset, numVoxels)); });
 
-    const int32 voxelFeatureId = featureIds.getValue(voxelIdx);
-    featureVoxelCounts[voxelFeatureId]++;
+    const usize count = std::min(k_ChunkTuples, numVoxels - offset);
+    featureIds.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuf.get(), count));
+    elemSizes.copyIntoBuffer(offset, nonstd::span<float32>(elemSizeBuf.get(), count));
+    for(usize i = 0; i < count; i++)
+    {
+      const int32 voxelFeatureId = featureIdBuf[i];
+      featureVoxelCounts[voxelFeatureId]++;
 
-    // Use Kahan summation to determine overall volume
-
-    // Attempt to recover low order into the value. The first instance is 0
-    float64 value = static_cast<float64>(elemSizes.getValue(voxelIdx)) - featureCompensators[voxelFeatureId];
-
-    // low order may be lost
-    float64 volSum = featureVolumes[voxelFeatureId] + value;
-
-    // recover and cache low order
-    featureCompensators[voxelFeatureId] = (volSum - featureVolumes[voxelFeatureId]) - value;
-
-    // store volumes
-    featureVolumes[voxelFeatureId] = volSum;
+      // Use Kahan summation to determine overall volume
+      float64 value = static_cast<float64>(elemSizeBuf[i]) - featureCompensators[voxelFeatureId];
+      float64 volSum = featureVolumes[voxelFeatureId] + value;
+      featureCompensators[voxelFeatureId] = (volSum - featureVolumes[voxelFeatureId]) - value;
+      featureVolumes[voxelFeatureId] = volSum;
+    }
   }
 
   msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating ESD...");

@@ -3,8 +3,11 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <nonstd/span.hpp>
+
 #include <algorithm>
 #include <chrono>
+#include <memory>
 #include <queue>
 
 using namespace nx::core;
@@ -13,8 +16,8 @@ namespace
 {
 using EdgeListT = std::set<std::pair<IGeometry::MeshIndexType, IGeometry::MeshIndexType>>;
 
-Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
-                                   const Int32AbstractDataStore& faceLabelsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, int32 maxFeature)
+Result<> ProcessWindingsWithLabels(IGeometry::MeshIndexType* triangles, usize numTris, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors, const int32* faceLabels,
+                                   const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, int32 maxFeature)
 {
   /**
    * This works by making a map of the edges since a properly wound mesh
@@ -31,17 +34,16 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
   // Walk the features repairing the graph group by group
   usize count = 0;
   auto start = std::chrono::steady_clock::now();
-  const usize numTuples = faceLabelsStore.getNumberOfTuples();
-  std::vector<bool> visited(faceLabelsStore.getNumberOfTuples(), false);
-  std::vector<bool> unmodified(faceLabelsStore.getNumberOfTuples(), false);
+  std::vector<bool> visited(numTris, false);
+  std::vector<bool> unmodified(numTris, false);
   for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
     std::queue<IGeometry::MeshIndexType> searchTargets = {};
 
     // process base case
-    for(usize i = 0; i < numTuples; i++)
+    for(usize i = 0; i < numTris; i++)
     {
-      if(faceLabelsStore[i * 2] != feature && faceLabelsStore[(i * 2) + 1] != feature)
+      if(faceLabels[i * 2] != feature && faceLabels[(i * 2) + 1] != feature)
       {
         continue;
       }
@@ -52,7 +54,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
       for(uint16 element = 0; element < numElem; element++)
       {
         const usize neighbor = neighborListPtr[element];
-        if(faceLabelsStore[neighbor * 2] != feature && faceLabelsStore[(neighbor * 2) + 1] != feature)
+        if(faceLabels[neighbor * 2] != feature && faceLabels[(neighbor * 2) + 1] != feature)
         {
           continue;
         }
@@ -94,7 +96,7 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
       for(uint16 element = 0; element < numElem; element++)
       {
         const usize neighbor = neighborListPtr[element];
-        if(faceLabelsStore[neighbor * 2] != feature && faceLabelsStore[(neighbor * 2) + 1] != feature)
+        if(faceLabels[neighbor * 2] != feature && faceLabels[(neighbor * 2) + 1] != feature)
         {
           continue;
         }
@@ -138,8 +140,8 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
          edgeList.find(std::make_pair(triangles[(triangle * 3) + 2], triangles[(triangle * 3) + 0])) != edgeList.end()) // If true it contains a conflicting edge
       {
         // check if previously visited
-        const usize offset = faceLabelsStore[triangle * 2] == feature ? 1 : 0;
-        const int32 alternateLabel = faceLabelsStore[(triangle * 2) + offset];
+        const usize offset = faceLabels[triangle * 2] == feature ? 1 : 0;
+        const int32 alternateLabel = faceLabels[(triangle * 2) + offset];
         if(alternateLabel != 0 && alternateLabel < feature)
         {
           unmodified[triangle] = true;
@@ -164,8 +166,8 @@ Result<> ProcessWindingsWithLabels(INodeGeometry2D::SharedFaceList::store_type& 
   return {};
 }
 
-Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type& triangles, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors,
-                                    const Int32AbstractDataStore& regionsStore, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, int32 maxFeature)
+Result<> ProcessWindingsWithRegions(IGeometry::MeshIndexType* triangles, usize numTris, const DynamicListArray<uint16, IGeometry::MeshIndexType>& neighbors, const int32* regions,
+                                    const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, int32 maxFeature)
 {
   /**
    * This works by making a map of the edges since a properly wound mesh
@@ -181,16 +183,15 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
 
   // Walk the features repairing the graph group by group
   auto start = std::chrono::steady_clock::now();
-  const usize numTuples = regionsStore.getNumberOfTuples();
-  std::vector<bool> visited(regionsStore.getNumberOfTuples(), false);
+  std::vector<bool> visited(numTris, false);
   for(int32 feature = 1; feature < maxFeature + 1; feature++)
   {
     std::queue<IGeometry::MeshIndexType> searchTargets = {};
 
     // process base case
-    for(usize i = 0; i < numTuples; i++)
+    for(usize i = 0; i < numTris; i++)
     {
-      if(regionsStore[i] != feature)
+      if(regions[i] != feature)
       {
         continue;
       }
@@ -201,7 +202,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
       for(uint16 element = 0; element < numElem; element++)
       {
         const usize neighbor = neighborListPtr[element];
-        if(regionsStore[neighbor] != feature)
+        if(regions[neighbor] != feature)
         {
           continue;
         }
@@ -243,7 +244,7 @@ Result<> ProcessWindingsWithRegions(INodeGeometry2D::SharedFaceList::store_type&
       for(uint16 element = 0; element < numElem; element++)
       {
         const usize neighbor = neighborListPtr[element];
-        if(regionsStore[neighbor] != feature)
+        if(regions[neighbor] != feature)
         {
           continue;
         }
@@ -318,20 +319,38 @@ Result<> MeshingUtilities::RepairTriangleWinding(INodeGeometry2D::SharedFaceList
                            fmt::format("MeshingUtilities::RepairTriangleWinding: invalid ID array supplied. The ID array must have 1 or 2 components, supplied array components: {}.", numComp));
   }
 
-  // Get max group and (feature id != 0)
+  const usize numTris = triangles.getNumberOfTuples();
+  const usize idsSize = idsStore.getSize(); // numTris * numComp
+
+  // Bulk-read triangles into local buffer to avoid per-element OOC overhead
+  auto triBuf = std::make_unique<IGeometry::MeshIndexType[]>(numTris * 3);
+  triangles.copyIntoBuffer(0, nonstd::span<IGeometry::MeshIndexType>(triBuf.get(), numTris * 3));
+
+  // Bulk-read ids into local buffer
+  auto idsBuf = std::make_unique<int32[]>(idsSize);
+  idsStore.copyIntoBuffer(0, nonstd::span<int32>(idsBuf.get(), idsSize));
+
+  // Find max feature from local buffer
   int32 maxFeature = 0;
-  for(int32 i = 0; i < idsStore.getSize(); i++)
+  for(usize i = 0; i < idsSize; i++)
   {
-    maxFeature = std::max(idsStore[i], maxFeature);
+    maxFeature = std::max(idsBuf[i], maxFeature);
   }
 
+  Result<> result;
   if(numComp == 2)
   {
-    return ::ProcessWindingsWithLabels(triangles, neighbors, idsStore, shouldCancel, mesgHandler, maxFeature);
+    result = ::ProcessWindingsWithLabels(triBuf.get(), numTris, neighbors, idsBuf.get(), shouldCancel, mesgHandler, maxFeature);
+  }
+  else
+  {
+    result = ::ProcessWindingsWithRegions(triBuf.get(), numTris, neighbors, idsBuf.get(), shouldCancel, mesgHandler, maxFeature);
   }
 
-  // numComp == 1
-  return ::ProcessWindingsWithRegions(triangles, neighbors, idsStore, shouldCancel, mesgHandler, maxFeature);
+  // Bulk-write modified triangles back
+  triangles.copyFromBuffer(0, nonstd::span<const IGeometry::MeshIndexType>(triBuf.get(), numTris * 3));
+
+  return result;
 }
 
 MeshingUtilities::CalculateNormalsImpl::CalculateNormalsImpl(const INodeGeometry2D::SharedFaceList::store_type& triangles, const INodeGeometry2D::SharedVertexList::store_type& verts,

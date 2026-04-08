@@ -1,5 +1,7 @@
 #include "ComputeBoundaryCellsDirect.hpp"
 
+#include "ComputeBoundaryCells.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
@@ -7,7 +9,8 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-ComputeBoundaryCellsDirect::ComputeBoundaryCellsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundaryCellsInputValues* inputValues)
+ComputeBoundaryCellsDirect::ComputeBoundaryCellsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
+                                                       const ComputeBoundaryCellsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -19,15 +22,13 @@ ComputeBoundaryCellsDirect::ComputeBoundaryCellsDirect(DataStructure& dataStruct
 ComputeBoundaryCellsDirect::~ComputeBoundaryCellsDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeBoundaryCellsDirect::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
+/**
+ * @brief Counts boundary faces per voxel using direct Z-Y-X iteration.
+ * In-core path: iterates all voxels sequentially, checking 6 face neighbors.
+ */
 Result<> ComputeBoundaryCellsDirect::operator()()
 {
-  const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const SizeVec3 udims = imageGeometry.getDimensions();
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),

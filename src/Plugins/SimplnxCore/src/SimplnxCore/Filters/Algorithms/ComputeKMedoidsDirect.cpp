@@ -1,9 +1,13 @@
 #include "ComputeKMedoidsDirect.hpp"
 
+#include "ComputeKMedoids.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ClusteringUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MaskCompareUtilities.hpp"
+
+#include <fmt/format.h>
 
 #include <random>
 
@@ -73,6 +77,11 @@ public:
 
     while(update)
     {
+      if(m_Filter->getCancel())
+      {
+        return;
+      }
+
       findClusters(numTuples, numCompDims);
 
       optClusterIdxs = clusterIdxs;
@@ -94,7 +103,7 @@ private:
   const AbstractDataStoreT& m_InputArray;
   AbstractDataStoreT& m_Medoids;
   const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
-  usize m_NumClusters;
+  usize m_NumClusters = 0;
   Int32AbstractDataStore& m_FeatureIds;
   ClusterUtilities::DistanceMetric m_DistMetric;
   std::mt19937_64::result_type m_Seed;
@@ -182,7 +191,7 @@ private:
 } // namespace
 
 // -----------------------------------------------------------------------------
-ComputeKMedoidsDirect::ComputeKMedoidsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues)
+ComputeKMedoidsDirect::ComputeKMedoidsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const KMedoidsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -215,11 +224,10 @@ Result<> ComputeKMedoidsDirect::operator()()
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
-    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
     std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
     return MakeErrorResult(-54070, message);
   }
+
   RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clusteringArray->getDataType(), this, clusteringArray, m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath), maskCompare,
                                                            m_InputValues->InitClusters, m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(),
                                                            m_InputValues->DistanceMetric, m_InputValues->Seed);

@@ -2,29 +2,23 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
 namespace nx::core
 {
-
-struct SIMPLNXCORE_EXPORT ComputeBoundaryCellsInputValues
-{
-  bool IgnoreFeatureZero;
-  bool IncludeVolumeBoundary;
-  DataPath ImageGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath BoundaryCellsArrayName;
-};
+struct ComputeBoundaryCellsInputValues;
 
 /**
- * @class
+ * @class ComputeBoundaryCellsDirect
+ * @brief In-core algorithm for ComputeBoundaryCells. Preserves the original sequential
+ * Z-Y-X voxel iteration with face-neighbor boundary counting. Selected by DispatchAlgorithm
+ * when all input arrays are backed by in-memory DataStore.
  */
 class SIMPLNXCORE_EXPORT ComputeBoundaryCellsDirect
 {
 public:
-  ComputeBoundaryCellsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBoundaryCellsInputValues* inputValues);
+  ComputeBoundaryCellsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeBoundaryCellsInputValues* inputValues);
   ~ComputeBoundaryCellsDirect() noexcept;
 
   ComputeBoundaryCellsDirect(const ComputeBoundaryCellsDirect&) = delete;
@@ -33,8 +27,6 @@ public:
   ComputeBoundaryCellsDirect& operator=(ComputeBoundaryCellsDirect&&) noexcept = delete;
 
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;

@@ -8,7 +8,16 @@
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/TimeUtilities.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <memory>
+
 using namespace nx::core;
+
+namespace
+{
+constexpr usize k_ChunkTuples = 65536;
+} // namespace
 
 namespace
 {
@@ -124,6 +133,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
   Error errorReturn = {0, ""};
   std::vector<bool> activeObjects =
       removeSmallFeatures(featureIdsStoreRef, featureNumCellsStoreRef, featurePhases, m_InputValues->PhaseNumber, m_InputValues->ApplySinglePhase, m_InputValues->MinAllowedFeaturesSize, errorReturn);
+
   if(errorReturn.code < 0)
   {
     return {nonstd::make_unexpected(std::vector<Error>{errorReturn})};
@@ -135,6 +145,7 @@ Result<> RequireMinimumSizeFeatures::operator()()
 
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
   assignBadVoxels(imageGeom.getDimensions(), featureNumCellsStoreRef);
+
   if(m_ShouldCancel)
   {
     return {};
@@ -172,29 +183,42 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
       static_cast<int64>(dimensions[2]),
   };
 
-  std::vector<int64> neighborsVoxelIndex(totalPoints * featureIds.getNumberOfComponents(), -1);
+  // Track which voxels need data copied from a neighbor
+  std::vector<int64> neighborsVoxelIndex(totalPoints, -1);
 
-  // int32 good = 1;
   int64 neighborVoxelIdx = 0;
 
-  // These are the offsets that are applied to a voxel index to get to a specific neighbor voxel
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
   usize counter = 1;
-  int64 count = 0;
   int64 kstride = 0;
   int64 jstride = 0;
 
-  // `voteCounter` serves as a vote counter array for determining which feature ID should
-  // be assigned to "bad" voxels (those with featureId < 0 after small features
-  // were removed). The array indexing is by feature ID. The largest value that could
-  // be saved is 6 since there are only 6 face neighbors.
   std::vector<uint8> voteCounter(featureNumCellsStoreRef.getNumberOfTuples(), 0);
+
+  // Chunked scan: read featureIds in chunks for the voting scan
+  const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
   while(counter != 0)
   {
     counter = 0;
+
+    // Scan phase: read featureIds in z-slice chunks for voting
+    // Use 3-slice rolling buffer so all 6 face neighbors are accessible
+    std::vector<int32> slabBuf(3 * sliceSize, 0);
+    int32* prevSlice = slabBuf.data();
+    int32* curSlice = slabBuf.data() + sliceSize;
+    int32* nextSlice = slabBuf.data() + 2 * sliceSize;
+
+    featureIds.copyIntoBuffer(0, nonstd::span<int32>(curSlice, sliceSize));
+    if(dims[2] > 1)
+    {
+      featureIds.copyIntoBuffer(sliceSize, nonstd::span<int32>(nextSlice, sliceSize));
+    }
+
+    // Collect indices of voxels that get assigned this iteration
+    std::vector<usize> changedVoxels;
+
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
       if(m_ShouldCancel)
@@ -207,14 +231,14 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
         jstride = dims[0] * yIdx;
         for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          count = kstride + jstride + xIdx;
-          int32 currentFeatureId = featureIds.getValue(count);
+          const int64 globalIdx = kstride + jstride + xIdx;
+          const int64 localIdx = yIdx * dims[0] + xIdx;
+          int32 currentFeatureId = curSlice[localIdx];
           if(currentFeatureId < 0)
           {
             counter++;
             uint8 maxVoteCount = 0;
-            // Loop over the 6 face neighbors of the voxel
-            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
@@ -222,8 +246,24 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
                 continue;
               }
 
-              neighborVoxelIdx = count + neighborVoxelIndexOffsets[faceIndex];
-              int32 neighborFeatureId = featureIds.getValue(neighborVoxelIdx);
+              neighborVoxelIdx = globalIdx + neighborVoxelIndexOffsets[faceIndex];
+
+              // Read neighbor from slab buffer
+              int32 neighborFeatureId = 0;
+              const int64 neighborOffset = neighborVoxelIndexOffsets[faceIndex];
+              if(neighborOffset == -dims[0] * dims[1])
+              {
+                neighborFeatureId = prevSlice[localIdx];
+              }
+              else if(neighborOffset == dims[0] * dims[1])
+              {
+                neighborFeatureId = nextSlice[localIdx];
+              }
+              else
+              {
+                neighborFeatureId = curSlice[localIdx + neighborOffset];
+              }
+
               if(neighborFeatureId >= 0)
               {
                 voteCounter[neighborFeatureId]++;
@@ -231,41 +271,62 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
                 if(currentVoteCount > maxVoteCount)
                 {
                   maxVoteCount = currentVoteCount;
-                  neighborsVoxelIndex[count] = neighborVoxelIdx;
+                  neighborsVoxelIndex[globalIdx] = neighborVoxelIdx;
                 }
               }
             }
 
-            // Reset the VoteCounter back to Zero...
+            if(neighborsVoxelIndex[globalIdx] >= 0)
+            {
+              changedVoxels.push_back(static_cast<usize>(globalIdx));
+            }
+
             std::fill(voteCounter.begin(), voteCounter.end(), 0);
           }
         }
       }
+
+      // Slide the slab window
+      std::swap(prevSlice, curSlice);
+      std::swap(curSlice, nextSlice);
+      if(zIdx + 2 < dims[2])
+      {
+        featureIds.copyIntoBuffer(static_cast<usize>(zIdx + 2) * sliceSize, nonstd::span<int32>(nextSlice, sliceSize));
+      }
     }
 
-    messageHelper.sendMessage(fmt::format("Remaining voxels: {} - Updating Data Arrays... ", counter));
+    // Skip transfer entirely if no voxels were assigned
+    if(changedVoxels.empty())
+    {
+      break;
+    }
 
-    // Build up a list of the DataArrays that we are going to operate on.
+    messageHelper.sendMessage(fmt::format("Remaining voxels: {} - Updating {} changed voxels... ", counter, changedVoxels.size()));
+
+    // Transfer phase: only copy tuples for voxels that actually changed
     const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsPath, {});
 
-    ParallelTaskAlgorithm taskRunner;
-    taskRunner.setParallelizationEnabled(true);
     for(const auto& voxelArray : voxelArrays)
     {
-      // We need to skip updating the FeatureIds until all the other arrays are updated
-      // since we actually depend on the feature Ids values.
-      if(voxelArray->getName() == m_InputValues->FeatureIdsPath.getTargetName())
+      if(m_ShouldCancel)
       {
-        continue;
+        return;
       }
-
-      taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, voxelArray, messageHelper, m_ShouldCancel));
+      for(const usize voxelIndex : changedVoxels)
+      {
+        int64 neighborIdx = neighborsVoxelIndex[voxelIndex];
+        if(neighborIdx >= 0 && featureIds.getValue(neighborIdx) >= 0)
+        {
+          voxelArray->copyTuple(neighborIdx, voxelIndex);
+        }
+      }
     }
-    taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
-    // Now update the feature Ids
-    auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsPath);
-    taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(RequireMinimumSizeFeaturesTransferDataImpl(this, totalPoints, featureIds, neighborsVoxelIndex, featureIDataArray, messageHelper, m_ShouldCancel));
+
+    // Reset neighborsVoxelIndex for changed voxels
+    for(const usize voxelIndex : changedVoxels)
+    {
+      neighborsVoxelIndex[voxelIndex] = -1;
+    }
   }
 }
 
@@ -280,7 +341,6 @@ std::vector<bool> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractD
   usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
 
   bool good = false;
-  int32 gnum;
 
   usize totalFeatures = featureNumCellsStoreRef.getNumberOfTuples();
 
@@ -320,12 +380,29 @@ std::vector<bool> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractD
     errorReturn = Error{-1, "The minimum size is larger than the largest Feature.  All Features would be removed"};
     return activeObjects;
   }
-  for(usize i = 0; i < totalPoints; i++)
+
+  auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
+  for(usize offset = 0; offset < totalPoints; offset += k_ChunkTuples)
   {
-    gnum = featureIdsStoreRef.getValue(i);
-    if(!activeObjects[gnum])
+    if(m_ShouldCancel)
     {
-      featureIdsStoreRef.setValue(i, -1);
+      return {};
+    }
+    const usize count = std::min(k_ChunkTuples, totalPoints - offset);
+    featureIdsStoreRef.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuf.get(), count));
+
+    bool modified = false;
+    for(usize i = 0; i < count; i++)
+    {
+      if(!activeObjects[featureIdBuf[i]])
+      {
+        featureIdBuf[i] = -1;
+        modified = true;
+      }
+    }
+    if(modified)
+    {
+      featureIdsStoreRef.copyFromBuffer(offset, nonstd::span<const int32>(featureIdBuf.get(), count));
     }
   }
   return activeObjects;

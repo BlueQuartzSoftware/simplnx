@@ -1,6 +1,7 @@
 #include "AlignSections.hpp"
 
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
@@ -13,6 +14,9 @@ using namespace nx::core;
 
 namespace
 {
+// -----------------------------------------------------------------------------
+// In-core transfer: original per-tuple copyTuple/initializeTuple with
+// direction-dependent iteration to avoid overwriting source data.
 // -----------------------------------------------------------------------------
 template <typename T>
 class AlignSectionsTransferDataImpl
@@ -99,6 +103,100 @@ private:
   std::vector<int64_t> m_Yshifts;
   nx::core::DataArray<T>& m_DataArray;
 };
+
+// -----------------------------------------------------------------------------
+// OOC transfer: slice-buffered approach. Reads each Z-slice into a local buffer,
+// applies the 2D X/Y shift in memory, then writes the shifted data back.
+// All DataStore access is sequential, eliminating per-tuple chunk thrashing.
+// -----------------------------------------------------------------------------
+template <typename T>
+class AlignSectionsTransferDataOocImpl
+{
+public:
+  AlignSectionsTransferDataOocImpl() = delete;
+  AlignSectionsTransferDataOocImpl(const AlignSectionsTransferDataOocImpl&) = default;
+  AlignSectionsTransferDataOocImpl(AlignSectionsTransferDataOocImpl&&) noexcept = default;
+
+  AlignSectionsTransferDataOocImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
+  : m_Filter(filter)
+  , m_Dims(std::move(dims))
+  , m_Xshifts(std::move(xShifts))
+  , m_Yshifts(std::move(yShifts))
+  , m_DataArray(static_cast<DataArray<T>&>(dataArray))
+  {
+  }
+
+  ~AlignSectionsTransferDataOocImpl() = default;
+
+  AlignSectionsTransferDataOocImpl& operator=(const AlignSectionsTransferDataOocImpl&) = delete;
+  AlignSectionsTransferDataOocImpl& operator=(AlignSectionsTransferDataOocImpl&&) = delete;
+
+  void operator()() const
+  {
+    MessageHelper& messageHelper = m_Filter->getMessageHelper();
+    ThrottledMessenger progressMessenger = messageHelper.createThrottledMessenger();
+
+    auto& dataStore = m_DataArray.getDataStoreRef();
+    const usize numComp = m_DataArray.getNumberOfComponents();
+    const usize dimX = m_Dims[0];
+    const usize dimY = m_Dims[1];
+    const usize sliceVoxels = dimX * dimY;
+    const usize sliceElements = sliceVoxels * numComp;
+
+    std::string arrayName = m_DataArray.getName();
+
+    // Buffers for one Z-slice (use unique_ptr to avoid std::vector<bool> specialization)
+    auto sliceBuffer = std::make_unique<T[]>(sliceElements);
+    auto outBuffer = std::make_unique<T[]>(sliceElements);
+
+    for(usize i = 1; i < m_Dims[2]; i++)
+    {
+      progressMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_Dims[2])); });
+      if(m_Filter->getCancel())
+      {
+        return;
+      }
+
+      usize slice = (m_Dims[2] - 1) - i;
+      usize sliceOffset = slice * sliceElements;
+
+      // Phase 1: Bulk-read entire Z-slice into local buffer
+      dataStore.copyIntoBuffer(sliceOffset, nonstd::span<T>(sliceBuffer.get(), sliceElements));
+
+      // Phase 2: Apply 2D X/Y shift in the output buffer, then bulk-write back
+      int64_t xShift = m_Xshifts[i];
+      int64_t yShift = m_Yshifts[i];
+
+      std::fill(outBuffer.get(), outBuffer.get() + sliceElements, static_cast<T>(0));
+      for(usize yIndex = 0; yIndex < dimY; yIndex++)
+      {
+        for(usize xIndex = 0; xIndex < dimX; xIndex++)
+        {
+          int64_t srcX = static_cast<int64_t>(xIndex) + xShift;
+          int64_t srcY = static_cast<int64_t>(yIndex) + yShift;
+
+          if(srcX >= 0 && srcX < static_cast<int64_t>(dimX) && srcY >= 0 && srcY < static_cast<int64_t>(dimY))
+          {
+            usize srcBufBase = (static_cast<usize>(srcY) * dimX + static_cast<usize>(srcX)) * numComp;
+            usize dstBufBase = (yIndex * dimX + xIndex) * numComp;
+            for(usize c = 0; c < numComp; c++)
+            {
+              outBuffer[dstBufBase + c] = sliceBuffer[srcBufBase + c];
+            }
+          }
+        }
+      }
+      dataStore.copyFromBuffer(sliceOffset, nonstd::span<const T>(outBuffer.get(), sliceElements));
+    }
+  }
+
+private:
+  AlignSections* m_Filter = nullptr;
+  SizeVec3 m_Dims;
+  std::vector<int64_t> m_Xshifts;
+  std::vector<int64_t> m_Yshifts;
+  nx::core::DataArray<T>& m_DataArray;
+};
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -147,6 +245,21 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
   // Now Adjust the actual DataArrays
   const std::vector<DataPath> selectedCellArrays = getSelectedDataPaths(imageGeometryPath);
 
+  // Determine whether to use OOC-optimized transfer
+  bool useOoc = ForceOocAlgorithm();
+  if(!useOoc)
+  {
+    for(const auto& cellArrayPath : selectedCellArrays)
+    {
+      const auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
+      if(IsOutOfCore(cellArray))
+      {
+        useOoc = true;
+        break;
+      }
+    }
+  }
+
   ParallelTaskAlgorithm taskRunner;
 
   for(const auto& cellArrayPath : selectedCellArrays)
@@ -158,7 +271,15 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
 
     m_MessageHelper.sendMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
     auto& cellArray = m_DataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-    ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
+
+    if(useOoc)
+    {
+      ExecuteParallelFunction<AlignSectionsTransferDataOocImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
+    }
+    else
+    {
+      ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray.getDataType(), taskRunner, this, udims, xShifts, yShifts, cellArray);
+    }
   }
 
   // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.

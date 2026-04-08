@@ -27,6 +27,7 @@ Compare the data sets. The values should be exactly the same.
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -56,6 +57,8 @@ constexpr StringLiteral k_OutputIPFColors("IPF Colors_Test_Output");
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][ComputeIPFColorsFilter]")
 {
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   {
     HomochoricDType ho(0.021797740480252403, 0.027063934475102136, 0.035554288118377242);

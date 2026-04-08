@@ -2,36 +2,23 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 
 namespace nx::core
 {
-
-struct SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesInputValues
-{
-  AttributeMatrixSelectionParameter::ValueType FeatureAttributeMatrixPath;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  BoolParameter::ValueType MarkFeature0Neighbors;
-  DataObjectNameParameter::ValueType SurfaceFeaturesArrayName;
-};
+struct ComputeSurfaceFeaturesInputValues;
 
 /**
  * @class ComputeSurfaceFeaturesDirect
- * @brief This algorithm implements support code for the ComputeSurfaceFeaturesFilter
+ * @brief In-core algorithm for ComputeSurfaceFeatures. Preserves the original 2D/3D branching
+ * with sequential voxel iteration and face-neighbor surface detection. Selected by
+ * DispatchAlgorithm when all input arrays are backed by in-memory DataStore.
  */
-
 class SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesDirect
 {
 public:
-  ComputeSurfaceFeaturesDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeSurfaceFeaturesInputValues* inputValues);
+  ComputeSurfaceFeaturesDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeSurfaceFeaturesInputValues* inputValues);
   ~ComputeSurfaceFeaturesDirect() noexcept;
 
   ComputeSurfaceFeaturesDirect(const ComputeSurfaceFeaturesDirect&) = delete;

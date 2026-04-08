@@ -57,9 +57,18 @@ protected:
    * @param yShifts
    * @return Whether the x and y shifts were successfully found
    */
-  Result<> findShifts(std::vector<int64_t>& xShifts, std::vector<int64_t>& yShifts) override;
+  Result<> findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts) override;
 
 private:
+  /**
+   * @brief OOC-optimized variant of findShifts that buffers two adjacent Z-slices
+   * into local vectors before the convergence loop, eliminating per-tuple chunk thrashing.
+   * @param xShifts Output vector of cumulative X shifts per slice.
+   * @param yShifts Output vector of cumulative Y shifts per slice.
+   * @return Success or error result.
+   */
+  Result<> findShiftsOoc(std::vector<int64>& xShifts, std::vector<int64>& yShifts);
+
   DataStructure& m_DataStructure;
   const AlignSectionsMisorientationInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;

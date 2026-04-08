@@ -11,6 +11,7 @@
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
 
 #include <catch2/catch.hpp>
 #include <filesystem>
@@ -24,6 +25,9 @@ namespace fs = std::filesystem;
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();
+
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
 
@@ -51,6 +55,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
     Arguments args;
     QuickSurfaceMeshFilter filter;
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath));
     auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath);
     MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
     for(const auto& child : voxelCellAttrMat)
@@ -58,6 +63,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
       selectedCellArrayPaths.push_back(ebsdCellDataPath.createChildPath(child.second->getName()));
     }
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath));
     auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath);
     MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
     for(const auto& child : voxelFeatureAttrMat)
@@ -95,6 +101,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
 #endif
   }
   // Check a few things about the generated data.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
@@ -118,6 +125,9 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();
+
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
 
@@ -145,6 +155,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
     Arguments args;
     QuickSurfaceMeshFilter filter;
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath));
     auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath);
     MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
     for(const auto& child : voxelCellAttrMat)
@@ -152,6 +163,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
       selectedCellArrayPaths.push_back(ebsdCellDataPath.createChildPath(child.second->getName()));
     }
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath));
     auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath);
     MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
     for(const auto& child : voxelFeatureAttrMat)
@@ -189,6 +201,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
 #endif
   }
   // Check a few things about the generated data.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
@@ -212,6 +225,9 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();
+
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
 
@@ -239,6 +255,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
     Arguments args;
     QuickSurfaceMeshFilter filter;
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath));
     auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath);
     MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
     for(const auto& child : voxelCellAttrMat)
@@ -246,6 +263,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
       selectedCellArrayPaths.push_back(ebsdCellDataPath.createChildPath(child.second->getName()));
     }
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath));
     auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath);
     MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
     for(const auto& child : voxelFeatureAttrMat)
@@ -283,6 +301,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
 #endif
   }
   // Check a few things about the generated data.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();
@@ -306,6 +325,9 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
   UnitTest::LoadPlugins();
+
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
 
@@ -333,6 +355,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
     Arguments args;
     QuickSurfaceMeshFilter filter;
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath));
     auto voxelCellAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdCellDataPath);
     MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
     for(const auto& child : voxelCellAttrMat)
@@ -340,6 +363,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
       selectedCellArrayPaths.push_back(ebsdCellDataPath.createChildPath(child.second->getName()));
     }
 
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath));
     auto voxelFeatureAttrMat = dataStructure.getDataRefAs<AttributeMatrix>(ebsdFeatureDataPath);
     MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
     for(const auto& child : voxelFeatureAttrMat)
@@ -377,6 +401,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
 #endif
   }
   // Check a few things about the generated data.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath));
   TriangleGeom& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(computedTriangleGeomPath);
   IGeometry::SharedTriList* triangle = triangleGeom.getFaces();
   IGeometry::SharedVertexList* vertices = triangleGeom.getVertices();

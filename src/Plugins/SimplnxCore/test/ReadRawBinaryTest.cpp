@@ -118,15 +118,25 @@ void TestCase1_Execute(NumericType scalarType)
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(k_CreatedArrayPath));
   const DataArray<T>& createdData = dataStructure.getDataRefAs<DataArray<T>>(k_CreatedArrayPath);
   const AbstractDataStore<T>& store = createdData.getDataStoreRef();
   bool isSame = true;
-  for(usize i = 0; i < dataArraySize; ++i)
   {
-    if(store[i] != exemplaryData[i])
+    constexpr usize k_BufSize = 1000000;
+    std::vector<T> readBuf(std::min(dataArraySize, k_BufSize));
+    for(usize start = 0; start < dataArraySize && isSame; start += k_BufSize)
     {
-      isSame = false;
-      break;
+      usize count = std::min(k_BufSize, dataArraySize - start);
+      store.copyIntoBuffer(start, nonstd::span<T>(readBuf.data(), count));
+      for(usize i = 0; i < count; ++i)
+      {
+        if(readBuf[i] != exemplaryData[start + i])
+        {
+          isSame = false;
+          break;
+        }
+      }
     }
   }
   REQUIRE(isSame);
@@ -264,12 +274,21 @@ void TestCase4_Execute(NumericType scalarType)
   constexpr usize elementOffset = skipHeaderBytes / sizeof(T);
   bool isSame = true;
   usize size = createdStore.getSize();
-  for(usize i = 0; i < size; ++i)
   {
-    if(createdStore[i] != exemplaryData[i + elementOffset])
+    constexpr usize k_BufSize = 1000000;
+    std::vector<T> readBuf(std::min(size, k_BufSize));
+    for(usize start = 0; start < size && isSame; start += k_BufSize)
     {
-      isSame = false;
-      break;
+      usize count = std::min(k_BufSize, size - start);
+      createdStore.copyIntoBuffer(start, nonstd::span<T>(readBuf.data(), count));
+      for(usize i = 0; i < count; ++i)
+      {
+        if(readBuf[i] != exemplaryData[start + i + elementOffset])
+        {
+          isSame = false;
+          break;
+        }
+      }
     }
   }
   REQUIRE(isSame);

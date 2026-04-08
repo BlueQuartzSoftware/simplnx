@@ -33,7 +33,12 @@ struct SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
  *
  * Z-slices are processed in parallel. Each worker thread rasterizes into
  * a thread-local buffer and then copies results back to the output DataArray
- * under a mutex, ensuring thread safety with out-of-core DataStore implementations.
+ * under a mutex via copyFromBuffer, ensuring thread safety and efficient
+ * bulk I/O with out-of-core DataStore implementations.
+ *
+ * All input geometry data (faces, vertices, face labels) is pre-loaded into
+ * contiguous memory buffers via copyIntoBuffer at algorithm start, so worker
+ * threads operate on plain memory arrays with no virtual dispatch per element.
  */
 class SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMesh
 {
@@ -50,20 +55,20 @@ public:
 
   /**
    * @brief Thread-safe method to copy a completed Z-slice buffer into the
-   * output DataArray. Called by worker threads after rasterizing a slice.
+   * output DataArray using bulk copyFromBuffer. Called by worker threads
+   * after rasterizing a slice.
+   * @tparam T The element type of the feature IDs array
    * @param zSlice The Z-slice index
-   * @param sliceBuffer The thread-local buffer containing rasterized feature IDs
+   * @param sliceData Raw pointer to the thread-local buffer containing rasterized feature IDs
+   * @param count Number of elements in the slice buffer
    */
-  template <typename OutputT>
-  void sendThreadSafeSliceUpdate(usize zSlice, const std::vector<OutputT>& sliceBuffer)
+  template <typename T>
+  void sendThreadSafeSliceUpdate(usize zSlice, const T* sliceData, usize count)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    auto& featureIdsRef = m_DataStructure.getDataRefAs<DataArray<OutputT>>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+    auto& featureIdsRef = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
     usize offset = zSlice * m_CellsPerSlice;
-    for(usize i = 0; i < m_CellsPerSlice; i++)
-    {
-      featureIdsRef[offset + i] = sliceBuffer[i];
-    }
+    featureIdsRef.copyFromBuffer(offset, nonstd::span<const T>(sliceData, count));
   }
 
 private:

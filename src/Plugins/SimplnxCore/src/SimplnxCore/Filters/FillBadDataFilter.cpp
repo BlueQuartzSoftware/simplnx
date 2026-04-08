@@ -1,6 +1,6 @@
 #include "FillBadDataFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/FillBadDataBFS.hpp"
+#include "SimplnxCore/Filters/Algorithms/FillBadData.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -130,7 +130,7 @@ Result<> FillBadDataFilter::executeImpl(DataStructure& dataStructure, const Argu
   inputValues.ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
   inputValues.inputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
-  return FillBadDataBFS(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return FillBadData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

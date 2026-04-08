@@ -17,6 +17,8 @@ namespace nx::core
 {
 
 class IGridGeometry;
+template <typename T>
+class AbstractDataStore;
 
 namespace segment_features
 {
@@ -51,16 +53,25 @@ public:
   };
 
   /**
-   * @brief execute
+   * @brief Original DFS-based segmentation (in-core optimized).
    * @param gridGeom
    * @return
    */
   Result<> execute(IGridGeometry* gridGeom);
 
   /**
+   * @brief Chunk-sequential CCL-based segmentation optimized for out-of-core.
+   *
+   * Subclasses must override isValidVoxel() and areNeighborsSimilar() to use this code path.
+   *
+   * @param gridGeom The grid geometry providing dimensions and neighbor offsets.
+   * @param featureIdsStore The data store to write assigned feature IDs into.
+   * @return Result indicating success or an error with a descriptive message.
+   */
+  Result<> executeCCL(IGridGeometry* gridGeom, AbstractDataStore<int32>& featureIdsStore);
+
+  /**
    * @brief Returns the seed for the specified values.
-   * @param data
-   * @param args
    * @param gnum
    * @param nextSeed
    * @return int64
@@ -69,8 +80,6 @@ public:
 
   /**
    * @brief Determines the grouping for the specified values.
-   * @param data
-   * @param args
    * @param referencePoint
    * @param neighborPoint
    * @param gnum
@@ -82,7 +91,6 @@ public:
    * @brief
    * @param featureIds
    * @param totalFeatures
-   * @param distribution
    */
   void randomizeFeatureIds(Int32Array* featureIds, uint64 totalFeatures);
 
@@ -106,7 +114,52 @@ public:
     {
       return false;
     }
+
+    /**
+     * @brief Pure data comparison without featureId assignment.
+     * Used by the CCL algorithm which handles label assignment separately.
+     * @param index First voxel index
+     * @param neighIndex Second voxel index
+     * @return true if the two voxels should be in the same feature
+     */
+    virtual bool compare(int64 index, int64 neighIndex)
+    {
+      return false;
+    }
   };
+
+  /**
+   * @brief Can this voxel be a feature member? (mask + phase check, NO featureId check)
+   * Default returns true (all voxels are valid).
+   * @param point Linear voxel index
+   * @return true if this voxel can participate in segmentation
+   */
+  virtual bool isValidVoxel(int64 point) const;
+
+  /**
+   * @brief Should these two adjacent voxels be in the same feature? (data comparison only)
+   * Default returns false (no voxels are similar).
+   * @param point1 First voxel index
+   * @param point2 Second voxel index
+   * @return true if the two voxels should be grouped together
+   */
+  virtual bool areNeighborsSimilar(int64 point1, int64 point2) const;
+
+  /**
+   * @brief Called by executeCCL at the start of each Z-slice to allow subclasses
+   * to pre-load input data into local buffers, eliminating per-element OOC overhead
+   * during neighbor comparisons.
+   *
+   * Called with iz = -1 before Phase 1b (periodic boundary merge) to signal that
+   * buffering should be disabled, since Phase 1b may access arbitrary Z-slices.
+   *
+   * Default implementation does nothing.
+   * @param iz Current Z-slice index, or -1 to disable buffering.
+   * @param dimX X dimension of the grid.
+   * @param dimY Y dimension of the grid.
+   * @param dimZ Z dimension of the grid.
+   */
+  virtual void prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ);
 
 protected:
   DataStructure& m_DataStructure;

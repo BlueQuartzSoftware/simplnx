@@ -67,8 +67,8 @@ const std::atomic_bool& WriteGBCDGMTFile::getCancel()
 // -----------------------------------------------------------------------------
 Result<> WriteGBCDGMTFile::operator()()
 {
-  auto gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
-  auto crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
@@ -143,8 +143,19 @@ Result<> WriteGBCDGMTFile::operator()()
   // take inverse of misorientation variable to use for switching symmetry
   Matrix3X3Type dgt = dg.transpose();
 
+  // Cache crystal structures locally (ensemble-level, tiny)
+  const usize numCrystalStructures = crystalStructures.getSize();
+  auto crystalStructuresCache = std::make_unique<uint32[]>(numCrystalStructures);
+  crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.get(), numCrystalStructures));
+
+  // Cache only the phase-of-interest slice of the GBCD via bulk I/O
+  const auto totalGBCDBins = (gbcdSizes[0] * gbcdSizes[1] * gbcdSizes[2] * gbcdSizes[3] * gbcdSizes[4] * 2);
+  const usize phaseOffset = static_cast<usize>(m_InputValues->PhaseOfInterest) * static_cast<usize>(totalGBCDBins);
+  auto gbcdPhaseCache = std::make_unique<float64[]>(static_cast<usize>(totalGBCDBins));
+  gbcd.getDataStoreRef().copyIntoBuffer(phaseOffset, nonstd::span<float64>(gbcdPhaseCache.get(), static_cast<usize>(totalGBCDBins)));
+
   // Get our LaueOps pointer for the selected crystal structure
-  const ebsdlib::LaueOps::Pointer orientOps = ebsdlib::LaueOps::GetAllOrientationOps()[crystalStructures[m_InputValues->PhaseOfInterest]];
+  const ebsdlib::LaueOps::Pointer orientOps = ebsdlib::LaueOps::GetAllOrientationOps()[crystalStructuresCache[m_InputValues->PhaseOfInterest]];
 
   // get number of symmetry operators
   const int32 nSym = orientOps->getNumSymOps();
@@ -160,13 +171,16 @@ Result<> WriteGBCDGMTFile::operator()()
   const int32 shift3 = gbcdSizes[0] * gbcdSizes[1] * gbcdSizes[2];
   const int32 shift4 = gbcdSizes[0] * gbcdSizes[1] * gbcdSizes[2] * gbcdSizes[3];
 
-  const auto totalGBCDBins = (gbcdSizes[0] * gbcdSizes[1] * gbcdSizes[2] * gbcdSizes[3] * gbcdSizes[4] * 2);
-
   std::vector<double> gmtValues;
   gmtValues.reserve((phiPoints + 1) * (thetaPoints + 1)); // Allocate what should be needed.
 
   for(int32 phiPtIndex = 0; phiPtIndex < phiPoints + 1; phiPtIndex++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     for(int32 thetaPtIndex = 0; thetaPtIndex < thetaPoints + 1; thetaPtIndex++)
     {
       // get (x,y) for stereographic projection pixel
@@ -237,7 +251,7 @@ Result<> WriteGBCDGMTFile::operator()()
               {
                 hemisphere = 1;
               }
-              sum += gbcd[(m_InputValues->PhaseOfInterest * totalGBCDBins) + 2 * ((location5 * shift4) + (location4 * shift3) + (location3 * shift2) + (location2 * shift1) + location1) + hemisphere];
+              sum += gbcdPhaseCache[2 * ((location5 * shift4) + (location4 * shift3) + (location3 * shift2) + (location2 * shift1) + location1) + hemisphere];
               count++;
             }
           }
@@ -283,7 +297,7 @@ Result<> WriteGBCDGMTFile::operator()()
               {
                 hemisphere = 1;
               }
-              sum += gbcd[(m_InputValues->PhaseOfInterest * totalGBCDBins) + 2 * ((location5 * shift4) + (location4 * shift3) + (location3 * shift2) + (location2 * shift1) + location1) + hemisphere];
+              sum += gbcdPhaseCache[2 * ((location5 * shift4) + (location4 * shift3) + (location3 * shift2) + (location2 * shift1) + location1) + hemisphere];
               count++;
             }
           }
@@ -304,9 +318,9 @@ Result<> WriteGBCDGMTFile::operator()()
   // Remember to use the original Angle in Degrees!!!!
   fprintf(gmtFilePtr, "%.1f %.1f %.1f %.1f\n", m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2], m_InputValues->MisorientationRotation[3],
           m_InputValues->MisorientationRotation[0]);
-  const size_t size = gmtValues.size() / 3;
+  const usize size = gmtValues.size() / 3;
 
-  for(size_t i = 0; i < size; i++)
+  for(usize i = 0; i < size; i++)
   {
     fprintf(gmtFilePtr, "%f %f %f\n", gmtValues[3 * i], gmtValues[3 * i + 1], gmtValues[3 * i + 2]);
   }

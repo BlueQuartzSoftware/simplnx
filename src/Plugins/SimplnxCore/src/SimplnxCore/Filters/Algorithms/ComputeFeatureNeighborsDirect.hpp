@@ -2,58 +2,35 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
-#include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
-#include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
-#include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-
-/**
-* This is example code to put in the Execute Method of the filter.
-  ComputeFeatureNeighborsInputValues inputValues;
-  inputValues.BoundaryCellsName = filterArgs.value<DataObjectNameParameter::ValueType>(boundary_cells_name);
-  inputValues.CellFeatureArrayPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(cell_feature_array_path);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(feature_ids_path);
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(input_image_geometry_path);
-  inputValues.NeighborListName = filterArgs.value<DataObjectNameParameter::ValueType>(neighbor_list_name);
-  inputValues.NumberOfNeighborsName = filterArgs.value<DataObjectNameParameter::ValueType>(number_of_neighbors_name);
-  inputValues.SharedSurfaceAreaListName = filterArgs.value<DataObjectNameParameter::ValueType>(shared_surface_area_list_name);
-  inputValues.StoreBoundaryCells = filterArgs.value<BoolParameter::ValueType>(store_boundary_cells);
-  inputValues.StoreSurfaceFeatures = filterArgs.value<BoolParameter::ValueType>(store_surface_features);
-  inputValues.SurfaceFeaturesName = filterArgs.value<DataObjectNameParameter::ValueType>(surface_features_name);
-  return ComputeFeatureNeighborsDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
-
-*/
 
 namespace nx::core
 {
-
-struct SIMPLNXCORE_EXPORT ComputeFeatureNeighborsInputValues
-{
-  DataObjectNameParameter::ValueType BoundaryCellsName;
-  AttributeMatrixSelectionParameter::ValueType CellFeatureArrayPath;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  DataObjectNameParameter::ValueType NeighborListName;
-  DataObjectNameParameter::ValueType NumberOfNeighborsName;
-  DataObjectNameParameter::ValueType SharedSurfaceAreaListName;
-  BoolParameter::ValueType StoreBoundaryCells;
-  BoolParameter::ValueType StoreSurfaceFeatures;
-  DataObjectNameParameter::ValueType SurfaceFeaturesName;
-};
+struct ComputeFeatureNeighborsInputValues;
 
 /**
  * @class ComputeFeatureNeighborsDirect
- * @brief This algorithm implements support code for the ComputeFeatureNeighborsFilter
+ * @brief In-core algorithm for ComputeFeatureNeighbors using compile-time dimension
+ * specialization and per-face surface area accumulation.
+ *
+ * Uses Nathan Young's rewritten algorithm with two-stage processing:
+ *   Stage 1: Boundary cells (corners, edges, faces) with validity checks
+ *   Stage 2: Internal cells (3D only) with all 6 neighbors guaranteed valid
+ *
+ * Accumulates per-face surface areas using precomputed face dimensions rather
+ * than a uniform area, fixing a surface area calculation bug from DREAM3D 6.5.
+ * Handles 0D/1D/2D/3D geometries via constexpr template specialization.
+ *
+ * Selected by DispatchAlgorithm when all input arrays are backed by in-memory DataStore.
+ *
+ * @see ComputeFeatureNeighborsScanline for the out-of-core-optimized alternative.
+ * @see AlgorithmDispatch.hpp for the dispatch mechanism that selects between them.
  */
-
 class SIMPLNXCORE_EXPORT ComputeFeatureNeighborsDirect
 {
 public:
-  ComputeFeatureNeighborsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeFeatureNeighborsInputValues* inputValues);
+  ComputeFeatureNeighborsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeFeatureNeighborsInputValues* inputValues);
   ~ComputeFeatureNeighborsDirect() noexcept;
 
   ComputeFeatureNeighborsDirect(const ComputeFeatureNeighborsDirect&) = delete;

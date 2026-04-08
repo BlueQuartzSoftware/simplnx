@@ -1,5 +1,7 @@
 #include "ComputeSurfaceFeaturesDirect.hpp"
 
+#include "ComputeSurfaceFeatures.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
@@ -103,20 +105,20 @@ void findSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
   const usize xPoints = featureGeometry.getNumXCells();
   const usize yPoints = featureGeometry.getNumYCells();
   const usize zPoints = featureGeometry.getNumZCells();
+  const usize totalSlices = zPoints;
 
   for(usize z = 0; z < zPoints; z++)
   {
+    if(shouldCancel)
+    {
+      return;
+    }
     const usize zStride = z * xPoints * yPoints;
     for(usize y = 0; y < yPoints; y++)
     {
       const usize yStride = y * xPoints;
       for(usize x = 0; x < xPoints; x++)
       {
-        if(shouldCancel)
-        {
-          return;
-        }
-
         const int32 gNum = featureIds[zStride + yStride + x];
         if(gNum != 0 && !surfaceFeatures[gNum])
         {
@@ -158,15 +160,14 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
 
   for(usize y = 0; y < yPoints; y++)
   {
+    if(shouldCancel)
+    {
+      return;
+    }
     const usize yStride = y * xPoints;
 
     for(usize x = 0; x < xPoints; x++)
     {
-      if(shouldCancel)
-      {
-        return;
-      }
-
       const int32 gNum = featureIds[yStride + x];
       if(gNum != 0 && surfaceFeatures[gNum] == 0)
       {
@@ -182,7 +183,7 @@ void findSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
 
 // -----------------------------------------------------------------------------
 ComputeSurfaceFeaturesDirect::ComputeSurfaceFeaturesDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
-                                               ComputeSurfaceFeaturesInputValues* inputValues)
+                                                           const ComputeSurfaceFeaturesInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -194,16 +195,19 @@ ComputeSurfaceFeaturesDirect::ComputeSurfaceFeaturesDirect(DataStructure& dataSt
 ComputeSurfaceFeaturesDirect::~ComputeSurfaceFeaturesDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Identifies surface features using direct Z-Y-X iteration.
+ * In-core path: delegates to findSurfaceFeatures3D or findSurfaceFeatures2D
+ * depending on geometry dimensionality.
+ */
 Result<> ComputeSurfaceFeaturesDirect::operator()()
 {
-
   const auto pMarkFeature0NeighborsValue = m_InputValues->MarkFeature0Neighbors;
   const auto pFeatureGeometryPathValue = m_InputValues->InputImageGeometryPath;
   const auto pFeatureIdsArrayPathValue = m_InputValues->FeatureIdsPath;
   const auto pFeaturesAttributeMatrixPathValue = m_InputValues->FeatureAttributeMatrixPath;
   const auto pSurfaceFeaturesArrayPathValue = pFeaturesAttributeMatrixPathValue.createChildPath(m_InputValues->SurfaceFeaturesArrayName);
 
-  // Resize the surface features array to the proper size
   const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
 
   auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, pFeaturesAttributeMatrixPathValue, featureIdsArray, false, m_MessageHandler);
@@ -212,7 +216,6 @@ Result<> ComputeSurfaceFeaturesDirect::operator()()
     return validateNumFeatResult;
   }
 
-  // Find surface features
   const auto& featureGeometry = m_DataStructure.getDataRefAs<ImageGeom>(pFeatureGeometryPathValue);
   if(const usize geometryDimensionality = featureGeometry.getDimensionality(); geometryDimensionality == 3)
   {
@@ -224,7 +227,7 @@ Result<> ComputeSurfaceFeaturesDirect::operator()()
   }
   else
   {
-    MakeErrorResult(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()));
+    return MakeErrorResult(-1000, fmt::format("Image Geometry at path '{}' must be either 3D or 2D", pFeatureGeometryPathValue.toString()));
   }
 
   return {};

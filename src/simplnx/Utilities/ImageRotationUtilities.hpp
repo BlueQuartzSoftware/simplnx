@@ -24,22 +24,22 @@ const Eigen::Vector3f k_XAxis = Eigen::Vector3f::UnitX();
 const Eigen::Vector3f k_YAxis = Eigen::Vector3f::UnitY();
 const Eigen::Vector3f k_ZAxis = Eigen::Vector3f::UnitZ();
 
-using Matrix3fR = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
-using Matrix4fR = Eigen::Matrix<float, 4, 4, Eigen::RowMajor>;
+using Matrix3fR = Eigen::Matrix<float32, 3, 3, Eigen::RowMajor>;
+using Matrix4fR = Eigen::Matrix<float32, 4, 4, Eigen::RowMajor>;
 
-using Vector3i64 = Eigen::Array<int64_t, 1, 3>;
+using Vector3i64 = Eigen::Array<int64, 1, 3>;
 
 struct RotateArgs
 {
   USizeVec3 OriginalDims;
   FloatVec3 OriginalSpacing;
   FloatVec3 OriginalOrigin;
-  int64_t xp = 0;
-  int64_t yp = 0;
-  int64_t zp = 0;
-  float xRes = 0.0f;
-  float yRes = 0.0f;
-  float zRes = 0.0f;
+  int64 xp = 0;
+  int64 yp = 0;
+  int64 zp = 0;
+  float32 xRes = 0.0f;
+  float32 yRes = 0.0f;
+  float32 zRes = 0.0f;
 
   USizeVec3 TransformedDims;
   FloatVec3 TransformedSpacing;
@@ -48,9 +48,9 @@ struct RotateArgs
   USizeVec3 outputDims;
   FloatVec3 outputSpacing;
 
-  float outputXMin = 0.0f;
-  float outputYMin = 0.0f;
-  float outputZMin = 0.0f;
+  float32 outputXMin = 0.0f;
+  float32 outputYMin = 0.0f;
+  float32 outputZMin = 0.0f;
 };
 
 /**
@@ -138,7 +138,7 @@ T CosBetweenVectors(const Eigen::Vector3<T>& vectorA, const Eigen::Vector3<T>& v
  * @param axisNew
  * @return spacing for a given axis.
  */
-SIMPLNX_EXPORT float DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew);
+SIMPLNX_EXPORT float32 DetermineSpacing(const FloatVec3& spacing, const Eigen::Vector3f& axisNew);
 
 /**
  * @brief Determines parameters for image rotation
@@ -158,7 +158,7 @@ SIMPLNX_EXPORT ImageRotationUtilities::RotateArgs CreateRotationArgs(const Image
  * @return
  */
 template <typename T>
-T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, const DataArray<T>& sourceArray, size_t compIndex)
+T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, const DataArray<T>& sourceArray, usize compIndex)
 {
   if(xyzIndex[0] < 0)
   {
@@ -199,7 +199,7 @@ T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, cons
  * @param coord
  * @return
  */
-SIMPLNX_EXPORT size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord);
+SIMPLNX_EXPORT usize FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord);
 
 using OctantOffsetArrayType = std::array<Vector3i64, 8>;
 
@@ -241,20 +241,20 @@ using AccumulationValueType = std::conditional_t<std::is_floating_point_v<T>, fl
  * @param hitVoxelCenterPoint
  */
 template <typename T>
-inline void FindInterpolationValues(const RotateArgs& params, size_t octant, SizeVec3 oldIndicesU, Eigen::Array4f& oldCoords, const DataArray<T>& sourceArray,
+inline void FindInterpolationValues(const RotateArgs& params, usize octant, SizeVec3 oldIndicesU, Eigen::Array4f& oldCoords, const DataArray<T>& sourceArray,
                                     std::vector<AccumulationValueType<T>>& pValues, Eigen::Vector3f& uvw, Point3Df& hitVoxelCenterPoint)
 {
   const std::array<Vector3i64, 8>& indexOffset = k_AllOctantOffsets[octant];
 
-  const Vector3i64 oldIndices(static_cast<int64_t>(oldIndicesU[0]), static_cast<int64_t>(oldIndicesU[1]), static_cast<int64_t>(oldIndicesU[2]));
-  size_t numComps = sourceArray.getNumberOfComponents();
+  const Vector3i64 oldIndices(static_cast<int64>(oldIndicesU[0]), static_cast<int64>(oldIndicesU[1]), static_cast<int64>(oldIndicesU[2]));
+  usize numComps = sourceArray.getNumberOfComponents();
 
   Eigen::Vector3f p1Coord;
 
-  for(size_t i = 0; i < 8; i++)
+  for(usize i = 0; i < 8; i++)
   {
     auto pIndices = oldIndices + indexOffset[i];
-    for(size_t compIndex = 0; compIndex < numComps; compIndex++)
+    for(usize compIndex = 0; compIndex < numComps; compIndex++)
     {
       T value = GetSourceArrayValue<T>(params, pIndices, sourceArray, compIndex);
       pValues[i * numComps + compIndex] = value;
@@ -277,7 +277,7 @@ inline void FindInterpolationValues(const RotateArgs& params, size_t octant, Siz
                                 static_cast<float32>(c111_Index[1]) * params.yRes + (0.5F * params.yRes) + params.OriginalOrigin[1],
                                 static_cast<float32>(c111_Index[2]) * params.zRes + (0.5F * params.zRes) + params.OriginalOrigin[2]};
 
-  for(size_t i = 0; i < 3; i++)
+  for(usize i = 0; i < 3; i++)
   {
     uvw[i] = (oldCoords[i] - c000_Coord[i]) / (c111_Coord[i] - c000_Coord[i]);
     uvw[i] = uvw[i] < 0.0 ? 0.0 : uvw[i];
@@ -297,7 +297,7 @@ public:
   {
   }
 
-  void sendThreadSafeProgressMessage(int64_t counter)
+  void sendThreadSafeProgressMessage(int64 counter)
   {
     static std::mutex mutex;
     m_Progcounter += static_cast<int32>(counter);
@@ -377,16 +377,16 @@ public:
    * @param indices
    * @return
    */
-  T calculateInterpolatedValue(const std::vector<AccumulationValueType<T>>& pValues, const Eigen::Vector3f& uvw, size_t numComps, size_t compIndex) const
+  T calculateInterpolatedValue(const std::vector<AccumulationValueType<T>>& pValues, const Eigen::Vector3f& uvw, usize numComps, usize compIndex) const
   {
-    constexpr size_t P1 = 0;
-    constexpr size_t P2 = 1;
-    constexpr size_t P3 = 2;
-    constexpr size_t P4 = 3;
-    constexpr size_t P5 = 4;
-    constexpr size_t P6 = 5;
-    constexpr size_t P7 = 6;
-    constexpr size_t P8 = 7;
+    constexpr usize P1 = 0;
+    constexpr usize P2 = 1;
+    constexpr usize P3 = 2;
+    constexpr usize P4 = 3;
+    constexpr usize P5 = 4;
+    constexpr usize P6 = 5;
+    constexpr usize P7 = 6;
+    constexpr usize P8 = 7;
 
     /* clang-format on */
     const AccumulationValueType<T> c000 = pValues[P1 * numComps + compIndex];
@@ -398,9 +398,9 @@ public:
     const AccumulationValueType<T> c111 = pValues[P7 * numComps + compIndex];
     const AccumulationValueType<T> c011 = pValues[P8 * numComps + compIndex];
 
-    const float Xd = uvw[0];
-    const float Yd = uvw[1];
-    const float Zd = uvw[2];
+    const float32 Xd = uvw[0];
+    const float32 Yd = uvw[1];
+    const float32 Zd = uvw[2];
 
     const AccumulationValueType<T> c00 = c000 * (1 - Xd) + c100 * Xd;
     const AccumulationValueType<T> c01 = c001 * (1 - Xd) + c101 * Xd;
@@ -425,7 +425,7 @@ public:
     using DataArrayType = DataArray<T>;
 
     const auto& sourceArray = dynamic_cast<const DataArrayType&>(*m_SourceArray);
-    const size_t numComps = sourceArray.getNumberOfComponents();
+    const usize numComps = sourceArray.getNumberOfComponents();
     if(numComps == 0)
     {
       m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Number of Components was Zero for array. Exiting Transform.", sourceArray.getName()));
@@ -451,21 +451,21 @@ public:
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
 
-    for(int64_t k = 0; k < m_Params.outputDims[2]; k++)
+    for(int64 k = 0; k < m_Params.outputDims[2]; k++)
     {
       if(m_FilterCallback->getCancel())
       {
         break;
       }
       m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
-      int64_t ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
+      int64 ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
 
-      for(int64_t j = 0; j < m_Params.outputDims[1]; j++)
+      for(int64 j = 0; j < m_Params.outputDims[1]; j++)
       {
-        int64_t jtot = (m_Params.outputDims[0]) * j;
-        for(int64_t i = 0; i < m_Params.outputDims[0]; i++)
+        int64 jtot = (m_Params.outputDims[0]) * j;
+        for(int64 i = 0; i < m_Params.outputDims[0]; i++)
         {
-          int64_t destIndex = ktot + jtot + i;
+          int64 destIndex = ktot + jtot + i;
           Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
           // Last value is 1. See https://www.euclideanspace.com/maths/geometry/affine/matrix4x4/index.htm
           Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
@@ -479,7 +479,7 @@ public:
           // Now we know what voxel the new cell center maps back to in the original geometry.
           if(errorResult == ImageGeom::ErrorType::NoError)
           {
-            size_t oldIndex = (m_Params.OriginalDims[0] * m_Params.OriginalDims[1] * oldGeomIndices[2]) + (m_Params.OriginalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
+            usize oldIndex = (m_Params.OriginalDims[0] * m_Params.OriginalDims[1] * oldGeomIndices[2]) + (m_Params.OriginalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
 
             auto oldVoxelCenterPoint = origImageGeomPtr->getCoordsf(oldIndex);
 
@@ -488,7 +488,7 @@ public:
             Eigen::Vector3f uvw;
             FindInterpolationValues(m_Params, octant, oldGeomIndices, coordsOld, sourceArray, pValues, uvw, oldVoxelCenterPoint);
 
-            for(size_t compIndex = 0; compIndex < numComps; compIndex++)
+            for(usize compIndex = 0; compIndex < numComps; compIndex++)
             {
               T value = calculateInterpolatedValue(pValues, uvw, numComps, compIndex);
               newDataStore.setComponent(destIndex, compIndex, value);
@@ -553,8 +553,25 @@ public:
 
     const auto& oldDataStore = m_SourceArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& newDataStore = m_TargetArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    const usize numComps = oldDataStore.getNumberOfComponents();
+    const int64 srcDimX = static_cast<int64>(m_Params.OriginalDims[0]);
+    const int64 srcDimY = static_cast<int64>(m_Params.OriginalDims[1]);
+    const int64 srcDimZ = static_cast<int64>(m_Params.OriginalDims[2]);
+    const usize srcSliceSize = static_cast<usize>(srcDimX * srcDimY);
+    const usize outSliceSize = static_cast<usize>(m_Params.outputDims[0] * m_Params.outputDims[1]);
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
+
+    // Allocate output slice buffer (bounded: one Z-slice of the output geometry)
+    auto outSliceBuf = std::make_unique<T[]>(outSliceSize * numComps);
+    std::fill(outSliceBuf.get(), outSliceBuf.get() + outSliceSize * numComps, static_cast<T>(0));
+
+    // Source slab cache: holds a contiguous range of source Z-slices
+    std::unique_ptr<T[]> srcSlabBuf;
+    usize srcSlabBufSize = 0;
+    int64 cachedSrcZMin = -1;
+    int64 cachedSrcZMax = -2; // invalid range initially
+
     for(int64 k = 0; k < m_Params.outputDims[2]; k++)
     {
       if(m_FilterCallback->getCancel())
@@ -563,46 +580,108 @@ public:
       }
       m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
 
-      int64 const ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
+      // Determine source Z range needed for this output slice analytically.
+      // The inverse transform maps output physical coords to source physical coords.
+      // Source Z is a linear function of output (X, Y) for a fixed output Z, so
+      // extrema occur at the corners of the output slice's XY bounding box.
+      int64 neededZMin = srcDimZ;
+      int64 neededZMax = -1;
+
+      if(m_SliceBySlice)
+      {
+        neededZMin = k;
+        neededZMax = k;
+      }
+      else
+      {
+        // Probe all 4 corners — compute source Z regardless of whether the point is in-bounds
+        for(int cj = 0; cj <= 1; cj++)
+        {
+          for(int ci = 0; ci <= 1; ci++)
+          {
+            int64 cx = ci == 0 ? 0 : static_cast<int64>(m_Params.outputDims[0] - 1);
+            int64 cy = cj == 0 ? 0 : static_cast<int64>(m_Params.outputDims[1] - 1);
+            int64 cornerFlatIdx = cx + cy * static_cast<int64>(m_Params.outputDims[0]) + k * static_cast<int64>(m_Params.outputDims[0] * m_Params.outputDims[1]);
+            Point3Df cornerPt = destImageGeomPtr->getCoordsf(cornerFlatIdx);
+            Eigen::Vector4f cornerNew(cornerPt.getX(), cornerPt.getY(), cornerPt.getZ(), 1.0f);
+            Eigen::Array4f cornerOld = inverseTransform * cornerNew;
+            // Convert source physical Z to cell index (floor division)
+            float srcPhysZ = cornerOld[2];
+            float srcOriginZ = m_Params.OriginalOrigin[2];
+            float srcSpacingZ = m_Params.OriginalSpacing[2];
+            int64 srcZIdx = static_cast<int64>(std::floor((srcPhysZ - srcOriginZ) / srcSpacingZ));
+            neededZMin = std::min(neededZMin, srcZIdx);
+            neededZMax = std::max(neededZMax, srcZIdx);
+          }
+        }
+        // Clamp to valid source range with margin
+        neededZMin = std::max(static_cast<int64>(0), neededZMin - 1);
+        neededZMax = std::min(srcDimZ - 1, neededZMax + 1);
+      }
+
+      if(neededZMin > neededZMax || neededZMin >= srcDimZ || neededZMax < 0)
+      {
+        // No valid source mapping for this slice — fill with zeros
+        std::fill(outSliceBuf.get(), outSliceBuf.get() + outSliceSize * numComps, static_cast<T>(0));
+        newDataStore.copyFromBuffer(static_cast<usize>(k) * outSliceSize * numComps, nonstd::span<const T>(outSliceBuf.get(), outSliceSize * numComps));
+        continue;
+      }
+      neededZMin = std::max(neededZMin, static_cast<int64>(0));
+      neededZMax = std::min(neededZMax, srcDimZ - 1);
+
+      // Read source slab if not already cached (or if range changed)
+      if(neededZMin < cachedSrcZMin || neededZMax > cachedSrcZMax)
+      {
+        cachedSrcZMin = neededZMin;
+        cachedSrcZMax = neededZMax;
+        usize slabTuples = static_cast<usize>(cachedSrcZMax - cachedSrcZMin + 1) * srcSliceSize;
+        usize slabElements = slabTuples * numComps;
+        if(slabElements > srcSlabBufSize)
+        {
+          srcSlabBuf = std::make_unique<T[]>(slabElements);
+          srcSlabBufSize = slabElements;
+        }
+        oldDataStore.copyIntoBuffer(static_cast<usize>(cachedSrcZMin) * srcSliceSize * numComps, nonstd::span<T>(srcSlabBuf.get(), slabElements));
+      }
+
+      // Process output slice
+      std::fill(outSliceBuf.get(), outSliceBuf.get() + outSliceSize * numComps, static_cast<T>(0));
+
+      int64 const ktot = static_cast<int64>(m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
       for(int64 j = 0; j < m_Params.outputDims[1]; j++)
       {
-        int64 jtot = (m_Params.outputDims[0]) * j;
+        int64 jtot = static_cast<int64>(m_Params.outputDims[0]) * j;
         for(int64 i = 0; i < m_Params.outputDims[0]; i++)
         {
           const int64 destIndex = ktot + jtot + i;
+          const usize outBufIdx = static_cast<usize>(j * static_cast<int64>(m_Params.outputDims[0]) + i);
           Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
-          // Last value is 1. See https://www.euclideanspace.com/maths/geometry/affine/matrix4x4/index.htm
           Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
-          // Transform back to the old coordinate
           Eigen::Array4f coordsOld = inverseTransform * coordsNew;
 
-          // Now compute the old Cell Index from the old coordinate
           SizeVec3 oldGeomIndices;
           auto errorResult = srcImageGeomPtr->computeCellIndex(coordsOld.data(), oldGeomIndices);
 
-          // Now we know what voxel the new cell center maps back to in the original geometry.
           if(errorResult == ImageGeom::ErrorType::NoError)
           {
             if(m_SliceBySlice)
             {
               oldGeomIndices[2] = k;
             }
-            size_t oldIndex = (m_Params.OriginalDims[0] * m_Params.OriginalDims[1] * oldGeomIndices[2]) + (m_Params.OriginalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
-
-            if(newDataStore.copyFrom(destIndex, oldDataStore, oldIndex, 1).invalid())
+            int64 srcZ = static_cast<int64>(oldGeomIndices[2]);
+            if(srcZ >= cachedSrcZMin && srcZ <= cachedSrcZMax)
             {
-              std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_SourceArray->getName(), oldIndex,
-                                       m_SourceArray->getName(), destIndex)
-                        << std::endl;
-              break;
+              usize slabLocalIdx = (static_cast<usize>(srcZ - cachedSrcZMin) * srcSliceSize + oldGeomIndices[1] * static_cast<usize>(srcDimX) + oldGeomIndices[0]) * numComps;
+              for(usize c = 0; c < numComps; c++)
+              {
+                outSliceBuf.get()[outBufIdx * numComps + c] = srcSlabBuf.get()[slabLocalIdx + c];
+              }
             }
-          }
-          else
-          {
-            newDataStore.fillTuple(destIndex, 0);
           }
         }
       }
+
+      newDataStore.copyFromBuffer(static_cast<usize>(k) * outSliceSize * numComps, nonstd::span<const T>(outSliceBuf.get(), outSliceSize * numComps));
     }
     m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", m_SourceArray->getName()));
   }
@@ -634,13 +713,13 @@ public:
   {
   }
 
-  void convert(size_t start, size_t end) const
+  void convert(usize start, usize end) const
   {
-    int64_t progCounter = 0;
-    const size_t totalElements = (end - start);
-    const size_t progIncrement = static_cast<int64_t>(totalElements / 100);
+    int64 progCounter = 0;
+    const usize totalElements = (end - start);
+    const usize progIncrement = static_cast<int64>(totalElements / 100);
 
-    for(size_t i = start; i < end; i++)
+    for(usize i = start; i < end; i++)
     {
       if(m_FilterCallback->getCancel())
       {

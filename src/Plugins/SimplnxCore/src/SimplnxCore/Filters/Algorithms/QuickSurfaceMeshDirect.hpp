@@ -6,32 +6,18 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
-
-#include <random>
-#include <string>
 
 namespace nx::core
 {
+struct QuickSurfaceMeshInputValues;
 
-struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
-{
-  bool FixProblemVoxels;
-  bool RepairTriangleWinding;
-  bool GenerateTripleLines;
-
-  DataPath GridGeomDataPath;
-  DataPath FeatureIdsArrayPath;
-  MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;
-  MultiArraySelectionParameter::ValueType SelectedFeatureDataArrayPaths;
-  DataPath TriangleGeometryPath;
-  DataPath VertexGroupDataPath;
-  DataPath NodeTypesDataPath;
-  DataPath FaceGroupDataPath;
-  DataPath FaceLabelsDataPath;
-  MultiArraySelectionParameter::ValueType CreatedDataArrayPaths;
-};
-
+/**
+ * @class QuickSurfaceMeshDirect
+ * @brief In-core algorithm for QuickSurfaceMesh. Preserves the original
+ * sequential voxel iteration using operator[] on DataStore references.
+ * Selected by DispatchAlgorithm when all input arrays are backed by
+ * in-memory DataStore.
+ */
 class SIMPLNXCORE_EXPORT QuickSurfaceMeshDirect
 {
 public:
@@ -39,7 +25,7 @@ public:
   using TriStore = AbstractDataStore<IGeometry::SharedTriList::value_type>;
   using MeshIndexType = IGeometry::MeshIndexType;
 
-  QuickSurfaceMeshDirect(DataStructure& dataStructure, QuickSurfaceMeshInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
+  QuickSurfaceMeshDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const QuickSurfaceMeshInputValues* inputValues);
   ~QuickSurfaceMeshDirect() noexcept;
 
   QuickSurfaceMeshDirect(const QuickSurfaceMeshDirect&) = delete;
@@ -49,37 +35,15 @@ public:
 
   Result<> operator()();
 
-  /**
-   * @brief
-   */
-  void correctProblemVoxels();
-
-  /**
-   * @brief
-   * @param m_NodeIds
-   * @param nodeCount
-   * @param triangleCount
-   */
-  void determineActiveNodes(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount);
-
-  /**
-   * @brief
-   * @param m_NodeIds
-   * @param nodeCount
-   * @param triangleCount
-   */
-  void createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount);
-
-  /**
-   * @brief generateTripleLines
-   */
-  void generateTripleLines();
-
 private:
+  void correctProblemVoxels();
+  void determineActiveNodes(std::vector<MeshIndexType>& nodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount);
+  void createNodesAndTriangles(std::vector<MeshIndexType>& nodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount);
+
   DataStructure& m_DataStructure;
   const QuickSurfaceMeshInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  bool m_GenerateTripleLines = false;
 };
+
 } // namespace nx::core

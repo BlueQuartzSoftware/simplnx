@@ -5,6 +5,7 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
@@ -20,6 +21,8 @@
 #include <EbsdLib/IO/TSL/AngFields.h>
 #include <EbsdLib/IO/TSL/H5AngVolumeReader.h>
 
+using namespace nx::core;
+
 namespace
 {
 // Parameter Keys
@@ -31,7 +34,7 @@ constexpr nx::core::StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_sl
 constexpr nx::core::StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
 // constexpr nx::core::StringLiteral k_RotatedGeometryName = ".RotatedGeometry";
 
-enum class RotationRepresentation : uint64_t
+enum class RotationRepresentation : uint64
 {
   AxisAngle = 0,
   RotationMatrix = 1
@@ -59,7 +62,7 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
   }
 
   // Resize the Ensemble Attribute Matrix to be the correct number of phases.
-  std::vector<size_t> tDims = {phases.size() + 1};
+  ShapeType tDims = {phases.size() + 1};
 
   nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
 
@@ -87,12 +90,12 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
   latticData[4] = 0.0f;
   latticData[5] = 0.0f;
 
-  for(size_t i = 0; i < phases.size(); i++)
+  for(usize i = 0; i < phases.size(); i++)
   {
-    int32_t phaseID = phases[i]->getPhaseIndex();
+    int32 phaseID = phases[i]->getPhaseIndex();
     xtalData[phaseID] = phases[i]->determineOrientationOpsIndex();
     matNameData[phaseID] = phases[i]->getMaterialName();
-    std::vector<float> latticeConstant = phases[i]->getLatticeConstants();
+    std::vector<float32> latticeConstant = phases[i]->getLatticeConstants();
 
     latticData[phaseID * 6ULL] = latticeConstant[0];
     latticData[phaseID * 6ULL + 1] = latticeConstant[1];
@@ -107,7 +110,7 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
 
 template <typename H5EbsdReaderType, typename T>
 void CopyData(nx::core::DataStructure& dataStructure, H5EbsdReaderType* ebsdReader, const std::vector<std::string>& arrayNames, std::set<std::string> selectedArrayNames,
-              const nx::core::DataPath& cellAttributeMatrixPath, size_t totalPoints)
+              const nx::core::DataPath& cellAttributeMatrixPath, usize totalPoints)
 {
   using DataArrayType = nx::core::DataArray<T>;
   for(const auto& arrayName : arrayNames)
@@ -115,12 +118,9 @@ void CopyData(nx::core::DataStructure& dataStructure, H5EbsdReaderType* ebsdRead
     if(selectedArrayNames.find(arrayName) != selectedArrayNames.end())
     {
       T* source = reinterpret_cast<T*>(ebsdReader->getPointerByName(arrayName));
-      nx::core::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName); // get the data from the DataStructure
+      nx::core::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName);
       auto& destination = dataStructure.getDataRefAs<DataArrayType>(dataPath);
-      for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
-      {
-        destination[tupleIndex] = source[tupleIndex];
-      }
+      destination.getDataStoreRef().copyFromBuffer(0, nonstd::span<const T>(source, totalPoints * destination.getNumberOfComponents()));
     }
   }
 }
@@ -139,10 +139,10 @@ void CopyData(nx::core::DataStructure& dataStructure, H5EbsdReaderType* ebsdRead
  */
 template <typename H5EbsdReaderType, typename PhaseType>
 nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputValues, nx::core::DataStructure& dataStructure, const std::vector<std::string>& eulerNames,
-                                const nx::core::IFilter::MessageHandler& mMessageHandler, std::set<std::string> selectedArrayNames, const std::array<size_t, 3>& dcDims,
+                                const nx::core::IFilter::MessageHandler& mMessageHandler, std::set<std::string> selectedArrayNames, const std::array<usize, 3>& dcDims,
                                 const std::vector<std::string>& floatArrayNames, const std::vector<std::string>& intArrayNames)
 {
-  int32_t err = 0;
+  int32 err = 0;
   std::shared_ptr<H5EbsdReaderType> ebsdReader = std::dynamic_pointer_cast<H5EbsdReaderType>(H5EbsdReaderType::New());
   if(nullptr == ebsdReader)
   {
@@ -170,7 +170,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
 
   // Initialize all the arrays with some default values
   mMessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, fmt::format("Reading EBSD Data from file {}", mInputValues->inputFilePath)});
-  uint32_t mRefFrameZDir = ebsdReader->getStackingOrder();
+  uint32 mRefFrameZDir = ebsdReader->getStackingOrder();
 
   ebsdReader->setSliceStart(mInputValues->startSlice);
   ebsdReader->setSliceEnd(mInputValues->endSlice);
@@ -185,7 +185,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   nx::core::DataPath geometryPath = mInputValues->dataContainerPath;
   nx::core::DataPath cellAttributeMatrixPath = mInputValues->cellAttributeMatrixPath;
 
-  size_t totalPoints = dcDims[0] * dcDims[1] * dcDims[2];
+  usize totalPoints = dcDims[0] * dcDims[1] * dcDims[2];
 
   // Get the Crystal Structure data which should have already been read from the file and copied to the array
   nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
@@ -193,63 +193,76 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
   auto& xtalData = dataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
 
   // Copy the Phase Values from the EBSDReader to the DataStructure
-  auto* phasePtr = reinterpret_cast<int32_t*>(ebsdReader->getPointerByName(eulerNames[3]));            // get the phase data from the EbsdReader
+  auto* phasePtr = reinterpret_cast<int32*>(ebsdReader->getPointerByName(eulerNames[3]));              // get the phase data from the EbsdReader
   nx::core::DataPath phaseDataPath = cellAttributeMatrixPath.createChildPath(ebsdlib::H5Ebsd::Phases); // get the phase data from the DataStructure
   nx::core::Int32Array* phaseDataArrayPtr = nullptr;
 
   if(selectedArrayNames.find(eulerNames[3]) != selectedArrayNames.end())
   {
     phaseDataArrayPtr = dataStructure.getDataAs<nx::core::Int32Array>(phaseDataPath);
-    for(size_t tupleIndex = 0; tupleIndex < totalPoints; tupleIndex++)
-    {
-      (*phaseDataArrayPtr)[tupleIndex] = phasePtr[tupleIndex];
-    }
+    phaseDataArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phasePtr, totalPoints));
   }
 
   if(selectedArrayNames.find(ebsdlib::CellData::EulerAngles) != selectedArrayNames.end())
   {
     //  radian conversion = std::numbers::pi / 180.0;
-    auto* euler0 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[0]));
-    auto* euler1 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[1]));
-    auto* euler2 = reinterpret_cast<float*>(ebsdReader->getPointerByName(eulerNames[2]));
-    //  std::vector<size_t> cDims = {3};
+    auto* euler0 = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[0]));
+    auto* euler1 = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[1]));
+    auto* euler2 = reinterpret_cast<float32*>(ebsdReader->getPointerByName(eulerNames[2]));
+    //  ShapeType cDims = {3};
     nx::core::DataPath eulerDataPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles); // get the Euler data from the DataStructure
     auto& eulerData = dataStructure.getDataRefAs<nx::core::Float32Array>(eulerDataPath);
 
-    float degToRad = 1.0f;
+    float32 degToRad = 1.0f;
     if(mInputValues->eulerRepresentation != ebsdlib::AngleRepresentation::Radians && mInputValues->useRecommendedTransform)
     {
-      degToRad = nx::core::numbers::pi_v<float> / 180.0F;
+      degToRad = nx::core::numbers::pi_v<float32> / 180.0F;
     }
-    for(size_t elementIndex = 0; elementIndex < totalPoints; elementIndex++)
+    // Interleave 3 separate Euler arrays into [e0,e1,e2, e0,e1,e2, ...] layout using a chunked buffer
+    // Also apply Oxford hex correction if needed (avoids a second pass over the data)
+    constexpr usize k_ChunkTuples = 65536;
+    auto eulerBuf = std::make_unique<float32[]>(k_ChunkTuples * 3);
+
+    // Cache phase data and crystal structures locally if Oxford hex correction is needed
+    std::unique_ptr<int32[]> phaseCache;
+    std::unique_ptr<uint32[]> xtalCache;
+    bool applyHexCorrection = (manufacturer == ebsdlib::Ctf::Manufacturer && phaseDataArrayPtr != nullptr);
+    if(applyHexCorrection)
     {
-      eulerData[3 * elementIndex] = euler0[elementIndex] * degToRad;
-      eulerData[3 * elementIndex + 1] = euler1[elementIndex] * degToRad;
-      eulerData[3 * elementIndex + 2] = euler2[elementIndex] * degToRad;
+      phaseCache = std::make_unique<int32[]>(totalPoints);
+      phaseDataArrayPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(phaseCache.get(), totalPoints));
+      usize numXtal = xtalData.getSize();
+      xtalCache = std::make_unique<uint32[]>(numXtal);
+      xtalData.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(xtalCache.get(), numXtal));
     }
-    // THIS IS ONLY TO BRING OXFORD DATA INTO THE SAME HEX REFERENCE AS EDAX HEX REFERENCE
-    if(manufacturer == ebsdlib::Ctf::Manufacturer && phaseDataArrayPtr != nullptr)
+
+    auto& eulerStore = eulerData.getDataStoreRef();
+    for(usize startTup = 0; startTup < totalPoints; startTup += k_ChunkTuples)
     {
-      for(size_t elementIndex = 0; elementIndex < totalPoints; elementIndex++)
+      usize count = std::min(k_ChunkTuples, totalPoints - startTup);
+      for(usize i = 0; i < count; i++)
       {
-        if(xtalData[(*phaseDataArrayPtr)[elementIndex]] == ebsdlib::CrystalStructure::Hexagonal_High)
+        usize srcIdx = startTup + i;
+        eulerBuf[i * 3] = euler0[srcIdx] * degToRad;
+        eulerBuf[i * 3 + 1] = euler1[srcIdx] * degToRad;
+        eulerBuf[i * 3 + 2] = euler2[srcIdx] * degToRad;
+        if(applyHexCorrection && xtalCache[phaseCache[srcIdx]] == ebsdlib::CrystalStructure::Hexagonal_High)
         {
-          eulerData[3 * elementIndex + 2] = eulerData[3 * elementIndex + 2] + (30.0F * degToRad);
+          eulerBuf[i * 3 + 2] += (30.0F * degToRad);
         }
       }
+      eulerStore.copyFromBuffer(startTup * 3, nonstd::span<const float32>(eulerBuf.get(), count * 3));
     }
   }
 
   // Copy the EBSD Data from its temp location into the final DataStructure location.
-  ::CopyData<H5EbsdReaderType, float>(dataStructure, ebsdReader.get(), floatArrayNames, selectedArrayNames, cellAttributeMatrixPath, totalPoints);
+  ::CopyData<H5EbsdReaderType, float32>(dataStructure, ebsdReader.get(), floatArrayNames, selectedArrayNames, cellAttributeMatrixPath, totalPoints);
   ::CopyData<H5EbsdReaderType, int>(dataStructure, ebsdReader.get(), intArrayNames, selectedArrayNames, cellAttributeMatrixPath, totalPoints);
 
   return {};
 }
 
 } // namespace
-
-using namespace nx::core;
 
 // -----------------------------------------------------------------------------
 ReadH5Ebsd::ReadH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadH5EbsdInputValues* inputValues)
@@ -274,22 +287,22 @@ Result<> ReadH5Ebsd::operator()()
   {
     return MakeErrorResult(-50000, fmt::format("Could not read H5EbsdVolumeInfo from file '{}", m_InputValues->inputFilePath));
   }
-  std::array<int64_t, 3> dims = {0, 0, 0};
-  std::array<float, 3> res = {0.0f, 0.0f, 0.0f};
+  std::array<int64, 3> dims = {0, 0, 0};
+  std::array<float32, 3> res = {0.0f, 0.0f, 0.0f};
   volumeInfoReader->getDimsAndResolution(dims[0], dims[1], dims[2], res[0], res[1], res[2]);
 
-  std::array<size_t, 3> dcDims = {static_cast<size_t>(dims[0]), static_cast<size_t>(dims[1]), static_cast<size_t>(dims[2])};
+  std::array<usize, 3> dcDims = {static_cast<usize>(dims[0]), static_cast<usize>(dims[1]), static_cast<usize>(dims[2])};
 
   // Now Calculate our "subvolume" of slices, ie, those start and end values that the user selected from the GUI
   dcDims[2] = m_InputValues->endSlice - m_InputValues->startSlice + 1;
 
   std::string manufacturer = volumeInfoReader->getManufacturer();
 
-  std::array<float, 3> sampleTransAxis = volumeInfoReader->getSampleTransformationAxis();
-  float sampleTransAngle = volumeInfoReader->getSampleTransformationAngle();
+  std::array<float32, 3> sampleTransAxis = volumeInfoReader->getSampleTransformationAxis();
+  float32 sampleTransAngle = volumeInfoReader->getSampleTransformationAngle();
 
-  std::array<float, 3> eulerTransAxis = volumeInfoReader->getEulerTransformationAxis();
-  float eulerTransAngle = volumeInfoReader->getEulerTransformationAngle();
+  std::array<float32, 3> eulerTransAxis = volumeInfoReader->getEulerTransformationAxis();
+  float32 eulerTransAngle = volumeInfoReader->getEulerTransformationAngle();
 
   // This will effectively close the reader and free any memory being used
   volumeInfoReader = ebsdlib::H5EbsdVolumeInfo::NullPointer();

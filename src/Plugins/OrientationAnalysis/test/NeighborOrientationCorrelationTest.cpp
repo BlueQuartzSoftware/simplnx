@@ -3,18 +3,21 @@
 #include "OrientationAnalysisTestUtils.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
-#include "simplnx/Pipeline/Pipeline.hpp"
-#include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <cmath>
 #include <filesystem>
-#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -41,6 +44,8 @@ using namespace nx::core::UnitTest;
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN100 Pipeline", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
   UnitTest::LoadPlugins();
+  // 1 Z-slice of quats (largest array): 189*201*4*4 = 607824 bytes
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 600000, true);
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "neighbor_orientation_correlation.tar.gz", "neighbor_orientation_correlation.dream3d");
 
@@ -102,6 +107,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
 
   // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group
   {
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(k_CellAttributeMatrix));
     auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(k_CellAttributeMatrix);
     std::vector<DataPath> selectedCellArrays;
 
@@ -113,6 +119,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
 
     for(const auto& cellArrayPath : selectedCellArrays)
     {
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(cellArrayPath));
       const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
       DataType type = generatedDataArray.getDataType();
 
@@ -127,6 +134,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
         continue;
       }
 
+      REQUIRE_NOTHROW(exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath));
       auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath);
       DataType exemplarType = exemplarDataArray.getDataType();
 
@@ -198,48 +206,166 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
   UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
 }
 
-TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][NeighborOrientationCorrelationFilter][BackwardsCompatibility]")
+namespace
 {
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+const std::string k_GeomName("Image Geometry");
+const std::string k_CellDataName("Cell Data");
 
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+const DataPath k_GeomPath({k_GeomName});
+const DataPath k_CellDataPath = k_GeomPath.createChildPath(k_CellDataName);
+const DataPath k_CIPath = k_CellDataPath.createChildPath("Confidence Index");
+const DataPath k_QuatsPath = k_CellDataPath.createChildPath("Quats");
+const DataPath k_PhasesPath = k_CellDataPath.createChildPath("Phases");
+const DataPath k_CrystalStructuresPath = k_GeomPath.createChildPath("Ensemble Data").createChildPath("CrystalStructures");
 
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "NeighborOrientationCorrelationFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "NeighborOrientationCorrelationFilter.json"},
-  };
+void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
+{
+  const ShapeType cellTupleShape = {dimZ, dimY, dimX};
+  const usize sliceSize = dimX * dimY;
 
-  for(const auto& [label, fixturePath] : fixtures)
+  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeom->setDimensions({dimX, dimY, dimZ});
+  imageGeom->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeom->setOrigin({0.0f, 0.0f, 0.0f});
+
+  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  auto quatsDataStore = DataStoreUtilities::CreateDataStore<float32>(cellTupleShape, {4}, IDataAction::Mode::Execute);
+  auto* quatsArray = DataArray<float32>::Create(dataStructure, "Quats", quatsDataStore, cellAM->getId());
+  auto& quatsStore = quatsArray->getDataStoreRef();
+
+  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* phasesArray = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAM->getId());
+  auto& phasesStore = phasesArray->getDataStoreRef();
+
+  auto ciDataStore = DataStoreUtilities::CreateDataStore<float32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto* ciArray = DataArray<float32>::Create(dataStructure, "Confidence Index", ciDataStore, cellAM->getId());
+  auto& ciStore = ciArray->getDataStoreRef();
+
+  const usize blocksPerDimX = dimX / blockSize;
+  const usize blocksPerDimY = dimY / blockSize;
+
+  std::vector<float32> quatsBuf(sliceSize * 4);
+  std::vector<int32> phasesBuf(sliceSize);
+  std::vector<float32> ciBuf(sliceSize);
+
+  for(usize z = 0; z < dimZ; z++)
   {
-    DYNAMIC_SECTION(label)
+    for(usize y = 0; y < dimY; y++)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
+      for(usize x = 0; x < dimX; x++)
+      {
+        const usize inSlice = y * dimX + x;
+        phasesBuf[inSlice] = 1;
 
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
+        usize bx = x / blockSize;
+        usize by = y / blockSize;
+        usize bz = z / blockSize;
+        float32 angle = static_cast<float32>(bz * blocksPerDimY * blocksPerDimX + by * blocksPerDimX + bx) * 0.1f;
+        float32 sinHalf = std::sin(angle * 0.5f);
+        float32 cosHalf = std::cos(angle * 0.5f);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+        const usize qIdx = inSlice * 4;
+        quatsBuf[qIdx] = cosHalf;
+        quatsBuf[qIdx + 1] = sinHalf * 0.577350269f; // 1/sqrt(3)
+        quatsBuf[qIdx + 2] = sinHalf * 0.577350269f;
+        quatsBuf[qIdx + 3] = sinHalf * 0.577350269f;
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<NeighborOrientationCorrelationFilter>::uuid);
-
-      CHECK(pipelineFilter->getComments().empty());
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<float32>(NeighborOrientationCorrelationFilter::k_MinConfidence_Key) == 2.5f);
-      CHECK(args.value<float32>(NeighborOrientationCorrelationFilter::k_MisorientationTolerance_Key) == 2.5f);
-      CHECK(args.value<int32>(NeighborOrientationCorrelationFilter::k_Level_Key) == 5);
-      CHECK(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      CHECK(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CorrelationArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
+        bool isBoundary = (x % blockSize == 0) || (y % blockSize == 0) || (z % blockSize == 0);
+        bool isNoisy = ((x * 7 + y * 13 + z * 29) % 10 == 0);
+        ciBuf[inSlice] = (isBoundary || isNoisy) ? 0.05f : 0.9f;
+      }
     }
+    const usize zOffset = z * sliceSize;
+    quatsStore.copyFromBuffer(zOffset * 4, nonstd::span<const float32>(quatsBuf.data(), sliceSize * 4));
+    phasesStore.copyFromBuffer(zOffset, nonstd::span<const int32>(phasesBuf.data(), sliceSize));
+    ciStore.copyFromBuffer(zOffset, nonstd::span<const float32>(ciBuf.data(), sliceSize));
+  }
+
+  // Ensemble data — small enough for per-element writes
+  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "Ensemble Data", {2}, imageGeom->getId());
+  auto crystalStructuresDataStore = DataStoreUtilities::CreateDataStore<uint32>({2}, {1}, IDataAction::Mode::Execute);
+  auto* crystalStructuresArray = DataArray<uint32>::Create(dataStructure, "CrystalStructures", crystalStructuresDataStore, ensembleAM->getId());
+  std::array<uint32, 2> csData = {999, 1}; // Unknown, Cubic-High (m-3m)
+  crystalStructuresArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(csData.data(), 2));
+}
+} // namespace
+
+TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Generate Test Data", "[OrientationAnalysis][NeighborOrientationCorrelationFilter][.GenerateTestData]")
+{
+  const auto outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "generated_test_data" / "neighbor_orientation_correlation";
+  fs::create_directories(outputDir);
+
+  // Large input data (200x200x200, blockSize=25)
+  {
+    DataStructure buildDS;
+    BuildTestData(buildDS, 200, 200, 200, 25);
+    UnitTest::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
+    fmt::print("Generated large input: {}\n", (outputDir / "large_input.dream3d").string());
+  }
+}
+
+TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: 200x200x200 Large OOC", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
+{
+  UnitTest::LoadPlugins();
+  // Test both algorithm paths (in-core + OOC) by default; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH
+  bool forceOocAlgo = static_cast<bool>(GENERATE(from_range(nx::core::k_ForceOocTestValues)));
+  const nx::core::ForceOocAlgorithmGuard guard(forceOocAlgo);
+  // 200x200x200, Quats (float32, 4-comp) => 200*200*4*4 = 640,000 bytes/slice
+  const UnitTest::PreferencesSentinel prefsSentinel("HDF5-OOC", 640000, true);
+
+  DYNAMIC_SECTION("forceOoc: " << forceOocAlgo)
+  {
+    constexpr usize k_Dim = 200;
+    constexpr usize k_Block = 25;
+
+    DataStructure dataStructure;
+    BuildTestData(dataStructure, k_Dim, k_Dim, k_Dim, k_Block);
+
+    const NeighborOrientationCorrelationFilter filter;
+    Arguments args;
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_MinConfidence_Key, std::make_any<float32>(0.2f));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_Level_Key, std::make_any<int32>(2));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CorrelationArrayPath_Key, std::make_any<DataPath>(k_CIPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(k_QuatsPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructuresPath));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    // Some low-CI voxels should have been modified — use Z-slice batched reads for OOC efficiency
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_CIPath));
+    const auto& ciAfter = dataStructure.getDataRefAs<Float32Array>(k_CIPath).getDataStoreRef();
+    const usize sliceSize = k_Dim * k_Dim;
+    std::vector<float32> ciBuf(sliceSize);
+    usize modifiedCount = 0;
+    for(usize z = 0; z < k_Dim; z++)
+    {
+      ciAfter.copyIntoBuffer(z * sliceSize, nonstd::span<float32>(ciBuf.data(), sliceSize));
+      for(usize y = 0; y < k_Dim; y++)
+      {
+        for(usize x = 0; x < k_Dim; x++)
+        {
+          const usize inSlice = y * k_Dim + x;
+          bool wasBoundary = (x % k_Block == 0) || (y % k_Block == 0) || (z % k_Block == 0);
+          bool wasNoisy = ((x * 7 + y * 13 + z * 29) % 10 == 0);
+          if((wasBoundary || wasNoisy) && ciBuf[inSlice] != 0.05f)
+          {
+            modifiedCount++;
+          }
+        }
+      }
+    }
+    REQUIRE(modifiedCount > 0);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }

@@ -1,5 +1,7 @@
 #include "DBSCANDirect.hpp"
 
+#include "DBSCAN.hpp"
+
 #include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -16,78 +18,37 @@ namespace
 {
 /**
  * Implementation derived from: https://yliu.site/pub/GDCF_PR2019.pdf
- * Citation:
- * Thapana Boonchoo, Xiang Ao, Yang Liu, Weizhong Zhao, Fuzhen Zhuang, Qing He,
- * Grid-based DBSCANDirect: Indexing and inference,
- * https://doi.org/10.1016/j.patcog.2019.01.034.
  *
- * Definitions:
- * - Core Grid - A grid that contains more than the minPoints
- * - Border Grid - A grid that contains less than the minPoints,
- * but is density-reachable from an existing cluster
- * - Noise Grid - A grid with less than minPoints, and is unreachable
- * from a valid cluster
+ * In-core variant: uses direct per-element getValue()/operator[] access.
  */
 
-/**
- * @brief This object packs a sparse matrix into a vector of uint8s. It
- * represents a singular dimension and must be used in tandem with another
- * from each dimension in the input array.
- *
- * It stores a form of adjacency matrix that is utilized as a look up
- * table for Nearest Neighbor queries.
- */
 struct GridBitMap
 {
   std::vector<uint8> gridTable = {};
   usize numPositions = 0;
-
-  // This value represents the number of bytes allocated
-  // to each row in the map
-  // Reason: stored to speed up indexing and access
   usize rowLength = 0;
 };
 
-/**
- * @brief This object contains a function for creating GridBitMaps that handles
- * all the setup for the object. The decision to make it a Factory object comes
- * from the need to assemble multiple depending on the dimensions of input.
- */
 struct GridBitMapFactory
 {
-  /**
-   * Note here we can pack it slightly tighter by not adding buffers at the end of each row (for grid counts not divisible by 8)
-   * but this will make calculations more difficult and costly during neighbor search
-   * At most this saves 7/8s of a byte per dimension worth of space for significant calculation
-   * and parse cost incursion
-   */
   static GridBitMap createGridBitMap(usize numGrids, usize numPositons)
   {
     GridBitMap gridBitMap = {};
 
     usize bitPackSize = numGrids / 8;
-    bitPackSize += static_cast<usize>((numGrids % 8 > 0)); // Cast to avoid if/else branch
+    bitPackSize += static_cast<usize>((numGrids % 8 > 0));
 
     gridBitMap.numPositions = numPositons;
     gridBitMap.rowLength = bitPackSize;
-
     gridBitMap.gridTable.resize(bitPackSize * numPositons);
 
     return gridBitMap;
   }
 };
 
-/**
- * @brief HyperGridBitMap is the superclass for two specializations of 2D and 3D. These
- * read an input array to define a relevant regular grid. It bins the values in the input
- * array into cells in the grid then compresses the stored grids to just the ones containing
- * points (gridVoxels). It then builds several psuedo-adjacency maps to preserve the spatial
- * relationship between grids along each dimension.
- */
 class HyperGridBitMap
 {
 public:
-  // Grid Cells
   std::vector<std::vector<usize>> gridVoxels = {};
 
 protected:
@@ -110,29 +71,28 @@ public:
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    const usize numTuples = inputArray.getNumberOfTuples();
+    const usize numComps = inputArray.getNumberOfComponents();
 
     messageHelper.sendMessage(" - Determining bounds...");
-    // Load array bounds
+    // Load array bounds using direct per-element access
     std::array<float32, 6> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN()};
-    for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
+    for(usize tup = 0; tup < numTuples; tup++)
     {
       if(shouldCancel)
       {
         return;
       }
 
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(i, inputArray.getNumberOfTuples())); });
-
-      if(!mask->isTrue(i))
+      if(!mask->isTrue(tup))
       {
         continue;
       }
 
-      auto xVal = static_cast<float32>(inputArray.getValue((i * 3) + 0));
-      auto yVal = static_cast<float32>(inputArray.getValue((i * 3) + 1));
-      auto zVal = static_cast<float32>(inputArray.getValue((i * 3) + 2));
+      auto xVal = static_cast<float32>(inputArray[tup * numComps + 0]);
+      auto yVal = static_cast<float32>(inputArray[tup * numComps + 1]);
+      auto zVal = static_cast<float32>(inputArray[tup * numComps + 2]);
 
       bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
       bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -164,30 +124,25 @@ public:
       std::vector<std::array<usize, 3>> positions = {};
       // Build a set of non-empty grids and temporarily store their positions
       {
-        usize numTup = inputArray.getNumberOfTuples();
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
-        // Find num grid cells
-        for(usize tup = 0; tup < numTup; tup++)
+        // Find num grid cells - direct access pass
+        for(usize tup = 0; tup < numTuples; tup++)
         {
           if(shouldCancel)
           {
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(tup, numTup * 2)); });
-
           if(!mask->isTrue(tup))
           {
             continue;
           }
-          // Determine the voxel
-          usize pointIdx = tup * inputArray.getNumberOfComponents();
-          usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
-          usize yPos = std::floor((inputArray.getValue(pointIdx + 1) - origin[1]) / spacing[1]);
-          usize zPos = std::floor((inputArray.getValue(pointIdx + 2) - origin[2]) / spacing[2]);
+
+          usize xPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 0]) - origin[0]) / spacing[0]);
+          usize yPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 1]) - origin[1]) / spacing[1]);
+          usize zPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 2]) - origin[2]) / spacing[2]);
 
           usize bin = (zPos * dims[1] * dims[0]) + (yPos * dims[0]) + xPos;
-
           grids[bin] = true;
         }
 
@@ -203,54 +158,45 @@ public:
             gridMap[i] = activeGridCount;
             activeGridCount++;
 
-            std::array<usize, 3> position = {}; // Trivially copyable
+            std::array<usize, 3> position = {};
             position[2] = i / zSize;
-            usize zRemdr = i % zSize; // Modern compilers will extract the result from previous instruction
+            usize zRemdr = i % zSize;
             position[1] = zRemdr / ySize;
-            position[0] = zRemdr % ySize; // Modern compilers will extract the result from previous instruction
+            position[0] = zRemdr % ySize;
             positions.push_back(position);
           }
         }
 
         gridVoxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
-        // Fill grid cells
-        for(usize tup = 0; tup < numTup; tup++)
+        // Fill grid cells - direct access pass
+        for(usize tup = 0; tup < numTuples; tup++)
         {
           if(shouldCancel)
           {
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(numTup + tup, numTup * 2)); });
-
           if(!mask->isTrue(tup))
           {
             continue;
           }
-          // Determine the voxel
-          usize pointIdx = tup * inputArray.getNumberOfComponents();
-          usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
-          usize yPos = std::floor((inputArray.getValue(pointIdx + 1) - origin[1]) / spacing[1]);
-          usize zPos = std::floor((inputArray.getValue(pointIdx + 2) - origin[2]) / spacing[2]);
+
+          usize xPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 0]) - origin[0]) / spacing[0]);
+          usize yPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 1]) - origin[1]) / spacing[1]);
+          usize zPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 2]) - origin[2]) / spacing[2]);
 
           usize bin = (zPos * dims[1] * dims[0]) + (yPos * dims[0]) + xPos;
-
           gridVoxels[gridMap[bin]].push_back(tup);
         }
       } // End of filling non-empty grids and positions vector
 
-      // Pack down memory further (run outside block to clear mem faster)
+      // Pack down memory further
       for(auto& grid : gridVoxels)
       {
         grid.shrink_to_fit();
       }
 
       messageHelper.sendMessage(" - Generating adjacency matrix for search...");
-      /**
-       * This could be modified to 3 passes on the positions vector with custom predicates and ths std::sort function,
-       * but we are sacrificing space for speed, because its a subset of a known predefined grid
-       */
-      // Make sets to bin grids
       std::set<usize> xSet = {};
       std::set<usize> ySet = {};
       std::set<usize> zSet = {};
@@ -267,7 +213,6 @@ public:
         return;
       }
 
-      // Set up hyper bit map
       xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
       yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
       zTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), zSet.size());
@@ -277,8 +222,6 @@ public:
         return;
       }
 
-      // Not the most efficient fill but due to the random access nature of position
-      // we can't load one consecutive mask
       for(usize gridId = 0; gridId < positions.size(); gridId++)
       {
         usize relativeGridBytePos = gridId / 8;
@@ -322,28 +265,26 @@ public:
                     const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
-    ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
+    const usize numTuples = inputArray.getNumberOfTuples();
+    const usize numComps = inputArray.getNumberOfComponents();
 
-    // Load array bounds
+    // Load array bounds using direct per-element access
     std::array<float32, 4> bounds = {std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::quiet_NaN(),
                                      std::numeric_limits<float32>::quiet_NaN()};
-    for(usize i = 0; i < inputArray.getNumberOfTuples(); i++)
+    for(usize tup = 0; tup < numTuples; tup++)
     {
       if(shouldCancel)
       {
         return;
       }
 
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Finding Bounds || {:.2f}% Complete", CalculatePercentComplete(i, inputArray.getNumberOfTuples())); });
-
-      if(!mask->isTrue(i))
+      if(!mask->isTrue(tup))
       {
         continue;
       }
 
-      // Determine the voxel
-      auto xVal = static_cast<float32>(inputArray.getValue((i * 2) + 0));
-      auto yVal = static_cast<float32>(inputArray.getValue((i * 2) + 1));
+      auto xVal = static_cast<float32>(inputArray[tup * numComps + 0]);
+      auto yVal = static_cast<float32>(inputArray[tup * numComps + 1]);
 
       bounds[0] = std::isnan(bounds[0]) ? xVal : std::min(bounds[0], xVal);
       bounds[1] = std::isnan(bounds[1]) ? yVal : std::min(bounds[1], yVal);
@@ -371,30 +312,24 @@ public:
       std::vector<std::array<usize, 2>> positions = {};
       // Build a set of non-empty grids and temporarily store their positions
       {
-        usize numTup = inputArray.getNumberOfTuples();
         std::vector<bool> grids(std::accumulate(dims.cbegin(), dims.cend(), static_cast<usize>(1), std::multiplies<>()), false);
-        // Find num grid cells
-        for(usize tup = 0; tup < numTup; tup++)
+        // Find num grid cells - direct access pass
+        for(usize tup = 0; tup < numTuples; tup++)
         {
           if(shouldCancel)
           {
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(tup, numTup * 2)); });
-
           if(!mask->isTrue(tup))
           {
             continue;
           }
 
-          // Determine the voxel
-          usize pointIdx = tup * inputArray.getNumberOfComponents();
-          usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
-          usize yPos = std::floor((inputArray.getValue(pointIdx + 1) - origin[1]) / spacing[1]);
+          usize xPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 0]) - origin[0]) / spacing[0]);
+          usize yPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 1]) - origin[1]) / spacing[1]);
 
           usize bin = (yPos * dims[0]) + xPos;
-
           grids[bin] = true;
         }
 
@@ -410,51 +345,42 @@ public:
             gridMap[i] = activeGridCount;
             activeGridCount++;
 
-            std::array<usize, 2> position = {}; // Trivially copyable
+            std::array<usize, 2> position = {};
             position[1] = i / ySize;
-            position[0] = i % ySize; // Modern compilers will extract the result from previous instruction
+            position[0] = i % ySize;
             positions.push_back(position);
           }
         }
 
         gridVoxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
-        // Fill grid cells
-        for(usize tup = 0; tup < numTup; tup++)
+        // Fill grid cells - direct access pass
+        for(usize tup = 0; tup < numTuples; tup++)
         {
           if(shouldCancel)
           {
             return;
           }
 
-          throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Binning || {:.2f}% Complete", CalculatePercentComplete(numTup + tup, numTup * 2)); });
-
           if(!mask->isTrue(tup))
           {
             continue;
           }
-          // Determine the voxel
-          usize pointIdx = tup * inputArray.getNumberOfComponents();
-          usize xPos = std::floor((inputArray.getValue(pointIdx + 0) - origin[0]) / spacing[0]);
-          usize yPos = std::floor((inputArray.getValue(pointIdx + 1) - origin[1]) / spacing[1]);
+
+          usize xPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 0]) - origin[0]) / spacing[0]);
+          usize yPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 1]) - origin[1]) / spacing[1]);
 
           usize bin = (yPos * dims[0]) + xPos;
-
           gridVoxels[gridMap[bin]].push_back(tup);
         }
       } // End of filling non-empty grids and positions vector
 
-      // Pack down memory further (run outside block to clear mem faster)
+      // Pack down memory further
       for(auto& grid : gridVoxels)
       {
         grid.shrink_to_fit();
       }
 
       messageHelper.sendMessage(" - Generating adjacency matrix for search...");
-      /**
-       * This could be modified to 2 passes on the positions vector with custom predicates and ths std::sort function,
-       * but we are sacrificing space for speed, because its a subset of a known predefined grid
-       */
-      // Make sets to bin grids
       std::set<usize> xSet = {};
       std::set<usize> ySet = {};
 
@@ -469,7 +395,6 @@ public:
         return;
       }
 
-      // Set up hyper bit map
       xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
       yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
 
@@ -478,8 +403,6 @@ public:
         return;
       }
 
-      // Not the most efficient fill but due to the random access nature of position
-      // we can't load one consecutive mask
       for(usize gridId = 0; gridId < positions.size(); gridId++)
       {
         usize relativeGridBytePos = gridId / 8;
@@ -506,11 +429,9 @@ void SearchTablePositions(std::vector<uint8>& outputGridMask, usize searchSpace,
 {
   std::vector<uint8> tempGridMask(selectedTable.rowLength, 0);
 
-  // Find indices to search space
   usize xStart = (targetPosition < searchSpace) ? 0 : targetPosition - searchSpace;
   usize xEnd = (targetPosition + searchSpace < selectedTable.numPositions) ? targetPosition + searchSpace + 1 : selectedTable.numPositions;
 
-  // Store all grids in the positions within the dimensional search space
   for(usize pos = xStart; pos < xEnd; pos++)
   {
     for(usize i = 0; i < selectedTable.rowLength; i++)
@@ -519,8 +440,6 @@ void SearchTablePositions(std::vector<uint8>& outputGridMask, usize searchSpace,
     }
   }
 
-  // Narrow down search by overlaying this dimension's search space
-  // onto previous dimensions search space
   for(usize i = 0; i < selectedTable.rowLength; i++)
   {
     outputGridMask[i] = tempGridMask[i] & outputGridMask[i];
@@ -537,11 +456,8 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
 
   std::vector<usize> neighborGridIds = {};
 
-  // check adjacent positions in the table by sqrt(Dimensions) for grid ids
   std::vector<uint8> finalGridMask(hyperGridBitMap.xTable.rowLength, std::numeric_limits<uint8>::max());
 
-  // The search loops to find xyzPos can be cut if we opt to store the
-  // positions for each grid cell within each cell or in a separate vector
   usize relativeGridBytePos = targetGridId / 8;
   uint8 bitGridOffset = targetGridId % 8;
 
@@ -612,18 +528,14 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
 
 struct ClusterNode
 {
-  int32 clusterId;
-  usize parent;
+  int32 clusterId = 0;
+  usize parent = 0;
 };
 
 struct ClusterForest
 {
   std::vector<ClusterNode> clusterForestNodes = {};
 
-  /**
-   * @brief Primes the cluster forest object
-   * @param numGrids the total number of gridVoxels containing points (not just core grids)
-   */
   void initialize(usize numGrids)
   {
     clusterForestNodes.resize(numGrids);
@@ -645,30 +557,11 @@ struct ClusterForest
     return findClusterRoot(clusterForestNodes[gridId].parent);
   }
 
-  /**
-   * @brief Checks if grids are already in the same cluster
-   * Note: NO BOUNDS CHECKING
-   * @param pGridId a valid grid id
-   * @param qGridId a valid grid id
-   * @return bool if true they are in the same cluster
-   */
   bool infer(usize pGridId, usize qGridId)
   {
     return findClusterRoot(pGridId) == findClusterRoot(qGridId);
   }
 
-  /**
-   * @brief This function merges every supplied grid into the cluster with the
-   * lowest cluster id.
-   *
-   * Note: DO NOT PASS IN A BORDER GRID THAT HAS ITSELF AS THE PARENT. This will
-   * collapse all your clusters into unlabeled category. Ids to border grids that
-   * have a valid Core Grid parent are fine.
-   *
-   * The best way to avoid collapse is never make a border grid with itself as
-   * the parent, the parent of another border grid
-   * @param gridIds - a vector of ids representing grids with valid parents to be merged
-   */
   void mergeLRC(const std::vector<usize>& gridIds)
   {
     if(gridIds.size() < 2)
@@ -700,6 +593,9 @@ struct ClusterForest
   }
 };
 
+/**
+ * @brief In-core GDCF: uses direct operator[] access for canMerge.
+ */
 template <IsHGBP HGBPT, typename T>
 class GDCF
 {
@@ -716,10 +612,9 @@ public:
   {
   }
 
-  Result<> cluster(usize minPoints, DBSCANDirect::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
+  Result<> cluster(usize minPoints, DBSCAN::ParseOrder parseOrder, std::mt19937_64::result_type seed = std::mt19937_64::default_seed)
   {
     m_MessageHelper.sendMessage(" - Identifying core grids...");
-    // Identify Core Grids
     std::vector<usize> coreGridIds = {};
     for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
     {
@@ -738,41 +633,36 @@ public:
       return {};
     }
 
-    // Sort Grids to reduce bias
     m_MessageHelper.sendMessage(" - Sorting grids according to supplied parse order...");
     switch(parseOrder)
     {
-    case DBSCANDirect::ParseOrder::LowDensityFirst: {
+    case DBSCAN::ParseOrder::LowDensityFirst: {
       QuickSortGrids(coreGridIds, 0, coreGridIds.size() - 1);
       break;
     }
-    case DBSCANDirect::ParseOrder::Random: {
+    case DBSCAN::ParseOrder::Random: {
       std::mt19937_64 gen(seed);
       std::uniform_real_distribution<float64> dist(0, 1);
 
       auto maxIdx = static_cast<float64>(coreGridIds.size() - 1);
 
-      //--- Shuffle elements by randomly exchanging each with one other.
       for(usize i = 1; i < coreGridIds.size(); i++)
       {
-        auto r = static_cast<usize>(std::floor(dist(gen) * maxIdx)); // Random remaining position.
-
+        auto r = static_cast<usize>(std::floor(dist(gen) * maxIdx));
         std::swap(coreGridIds[i], coreGridIds[r]);
       }
 
       break;
     }
-    case DBSCANDirect::SeededRandom: {
+    case DBSCAN::SeededRandom: {
       std::mt19937_64 gen(seed);
       std::uniform_real_distribution<float64> dist(0, 1);
 
       auto maxIdx = static_cast<float64>(coreGridIds.size() - 1);
 
-      //--- Shuffle elements by randomly exchanging each with one other.
       for(usize i = 1; i < coreGridIds.size(); i++)
       {
-        auto r = static_cast<usize>(std::floor(dist(gen) * maxIdx)); // Random remaining position.
-
+        auto r = static_cast<usize>(std::floor(dist(gen) * maxIdx));
         std::swap(coreGridIds[i], coreGridIds[r]);
       }
 
@@ -786,7 +676,6 @@ public:
     }
 
     m_MessageHelper.sendMessage("Identifying Qualifying Independent Clusters:");
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
     clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
     for(usize i = 0; i < coreGridIds.size(); i++)
     {
@@ -795,37 +684,25 @@ public:
         return {};
       }
 
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Identifying clusters || {:.2f}% Complete", CalculatePercentComplete(i, coreGridIds.size())); });
-
       std::vector<usize> neighborGrids = NeighborGridQuery(coreGridIds[i], hyperGridBitMap);
 
       std::vector<usize> cluster = {};
       cluster.push_back(coreGridIds[i]);
       for(const usize gridId : neighborGrids)
       {
-        // If true they are in the same cluster
         if(clusterForest.infer(coreGridIds[i], gridId))
         {
           continue;
         }
 
-        // Check if a point in neighbor grid is density reachable
         if(canMerge(coreGridIds[i], gridId))
         {
-          // Check if it's a border grid and check if its unvisited
           if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && clusterForest.clusterForestNodes[gridId].parent == gridId)
           {
-            // Border grids can not be their own cluster, which means this
-            // is unvisited currently so merge it into the current cluster
             clusterForest.clusterForestNodes[gridId].parent = coreGridIds[i];
           }
           else
           {
-            // Either this is a density-reachable core grid
-            // OR
-            // This border grid belongs to another cluster, but the fact it is
-            // reachable here means that the two clusters are one and need to
-            // be merged
             cluster.push_back(gridId);
           }
         }
@@ -844,7 +721,6 @@ public:
       operations = 0;
       for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
       {
-        throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Expanding clusters || {:.2f}% Complete", CalculatePercentComplete(i, hyperGridBitMap.gridVoxels.size())); });
         if(m_ShouldCancel)
         {
           return {};
@@ -865,13 +741,10 @@ public:
             {
               usize activeParent = clusterForest.findClusterRoot(i);
               usize neighborGridParent = clusterForest.findClusterRoot(gridId);
-              // Check if search grid has been visited
               if(activeParent == i)
               {
                 if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
                 {
-                  // Border grids can not be their own cluster, which means this
-                  // is unvisited currently;
                   continue;
                 }
                 clusterForest.clusterForestNodes[i].parent = neighborGridParent;
@@ -890,7 +763,6 @@ public:
                   }
                   else
                   {
-                    // Infer returning false means that they can't have the same cluster id so must be greater than
                     clusterForest.clusterForestNodes[activeParent].parent = neighborGridParent;
                   }
                 }
@@ -903,7 +775,6 @@ public:
     } while(operations > 0);
 
     m_MessageHelper.sendMessage(" - Cleaning up cluster identifiers...");
-    // clean up cluster forest
     std::vector<usize> clusters = {};
     for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
     {
@@ -911,12 +782,10 @@ public:
       {
         if(hyperGridBitMap.gridVoxels[i].size() >= minPoints)
         {
-          // Only core nodes can be their own parent
           clusters.push_back(i);
         }
         else
         {
-          // grid unreachable, label noise
           clusterForest.clusterForestNodes[i].clusterId = 0;
         }
       }
@@ -937,8 +806,6 @@ public:
       return MakeWarningVoidResult(-85640, "No clusters detected - Consider reducing number of required points (`Minimum Points`) or increasing acceptable distance (`Epsilon`).");
     }
 
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
-    // label
     fIdsDataStore.fill(0);
     for(usize gridIdx = 0; gridIdx < hyperGridBitMap.gridVoxels.size(); gridIdx++)
     {
@@ -946,8 +813,6 @@ public:
       {
         return {};
       }
-
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format(" - Labeling || {:.2f}% Complete", CalculatePercentComplete(gridIdx, hyperGridBitMap.gridVoxels.size())); });
 
       int32 featureId = clusterForest.clusterForestNodes[clusterForest.findClusterRoot(gridIdx)].clusterId;
       for(usize pointIdx : hyperGridBitMap.gridVoxels[gridIdx])
@@ -964,7 +829,7 @@ private:
 
   ClusterForest clusterForest = {};
 
-  float32 m_Epsilon;
+  float32 m_Epsilon = 0.0f;
   const AbstractDataStore<T>& m_InputDataStore;
   ClusterUtilities::DistanceMetric m_DistMetric;
   const std::atomic_bool& m_ShouldCancel;
@@ -1010,11 +875,11 @@ private:
 
     usize next = ProcessSection(sorted, begin, end);
 
-    // Recurse
     QuickSortGrids(sorted, begin, next);
     QuickSortGrids(sorted, next + 1, end);
   }
 
+  // In-core path: direct random access via operator[] is fast
   bool canMerge(usize pGridId, usize qGridId)
   {
     for(usize pPointId : hyperGridBitMap.gridVoxels[pGridId])
@@ -1028,7 +893,6 @@ private:
         }
       }
     }
-
     return false;
   }
 };
@@ -1046,11 +910,9 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
   }
 
   messageHelper.sendMessage("Clustering:");
-  Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCANDirect::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
+  Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
   if(result.invalid() || !result.warnings().empty())
   {
-    // If the result has warnings in it the cluster forest is
-    // ill-formed, so skip labeling step.
     return result;
   }
 
@@ -1089,7 +951,7 @@ struct DBSCANDirectFunctor
 } // namespace
 
 // -----------------------------------------------------------------------------
-DBSCANDirect::DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues)
+DBSCANDirect::DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const DBSCANInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
@@ -1101,6 +963,9 @@ DBSCANDirect::DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageH
 DBSCANDirect::~DBSCANDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief In-core DBSCAN execution using direct per-element access.
+ */
 Result<> DBSCANDirect::operator()()
 {
   MessageHelper messageHelper(m_MessageHandler);
@@ -1114,8 +979,6 @@ Result<> DBSCANDirect::operator()()
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
-    // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
     std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
     return MakeErrorResult(-54060, message);
   }

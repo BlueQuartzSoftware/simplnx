@@ -3,7 +3,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
-#include <chrono>
 #include <ctime>
 
 using namespace nx::core;
@@ -87,29 +86,50 @@ Result<> WriteAvizoUniformCoordinate::writeData(FILE* outputFile) const
 {
   fprintf(outputFile, "@1\n");
 
-  const auto& featureIds = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath)->template getIDataStoreRefAs<DataStore<int32>>();
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const usize totalPoints = featureIds.getNumberOfTuples();
 
+  constexpr usize k_ChunkSize = 65536;
+  std::vector<int32> buffer(k_ChunkSize);
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
   if(m_InputValues->WriteBinaryFile)
   {
-    fwrite(featureIds.data(), sizeof(int32), totalPoints, outputFile);
+    for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
+    {
+      if(m_ShouldCancel)
+      {
+        return {};
+      }
+      const usize count = std::min(k_ChunkSize, totalPoints - offset);
+      featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(buffer.data(), count));
+      fwrite(buffer.data(), sizeof(int32), count, outputFile);
+    }
   }
   else
   {
     // The "20 Items" is purely arbitrary and is put in to try and save some space in the ASCII file
-    int count = 0;
-    for(size_t i = 0; i < totalPoints; ++i)
+    int itemCount = 0;
+    for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
     {
-      fprintf(outputFile, "%d", featureIds[i]);
-      if(count < 20)
+      if(m_ShouldCancel)
       {
-        fprintf(outputFile, " ");
-        count++;
+        return {};
       }
-      else
+      const usize count = std::min(k_ChunkSize, totalPoints - offset);
+      featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(buffer.data(), count));
+      for(usize i = 0; i < count; ++i)
       {
-        fprintf(outputFile, "\n");
-        count = 0;
+        fprintf(outputFile, "%d", buffer[i]);
+        if(itemCount < 20)
+        {
+          fprintf(outputFile, " ");
+          itemCount++;
+        }
+        else
+        {
+          fprintf(outputFile, "\n");
+          itemCount = 0;
+        }
       }
     }
   }

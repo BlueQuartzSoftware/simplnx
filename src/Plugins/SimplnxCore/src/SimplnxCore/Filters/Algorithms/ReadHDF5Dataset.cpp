@@ -39,10 +39,21 @@ Result<> ReadHDF5Dataset::operator()()
     return MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile));
   }
 
+  const usize totalDatasets = datasetImportInfoList.size();
+  m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Reading {} dataset(s) from '{}'", totalDatasets, inputFilePath.filename().string())});
+
   std::map<std::string, hid_t> openedParentPathsMap;
+  usize dsIdx = 0;
   for(const auto& datasetImportInfo : datasetImportInfoList)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+
     std::string datasetPath = datasetImportInfo.dataSetPath;
+    m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Importing dataset {}/{}: '{}'", dsIdx + 1, totalDatasets, datasetPath)});
+    ++dsIdx;
     auto datasetReader = h5FileReader.openDataset(datasetPath);
 
     std::string objectName = datasetReader.getName();

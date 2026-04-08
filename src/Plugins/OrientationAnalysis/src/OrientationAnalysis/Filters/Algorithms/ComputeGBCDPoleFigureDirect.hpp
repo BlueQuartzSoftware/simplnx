@@ -25,16 +25,16 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDPoleFigureInputValues
 /**
  * @class
  */
-class ORIENTATIONANALYSIS_EXPORT ComputeGBCDPoleFigure
+class ORIENTATIONANALYSIS_EXPORT ComputeGBCDPoleFigureDirect
 {
 public:
-  ComputeGBCDPoleFigure(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeGBCDPoleFigureInputValues* inputValues);
-  ~ComputeGBCDPoleFigure() noexcept;
+  ComputeGBCDPoleFigureDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeGBCDPoleFigureInputValues* inputValues);
+  ~ComputeGBCDPoleFigureDirect() noexcept;
 
-  ComputeGBCDPoleFigure(const ComputeGBCDPoleFigure&) = delete;
-  ComputeGBCDPoleFigure(ComputeGBCDPoleFigure&&) noexcept = delete;
-  ComputeGBCDPoleFigure& operator=(const ComputeGBCDPoleFigure&) = delete;
-  ComputeGBCDPoleFigure& operator=(ComputeGBCDPoleFigure&&) noexcept = delete;
+  ComputeGBCDPoleFigureDirect(const ComputeGBCDPoleFigureDirect&) = delete;
+  ComputeGBCDPoleFigureDirect(ComputeGBCDPoleFigureDirect&&) noexcept = delete;
+  ComputeGBCDPoleFigureDirect& operator=(const ComputeGBCDPoleFigureDirect&) = delete;
+  ComputeGBCDPoleFigureDirect& operator=(ComputeGBCDPoleFigureDirect&&) noexcept = delete;
 
   Result<> operator()();
 

@@ -29,12 +29,19 @@ ComputeFeatureNeighborCAxisMisalignments::~ComputeFeatureNeighborCAxisMisalignme
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
 {
+  // -------------------------------------------------------------------------
+  // Cache ensemble-level crystalStructures locally (tiny array)
+  // -------------------------------------------------------------------------
+  const auto& crystalStructuresStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
+  const usize numPhases = crystalStructuresStore.getNumberOfTuples();
+  std::vector<uint32> crystalStructures(numPhases);
+  crystalStructuresStore.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), numPhases));
+
   // Validate any Crystal Structure issues early in the process.
   // If none of the phases are hexagonal, then report and return
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   bool allPhasesHexagonal = true;
   bool noPhasesHexagonal = true;
-  for(usize i = 1; i < crystalStructures.size(); ++i)
+  for(usize i = 1; i < numPhases; ++i)
   {
     const auto crystalStructureType = crystalStructures[i];
     const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
@@ -55,21 +62,34 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     result.warnings().push_back({-1563, "Non Hexagonal phases were found. All calculations for non Hexagonal phases will be skipped and a NaN value inserted."});
   }
 
-  // Get references to all the input data
-  auto& neighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborListArrayPath);
-  const auto& featurePhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  const auto& featureAvgQuat = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
+  // -------------------------------------------------------------------------
+  // Cache feature-level arrays locally (O(features) — thousands, not millions)
+  // -------------------------------------------------------------------------
+  const auto& featurePhasesStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
+  const usize totalFeatures = featurePhasesStore.getNumberOfTuples();
+  std::vector<int32> featurePhases(totalFeatures);
+  featurePhasesStore.copyIntoBuffer(0, nonstd::span<int32>(featurePhases.data(), totalFeatures));
 
-  // Get references to all the Output data
+  const auto& avgQuatsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgQuatsArrayPath)->getDataStoreRef();
+  const usize numQuatComps = avgQuatsStore.getNumberOfComponents();
+  const usize quatSize = totalFeatures * numQuatComps;
+  std::vector<float32> featureAvgQuat(quatSize);
+  avgQuatsStore.copyIntoBuffer(0, nonstd::span<float32>(featureAvgQuat.data(), quatSize));
+
+  // Get references to all the input/output data
+  auto& neighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborListArrayPath);
   auto& cAxisMisalignmentList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->CAxisMisalignmentListArrayName);
+
+  // -------------------------------------------------------------------------
+  // Output buffer for avgCAxisMisalignment — accumulate locally, bulk-write at end
+  // -------------------------------------------------------------------------
   Float32Array* avgCAxisMisalignmentPtr = nullptr;
+  std::vector<float32> avgCAxisBuf;
   if(m_InputValues->FindAvgMisals)
   {
     avgCAxisMisalignmentPtr = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgCAxisMisalignmentsArrayName);
+    avgCAxisBuf.resize(totalFeatures, 0.0f);
   }
-
-  const usize totalFeatures = featurePhases.getNumberOfTuples();
-  const usize numQuatComps = featureAvgQuat.getNumberOfComponents();
 
   std::vector<std::vector<float32>> misalignmentLists(totalFeatures);
 
@@ -85,7 +105,6 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     {
       return {};
     }
-
     // Get the crystal structure of phase 1
     xtalPhase1 = crystalStructures[featurePhases[featureIdx]];
 
@@ -139,8 +158,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
         // If we are finding the average misorientation, then start accumulating those values
         if(m_InputValues->FindAvgMisals)
         {
-          float32 value = avgCAxisMisalignmentPtr->getValue(featureIdx) + currentMisalignmentList[j];
-          avgCAxisMisalignmentPtr->setValue(featureIdx, value);
+          avgCAxisBuf[featureIdx] += currentMisalignmentList[j];
         }
       }
       else // The current feature and it's neighbor do not match in crystal structures so place a NaN value
@@ -159,17 +177,24 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     {
       if(hexNeighborListSize > 0)
       {
-        double value = avgCAxisMisalignmentPtr->getValue(featureIdx) / static_cast<double>(hexNeighborListSize);
-        avgCAxisMisalignmentPtr->setValue(featureIdx, value);
+        avgCAxisBuf[featureIdx] = static_cast<float32>(static_cast<float64>(avgCAxisBuf[featureIdx]) / static_cast<float64>(hexNeighborListSize));
       }
       else
       {
-        avgCAxisMisalignmentPtr->setValue(featureIdx, std::nan(""));
+        avgCAxisBuf[featureIdx] = std::nanf("");
       }
       hexNeighborListSize = 0;
     }
 
     cAxisMisalignmentList.setList(featureIdx, {currentMisalignmentList.begin(), currentMisalignmentList.end()});
+  }
+
+  // -------------------------------------------------------------------------
+  // Bulk-write the avgCAxisMisalignment output buffer back to the DataStore
+  // -------------------------------------------------------------------------
+  if(m_InputValues->FindAvgMisals)
+  {
+    avgCAxisMisalignmentPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(avgCAxisBuf.data(), totalFeatures));
   }
 
   return result;

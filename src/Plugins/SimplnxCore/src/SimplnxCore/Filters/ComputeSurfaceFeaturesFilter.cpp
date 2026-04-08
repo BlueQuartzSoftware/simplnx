@@ -1,6 +1,6 @@
 #include "ComputeSurfaceFeaturesFilter.hpp"
 
-#include "SimplnxCore/Filters/Algorithms/ComputeSurfaceFeaturesDirect.hpp"
+#include "SimplnxCore/Filters/Algorithms/ComputeSurfaceFeatures.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -126,7 +126,7 @@ Result<> ComputeSurfaceFeaturesFilter::executeImpl(DataStructure& dataStructure,
   inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_FeatureGeometryPath_Key);
   inputValues.MarkFeature0Neighbors = filterArgs.value<BoolParameter::ValueType>(k_MarkFeature0Neighbors);
   inputValues.SurfaceFeaturesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceFeaturesArrayName_Key);
-  return ComputeSurfaceFeaturesDirect(dataStructure, messageHandler, shouldCancel, &inputValues)();
+  return ComputeSurfaceFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

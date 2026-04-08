@@ -2,6 +2,8 @@
 
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 
+#include <nonstd/span.hpp>
+
 #include <random>
 
 using namespace nx::core;
@@ -40,12 +42,19 @@ void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFea
 {
   std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
 
-  // Now adjust all the Grain ID values for each Voxel
-  // instead of taking total points as an input just extract the size, so we don't walk off
+  // Chunked bulk I/O for OOC efficiency
   usize totalPoints = featureIdsStore.getSize();
-  for(int64 i = 0; i < totalPoints; ++i)
+  constexpr usize k_ChunkSize = 65536;
+  std::vector<int32> chunkBuf(k_ChunkSize);
+  for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
   {
-    featureIdsStore[i] = randomIds[featureIdsStore[i]];
+    usize count = std::min(k_ChunkSize, totalPoints - offset);
+    featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(chunkBuf.data(), count));
+    for(usize i = 0; i < count; i++)
+    {
+      chunkBuf[i] = randomIds[chunkBuf[i]];
+    }
+    featureIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(chunkBuf.data(), count));
   }
 }
 
@@ -53,17 +62,24 @@ void RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFea
 {
   std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
 
-  // Now adjust all the Grain ID values for each Voxel
-  // instead of taking total points as an input just extract the size, so we don't walk off
+  // Chunked bulk I/O for OOC efficiency
   usize totalPoints = featureIdsStore.getSize();
-  for(int64 i = 0; i < totalPoints; ++i)
+  constexpr usize k_ChunkSize = 65536;
+  std::vector<int32> chunkBuf(k_ChunkSize);
+  for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
   {
-    featureIdsStore[i] = randomIds[featureIdsStore[i]];
+    usize count = std::min(k_ChunkSize, totalPoints - offset);
+    featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(chunkBuf.data(), count));
+    for(usize i = 0; i < count; i++)
+    {
+      chunkBuf[i] = randomIds[chunkBuf[i]];
+    }
+    featureIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(chunkBuf.data(), count));
   }
 
   if(!featureIArrays.empty())
   {
-    // We use a visitation pattern to prevent reverting swaps
+    // Visitation pattern for feature-level tuple swaps (small, no OOC concern)
     std::vector<bool> visited(randomIds.size(), false);
     for(usize i = 0; i < randomIds.size(); i++)
     {

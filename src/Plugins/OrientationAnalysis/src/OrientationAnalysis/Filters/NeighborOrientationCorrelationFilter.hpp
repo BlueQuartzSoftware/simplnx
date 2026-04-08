@@ -9,7 +9,21 @@ namespace nx::core
 {
 /**
  * @class NeighborOrientationCorrelationFilter
- * @brief This filter will ....
+ * @brief Cleans up EBSD data by replacing low-confidence voxels with data from
+ * the most orientation-correlated face neighbor.
+ *
+ * This filter identifies voxels whose confidence index falls below a
+ * user-specified threshold, then examines the 6 face neighbors of each such
+ * voxel. Neighbor pairs are compared using crystallographic misorientation;
+ * the neighbor that agrees most with the other neighbors (within a given
+ * angular tolerance) is selected as the replacement source. All cell-level
+ * DataArrays are updated to reflect the replacement. The process repeats
+ * across multiple cleanup levels, progressively relaxing the required neighbor
+ * agreement count.
+ *
+ * The underlying algorithm uses Z-slice buffering to maintain efficient
+ * sequential access patterns, which is critical for out-of-core (OOC) data
+ * where arrays are stored as compressed Zarr chunks on disk.
  */
 class ORIENTATIONANALYSIS_EXPORT NeighborOrientationCorrelationFilter : public IFilter
 {

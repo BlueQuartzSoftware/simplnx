@@ -1,68 +1,13 @@
 #include "ErodeDilateBadData.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
-#include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/SliceBufferedTransfer.hpp"
 
 using namespace nx::core;
-namespace
-{
-class ErodeDilateBadDataTransferDataImpl
-{
-public:
-  ErodeDilateBadDataTransferDataImpl() = delete;
-  ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
-
-  ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
-                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
-  : m_FilterAlg(filterAlg)
-  , m_TotalPoints(totalPoints)
-  , m_Operation(operation)
-  , m_Neighbors(neighbors)
-  , m_DataArrayPtr(dataArrayPtr)
-  , m_FeatureIds(featureIds)
-  , m_MessageHelper(messageHelper)
-  {
-  }
-  ErodeDilateBadDataTransferDataImpl(ErodeDilateBadDataTransferDataImpl&&) = default;                // Move Constructor Not Implemented
-  ErodeDilateBadDataTransferDataImpl& operator=(const ErodeDilateBadDataTransferDataImpl&) = delete; // Copy Assignment Not Implemented
-  ErodeDilateBadDataTransferDataImpl& operator=(ErodeDilateBadDataTransferDataImpl&&) = delete;      // Move Assignment Not Implemented
-
-  ~ErodeDilateBadDataTransferDataImpl() = default;
-
-  void operator()() const
-  {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
-    std::string arrayName = m_DataArrayPtr->getName();
-    for(usize i = 0; i < m_TotalPoints; i++)
-    {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
-
-      const int32 featureName = m_FeatureIds[i];
-      const int64 neighbor = m_Neighbors[i];
-      if(neighbor >= 0)
-      {
-        if((featureName == 0 && m_FeatureIds[neighbor] > 0 && m_Operation == detail::k_ErodeIndex) || (featureName > 0 && m_FeatureIds[neighbor] == 0 && m_Operation == detail::k_DilateIndex))
-        {
-          m_DataArrayPtr->copyTuple(neighbor, i);
-        }
-      }
-    }
-  }
-
-private:
-  ErodeDilateBadData* m_FilterAlg = nullptr;
-  usize m_TotalPoints = 0;
-  ChoicesParameter::ValueType m_Operation = 0;
-  std::vector<int64> m_Neighbors;
-  const std::shared_ptr<IDataArray> m_DataArrayPtr;
-  const Int32AbstractDataStore& m_FeatureIds;
-  MessageHelper& m_MessageHelper;
-};
-} // namespace
 
 // -----------------------------------------------------------------------------
 ErodeDilateBadData::ErodeDilateBadData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateBadDataInputValues* inputValues)
@@ -77,7 +22,7 @@ ErodeDilateBadData::ErodeDilateBadData(DataStructure& dataStructure, const IFilt
 ErodeDilateBadData::~ErodeDilateBadData() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ErodeDilateBadData::getCancel()
+const std::atomic_bool& ErodeDilateBadData::getCancel() const
 {
   return m_ShouldCancel;
 }
@@ -85,54 +30,132 @@ const std::atomic_bool& ErodeDilateBadData::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ErodeDilateBadData::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
-  const usize totalPoints = featureIds.getNumberOfTuples();
-
-  std::vector<int64> neighbors(totalPoints, -1);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
-
   SizeVec3 udims = selectedImageGeom.getDimensions();
+  std::array<int64, 3> dims = {static_cast<int64>(udims[0]), static_cast<int64>(udims[1]), static_cast<int64>(udims[2])};
 
-  std::array<int64, 3> dims = {
-      static_cast<int64>(udims[0]),
-      static_cast<int64>(udims[1]),
-      static_cast<int64>(udims[2]),
-  };
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
+  const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
+
+  // Find max feature ID using Z-slice batched reads
   usize numFeatures = 0;
-  for(usize i = 0; i < totalPoints; i++)
   {
-    const int32 featureName = featureIds[i];
-    if(featureName > numFeatures)
+    std::vector<int32> sliceBuf(sliceSize);
+    for(int64 z = 0; z < dims[2]; z++)
     {
-      numFeatures = featureName;
+      featureIds.copyIntoBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<int32>(sliceBuf.data(), sliceSize));
+      for(usize i = 0; i < sliceSize; i++)
+      {
+        if(sliceBuf[i] > static_cast<int32>(numFeatures))
+        {
+          numFeatures = sliceBuf[i];
+        }
+      }
     }
   }
 
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
-
   std::vector<int32> featureCount(numFeatures + 1, 0);
+
+  // FeatureIds rolling window for neighbor lookups
+  std::array<std::vector<int32>, 3> featureIdSlices;
+  for(auto& fis : featureIdSlices)
+  {
+    fis.resize(sliceSize);
+  }
+
+  auto readFeatureIdSlice = [&](int64 z, usize slot) { featureIds.copyIntoBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<int32>(featureIdSlices[slot].data(), sliceSize)); };
+
+  constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
+
+  // Per-slice mark arrays: marks[0]=z-1, marks[1]=z, marks[2]=z+1
+  // Each entry is -1 (no transfer) or the global source index.
+  // This replaces the O(totalPoints) neighbors array with O(3*sliceSize).
+  std::array<std::vector<int64>, 3> marks;
+  for(auto& m : marks)
+  {
+    m.resize(sliceSize);
+  }
+
+  const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
+  const usize dimZ = static_cast<usize>(dims[2]);
+
+  // Helper to transfer a single Z-slice across all arrays
+  auto transferSlice = [&](usize z, const std::vector<int64>& sliceMarks) {
+    for(const auto& voxelArray : voxelArrays)
+    {
+      SliceBufferedTransferOneZ(*voxelArray, sliceMarks, sliceSize, z, dimZ);
+    }
+  };
 
   for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
+    // Clear marks
+    for(auto& m : marks)
+    {
+      std::fill(m.begin(), m.end(), -1);
+    }
+
+    // Initialize FeatureId rolling window
+    readFeatureIdSlice(0, 1);
+    if(dims[2] > 1)
+    {
+      readFeatureIdSlice(1, 2);
+    }
+
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      const int64 zStride = dims[0] * dims[1] * zIdx;
+      // Advance FeatureId rolling window
+      if(zIdx > 0)
+      {
+        std::swap(featureIdSlices[0], featureIdSlices[1]);
+        std::swap(featureIdSlices[1], featureIdSlices[2]);
+        if(zIdx + 1 < dims[2])
+        {
+          readFeatureIdSlice(zIdx + 1, 2);
+        }
+      }
+
+      // Find neighbors for bad voxels in this Z-slice
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        const int64 yStride = dims[0] * yIdx;
         for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          const int64 voxelIndex = zStride + yStride + xIdx;
-          const int32 featureName = featureIds[voxelIndex];
+          const usize inSlice = static_cast<usize>(yIdx * dims[0] + xIdx);
+          const int32 featureName = featureIdSlices[1][inSlice];
           if(featureName == 0)
           {
             int32 most = 0;
-            // Loop over the 6 face neighbors of the voxel
-            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            if(!m_InputValues->XDirOn)
+            {
+              isValidFaceNeighbor[k_NegativeXNeighbor] = false;
+              isValidFaceNeighbor[k_PositiveXNeighbor] = false;
+            }
+            if(!m_InputValues->YDirOn)
+            {
+              isValidFaceNeighbor[k_NegativeYNeighbor] = false;
+              isValidFaceNeighbor[k_PositiveYNeighbor] = false;
+            }
+            if(!m_InputValues->ZDirOn)
+            {
+              isValidFaceNeighbor[k_NegativeZNeighbor] = false;
+              isValidFaceNeighbor[k_PositiveZNeighbor] = false;
+            }
+
+            const int64 voxelIndex = xIdx + yIdx * dims[0] + zIdx * static_cast<int64>(sliceSize);
+            const std::array<usize, 6> neighborInSlice = {
+                inSlice,                                         // -Z
+                static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
+                static_cast<usize>(yIdx * dims[0] + (xIdx - 1)), // -X
+                static_cast<usize>(yIdx * dims[0] + (xIdx + 1)), // +X
+                static_cast<usize>((yIdx + 1) * dims[0] + xIdx), // +Y
+                inSlice                                          // +Z
+            };
+
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
@@ -140,11 +163,13 @@ Result<> ErodeDilateBadData::operator()()
                 continue;
               }
               const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
+              const int32 feature = featureIdSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
 
-              const int32 feature = featureIds[neighborPoint];
               if(m_InputValues->Operation == detail::k_DilateIndex && feature > 0)
               {
-                neighbors[neighborPoint] = voxelIndex;
+                // Mark the good NEIGHBOR to be overwritten by this bad voxel.
+                // The neighbor is in slot k_NeighborSlot[faceIndex] (0=z-1, 1=z, 2=z+1).
+                marks[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] = voxelIndex;
               }
               if(feature > 0 && m_InputValues->Operation == detail::k_ErodeIndex)
               {
@@ -153,54 +178,44 @@ Result<> ErodeDilateBadData::operator()()
                 if(current > most)
                 {
                   most = current;
-                  neighbors[voxelIndex] = neighborPoint;
+                  // Mark this bad voxel to be overwritten by the best neighbor
+                  marks[1][inSlice] = neighborPoint;
                 }
               }
             }
             if(m_InputValues->Operation == detail::k_ErodeIndex)
             {
-              // Loop over the 6 face neighbors of the voxel
               for(const auto& faceIndex : faceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
                 {
                   continue;
                 }
-                const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-
-                const int32 feature = featureIds[neighborPoint];
+                const int32 feature = featureIdSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
                 featureCount[feature] = 0;
               }
             }
           }
         }
       }
-    }
 
-    // Build up a list of the DataArrays that we are going to operate on.
-    const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
-
-    MessageHelper messageHelper(m_MessageHandler);
-
-    ParallelTaskAlgorithm taskRunner;
-    taskRunner.setParallelizationEnabled(true);
-    for(const auto& voxelArray : voxelArrays)
-    {
-      // We need to skip updating the FeatureIds until all the other arrays are updated
-      // since we actually depend on the feature Ids values.
-      if(voxelArray->getName() == m_InputValues->FeatureIdsArrayPath.getTargetName())
+      // Transfer z-1: all marks for z-1 are now complete (from bad voxels at z-2, z-1, z)
+      if(zIdx > 0)
       {
-        continue;
+        transferSlice(static_cast<usize>(zIdx - 1), marks[0]);
       }
 
-      taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, voxelArray, messageHelper));
+      // Rotate marks: [0]=old[1], [1]=old[2], [2]=cleared
+      std::swap(marks[0], marks[1]);
+      std::swap(marks[1], marks[2]);
+      std::fill(marks[2].begin(), marks[2].end(), -1);
     }
-    taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
-    // Now update the feature Ids
-    auto featureIDataArray = m_DataStructure.getSharedDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
-    taskRunner.setParallelizationEnabled(false); // Do this to make the next call synchronous
-    taskRunner.execute(ErodeDilateBadDataTransferDataImpl(this, totalPoints, m_InputValues->Operation, featureIds, neighbors, featureIDataArray, messageHelper));
+    // Transfer last slice
+    if(dims[2] > 0)
+    {
+      transferSlice(static_cast<usize>(dims[2] - 1), marks[0]);
+    }
   }
 
   return {};

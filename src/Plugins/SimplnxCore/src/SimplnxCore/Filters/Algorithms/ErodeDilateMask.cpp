@@ -1,6 +1,7 @@
 #include "ErodeDilateMask.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
@@ -19,7 +20,7 @@ ErodeDilateMask::ErodeDilateMask(DataStructure& dataStructure, const IFilter::Me
 ErodeDilateMask::~ErodeDilateMask() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ErodeDilateMask::getCancel()
+const std::atomic_bool& ErodeDilateMask::getCancel() const
 {
   return m_ShouldCancel;
 }
@@ -29,9 +30,7 @@ Result<> ErodeDilateMask::operator()()
 {
 
   auto& mask = m_DataStructure.getDataRefAs<BoolArray>(m_InputValues->MaskArrayPath);
-  const size_t totalPoints = mask.getNumberOfTuples();
-
-  std::vector<bool> maskCopy(totalPoints, false);
+  const usize totalPoints = mask.getNumberOfTuples();
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
 
@@ -43,32 +42,103 @@ Result<> ErodeDilateMask::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  for(int32_t iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
+  // Z-slice buffering: maintain rolling window of 3 adjacent Z-slices for mask
+  // to avoid random OOC chunk access during neighbor lookups.
+  const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
+
+  // Rolling window: slot 0 = z-1, slot 1 = z (current), slot 2 = z+1
+  std::array<std::vector<uint8>, 3> maskSlices;
+  for(auto& ms : maskSlices)
+  {
+    ms.resize(sliceSize);
+  }
+  // maskCopy uses same rolling window structure for output
+  std::array<std::vector<uint8>, 3> maskCopySlices;
+  for(auto& ms : maskCopySlices)
+  {
+    ms.resize(sliceSize);
+  }
+
+  // Temporary bool buffer for bulk I/O (std::vector<bool> is bit-packed, so use unique_ptr<bool[]>)
+  auto boolBuf = std::make_unique<bool[]>(sliceSize);
+  auto& maskStore = mask.getDataStoreRef();
+
+  auto readMaskSlice = [&](int64 z, usize slot) {
+    const usize zOffset = static_cast<usize>(z) * sliceSize;
+    maskStore.copyIntoBuffer(zOffset, nonstd::span<bool>(boolBuf.get(), sliceSize));
+    for(usize i = 0; i < sliceSize; i++)
+    {
+      maskSlices[slot][i] = boolBuf[i] ? 1 : 0;
+      maskCopySlices[slot][i] = maskSlices[slot][i];
+    }
+  };
+
+  // Face neighbor ordering: 0=-Z, 1=-Y, 2=-X, 3=+X, 4=+Y, 5=+Z
+  constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
+
+  for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {}", iteration));
 
-    for(size_t j = 0; j < totalPoints; j++)
+    // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
+    readMaskSlice(0, 1);
+    if(dims[2] > 1)
     {
-      maskCopy[j] = mask[j];
+      readMaskSlice(1, 2);
     }
+
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      const int64 zStride = dims[0] * dims[1] * zIdx;
+      // Advance rolling window for z > 0
+      if(zIdx > 0)
+      {
+        std::swap(maskSlices[0], maskSlices[1]);
+        std::swap(maskSlices[1], maskSlices[2]);
+        std::swap(maskCopySlices[0], maskCopySlices[1]);
+        std::swap(maskCopySlices[1], maskCopySlices[2]);
+        if(zIdx + 1 < dims[2])
+        {
+          readMaskSlice(zIdx + 1, 2);
+        }
+      }
+
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        const int64 yStride = dims[0] * yIdx;
         for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
-          const int64 voxelIndex = zStride + yStride + xIdx;
+          const usize inSlice = static_cast<usize>(yIdx * dims[0] + xIdx);
 
-          if(!mask[voxelIndex])
+          if(maskSlices[1][inSlice] == 0)
           {
-            // Loop over the 6 face neighbors of the voxel
-            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            if(!m_InputValues->XDirOn)
+            {
+              isValidFaceNeighbor[k_NegativeXNeighbor] = false;
+              isValidFaceNeighbor[k_PositiveXNeighbor] = false;
+            }
+            if(!m_InputValues->YDirOn)
+            {
+              isValidFaceNeighbor[k_NegativeYNeighbor] = false;
+              isValidFaceNeighbor[k_PositiveYNeighbor] = false;
+            }
+            if(!m_InputValues->ZDirOn)
+            {
+              isValidFaceNeighbor[k_NegativeZNeighbor] = false;
+              isValidFaceNeighbor[k_PositiveZNeighbor] = false;
+            }
+
+            const std::array<usize, 6> neighborInSlice = {
+                inSlice,                                         // -Z: same xy position in prev slice
+                static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
+                static_cast<usize>(yIdx * dims[0] + (xIdx - 1)), // -X
+                static_cast<usize>(yIdx * dims[0] + (xIdx + 1)), // +X
+                static_cast<usize>((yIdx + 1) * dims[0] + xIdx), // +Y
+                inSlice                                          // +Z: same xy position in next slice
+            };
+
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
@@ -76,24 +146,48 @@ Result<> ErodeDilateMask::operator()()
                 continue;
               }
 
-              const int64 neighpoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-
-              if(m_InputValues->Operation == detail::k_DilateIndex && mask[neighpoint])
+              if(m_InputValues->Operation == detail::k_DilateIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
               {
-                maskCopy[voxelIndex] = true;
+                maskCopySlices[1][inSlice] = 1;
               }
-              if(m_InputValues->Operation == detail::k_ErodeIndex && mask[neighpoint])
+              if(m_InputValues->Operation == detail::k_ErodeIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
               {
-                maskCopy[neighpoint] = false;
+                maskCopySlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] = 0;
               }
             }
           }
         }
       }
+
+      // Write back the completed z-1 slice using bulk I/O
+      if(zIdx > 0)
+      {
+        const usize prevZOffset = static_cast<usize>(zIdx - 1) * sliceSize;
+        for(usize i = 0; i < sliceSize; i++)
+        {
+          boolBuf[i] = (maskCopySlices[0][i] != 0);
+        }
+        maskStore.copyFromBuffer(prevZOffset, nonstd::span<const bool>(boolBuf.get(), sliceSize));
+      }
     }
-    for(size_t j = 0; j < totalPoints; j++)
+
+    // Write back the last slice(s) using bulk I/O
+    if(dims[2] == 1)
     {
-      mask[j] = maskCopy[j];
+      for(usize i = 0; i < sliceSize; i++)
+      {
+        boolBuf[i] = (maskCopySlices[1][i] != 0);
+      }
+      maskStore.copyFromBuffer(0, nonstd::span<const bool>(boolBuf.get(), sliceSize));
+    }
+    else
+    {
+      const usize lastZOffset = static_cast<usize>(dims[2] - 1) * sliceSize;
+      for(usize i = 0; i < sliceSize; i++)
+      {
+        boolBuf[i] = (maskCopySlices[1][i] != 0);
+      }
+      maskStore.copyFromBuffer(lastZOffset, nonstd::span<const bool>(boolBuf.get(), sliceSize));
     }
   }
 
