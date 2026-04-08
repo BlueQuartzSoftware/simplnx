@@ -67,7 +67,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-1", "[OrientationAnalysis]
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v4.tar.gz", "PoleFigure_Exemplars_v4");
 
-  // Read the Small IN100 Data set
+  // Read the test data
   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v4/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
@@ -122,7 +122,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-2", "[OrientationAnalysis]
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v4.tar.gz", "PoleFigure_Exemplars_v4");
 
-  // Read the Small IN100 Data set
+  // Read the test data
   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v4/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
@@ -178,7 +178,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-3", "[OrientationAnalysis]
 
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v4.tar.gz", "PoleFigure_Exemplars_v4");
 
-  // Read the Small IN100 Data set
+  // Read the test data
   auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v4/fw-ar-IF1-aptr12-corr.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
