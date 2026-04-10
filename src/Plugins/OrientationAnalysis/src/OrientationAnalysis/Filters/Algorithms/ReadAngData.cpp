@@ -34,7 +34,6 @@ Result<> ReadAngData::operator()()
   {
     return MakeErrorResult(reader.getErrorCode(), reader.getErrorMessage());
   }
-
   const auto result = loadMaterialInfo(&reader);
   if(result.first < 0)
   {

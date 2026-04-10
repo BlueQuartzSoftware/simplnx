@@ -107,6 +107,10 @@ IFilter::PreflightResult ReadAngDataFilter::preflightImpl(const DataStructure& d
   {
     return {MakeErrorResult<OutputActions>(reader.getErrorCode(), reader.getErrorMessage())};
   }
+  if(reader.getGrid().empty())
+  {
+    return {MakeErrorResult<OutputActions>(-19501, fmt::format("Input file '{}' is missing the GRID header key.", pInputFileValue.string()))};
+  }
 
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(reader.getXDimension()), static_cast<size_t>(reader.getYDimension()), static_cast<size_t>(1)};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};

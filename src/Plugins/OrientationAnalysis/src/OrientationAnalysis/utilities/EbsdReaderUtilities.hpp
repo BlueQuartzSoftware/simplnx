@@ -245,34 +245,47 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
     preflightUpdatedValues.push_back({"Phase Information", ""});
   }
   auto laueOps = ebsdlib::LaueOps::GetAllOrientationOps();
-  int phaseIndex = 1;
+  // int phaseIndex = 1;
   for(const auto& phaseInfo : phaseInfos)
   {
 
     if constexpr(std::is_same_v<ReaderType, ebsdlib::AngReader> || std::is_same_v<ReaderType, ebsdlib::H5OIMReader> || std::is_same_v<ReaderType, ebsdlib::H5AngVolumeReader>)
     {
-      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Formula: {}    |    Crystal Symmetry: {}", phaseInfo->getMaterialName(),
-                                                                                       phaseInfo->getFormula(), laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName())});
+      if(phaseInfo == nullptr)
+      {
+        continue;
+      }
+      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo->getPhaseIndex()), fmt::format("Material Name: {}    |    Formula: {}    |    Crystal Symmetry: {}", phaseInfo->getMaterialName(),
+                                                                                                     phaseInfo->getFormula(), laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName())});
     }
 
     if constexpr(std::is_same_v<ReaderType, ebsdlib::CtfReader> || std::is_same_v<ReaderType, ebsdlib::H5OINAReader> || std::is_same_v<ReaderType, ebsdlib::CprReader> ||
                  std::is_same_v<ReaderType, ebsdlib::H5CtfVolumeReader>)
     {
-      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Comment: {}", phaseInfo->getMaterialName(),
-                                                                                       laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
+      if(phaseInfo == nullptr)
+      {
+        continue;
+      }
+      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo->getPhaseIndex()), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Comment: {}", phaseInfo->getMaterialName(),
+                                                                                                     laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getComment())});
     }
 
     if constexpr(std::is_same_v<ReaderType, ebsdlib::H5EspritReader>)
     {
-      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo->getMaterialName(),
-                                                                                       laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getSpaceGroup())});
+      if(phaseInfo == nullptr)
+      {
+        continue;
+      }
+      preflightUpdatedValues.push_back(
+          {fmt::format("{}: ", phaseInfo->getPhaseIndex()), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo->getMaterialName(),
+                                                                        laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getSpaceGroup())});
     }
 
     if constexpr(std::is_same_v<ReaderType, GrainMapper3DUtilities::GrainMapperReader>)
     {
       preflightUpdatedValues.push_back(
-          {fmt::format("{}: ", phaseIndex++), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
-                                                          ebsdlib::LaueOps::GetOrientationOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup)->getSymmetryName(), phaseInfo.SpaceGroup)});
+          {fmt::format("{}: ", phaseInfo.PhaseIndex), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
+                                                                  ebsdlib::LaueOps::GetOrientationOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup)->getSymmetryName(), phaseInfo.SpaceGroup)});
     }
   }
 }

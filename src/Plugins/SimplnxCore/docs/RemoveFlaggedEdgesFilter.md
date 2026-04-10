@@ -12,14 +12,14 @@ This **Filter** removes **Edges** from the supplied **Edges Geometry** that are 
 
 For each of the vertex and edge data attribute matrices, the user can select to copy none, some or all of the associated data arrays into the newly created geometry. If the user wishes to not copy any of the data, just leave the choice to "Copy Selected XXX Data" but do not populate the list with any selections.
 
-### Vertex Data Handling
+### A Note on Vertex Data Handling
 
 The *Vertex Data Handling* parameter controls which vertex data arrays are transferred to the reduced geometry:
 
 - **Copy Selected Vertex Data [0]**: Copies only the vertex arrays selected by the user into the new geometry.
 - **Copy All Vertex Data [1]**: Copies all arrays from the vertex attribute matrix into the new geometry.
 
-### Edge Data Handling
+### A Note on Edge Data Handling
 
 The *Edge Data Handling* parameter controls which edge data arrays are transferred to the reduced geometry:
 
