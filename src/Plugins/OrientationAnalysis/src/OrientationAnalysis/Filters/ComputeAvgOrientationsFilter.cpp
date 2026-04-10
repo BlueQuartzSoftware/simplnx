@@ -107,7 +107,7 @@ Parameters ComputeAvgOrientationsFilter::parameters() const
 
   params.linkParameters(k_UseWatson_Key, k_WatsonAvgQuatsArrayName_Key, true);
   params.linkParameters(k_UseWatson_Key, k_WatsonAvgEulerArrayName_Key, true);
-  params.linkParameters(k_UseVonMisesFisher_Key, k_WatsonKappaArrayName_Key, true);
+  params.linkParameters(k_UseWatson_Key, k_WatsonKappaArrayName_Key, true);
 
   return params;
 }

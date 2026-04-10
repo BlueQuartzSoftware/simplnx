@@ -38,6 +38,8 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeAvgOrientationsInputValues
   DataPath WatsonKappaArrayPath;
 
   uint32 RandomSeed = 43514;
+  int32 NumEMIterations = 5;
+  int32 NumIterations = 10;
 };
 
 /**

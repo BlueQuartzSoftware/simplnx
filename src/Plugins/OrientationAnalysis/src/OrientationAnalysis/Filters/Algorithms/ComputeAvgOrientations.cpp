@@ -18,11 +18,13 @@ namespace
 class VmfWatsonSamplingImpl
 {
 public:
-  VmfWatsonSamplingImpl(ComputeAvgOrientations* filter, const ComputeAvgOrientationsInputValues* inputPtr, DataStructure& dataStruture, const std::vector<usize>& featureNumVoxels)
+  VmfWatsonSamplingImpl(ComputeAvgOrientations* filter, const ComputeAvgOrientationsInputValues* inputPtr, DataStructure& dataStruture, const std::vector<usize>& featureNumVoxels,
+                        const std::map<int32, int32>& featureIdToPhaseMap)
   : m_Filter(filter)
   , m_InputValues(inputPtr)
   , m_DataStructure(dataStruture)
   , m_FeatureNumVoxels(featureNumVoxels)
+  , m_FeatureIdToPhaseMap(featureIdToPhaseMap)
   {
   }
 
@@ -30,9 +32,9 @@ public:
 
   void operator()(const Range& range) const
   {
-    // Input FeatureData + Input Orientations
+    // Input FeatureIds + Input Orientations. All these should come from the same Attribute Matrix or have the same number of tuples
     Int32AbstractDataStore& featureIdsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath).getDataStoreRef();
-    Int32AbstractDataStore& phasesRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath).getDataStoreRef();
+    // Int32AbstractDataStore& phasesRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath).getDataStoreRef();
     Float32AbstractDataStore& quatsRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath).getDataStoreRef();
     // Ensemble Level Data
     UInt32AbstractDataStore& xtalRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath).getDataStoreRef();
@@ -72,15 +74,15 @@ public:
         continue;
       }
 
-      int32 phaseIdx = phasesRef[featureId];
-      uint32 laueClass = xtalRef[phaseIdx];
+      const int32 phaseIdx = m_FeatureIdToPhaseMap.at(static_cast<int32>(featureId));
+      const uint32 laueClass = xtalRef[phaseIdx];
       ebsdlib::LaueOps::Pointer op = ops[laueClass];
 
       fzQuats.clear();
       fzQuats.reserve(m_FeatureNumVoxels[featureId]);
 
       // Loop over every "voxel" (although the user could just be passing in an array
-      // they they want to find the average orientation of
+      // they want to find the average orientation of
       for(usize voxelIdx = 0; voxelIdx < numVoxels; voxelIdx++)
       {
         // If the feature Id of the voxel matches the current feature Id, then grab that orientation
@@ -98,16 +100,15 @@ public:
         ebsdlib::QuatD muhat = ebsdlib::QuatD::identity();
         double kappahat = 0.0;
 
-        // Check if there is only a single orientation...
         if(fzQuats.size() == 1)
         {
           muhat = fzQuats[0];
         }
-        else
+        else if(!fzQuats.empty())
         {
           ebsdlib::DirectionalStats directionalStats("VMF", op);
-          int numEmIterations = 5; // At some point this should be a user defined input
-          int numIterations = 10;  // At some point this should be a user defined input
+          int numEmIterations = m_InputValues->NumEMIterations; // At some point this should be a user-defined input
+          int numIterations = m_InputValues->NumIterations;     // At some point this should be a user-defined input
           directionalStats.setNumEM(numEmIterations);
           directionalStats.setNumIter(numIterations);
           directionalStats.setQuatArray(fzQuats);
@@ -139,11 +140,11 @@ public:
         {
           muhat = fzQuats[0];
         }
-        else
+        else if(!fzQuats.empty())
         {
           ebsdlib::DirectionalStats directionalStats("WAT", op);
-          int numEmIterations = 5; // At some point this should be a user defined input
-          int numIterations = 10;  // At some point this should be a user defined input
+          int numEmIterations = m_InputValues->NumEMIterations; // At some point this should be a user-defined input
+          int numIterations = m_InputValues->NumIterations;     // At some point this should be a user-defined input
           directionalStats.setNumEM(numEmIterations);
           directionalStats.setNumIter(numIterations);
           directionalStats.setQuatArray(fzQuats);
@@ -173,6 +174,7 @@ private:
   const ComputeAvgOrientationsInputValues* m_InputValues = nullptr;
   DataStructure& m_DataStructure;
   const std::vector<usize>& m_FeatureNumVoxels;
+  const std::map<int32, int32>& m_FeatureIdToPhaseMap;
 };
 
 template <typename T>
@@ -312,6 +314,7 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
 
   // Run through the "voxels" and compute the number of voxels for each feature
   std::vector<usize> featureNumVoxels(m_NumberOfFeatures, 0);
+  std::map<int32, int32> featureIdToPhaseMap;
   for(size_t i = 0; i < totalVoxels; i++)
   {
     const int32_t currentFeatureId = featureIds[i];
@@ -319,6 +322,7 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
     if(currentPhase > 0)
     {
       featureNumVoxels[currentFeatureId]++;
+      featureIdToPhaseMap[currentFeatureId] = currentPhase;
     }
   }
 
@@ -354,7 +358,7 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, m_NumberOfFeatures);
-  dataAlg.execute(VmfWatsonSamplingImpl(this, m_InputValues, m_DataStructure, featureNumVoxels));
+  dataAlg.execute(VmfWatsonSamplingImpl(this, m_InputValues, m_DataStructure, featureNumVoxels, featureIdToPhaseMap));
 
   return {};
 }
@@ -436,6 +440,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     if(counts[featureId] == 0.0f)
     {
       UpdateQuaternionArray(avgQuats, identityQuat, featureId);
+      continue;
     }
 
     ebsdlib::QuatF curAvgQuat(avgQuats[featureId * 4], avgQuats[featureId * 4 + 1], avgQuats[featureId * 4 + 2], avgQuats[featureId * 4 + 3]);
