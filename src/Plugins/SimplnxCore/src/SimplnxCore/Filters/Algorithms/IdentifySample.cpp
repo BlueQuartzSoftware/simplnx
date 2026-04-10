@@ -3,7 +3,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/ImageDimensionalUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
@@ -34,8 +33,8 @@ struct IdentifySampleFunctor
     };
 
     int64_t neighborPoint = 0;
-    std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-    std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+    std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+    std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
     std::vector<int64> currentVList;
     std::vector<bool> checked(totalPoints, false);
@@ -67,7 +66,7 @@ struct IdentifySampleFunctor
             while(count < currentVList.size())
             {
               int64 index = currentVList[count];
-              std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+              std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
               for(const auto& faceIndex : faceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
@@ -115,165 +114,59 @@ struct IdentifySampleFunctor
     {
       messageHelper.sendMessage("Filling holes in sample...");
 
-      // Corners
-      const auto processCornerCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
-        const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
-
-        if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
+      neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimsStateT>(dims);
+      faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimsStateT>();
+      for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
+      {
+        const int64 zStride = dims[0] * dims[1] * zIndex;
+        for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
         {
-          currentVList.push_back(voxelIndex);
-          usize count = 0;
-          while(count < currentVList.size())
+          const int64 yStride = dims[0] * yIndex;
+          throttledMessenger.sendThrottledMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
+          if(shouldCancel)
           {
-            int64 index = currentVList[count];
-            // Loop over the 6 face neighbors of the voxel
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
-            for(const auto faceIndex : faceNeighborInternalIdx) // trivially copyable
-            {
-              if(!isValidFaceNeighbor[faceIndex])
-              {
-                continue;
-              }
-              neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
-
-              if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
-              {
-                currentVList.push_back(neighborPoint);
-                checked[neighborPoint] = true;
-              }
-            }
-            count++;
+            return;
           }
-          currentVList.clear();
-        }
-      };
-      ImageDimensionalUtilities::ProcessCorners<ImageDimsStateT>(processCornerCell, dims);
-
-      // Edges
-      if constexpr(!ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimsStateT, ImageDimensionalUtilities::SingleVoxelImage>())
-      {
-        const auto processEdgeCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
-          const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
-
-          if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
+          for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
           {
-            currentVList.push_back(voxelIndex);
-            usize count = 0;
-            while(count < currentVList.size())
+            int64 voxelIndex = zStride + yStride + xIndex;
+
+            if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
             {
-              int64 index = currentVList[count];
-              // Loop over the 6 face neighbors of the voxel
-              std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
-              for(const auto faceIndex : faceNeighborInternalIdx) // trivially copyable
+              bool touchesBoundary = false;
+              currentVList.push_back(voxelIndex);
+              usize count = 0;
+              while(count < currentVList.size())
               {
-                if(!isValidFaceNeighbor[faceIndex])
+                int64 index = currentVList[count];
+                // Loop over the 6 face neighbors of the voxel
+                std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
+                for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
                 {
-                  continue;
-                }
-                neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
-
-                if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
-                {
-                  currentVList.push_back(neighborPoint);
-                  checked[neighborPoint] = true;
-                }
-              }
-              count++;
-            }
-            if constexpr(ImageDimsStateT::Is1DImageDimsState())
-            {
-              for(int64_t j : currentVList)
-              {
-                goodVoxels.setValue(j, true);
-              }
-            }
-            currentVList.clear();
-          }
-        };
-        ImageDimensionalUtilities::ProcessEdges<ImageDimsStateT>(processEdgeCell, dims);
-      }
-
-      // Faces
-      if constexpr(!ImageDimsStateT::Is1DImageDimsState() && !ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimsStateT, ImageDimensionalUtilities::SingleVoxelImage>())
-      {
-        const auto processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex, const std::vector<FaceNeighborType>& validFaces) -> void {
-          const int64 voxelIndex = (dims[0] * dims[1] * zIndex) + (dims[0] * yIndex) + xIndex;
-
-          if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
-          {
-            currentVList.push_back(voxelIndex);
-            usize count = 0;
-            while(count < currentVList.size())
-            {
-              int64 index = currentVList[count];
-              for(const auto faceIndex : validFaces) // trivially copyable
-              {
-                neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
-
-                if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
-                {
-                  currentVList.push_back(neighborPoint);
-                  checked[neighborPoint] = true;
-                }
-              }
-              count++;
-            }
-            if constexpr(ImageDimsStateT::Is2DImageDimsState())
-            {
-              for(int64_t j : currentVList)
-              {
-                goodVoxels.setValue(j, true);
-              }
-            }
-            currentVList.clear();
-          }
-        };
-        ImageDimensionalUtilities::ProcessFaces<ImageDimsStateT>(processFaceCell, dims);
-      }
-
-      if constexpr(ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimsStateT, ImageDimensionalUtilities::Image3D>())
-      {
-        for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
-        {
-          const int64 zStride = dims[0] * dims[1] * zIndex;
-          for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
-          {
-            const int64 yStride = dims[0] * yIndex;
-            throttledMessenger.sendThrottledMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
-            if(shouldCancel)
-            {
-              return;
-            }
-            for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
-            {
-              int64 voxelIndex = zStride + yStride + xIndex;
-
-              if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
-              {
-                currentVList.push_back(voxelIndex);
-                usize count = 0;
-                while(count < currentVList.size())
-                {
-                  int64 index = currentVList[count];
-                  // Loop over the 6 face neighbors of the voxel
-                  for(const auto faceIndex : faceNeighborInternalIdx) // Trivially Copyable
+                  if(!isValidFaceNeighbor[faceIndex])
                   {
-                    neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
-
-                    if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
-                    {
-                      currentVList.push_back(neighborPoint);
-                      checked[neighborPoint] = true;
-                    }
+                    touchesBoundary = true;
+                    continue;
                   }
-                  count++;
+
+                  neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
+
+                  if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
+                  {
+                    currentVList.push_back(neighborPoint);
+                    checked[neighborPoint] = true;
+                  }
                 }
+                count++;
+              }
+              if(!touchesBoundary)
+              {
                 for(int64_t j : currentVList)
                 {
                   goodVoxels.setValue(j, true);
                 }
-                currentVList.clear();
               }
+              currentVList.clear();
             }
           }
         }
@@ -505,41 +398,41 @@ void ProcessVoxels(const DataType& dataType, const ImageGeom* imageGeom, ArgsT&&
   // Treat dimensions of 1 as flat for image geom
   if(emptyDimCount == 0)
   {
-    return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::Image3D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    return ExecuteDataFunction(FunctorT<Image3D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
   }
   if(emptyDimCount == 1)
   {
     if(zDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::EmptyZImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<EmptyZImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
     if(yDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::EmptyYImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<EmptyYImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
     if(xDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::EmptyXImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<EmptyXImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
   }
   if(emptyDimCount == 2)
   {
     if(xDimEmpty && yDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::ZImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<ZImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
     if(xDimEmpty && zDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::YImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<YImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
     if(yDimEmpty && zDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::XImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<XImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
   }
   if(emptyDimCount == 3)
   {
-    return ExecuteDataFunction(FunctorT<ImageDimensionalUtilities::SingleVoxelImage>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    return ExecuteDataFunction(FunctorT<SingleVoxelImage>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
   }
 
   return;

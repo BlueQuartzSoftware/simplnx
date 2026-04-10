@@ -313,8 +313,8 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
   std::vector<int32> coordination;
 
   int64_t neighborPoint = 0;
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  const std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   // This entire loop finds all 3 kinds of grain boundaries,
   // Feature Boundaries, Triple Junctions, QuadPoints
@@ -328,7 +328,7 @@ void findDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
       int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
       // Loop over the 6 face neighbors of the voxel
-      std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
       for(const auto& faceIndex : faceNeighborInternalIdx)
       {
         if(!isValidFaceNeighbor[faceIndex])

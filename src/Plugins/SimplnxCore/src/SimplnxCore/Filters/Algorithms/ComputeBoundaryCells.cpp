@@ -38,8 +38,8 @@ Result<> ComputeBoundaryCells::operator()()
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
   auto& boundaryCellsStore = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsArrayName)->getDataStoreRef();
 
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  const std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   int32 feature = 0;
   int8 onSurf = 0;
@@ -93,7 +93,7 @@ Result<> ComputeBoundaryCells::operator()()
           }
 
           // Loop over the 6 face neighbors of the voxel
-          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
           for(const auto& faceIndex : faceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])

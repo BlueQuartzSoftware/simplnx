@@ -70,8 +70,8 @@ Result<> ErodeDilateCoordinationNumber::operator()()
     }
   }
 
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  const std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  const std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   const std::string attrMatName = m_InputValues->FeatureIdsArrayPath.getTargetName();
   const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
@@ -102,7 +102,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           int32 coordination = 0;
           int32 most = 0;
           // Loop over the 6 face neighbors of the voxel
-          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
           for(const auto& faceIndex : faceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])

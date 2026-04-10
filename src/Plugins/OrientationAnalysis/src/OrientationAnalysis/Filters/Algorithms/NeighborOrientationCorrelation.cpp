@@ -101,8 +101,8 @@ Result<> NeighborOrientationCorrelation::operator()()
   int32 best = 0;
   int64 neighborPoint2 = 0;
 
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   std::vector<int32> neighborDiffCount(totalPoints, 0);
   std::vector<int32> neighborSimCount(6, 0);
@@ -133,7 +133,7 @@ Result<> NeighborOrientationCorrelation::operator()()
         int64 yIdx = (voxelIndex / dims[0]) % dims[1];
         int64 zIdx = voxelIndex / (dims[0] * dims[1]);
         // Loop over the 6 face neighbors of the voxel
-        std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
         for(const auto& faceIndexJ : faceNeighborInternalIdx)
         {
           if(!isValidFaceNeighbor[faceIndexJ])
@@ -156,7 +156,7 @@ Result<> NeighborOrientationCorrelation::operator()()
           }
 
           isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-          for(size_t faceIndexK = faceIndexJ + 1; faceIndexK < k_FaceNeighborCount; faceIndexK++)
+          for(size_t faceIndexK = faceIndexJ + 1; faceIndexK < VoxelNeighbors<Image3D>::k_FaceNeighborCount; faceIndexK++)
           {
             if(!isValidFaceNeighbor[faceIndexK])
             {

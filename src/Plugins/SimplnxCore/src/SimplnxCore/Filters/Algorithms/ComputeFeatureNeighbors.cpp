@@ -3,7 +3,6 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
-#include "simplnx/Utilities/ImageDimensionalUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
@@ -14,10 +13,10 @@ namespace
 template <bool ProcessSurfaceFeaturesV, bool ProcessBoundaryCellsV>
 struct ComputeFeatureNeighborsFunctor
 {
-  template <class ImageDimensionStateT>
+  template <detail::ImageDimensionality ImageDimensionStateT>
   Result<> operator()(BoolAbstractDataStore* surfaceFeatures, Int8AbstractDataStore* boundaryCells, Float32NeighborList& sharedSurfaceAreaList, Int32NeighborList& neighborsList,
                       Int32AbstractDataStore& numNeighbors, const Int32AbstractDataStore& featureIds, usize totalFeatures, const std::array<int64, 3>& dims, const std::array<float64, 3> spacing,
-                      const std::array<int64, 6>& neighborVoxelIndexOffsets, ThrottledMessenger& throttledMessenger, const std::atomic_bool& shouldCancel) const
+                      ThrottledMessenger& throttledMessenger, const std::atomic_bool& shouldCancel) const
   {
     if(ProcessSurfaceFeaturesV)
     {
@@ -34,10 +33,11 @@ struct ComputeFeatureNeighborsFunctor
         return MakeErrorResult(-789621, "Process Boundary Cells selected, but the supplied Boundary Cells Array invalid.");
       }
     }
+    const std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimensionStateT>(dims);
 
     const usize totalPoints = featureIds.getNumberOfTuples();
 
-    const std::array<float64, 6> precomputedFaceAreas = computeFaceSurfaceAreas(spacing);
+    const std::vector<float64> precomputedFaceAreas = computeFaceSurfaceAreas<ImageDimensionStateT>(spacing);
     std::vector<std::map<usize, float64>> neighborSurfaceAreas(totalFeatures);
 
     /**
@@ -64,7 +64,7 @@ struct ComputeFeatureNeighborsFunctor
      * areas, but was decided against to conserve memory. At least until the issue presents itself
      * in a real world dataset.
      */
-    const std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+    const std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimensionStateT>();
 
     // Process Corners
     {
@@ -81,7 +81,7 @@ struct ComputeFeatureNeighborsFunctor
           }
 
           // Loop over the 6 face neighbors of the voxel
-          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+          std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
           for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
           {
             if(!isValidFaceNeighbor[faceIndex])
@@ -109,7 +109,7 @@ struct ComputeFeatureNeighborsFunctor
     }
 
     // Process Edges
-    if constexpr(!ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimensionStateT, ImageDimensionalUtilities::SingleVoxelImage>())
+    if constexpr(!std::is_same_v<ImageDimensionStateT, SingleVoxelImage>)
     {
       const auto processEdgeCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
         int8 numDiffNeighbors = 0;
@@ -124,7 +124,7 @@ struct ComputeFeatureNeighborsFunctor
           }
 
           // Loop over the 6 face neighbors of the voxel
-          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+          std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
           for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
           {
             if(!isValidFaceNeighbor[faceIndex])
@@ -152,7 +152,7 @@ struct ComputeFeatureNeighborsFunctor
     }
 
     // Process Planes for 2D and 3D (Stack) Images
-    if constexpr(!ImageDimensionStateT::Is1DImageDimsState() && !ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimensionStateT, ImageDimensionalUtilities::SingleVoxelImage>())
+    if constexpr(!ImageDimensionStateT::Is1DImageDimsState() && !std::is_same_v<ImageDimensionStateT, SingleVoxelImage>)
     {
       const auto processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex, const std::vector<FaceNeighborType>& validFaces) -> void {
         int8 numDiffNeighbors = 0;
@@ -161,7 +161,7 @@ struct ComputeFeatureNeighborsFunctor
         const int32 feature = featureIds.getValue(voxelIndex);
         if(feature > 0)
         {
-          if constexpr(ProcessSurfaceFeaturesV && ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimensionStateT, ImageDimensionalUtilities::Image3D>())
+          if constexpr(ProcessSurfaceFeaturesV && std::is_same_v<ImageDimensionStateT, Image3D>)
           {
             surfaceFeatures->setValue(feature, true);
           }
@@ -195,7 +195,7 @@ struct ComputeFeatureNeighborsFunctor
      * internal cell and checks each of the neighbors, storing them onto the existing
      * results from the boundary cell phases.
      */
-    if constexpr(ImageDimensionalUtilities::IsExpectedImageDimsState<ImageDimensionStateT, ImageDimensionalUtilities::Image3D>())
+    if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
     {
       // Loop over all internal cells to generate the neighbor lists
       for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
@@ -277,41 +277,41 @@ Result<> ProcessVoxels(const FunctorT& functor, const ImageGeom& imageGeom, Args
   // Treat dimensions of 1 as flat for image geom
   if(emptyDimCount == 0)
   {
-    return functor.template operator()<ImageDimensionalUtilities::Image3D>(std::forward<ArgsT>(args)...);
+    return functor.template operator()<Image3D>(std::forward<ArgsT>(args)...);
   }
   if(emptyDimCount == 1)
   {
     if(zDimEmpty)
     {
-      return functor.template operator()<ImageDimensionalUtilities::EmptyZImage2D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<EmptyZImage2D>(std::forward<ArgsT>(args)...);
     }
     if(yDimEmpty)
     {
-      return functor.template operator()<ImageDimensionalUtilities::EmptyYImage2D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<EmptyYImage2D>(std::forward<ArgsT>(args)...);
     }
     if(xDimEmpty)
     {
-      return functor.template operator()<ImageDimensionalUtilities::EmptyXImage2D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<EmptyXImage2D>(std::forward<ArgsT>(args)...);
     }
   }
   if(emptyDimCount == 2)
   {
     if(xDimEmpty && yDimEmpty)
     {
-      return functor.template operator()<ImageDimensionalUtilities::ZImage1D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<ZImage1D>(std::forward<ArgsT>(args)...);
     }
     if(xDimEmpty && zDimEmpty)
     {
-      return functor.template operator()<ImageDimensionalUtilities::YImage1D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<YImage1D>(std::forward<ArgsT>(args)...);
     }
     if(yDimEmpty && zDimEmpty)
     {
-      return functor.template operator()<ImageDimensionalUtilities::XImage1D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<XImage1D>(std::forward<ArgsT>(args)...);
     }
   }
   if(emptyDimCount == 3)
   {
-    return functor.template operator()<ImageDimensionalUtilities::SingleVoxelImage>(std::forward<ArgsT>(args)...);
+    return functor.template operator()<SingleVoxelImage>(std::forward<ArgsT>(args)...);
   }
 
   return {};
@@ -365,30 +365,28 @@ Result<> ComputeFeatureNeighbors::operator()()
 
   std::array<float64, 3> spacing64 = {static_cast<float64>(spacing32[0]), static_cast<float64>(spacing32[1]), static_cast<float64>(spacing32[2])};
 
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-
   if(m_InputValues->StoreSurfaceFeatures && m_InputValues->StoreBoundaryCells)
   {
     // Surface Features filled with `false` by default during creation in preflight
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
     return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                         spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
+                         spacing64, throttledMessenger, m_ShouldCancel);
   }
   if(m_InputValues->StoreSurfaceFeatures)
   {
     // Surface Features filled with `false` by default during creation in preflight
     auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
     return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeatures, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                         spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
+                         spacing64, throttledMessenger, m_ShouldCancel);
   }
   if(m_InputValues->StoreBoundaryCells)
   {
     auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
     return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                         spacing64, neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
+                         spacing64, throttledMessenger, m_ShouldCancel);
   }
 
   return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, false>{}, imageGeom, nullptr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims, spacing64,
-                       neighborVoxelIndexOffsets, throttledMessenger, m_ShouldCancel);
+                       throttledMessenger, m_ShouldCancel);
 }
