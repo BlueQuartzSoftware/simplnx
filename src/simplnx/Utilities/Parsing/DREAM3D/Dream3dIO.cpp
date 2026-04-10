@@ -28,6 +28,7 @@
 #include <nlohmann/json.hpp>
 
 #include <fstream>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
@@ -1282,6 +1283,296 @@ Result<> finishImportingLegacyArray(DataStructure& dataStructure, const nx::core
   }
 }
 
+Result<> readDatasetAsDataArray(DataStructure& dataStructure, const HDF5::DatasetIO& datasetIO, DataObject::IdType parentId, bool preflight)
+{
+  ShapeType tDims = datasetIO.getDimensions();
+  if(tDims.empty())
+  {
+    return MakeErrorResult(-13345, "Unable to read dataset dimensions");
+  }
+  ShapeType cDims = {1};
+  Result<DataType> dataTypeResult = datasetIO.getDataType();
+  if(dataTypeResult.invalid())
+  {
+    hid_t datasetId = datasetIO.getId();
+    hid_t typeId = H5Dget_type(datasetId);
+    H5T_class_t classType = H5Tget_class(typeId);
+    H5Tclose(typeId);
+    if(classType == H5T_STRING)
+    {
+      usize size = std::accumulate(tDims.cbegin(), tDims.cend(), static_cast<usize>(1), std::multiplies<>());
+      StringArray* stringArray = StringArray::CreateWithValues(dataStructure, datasetIO.getName(), tDims, std::vector<std::string>(size), parentId);
+      return {};
+    }
+  }
+
+  DataType dataType = dataTypeResult.value();
+  switch(dataType)
+  {
+  case DataType::float32: {
+    return ConvertResult(createLegacyDataArray<float32>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::float64: {
+    return ConvertResult(createLegacyDataArray<float64>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::int8: {
+    return ConvertResult(createLegacyDataArray<int8>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::int16: {
+    return ConvertResult(createLegacyDataArray<int16>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::int32: {
+    return ConvertResult(createLegacyDataArray<int32>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::int64: {
+    return ConvertResult(createLegacyDataArray<int64>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::boolean: {
+    return ConvertResult(createLegacyDataArray<bool>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::uint8: {
+    return ConvertResult(createLegacyDataArray<uint8>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::uint16: {
+    return ConvertResult(createLegacyDataArray<uint16>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::uint32: {
+    return ConvertResult(createLegacyDataArray<uint32>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  case DataType::uint64: {
+    return ConvertResult(createLegacyDataArray<uint64>(dataStructure, parentId, datasetIO, tDims, cDims, preflight));
+  }
+  }
+  return MakeErrorResult(-456345, fmt::format("StatsReader: Unsupported array type: {}", to_underlying(dataType)));
+}
+
+Result<> readLegacyStatsDataArrayDatasetChild(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetIO, DataObject::IdType parentId, bool preflight)
+{
+  Result<std::string> objectTypeResult = datasetIO.readStringAttribute(Constants::k_ObjectTypeTag);
+  if(objectTypeResult.invalid())
+  {
+    return readDatasetAsDataArray(dataStructure, datasetIO, parentId, preflight);
+  }
+  std::string objectType = std::move(objectTypeResult.value());
+  if(objectType.starts_with("DataArray<"))
+  {
+    return ConvertResult(readLegacyDataArray(dataStructure, datasetIO, parentId, preflight));
+  }
+  return MakeErrorResult(-343254, fmt::format("Unable to read dataset \"{}\"", datasetIO.getName()));
+}
+
+template <typename T>
+Result<IDataArray*> CreateDataArrayFromAttribute(DataStructure& dataStructure, DataObject::IdType parentId, const HDF5::ObjectIO& objectIO, const std::string& attributeName,
+                                                 const std::string& dataArrayName, bool preflight)
+{
+  Result<std::vector<T>> result = objectIO.readVectorAttribute<T>(attributeName);
+  if(result.invalid())
+  {
+    return nx::core::MakeErrorResult<IDataArray*>(Legacy::k_FailedReadingDataArrayData_Code, fmt::format("Error reading HDF5 attribute: {}", attributeName));
+  }
+  std::vector<T> data = std::move(result.value());
+
+  std::vector<usize> tDims = {data.size()};
+  std::vector<usize> cDims = {1};
+
+  DataArray<T>* dataArray = nullptr;
+
+  if(preflight)
+  {
+    dataArray = DataArray<T>::template CreateWithStore<EmptyDataStore<T>>(dataStructure, dataArrayName, tDims, cDims, parentId);
+  }
+  else
+  {
+    auto dataStore = std::make_unique<DataStore<T>>(tDims, cDims, static_cast<T>(0));
+    std::copy(data.begin(), data.end(), dataStore->begin());
+    dataArray = DataArray<T>::Create(dataStructure, dataArrayName, std::move(dataStore), parentId);
+  }
+
+  if(nullptr == dataArray)
+  {
+    return nx::core::MakeErrorResult<IDataArray*>(Legacy::k_FailedCreatingArray_Code, fmt::format("Failed to create DataArray: '{}'", dataArrayName));
+  }
+
+  return {dataArray};
+}
+
+Result<> ReadAttributeAsDataArray(HDF5::ObjectIO& objectIO, const std::string& attributeName, DataStructure& dataStructure, DataObject::IdType parentId, bool preflight, std::string_view prefix)
+{
+  HDF_ERROR_HANDLER_OFF
+  hid_t attribId = H5Aopen(objectIO.getId(), attributeName.c_str(), H5P_DEFAULT);
+  HDF_ERROR_HANDLER_ON
+  if(attribId < 0)
+  {
+    return MakeErrorResult(-16565, fmt::format("Unable to open attribute \"\"", attributeName));
+  }
+  hid_t typeId = H5Aget_type(attribId);
+
+  std::string daName = fmt::format("{}{}", prefix, attributeName);
+
+  Result<> result;
+
+  H5T_class_t classType = H5Tget_class(typeId);
+  if(classType == H5T_STRING)
+  {
+    Result<std::string> stringResult = objectIO.readStringAttribute(attributeName);
+    if(result.valid())
+    {
+      auto* stringArray = StringArray::CreateWithValues(dataStructure, daName, {1}, std::vector<std::string>{std::move(stringResult.value())}, parentId);
+      if(stringArray == nullptr)
+      {
+        result = MakeErrorResult(-16566, "Unable to create StringArray");
+      }
+    }
+    else
+    {
+      result = ConvertResult(std::move(stringResult));
+    }
+  }
+  else
+  {
+    HDF5::Type type = HDF5::getTypeFromId(typeId);
+
+    switch(type)
+    {
+    case HDF5::Type::int8: {
+      result = ConvertResult(CreateDataArrayFromAttribute<int8>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::int16: {
+      result = ConvertResult(CreateDataArrayFromAttribute<int16>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::int32: {
+      result = ConvertResult(CreateDataArrayFromAttribute<int32>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::int64: {
+      result = ConvertResult(CreateDataArrayFromAttribute<int64>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::uint8: {
+      result = ConvertResult(CreateDataArrayFromAttribute<uint8>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::uint16: {
+      result = ConvertResult(CreateDataArrayFromAttribute<uint16>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::uint32: {
+      result = ConvertResult(CreateDataArrayFromAttribute<uint32>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::uint64: {
+      result = ConvertResult(CreateDataArrayFromAttribute<uint64>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::float32: {
+      result = ConvertResult(CreateDataArrayFromAttribute<float32>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    case HDF5::Type::float64: {
+      result = ConvertResult(CreateDataArrayFromAttribute<float64>(dataStructure, parentId, objectIO, attributeName, daName, preflight));
+      break;
+    }
+    default: {
+      result = MakeErrorResult(-16567, "Invalid HDF5 for DataArray");
+      break;
+    }
+    }
+  }
+
+  H5Aclose(attribId);
+  H5Tclose(typeId);
+
+  return ConvertResult(std::move(result));
+}
+
+Result<> ReadAllAttributesAsDataArrays(DataStructure& dataStructure, nx::core::HDF5::ObjectIO& objectIO, DataObject::IdType parentId, bool preflight, std::string_view prefix,
+                                       const std::set<std::string>& exclusions)
+{
+  auto attributeNames = objectIO.getAttributeNames();
+  for(const auto& name : attributeNames)
+  {
+    if(exclusions.contains(name))
+    {
+      continue;
+    }
+    auto result = ReadAttributeAsDataArray(objectIO, name, dataStructure, parentId, preflight, prefix);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+  return {};
+}
+
+Result<> readLegacyStatsDataArrayChild(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const std::string& name, DataObject::IdType parentId, bool preflight)
+{
+  if(parentReader.isDataset(name))
+  {
+    HDF5::DatasetIO datasetIO = parentReader.openDataset(name);
+    std::string prefix = fmt::format("{}_", datasetIO.getName());
+    static const std::set<std::string> exclusions = {Legacy::CompDims, Legacy::TupleDims, "ObjectType", "Tuple Axis Dimensions", "DataArrayVersion"};
+    Result<> attributeResult = ReadAllAttributesAsDataArrays(dataStructure, datasetIO, parentId, false, prefix, exclusions);
+    if(attributeResult.invalid())
+    {
+      return attributeResult;
+    }
+    return readLegacyStatsDataArrayDatasetChild(dataStructure, datasetIO, parentId, preflight);
+  }
+  if(parentReader.isGroup(name))
+  {
+    HDF5::GroupIO groupIO = parentReader.openGroup(name);
+    DataGroup* dataGroup = DataGroup::Create(dataStructure, name, parentId);
+    if(dataGroup == nullptr)
+    {
+      return MakeErrorResult(-1434535, fmt::format("Unable to create group \"{}\"", name));
+    }
+    DataObject::IdType groupId = dataGroup->getId();
+    Result<> attributeResult = ReadAllAttributesAsDataArrays(dataStructure, groupIO, groupId, false, "", {});
+    if(attributeResult.invalid())
+    {
+      return attributeResult;
+    }
+    std::vector<std::string> groupChildren = groupIO.getChildNames();
+    for(const auto& childName : groupChildren)
+    {
+      Result<> result = readLegacyStatsDataArrayChild(dataStructure, groupIO, childName, groupId, preflight);
+      if(result.invalid())
+      {
+        return result;
+      }
+    }
+    return {};
+  }
+  return MakeErrorResult(-769634, fmt::format("StatsReader: Unsupported object type for \"{}\"", name));
+}
+
+Result<> readLegacyStatsDataArray(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& statsReader, DataObject::IdType parentId, bool /*preflight*/)
+{
+  // Always fully import Statistics data (ignoring the preflight parameter) because
+  // the Statistics hierarchy produces DataPaths of depth > 3 (up to depth 6) which
+  // FinishImportingLegacyDataObject cannot handle. Since StatsDataArray data is
+  // relatively small, fully importing during the initial read is safe and avoids
+  // the need for a separate finish-importing step.
+  std::string statsGroupName = "Statistics";
+  DataGroup* dataGroup = DataGroup::Create(dataStructure, statsGroupName, parentId);
+  if(dataGroup == nullptr)
+  {
+    return MakeErrorResult(-1434547, fmt::format("Unable to create group \"{}\"", statsGroupName));
+  }
+  std::vector<std::string> childNames = statsReader.getChildNames();
+  for(const auto& name : childNames)
+  {
+    Result<> result = readLegacyStatsDataArrayChild(dataStructure, statsReader, name, dataGroup->getId(), false);
+    if(result.invalid())
+    {
+      return result;
+    }
+  }
+  return {};
+}
+
 Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& amGroupReader, DataObject& parent, bool preflight = false, bool importChildren = true)
 {
   DataObject::IdType parentId = parent.getId();
@@ -1300,42 +1591,40 @@ Result<> readLegacyAttributeMatrix(DataStructure& dataStructure, const nx::core:
   std::vector<Result<>> daResults;
   if(importChildren)
   {
-    auto dataArrayNames = amGroupReader.getChildNames();
-    for(const auto& daName : dataArrayNames)
+    auto childNames = amGroupReader.getChildNames();
+    for(const auto& childName : childNames)
     {
-      // Check if child is a Dataset.
-      // Stats data is not supported in simplnx.
-      // TODO: LEGACY SYNTHETIC MICROSTRUCTURE SUPPORT
-      if(!amGroupReader.isDataset(daName))
+      if(!amGroupReader.isDataset(childName))
       {
-        Result<> unsupportedDataResult = MakeWarningVoidResult(-298012, fmt::format("DataObject '{}' is not a supported simplnx data type", daName));
-        daResults.push_back(unsupportedDataResult);
-        continue;
-      }
-
-      auto dataArraySet = amGroupReader.openDataset(daName);
-#if 0
-    if(!dataArraySet.isValid())
-    {
-      // Could not open HDF5 DataSet. Could be stats array
-      std::string ss = fmt::format("Could not open array '{}'", daName);
-      daResults.push_back(nx::core::MakeWarningVoidResult(Legacy::k_LegacyDataArrayH5_Code, ss));
-      continue;
-    }
-#endif
-
-      if(isLegacyNeighborList(dataArraySet))
-      {
-        daResults.push_back(readLegacyNeighborList(dataStructure, amGroupReader, dataArraySet, attributeMatrix->getId()));
-      }
-      else if(isLegacyStringArray(dataArraySet))
-      {
-        daResults.push_back(readLegacyStringArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
+        auto groupReader = amGroupReader.openGroup(childName);
+        auto objectTypeResult = groupReader.readStringAttribute(Constants::k_ObjectTypeTag);
+        if(objectTypeResult.valid() && objectTypeResult.value() == "Statistics")
+        {
+          daResults.push_back(readLegacyStatsDataArray(dataStructure, groupReader, parentId, preflight));
+        }
+        else
+        {
+          Result<> unsupportedDataResult = MakeWarningVoidResult(-298012, fmt::format("DataObject '{}' is not a supported simplnx data type", childName));
+          daResults.push_back(unsupportedDataResult);
+        }
       }
       else
       {
-        Result<> result = ConvertResult(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
-        daResults.push_back(result);
+        auto dataArraySet = amGroupReader.openDataset(childName);
+
+        if(isLegacyNeighborList(dataArraySet))
+        {
+          daResults.push_back(readLegacyNeighborList(dataStructure, amGroupReader, dataArraySet, attributeMatrix->getId()));
+        }
+        else if(isLegacyStringArray(dataArraySet))
+        {
+          daResults.push_back(readLegacyStringArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
+        }
+        else
+        {
+          Result<> result = ConvertResult(readLegacyDataArray(dataStructure, dataArraySet, attributeMatrix->getId(), preflight));
+          daResults.push_back(result);
+        }
       }
     }
   }
@@ -1842,6 +2131,15 @@ Result<std::vector<std::shared_ptr<DataObject>>> ImportLegacyDataObjectFromFile(
 
 Result<> FinishImportingLegacyDataObject(DataStructure& dataStructure, const nx::core::HDF5::GroupIO& parentReader, const DataPath& dataPath)
 {
+  // Statistics data is fully imported during the initial read (readLegacyStatsDataArray
+  // always imports with preflight=false), so skip the finish-importing step for all
+  // Statistics paths. The Statistics group is placed as a sibling of the AttributeMatrix
+  // under the DataContainer, so any path with "Statistics" at index 1 is part of this hierarchy.
+  if(dataPath.getLength() >= 2 && dataPath[1] == "Statistics")
+  {
+    return {};
+  }
+
   switch(dataPath.getLength())
   {
   case 1:
