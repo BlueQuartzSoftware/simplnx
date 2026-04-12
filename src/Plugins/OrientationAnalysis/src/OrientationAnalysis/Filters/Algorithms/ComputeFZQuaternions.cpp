@@ -153,8 +153,8 @@ Result<> ComputeFZQuaternions::operator()()
     }
     else if(maskArray->getDataType() == DataType::uint8)
     {
-      UInt32Array* goodVoxelsArray = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->MaskArrayPath);
-      dataAlg.execute(::GenerateFZQuatsImpl<UInt32Array>(quatArray, phaseArray, xtalArray, numPhases, goodVoxelsArray, fzQuatArray, m_ShouldCancel, warningCount));
+      UInt8Array* goodVoxelsArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->MaskArrayPath);
+      dataAlg.execute(::GenerateFZQuatsImpl<UInt8Array>(quatArray, phaseArray, xtalArray, numPhases, goodVoxelsArray, fzQuatArray, m_ShouldCancel, warningCount));
     }
     else if(maskArray->getDataType() == DataType::int8)
     {

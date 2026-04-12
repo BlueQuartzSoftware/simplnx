@@ -13,164 +13,9 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <EbsdLib/Core/EbsdLibConstants.h>
-#include <EbsdLib/Core/EbsdMacros.h>
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
-
-namespace
-{
-/**
- * @brief The GenerateFZQuatsImpl class implements a threaded algorithm that computes the Fundamental Zone Quaternion
- * for a given Quaternion and Laue Class (which is based from the crystalStructures array
- */
-class GenerateMaskedFZQuatsImpl
-{
-public:
-  GenerateMaskedFZQuatsImpl(const Float32AbstractDataStore& quats, const Int32AbstractDataStore& phases, const UInt32AbstractDataStore& crystalStructures, const int32 numPhases,
-                            std::unique_ptr<MaskCompareUtilities::MaskCompare>& goodVoxels, Float32AbstractDataStore& fzQuats, const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount)
-  : m_Quats(quats)
-  , m_CellPhases(phases)
-  , m_CrystalStructures(crystalStructures)
-  , m_NumPhases(numPhases)
-  , m_GoodVoxels(goodVoxels)
-  , m_FZQuats(fzQuats)
-  , m_ShouldCancel(shouldCancel)
-  , m_WarningCount(warningCount)
-  {
-  }
-
-  ~GenerateMaskedFZQuatsImpl() = default;
-
-  /**
-   * @brief convert
-   * @param start
-   * @param end
-   */
-  void convert(size_t start, size_t end) const
-  {
-    std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
-    int32 phase = 0;
-    size_t index = 0;
-
-    for(size_t i = start; i < end; i++)
-    {
-      if(m_ShouldCancel)
-      {
-        break;
-      }
-      phase = m_CellPhases.getValue(i);
-
-      // Sanity check the phase data to make sure we do not walk off the end of the array
-      if(phase >= m_NumPhases)
-      {
-        m_WarningCount++;
-      }
-
-      // Output initialized to zero by default
-      index = i * 4;
-      if(phase < m_NumPhases && m_GoodVoxels->isTrue(i) && m_CrystalStructures.getValue(phase) < ebsdlib::CrystalStructure::LaueGroupEnd)
-      {
-        ebsdlib::QuatD quatD = ebsdlib::QuatD(m_Quats.getValue(index), m_Quats.getValue(index + 1), m_Quats.getValue(index + 2), m_Quats.getValue(index + 3)); // Makes a copy into q
-        auto xtal = static_cast<int32_t>(m_CrystalStructures.getValue(phase));                                                                                 // get the Laue Group
-        quatD = ops[xtal]->getFZQuat(quatD);
-        m_FZQuats.setValue(index, static_cast<float32>(quatD.x()));
-        m_FZQuats.setValue(index + 1, static_cast<float32>(quatD.y()));
-        m_FZQuats.setValue(index + 2, static_cast<float32>(quatD.z()));
-        m_FZQuats.setValue(index + 3, static_cast<float32>(quatD.w()));
-      }
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    convert(range.min(), range.max());
-  }
-
-private:
-  const Float32AbstractDataStore& m_Quats;
-  const Int32AbstractDataStore& m_CellPhases;
-  const UInt32AbstractDataStore& m_CrystalStructures;
-  const int32 m_NumPhases = 0;
-  std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_GoodVoxels;
-  Float32AbstractDataStore& m_FZQuats;
-  const std::atomic_bool& m_ShouldCancel;
-  std::atomic_int32_t& m_WarningCount;
-};
-
-class GenerateFZQuatsImpl
-{
-public:
-  GenerateFZQuatsImpl(const Float32AbstractDataStore& quats, const Int32AbstractDataStore& phases, const UInt32AbstractDataStore& crystalStructures, const int32 numPhases,
-                      Float32AbstractDataStore& fzQuats, const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount)
-  : m_Quats(quats)
-  , m_CellPhases(phases)
-  , m_CrystalStructures(crystalStructures)
-  , m_NumPhases(numPhases)
-  , m_FZQuats(fzQuats)
-  , m_ShouldCancel(shouldCancel)
-  , m_WarningCount(warningCount)
-  {
-  }
-
-  ~GenerateFZQuatsImpl() = default;
-
-  /**
-   * @brief convert
-   * @param start
-   * @param end
-   */
-  void convert(size_t start, size_t end) const
-  {
-    std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
-    int32 phase = 0;
-    size_t index = 0;
-
-    for(size_t i = start; i < end; i++)
-    {
-      if(m_ShouldCancel)
-      {
-        break;
-      }
-      phase = m_CellPhases.getValue(i);
-
-      // Sanity check the phase data to make sure we do not walk off the end of the array
-      if(phase >= m_NumPhases)
-      {
-        m_WarningCount++;
-      }
-
-      // Output initialized to zero by default
-      index = i * 4;
-      if(phase < m_NumPhases && m_CrystalStructures.getValue(phase) < ebsdlib::CrystalStructure::LaueGroupEnd)
-      {
-        ebsdlib::QuatD quatD = ebsdlib::QuatD(m_Quats.getValue(index), m_Quats.getValue(index + 1), m_Quats.getValue(index + 2), m_Quats.getValue(index + 3)); // Makes a copy into q
-        auto xtal = static_cast<int32_t>(m_CrystalStructures.getValue(phase));                                                                                 // get the Laue Group
-        quatD = ops[xtal]->getFZQuat(quatD);
-        m_FZQuats.setValue(index, static_cast<float32>(quatD.x()));
-        m_FZQuats.setValue(index + 1, static_cast<float32>(quatD.y()));
-        m_FZQuats.setValue(index + 2, static_cast<float32>(quatD.z()));
-        m_FZQuats.setValue(index + 3, static_cast<float32>(quatD.w()));
-      }
-    }
-  }
-
-  void operator()(const Range& range) const
-  {
-    convert(range.min(), range.max());
-  }
-
-private:
-  const Float32AbstractDataStore& m_Quats;
-  const Int32AbstractDataStore& m_CellPhases;
-  const UInt32AbstractDataStore& m_CrystalStructures;
-  const int32 m_NumPhases = 0;
-  Float32AbstractDataStore& m_FZQuats;
-  const std::atomic_bool& m_ShouldCancel;
-  std::atomic_int32_t& m_WarningCount;
-};
-} // namespace
 
 namespace nx::core
 {
@@ -289,76 +134,16 @@ IFilter::PreflightResult ComputeFZQuaternionsFilter::preflightImpl(const DataStr
 Result<> ComputeFZQuaternionsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
-  auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pFZQuatsArrayPathValue = pQuatsArrayPathValue.replaceName(filterArgs.value<std::string>(k_FZQuatsArrayName_Key));
 
-  auto& phaseArray = dataStructure.getDataRefAs<Int32Array>(pCellPhasesArrayPathValue);
-  auto& quatArray = dataStructure.getDataRefAs<Float32Array>(pQuatsArrayPathValue);
-  auto& xtalArray = dataStructure.getDataRefAs<UInt32Array>(pCrystalStructuresArrayPathValue);
-  auto* maskArray = dataStructure.getDataAs<IDataArray>(pGoodVoxelsArrayPathValue);
-  auto& fzQuatArray = dataStructure.getDataRefAs<Float32Array>(pFZQuatsArrayPathValue);
+  ComputeFZQuaternionsInputValues inputValues;
+  inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.InputQuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
+  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.MaskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.OutputFzQuatsArrayName = filterArgs.value<std::string>(k_FZQuatsArrayName_Key);
 
-  std::atomic_int32_t warningCount = 0;
-  auto numPhases = static_cast<int32>(xtalArray.getNumberOfTuples());
-
-  typename IParallelAlgorithm::AlgorithmArrays algArrays;
-  algArrays.push_back(&phaseArray);
-  algArrays.push_back(&quatArray);
-  algArrays.push_back(&xtalArray);
-  algArrays.push_back(&fzQuatArray);
-
-  if(pUseGoodVoxelsValue)
-  {
-    algArrays.push_back(maskArray);
-  }
-
-  try
-  {
-    // Parallel algorithm
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0ULL, static_cast<size_t>(quatArray.getNumberOfTuples()));
-    dataAlg.requireArraysInMemory(algArrays);
-
-    if(pUseGoodVoxelsValue)
-    {
-      std::unique_ptr<MaskCompareUtilities::MaskCompare> maskArrayPtr = nullptr;
-      try
-      {
-        maskArrayPtr = MaskCompareUtilities::InstantiateMaskCompare(dataStructure, pGoodVoxelsArrayPathValue);
-      } catch(const std::out_of_range& exception)
-      {
-        // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
-        // some other context that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-        return MakeErrorResult(-49003, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", pGoodVoxelsArrayPathValue.toString()));
-      }
-
-      dataAlg.execute(::GenerateMaskedFZQuatsImpl(quatArray.getDataStoreRef(), phaseArray.getDataStoreRef(), xtalArray.getDataStoreRef(), numPhases, maskArrayPtr, fzQuatArray.getDataStoreRef(),
-                                                  shouldCancel, warningCount));
-    }
-    else
-    {
-      dataAlg.execute(
-          ::GenerateFZQuatsImpl(quatArray.getDataStoreRef(), phaseArray.getDataStoreRef(), xtalArray.getDataStoreRef(), numPhases, fzQuatArray.getDataStoreRef(), shouldCancel, warningCount));
-    }
-
-    if(warningCount > 0)
-    {
-      std::string errorMessage = fmt::format("The Ensemble Phase information only references {} phase(s) but {} cell(s) had a phase value greater than {}. This indicates a problem with the input "
-                                             "cell phase data. DREAM3D-NX may have given INCORRECT RESULTS.",
-                                             numPhases - 1, warningCount.load(), numPhases - 1);
-
-      return {MakeErrorResult<>(-49004, errorMessage)};
-    }
-  } catch(const ebsdlib::method_not_implemented& e)
-  {
-    return {MakeErrorResult<>(-49005, fmt::format("EbsdLib threw an exception when computing the fundamental zone data. {}", e.what()))};
-  }
-
-  return {};
+  return ComputeFZQuaternions(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace

@@ -7,8 +7,8 @@
 
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Filter/Actions/CopyDataObjectAction.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateVertexGeometryAction.hpp"
-#include "simplnx/Filter/Actions/MoveDataAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -109,7 +109,7 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
 {
   auto inputRepType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto inputOrientationsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
-  auto vertexPathsToCopy = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
+  auto sourceDataPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
   auto convertToFundamentalZone = filterArgs.value<BoolParameter::ValueType>(k_ConvertToFundamentalZone_Key);
   auto cellPhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellPhasesArrayPath_Key);
   auto crystalStructuresArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
@@ -145,33 +145,33 @@ IFilter::PreflightResult ConvertOrientationsToVertexGeometryFilter::preflightImp
   }
 
   // Create the Vertex Geometry
-  auto createVertexGeometryAction =
-      std::make_unique<CreateVertexGeometryAction>(outputVertexGeometryPath, inputOrientationsArray.getNumberOfTuples(), outputVertexAttrMatrixName, outputSharedVertexListName);
-  resultOutputActions.value().appendAction(std::move(createVertexGeometryAction));
-  DataPath vertexAttrMatrixPath = outputVertexGeometryPath.createChildPath(outputVertexAttrMatrixName);
-  for(const auto& vertexPathToCopy : vertexPathsToCopy)
   {
-    auto& vertexDataArray = dataStructure.getDataRefAs<IDataArray>(vertexPathToCopy);
-    DataType type = vertexDataArray.getDataType();
-    DataPath copyPath = vertexAttrMatrixPath.createChildPath(vertexDataArray.getName());
-    auto numTuples = vertexDataArray.getNumberOfTuples();
-    auto components = vertexDataArray.getNumberOfComponents();
-    const std::string dataStoreFormat = vertexDataArray.getDataFormat();
+    auto createVertexGeometryAction =
+        std::make_unique<CreateVertexGeometryAction>(outputVertexGeometryPath, inputOrientationsArray.getNumberOfTuples(), outputVertexAttrMatrixName, outputSharedVertexListName);
+    resultOutputActions.value().appendAction(std::move(createVertexGeometryAction));
+  }
+  DataPath vertexAttrMatrixPath = outputVertexGeometryPath.createChildPath(outputVertexAttrMatrixName);
+  for(const auto& sourceDataPath : sourceDataPaths)
+  {
+    auto& sourceDataArray = dataStructure.getDataRefAs<IDataArray>(sourceDataPath);
+    DataType type = sourceDataArray.getDataType();
+    DataPath destinationDataPath = vertexAttrMatrixPath.createChildPath(sourceDataArray.getName());
+    auto numTuples = sourceDataArray.getNumberOfTuples();
+    auto components = sourceDataArray.getComponentShape();
+    const std::string dataStoreFormat = sourceDataArray.getDataFormat();
 
     if(numTuples != inputOrientationsArray.getNumberOfTuples())
     {
       return {MakeErrorResult<OutputActions>(-1004, fmt::format("Array at path {} only has {} tuples, but it MUST have {} tuples to be copied into output vertex attribute matrix at path {}!",
-                                                                vertexPathToCopy.toString(), numTuples, inputOrientationsArray.getNumberOfTuples(), vertexAttrMatrixPath.toString()))};
+                                                                sourceDataPath.toString(), numTuples, inputOrientationsArray.getNumberOfTuples(), vertexAttrMatrixPath.toString()))};
     }
 
-    auto action = std::make_unique<CopyDataObjectAction>(vertexPathToCopy, copyPath, std::vector<DataPath>{});
+    // We are using the CreateArrayAction here instead of the CopyArrayAction because the
+    // CopyArrayAction will have the destination DataArray have the same tuple shape
+    // as the source array, but in this case we don't want that. So we use the CreateArrayAction
+    // instead and manually update the tuple shape later one.
+    auto action = std::make_unique<CreateArrayAction>(type, ShapeType{numTuples}, components, destinationDataPath, dataStoreFormat);
     resultOutputActions.value().appendAction(std::move(action));
-
-    //    auto moveDataAction = std::make_unique<MoveDataAction>(vertexPathToCopy, vertexAttrMatrixPath);
-    //    resultOutputActions.value().appendAction(std::move(moveDataAction));
-
-    //    auto action = std::make_unique<CreateArrayAction>(type, std::vector<usize>{numTuples}, std::vector<usize>{components}, copyPath, dataStoreFormat);
-    //    resultOutputActions.value().appendAction(std::move(action));
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
@@ -186,7 +186,7 @@ Result<> ConvertOrientationsToVertexGeometryFilter::executeImpl(DataStructure& d
 
   inputValues.InputOrientationType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   inputValues.InputOrientationArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
-  inputValues.CopyVertexArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
+  inputValues.DataPathCopySources = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CopyVertexPaths_Key);
   inputValues.ConvertToFundamentalZone = filterArgs.value<BoolParameter::ValueType>(k_ConvertToFundamentalZone_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellPhasesArrayPath_Key);
   inputValues.CrystalStructuresArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);

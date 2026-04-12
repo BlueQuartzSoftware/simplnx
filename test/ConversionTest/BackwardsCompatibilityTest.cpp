@@ -725,7 +725,14 @@ const std::map<Uuid, std::vector<std::string>> k_KeyIgnoreMap = {
                                                                        "max_suffix_name", "mean_suffix_name", "min_suffix_name", "std_deviation_suffix_name", "summation_suffix_name"}},
     // ExtractVertexGeometryFilter
     std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("621a71ca-124b-4471-ad1a-02f05ffba099").value(),
-                                              std::vector<std::string>{"output_shared_vertex_list_name", "output_vertex_attr_matrix_name"}}};
+                                              std::vector<std::string>{"output_shared_vertex_list_name", "output_vertex_attr_matrix_name"}},
+
+    // ComputeAvgOrientationsFilter
+    std::pair<Uuid, std::vector<std::string>>{Uuid::FromString("086ddb9a-928f-46ab-bad6-b1498270d71e").value(),
+                                              std::vector<std::string>{"use_vmf_average", "use_watson_average", "vmf_euler_array_name", "vmf_kappa_array_name", "vmf_quat_array_name",
+                                                                       "watson_euler_array_name", "watson_kappa_array_name", "watson_quat_array_name"}}
+
+};
 
 } // namespace
 
