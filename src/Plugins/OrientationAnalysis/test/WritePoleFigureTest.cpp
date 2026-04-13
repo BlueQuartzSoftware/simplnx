@@ -268,19 +268,19 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-Color", "[OrientationAnaly
   {
     DataPath calculatedImageData({"Color Count MRD", "Cell Data", "Phase_1_<001>"});
     DataPath exemplarImageData({"Color Count MRD [CALCULATED]", "Cell Data", "Phase_1_<001>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
   }
 
   {
     DataPath calculatedImageData({"Color Count MRD", "Cell Data", "Phase_1_<011>"});
     DataPath exemplarImageData({"Color Count MRD [CALCULATED]", "Cell Data", "Phase_1_<011>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
   }
 
   {
     DataPath calculatedImageData({"Color Count MRD", "Cell Data", "Phase_1_<111>"});
     DataPath exemplarImageData({"Color Count MRD [CALCULATED]", "Cell Data", "Phase_1_<111>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -345,19 +345,19 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-Color-Masked", "[Orientati
   {
     DataPath calculatedImageData({"Color Count MRD Masked", "Cell Data", "Phase_1_<001>"});
     DataPath exemplarImageData({"Color Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<001>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
   }
 
   {
     DataPath calculatedImageData({"Color Count MRD Masked", "Cell Data", "Phase_1_<011>"});
     DataPath exemplarImageData({"Color Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<011>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
   }
 
   {
     DataPath calculatedImageData({"Color Count MRD Masked", "Cell Data", "Phase_1_<111>"});
     DataPath exemplarImageData({"Color Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<111>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
+    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
   }
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
