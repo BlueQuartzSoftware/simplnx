@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Rescale Intensity Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Rescale Intensity Image",
+    "Filter_Name": "ITKRescaleIntensityImage",
+    "Filter_Uuid": "{77bf2192-851d-5127-9add-634c1ef4f67f}",
+    "OutputMinimum": 2.5,
+    "OutputMaximum": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

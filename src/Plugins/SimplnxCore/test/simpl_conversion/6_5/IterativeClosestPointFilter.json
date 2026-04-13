@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "Iterative Closest Point Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Iterative Closest Point",
+    "Filter_Name": "IterativeClosestPoint",
+    "Filter_Uuid": "{6c8fb24b-5b12-551c-ba6d-ae2fa7724764}",
+    "MovingVertexGeometry": {
+      "Data Container Name": "MovingGeometry"
+    },
+    "TargetVertexGeometry": {
+      "Data Container Name": "TargetGeometry"
+    },
+    "Iterations": 5,
+    "ApplyTransform": 1,
+    "TransformArrayName": "TransformArray"
+  }
+}

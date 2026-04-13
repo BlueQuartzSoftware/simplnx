@@ -4,6 +4,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 #include "simplnx/Common/Constants.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"

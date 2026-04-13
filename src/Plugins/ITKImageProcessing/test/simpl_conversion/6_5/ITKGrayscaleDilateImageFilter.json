@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Grayscale Dilate Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Grayscale Dilate Image",
+    "Filter_Name": "ITKGrayscaleDilateImage",
+    "Filter_Uuid": "{66cec151-2950-51f8-8a02-47d3516d8721}",
+    "KernelType": 0,
+    "KernelRadius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

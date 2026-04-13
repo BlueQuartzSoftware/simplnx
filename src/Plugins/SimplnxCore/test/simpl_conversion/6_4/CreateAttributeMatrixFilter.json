@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "Create Attribute Matrix 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create Attribute Matrix",
+    "Filter_Name": "CreateAttributeMatrix",
+    "TupleDimensions": {
+      "Table Data": [
+        [
+          1.0,
+          2.0,
+          3.0
+        ]
+      ]
+    },
+    "CreatedAttributeMatrix": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    }
+  }
+}

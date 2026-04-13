@@ -1,0 +1,33 @@
+{
+  "PipelineBuilder": {
+    "Name": "Resample Image Geom Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Resample Image Geom",
+    "Filter_Name": "ChangeResolution",
+    "Filter_Uuid": "{1966e540-759c-5798-ae26-0c6a3abc65c0}",
+    "Spacing": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "RenumberFeatures": 1,
+    "SaveAsNewDataContainer": 1,
+    "CellAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewDataContainerPath": {
+      "Data Container Name": "DataContainer"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Largest Cross Sections Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Largest Cross Sections",
+    "Filter_Name": "FindLargestCrossSections",
+    "Filter_Uuid": "{9f77b4a9-6416-5220-a688-115f4e14c90d}",
+    "Plane": 0,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "LargestCrossSectionsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

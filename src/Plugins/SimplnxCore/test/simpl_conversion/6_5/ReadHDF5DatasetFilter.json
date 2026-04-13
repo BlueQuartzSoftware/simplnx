@@ -1,0 +1,24 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read HDF5 Dataset Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read HDF5 Dataset",
+    "Filter_Name": "ImportHDF5Dataset",
+    "Filter_Uuid": "{9e98c3b0-5707-5a3b-b8b5-23ef83b02896}",
+    "HDF5FilePath": "/test/path/file.h5",
+    "Dataset Import Info Array": [
+      {
+        "dataset_path": "/data/array1",
+        "component_dimensions": "1"
+      }
+    ],
+    "SelectedAttributeMatrix": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    }
+  }
+}

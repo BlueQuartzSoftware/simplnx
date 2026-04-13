@@ -1,0 +1,31 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Neighborhoods Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Neighborhoods",
+    "Filter_Name": "FindNeighborhoods",
+    "Filter_Uuid": "{697ed3de-db33-5dd1-a64b-04fb71e7d63e}",
+    "EquivalentDiametersArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "MultiplesOfAverage": 2.5,
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CentroidsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NeighborhoodsArrayName": "TestName",
+    "NeighborhoodListArrayName": "TestName"
+  }
+}

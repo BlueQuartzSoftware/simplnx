@@ -1,0 +1,28 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read H5 Ebsd 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read H5 Ebsd",
+    "Filter_Name": "ReadH5Ebsd",
+    "ReadH5Ebsd": {
+      "InputFile": "/test/path/file.h5ebsd",
+      "ZStartIndex": 0,
+      "ZEndIndex": 10,
+      "UseTransformations": true,
+      "SelectedArrayNames": [
+        "Confidence Index",
+        "Image Quality"
+      ],
+      "RefFrameZDir": 0
+    },
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CellAttributeMatrixName": "TestName",
+    "CellEnsembleAttributeMatrixName": "TestName"
+  }
+}

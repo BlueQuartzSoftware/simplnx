@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Vtk Structured Points 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read Vtk Structured Points",
+    "Filter_Name": "VtkStructuredPointsReader",
+    "CellAttributeMatrixName": "TestName",
+    "InputFile": "/test/path/file.txt",
+    "ReadCellData": 1,
+    "ReadPointData": 1,
+    "VertexAttributeMatrixName": "TestName",
+    "VertexDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "VolumeDataContainerName": {
+      "Data Container Name": "DataContainer"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "Array Calculator Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Array Calculator",
+    "Filter_Name": "ArrayCalculator",
+    "Filter_Uuid": "{7ff0ebb3-7b0d-5ff7-b9d8-5147031aca10}",
+    "SelectedAttributeMatrix": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "InfixEquation": "1+2",
+    "ScalarType": 0,
+    "CalculatedArray": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "Units": 0
+  }
+}

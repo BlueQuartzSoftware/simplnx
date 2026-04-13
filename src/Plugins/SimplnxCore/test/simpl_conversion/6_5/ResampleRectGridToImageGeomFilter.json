@@ -1,0 +1,32 @@
+{
+  "PipelineBuilder": {
+    "Name": "Resample Rect Grid To Image Geom Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Resample Rectilinear Grid to Image Geometry",
+    "Filter_Name": "ResampleRectGridToImageGeom",
+    "Filter_Uuid": "{77befd69-4536-5856-9f81-02996d038f73}",
+    "RectilinearGridPath": {
+      "Data Container Name": "DataContainer"
+    },
+    "SelectedDataArrayPaths": [
+      {
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "TestArray"
+      }
+    ],
+    "Dimensions": {
+      "x": 10,
+      "y": 20,
+      "z": 30
+    },
+    "ImageGeometryPath": {
+      "Data Container Name": "ImageGeometry"
+    },
+    "ImageGeomCellAttributeMatrix": "CellData"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Feature Reference C Axis Misorientations Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Feature Reference C Axis Misorientations",
+    "Filter_Name": "FindFeatureReferenceCAxisMisorientations",
+    "Filter_Uuid": "{1a0848da-2edd-52c0-b111-62a4dc6d2886}",
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "QuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AvgCAxesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureAvgCAxisMisorientationsArrayName": "TestName",
+    "FeatureStdevCAxisMisorientationsArrayName": "TestName",
+    "FeatureReferenceCAxisMisorientationsArrayName": "TestName"
+  }
+}

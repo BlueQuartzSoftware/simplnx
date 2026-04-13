@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Grayscale Erode Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Grayscale Erode Image",
+    "Filter_Name": "ITKGrayscaleErodeImage",
+    "Filter_Uuid": "{aef4e804-3f7a-5dc0-911c-b1f16a393a69}",
+    "KernelType": 0,
+    "KernelRadius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

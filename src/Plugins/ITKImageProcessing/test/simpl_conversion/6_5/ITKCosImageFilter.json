@@ -1,0 +1,19 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Cos Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Cos Image",
+    "Filter_Name": "ITKCosImage",
+    "Filter_Uuid": "{2c2d7bf6-1e78-52e6-80aa-58b504ce0912}",
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

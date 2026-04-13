@@ -1,0 +1,50 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Schmids Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Schmids",
+    "Filter_Name": "FindSchmids",
+    "Filter_Uuid": "{e67ca06a-176f-58fc-a676-d6ee5553511a}",
+    "LoadingDirection": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "StoreAngleComponents": 1,
+    "OverrideSystem": 1,
+    "SlipPlane": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "SlipDirection": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AvgQuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SchmidsArrayName": "TestName",
+    "SlipSystemsArrayName": "TestName",
+    "PolesArrayName": "TestName",
+    "PhisArrayName": "TestName",
+    "LambdasArrayName": "TestName"
+  }
+}

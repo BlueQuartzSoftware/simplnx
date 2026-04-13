@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "Nearest Point Fuse Regular Grids 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Nearest Point Fuse Regular Grids",
+    "Filter_Name": "NearestPointFuseRegularGrids",
+    "ReferenceCellAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "SamplingCellAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    }
+  }
+}

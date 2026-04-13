@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "Rodrigues Convertor 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Rodrigues Convertor",
+    "Filter_Name": "RodriguesConvertor",
+    "RodriguesDataArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "OutputDataArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "DeleteOriginalData": 1
+  }
+}

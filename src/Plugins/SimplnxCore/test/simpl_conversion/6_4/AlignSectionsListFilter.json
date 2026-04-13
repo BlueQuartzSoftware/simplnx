@@ -1,0 +1,17 @@
+{
+  "PipelineBuilder": {
+    "Name": "Align Sections List 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Align Sections List",
+    "Filter_Name": "AlignSectionsList",
+    "CellAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

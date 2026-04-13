@@ -1,12 +1,16 @@
 #include "SimplnxCore/Filters/ComputeNeighborListStatisticsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <string>
 
+namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 
@@ -201,4 +205,55 @@ TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: Invalid Input Array
   REQUIRE(executeResult.result.invalid());
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeNeighborListStatisticsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeNeighborListStatisticsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeNeighborListStatisticsFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ComputeNeighborListStatisticsFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindLength_Key) == true);
+      CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMinimum_Key) == true);
+      CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMaximum_Key) == true);
+      CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMean_Key) == true);
+      CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindMedian_Key) == true);
+      CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindStandardDeviation_Key) == true);
+      CHECK(args.value<bool>(ComputeNeighborListStatisticsFilter::k_FindSummation_Key) == true);
+      CHECK(args.value<DataPath>(ComputeNeighborListStatisticsFilter::k_InputNeighborListPath_Key) == DataPath({"DataContainer", "FeatureData", "NeighborList"}));
+      CHECK(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_LengthName_Key) == "Length");
+      CHECK(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MinimumName_Key) == "Minimum");
+      CHECK(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MaximumName_Key) == "Maximum");
+      CHECK(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MeanName_Key) == "Mean");
+      CHECK(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_MedianName_Key) == "Median");
+      CHECK(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_StandardDeviationName_Key) == "StdDeviation");
+      CHECK(args.value<std::string>(ComputeNeighborListStatisticsFilter::k_SummationName_Key) == "Summation");
+    }
+  }
 }

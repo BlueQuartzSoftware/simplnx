@@ -3,15 +3,21 @@
 
 #include "SimplnxCore/Filters/ReadCSVFileFilter.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/ReadCSVFileParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <filesystem>
 #include <fstream>
 
 namespace fs = std::filesystem;
@@ -371,5 +377,48 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadTextDataArrayFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadTextDataArrayFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadTextDataArrayFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ReadTextDataArrayFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<FileSystemPathParameter::ValueType>(ReadTextDataArrayFilter::k_InputFile_Key) == fs::path("/test/path/file.txt"));
+      // Complex type (NumericTypeParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<uint64>(ReadTextDataArrayFilter::k_NComp_Key) == 5);
+      CHECK(args.value<uint64>(ReadTextDataArrayFilter::k_NSkipLines_Key) == 5);
+      CHECK(args.value<ChoicesParameter::ValueType>(ReadTextDataArrayFilter::k_DelimiterChoice_Key) == 0);
+      // Complex type (DataArrayCreationFilterParameterConverter) - verified by successful pipeline loading
+    }
   }
 }

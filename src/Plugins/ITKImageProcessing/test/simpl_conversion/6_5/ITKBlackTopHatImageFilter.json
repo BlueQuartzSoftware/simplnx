@@ -1,0 +1,26 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Black Top Hat Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Black Top Hat Image",
+    "Filter_Name": "ITKBlackTopHatImage",
+    "Filter_Uuid": "{e26e7359-f72c-5924-b42e-dd5dd454a794}",
+    "KernelType": 0,
+    "SafeBorder": 1,
+    "KernelRadius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

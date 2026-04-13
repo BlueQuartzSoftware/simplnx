@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Feature Rect Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Feature Rect",
+    "Filter_Name": "ComputeFeatureRect",
+    "Filter_Uuid": "{6eda8dbf-dbd8-562a-ae1a-f2904157c189}",
+    "FeatureRectArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

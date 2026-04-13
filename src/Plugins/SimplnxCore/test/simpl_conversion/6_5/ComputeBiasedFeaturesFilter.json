@@ -1,0 +1,30 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Biased Features Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Biased Features",
+    "Filter_Name": "FindBoundingBoxFeatures",
+    "Filter_Uuid": "{450c2f00-9ddf-56e1-b4c1-0e74e7ad2349}",
+    "CalcByPhase": 1,
+    "CentroidsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceFeaturesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "PhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "BiasedFeaturesArrayName": "TestName"
+  }
+}

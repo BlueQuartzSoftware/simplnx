@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "Label Triangle Geometry Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Label Triangle Geometry",
+    "Filter_Name": "LabelTriangleGeometry",
+    "Filter_Uuid": "{a250a228-3b6b-5b37-a6e4-8687484f04c4}",
+    "CADDataContainerPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "FaceLabels"
+    },
+    "RegionIdArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "RegionIds"
+    },
+    "TriangleAttributeMatrixName": "TriangleData",
+    "NumTrianglesArrayName": "NumTriangles"
+  }
+}

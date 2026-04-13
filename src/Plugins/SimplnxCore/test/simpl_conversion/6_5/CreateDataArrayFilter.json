@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "Create Data Array Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create Data Array",
+    "Filter_Name": "CreateDataArray",
+    "Filter_Uuid": "{77f392fb-c1eb-57da-a1b1-e7acf9239fb8}",
+    "ScalarType": 0,
+    "NumberOfComponents": 5,
+    "InitializationValue": "TestName",
+    "NewArray": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

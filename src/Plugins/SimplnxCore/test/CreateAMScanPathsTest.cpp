@@ -1,9 +1,12 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "SimplnxCore/Filters/CreateAMScanPathsFilter.hpp"
@@ -88,4 +91,49 @@ TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: Valid Filter Execution", "[Simp
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CreateAMScanPathsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateAMScanPathsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "CreateAMScanPathsFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<CreateAMScanPathsFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<float32>(CreateAMScanPathsFilter::k_StripeWidth_Key) == Approx(2.5f));
+      CHECK(args.value<float32>(CreateAMScanPathsFilter::k_HatchSpacing_Key) == Approx(2.5f));
+      CHECK(args.value<DataPath>(CreateAMScanPathsFilter::k_CADSliceDataContainerPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(CreateAMScanPathsFilter::k_CADSliceIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "SliceIds"}));
+      CHECK(args.value<DataPath>(CreateAMScanPathsFilter::k_CADRegionIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "RegionIds"}));
+      CHECK(args.value<DataPath>(CreateAMScanPathsFilter::k_HatchDataContainerPath_Key) == DataPath({"HatchDataContainer"}));
+      CHECK(args.value<std::string>(CreateAMScanPathsFilter::k_VertexAttributeMatrixName_Key) == "VertexData");
+      CHECK(args.value<std::string>(CreateAMScanPathsFilter::k_HatchAttributeMatrixName_Key) == "HatchData");
+      CHECK(args.value<std::string>(CreateAMScanPathsFilter::k_RegionIdsArrayName_Key) == "RegionIds");
+    }
+  }
 }

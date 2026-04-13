@@ -1,0 +1,28 @@
+{
+  "PipelineBuilder": {
+    "Name": "DBSCAN 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "DBSCAN",
+    "Filter_Name": "DBSCAN",
+    "SelectedArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureAttributeMatrixName": "TestName",
+    "Epsilon": 2.5,
+    "MinPnts": 5,
+    "DistanceMetric": 0,
+    "UseMask": 1,
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayName": "TestName"
+  }
+}

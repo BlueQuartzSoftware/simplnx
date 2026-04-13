@@ -1,0 +1,29 @@
+{
+  "PipelineBuilder": {
+    "Name": "DBSCAN Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "DBSCAN",
+    "Filter_Name": "DBSCAN",
+    "Filter_Uuid": "{c2d4f1e8-2b04-5d82-b90f-2191e8f4262e}",
+    "SelectedArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureAttributeMatrixName": "TestName",
+    "Epsilon": 2.5,
+    "MinPnts": 5,
+    "DistanceMetric": 0,
+    "UseMask": 1,
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayName": "TestName"
+  }
+}

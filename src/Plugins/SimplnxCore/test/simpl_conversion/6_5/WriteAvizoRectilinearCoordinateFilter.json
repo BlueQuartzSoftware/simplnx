@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Avizo Rectilinear Coordinate Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write Avizo Rectilinear Coordinate",
+    "Filter_Name": "AvizoRectilinearCoordinateWriter",
+    "Filter_Uuid": "{2861f4b4-8d50-5e69-9575-68c9d35f1256}",
+    "OutputFile": "/test/path/file.txt",
+    "WriteBinaryFile": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "Units": "TestName"
+  }
+}

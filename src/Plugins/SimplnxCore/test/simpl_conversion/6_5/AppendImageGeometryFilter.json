@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "Append Image Geometry Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Append Image Geometry",
+    "Filter_Name": "AppendImageGeometryZSlice",
+    "Filter_Uuid": "{52b2918a-4fb5-57aa-97d4-ccc084b89572}",
+    "InputAttributeMatrix": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "DestinationAttributeMatrix": {
+      "Data Container Name": "DataContainer"
+    },
+    "CheckResolution": 1
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Grayscale Morphological Closing Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Grayscale Morphological Closing Image",
+    "Filter_Name": "ITKGrayscaleMorphologicalClosingImage",
+    "Filter_Uuid": "{849a1903-5595-5029-bbde-6f4b68b2a25c}",
+    "KernelType": 0,
+    "SafeBorder": 1,
+    "KernelRadius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

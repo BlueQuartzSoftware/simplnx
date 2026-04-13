@@ -1,0 +1,18 @@
+{
+  "PipelineBuilder": {
+    "Name": "Verify Triangle Winding Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Verify Triangle Winding",
+    "Filter_Name": "VerifyTriangleWinding",
+    "Filter_Uuid": "{3524c2dc-df60-5f90-b54b-e04946628a38}",
+    "SurfaceMeshFaceLabelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "FaceLabels"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "PipelineBuilder": {
+    "Name": "Rename Data Object 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Rename Data Object",
+    "Filter_Name": "RenameAttributeArray",
+    "SelectedArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewArrayName": "TestName",
+    "SelectedAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "NewAttributeMatrix": "TestName",
+    "SelectedDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "NewDataContainerName": "TestName"
+  }
+}

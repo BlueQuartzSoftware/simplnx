@@ -1,0 +1,36 @@
+{
+  "PipelineBuilder": {
+    "Name": "Align Sections Mutual Information Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Align Sections Mutual Information",
+    "Filter_Name": "AlignSectionsMutualInformation",
+    "Filter_Uuid": "{61c5519b-5561-58b8-a522-2ce1324e244d}",
+    "WriteAlignmentShifts": 1,
+    "MisorientationTolerance": 2.5,
+    "UseGoodVoxels": 1,
+    "QuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "GoodVoxelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

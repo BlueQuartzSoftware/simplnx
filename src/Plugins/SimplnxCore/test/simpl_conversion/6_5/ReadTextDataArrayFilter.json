@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Text Data Array Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read Text Data Array",
+    "Filter_Name": "ImportAsciDataArray",
+    "Filter_Uuid": "{a7007472-29e5-5d0a-89a6-1aed11b603f8}",
+    "InputFile": "/test/path/file.txt",
+    "ScalarType": 0,
+    "NumberOfComponents": 5,
+    "SkipHeaderLines": 5,
+    "Delimiter": 0,
+    "CreatedAttributeArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

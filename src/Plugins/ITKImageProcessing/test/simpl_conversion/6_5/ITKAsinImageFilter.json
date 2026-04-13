@@ -1,0 +1,19 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Asin Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Asin Image",
+    "Filter_Name": "ITKAsinImage",
+    "Filter_Uuid": "{79509ab1-24e1-50e4-9351-c5ce7cd87a72}",
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

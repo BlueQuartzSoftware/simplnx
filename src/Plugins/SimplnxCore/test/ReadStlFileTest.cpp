@@ -1,15 +1,19 @@
 #include "SimplnxCore/Filters/ReadStlFileFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <filesystem>
+#include <fstream>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -149,4 +153,51 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:AttributeParseError", "[SimplnxCore][R
   REQUIRE(executeResult.result.errors().front().code == -1107);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ReadStlFileFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadStlFileFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadStlFileFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadStlFileFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ReadStlFileFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      if(label == "SIMPL 6.5 (UUID)")
+      {
+        CHECK(args.value<bool>(ReadStlFileFilter::k_ScaleOutput) == true);
+        CHECK(args.value<float32>(ReadStlFileFilter::k_ScaleFactor) == 2.5f);
+        CHECK(args.value<std::string>(ReadStlFileFilter::k_VertexAttributeMatrixName_Key) == "TestName");
+      }
+      CHECK(args.value<FileSystemPathParameter::ValueType>(ReadStlFileFilter::k_StlFilePath_Key) == fs::path("/test/path/file.txt"));
+      CHECK(args.value<DataPath>(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<std::string>(ReadStlFileFilter::k_FaceAttributeMatrixName_Key) == "TestName");
+      CHECK(args.value<std::string>(ReadStlFileFilter::k_FaceNormalsName_Key) == "TestName");
+    }
+  }
 }

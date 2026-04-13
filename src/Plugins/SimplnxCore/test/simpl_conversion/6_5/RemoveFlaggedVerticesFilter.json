@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "Remove Flagged Vertices Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Remove Flagged Vertices",
+    "Filter_Name": "RemoveFlaggedVertices",
+    "Filter_Uuid": "{379ccc67-16dd-530a-984f-177db2314bac}",
+    "VertexGeometry": {
+      "Data Container Name": "DataContainer"
+    },
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "ReducedVertexGeometry": "ReducedVertexGeom"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "PipelineBuilder": {
+    "Name": "Combine Attribute Arrays 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Combine Attribute Arrays",
+    "Filter_Name": "CombineAttributeArrays",
+    "NormalizeData": 1,
+    "SelectedDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ],
+    "StackedDataArrayName": "TestName"
+  }
+}

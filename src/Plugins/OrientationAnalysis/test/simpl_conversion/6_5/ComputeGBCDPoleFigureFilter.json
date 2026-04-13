@@ -1,0 +1,37 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute GBCD Pole Figure Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute GBCD Pole Figure",
+    "Filter_Name": "VisualizeGBCDPoleFigure",
+    "Filter_Uuid": "{85900eba-3da9-5985-ac71-1d9d290a5d31}",
+    "PhaseOfInterest": 5,
+    "MisorientationRotation": {
+      "angle": 90.0,
+      "h": 1.0,
+      "k": 0.0,
+      "l": 0.0
+    },
+    "OutputFile": "/test/path/file.txt",
+    "OutputDimension": 5,
+    "GBCDArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CellAttributeMatrixName": "TestName",
+    "IntensityArrayName": "TestName"
+  }
+}

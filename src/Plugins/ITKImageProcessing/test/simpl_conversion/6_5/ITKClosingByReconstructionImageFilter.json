@@ -1,0 +1,27 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Closing By Reconstruction Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Closing By Reconstruction Image",
+    "Filter_Name": "ITKClosingByReconstructionImage",
+    "Filter_Uuid": "{99a7aa3c-f945-5e77-875a-23b5231ab3f4}",
+    "KernelType": 0,
+    "FullyConnected": 1,
+    "PreserveIntensities": 1,
+    "KernelRadius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

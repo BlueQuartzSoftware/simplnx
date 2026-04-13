@@ -1,7 +1,10 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "SimplnxCore/Filters/CombineStlFilesFilter.hpp"
@@ -93,4 +96,44 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: InValid Filter Execution")
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::CombineStlFilesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CombineStlFilesFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "CombineStlFilesFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<CombineStlFilesFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<FileSystemPathParameter::ValueType>(CombineStlFilesFilter::k_StlFilesPath_Key) == fs::path("/test/path/stl_files"));
+      CHECK(args.value<DataPath>(CombineStlFilesFilter::k_TriangleGeometryPath_Key) == DataPath({"TriangleDataContainer"}));
+      CHECK(args.value<std::string>(CombineStlFilesFilter::k_FaceAttributeMatrixName_Key) == "FaceData");
+      CHECK(args.value<std::string>(CombineStlFilesFilter::k_FaceNormalsArrayName_Key) == "FaceNormals");
+    }
+  }
 }

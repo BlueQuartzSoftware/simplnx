@@ -1,0 +1,29 @@
+{
+  "PipelineBuilder": {
+    "Name": "ScalarSegmentFeatures Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Segment Features (Scalar)",
+    "Filter_Name": "ScalarSegmentFeatures",
+    "Filter_Uuid": "{2c5edebf-95d8-511f-b787-90ee2adf485c}",
+    "ScalarTolerance": 5,
+    "UseGoodVoxels": 1,
+    "RandomizeFeatureIds": 0,
+    "ScalarArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "Confidence Index"
+    },
+    "GoodVoxelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "Mask"
+    },
+    "FeatureIdsArrayName": "FeatureIds",
+    "CellFeatureAttributeMatrixName": "CellFeatureData",
+    "ActiveArrayName": "Active"
+  }
+}

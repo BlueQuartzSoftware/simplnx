@@ -15,6 +15,7 @@ if(SIMPLNX_ENABLE_OrientationAnalysis)
     ${SIMPLNX_TEST_DIRS_HEADER}
     conversion_test_main.cpp
     BackwardsCompatibilityTest.cpp
+    SIMPLMapInventoryTest.cpp
   )
 
   target_link_libraries(conversion_test

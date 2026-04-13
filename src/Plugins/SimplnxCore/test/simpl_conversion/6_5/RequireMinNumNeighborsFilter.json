@@ -1,0 +1,43 @@
+{
+  "PipelineBuilder": {
+    "Name": "Require Min Num Neighbors Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Require Min Num Neighbors",
+    "Filter_Name": "MinNeighbors",
+    "Filter_Uuid": "{dab5de3c-5f81-5bb5-8490-73521e1183ea}",
+    "MinNumNeighbors": 5,
+    "ApplyToSinglePhase": 1,
+    "PhaseNumber": 5,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NumNeighborsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "IgnoredDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Threshold Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Threshold Image",
+    "Filter_Name": "ITKThresholdImage",
+    "Filter_Uuid": "{5845ee06-5c8a-5a74-80fb-c820bd8dfb75}",
+    "Lower": 2.5,
+    "Upper": 2.5,
+    "OutsideValue": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Stl File Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read Stl File",
+    "Filter_Name": "ReadStlFile",
+    "Filter_Uuid": "{980c7bfd-20b2-5711-bc3b-0190b9096c34}",
+    "ScaleOutput": 1,
+    "ScaleFactor": 2.5,
+    "VertexAttributeMatrixName": "TestName",
+    "StlFilePath": "/test/path/file.txt",
+    "SurfaceMeshDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "FaceAttributeMatrixName": "TestName",
+    "FaceNormalsArrayName": "TestName"
+  }
+}

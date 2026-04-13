@@ -1,0 +1,18 @@
+{
+  "PipelineBuilder": {
+    "Name": "Triangle Dihedral Angle Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Triangle Dihedral Angle",
+    "Filter_Name": "TriangleDihedralAngleFilter",
+    "Filter_Uuid": "{0541c5eb-1976-5797-9468-be50a93d44e2}",
+    "SurfaceMeshTriangleDihedralAnglesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

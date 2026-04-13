@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "Remove Flagged Vertices 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Remove Flagged Vertices",
+    "Filter_Name": "RemoveFlaggedVertices",
+    "VertexGeometry": {
+      "Data Container Name": "DataContainer"
+    },
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "ReducedVertexGeometry": "ReducedVertexGeom"
+  }
+}

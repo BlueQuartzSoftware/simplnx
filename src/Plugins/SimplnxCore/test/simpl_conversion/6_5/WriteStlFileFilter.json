@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Stl File Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write Stl File",
+    "Filter_Name": "WriteStlFile",
+    "Filter_Uuid": "{b9134758-d5e5-59dd-9907-28d23e0e0143}",
+    "OutputStlDirectory": "/test/path/file.txt",
+    "OutputStlPrefix": "TestName",
+    "SurfaceMeshFaceLabelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

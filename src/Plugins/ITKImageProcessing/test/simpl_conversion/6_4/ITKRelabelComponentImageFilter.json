@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Relabel Component Image 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Relabel Component Image",
+    "Filter_Name": "ITKRelabelComponentImage",
+    "MinimumObjectSize": 5,
+    "SortByObjectSize": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "PipelineBuilder": {
+    "Name": "Triangle Normal Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Triangle Normal",
+    "Filter_Name": "TriangleNormalFilter",
+    "Filter_Uuid": "{928154f6-e4bc-5a10-a9dd-1abb6a6c0f6b}",
+    "SurfaceMeshTriangleNormalsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

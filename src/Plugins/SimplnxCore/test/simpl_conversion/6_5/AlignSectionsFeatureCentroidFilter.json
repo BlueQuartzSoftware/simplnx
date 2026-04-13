@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "Align Sections Feature Centroid Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Align Sections Feature Centroid",
+    "Filter_Name": "AlignSectionsFeatureCentroid",
+    "Filter_Uuid": "{886f8b46-51b6-5682-a289-6febd10b7ef0}",
+    "WriteAlignmentShifts": 1,
+    "UseReferenceSlice": 1,
+    "ReferenceSlice": 5,
+    "GoodVoxelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

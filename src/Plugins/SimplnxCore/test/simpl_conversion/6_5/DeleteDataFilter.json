@@ -1,0 +1,33 @@
+{
+  "PipelineBuilder": {
+    "Name": "Delete Data Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Delete Data",
+    "Filter_Name": "RemoveArrays",
+    "Filter_Uuid": "{7b1c8f46-90dd-584a-b3ba-34e16958a7d0}",
+    "DataArraysToRemove": {
+      "Data Containers": [
+        {
+          "Name": "DataContainer",
+          "Flag": 2,
+          "Attribute Matricies": [
+            {
+              "Name": "CellData",
+              "Flag": 2,
+              "Data Arrays": [
+                {
+                  "Name": "TestArray",
+                  "Flag": 2
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

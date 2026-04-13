@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "Multi Threshold Objects 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Multi Threshold Objects",
+    "Filter_Name": "MultiThresholdObjects2",
+    "SelectedThresholds": {
+      "Thresholds": [
+        {
+          "Attribute Array Name": "TestArray",
+          "Comparison Operator": 0,
+          "Comparison Value": 1.0
+        }
+      ],
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "ScalarType": 0,
+    "DestinationArrayName": "TestName"
+  }
+}

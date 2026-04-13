@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Grayscale Fillhole Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Grayscale Fillhole Image",
+    "Filter_Name": "ITKGrayscaleFillholeImage",
+    "Filter_Uuid": "{54c8dd45-88c4-5d4b-8a39-e3cc595e1cf8}",
+    "FullyConnected": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

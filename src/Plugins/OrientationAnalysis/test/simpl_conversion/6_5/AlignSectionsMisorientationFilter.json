@@ -1,0 +1,36 @@
+{
+  "PipelineBuilder": {
+    "Name": "Align Sections Misorientation Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Align Sections Misorientation",
+    "Filter_Name": "AlignSectionsMisorientation",
+    "Filter_Uuid": "{4fb2b9de-3124-534b-b914-dbbbdbc14604}",
+    "WriteAlignmentShifts": 1,
+    "MisorientationTolerance": 2.5,
+    "UseGoodVoxels": 1,
+    "QuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "GoodVoxelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

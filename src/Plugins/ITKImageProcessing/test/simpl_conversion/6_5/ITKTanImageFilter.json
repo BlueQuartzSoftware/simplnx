@@ -1,0 +1,19 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Tan Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Tan Image",
+    "Filter_Name": "ITKTanImage",
+    "Filter_Uuid": "{672810d9-5ec0-59c1-a209-8fb56c7a018a}",
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

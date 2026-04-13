@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Boundary Cells 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Boundary Cells",
+    "Filter_Name": "FindBoundaryCells",
+    "IgnoreFeatureZero": 1,
+    "IncludeVolumeBoundary": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "BoundaryCellsArrayName": "TestName"
+  }
+}

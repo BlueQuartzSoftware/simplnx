@@ -1,0 +1,17 @@
+{
+  "PipelineBuilder": {
+    "Name": "Combine STL Files Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Combine STL Files",
+    "Filter_Name": "CombineStlFiles",
+    "Filter_Uuid": "{71d46128-1d2d-58fd-9924-1714695768c3}",
+    "StlFilesPath": "/test/path/stl_files",
+    "TriangleDataContainerName": "TriangleDataContainer",
+    "FaceAttributeMatrixName": "FaceData",
+    "FaceNormalsArrayName": "FaceNormals"
+  }
+}

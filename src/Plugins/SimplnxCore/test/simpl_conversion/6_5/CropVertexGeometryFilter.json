@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "Crop Vertex Geometry Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Crop Vertex Geometry",
+    "Filter_Name": "CropVertexGeometry",
+    "Filter_Uuid": "{f28cbf07-f15a-53ca-8c7f-b41a11dae6cc}",
+    "XMin": 1.0,
+    "YMin": 1.0,
+    "ZMin": 1.0,
+    "XMax": 1.0,
+    "YMax": 1.0,
+    "ZMax": 1.0,
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CroppedDataContainerName": {
+      "Data Container Name": "DataContainer"
+    }
+  }
+}

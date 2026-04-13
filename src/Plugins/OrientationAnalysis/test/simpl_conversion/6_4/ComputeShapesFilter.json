@@ -1,0 +1,27 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Shapes 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Shapes",
+    "Filter_Name": "FindShapes",
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CentroidsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "Omega3sArrayName": "TestName",
+    "AxisLengthsArrayName": "TestName",
+    "AxisEulerAnglesArrayName": "TestName",
+    "AspectRatiosArrayName": "TestName",
+    "VolumesArrayName": "TestName"
+  }
+}

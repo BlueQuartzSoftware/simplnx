@@ -1,14 +1,20 @@
 #include <catch2/catch.hpp>
+#include <filesystem>
+#include <fstream>
 
 #include "simplnx/Parameters/VectorParameter.hpp"
 
 #include "OrientationAnalysis/Filters/ComputeBoundaryStrengthsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -68,4 +74,50 @@ TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: Valid Filter Exe
   UnitTest::CompareArrays<float32>(dataStructure, faceDataPath.createChildPath("mPrimes"), faceDataPath.createChildPath(k_mPrimes));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeBoundaryStrengthsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeBoundaryStrengthsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeBoundaryStrengthsFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeBoundaryStrengthsFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ComputeBoundaryStrengthsFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      // Complex type (DoubleVec3FilterParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeBoundaryStrengthsFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF1sptsArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshF7sArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeBoundaryStrengthsFilter::k_SurfaceMeshmPrimesArrayName_Key) == "TestName");
+    }
+  }
 }

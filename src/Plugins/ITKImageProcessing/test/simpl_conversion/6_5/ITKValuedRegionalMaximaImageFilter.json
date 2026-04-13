@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Valued Regional Maxima Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Valued Regional Maxima Image",
+    "Filter_Name": "ITKValuedRegionalMaximaImage",
+    "Filter_Uuid": "{10aff542-81c5-5f09-9797-c7171c40b6a0}",
+    "FullyConnected": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

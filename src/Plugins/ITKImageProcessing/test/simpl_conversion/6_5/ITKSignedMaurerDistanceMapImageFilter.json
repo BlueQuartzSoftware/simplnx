@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Signed Maurer Distance Map Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Signed Maurer Distance Map Image",
+    "Filter_Name": "ITKSignedMaurerDistanceMapImage",
+    "Filter_Uuid": "{bb15d42a-3077-582a-be1a-76b2bae172e9}",
+    "InsideIsPositive": 1,
+    "SquaredDistance": 1,
+    "UseImageSpacing": 1,
+    "BackgroundValue": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

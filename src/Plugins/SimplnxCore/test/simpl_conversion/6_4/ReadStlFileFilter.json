@@ -1,0 +1,18 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Stl File 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read Stl File",
+    "Filter_Name": "ReadStlFile",
+    "StlFilePath": "/test/path/file.txt",
+    "SurfaceMeshDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "FaceAttributeMatrixName": "TestName",
+    "FaceNormalsArrayName": "TestName"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Feature Data CSV Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write Feature Data CSV",
+    "Filter_Name": "FeatureDataCSVWriter",
+    "Filter_Uuid": "{737b8d5a-8622-50f9-9a8a-bfdb57608891}",
+    "FeatureDataFile": "/test/path/file.txt",
+    "WriteNeighborListData": 1,
+    "WriteNumFeaturesLine": 1,
+    "DelimiterChoiceInt": 0,
+    "CellFeatureAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    }
+  }
+}

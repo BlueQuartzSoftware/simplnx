@@ -1,0 +1,34 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Stats Gen Odf Angle File Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write Stats Gen Odf Angle File",
+    "Filter_Name": "WriteStatsGenOdfAngleFile",
+    "Filter_Uuid": "{a4952f40-22dd-54ec-8c38-69c3fcd0e6f7}",
+    "OutputFile": "/test/path/file.txt",
+    "Weight": 2.5,
+    "Sigma": 5,
+    "Delimiter": 0,
+    "ConvertToDegrees": 1,
+    "UseGoodVoxels": 1,
+    "CellEulerAnglesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "GoodVoxelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

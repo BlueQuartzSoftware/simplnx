@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITKH Maxima Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITKH Maxima Image",
+    "Filter_Name": "ITKHMaximaImage",
+    "Filter_Uuid": "{932a6df4-212e-53a1-a2ab-c29bd376bb7b}",
+    "Height": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "PipelineBuilder": {
+    "Name": "Apply Transformation To Geometry 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Apply Transformation To Geometry",
+    "Filter_Name": "ApplyTransformationToGeometry",
+    "TransformationMatrixType": 0,
+    "InterpolationType": 0,
+    "UseDataArraySelection": 1,
+    "ManualTransformationMatrix": {
+      "Table Data": [
+        [
+          1.0,
+          2.0
+        ],
+        [
+          3.0,
+          4.0
+        ]
+      ]
+    },
+    "RotationAngle": 90.0,
+    "RotationAxis": {
+      "x": 1.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "Translation": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "Scale": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "ComputedTransformationMatrix": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "DataArraySelection": [
+      {
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "TestArray"
+      }
+    ]
+  }
+}

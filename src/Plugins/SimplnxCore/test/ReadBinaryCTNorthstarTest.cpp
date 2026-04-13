@@ -1,7 +1,11 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "SimplnxCore/Filters/ReadBinaryCTNorthstarFilter.hpp"
@@ -325,4 +329,46 @@ TEST_CASE("SimplnxCore::ReadBinaryCTNorthStarFilter: Invalid filter execution - 
   REQUIRE(executeResult.result.errors()[0].code == -38718);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ReadBinaryCTNorthstarFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadBinaryCTNorthstarFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadBinaryCTNorthstarFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ReadBinaryCTNorthstarFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<FileSystemPathParameter::ValueType>(ReadBinaryCTNorthstarFilter::k_InputHeaderFile_Key) == fs::path("/test/path/file.nsihdr"));
+      CHECK(args.value<DataPath>(ReadBinaryCTNorthstarFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<std::string>(ReadBinaryCTNorthstarFilter::k_CellAttributeMatrixName_Key) == "CellData");
+      CHECK(args.value<std::string>(ReadBinaryCTNorthstarFilter::k_DensityArrayName_Key) == "Density");
+      CHECK(args.value<ChoicesParameter::ValueType>(ReadBinaryCTNorthstarFilter::k_LengthUnit_Key) == 0);
+      CHECK(args.value<bool>(ReadBinaryCTNorthstarFilter::k_ImportSubvolume_Key) == true);
+    }
+  }
 }

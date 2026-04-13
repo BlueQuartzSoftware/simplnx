@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Abaqus Hexahedron 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write Abaqus Hexahedron",
+    "Filter_Name": "AbaqusHexahedronWriter",
+    "HourglassStiffness": 5,
+    "JobName": "TestName",
+    "OutputPath": "/test/path/file.txt",
+    "FilePrefix": "TestName",
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

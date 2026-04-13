@@ -1,0 +1,16 @@
+{
+  "PipelineBuilder": {
+    "Name": "Create Data Group Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create Data Container",
+    "Filter_Name": "CreateDataContainer",
+    "Filter_Uuid": "{816fbe6b-7c38-581b-b149-3f839fb65b93}",
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    }
+  }
+}

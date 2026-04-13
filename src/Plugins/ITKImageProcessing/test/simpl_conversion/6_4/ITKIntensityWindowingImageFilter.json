@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Intensity Windowing Image 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Intensity Windowing Image",
+    "Filter_Name": "ITKIntensityWindowingImage",
+    "WindowMinimum": 2.5,
+    "WindowMaximum": 2.5,
+    "OutputMinimum": 2.5,
+    "OutputMaximum": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Vtk Rectilinear Grid Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write Vtk Rectilinear Grid",
+    "Filter_Name": "VtkRectilinearGridWriter",
+    "Filter_Uuid": "{a043bd66-2681-5126-82e1-5fdc46694bf4}",
+    "OutputFile": "/test/path/file.txt",
+    "WriteBinaryFile": 1,
+    "SelectedDataArrayPaths": [
+      {
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "TestArray"
+      }
+    ]
+  }
+}

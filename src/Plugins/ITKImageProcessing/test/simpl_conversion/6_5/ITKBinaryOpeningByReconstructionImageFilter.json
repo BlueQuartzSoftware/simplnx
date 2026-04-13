@@ -1,0 +1,28 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Binary Opening By Reconstruction Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Binary Opening By Reconstruction Image",
+    "Filter_Name": "ITKBinaryOpeningByReconstructionImage",
+    "Filter_Uuid": "{bd1c2353-0a39-52c0-902b-ee64721994c7}",
+    "KernelType": 0,
+    "ForegroundValue": 2.5,
+    "BackgroundValue": 2.5,
+    "FullyConnected": 1,
+    "KernelRadius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "PipelineBuilder": {
+    "Name": "Copy Data Object Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Copy Data Object",
+    "Filter_Name": "CopyObject",
+    "Filter_Uuid": "{088ef69b-ca98-51a9-97ac-369862015d71}",
+    "ObjectToCopy": 2,
+    "DataContainerToCopy": {
+      "Data Container Name": "DataContainer"
+    },
+    "AttributeMatrixToCopy": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "AttributeArrayToCopy": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CopiedObjectName": "TestName"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "PipelineBuilder": {
+    "Name": "Add Bad Data Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Add Bad Data",
+    "Filter_Name": "AddBadData",
+    "Filter_Uuid": "{ac99b706-d1e0-5f78-9246-fbbe1efd93d2}",
+    "UseRandomSeed": 1,
+    "RandomSeedValue": "5",
+    "PoissonNoise": 1,
+    "PoissonVolFraction": 2.5,
+    "BoundaryNoise": 1,
+    "BoundaryVolFraction": 2.5,
+    "GBEuclideanDistancesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

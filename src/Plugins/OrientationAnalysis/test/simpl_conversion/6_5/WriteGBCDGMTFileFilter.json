@@ -1,0 +1,31 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write GBCD GMT File Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write GBCD GMT File",
+    "Filter_Name": "VisualizeGBCDGMT",
+    "Filter_Uuid": "{f62065b4-54e9-53b1-bed7-2178a57d3c7a}",
+    "PhaseOfInterest": 5,
+    "MisorientationRotation": {
+      "angle": 90.0,
+      "h": 1.0,
+      "k": 0.0,
+      "l": 0.0
+    },
+    "OutputFile": "/test/path/file.txt",
+    "GBCDArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

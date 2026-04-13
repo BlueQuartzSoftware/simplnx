@@ -1,0 +1,38 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Import Image Stack 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Import Image Stack",
+    "Filter_Name": "ITKImportImageStack",
+    "InputFileListInfo": {
+      "EndIndex": 10,
+      "FileExtension": ".tif",
+      "FilePrefix": "img_",
+      "FileSuffix": "",
+      "IncrementIndex": 1,
+      "InputPath": "/test/path",
+      "Ordering": 0,
+      "PaddingDigits": 3,
+      "StartIndex": 0
+    },
+    "Origin": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "Resolution": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CellAttributeMatrixName": "TestName",
+    "ImageDataArrayName": "TestName"
+  }
+}

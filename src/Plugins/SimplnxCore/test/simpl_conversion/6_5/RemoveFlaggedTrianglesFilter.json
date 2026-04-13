@@ -1,0 +1,24 @@
+{
+  "PipelineBuilder": {
+    "Name": "Remove Flagged Triangles Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Remove Flagged Triangles",
+    "Filter_Name": "RemoveFlaggedTriangles",
+    "Filter_Uuid": "{379ccc67-16dd-530a-984f-177db9351bac}",
+    "TriangleGeometry": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "FaceLabels"
+    },
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "Mask"
+    },
+    "ReducedTriangleGeometry": "ReducedTriangleGeometry"
+  }
+}

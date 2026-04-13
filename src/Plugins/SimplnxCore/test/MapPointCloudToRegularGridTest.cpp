@@ -1,12 +1,17 @@
 #include "SimplnxCore/Filters/MapPointCloudToRegularGridFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <string>
 
+namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 
@@ -194,4 +199,47 @@ TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: Invalid Filter Executi
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::MapPointCloudToRegularGridFilter: SIMPL Backwards Compatibility", "[SimplnxCore][MapPointCloudToRegularGridFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "MapPointCloudToRegularGridFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<MapPointCloudToRegularGridFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<ChoicesParameter::ValueType>(MapPointCloudToRegularGridFilter::k_SamplingGridType_Key) == 0);
+      CHECK(args.value<DataPath>(MapPointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key) == DataPath({"ImageDataContainer"}));
+      CHECK(args.value<DataPath>(MapPointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<bool>(MapPointCloudToRegularGridFilter::k_UseMask_Key) == true);
+      CHECK(args.value<DataPath>(MapPointCloudToRegularGridFilter::k_InputMaskPath_Key) == DataPath({"DataContainer", "VertexData", "Mask"}));
+      CHECK(args.value<std::string>(MapPointCloudToRegularGridFilter::k_VoxelIndicesName_Key) == "VoxelIndices");
+      CHECK(args.value<DataPath>(MapPointCloudToRegularGridFilter::k_CreatedImageGeometryPath_Key) == DataPath({"CreatedImageDataContainer"}));
+    }
+  }
 }

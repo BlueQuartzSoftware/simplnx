@@ -1,0 +1,31 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute K Means Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute K Means",
+    "Filter_Name": "KMeans",
+    "Filter_Uuid": "{b56a04de-0ca0-509d-809f-52219fca9c98}",
+    "SelectedArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureAttributeMatrixName": "TestName",
+    "InitClusters": 5,
+    "DistanceMetric": 0,
+    "UseMask": 1,
+    "UseRandomSeed": 1,
+    "RandomSeedValue": "5",
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayName": "TestName",
+    "MeansArrayName": "TestName"
+  }
+}

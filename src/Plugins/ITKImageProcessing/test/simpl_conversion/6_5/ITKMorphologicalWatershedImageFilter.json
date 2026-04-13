@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Morphological Watershed Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Morphological Watershed Image",
+    "Filter_Name": "ITKMorphologicalWatershedImage",
+    "Filter_Uuid": "{b2248340-a371-5899-90a2-86047950f0a2}",
+    "Level": 2.5,
+    "MarkWatershedLine": 1,
+    "FullyConnected": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

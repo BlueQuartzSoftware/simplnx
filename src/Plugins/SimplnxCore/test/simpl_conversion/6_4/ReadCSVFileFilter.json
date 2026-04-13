@@ -1,0 +1,39 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read CSV File 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read CSV File",
+    "Filter_Name": "ReadASCIIData",
+    "Wizard_AutomaticAM": 1,
+    "Wizard_SelectedPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "Wizard_InputFilePath": "/test/path/file.csv",
+    "Wizard_BeginIndex": 2,
+    "Wizard_NumberOfLines": 100,
+    "Wizard_DataHeaders": [
+      "Col1",
+      "Col2"
+    ],
+    "Wizard_DataTypes": [
+      "float",
+      "int"
+    ],
+    "Wizard_Delimiters": ",",
+    "Wizard_TupleDimensions": [
+      10
+    ],
+    "Wizard_HeaderLine": 1,
+    "Wizard_HeaderIsCustom": false,
+    "Wizard_HeaderUseDefaults": true,
+    "Wizard_TupleDims": [
+      10
+    ],
+    "Wizard_ConsecutiveDelimiters": 0
+  }
+}

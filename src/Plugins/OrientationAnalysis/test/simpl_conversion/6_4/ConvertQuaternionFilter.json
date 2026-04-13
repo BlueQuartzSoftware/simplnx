@@ -1,0 +1,24 @@
+{
+  "PipelineBuilder": {
+    "Name": "Convert Quaternion 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Convert Quaternion",
+    "Filter_Name": "ConvertQuaternion",
+    "QuaternionDataArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "OutputDataArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "DeleteOriginalData": 1,
+    "ConversionType": 0
+  }
+}

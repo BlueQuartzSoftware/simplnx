@@ -1,0 +1,49 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Array Statistics 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Array Statistics",
+    "Filter_Name": "FindArrayStatistics",
+    "FindLength": 1,
+    "FindMin": 1,
+    "FindMax": 1,
+    "FindMean": 1,
+    "FindMedian": 1,
+    "FindStdDeviation": 1,
+    "FindSummation": 1,
+    "UseMask": 1,
+    "ComputeByIndex": 1,
+    "StandardizeData": 1,
+    "SelectedArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "DestinationAttributeMatrix": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "LengthArrayName": "TestName",
+    "MinimumArrayName": "TestName",
+    "MaximumArrayName": "TestName",
+    "MeanArrayName": "TestName",
+    "MedianArrayName": "TestName",
+    "StdDeviationArrayName": "TestName",
+    "SummationArrayName": "TestName",
+    "StandardizedArrayName": "TestName"
+  }
+}

@@ -1,15 +1,21 @@
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
+#include <filesystem>
+#include <fstream>
 
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 
 #include "SimplnxCore/Filters/NearestPointFuseRegularGridsFilter.hpp"
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -307,4 +313,45 @@ TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: Invalid Execution", 
   REQUIRE(!executeResult.result.valid());
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::NearestPointFuseRegularGridsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][NearestPointFuseRegularGridsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "NearestPointFuseRegularGridsFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "NearestPointFuseRegularGridsFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<NearestPointFuseRegularGridsFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<DataPath>(NearestPointFuseRegularGridsFilter::k_ReferenceGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(NearestPointFuseRegularGridsFilter::k_ReferenceCellAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
+      CHECK(args.value<DataPath>(NearestPointFuseRegularGridsFilter::k_SamplingGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(NearestPointFuseRegularGridsFilter::k_SamplingCellAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
+    }
+  }
 }

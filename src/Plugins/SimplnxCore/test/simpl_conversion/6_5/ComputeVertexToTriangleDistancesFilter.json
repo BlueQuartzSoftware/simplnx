@@ -1,0 +1,34 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Vertex To Triangle Distances Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Find Vertex to Triangle Distances",
+    "Filter_Name": "FindVertexToTriangleDistances",
+    "Filter_Uuid": "{fcdde553-36b4-5731-bc88-fc499806cb4e}",
+    "VertexDataContainer": {
+      "Data Container Name": "VertexDataContainer"
+    },
+    "TriangleDataContainer": {
+      "Data Container Name": "TriangleDataContainer"
+    },
+    "TriangleNormalsArrayPath": {
+      "Data Container Name": "TriangleDataContainer",
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "Normals"
+    },
+    "DistancesArrayPath": {
+      "Data Container Name": "VertexDataContainer",
+      "Attribute Matrix Name": "VertexData",
+      "Data Array Name": "Distances"
+    },
+    "ClosestTriangleIdArrayPath": {
+      "Data Container Name": "VertexDataContainer",
+      "Attribute Matrix Name": "VertexData",
+      "Data Array Name": "ClosestTriangleId"
+    }
+  }
+}

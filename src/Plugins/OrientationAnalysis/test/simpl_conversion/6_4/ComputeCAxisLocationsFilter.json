@@ -1,0 +1,18 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute C Axis Locations 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute C Axis Locations",
+    "Filter_Name": "FindCAxisLocations",
+    "QuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CAxisLocationsArrayName": "TestName"
+  }
+}

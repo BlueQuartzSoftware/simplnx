@@ -1,0 +1,31 @@
+{
+  "PipelineBuilder": {
+    "Name": "Create Ensemble Info Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create Ensemble Info",
+    "Filter_Name": "CreateEnsembleInfo",
+    "Filter_Uuid": "{2a0bfcd3-2517-5117-b164-964dfac8fe22}",
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "Ensemble": {
+      "CrystalStructure": [
+        999
+      ],
+      "PhaseType": [
+        999
+      ],
+      "PhaseName": [
+        "Primary"
+      ]
+    },
+    "CellEnsembleAttributeMatrixName": "CellEnsembleData",
+    "CrystalStructuresArrayName": "TestName",
+    "PhaseTypesArrayName": "TestName",
+    "PhaseNamesArrayName": "TestName"
+  }
+}

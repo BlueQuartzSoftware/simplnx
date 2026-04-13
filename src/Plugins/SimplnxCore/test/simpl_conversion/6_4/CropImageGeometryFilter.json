@@ -1,0 +1,32 @@
+{
+  "PipelineBuilder": {
+    "Name": "Crop Image Geometry 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Crop Image Geometry",
+    "Filter_Name": "CropImageGeometry",
+    "XMin": 1,
+    "YMin": 1,
+    "ZMin": 1,
+    "XMax": 1,
+    "YMax": 1,
+    "ZMax": 1,
+    "SaveAsNewDataContainer": 1,
+    "NewDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "RenumberFeatures": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellFeatureAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "PipelineBuilder": {
+    "Name": "Conditional Set Value Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Conditional Set Value",
+    "Filter_Name": "ReplaceValueInArray",
+    "Filter_Uuid": "{a37f2e24-7400-5005-b9a7-b2224570cbe9}",
+    "ReplaceValue": 3.5,
+    "ConditionalArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SelectedArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

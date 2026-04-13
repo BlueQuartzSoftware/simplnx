@@ -1,0 +1,16 @@
+{
+  "PipelineBuilder": {
+    "Name": "Execute Process Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Execute Process",
+    "Filter_Name": "ExecuteProcess",
+    "Filter_Uuid": "{8a2308ec-86cd-5636-9a0a-6c7d383e9e7f}",
+    "Arguments": "TestName",
+    "Blocking": 1,
+    "Timeout": 5
+  }
+}

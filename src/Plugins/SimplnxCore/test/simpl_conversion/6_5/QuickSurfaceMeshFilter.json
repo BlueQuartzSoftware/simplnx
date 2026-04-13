@@ -1,0 +1,38 @@
+{
+  "PipelineBuilder": {
+    "Name": "Quick Surface Mesh Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Quick Surface Mesh",
+    "Filter_Name": "QuickSurfaceMesh",
+    "Filter_Uuid": "{07b49e30-3900-5c34-862a-f1fb48bad568}",
+    "FixProblemVoxels": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SelectedDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ],
+    "SurfaceDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "VertexAttributeMatrixName": "TestName",
+    "NodeTypesArrayName": "TestName",
+    "FaceAttributeMatrixName": "TestName",
+    "FaceLabelsArrayName": "TestName"
+  }
+}

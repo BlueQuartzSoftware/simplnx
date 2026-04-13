@@ -1,0 +1,17 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Volume Graphics File Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Import Volume Graphics File (.vgi)",
+    "Filter_Name": "ImportVolumeGraphicsFileFilter",
+    "Filter_Uuid": "{5fa10d81-94b4-582b-833f-8eabe659069e}",
+    "VGHeaderFile": "/test/path/file.vgi",
+    "DataContainerName": "DataContainer",
+    "CellAttributeMatrixName": "CellData",
+    "DensityArrayName": "Density"
+  }
+}

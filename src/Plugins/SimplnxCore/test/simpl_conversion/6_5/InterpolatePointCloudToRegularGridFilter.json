@@ -1,0 +1,50 @@
+{
+  "PipelineBuilder": {
+    "Name": "Interpolate Point Cloud To Regular Grid Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Interpolate Point Cloud to Regular Grid",
+    "Filter_Name": "InterpolatePointCloudToRegularGrid",
+    "Filter_Uuid": "{4b551c15-418d-5081-be3f-d3aeb62408e5}",
+    "UseMask": 1,
+    "InterpolationTechnique": 0,
+    "KernelSize": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "Sigmas": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "InterpolatedDataContainerName": {
+      "Data Container Name": "VertexDataContainer"
+    },
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "Mask"
+    },
+    "ArraysToInterpolate": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      }
+    ],
+    "ArraysToCopy": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ]
+  }
+}

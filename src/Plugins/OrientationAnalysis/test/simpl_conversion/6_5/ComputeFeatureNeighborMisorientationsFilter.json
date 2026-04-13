@@ -1,0 +1,36 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Feature Neighbor Misorientations Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Feature Neighbor Misorientations",
+    "Filter_Name": "FindMisorientations",
+    "Filter_Uuid": "{286dd493-4fea-54f4-b59e-459dd13bbe57}",
+    "FindAvgMisors": 1,
+    "NeighborListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AvgQuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "MisorientationListArrayName": "TestName",
+    "AvgMisorientationsArrayName": "TestName"
+  }
+}
