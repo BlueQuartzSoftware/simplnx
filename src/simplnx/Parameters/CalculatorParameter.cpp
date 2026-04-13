@@ -21,7 +21,7 @@ constexpr StringLiteral k_SelectedGroup = "selected_group";
 } // namespace
 
 CalculatorParameter::CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
-: MutableDataParameter(name, humanName, helpText, Category::Required)
+: ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
 {
 }
@@ -107,7 +107,7 @@ typename CalculatorParameter::ValueType CalculatorParameter::defaultString() con
   return m_DefaultValue;
 }
 
-Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const std::any& value) const
+Result<> CalculatorParameter::validate(const std::any& value) const
 {
   static constexpr StringLiteral prefix = "FilterParameter 'CalculatorParameter' JSON Error: ";
   [[maybe_unused]] const auto& structValue = GetAnyRef<ValueType>(value);
@@ -115,29 +115,12 @@ Result<> CalculatorParameter::validate(const DataStructure& dataStructure, const
   {
     return MakeErrorResult(FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}expression cannot be empty", prefix));
   }
-  if(!structValue.m_SelectedGroup.empty()) // if empty then using root group
-  {
-    const DataObject* dataObject = dataStructure.getData(structValue.m_SelectedGroup);
-    if(dataObject == nullptr)
-    {
-      return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_DuplicateValue,
-                                       fmt::format("{}Object does not exist at path '{}'", prefix, structValue.m_SelectedGroup.toString()));
-    }
-    const auto baseGroupObj = dataStructure.getDataAs<BaseGroup>(structValue.m_SelectedGroup);
-    if(baseGroupObj == nullptr)
-    {
-      return MakeErrorResult(FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is not a BaseGroup type", prefix, structValue.m_SelectedGroup.toString()));
-    }
-  }
+
+  // m_SelectedGroup is only a resolution hint for array name lookups.
+  // An empty path means "use root", and a non-existent or non-BaseGroup
+  // path is silently accepted -- the parser will handle any issues.
 
   return {};
-}
-
-Result<std::any> CalculatorParameter::resolve(DataStructure& dataStructure, const std::any& value) const
-{
-  const auto& structValue = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(structValue.m_SelectedGroup);
-  return {{object}};
 }
 
 namespace SIMPLConversion
