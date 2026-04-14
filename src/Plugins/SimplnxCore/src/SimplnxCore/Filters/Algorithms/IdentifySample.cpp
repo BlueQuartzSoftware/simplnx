@@ -33,8 +33,8 @@ struct IdentifySampleFunctor
     };
 
     int64_t neighborPoint = 0;
-    std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-    std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+    std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimsStateT>(dims);
+    std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimsStateT>();
 
     std::vector<int64> currentVList;
     std::vector<bool> checked(totalPoints, false);
@@ -44,20 +44,20 @@ struct IdentifySampleFunctor
     // In this loop over the data we are finding the biggest contiguous set of GoodVoxels and calling that the 'sample'  All GoodVoxels that do not touch the 'sample'
     // are flipped to be called 'bad' voxels or 'not sample'
     float threshold = 0.0f;
-    for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
+    for(int64 zLoopIdx = 0; zLoopIdx < dims[2]; zLoopIdx++)
     {
-      const int64 zStride = dims[0] * dims[1] * zIndex;
-      for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
+      const int64 zStride = dims[0] * dims[1] * zLoopIdx;
+      for(int64 yLoopIdx = 0; yLoopIdx < dims[1]; yLoopIdx++)
       {
-        const int64 yStride = dims[0] * yIndex;
+        const int64 yStride = dims[0] * yLoopIdx;
         throttledMessenger.sendThrottledMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
         if(shouldCancel)
         {
           return;
         }
-        for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
+        for(int64 xLoopIdx = 0; xLoopIdx < dims[0]; xLoopIdx++)
         {
-          int64 voxelIndex = zStride + yStride + xIndex;
+          int64 voxelIndex = zStride + yStride + xLoopIdx;
 
           if(!checked[voxelIndex] && goodVoxels.getValue(voxelIndex))
           {
@@ -66,7 +66,10 @@ struct IdentifySampleFunctor
             while(count < currentVList.size())
             {
               int64 index = currentVList[count];
-              std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+              int64 xIndex = index % dims[0];
+              int64 yIndex = (index / dims[0]) % dims[1];
+              int64 zIndex = index / (dims[0] * dims[1]);
+              std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
               for(const auto& faceIndex : faceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
@@ -113,23 +116,20 @@ struct IdentifySampleFunctor
     if(fillHoles)
     {
       messageHelper.sendMessage("Filling holes in sample...");
-
-      neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimsStateT>(dims);
-      faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimsStateT>();
-      for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
+      for(int64 zLoopIdx = 0; zLoopIdx < dims[2]; zLoopIdx++)
       {
-        const int64 zStride = dims[0] * dims[1] * zIndex;
-        for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
+        const int64 zStride = dims[0] * dims[1] * zLoopIdx;
+        for(int64 yLoopIdx = 0; yLoopIdx < dims[1]; yLoopIdx++)
         {
-          const int64 yStride = dims[0] * yIndex;
+          const int64 yStride = dims[0] * yLoopIdx;
           throttledMessenger.sendThrottledMessage([&] { return fmt::format("Identifying potential samples || {:.2f}% Complete", CalculatePercentComplete(zStride + yStride, totalPoints)); });
           if(shouldCancel)
           {
             return;
           }
-          for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
+          for(int64 xLoopIdx = 0; xLoopIdx < dims[0]; xLoopIdx++)
           {
-            int64 voxelIndex = zStride + yStride + xIndex;
+            int64 voxelIndex = zStride + yStride + xLoopIdx;
 
             if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
             {
@@ -139,6 +139,9 @@ struct IdentifySampleFunctor
               while(count < currentVList.size())
               {
                 int64 index = currentVList[count];
+                int64 xIndex = index % dims[0];
+                int64 yIndex = (index / dims[0]) % dims[1];
+                int64 zIndex = index / (dims[0] * dims[1]);
                 // Loop over the 6 face neighbors of the voxel
                 std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
                 for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
@@ -151,7 +154,7 @@ struct IdentifySampleFunctor
 
                   neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
 
-                  if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
+                  if(!checked.at(neighborPoint) && !goodVoxels.getValue(neighborPoint))
                   {
                     currentVList.push_back(neighborPoint);
                     checked[neighborPoint] = true;
