@@ -587,7 +587,6 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
     {
       float diff = std::fabs(static_cast<float>(oldVal - newVal));
       REQUIRE(diff < EPSILON);
-      break;
     }
   }
 }
@@ -632,7 +631,6 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
     {
       float diff = std::fabs(static_cast<float>(oldVal - newVal));
       REQUIRE(diff < epsilon);
-      break;
     }
   }
 }
