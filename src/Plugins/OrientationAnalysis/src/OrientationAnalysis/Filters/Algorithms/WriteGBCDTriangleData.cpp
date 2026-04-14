@@ -25,6 +25,33 @@ const std::atomic_bool& WriteGBCDTriangleData::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Writes GBCD triangle data (grain boundary character distribution) to an ASCII file.
+ *
+ * Each line contains the Euler angles of the two grains adjacent to a triangle,
+ * the triangle normal, and the surface area.
+ *
+ * @section ooc_strategy OOC Strategy
+ * Three triangle-level arrays (faceLabels, faceNormals, faceAreas) are potentially
+ * very large (millions of triangles). Rather than reading each element via operator[]
+ * (which triggers chunk load/evict cycles on OOC stores), we:
+ *
+ *   1. Cache the Euler angles array locally via copyIntoBuffer(). This is feature-level
+ *      data (one tuple per grain, typically thousands) and is small enough to hold entirely
+ *      in memory. Grain IDs from faceLabels can map to arbitrary features, so caching
+ *      the full array avoids random OOC lookups.
+ *
+ *   2. Process triangles in chunks of k_ChunkSize (8192). For each chunk:
+ *      a. Bulk-read the chunk of faceLabels, faceNormals, and faceAreas via copyIntoBuffer().
+ *      b. Format all lines into a fmt::memory_buffer (pure in-memory string building).
+ *      c. Write the entire buffer to disk in one outStream.write() call.
+ *
+ * This reduces OOC I/O from O(numTriangles) random accesses to O(numTriangles / k_ChunkSize)
+ * sequential bulk reads, and reduces file I/O from O(numTriangles) fprintf calls to
+ * O(numTriangles / k_ChunkSize) write calls.
+ *
+ * @return Result<> indicating success or an error if the output file cannot be opened.
+ */
 Result<> WriteGBCDTriangleData::operator()()
 {
   auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
@@ -33,7 +60,9 @@ Result<> WriteGBCDTriangleData::operator()()
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
   usize numTriangles = faceAreas.getNumberOfTuples();
 
-  // Cache eulerAngles locally — feature-level (indexed by grain ID, typically thousands)
+  // Cache eulerAngles locally -- feature-level (indexed by grain ID, typically thousands).
+  // This is small enough to hold entirely in memory and avoids random OOC lookups when
+  // grain IDs from faceLabels index into arbitrary positions.
   const usize numEulerElements = eulerAngles.getSize();
   std::vector<float32> eulerCache(numEulerElements);
   eulerAngles.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(eulerCache.data(), numEulerElements));
@@ -49,7 +78,8 @@ Result<> WriteGBCDTriangleData::operator()()
             << "# Column 7-9:    triangle normal\n"
             << "# Column 8:      surface area\n";
 
-  // Process triangles in chunks: bulk-read arrays, format into a string buffer, write once per chunk
+  // Process triangles in chunks: bulk-read arrays into local buffers, format into a
+  // string buffer, write once per chunk. This batches both OOC reads and file writes.
   constexpr usize k_ChunkSize = 8192;
   const auto& labelsStore = faceLabels.getDataStoreRef();
   const auto& normalsStore = faceNormals.getDataStoreRef();

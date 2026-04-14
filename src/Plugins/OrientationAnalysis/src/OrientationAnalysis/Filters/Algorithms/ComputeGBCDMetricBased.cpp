@@ -58,8 +58,13 @@ struct TriAreaAndNormals
 };
 
 /**
- * @brief The TrianglesSelector class implements a threaded algorithm that determines which triangles to
- * include in the GBCD calculation
+ * @brief Parallel worker that selects triangles matching the specified
+ * misorientation for the metric-based GBCD calculation. Receives raw pointers
+ * to locally cached feature-level Euler angles and phases (pre-read via
+ * copyIntoBuffer), plus the resolved crystal structure for the phase of
+ * interest. This eliminates OOC virtual dispatch during the parallel loop.
+ * Triangle-level arrays (faceLabels, faceNormals, faceAreas) are still
+ * accessed through DataArray references because they are read sequentially.
  */
 class TrianglesSelector
 {
@@ -342,6 +347,19 @@ const std::atomic_bool& ComputeGBCDMetricBased::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes the Grain Boundary Character Distribution using a metric-based
+ * approach. Triangles matching a specified misorientation (within tolerance) are
+ * selected, then the distribution is evaluated at sampling points on the unit
+ * hemisphere using a kernel density estimator.
+ *
+ * OOC strategy: Feature-level arrays (Euler angles, phases) and ensemble-level
+ * arrays (crystal structures) are bulk-read into local vectors at startup. The
+ * TrianglesSelector parallel worker receives raw pointers to these caches,
+ * eliminating OOC virtual dispatch. Triangle-level arrays (face labels, areas)
+ * are chunk-read per iteration for the totalFaceArea accumulation. Feature-face
+ * labels are also cached locally for the distinct boundary count loop.
+ */
 Result<> ComputeGBCDMetricBased::operator()()
 {
   // -------------------- check if directories are ok and if output files can be opened -----------
@@ -395,7 +413,9 @@ Result<> ComputeGBCDMetricBased::operator()()
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   const IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
 
-  // Cache feature-level arrays locally to eliminate per-element OOC overhead
+  // Bulk-read feature-level arrays (Euler angles, phases) into local vectors.
+  // The parallel TrianglesSelector accesses these randomly by feature ID from
+  // triangle face labels — leaving them in OOC DataStores would cause thrashing.
   const usize numEulerElements = eulerAngles.getSize();
   std::vector<float32> eulerCache(numEulerElements);
   eulerAngles.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(eulerCache.data(), numEulerElements));
@@ -404,12 +424,13 @@ Result<> ComputeGBCDMetricBased::operator()()
   std::vector<int32> phasesCache(numPhaseElements);
   phases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(phasesCache.data(), numPhaseElements));
 
-  // Cache ensemble-level arrays (tiny)
+  // Bulk-read ensemble-level crystal structures (tiny, typically < 10 entries)
   const usize numCrystalStructures = crystalStructures.getSize();
   std::vector<uint32> crystalStructuresCache(numCrystalStructures);
   crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), numCrystalStructures));
 
-  // Cache feature-face labels (feature-level)
+  // Bulk-read feature-face labels for the distinct boundary count loop below.
+  // This is O(feature_faces) which is much smaller than O(mesh_triangles).
   const usize numFeatureFaceElements = featureFaceLabels.getSize();
   std::vector<int32> featureFaceLabelsCache(numFeatureFaceElements);
   featureFaceLabels.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(featureFaceLabelsCache.data(), numFeatureFaceElements));
@@ -491,8 +512,10 @@ Result<> ComputeGBCDMetricBased::operator()()
     triChunkSize = numMeshTriangles;
   }
 
-  // Accumulate totalFaceArea per-chunk by re-checking the geometric filter
-  // conditions instead of storing an O(n) triIncluded mask.
+  // Accumulate totalFaceArea by re-checking geometric filter conditions per
+  // chunk, rather than storing an O(n) triIncluded mask. This trades a small
+  // amount of redundant computation for eliminating a large boolean array
+  // that would also need OOC-safe access patterns.
   float64 totalFaceArea = 0.0;
 
   for(usize i = 0; i < numMeshTriangles; i += triChunkSize)
@@ -515,7 +538,8 @@ Result<> ComputeGBCDMetricBased::operator()()
     dataAlg.execute(GBCDMetricBased::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, misResolution, m_InputValues->PhaseOfInterest, gFixedT,
                                                        crystalStructuresCache[m_InputValues->PhaseOfInterest], eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
 
-    // Chunk-read triangle arrays for totalFaceArea accumulation
+    // Bulk-read this chunk's face labels and areas for totalFaceArea accumulation.
+    // Re-applies the same geometric filter conditions that TrianglesSelector uses.
     {
       std::vector<int32> labelsBuf(currentChunkSize * 2);
       std::vector<float64> areasBuf(currentChunkSize);

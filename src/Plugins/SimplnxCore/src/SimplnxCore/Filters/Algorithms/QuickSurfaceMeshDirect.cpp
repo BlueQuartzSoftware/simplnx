@@ -1,3 +1,30 @@
+/**
+ * @file QuickSurfaceMeshDirect.cpp
+ * @brief In-core implementation of the QuickSurfaceMesh algorithm.
+ *
+ * This file contains the original QuickSurfaceMesh algorithm that uses direct
+ * operator[] access on DataStore references. It serves as the reference
+ * implementation for correctness. The algorithm generates a triangle surface
+ * mesh from a grid geometry by examining every voxel face: boundary faces
+ * (at volume edges) and interior faces where the FeatureId changes produce
+ * two triangles each.
+ *
+ * The algorithm proceeds in three major phases:
+ *   Phase 1 (correctProblemVoxels): Fix diagonal-conflict voxel configurations
+ *   Phase 2 (determineActiveNodes): Count nodes and triangles in one pass
+ *   Phase 3 (createNodesAndTriangles): Write mesh data in a second pass
+ *
+ * For each voxel at grid position (i,j,k), the algorithm checks three neighbors:
+ *   - neigh1 = (i+1, j, k) -- the +X neighbor
+ *   - neigh2 = (i, j+1, k) -- the +Y neighbor
+ *   - neigh3 = (i, j, k+1) -- the +Z neighbor
+ *
+ * If the FeatureIds differ across a face, or if the face is on the volume
+ * boundary, two triangles are generated for that face. The four vertices of
+ * the face are the corners of the dual grid (offset by +0.5 in each dimension
+ * from the cell centers).
+ */
+
 #include "QuickSurfaceMeshDirect.hpp"
 
 #include "QuickSurfaceMesh.hpp"
@@ -19,6 +46,8 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 namespace
 {
+// RNG constants for problem-voxel correction. The fixed seed ensures reproducible
+// results across runs -- the same diagonal conflicts are resolved the same way.
 constexpr float64 k_RangeMin = 0.0;
 constexpr float64 k_RangeMax = 1.0;
 constexpr std::mt19937_64::result_type k_Seed = 3412341234123412;
@@ -26,6 +55,11 @@ std::mt19937_64 generator(k_Seed);
 std::uniform_real_distribution<> distribution(k_RangeMin, k_RangeMax);
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Writes the world-space coordinates for a dual-grid vertex into the
+ * vertex coordinate array. The dual-grid vertex at integer (x,y,z) corresponds
+ * to the corner shared by up to 8 voxels in the primal grid.
+ */
 void GetGridCoordinates(const IGridGeometry* grid, usize x, usize y, usize z, QuickSurfaceMeshDirect::VertexStore& verts, IGeometry::MeshIndexType nodeIndex)
 {
   nx::core::Point3D<float64> tmpCoords = grid->getPlaneCoords(x, y, z);
@@ -35,6 +69,12 @@ void GetGridCoordinates(const IGridGeometry* grid, usize x, usize y, usize z, Qu
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Resolves a Case 1 diagonal conflict: two voxels (v1 and v6) share
+ * a body diagonal but none of the 6 face-adjacent voxels match either.
+ * Randomly reassigns one of the two offending voxels to a face neighbor's value.
+ * The four outcomes have equal 25% probability each.
+ */
 void FlipProblemVoxelCase1(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3,
                            QuickSurfaceMeshDirect::MeshIndexType v4, QuickSurfaceMeshDirect::MeshIndexType v5, QuickSurfaceMeshDirect::MeshIndexType v6)
 {
@@ -59,6 +99,12 @@ void FlipProblemVoxelCase1(Int32AbstractDataStore& featureIds, QuickSurfaceMeshD
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Resolves a Case 2 edge-diagonal conflict: two voxels (v1 and v4)
+ * share an edge diagonal but neither of the two face-adjacent voxels on that
+ * edge match. Randomly reassigns one of the four voxels to break the diagonal
+ * with 8 equally-weighted outcomes (12.5% each).
+ */
 void FlipProblemVoxelCase2(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3,
                            QuickSurfaceMeshDirect::MeshIndexType v4)
 {
@@ -99,6 +145,11 @@ void FlipProblemVoxelCase2(Int32AbstractDataStore& featureIds, QuickSurfaceMeshD
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Resolves a Case 3 isolated-voxel conflict: one voxel (v1) is the only
+ * one that differs from all 7 other voxels in the 2x2x2 block.
+ * Randomly reassigns v2 or v3 to match v1 with 50/50 probability.
+ */
 void FlipProblemVoxelCase3(Int32AbstractDataStore& featureIds, QuickSurfaceMeshDirect::MeshIndexType v1, QuickSurfaceMeshDirect::MeshIndexType v2, QuickSurfaceMeshDirect::MeshIndexType v3)
 {
   auto val = static_cast<float32>(distribution(generator));
@@ -129,6 +180,14 @@ QuickSurfaceMeshDirect::QuickSurfaceMeshDirect(DataStructure& dataStructure, con
 QuickSurfaceMeshDirect::~QuickSurfaceMeshDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Executes the full in-core meshing pipeline.
+ *
+ * The algorithm allocates a nodeIds array of size (xP+1)*(yP+1)*(zP+1) --
+ * one entry per possible dual-grid vertex. This maps grid-corner linear
+ * indices to sequential vertex IDs. The array starts filled with max values
+ * to indicate "not yet assigned."
+ */
 Result<> QuickSurfaceMeshDirect::operator()()
 {
   auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
@@ -140,6 +199,9 @@ Result<> QuickSurfaceMeshDirect::operator()()
   usize yP = udims[1];
   usize zP = udims[2];
 
+  // The dual grid has (xP+1)*(yP+1)*(zP+1) possible vertices. Each entry is
+  // initialized to max to indicate "unused." Active entries get assigned
+  // sequential vertex IDs during the counting pass.
   usize possibleNumNodes = (xP + 1) * (yP + 1) * (zP + 1);
   std::vector<MeshIndexType> nodeIds(possibleNumNodes, std::numeric_limits<usize>::max());
 
@@ -205,6 +267,23 @@ Result<> QuickSurfaceMeshDirect::operator()()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Iteratively fixes problem voxels that would produce non-manifold geometry.
+ *
+ * A "problem voxel" configuration occurs when two voxels in a 2x2x2 block share
+ * a body diagonal or edge diagonal without any face-adjacent voxel sharing the
+ * same FeatureId. This creates degenerate zero-area triangles in the mesh. The
+ * fix randomly reassigns one of the conflicting voxels to break the diagonal.
+ *
+ * The iteration continues until no more problem voxels are found or 20 iterations
+ * are reached. Each iteration scans all 2x2x2 blocks in the volume. The 8 voxels
+ * in each block are labeled v1-v8 with v1-v4 in plane (k-1) and v5-v8 in plane k:
+ *
+ *     v1 = (i-1, j-1, k-1)   v5 = (i-1, j-1, k)
+ *     v2 = (i,   j-1, k-1)   v6 = (i,   j-1, k)
+ *     v3 = (i-1, j,   k-1)   v7 = (i-1, j,   k)
+ *     v4 = (i,   j,   k-1)   v8 = (i,   j,   k)
+ */
 void QuickSurfaceMeshDirect::correctProblemVoxels()
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Correcting Problem Voxels");
@@ -218,12 +297,15 @@ void QuickSurfaceMeshDirect::correctProblemVoxels()
   MeshIndexType yP = udims[1];
   MeshIndexType zP = udims[2];
 
+  // Linear indices into the FeatureIds array for the 8 voxels of a 2x2x2 block
   MeshIndexType v1 = 0, v2 = 0, v3 = 0, v4 = 0;
   MeshIndexType v5 = 0, v6 = 0, v7 = 0, v8 = 0;
 
+  // FeatureId values for the 8 voxels
   int32 f1 = 0, f2 = 0, f3 = 0, f4 = 0;
   int32 f5 = 0, f6 = 0, f7 = 0, f8 = 0;
 
+  // Row and plane offsets for computing linear indices
   MeshIndexType row1 = 0, row2 = 0;
   MeshIndexType plane1 = 0, plane2 = 0;
 
@@ -376,6 +458,23 @@ void QuickSurfaceMeshDirect::correctProblemVoxels()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief First pass: counts unique mesh vertices (nodes) and triangles.
+ *
+ * For each voxel, the algorithm checks six face conditions:
+ *   - i==0, i==xP-1: left/right volume boundary faces
+ *   - j==0, j==yP-1: front/back volume boundary faces
+ *   - k==0, k==zP-1: bottom/top volume boundary faces
+ *   - FeatureId differs from +X, +Y, or +Z neighbor: interior feature boundary
+ *
+ * Each face that produces triangles has 4 dual-grid nodes (corners of the
+ * face rectangle). The nodeIds array maps each possible dual-grid node
+ * (indexed by its (xP+1)*(yP+1)*(zP+1) linear position) to a sequential
+ * vertex ID. Unvisited entries contain max (sentinel value).
+ *
+ * Two triangles are generated per boundary face, so triangleCount is
+ * incremented by 2 for each detected face.
+ */
 void QuickSurfaceMeshDirect::determineActiveNodes(std::vector<MeshIndexType>& nodeIds, MeshIndexType& nodeCount, MeshIndexType& triangleCount)
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Determining active Nodes");
@@ -389,8 +488,10 @@ void QuickSurfaceMeshDirect::determineActiveNodes(std::vector<MeshIndexType>& no
   MeshIndexType yP = udims[1];
   MeshIndexType zP = udims[2];
 
+  // Linear indices: point = current voxel, neigh1/2/3 = +X, +Y, +Z neighbors
   MeshIndexType point = 0, neigh1 = 0, neigh2 = 0, neigh3 = 0;
 
+  // The 4 dual-grid node indices for the face being examined
   MeshIndexType nodeId1 = 0, nodeId2 = 0, nodeId3 = 0, nodeId4 = 0;
 
   for(MeshIndexType k = 0; k < zP; k++)
@@ -675,6 +776,22 @@ void QuickSurfaceMeshDirect::determineActiveNodes(std::vector<MeshIndexType>& no
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Second pass: writes vertex coordinates, triangle connectivity,
+ * face labels, node types, and transferred cell/feature data.
+ *
+ * This pass mirrors the structure of determineActiveNodes but additionally:
+ *   - Writes vertex world-space coordinates via GetGridCoordinates()
+ *   - Writes triangle connectivity (3 vertex IDs per triangle)
+ *   - Writes face labels (2-component: [lowerFeatureId, higherFeatureId])
+ *     with -1 for boundary faces
+ *   - Tracks which features "own" each vertex in ownerLists for node type
+ *     classification (2=interior, 3=triple line, 4=quad point, +10=boundary)
+ *   - Runs TupleTransfer functions to copy cell/feature data to face arrays
+ *
+ * Face label ordering: the smaller FeatureId is always placed in component[0].
+ * When one side is the volume exterior, FaceLabel[0] = -1.
+ */
 void QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexType>& m_NodeIds, MeshIndexType nodeCount, MeshIndexType triangleCount)
 {
   if(m_ShouldCancel)
@@ -685,6 +802,7 @@ void QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexType>&
 
   auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
+  // Scan all voxels to find the maximum FeatureId (needed for feature array sizing)
   usize numFeatures = 0;
   usize numTuples = featureIds.getNumberOfTuples();
   for(usize i = 0; i < numTuples; i++)

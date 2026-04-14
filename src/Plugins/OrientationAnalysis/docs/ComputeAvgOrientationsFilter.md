@@ -68,6 +68,26 @@ These values may be exposed as user-configurable parameters in a future release.
 - **Features with zero elements:** Features with no elements (phase <= 0 for all voxels) will have their output arrays initialized to NaN (for vMF/Watson) or identity quaternion / zero Euler angles (for Rodrigues).
 - **Phase indexing:** The filter requires that phase values be > 0 for elements to be included in the averaging. Phase index 0 is reserved for "Unknown" in the Crystal Structures array and is always skipped.
 
+## Algorithm
+
+This filter supports three independent averaging methods that can be enabled in any combination. Each method accumulates per-element quaternion data grouped by feature ID, then produces feature-level outputs.
+
+### In-Core Path
+
+**Rodrigues Average:** Iterates over all elements once, accumulating quaternion sums into a feature-level buffer. For each element, the voxel quaternion is rotated to the nearest symmetry-equivalent orientation of the running average to handle the periodicity of orientation space. After accumulation, each feature's summed quaternion is normalized, forced into the positive hemisphere, and converted to Euler angles.
+
+**Von Mises-Fisher / Watson Average:** A preliminary pass counts elements per feature and maps feature IDs to phases. Then a `ParallelDataAlgorithm` processes features in parallel. For each feature, all element quaternions are collected, reduced to the fundamental zone, and passed to the EbsdLib `DirectionalStats` EM algorithm to estimate the mean orientation (mu) and concentration parameter (kappa).
+
+### Out-of-Core Path
+
+The Rodrigues average reads cell-level arrays (feature IDs, phases, quaternions) in sequential 64K-tuple chunks via `copyIntoBuffer`, accumulating into local `std::vector` buffers that hold only the feature-level data. Crystal structures are cached locally from the tiny ensemble-level array. Final results are bulk-written to the DataStore via `copyFromBuffer`, eliminating random-access overhead on potentially disk-backed stores.
+
+The vMF/Watson path similarly reads cell-level data through the AbstractDataStore API and caches crystal structures locally.
+
+### Performance
+
+The chunked Rodrigues path avoids per-element virtual dispatch on the DataStore, which is critical when cell-level data exceeds available RAM and falls back to HDF5-chunked storage. The feature-level buffers remain in-memory because feature counts are orders of magnitude smaller than cell counts. The vMF/Watson path benefits from parallel feature processing since each feature's EM computation is independent.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

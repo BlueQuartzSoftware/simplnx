@@ -13,8 +13,50 @@
 
 using namespace nx::core;
 
+// =============================================================================
+// ComputeKMedoidsScanline — Out-of-Core (OOC) Algorithm
+//
+// This file implements the out-of-core (Scanline) variant of ComputeKMedoids.
+// It is selected by DispatchAlgorithm when any input array uses chunked on-disk
+// storage (e.g., ZarrStore / HDF5 chunked store).
+//
+// PROBLEM:
+//   K-Medoids requires repeated passes over the input data:
+//     - findClusters:     reads all N tuples to compute distances to k medoids
+//     - optimizeClusters: reads cluster members pairwise to find optimal medoids
+//   With OOC storage, each operator[] access may load an entire chunk from disk,
+//   use one value, then evict it. Over millions of tuples and multiple iterations,
+//   this chunk thrashing makes the algorithm catastrophically slow.
+//
+// SOLUTION — CHUNKED BULK I/O:
+//   Instead of per-element random access, read data in sequential 64K-tuple chunks
+//   using copyIntoBuffer(). This aligns with OOC chunk boundaries and amortizes
+//   the cost of disk I/O across thousands of elements per read.
+//
+// KEY OOC OPTIMIZATIONS:
+//   1. Medoid cache: The medoids array is tiny (k * numComponents), so it is cached
+//      entirely in a local std::vector before each findClusters pass.
+//   2. Chunked assignment: Input data and featureIds are read/written in aligned
+//      64K-tuple chunks. All distance computations for each chunk are done in
+//      memory before writing the updated featureIds back.
+//   3. Per-cluster member scanning: optimizeClusters scans featureIds in chunks
+//      to build a member index list for one cluster at a time, keeping peak
+//      memory at O(max_cluster_size) instead of O(n).
+//   4. Per-tuple reads for pairwise distances: Each candidate medoid and comparison
+//      member is read via single-tuple copyIntoBuffer() calls. While this is still
+//      O(n_i^2) reads per cluster, each read is a known-location bulk I/O call
+//      rather than a virtual operator[] dispatch, and the grid of reads is bounded
+//      by cluster size rather than total array size.
+// =============================================================================
+
 namespace
 {
+/**
+ * @brief Type-specialized template that performs the actual K-Medoids computation
+ * for the out-of-core (Scanline) path using chunked bulk I/O.
+ *
+ * @tparam T The element type of the clustering array (e.g., float32, int32)
+ */
 template <typename T>
 class KMedoidsTemplate
 {
@@ -37,6 +79,13 @@ public:
   void operator=(const KMedoidsTemplate&) = delete;   // Move assignment Not Implemented
 
   // -----------------------------------------------------------------------------
+  /**
+   * @brief Main K-Medoids loop: initialize medoids via bulk I/O, then iterate
+   * findClusters + optimizeClusters until convergence.
+   *
+   * Medoid initialization uses copyIntoBuffer()/copyFromBuffer() per-tuple instead
+   * of operator[] to avoid OOC random access during setup.
+   */
   void operator()()
   {
     usize numTuples = m_InputArray.getNumberOfTuples();
@@ -58,7 +107,10 @@ public:
       }
     }
 
-    // OOC: use bulk I/O to initialize medoids
+    // OOC: use bulk I/O to initialize medoids. Each medoid is a single tuple
+    // read from a random position in the input array. Using copyIntoBuffer()
+    // instead of operator[] ensures we go through the bulk I/O path, which
+    // reads a known-size chunk from disk rather than triggering virtual dispatch.
     auto tupleBuf = std::make_unique<T[]>(numCompDims);
     for(usize i = 0; i < m_NumClusters; i++)
     {
@@ -109,10 +161,22 @@ private:
   std::mt19937_64::result_type m_Seed;
 
   // -----------------------------------------------------------------------------
-  // OOC: cache medoids locally, process input and featureIds in chunks
+  /**
+   * @brief OOC-optimized cluster assignment: cache medoids locally, then process
+   * the input array and featureIds in aligned 64K-tuple chunks.
+   *
+   * Why cache medoids: The medoids array is tiny (k * dims elements), so caching
+   * it in a local vector eliminates k * n per-element OOC reads per iteration.
+   * The input data and featureIds are then read/written in sequential chunks,
+   * converting O(n) random accesses into O(n / chunkSize) bulk I/O calls.
+   *
+   * @param tuples Total number of tuples in the input array
+   * @param dims Number of components per tuple
+   */
   void findClusters(usize tuples, int32 dims)
   {
-    // Cache medoids (small: numClusters * dims)
+    // Cache the entire medoids array in memory. This is small (typically k < 100
+    // and dims < 10, so < 1 KB) and avoids repeated OOC reads during the inner loop.
     const usize medoidsSize = (m_NumClusters + 1) * dims;
     std::vector<T> medoidsCache(medoidsSize);
     m_Medoids.copyIntoBuffer(0, nonstd::span<T>(medoidsCache.data(), medoidsSize));
@@ -155,8 +219,24 @@ private:
   }
 
   // -----------------------------------------------------------------------------
-  // OOC: process one cluster at a time to avoid O(n) total member list allocation.
-  // Peak memory is O(max_cluster_size), not O(n).
+  /**
+   * @brief OOC-optimized medoid optimization: process one cluster at a time.
+   *
+   * Instead of building a global member list for all clusters (O(n) memory), this
+   * processes clusters sequentially. For each cluster:
+   *   1. Scan featureIds in 64K-tuple chunks to collect member indices
+   *   2. For each candidate medoid j in the cluster, compute total distance to
+   *      all other members k using per-tuple copyIntoBuffer() reads
+   *   3. The member with the lowest total cost becomes the new medoid
+   *   4. Release the member list before processing the next cluster
+   *
+   * Peak memory is O(max_cluster_size) per cluster, not O(n) for all clusters.
+   *
+   * @param tuples Total number of tuples in the input array
+   * @param dims Number of components per tuple
+   * @param clusterIdxs In/out: current medoid indices, updated with new optimal medoids
+   * @return Per-cluster minimum cost vector
+   */
   std::vector<float64> optimizeClusters(usize tuples, int32 dims, std::vector<usize>& clusterIdxs)
   {
     std::vector<float64> minCosts(m_NumClusters, std::numeric_limits<float64>::max());

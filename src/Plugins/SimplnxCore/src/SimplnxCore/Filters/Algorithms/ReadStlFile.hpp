@@ -15,8 +15,12 @@ namespace fs = std::filesystem;
 namespace nx::core
 {
 /**
- * @class ConditionalSetValueFilter
-
+ * @class ReadStlFile
+ * @brief Reads a binary STL mesh file into a TriangleGeom, creating vertices, faces, and face normals.
+ *
+ * Handles vendor-specific STL quirks (Magics color encoding, VxElements metadata) by
+ * detecting them from the header and adjusting the parse behavior accordingly.
+ * After reading, calls GeometryUtilities::EliminateDuplicateNodes to merge shared vertices.
  */
 class SIMPLNXCORE_EXPORT ReadStlFile
 {

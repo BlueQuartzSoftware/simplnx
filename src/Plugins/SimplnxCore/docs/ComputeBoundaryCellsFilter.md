@@ -17,6 +17,35 @@ This **Filter** determines, for each **Cell**, the number of neighboring **Cells
 |--|--|
 | ![Feature Ids](Images/ComputeBoundaryCellsInput.png) | ![Boundary Cells](Images/ComputeBoundaryCellsOutput.png) |
 
+## Algorithm
+
+For each voxel in the image geometry, the filter counts how many of its 6 face-connected neighbors (front, back, left, right, up, down) belong to a different feature. The result is an Int8 array where each cell stores a value from 0 (all neighbors are the same feature) to 6 (all neighbors differ).
+
+Two optional behaviors modify the counting:
+
++ **Include Volume Boundary**: When enabled, cells on the outer faces of the image geometry receive additional boundary counts for each face that touches the volume edge. Feature 0 cells on the boundary are excluded from this count.
++ **Ignore Feature Zero**: When enabled, neighbors with Feature ID = 0 are not counted as boundary faces. This is useful when Feature 0 represents background/empty space that should not be treated as a distinct feature.
+
+### In-Core Algorithm (Direct)
+
+The in-core variant iterates all voxels sequentially in Z-Y-X order. For each voxel, it uses pre-computed flat-index offsets to look up the 6 face neighbors directly via operator[] on the FeatureIds DataStore. This is a straightforward approach that works well when all data is resident in memory.
+
+### Out-of-Core Algorithm (Scanline)
+
+When the FeatureIds array is stored out-of-core in chunked format (e.g., loaded from a .dream3d file in OOC mode), the in-core algorithm's random neighbor lookups would trigger chunk load/evict cycles for every voxel, making it extremely slow. The Scanline variant avoids this by reading one complete Z-slice at a time using sequential bulk I/O.
+
+Three in-memory buffers hold adjacent Z-slices simultaneously:
+
++ **prevSlice**: The Z-slice at z-1, needed for -Z neighbor lookups
++ **curSlice**: The Z-slice at z (the slice being processed)
++ **nextSlice**: The Z-slice at z+1, needed for +Z neighbor lookups
+
+Within a Z-slice, X and Y neighbor lookups are simple index arithmetic on the curSlice buffer. After processing a slice, the output is written in a single bulk operation, the window rotates forward, and the next Z-slice is loaded. This guarantees strictly sequential disk I/O.
+
+### Performance
+
+The in-core and out-of-core variants produce identical results. The algorithm dispatch is automatic: in-memory data uses the Direct path, and chunked/OOC data uses the Scanline path. The Scanline variant adds minimal memory overhead (3 Z-slices of int32 plus 1 Z-slice of int8), which is negligible compared to the full volume.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

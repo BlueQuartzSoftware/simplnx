@@ -8,6 +8,19 @@
 
 using namespace nx::core;
 
+// =============================================================================
+// MultiThresholdObjects — Dispatcher
+//
+// This file contains only the dispatch logic. The actual algorithm implementations
+// live in MultiThresholdObjectsDirect.cpp (in-core) and
+// MultiThresholdObjectsScanline.cpp (out-of-core).
+//
+// The dispatch checks the first required input array's storage type: if it uses
+// chunked on-disk storage (OOC), the Scanline variant is selected. Since all
+// input arrays in a threshold set come from the same Attribute Matrix, if one is
+// OOC then all are OOC, so checking the first is sufficient.
+// =============================================================================
+
 // -----------------------------------------------------------------------------
 MultiThresholdObjects::MultiThresholdObjects(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                              MultiThresholdObjectsInputValues* inputValues)
@@ -22,10 +35,21 @@ MultiThresholdObjects::MultiThresholdObjects(DataStructure& dataStructure, const
 MultiThresholdObjects::~MultiThresholdObjects() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Dispatches to the appropriate algorithm variant based on storage type.
+ *
+ * Checks the first input array referenced by the threshold configuration to determine
+ * if OOC storage is in use. All threshold input arrays come from the same Attribute
+ * Matrix, so if one is OOC, all are OOC.
+ *
+ * Both variants receive identical constructor arguments and produce identical output.
+ */
 Result<> MultiThresholdObjects::operator()()
 {
   auto thresholdsObject = m_InputValues->ArrayThresholdsObject;
   const auto& requiredPaths = thresholdsObject.getRequiredPaths();
+  // Check the first input array — since all arrays in a threshold set share the
+  // same Attribute Matrix, they all use the same storage type.
   const IDataArray* checkArray = nullptr;
   if(!requiredPaths.empty())
   {

@@ -367,6 +367,18 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes the average quaternion orientation for each feature using
+ * iterative Rodrigues averaging. For each cell, the voxel quaternion is rotated
+ * to the nearest equivalent of the running average, then accumulated. After all
+ * cells are processed, the accumulated quaternions are normalized, forced into
+ * the positive hemisphere, and converted to Euler angles.
+ *
+ * OOC strategy: Cell-level arrays (featureIds, phases, quats) are read in
+ * sequential 64K-tuple chunks via copyIntoBuffer to avoid random OOC page
+ * faults. Feature-level accumulation uses local std::vector buffers (small
+ * enough to fit in RAM). Final results are bulk-written back via copyFromBuffer.
+ */
 Result<> ComputeAvgOrientations::computeRodriguesAverage()
 {
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
@@ -385,22 +397,27 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
   const usize totalFeatures = avgQuatsStore.getNumberOfTuples();
   std::vector<float32> counts(totalFeatures, 0.0f);
 
-  // Cache crystal structures locally (ensemble-level, tiny)
+  // Bulk-read crystal structures into a local vector (ensemble-level, typically < 10 entries).
+  // This avoids repeated virtual dispatch into the OOC DataStore during the hot cell loop.
   const usize numPhases = crystalStructuresArray.getNumberOfTuples();
   std::vector<uint32> crystalStructures(numPhases);
   crystalStructuresArray.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), numPhases));
 
-  // Local cache for avgQuats (feature-level, manageable)
+  // Feature-level quaternion accumulator — kept entirely in RAM. Random access
+  // by featureId would thrash OOC chunks if stored in a DataStore directly.
   std::vector<float32> localAvgQuats(totalFeatures * 4, 0.0f);
 
   // Get the Identity Quaternion
   static const ebsdlib::QuatF identityQuat(0.0f, 0.0f, 0.0f, 1.0f);
 
-  // Chunked accumulation of cell-level data
+  // Obtain DataStore references for bulk I/O. The stores may be backed by
+  // HDF5 chunked storage, so element-wise operator[] would trigger expensive
+  // page faults. All cell-level reads go through copyIntoBuffer instead.
   const auto& featureIdsStore = featureIds.getDataStoreRef();
   const auto& phasesStore = phases.getDataStoreRef();
   const auto& quatsStore = quats.getDataStoreRef();
 
+  // Pre-allocate chunk buffers (reused across iterations to avoid allocation churn)
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
   auto phasesBuf = std::make_unique<int32[]>(k_ChunkTuples);
   auto quatsBuf = std::make_unique<float32[]>(k_ChunkTuples * 4);
@@ -413,6 +430,8 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     }
 
     const usize count = std::min(k_ChunkTuples, totalPoints - offset);
+    // Sequential bulk reads — each call fetches one contiguous chunk from the
+    // underlying DataStore (a single HDF5 read or memcpy for in-core stores).
     featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(featureIdBuf.get(), count));
     phasesStore.copyIntoBuffer(offset, nonstd::span<int32>(phasesBuf.get(), count));
     quatsStore.copyIntoBuffer(offset * 4, nonstd::span<float32>(quatsBuf.get(), count * 4));
@@ -421,27 +440,33 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     {
       const int32 currentFeatureId = featureIdBuf[i];
       const int32 currentPhase = phasesBuf[i];
+      // Phase index must be > 0 (index 0 is reserved for "unknown" in CrystalStructures).
       if(currentPhase > 0)
       {
-        const uint32 xtal = crystalStructures[currentPhase];
+        const uint32 xtal = crystalStructures[currentPhase]; // Laue class from local cache
         counts[currentFeatureId] += 1.0f;
 
+        // Read the voxel quaternion from the chunk buffer (not from DataStore)
         const usize qi = i * 4;
         ebsdlib::QuatF voxQuat(quatsBuf[qi], quatsBuf[qi + 1], quatsBuf[qi + 2], quatsBuf[qi + 3]);
 
+        // Read the running average from the local accumulator (random access by featureId)
         const usize fi = static_cast<usize>(currentFeatureId) * 4;
         ebsdlib::QuatF curAvgQuat(localAvgQuats[fi], localAvgQuats[fi + 1], localAvgQuats[fi + 2], localAvgQuats[fi + 3]);
         ebsdlib::QuatF finalAvgQuat = curAvgQuat;
 
         curAvgQuat = curAvgQuat.scalarDivide(counts[currentFeatureId]);
 
+        // First voxel: seed with identity so getNearestQuat has a valid reference
         if(counts[currentFeatureId] == 1.0f)
         {
           curAvgQuat = ebsdlib::QuatF::identity();
         }
+        // Rotate voxQuat to the symmetrically equivalent orientation nearest the running average
         voxQuat = orientationOps[xtal]->getNearestQuat(curAvgQuat, voxQuat);
         curAvgQuat = finalAvgQuat + voxQuat;
 
+        // Write back into local accumulator (not into DataStore — avoids OOC writes)
         localAvgQuats[fi] = curAvgQuat.x();
         localAvgQuats[fi + 1] = curAvgQuat.y();
         localAvgQuats[fi + 2] = curAvgQuat.z();
@@ -450,7 +475,8 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     }
   }
 
-  // Second pass: normalize and convert to Euler angles (feature-level only)
+  // Second pass: normalize accumulated quaternions and convert to Euler angles.
+  // This is feature-level only (O(features)), so no chunking needed.
   std::vector<float32> localAvgEuler(totalFeatures * 3, 0.0f);
 
   for(usize featureId = 0; featureId < totalFeatures; featureId++)
@@ -485,7 +511,8 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     localAvgEuler[ei + 2] = eu[2];
   }
 
-  // Write feature-level results back to DataStore
+  // Bulk-write feature-level results back to DataStore in a single operation.
+  // This is the only write to these stores — all accumulation was done in RAM.
   avgQuatsStore.copyFromBuffer(0, nonstd::span<const float32>(localAvgQuats.data(), localAvgQuats.size()));
   avgEulerStore.copyFromBuffer(0, nonstd::span<const float32>(localAvgEuler.data(), localAvgEuler.size()));
 

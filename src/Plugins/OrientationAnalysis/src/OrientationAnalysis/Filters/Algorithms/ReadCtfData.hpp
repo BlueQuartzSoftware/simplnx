@@ -54,10 +54,16 @@ public:
 
 /**
  * @class ReadCtfData
- * @brief This filter will read a single .ctf file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the
- * intermediate .h5ebsd file.
+ * @brief Algorithm that reads a single .ctf (Oxford/HKL) EBSD file into an Image Geometry.
+ *
+ * Parses the .ctf file using EbsdLib's CtfReader, then transfers the parsed data
+ * into the DataStructure's cell-level and ensemble-level arrays.
+ *
+ * @section ooc_summary OOC Optimization Summary
+ * All data transfer uses copyFromBuffer() bulk writes. Euler angles are interleaved from
+ * 3 source arrays using chunked buffers with optional hex correction and degree-to-radian
+ * conversion. Crystal structures are cached locally for the per-cell hex correction check.
  */
-
 class ORIENTATIONANALYSIS_EXPORT ReadCtfData
 {
 public:

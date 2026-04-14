@@ -22,8 +22,12 @@ namespace
 const usize k_NumMisoReps = 576 * 4;
 }
 /**
- * @brief The CalculateGBCDImpl class implements a threaded algorithm that calculates the
- * grain boundary character distribution (GBCD) for a surface mesh
+ * @brief Parallel worker that computes GBCD bin indices for a chunk of surface
+ * mesh triangles. Accepts raw pointers to locally cached feature-level (Euler
+ * angles, phases) and ensemble-level (crystal structures) data, plus
+ * offset-adjusted pointers to the current chunk of triangle labels and normals.
+ * All data access is through raw pointers into local buffers -- zero OOC
+ * virtual dispatch in the parallel hot loop.
  */
 class CalculateGBCDImpl
 {
@@ -363,6 +367,23 @@ const std::atomic_bool& ComputeGBCD::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes the Grain Boundary Character Distribution (GBCD) by
+ * iterating over all triangle faces on the surface mesh in chunks of 50K
+ * triangles. For each chunk, the CalculateGBCDImpl parallel worker computes
+ * GBCD bin indices for each triangle, then the main loop accumulates
+ * face-area-weighted contributions into the GBCD histogram. Finally, the
+ * histogram is normalized to multiples of random distribution (MRD).
+ *
+ * OOC strategy: Feature-level arrays (Euler angles, phases) and ensemble-level
+ * arrays (crystal structures) are bulk-read into local vectors at startup since
+ * the parallel worker accesses them randomly by feature ID. Triangle-level
+ * arrays (labels, normals, areas) are chunk-read per iteration via
+ * copyIntoBuffer. The GBCD output histogram is accumulated in a local buffer
+ * and bulk-written to the DataStore at the end via copyFromBuffer.
+ * The CalculateGBCDImpl worker receives raw pointers into the local caches,
+ * eliminating all OOC virtual dispatch from the parallel hot loop.
+ */
 Result<> ComputeGBCD::operator()()
 {
   auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
@@ -374,7 +395,9 @@ Result<> ComputeGBCD::operator()()
 
   auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayName);
 
-  // Cache feature-level arrays locally to eliminate per-element OOC overhead
+  // Bulk-read feature-level arrays into local vectors. The parallel worker
+  // accesses these randomly by feature ID (from triangle face labels), which
+  // would cause severe OOC chunk thrashing if left in DataStores.
   const usize numEulerElements = eulerAngles.getSize();
   std::vector<float32> eulersCache(numEulerElements);
   eulerAngles.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(eulersCache.data(), numEulerElements));
@@ -383,7 +406,7 @@ Result<> ComputeGBCD::operator()()
   std::vector<int32> phasesCache(numPhaseElements);
   phases.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(phasesCache.data(), numPhaseElements));
 
-  // Cache ensemble-level arrays (tiny)
+  // Bulk-read ensemble-level crystal structures (tiny, typically < 10 entries)
   usize totalPhases = crystalStructures.getNumberOfTuples();
   std::vector<uint32> crystalStructuresCache(totalPhases);
   crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), totalPhases));
@@ -406,7 +429,7 @@ Result<> ComputeGBCD::operator()()
   messageHelper.sendMessage("1/2 Starting GBCD Calculation and Summation Phase");
   ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
 
-  // Pre-allocate chunk buffers for triangle-level arrays
+  // Pre-allocate chunk buffers for triangle-level arrays (reused each iteration)
   const auto& labelsStore = faceLabels.getDataStoreRef();
   const auto& normalsStore = faceNormals.getDataStoreRef();
   const auto& areasStore = faceAreas.getDataStoreRef();
@@ -414,8 +437,9 @@ Result<> ComputeGBCD::operator()()
   std::vector<float64> normalsBuf(triangleChunkSize * 3);
   std::vector<float64> areasBuf(triangleChunkSize);
 
-  // Cache the full GBCD output locally for accumulation — bounded by
-  // totalPhases * totalGBCDBins (bin resolution, not cell count)
+  // Local GBCD histogram accumulator. Size is bounded by totalPhases *
+  // totalGBCDBins (determined by angular resolution, not by cell count),
+  // so it fits in RAM even for multi-phase datasets.
   const usize gbcdTotalElements = gbcd.getSize();
   std::vector<float64> gbcdBuf(gbcdTotalElements, 0.0);
 
@@ -433,7 +457,9 @@ Result<> ComputeGBCD::operator()()
     sizeGbcd.initializeBinsWithValue(-1);
     sizeGbcd.m_GbcdHemiCheck.assign(sizeGbcd.m_GbcdHemiCheck.size(), false);
 
-    // Chunk-read triangle arrays for this iteration
+    // Bulk-read this chunk of triangle data (labels, normals, areas).
+    // The parallel worker receives offset-adjusted raw pointers into these
+    // buffers so it can index using absolute triangle indices.
     labelsStore.copyIntoBuffer(i * 2, nonstd::span<int32>(labelsBuf.data(), triangleChunkSize * 2));
     normalsStore.copyIntoBuffer(i * 3, nonstd::span<float64>(normalsBuf.data(), triangleChunkSize * 3));
     areasStore.copyIntoBuffer(i, nonstd::span<float64>(areasBuf.data(), triangleChunkSize));
@@ -486,7 +512,8 @@ Result<> ComputeGBCD::operator()()
 
   messageHelper.sendMessage("2/2 Starting GBCD Normalization Phase");
 
-  // Normalize GBCD in the local buffer, then write back to the DataStore
+  // Normalize the GBCD histogram to MRD (multiples of random distribution)
+  // in the local buffer, then bulk-write the final result to the DataStore.
   for(usize i = 0; i < totalPhases; i++)
   {
     const usize k_PhaseShift = i * static_cast<usize>(totalGBCDBins);
@@ -496,6 +523,7 @@ Result<> ComputeGBCD::operator()()
       gbcdBuf[k_PhaseShift + j] *= k_MrdFactor;
     }
   }
+  // Single bulk-write of the normalized GBCD histogram to the output DataStore
   gbcd.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(gbcdBuf.data(), gbcdTotalElements));
 
   return {};

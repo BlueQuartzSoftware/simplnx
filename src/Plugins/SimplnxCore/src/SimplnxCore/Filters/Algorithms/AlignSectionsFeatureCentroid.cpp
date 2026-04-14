@@ -24,6 +24,12 @@ AlignSectionsFeatureCentroid::AlignSectionsFeatureCentroid(DataStructure& dataSt
 AlignSectionsFeatureCentroid::~AlignSectionsFeatureCentroid() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Entry point: delegates to the base-class AlignSections::execute() which
+ * calls findShifts() to compute per-slice shifts, then applies them to all cell
+ * data arrays by physically reordering voxels within each Z-slice.
+ */
+// -----------------------------------------------------------------------------
 Result<> AlignSectionsFeatureCentroid::operator()()
 {
   if(m_ShouldCancel)
@@ -36,8 +42,16 @@ Result<> AlignSectionsFeatureCentroid::operator()()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes per-slice X/Y centroid shifts. Dispatches to findShiftsOoc()
+ * when the mask array is out-of-core to avoid per-element chunk thrashing;
+ * otherwise uses the in-memory MaskCompare path with per-element isTrue() calls.
+ */
+// -----------------------------------------------------------------------------
 Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
 {
+  // Check if OOC dispatch is needed before creating MaskCompare (which would
+  // eagerly load the entire array for some store types).
   {
     const auto& maskCheck = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
     if(ForceOocAlgorithm() || IsOutOfCore(maskCheck))
@@ -234,12 +248,24 @@ Result<> AlignSectionsFeatureCentroid::findShifts(std::vector<int64>& xShifts, s
 }
 
 // -----------------------------------------------------------------------------
-// OOC-optimized findShifts: bulk-reads mask per Z-slice instead of per-element
-// isTrue() calls, eliminating OOC chunk thrashing in the centroid computation.
+/**
+ * @brief OOC-optimized shift computation. Instead of per-element MaskCompare::isTrue()
+ * calls (which trigger a chunk load per voxel for OOC stores), this method reads
+ * one complete Z-slice of mask data at a time via copyIntoBuffer(). The centroid
+ * computation then iterates over the in-memory buffer with zero OOC overhead.
+ *
+ * Memory usage: one XY-slice of uint8 mask data (dims[0] * dims[1] bytes), plus
+ * a temporary bool[] buffer of the same size when the mask is boolean-typed.
+ *
+ * The shift calculation logic after centroid computation is identical to the
+ * in-core path (without the StoreAlignmentShifts diagnostic storage, which is
+ * handled separately at the end).
+ */
 // -----------------------------------------------------------------------------
 Result<> AlignSectionsFeatureCentroid::findShiftsOoc(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
 {
-  // Get raw mask store for bulk reads
+  // Obtain typed DataStore pointers for bulk reads. Only uint8 and bool masks
+  // are supported; other types produce an error.
   const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
   const AbstractDataStore<uint8>* maskUInt8StorePtr = nullptr;
   const AbstractDataStore<bool>* maskBoolStorePtr = nullptr;

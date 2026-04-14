@@ -55,7 +55,16 @@ struct SIMPLNXCORE_EXPORT ComputeArrayStatisticsInputValues
 };
 
 /**
- * @class
+ * @class ComputeArrayStatistics
+ * @brief Computes a configurable set of statistical measures (length, min, max,
+ * mean, median, mode, standard deviation, summation, unique value count) for a
+ * scalar array, optionally grouped by Feature/Ensemble ID.
+ *
+ * @section ooc_note Out-of-Core Awareness
+ * The algorithm detects whether input arrays are out-of-core (OOC) by checking
+ * IDataStore::getStoreType(). When OOC arrays are detected, parallelization is
+ * disabled to prevent concurrent random access to chunk-backed stores, which
+ * would cause severe performance degradation from chunk thrashing.
  */
 class SIMPLNXCORE_EXPORT ComputeArrayStatistics
 {

@@ -44,7 +44,17 @@ struct ORIENTATIONANALYSIS_EXPORT ReadH5EbsdInputValues
 };
 
 /**
- * @brief The ReadH5Ebsd class
+ * @class ReadH5Ebsd
+ * @brief Algorithm that reads H5Ebsd-format EBSD data (TSL .ang or Oxford .ctf stored in HDF5).
+ *
+ * Supports both TSL (H5AngVolumeReader) and Oxford (H5CtfVolumeReader) manufacturers.
+ * After data import, optionally applies recommended sample/Euler reference frame rotations.
+ *
+ * @section ooc_summary OOC Optimization Summary
+ * The CopyData helper uses copyFromBuffer() for each selected array (single bulk write).
+ * Euler angle interleaving uses chunked buffers with optional hex correction and
+ * degree-to-radian conversion. Phase and crystal structure arrays are cached locally
+ * via copyIntoBuffer() when needed for per-cell correction lookups.
  */
 class ReadH5Ebsd
 {

@@ -1,3 +1,33 @@
+/**
+ * @file ErodeDilateCoordinationNumber.cpp
+ * @brief Coordination-number-based boundary smoothing of good/bad voxels,
+ *        optimized for out-of-core (OOC) data stores via Z-slice buffered I/O.
+ *
+ * ## High-Level Flow (per pass)
+ *
+ * 1. **Initialize rolling window** -- Load FeatureId Z-slices 0 and 1 into
+ *    the three-element window (slots 1 and 2).
+ *
+ * 2. **Scan every voxel** (Z-major, then Y, then X):
+ *    - For each voxel on a good/bad boundary, count face neighbors of the
+ *      opposite type (the "coordination number") and record the most common
+ *      neighbor FeatureId.
+ *    - Store the coordination number and best-neighbor index in per-slice
+ *      arrays rather than full-volume arrays.
+ *
+ * 3. **Deferred transfer** -- After processing Z-slice z, commit the marks
+ *    for z-1 (which are now complete). Only voxels whose coordination number
+ *    meets or exceeds the user's threshold are actually transferred.
+ *
+ * 4. **Rotate windows** -- Shift rolling-window buffers and per-slice arrays
+ *    forward by one Z-layer.
+ *
+ * 5. **Flush final slice** -- Commit the last slice's marks after the Z-loop.
+ *
+ * 6. **Repeat** until no voxels were modified (if Loop is true) or after
+ *    one pass (if Loop is false).
+ */
+
 #include "ErodeDilateCoordinationNumber.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -37,15 +67,18 @@ Result<> ErodeDilateCoordinationNumber::operator()()
   SizeVec3 udims = selectedImageGeom.getDimensions();
   std::array<int64, 3> dims = {static_cast<int64>(udims[0]), static_cast<int64>(udims[1]), static_cast<int64>(udims[2])};
 
+  // Precompute face-neighbor index offsets and iteration order
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
+  // Collect all sibling arrays that should be updated during the transfer phase
   const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
 
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
   const usize dimZ = static_cast<usize>(dims[2]);
 
-  // Find max feature ID using Z-slice batched reads
+  // ---- Determine max FeatureId using sequential Z-slice reads ----
+  // Sequential bulk reads avoid OOC chunk thrashing.
   const auto& featureIdsStore = featureIds.getDataStoreRef();
   usize numFeatures = 0;
   {
@@ -63,11 +96,14 @@ Result<> ErodeDilateCoordinationNumber::operator()()
     }
   }
 
+  // Per-voxel neighbor feature tally, sized so featureCount[featureId] is
+  // directly addressable. Reset after each voxel to avoid a full memset.
   std::vector<int32> featureCount(numFeatures + 1, 0);
   bool keepGoing = true;
   int32 counter = 1;
 
-  // FeatureIds rolling window
+  // ---- FeatureIds rolling window (3 Z-slices) ----
+  // Slot 0 = z-1 (previous), slot 1 = z (current), slot 2 = z+1 (next).
   std::array<std::vector<int32>, 3> featureIdSlices;
   for(auto& fis : featureIdSlices)
   {
@@ -76,26 +112,34 @@ Result<> ErodeDilateCoordinationNumber::operator()()
 
   auto readFeatureIdSlice = [&](int64 z, usize slot) { featureIdsStore.copyIntoBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<int32>(featureIdSlices[slot].data(), sliceSize)); };
 
+  // Maps face-neighbor index to rolling-window slot:
+  // -Z -> slot 0, -Y/-X/+X/+Y -> slot 1 (same Z), +Z -> slot 2
   constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
 
-  // Per-slice neighbors (O(3*sliceSize) replaces O(totalPoints) neighbors array)
-  // Slot 0=z-1, slot 1=z, slot 2=z+1
+  // ---- Per-slice neighbor marks: 3 x O(sliceSize) ----
+  // Each entry is -1 (no transfer) or the global flat index of the source voxel.
+  // Replaces the O(totalPoints) full-volume neighbors array.
   std::array<std::vector<int64>, 3> sliceNeighbors;
   for(auto& sn : sliceNeighbors)
   {
     sn.resize(sliceSize, -1);
   }
 
-  // Per-slice coordination numbers (O(3*sliceSize) replaces O(totalPoints))
+  // ---- Per-slice coordination numbers: 3 x O(sliceSize) ----
+  // Tracks the coordination number for each voxel in the rolling window.
+  // Only voxels whose coordination number meets the threshold will be
+  // transferred during the commit phase.
   std::array<std::vector<int32>, 3> sliceCoordination;
   for(auto& sc : sliceCoordination)
   {
     sc.resize(sliceSize, 0);
   }
 
-  // Helper to transfer a single Z-slice across all arrays, for qualifying voxels
+  // Commits one Z-slice worth of marks, but only for voxels whose coordination
+  // number meets or exceeds the user's threshold. This filtering step is what
+  // distinguishes this algorithm from simple erosion/dilation: low-coordination
+  // boundary voxels are left alone.
   auto transferSlice = [&](usize z, const std::vector<int64>& marks, const std::vector<int32>& coord) {
-    // Filter marks: only transfer voxels meeting coordination threshold
     std::vector<int64> filteredMarks(sliceSize, -1);
     for(usize i = 0; i < sliceSize; i++)
     {
@@ -111,6 +155,9 @@ Result<> ErodeDilateCoordinationNumber::operator()()
     }
   };
 
+  // ---- Main pass loop ----
+  // Repeats until either (a) no voxels were modified this pass, or
+  // (b) Loop is false and a single pass has completed.
   while(counter > 0 && keepGoing)
   {
     counter = 0;
@@ -119,7 +166,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
       keepGoing = false;
     }
 
-    // Clear per-slice arrays
+    // Clear per-slice tracking arrays for this pass
     for(auto& sn : sliceNeighbors)
     {
       std::fill(sn.begin(), sn.end(), -1);
@@ -129,15 +176,17 @@ Result<> ErodeDilateCoordinationNumber::operator()()
       std::fill(sc.begin(), sc.end(), 0);
     }
 
-    // Initialize rolling window
+    // Re-initialize rolling window from the (potentially modified) store
     readFeatureIdSlice(0, 1);
     if(dims[2] > 1)
     {
       readFeatureIdSlice(1, 2);
     }
 
+    // ---- Z-slice scan loop ----
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
+      // Advance the FeatureId rolling window
       if(zIdx > 0)
       {
         std::swap(featureIdSlices[0], featureIdSlices[1]);
@@ -148,6 +197,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
         }
       }
 
+      // ---- Inner XY scan ----
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
         for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
@@ -160,6 +210,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
 
           std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
+          // Map each face neighbor to its position within its rolling-window slice
           const std::array<usize, 6> neighborInSlice = {
               inSlice,                                         // -Z
               static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
@@ -179,6 +230,8 @@ Result<> ErodeDilateCoordinationNumber::operator()()
             const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
             const int32 feature = featureIdSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]];
 
+            // A voxel is on the boundary if it and its neighbor have opposite
+            // good/bad status (one is 0, the other is > 0).
             if((featureName > 0 && feature == 0) || (featureName == 0 && feature > 0))
             {
               coordination = coordination + 1;
@@ -187,13 +240,15 @@ Result<> ErodeDilateCoordinationNumber::operator()()
               if(current > most)
               {
                 most = current;
+                // Record this neighbor as the best replacement source
                 sliceNeighbors[1][inSlice] = neighborPoint;
               }
             }
           }
+          // Store the computed coordination number for the transfer-filter step
           sliceCoordination[1][inSlice] = coordination;
 
-          // Reset featureCount for neighbors
+          // Reset featureCount entries touched by this voxel's neighbors
           for(const auto& faceIndex : faceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
@@ -209,13 +264,14 @@ Result<> ErodeDilateCoordinationNumber::operator()()
         }
       }
 
-      // Transfer z-1 (complete after processing z)
+      // ---- Deferred transfer for slice z-1 ----
+      // After processing slice z, all marks for z-1 are complete.
       if(zIdx > 0)
       {
         transferSlice(static_cast<usize>(zIdx - 1), sliceNeighbors[0], sliceCoordination[0]);
       }
 
-      // Rotate per-slice arrays
+      // ---- Rotate per-slice arrays forward ----
       std::swap(sliceNeighbors[0], sliceNeighbors[1]);
       std::swap(sliceNeighbors[1], sliceNeighbors[2]);
       std::fill(sliceNeighbors[2].begin(), sliceNeighbors[2].end(), -1);
@@ -225,7 +281,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
       std::fill(sliceCoordination[2].begin(), sliceCoordination[2].end(), 0);
     }
 
-    // Transfer last slice
+    // ---- Flush final Z-slice ----
     if(dims[2] > 0)
     {
       transferSlice(static_cast<usize>(dims[2] - 1), sliceNeighbors[0], sliceCoordination[0]);

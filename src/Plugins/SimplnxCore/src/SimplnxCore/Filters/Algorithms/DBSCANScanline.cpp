@@ -15,6 +15,43 @@
 
 using namespace nx::core;
 
+// =============================================================================
+// DBSCANScanline — Out-of-Core (OOC) Algorithm
+//
+// This file implements the out-of-core (Scanline) variant of DBSCAN.
+// It is selected by DispatchAlgorithm when any input array uses chunked on-disk
+// storage (e.g., ZarrStore / HDF5 chunked store).
+//
+// PROBLEM:
+//   The DBSCAN algorithm requires multiple passes over the input array during
+//   grid construction (bounds, binning, filling) and random access to arbitrary
+//   tuple indices during canMerge distance checks. When data is stored out-of-core,
+//   each operator[] call may trigger a chunk load/decompress/evict cycle. The grid
+//   construction passes iterate over all N tuples 2-3 times, and canMerge checks
+//   access random positions in the array, making both phases vulnerable to chunk
+//   thrashing.
+//
+// SOLUTION:
+//   1. Grid construction uses 64K-tuple chunk reads via copyIntoBuffer(). Each
+//      of the 2-3 passes reads the input array sequentially in chunks, processing
+//      all tuples in each chunk before moving to the next. This converts N per-
+//      element random accesses into N/65536 sequential bulk reads.
+//
+//   2. canMerge uses readGridCellCoords() to bulk-read all coordinate data for
+//      each grid cell into a local float32 buffer. The pairwise distance check
+//      then operates entirely on in-memory data. Memory cost per canMerge call
+//      is O(gridCellSize * dims), which is typically small (grid cells contain
+//      just a handful of points in practice).
+//
+//   3. The clustering and labeling phases operate on the in-memory grid index
+//      (gridVoxels, clusterForest), which is identical to the Direct variant.
+//      Only grid construction and canMerge are modified for OOC.
+//
+// NOTE: The HyperGridBitMap constructors in this file do NOT accept a
+//   MessageHelper parameter (unlike the Direct variant) because they were
+//   written to minimize the parameter surface for the OOC path.
+// =============================================================================
+
 namespace
 {
 /**
@@ -860,8 +897,20 @@ private:
   const std::atomic_bool& m_ShouldCancel;
 
   /**
-   * @brief Reads coordinate data for all points in a grid cell from the store.
-   * Memory cost is O(gridCellSize * dims), not O(n).
+   * @brief Reads coordinate data for all points in a grid cell from the OOC store.
+   *
+   * Instead of random operator[] access to arbitrary tuple indices scattered across
+   * the full input array (which would cause chunk thrashing), this method reads each
+   * grid cell member's coordinates via single-tuple copyIntoBuffer() calls and
+   * assembles them into a contiguous local buffer.
+   *
+   * Memory cost is O(gridCellSize * dims) per call, which is typically very small
+   * (grid cells contain a handful of points in practice). The returned buffer is
+   * used for all pairwise distance computations in canMerge, so the data is read
+   * once and reused for every comparison.
+   *
+   * @param gridId Index of the grid cell whose member coordinates to read
+   * @return Contiguous float32 buffer with coordinates for all grid cell members
    */
   std::vector<float32> readGridCellCoords(usize gridId) const
   {
@@ -924,7 +973,11 @@ private:
     QuickSortGrids(sorted, next + 1, end);
   }
 
-  // OOC path: read grid cell coords on-demand into O(gridCellSize) local buffers
+  // OOC path: read grid cell coords on-demand into O(gridCellSize) local buffers.
+  // Both grid cells' coordinate data is read in full via readGridCellCoords(),
+  // then all pairwise distances are computed entirely in memory. This avoids
+  // random operator[] access to the full OOC input array, which would trigger
+  // chunk load/evict cycles for every single distance computation.
   bool canMerge(usize pGridId, usize qGridId)
   {
     const usize dims = static_cast<usize>(HGBPT::Dimensions);
@@ -1038,6 +1091,9 @@ Result<> DBSCANScanline::operator()()
     return {};
   }
 
+  // OOC: find max cluster ID using chunked bulk I/O instead of std::max_element
+  // on the OOC store (which would use per-element iterator access). Read featureIds
+  // in 1M-element chunks and track the maximum across all chunks.
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   int32 maxCluster = 0;
   {

@@ -20,6 +20,12 @@ This **Filter** calculates the distance of each **Cell** from the nearest **Feat
 
 4. If the option *Calculate Manhattan Distance* is *false*, then the "city-block" distances are overwritten with the *Euclidean Distance* from the **Cell** to its internally tracked *nearest neighbor* **Cell** and stored in a *float* array instead of an *integer* array.
 
+### Performance
+
+This filter is optimized for out-of-core (OOC) data storage. The entire Feature IDs array is bulk-read into a local buffer via `copyIntoBuffer()` at the start. Each distance map (grain boundary, triple junction, quadruple point) is also initialized and bulk-read into a local buffer. All boundary identification and iterative distance propagation operates on these local buffers with plain pointer access. Results are written back to the output DataStores via a single `copyFromBuffer()` call per map. This reduces OOC I/O operations from O(total_voxels * passes) to O(1) per map.
+
+The three distance maps (when enabled) are computed in parallel using `ParallelTaskAlgorithm`.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

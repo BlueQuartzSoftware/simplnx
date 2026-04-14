@@ -151,6 +151,16 @@ struct StereographicCheck
   }
 };
 
+/**
+ * Macro-generated parallel convertor classes (one per target representation).
+ * Each class reads from an input DataStore and writes to an output DataStore,
+ * converting orientation representations (Euler, OM, Quat, etc.) tuple by tuple.
+ *
+ * OOC strategy: The operator() processes the assigned Range in 4096-tuple chunks.
+ * Each chunk bulk-reads input data via copyIntoBuffer, converts all tuples locally,
+ * then bulk-writes output via copyFromBuffer. This replaces per-element operator[]
+ * access, which would cause O(N) virtual dispatch calls into the OOC storage layer.
+ */
 #define OC_TBB_IMPL(TO_REP)                                                                                                                                                                            \
   template <typename T, typename K, class InputType, class OutputType>                                                                                                                                 \
   class TO_REP##Convertor                                                                                                                                                                              \
@@ -163,31 +173,31 @@ struct StereographicCheck
     }                                                                                                                                                                                                  \
     void operator()(const Range& r) const                                                                                                                                                              \
     {                                                                                                                                                                                                  \
-      static constexpr usize k_ChunkSize = 4096;                                                                                                                                                      \
-      const usize inNumComps = m_Input.getNumberOfComponents();                                                                                                                                       \
-      const usize outNumComps = m_Output.getNumberOfComponents();                                                                                                                                     \
-      const usize totalTuples = r.max() - r.min();                                                                                                                                                    \
-      const usize maxChunkTuples = std::min(k_ChunkSize, totalTuples);                                                                                                                                \
+      static constexpr usize k_ChunkSize = 4096;                                                                                                                                                       \
+      const usize inNumComps = m_Input.getNumberOfComponents();                                                                                                                                        \
+      const usize outNumComps = m_Output.getNumberOfComponents();                                                                                                                                      \
+      const usize totalTuples = r.max() - r.min();                                                                                                                                                     \
+      const usize maxChunkTuples = std::min(k_ChunkSize, totalTuples);                                                                                                                                 \
       auto inBuffer = std::make_unique<T[]>(maxChunkTuples * inNumComps);                                                                                                                              \
       auto outBuffer = std::make_unique<K[]>(maxChunkTuples * outNumComps);                                                                                                                            \
-      usize tupleIdx = r.min();                                                                                                                                                                       \
+      usize tupleIdx = r.min();                                                                                                                                                                        \
       while(tupleIdx < r.max())                                                                                                                                                                        \
       {                                                                                                                                                                                                \
-        const usize chunkTuples = std::min(k_ChunkSize, r.max() - tupleIdx);                                                                                                                          \
-        const usize inElemCount = chunkTuples * inNumComps;                                                                                                                                           \
-        const usize outElemCount = chunkTuples * outNumComps;                                                                                                                                         \
+        const usize chunkTuples = std::min(k_ChunkSize, r.max() - tupleIdx);                                                                                                                           \
+        const usize inElemCount = chunkTuples * inNumComps;                                                                                                                                            \
+        const usize outElemCount = chunkTuples * outNumComps;                                                                                                                                          \
         m_Input.copyIntoBuffer(tupleIdx* inNumComps, nonstd::span<T>(inBuffer.get(), inElemCount));                                                                                                    \
         InputType inputInstance;                                                                                                                                                                       \
-        for(usize t = 0; t < chunkTuples; ++t)                                                                                                                                                        \
+        for(usize t = 0; t < chunkTuples; ++t)                                                                                                                                                         \
         {                                                                                                                                                                                              \
-          const usize inOff = t * inNumComps;                                                                                                                                                         \
-          const usize outOff = t * outNumComps;                                                                                                                                                       \
-          for(usize c = 0; c < inNumComps; ++c)                                                                                                                                                       \
+          const usize inOff = t * inNumComps;                                                                                                                                                          \
+          const usize outOff = t * outNumComps;                                                                                                                                                        \
+          for(usize c = 0; c < inNumComps; ++c)                                                                                                                                                        \
           {                                                                                                                                                                                            \
             inputInstance[c] = inBuffer[inOff + c];                                                                                                                                                    \
           }                                                                                                                                                                                            \
           OutputType outputInstance = inputInstance.to##TO_REP();                                                                                                                                      \
-          for(usize c = 0; c < outNumComps; ++c)                                                                                                                                                      \
+          for(usize c = 0; c < outNumComps; ++c)                                                                                                                                                       \
           {                                                                                                                                                                                            \
             outBuffer[outOff + c] = outputInstance[c];                                                                                                                                                 \
           }                                                                                                                                                                                            \
@@ -226,6 +236,12 @@ ConvertOrientations::ConvertOrientations(DataStructure& dataStructure, const IFi
 ConvertOrientations::~ConvertOrientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Converts an array of orientation representations from one type to
+ * another (e.g., Euler angles to quaternions). Supports all 8 EbsdLib
+ * orientation types. Parallelized via ParallelDataAlgorithm with macro-
+ * generated convertor classes that use chunked bulk I/O internally.
+ */
 Result<> ConvertOrientations::operator()()
 {
   using ValidateInputDataFunctionType = std::function<void(float32*)>;

@@ -45,6 +45,28 @@ feature boundary, and use that voxel's orientation as the **reference orientatio
 
 ![ComputeFeatureReferenceMisorientations_1.png](Images/ComputeFeatureReferenceMisorientations_1.png)
 
+## Algorithm
+
+The algorithm calculates the crystallographic misorientation angle between each cell's quaternion and a reference orientation for its parent feature. The misorientation is computed using the LaueOps symmetry operators for the cell's crystal structure, and the result is stored in degrees.
+
+When using the **Average Feature Orientation** reference, the pre-computed average quaternions are looked up per feature. When using the **Orientation Farthest from Feature Boundary** reference, a preliminary pass finds the cell with the maximum Euclidean distance from the grain boundary for each feature, and that cell's quaternion is used as the reference.
+
+After computing per-cell misorientations, the filter also calculates the average misorientation across all cells belonging to each feature.
+
+### In-Core Path
+
+Input cell-level arrays (feature IDs, phases, quaternions) and the reference data (average quaternions or grain boundary distances) are accessed through the AbstractDataStore API. The per-cell misorientation output is written directly.
+
+### Out-of-Core Path
+
+All cell-level arrays are read in sequential 64K-tuple chunks via `copyIntoBuffer`. Crystal structures and average quaternions are cached locally at startup since they are ensemble-level and feature-level arrays respectively. For the boundary-distance reference mode, the center voxel identification pass also uses chunked reads of feature IDs and distance arrays.
+
+Per-cell misorientation results are accumulated in a local buffer and bulk-written via `copyFromBuffer` one chunk at a time. Feature-level sums and counts are maintained in local vectors.
+
+### Performance
+
+The two-pass chunked design (center-finding pass for mode 1, then the main misorientation pass) ensures that cell-level data is always read sequentially. This avoids random page faults on HDF5-chunked DataStores and reduces I/O from millions of individual accesses to a few hundred bulk reads.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -9,6 +9,33 @@
 
 using namespace nx::core;
 
+// =============================================================================
+// ComputeFeatureNeighborsDirect — In-Core Algorithm
+//
+// This file implements the in-core (Direct) variant of ComputeFeatureNeighbors.
+// It is selected by DispatchAlgorithm when all input arrays reside in memory.
+//
+// ALGORITHM OVERVIEW:
+//   For each voxel in an ImageGeom, compare its FeatureId against the FeatureIds
+//   of its 6 face neighbors (+/-X, +/-Y, +/-Z). When two adjacent voxels belong
+//   to different features, accumulate the shared face's surface area into a
+//   per-feature-pair map. After all voxels are processed, convert the maps into
+//   NeighborList and SharedSurfaceAreaList arrays.
+//
+// KEY DESIGN DECISIONS:
+//   1. Compile-time dimension specialization via ImageDimensionState<> templates
+//      eliminates runtime branching for degenerate dimensions (1D, 2D geometries).
+//   2. Two-stage processing separates boundary cells (which need validity checks)
+//      from internal cells (where all 6 neighbors are guaranteed valid), removing
+//      a branch from the innermost loop of Stage 2.
+//   3. Per-face surface areas use precomputed values from computeFaceSurfaceAreas()
+//      rather than a uniform area, fixing a DREAM3D 6.5 bug.
+//
+// DATA ACCESS PATTERN:
+//   Uses getValue() for per-element random access. This is optimal for in-memory
+//   DataStore where getValue() is essentially a pointer dereference.
+// =============================================================================
+
 namespace
 {
 // =============================================================================
@@ -574,12 +601,18 @@ ComputeFeatureNeighborsDirect::~ComputeFeatureNeighborsDirect() noexcept = defau
 
 // -----------------------------------------------------------------------------
 /**
- * @brief In-core implementation of ComputeFeatureNeighbors using Nathan Young's
- * rewritten algorithm with compile-time dimension specialization and per-face
- * surface area accumulation.
+ * @brief In-core implementation of ComputeFeatureNeighbors.
  *
- * Uses getValue() for per-element array access (in-core optimal).
- * Selected by DispatchAlgorithm when all input arrays are backed by in-memory DataStore.
+ * Uses Nathan Young's rewritten algorithm with compile-time dimension specialization
+ * and per-face surface area accumulation.
+ *
+ * Accesses FeatureIds via getValue() (per-element random access), which is optimal
+ * for in-memory DataStore where it is essentially a pointer dereference. For OOC
+ * data, the Scanline variant reads Z-slices via bulk I/O instead.
+ *
+ * The function dispatches to one of 4 template specializations based on boolean
+ * combinations of StoreSurfaceFeatures and StoreBoundaryCells, eliminating those
+ * branches from the innermost loop via constexpr if.
  */
 Result<> ComputeFeatureNeighborsDirect::operator()()
 {

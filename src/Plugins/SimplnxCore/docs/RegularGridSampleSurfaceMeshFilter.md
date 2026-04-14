@@ -15,7 +15,7 @@ The *Use existing geometry* parameter controls how the target **Image Geometry**
 - **Create geometry [0]**: Creates a new **Image Geometry** with user-specified dimensions, spacing, and origin for sampling the surface mesh.
 - **Use existing geometry [1]**: Uses a pre-existing **Image Geometry** from the data structure as the sampling grid.
 
-### Algorithm
+## Algorithm
 
 The sampling is performed using the following scanline rasterization approach:
 
@@ -23,6 +23,15 @@ The sampling is performed using the following scanline rasterization approach:
 2. For each Y-scanline within a Z-slice, find the X-coordinates where the scanline crosses the 2D edges
 3. Sort the crossings by X-coordinate and walk left to right across the voxels, toggling the current **Feature Id** at each boundary crossing
 4. Assign the current **Feature Id** to each voxel in the *Feature Ids* output array
+
+### Performance
+
+This filter is optimized for out-of-core (OOC) data storage in two ways:
+
+1. **Input pre-loading**: All triangle geometry data (faces, vertices, face labels) is bulk-read into contiguous memory buffers via `copyIntoBuffer()` at algorithm start. Worker threads then operate on plain memory pointers with no per-element virtual dispatch overhead.
+2. **Thread-safe output**: Each Z-slice worker rasterizes into a thread-local buffer, then writes results to the output DataArray via a mutex-protected `copyFromBuffer()` call. This ensures correct and efficient bulk I/O with OOC DataStore implementations.
+
+Z-slices are processed in parallel using `ParallelTaskAlgorithm`, with per-triangle Z-range pre-computation enabling fast rejection of triangles that don't intersect a given slice.
 
 ### Face Labels / Part Numbers
 

@@ -24,6 +24,19 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 ComputeKernelAvgMisorientations::~ComputeKernelAvgMisorientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes the average misorientation between each voxel and its
+ * neighbors within a user-specified kernel (kX x kY x kZ). Only neighbors
+ * belonging to the same feature are included in the average.
+ *
+ * OOC strategy: Replaced the parallel 3D range-based approach with Z-plane
+ * slab-based sequential processing. For each Z-plane, a slab spanning
+ * [plane - kZ, plane + kZ] is bulk-read via copyIntoBuffer, covering all
+ * neighbor lookups for voxels on that plane. The output for each plane is
+ * bulk-written via copyFromBuffer. This converts random 3D neighbor access
+ * (which caused severe OOC chunk thrashing) into bounded sequential reads
+ * proportional to (2*kZ+1) slices per plane.
+ */
 Result<> ComputeKernelAvgMisorientations::operator()()
 {
   auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
@@ -38,13 +51,14 @@ Result<> ComputeKernelAvgMisorientations::operator()()
   const int32 kY = kernelSize[1];
   const int32 kX = kernelSize[0];
 
-  // Get DataStore references for bulk I/O
+  // DataStore references for bulk I/O — all cell-level reads/writes use
+  // copyIntoBuffer/copyFromBuffer to avoid per-element OOC virtual dispatch.
   const auto& cellPhasesStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
   const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
   const auto& quatsStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getDataStoreRef();
   auto& outputStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->KernelAverageMisorientationsArrayName).getDataStoreRef();
 
-  // Cache ensemble-level crystalStructures locally (tiny array, avoids per-element OOC overhead)
+  // Bulk-read ensemble-level crystal structures into local memory.
   const auto& crystalStructuresStore = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath).getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStore.getNumberOfTuples();
   std::vector<uint32> crystalStructuresLocal(numCrystalStructures);
@@ -65,13 +79,15 @@ Result<> ComputeKernelAvgMisorientations::operator()()
     {
       break;
     }
-    // Compute slab Z range (clamped to volume bounds)
+    // Compute the Z-extent of the slab needed for this plane's kernel lookups.
+    // The slab covers [plane - kZ, plane + kZ], clamped to volume bounds.
     const int64 slabZMin = std::max(static_cast<int64>(0), plane - kZ);
     const int64 slabZMax = std::min(zPoints - 1, plane + kZ);
     const usize slabZCount = static_cast<usize>(slabZMax - slabZMin + 1);
     const usize slabTuples = slabZCount * sliceSize;
 
-    // Read slab data via copyIntoBuffer (OOC-safe bulk I/O)
+    // Bulk-read the entire slab via copyIntoBuffer. This is the key OOC
+    // optimization: a single contiguous read replaces many random accesses.
     const usize slabStartTuple = static_cast<usize>(slabZMin) * sliceSize;
 
     std::vector<int32> slabFeatureIds(slabTuples);
@@ -83,10 +99,11 @@ Result<> ComputeKernelAvgMisorientations::operator()()
     std::vector<float32> slabQuats(slabTuples * 4);
     quatsStore.copyIntoBuffer(slabStartTuple * 4, nonstd::span<float32>(slabQuats.data(), slabTuples * 4));
 
-    // Output buffer for this plane
+    // Output buffer for this single Z-plane — populated locally, then
+    // bulk-written to the output DataStore after the plane is processed.
     std::vector<float32> planeOutput(sliceSize, 0.0f);
 
-    // Offset of current plane within the slab
+    // Index offset from the slab start to the current Z-plane within the slab
     const usize planeOffsetInSlab = static_cast<usize>(plane - slabZMin) * sliceSize;
 
     for(int64 row = 0; row < yPoints; row++)
@@ -105,7 +122,7 @@ Result<> ComputeKernelAvgMisorientations::operator()()
           continue;
         }
 
-        // Extract center quaternion
+        // Extract the center voxel's quaternion from the slab buffer
         ebsdlib::QuatD q1;
         const usize q1Idx = pointInSlab * 4;
         q1[0] = slabQuats[q1Idx];
@@ -143,6 +160,8 @@ Result<> ComputeKernelAvgMisorientations::operator()()
                 continue;
               }
 
+              // All neighbor lookups index into the slab buffers (local RAM),
+              // not the DataStore. This is where the OOC savings come from.
               const usize neighborInSlab = nzInSlab + static_cast<usize>(ny * xPoints + nx);
 
               if(slabFeatureIds[neighborInSlab] == featureId)
@@ -166,7 +185,7 @@ Result<> ComputeKernelAvgMisorientations::operator()()
       }
     }
 
-    // Write this plane's output via bulk I/O
+    // Bulk-write this plane's computed kernel averages to the output DataStore
     const usize planeStartTuple = static_cast<usize>(plane) * sliceSize;
     outputStore.copyFromBuffer(planeStartTuple, nonstd::span<const float32>(planeOutput.data(), sliceSize));
   }

@@ -90,6 +90,22 @@ If the angles fall outside of this range the **original** Euler Input data **WIL
 
 While every effort has been made to ensure the correctness of each transformation algorithm, certain situations may arise where the initial precision of the input data is not large enough for the algorithm to calculate an answer that is intuitive. The user should be acutely aware of their input data and if their data may cause these situations to occur. Combinations of Euler angles close to 0, 180 and 360 can cause these issues to be hit. For instance an Euler angle of [180, 56, 360] is symmetrically the same as [180, 56, 0] and due to calculation errors and round off errors converting that Euler angle between representations may not give the numerical answer the user was anticipating but will give a symmetrically equivalent angle.
 
+## Algorithm
+
+The filter converts each element's orientation from the input representation to the output representation using the EbsdLib orientation conversion library. The conversion is performed element-by-element through a chain of intermediate representations as needed (e.g., Euler to Quaternion may go through an orientation matrix). Euler angle inputs are range-checked and clamped before conversion. The computation is parallelized using `ParallelDataAlgorithm` with a macro-generated converter class for each output type.
+
+### In-Core Path
+
+Input and output DataArrays are accessed through the AbstractDataStore API. The parallel converter reads input and writes output directly.
+
+### Out-of-Core Path
+
+Each parallel converter processes its assigned tuple range in 4096-tuple chunks. Within each chunk, input data is bulk-read via `copyIntoBuffer`, the orientation conversion is performed element-by-element on the local buffer, and results are bulk-written via `copyFromBuffer`. This chunked approach is embedded in the `OC_TBB_IMPL` macro that generates all eight converter classes.
+
+### Performance
+
+The chunked I/O within each parallel range avoids per-element virtual dispatch on the DataStore while preserving parallelism across ranges. Since the conversion is purely per-element with no neighbor dependencies, the chunks can be processed independently with excellent scaling.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

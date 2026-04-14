@@ -1,3 +1,25 @@
+// -----------------------------------------------------------------------------
+// IdentifySampleBFS.cpp -- In-core BFS flood-fill for sample identification
+// -----------------------------------------------------------------------------
+//
+// This file implements the BFS (breadth-first search) variant of the
+// IdentifySample algorithm, optimized for in-core (contiguous memory) data
+// access. The algorithm identifies the largest connected component of "good"
+// voxels (mask == true) as the sample, removes satellite regions, and
+// optionally fills interior holes.
+//
+// The BFS approach uses O(N) temporary bit vectors and relies on random access
+// to the mask array via getValue(). This is efficient when data fits in RAM
+// but causes chunk thrashing when data is stored out-of-core in compressed
+// HDF5 chunks. For OOC data, IdentifySampleCCL should be used instead
+// (selected automatically by the IdentifySample dispatcher).
+//
+// When slice-by-slice mode is enabled, this class delegates to the shared
+// IdentifySampleSliceBySliceFunctor which performs BFS on individual 2D slices.
+//
+// See IdentifySampleBFS.hpp for detailed algorithm documentation.
+// -----------------------------------------------------------------------------
+
 #include "IdentifySampleBFS.hpp"
 
 #include "IdentifySample.hpp"

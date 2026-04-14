@@ -18,6 +18,14 @@ using namespace nx::core;
 namespace
 {
 // -----------------------------------------------------------------------------
+/**
+ * @brief Checks whether all arrays in the set are backed by in-memory DataStores.
+ * Used to decide if parallelization is safe: OOC stores are not thread-safe for
+ * concurrent random access, so parallelization must be disabled when any array
+ * resides out-of-core. Uses IDataStore::getStoreType() for an explicit check
+ * rather than the legacy getDataFormat() string comparison.
+ */
+// -----------------------------------------------------------------------------
 bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& arrays)
 {
   if(arrays.empty())

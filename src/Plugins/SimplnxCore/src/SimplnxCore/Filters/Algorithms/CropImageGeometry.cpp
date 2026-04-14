@@ -52,7 +52,10 @@ protected:
 
     auto srcDims = m_SrcImageGeom.getDimensions();
 
-    // Copy one X-row at a time using bulk I/O
+    // OOC optimization: Copy one X-row at a time using bulk copyIntoBuffer/
+    // copyFromBuffer. The original code used per-element getValue/setValue in
+    // a triple-nested loop, causing O(voxels * components) chunk operations.
+    // Row-at-a-time reduces this to O(Z * Y) bulk operations.
     const uint64 rowTuples = m_Bounds[1] - m_Bounds[0];
     const usize rowElements = rowTuples * numComps;
     auto rowBuffer = std::make_unique<T[]>(rowElements);

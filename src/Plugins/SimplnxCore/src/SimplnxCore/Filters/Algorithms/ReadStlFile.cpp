@@ -143,6 +143,10 @@ Result<> ReadStlFile::operator()()
 
   fpos_t pos;
 
+  // Progress reporting is throttled to every k_ProgressStride triangles to reduce
+  // the overhead of the modulo check and message formatting in the tight read loop.
+  // The original code called sendThrottledMessage on every iteration, which added
+  // measurable overhead when reading millions of triangles.
   constexpr int32_t k_ProgressStride = 10000;
   for(int32_t t = 0; t < triCount; ++t)
   {

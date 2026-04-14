@@ -75,6 +75,23 @@ Result<> WriteAvizoRectilinearCoordinate::generateHeader(FILE* outputFile) const
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Writes the FeatureIds and rectilinear coordinate data to the Avizo output file.
+ *
+ * @section ooc_strategy OOC Strategy
+ * The FeatureIds array can be very large (millions of voxels). The original implementation
+ * used featureIds.data() to get a raw pointer and fwrite the entire array, but this fails
+ * when the DataStore is out-of-core because data() is not available.
+ *
+ * The optimized version reads in chunks of k_ChunkSize (65536) tuples via copyIntoBuffer(),
+ * then writes each chunk to the output file. This:
+ *   - Works with any DataStore backend (in-memory or OOC).
+ *   - Bounds memory to ~256 KB (65536 * sizeof(int32)) regardless of volume size.
+ *   - Maintains sequential I/O pattern for both the DataStore reads and file writes.
+ *
+ * @param outputFile FILE pointer to the open Avizo output file.
+ * @return Result<> indicating success.
+ */
 Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
 {
   const auto& geom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
@@ -87,6 +104,7 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const usize totalPoints = featureIds.getNumberOfTuples();
 
+  // Read FeatureIds in chunks via copyIntoBuffer() (OOC-safe) and write each chunk to file
   constexpr usize k_ChunkSize = 65536;
   std::vector<int32> buffer(k_ChunkSize);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
@@ -106,7 +124,8 @@ Result<> WriteAvizoRectilinearCoordinate::writeData(FILE* outputFile) const
   }
   else
   {
-    // The "20 Items" is purely arbitrary and is put in to try and save some space in the ASCII file
+    // ASCII mode: read chunks, format each value individually.
+    // The "20 items per line" formatting is preserved from the original code.
     int itemCount = 0;
     for(usize offset = 0; offset < totalPoints; offset += k_ChunkSize)
     {

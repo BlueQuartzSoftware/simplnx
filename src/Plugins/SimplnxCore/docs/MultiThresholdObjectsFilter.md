@@ -16,6 +16,31 @@ It is possible to set custom values for both the TRUE and FALSE values that will
 
 **NOTE**: If custom TRUE/FALSE values are chosen, then using the resulting mask array in any other filters that require a mask array will break those other filters.  This is because most other filters that require a mask array make the assumption that the true/false values are 1/0.
 
+## Algorithm
+
+This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.
+
+### In-Core Algorithm (Direct)
+
+When all input arrays reside in memory, the **Direct** algorithm is used. For each threshold condition, it reads the input array via per-element access and compares every element against the threshold value. The results are stored in a temporary vector, then merged into the output mask using AND/OR logic.
+
+### Out-of-Core Algorithm (Scanline)
+
+When any input array is backed by chunked on-disk storage (out-of-core), the **Scanline** algorithm is used. Out-of-core data lives in compressed chunks on disk; per-element access would trigger repeated chunk load/decompress/evict cycles ("chunk thrashing").
+
+The Scanline algorithm processes data in fixed-size chunks (64K tuples at a time):
+
+1. Read a chunk of the input array via bulk I/O (copyIntoBuffer)
+2. Apply the threshold comparison to produce a chunk-sized result buffer
+3. For the first threshold condition, write results directly to the output mask via bulk I/O
+4. For subsequent conditions, read the current output chunk, merge using AND/OR logic, and write back
+
+This approach replaces the Direct variant's per-element reads with sequential bulk reads, and reduces temporary memory from O(n) to O(64K) per threshold condition.
+
+### Performance
+
+The in-core Direct algorithm is faster for in-memory data. The out-of-core Scanline algorithm converts random per-element access into sequential bulk I/O and reduces peak memory usage. For a dataset with 100 million tuples, the Scanline variant uses approximately 64 KB of temporary memory per threshold condition instead of approximately 100 MB. Both produce identical output.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

@@ -11,17 +11,27 @@
 namespace nx::core
 {
 
+/**
+ * @brief Input values for the WriteGBCDTriangleData algorithm.
+ */
 struct ORIENTATIONANALYSIS_EXPORT WriteGBCDTriangleDataInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath SurfaceMeshFaceNormalsArrayPath;
-  DataPath SurfaceMeshFaceAreasArrayPath;
-  DataPath FeatureEulerAnglesArrayPath;
+  FileSystemPathParameter::ValueType OutputFile; ///< Path to the output ASCII file.
+  DataPath SurfaceMeshFaceLabelsArrayPath;       ///< Path to FaceLabels (2-component int32, grain IDs per face side).
+  DataPath SurfaceMeshFaceNormalsArrayPath;      ///< Path to FaceNormals (3-component float64).
+  DataPath SurfaceMeshFaceAreasArrayPath;        ///< Path to FaceAreas (1-component float64).
+  DataPath FeatureEulerAnglesArrayPath;          ///< Path to FeatureEulerAngles (3-component float32, feature-level).
 };
 
 /**
- * @class
+ * @class WriteGBCDTriangleData
+ * @brief Writes grain boundary triangle data (Euler angles, normals, areas) to an ASCII file.
+ *
+ * @section ooc_summary OOC Optimization Summary
+ * Three face-level arrays (labels, normals, areas) are read in chunks via copyIntoBuffer()
+ * and formatted into a string buffer before writing. The feature-level Euler angles array
+ * is cached entirely in memory (small, one tuple per grain). This avoids per-element OOC
+ * access and reduces file I/O to one write per chunk.
  */
 class ORIENTATIONANALYSIS_EXPORT WriteGBCDTriangleData
 {

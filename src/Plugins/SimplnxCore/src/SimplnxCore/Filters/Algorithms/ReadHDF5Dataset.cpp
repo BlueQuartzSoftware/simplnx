@@ -14,6 +14,9 @@ using namespace nx::core;
 namespace fs = std::filesystem;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Constructs ReadHDF5Dataset with the given DataStructure, message handler, cancel flag, and input values.
+ */
 ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadHDF5DatasetInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -26,6 +29,21 @@ ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::Me
 ReadHDF5Dataset::~ReadHDF5Dataset() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Reads one or more HDF5 datasets from the input file and populates the DataStructure.
+ *
+ * Each selected dataset is read via HDF5::Support::FillDataArray, which internally uses
+ * the HDF5 library for bulk reads. Progress messages report the current dataset index
+ * and name. Cancel checking occurs between datasets so that long multi-dataset imports
+ * can be interrupted.
+ *
+ * @section ooc_note OOC Note
+ * The OOC changes here are minor (progress messaging and cancel support between datasets).
+ * The actual HDF5 -> DataStore transfer is handled by the FillDataArray utility which
+ * already uses bulk I/O internally.
+ *
+ * @return Result<> indicating success or an error from the HDF5 reading infrastructure.
+ */
 Result<> ReadHDF5Dataset::operator()()
 {
   auto pSelectedAttributeMatrixValue = m_InputValues->ImportHdf5Object.parent;

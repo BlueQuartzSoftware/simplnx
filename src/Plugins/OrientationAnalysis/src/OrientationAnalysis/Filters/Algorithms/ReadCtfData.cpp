@@ -99,6 +99,20 @@ std::pair<int32, std::string> ReadCtfData::loadMaterialInfo(ebsdlib::CtfReader* 
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Copies raw EBSD data from the EbsdLib CtfReader buffers into the DataStructure arrays.
+ *
+ * @section ooc_strategy OOC Strategy
+ * Same bulk I/O approach as ReadAngData::copyRawEbsdData():
+ *   - Single-component arrays use one copyFromBuffer() call each.
+ *   - Euler angles use chunked interleaving with hex correction and optional degree-to-radian
+ *     conversion applied in-buffer before each chunk write.
+ *   - The crystal structures array is cached locally via copyIntoBuffer() because it is
+ *     ensemble-level (tiny) and is needed for every cell during hex correction checks.
+ *     Reading it once avoids repeated OOC lookups during the per-cell loop.
+ *
+ * @param reader Pointer to the EbsdLib CtfReader that has already parsed the file.
+ */
 void ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
 {
   const DataPath cellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
@@ -110,19 +124,22 @@ void ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
   // Prepare the Cell Attribute Matrix with the correct number of tuples based on the total Cells being read from the file.
   std::vector<usize> tDims = {imageGeom.getNumXCells(), imageGeom.getNumYCells(), imageGeom.getNumZCells()};
 
-  // Copy the Phase Array
+  // OOC-safe bulk write of the Phase array (single copyFromBuffer call)
   {
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::Phases));
     auto* phasePtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
     targetArray.getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phasePtr, totalCells));
   }
 
-  // Condense the Euler Angles from 3 separate arrays into a single 1x3 array
+  // Condense 3 separate Euler angle arrays into a single interleaved 3-component array,
+  // applying hex correction and degree-to-radian conversion as needed.
   {
     auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::CrystalStructures));
     const auto* phasePtr = reinterpret_cast<const int32*>(reader->getPointerByName(ebsdlib::Ctf::Phase));
 
-    // Cache ensemble-level crystal structures locally
+    // Cache ensemble-level crystal structures locally via bulk read.
+    // This array is tiny (one entry per phase) but is accessed for every cell
+    // during hex correction -- caching avoids repeated OOC lookups.
     const auto& csStore = crystalStructures.getDataStoreRef();
     const usize numPhases = csStore.getNumberOfTuples();
     std::vector<uint32> csCache(numPhases);
@@ -135,6 +152,7 @@ void ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
     auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::CtfFile::EulerAngles));
     auto& eulerStore = cellEulerAngles.getDataStoreRef();
 
+    // Chunked interleaving with corrections applied in the local buffer before bulk write
     constexpr usize k_ChunkSize = 65536;
     std::vector<float32> eulerBuf(k_ChunkSize * 3);
     for(usize offset = 0; offset < totalCells; offset += k_ChunkSize)
@@ -164,6 +182,8 @@ void ReadCtfData::copyRawEbsdData(ebsdlib::CtfReader* reader) const
     }
   }
 
+  // OOC-safe bulk writes for remaining single-component arrays.
+  // Each copyFromBuffer() call writes the entire reader buffer in one I/O operation.
   {
     auto* srcPtr = reinterpret_cast<int32*>(reader->getPointerByName(ebsdlib::Ctf::Bands));
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ctf::Bands));

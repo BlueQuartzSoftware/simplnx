@@ -31,6 +31,17 @@ const std::atomic_bool& ComputeCAxisLocations::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Converts each cell's quaternion to a c-axis direction in the sample
+ * reference frame. Only hexagonal phases (6/m, 6/mmm) are processed; all
+ * others receive NaN output values.
+ *
+ * OOC strategy: Cell-level arrays (quaternions, phases, output) are processed
+ * in fixed-size chunks (65K tuples). Each chunk is bulk-read via
+ * copyIntoBuffer, processed locally, and the output is bulk-written via
+ * copyFromBuffer. Ensemble-level crystal structures are cached in a local
+ * vector.
+ */
 Result<> ComputeCAxisLocations::operator()()
 {
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
@@ -67,7 +78,8 @@ Result<> ComputeCAxisLocations::operator()()
   std::vector<uint32> crystalStructuresBuf(numPhases);
   crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresBuf.data(), numPhases));
 
-  // Process cells in chunks using bulk I/O
+  // Process cells in 64K-tuple chunks using sequential bulk I/O.
+  // This amortizes OOC overhead (page faults, HDF5 reads) over many tuples.
   constexpr usize k_ChunkSize = 65536;
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
@@ -85,7 +97,7 @@ Result<> ComputeCAxisLocations::operator()()
 
     const usize chunkCount = std::min(k_ChunkSize, totalPoints - chunkStart);
 
-    // Bulk-read quaternions (4 components), phases (1 component)
+    // Bulk-read this chunk: quaternions (4 components per tuple) and phases (1 per tuple)
     std::vector<float32> quatBuf(chunkCount * 4);
     std::vector<int32> phaseBuf(chunkCount);
     std::vector<float32> outputBuf(chunkCount * 3);
@@ -118,6 +130,7 @@ Result<> ComputeCAxisLocations::operator()()
       }
     }
 
+    // Bulk-write the computed c-axis locations for this chunk
     outputStore.copyFromBuffer(chunkStart * 3, nonstd::span<const float32>(outputBuf.data(), chunkCount * 3));
   }
   return result;

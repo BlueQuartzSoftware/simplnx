@@ -52,7 +52,16 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
 };
 
 /**
- * @class
+ * @class WritePoleFigure
+ * @brief Generates pole figure images from Euler angle data using Lambert or discrete projection.
+ *
+ * Supports multiple output formats (TIFF, BMP, PNG, JPG, PDF), layouts (horizontal,
+ * vertical, square), and optional intensity data output. The projection computation
+ * uses EbsdLib's ModifiedLambertProjection or a discrete stereographic projection.
+ *
+ * @note The OOC changes in this file are limited to type cleanup (size_t -> usize,
+ * float -> float32) and removing an unused include. The algorithm itself operates on
+ * EbsdLib's internal arrays which are always in-memory.
  */
 class ORIENTATIONANALYSIS_EXPORT WritePoleFigure
 {

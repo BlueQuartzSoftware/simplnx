@@ -30,6 +30,13 @@ struct ComputeFeatureNeighborsInputValues;
 class SIMPLNXCORE_EXPORT ComputeFeatureNeighborsDirect
 {
 public:
+  /**
+   * @brief Constructs the in-core algorithm with all resources it needs.
+   * @param dataStructure The DataStructure containing input/output arrays
+   * @param mesgHandler Message handler for progress reporting
+   * @param shouldCancel Atomic flag checked periodically to support user cancellation
+   * @param inputValues Non-owning pointer to the parameter bundle
+   */
   ComputeFeatureNeighborsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeFeatureNeighborsInputValues* inputValues);
   ~ComputeFeatureNeighborsDirect() noexcept;
 
@@ -38,13 +45,25 @@ public:
   ComputeFeatureNeighborsDirect& operator=(const ComputeFeatureNeighborsDirect&) = delete;
   ComputeFeatureNeighborsDirect& operator=(ComputeFeatureNeighborsDirect&&) noexcept = delete;
 
+  /**
+   * @brief Executes the in-core feature neighbor computation.
+   *
+   * Uses Nathan Young's two-stage algorithm with compile-time dimension specialization:
+   *   - Stage 1: Process boundary cells (corners, edges, faces) with validity checks
+   *   - Stage 2: Process internal cells with all 6 neighbors guaranteed valid
+   *
+   * Per-face surface areas are computed using precomputed face dimensions rather
+   * than a uniform area, fixing a bug from DREAM3D 6.5.
+   *
+   * @return Result<> with any errors encountered during execution
+   */
   Result<> operator()();
 
 private:
-  DataStructure& m_DataStructure;
-  const ComputeFeatureNeighborsInputValues* m_InputValues = nullptr;
-  const std::atomic_bool& m_ShouldCancel;
-  const IFilter::MessageHandler& m_MessageHandler;
+  DataStructure& m_DataStructure;                                    ///< Reference to the DataStructure containing all arrays
+  const ComputeFeatureNeighborsInputValues* m_InputValues = nullptr; ///< Non-owning pointer to input parameters
+  const std::atomic_bool& m_ShouldCancel;                            ///< User cancellation flag
+  const IFilter::MessageHandler& m_MessageHandler;                   ///< Message handler for progress updates
 };
 
 } // namespace nx::core

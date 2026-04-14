@@ -66,6 +66,46 @@ Each triangle that is created will have an 2 component attribute called `Face La
 side of the triangle. If one of the triangles represents the border of the virtual box then one of the FaceLables will
 have a value of -1.
 
+## Algorithm
+
+This filter uses a dispatch mechanism to select the optimal algorithm implementation based on the storage type of the input arrays.
+
+### In-Core Algorithm (Direct)
+
+When all input arrays are backed by in-memory storage, the **SurfaceNetsDirect** algorithm is used. This delegates to the MMSurfaceNet library, which is a C++ implementation of the Surface Nets algorithm from Frisken (2022).
+
+The algorithm proceeds in six phases:
+
+1. **Build Surface Net**: The MMSurfaceNet library constructs a padded grid (dimX+2, dimY+2, dimZ+2) and classifies every cell by examining its 8 corner labels. Cells where not all corners have the same FeatureId are "surface cells" and receive a mesh vertex at the cell center. This reads the entire FeatureIds array via direct element access.
+
+2. **Smoothing** (optional): Iterative Laplacian-like relaxation moves each vertex toward the average of its face-connected neighbors, clamped to stay within `MaxDistanceFromVoxel` of the cell center. The `RelaxationFactor` controls the blending between current and average position.
+
+3. **Vertex Transformation**: Converts cell-local coordinates (where 0.5 = cell center) to world coordinates using the ImageGeom origin and spacing.
+
+4. **Triangle Counting**: First pass over surface vertices, checking 3 edges per cell (BackBottom, LeftBottom, LeftBack) for feature boundary crossings. Each crossing produces a quad (4 vertices) that becomes 2 triangles.
+
+5. **Triangle Generation**: Second pass that writes triangle connectivity and face labels. Quads are triangulated using the diagonal that minimizes total triangle area, reducing self-intersections.
+
+6. **Winding Repair** (optional): Fixes inconsistent triangle orientations.
+
+### Out-of-Core Algorithm (Scanline)
+
+When any input array uses chunked out-of-core (OOC) storage, the **SurfaceNetsScanline** algorithm is selected automatically. This variant reimplements the entire Surface Nets algorithm without the MMSurfaceNet library, using only O(surface) memory instead of O(volume).
+
+Key optimizations:
+
+- **Z-slice bulk I/O**: FeatureIds are read two Z-slices at a time via `copyIntoBuffer()` with a rolling ping-pong buffer. Each cell's 8 corner labels are resolved from the two buffered slices using a `cornerLabel()` helper.
+
+- **O(surface) cell storage**: Instead of allocating one Cell per padded voxel (the O(volume) MMCellMap), only surface cells are stored in a vector of `VertexInfo` structs plus a hash map for O(1) neighbor lookups. For typical datasets, the surface is O(n^{2/3}) vs O(n) for the full volume.
+
+- **Self-contained smoothing**: The relaxation is performed entirely on the O(surface) vertex data using neighbor lookups through the hash map, without needing the full MMCellMap.
+
+- **Buffered output writes**: All triangle connectivity, face labels, vertex coordinates, and node types are accumulated in local buffers and flushed via `copyFromBuffer()` in bulk.
+
+### Performance
+
+The in-core (Direct) variant is fastest for datasets that fit in memory, leveraging the optimized MMSurfaceNet library. The out-of-core (Scanline) variant avoids the O(volume) memory allocation and per-element reads that would cause chunk thrashing on OOC datasets. For a 500x500x500 dataset with ~1% surface cells, the Scanline variant uses roughly 100x less memory for cell classification. Both variants produce identical output.
+
 ## Notes
 
 This filter should be used in place of the "QuickMesh Surface Filter".

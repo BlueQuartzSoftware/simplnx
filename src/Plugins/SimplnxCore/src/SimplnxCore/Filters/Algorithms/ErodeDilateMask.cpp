@@ -1,3 +1,42 @@
+/**
+ * @file ErodeDilateMask.cpp
+ * @brief Iterative morphological erosion/dilation of a boolean mask array,
+ *        optimized for out-of-core (OOC) data stores via Z-slice buffered I/O.
+ *
+ * ## High-Level Flow (per iteration)
+ *
+ * 1. **Initialize dual rolling windows** -- Load mask Z-slices 0 and 1 into
+ *    both `maskSlices` (read buffer) and `maskCopySlices` (write buffer).
+ *
+ * 2. **Scan every voxel** (Z-major, then Y, then X):
+ *    - For each false (unmasked) voxel, examine face neighbors using the
+ *      read buffer (`maskSlices`).
+ *    - **Dilate**: If any neighbor is true, set this voxel to true in the
+ *      write buffer (`maskCopySlices[1]`).
+ *    - **Erode**: If any neighbor is true, set that neighbor to false in
+ *      the write buffer (`maskCopySlices[slot]`).
+ *    - The dual-buffer approach prevents modifications from affecting
+ *      neighbor reads within the same iteration.
+ *
+ * 3. **Deferred write-back** -- After processing Z-slice z, write the
+ *    completed z-1 slice from the write buffer back to the data store
+ *    using copyFromBuffer. This keeps writes sequential.
+ *
+ * 4. **Rotate windows** -- Swap both read and write buffer slots forward
+ *    by one Z-layer. Load the next Z+1 slice.
+ *
+ * 5. **Flush remaining slices** -- After the Z-loop exits, write back the
+ *    last slice (or the single slice for 1-deep volumes).
+ *
+ * ## Key Design Note: Why uint8 buffers?
+ *
+ * std::vector<bool> uses bit-packing, which means individual elements cannot
+ * be addressed by pointer. Since the rolling window needs random element
+ * access by index, uint8 buffers (0 or 1) are used instead. A separate
+ * bool[] buffer is used for the copyIntoBuffer/copyFromBuffer calls which
+ * require a contiguous bool array.
+ */
+
 #include "ErodeDilateMask.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -42,30 +81,41 @@ Result<> ErodeDilateMask::operator()()
       static_cast<int64>(udims[2]),
   };
 
+  // Precompute face-neighbor index offsets and iteration order
   std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  // Z-slice buffering: maintain rolling window of 3 adjacent Z-slices for mask
-  // to avoid random OOC chunk access during neighbor lookups.
+  // ---- Z-slice buffering setup ----
+  // Maintain a rolling window of 3 adjacent Z-slices in memory to avoid
+  // random per-voxel access to the OOC data store during neighbor lookups.
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
-  // Rolling window: slot 0 = z-1, slot 1 = z (current), slot 2 = z+1
+  // READ buffer: maskSlices holds the original mask state for this iteration.
+  // Slot 0 = z-1, slot 1 = z (current), slot 2 = z+1.
+  // Uses uint8 (0/1) because std::vector<bool> is bit-packed and does not
+  // support pointer-based element access.
   std::array<std::vector<uint8>, 3> maskSlices;
   for(auto& ms : maskSlices)
   {
     ms.resize(sliceSize);
   }
-  // maskCopy uses same rolling window structure for output
+
+  // WRITE buffer: maskCopySlices accumulates modifications for this iteration.
+  // Starts as a copy of maskSlices and is modified during the scan.
   std::array<std::vector<uint8>, 3> maskCopySlices;
   for(auto& ms : maskCopySlices)
   {
     ms.resize(sliceSize);
   }
 
-  // Temporary bool buffer for bulk I/O (std::vector<bool> is bit-packed, so use unique_ptr<bool[]>)
+  // Temporary bool[] buffer for bulk I/O with the data store.
+  // copyIntoBuffer/copyFromBuffer require contiguous bool arrays,
+  // so we convert between bool and uint8 during reads and writes.
   auto boolBuf = std::make_unique<bool[]>(sliceSize);
   auto& maskStore = mask.getDataStoreRef();
 
+  // Reads one Z-slice from the data store into both the read and write buffers.
+  // The bool->uint8 conversion happens here.
   auto readMaskSlice = [&](int64 z, usize slot) {
     const usize zOffset = static_cast<usize>(z) * sliceSize;
     maskStore.copyIntoBuffer(zOffset, nonstd::span<bool>(boolBuf.get(), sliceSize));
@@ -76,23 +126,27 @@ Result<> ErodeDilateMask::operator()()
     }
   };
 
-  // Face neighbor ordering: 0=-Z, 1=-Y, 2=-X, 3=+X, 4=+Y, 5=+Z
+  // Maps face-neighbor index to rolling-window slot:
+  // -Z -> slot 0, -Y/-X/+X/+Y -> slot 1 (same Z), +Z -> slot 2
   constexpr std::array<usize, 6> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
 
+  // ---- Main iteration loop ----
   for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Iteration {}", iteration));
 
-    // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
+    // Re-initialize rolling window from the (potentially modified) store.
+    // z=0 -> slot 1 (current), z=1 -> slot 2 (next).
     readMaskSlice(0, 1);
     if(dims[2] > 1)
     {
       readMaskSlice(1, 2);
     }
 
+    // ---- Z-slice scan loop ----
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
-      // Advance rolling window for z > 0
+      // Advance both read and write rolling windows for z > 0
       if(zIdx > 0)
       {
         std::swap(maskSlices[0], maskSlices[1]);
@@ -105,14 +159,18 @@ Result<> ErodeDilateMask::operator()()
         }
       }
 
+      // ---- Inner XY scan ----
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
         for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
           const usize inSlice = static_cast<usize>(yIdx * dims[0] + xIdx);
 
+          // Only process false (unmasked) voxels -- these are the boundary
+          // candidates for both dilation and erosion.
           if(maskSlices[1][inSlice] == 0)
           {
+            // Determine valid face neighbors and mask off user-disabled directions
             std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             if(!m_InputValues->XDirOn)
             {
@@ -130,6 +188,8 @@ Result<> ErodeDilateMask::operator()()
               isValidFaceNeighbor[k_PositiveZNeighbor] = false;
             }
 
+            // Map each face neighbor to its in-slice offset within the
+            // appropriate rolling-window slot.
             const std::array<usize, 6> neighborInSlice = {
                 inSlice,                                         // -Z: same xy position in prev slice
                 static_cast<usize>((yIdx - 1) * dims[0] + xIdx), // -Y
@@ -148,10 +208,17 @@ Result<> ErodeDilateMask::operator()()
 
               if(m_InputValues->Operation == detail::k_DilateIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
               {
+                // DILATION: This false voxel has a true neighbor, so it
+                // should become true. Write into the copy buffer for the
+                // current slice (slot 1).
                 maskCopySlices[1][inSlice] = 1;
               }
               if(m_InputValues->Operation == detail::k_ErodeIndex && maskSlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] != 0)
               {
+                // EROSION: This false voxel has a true neighbor. Set the
+                // neighbor to false in the copy buffer. The neighbor may
+                // be in a different Z-slice (slot 0 or 2), which is why
+                // we write to maskCopySlices[k_NeighborSlot[faceIndex]].
                 maskCopySlices[k_NeighborSlot[faceIndex]][neighborInSlice[faceIndex]] = 0;
               }
             }
@@ -159,7 +226,10 @@ Result<> ErodeDilateMask::operator()()
         }
       }
 
-      // Write back the completed z-1 slice using bulk I/O
+      // ---- Write back the completed z-1 slice using bulk I/O ----
+      // After processing slice z, the modifications for z-1 are finalized
+      // (no future voxel at z+1 or beyond can affect z-1's write buffer).
+      // Convert uint8 -> bool and write back via copyFromBuffer.
       if(zIdx > 0)
       {
         const usize prevZOffset = static_cast<usize>(zIdx - 1) * sliceSize;
@@ -171,9 +241,10 @@ Result<> ErodeDilateMask::operator()()
       }
     }
 
-    // Write back the last slice(s) using bulk I/O
+    // ---- Flush the last (or only) Z-slice ----
     if(dims[2] == 1)
     {
+      // Single-slice volume: the current slot is still in position 1
       for(usize i = 0; i < sliceSize; i++)
       {
         boolBuf[i] = (maskCopySlices[1][i] != 0);
@@ -182,6 +253,8 @@ Result<> ErodeDilateMask::operator()()
     }
     else
     {
+      // Multi-slice volume: after the loop, the last slice ended up in
+      // slot 1 (due to swaps), which corresponds to dims[2]-1.
       const usize lastZOffset = static_cast<usize>(dims[2] - 1) * sliceSize;
       for(usize i = 0; i < sliceSize; i++)
       {

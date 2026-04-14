@@ -108,6 +108,22 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
   return {};
 }
 
+/**
+ * @brief Copies selected EBSD data arrays from the H5Ebsd reader into the DataStructure.
+ *
+ * For each selected array name, retrieves the reader's in-memory buffer and bulk-writes it
+ * into the corresponding DataArray via copyFromBuffer(). This is OOC-safe: one bulk I/O
+ * operation per array regardless of the underlying DataStore backend.
+ *
+ * @tparam H5EbsdReaderType The H5Ebsd volume reader type (H5AngVolumeReader or H5CtfVolumeReader).
+ * @tparam T The element type of the arrays to copy (float32 or int).
+ * @param dataStructure The DataStructure containing the destination arrays.
+ * @param ebsdReader The H5Ebsd reader holding parsed data buffers.
+ * @param arrayNames All possible array names of this type.
+ * @param selectedArrayNames Set of array names the user selected for import.
+ * @param cellAttributeMatrixPath Parent path for the cell-level arrays.
+ * @param totalPoints Total number of voxels in the volume.
+ */
 template <typename H5EbsdReaderType, typename T>
 void CopyData(nx::core::DataStructure& dataStructure, H5EbsdReaderType* ebsdReader, const std::vector<std::string>& arrayNames, std::set<std::string> selectedArrayNames,
               const nx::core::DataPath& cellAttributeMatrixPath, usize totalPoints)
@@ -120,6 +136,7 @@ void CopyData(nx::core::DataStructure& dataStructure, H5EbsdReaderType* ebsdRead
       T* source = reinterpret_cast<T*>(ebsdReader->getPointerByName(arrayName));
       nx::core::DataPath dataPath = cellAttributeMatrixPath.createChildPath(arrayName);
       auto& destination = dataStructure.getDataRefAs<DataArrayType>(dataPath);
+      // OOC-safe: single bulk write of the entire array
       destination.getDataStoreRef().copyFromBuffer(0, nonstd::span<const T>(source, totalPoints * destination.getNumberOfComponents()));
     }
   }
@@ -218,12 +235,18 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
     {
       degToRad = nx::core::numbers::pi_v<float32> / 180.0F;
     }
-    // Interleave 3 separate Euler arrays into [e0,e1,e2, e0,e1,e2, ...] layout using a chunked buffer
-    // Also apply Oxford hex correction if needed (avoids a second pass over the data)
+    // Interleave 3 separate Euler arrays into [e0,e1,e2, e0,e1,e2, ...] layout using a chunked buffer.
+    // Also apply Oxford hex correction if needed (avoids a second pass over the data).
+    //
+    // OOC note: The chunked approach writes k_ChunkTuples interleaved tuples per copyFromBuffer()
+    // call, bounding memory to ~768 KB while maintaining bulk I/O efficiency.
     constexpr usize k_ChunkTuples = 65536;
     auto eulerBuf = std::make_unique<float32[]>(k_ChunkTuples * 3);
 
-    // Cache phase data and crystal structures locally if Oxford hex correction is needed
+    // Cache phase data and crystal structures locally if Oxford hex correction is needed.
+    // The phase array (cell-level, potentially large) is cached via copyIntoBuffer() to
+    // avoid per-element OOC lookups during the correction loop. The crystal structures
+    // array (ensemble-level, tiny) is also cached for the same reason.
     std::unique_ptr<int32[]> phaseCache;
     std::unique_ptr<uint32[]> xtalCache;
     bool applyHexCorrection = (manufacturer == ebsdlib::Ctf::Manufacturer && phaseDataArrayPtr != nullptr);

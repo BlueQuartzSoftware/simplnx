@@ -45,6 +45,20 @@ In this new structure, what follows is what the created structures represent:
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 
 
+## Algorithm
+
+### In-Core Path
+
+For each pair of adjacent Z-sections, the algorithm computes the misorientation between voxels across the section boundary. It tests candidate X-Y shifts to find the shift that minimizes the total misorientation between the two sections. All voxel comparisons use direct array indexing with `operator[]`.
+
+### Out-of-Core Path
+
+Reads pairs of adjacent Z-slices into local memory buffers using `copyIntoBuffer()`. All misorientation comparisons for a given slice pair operate entirely on the in-memory buffers. This converts what would otherwise be random cross-slice element access into sequential bulk reads, avoiding chunk thrashing when data is stored on disk in compressed chunks.
+
+### Performance
+
+The OOC optimization matters most for large datasets that exceed available RAM. By reading entire Z-slices in bulk rather than accessing individual voxels across slice boundaries, the algorithm avoids repeatedly decompressing the same disk chunks. For in-memory datasets, the two paths produce identical results with negligible overhead difference.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

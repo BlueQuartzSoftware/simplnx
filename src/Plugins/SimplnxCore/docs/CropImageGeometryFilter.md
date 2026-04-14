@@ -70,6 +70,14 @@ In this example the user is going to define the crop using physical coordinates 
 
 User may note that the way the bounds are determined are affected by the origin and spacing, so be sure to take these into account when supplying coordinate bounds for the crop.
 
+## Algorithm
+
+The crop operation copies voxel data from the source geometry's bounding region into a new (smaller) geometry. For each cell-level data array, the data is copied one X-row at a time using bulk `copyIntoBuffer()` and `copyFromBuffer()` calls.
+
+### Performance
+
+This filter is optimized for out-of-core (OOC) data storage. The original implementation copied data element-by-element in a triple-nested loop (Z, Y, X), causing a DataStore chunk operation per voxel per component. The optimized implementation copies entire X-rows at a time, reducing the number of I/O operations from O(voxels * components) to O(Z_range * Y_range), a factor-of-X_range improvement.
+
 ## Renumber Features
 
 It is possible with this **Filter** to fully remove **Features** from the volume, possibly resulting in consistency errors if more **Filters** process the data in the pipeline. If the user selects to *Renumber Features* then the *Feature Ids* array will be adjusted so that all **Features** are continuously numbered starting from 1. The user should decide if they would like their **Features** renumbered or left alone (in the case where the cropped output is being compared to some larger volume).

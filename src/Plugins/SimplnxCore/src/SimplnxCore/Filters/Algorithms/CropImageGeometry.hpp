@@ -16,34 +16,49 @@
 namespace nx::core
 {
 
+/**
+ * @struct CropImageGeometryInputValues
+ * @brief Holds all user-configured parameters for the CropImageGeometry algorithm.
+ */
 struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
 {
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  DataGroupCreationParameter::ValueType OutputImageGeometryPath;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  VectorUInt64Parameter::ValueType MinVoxel;
-  VectorUInt64Parameter::ValueType MaxVoxel;
-  BoolParameter::ValueType RenumberFeatures;
-  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
-  BoolParameter::ValueType RemoveOriginalGeometry;
-  BoolParameter::ValueType CropXDim;
-  BoolParameter::ValueType CropYDim;
-  BoolParameter::ValueType CropZDim;
+  GeometrySelectionParameter::ValueType InputImageGeometryPath;                ///< Source ImageGeom to crop.
+  DataGroupCreationParameter::ValueType OutputImageGeometryPath;               ///< Destination path for the cropped geometry.
+  ArraySelectionParameter::ValueType FeatureIdsPath;                           ///< Per-cell Feature ID array (for renumbering).
+  VectorUInt64Parameter::ValueType MinVoxel;                                   ///< User-specified minimum voxel bounds.
+  VectorUInt64Parameter::ValueType MaxVoxel;                                   ///< User-specified maximum voxel bounds.
+  BoolParameter::ValueType RenumberFeatures;                                   ///< If true, renumber Feature IDs to be contiguous.
+  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath; ///< Feature-level AM (for renumbering).
+  BoolParameter::ValueType RemoveOriginalGeometry;                             ///< If true, remove the source geometry after cropping.
+  BoolParameter::ValueType CropXDim;                                           ///< Enable cropping in the X dimension.
+  BoolParameter::ValueType CropYDim;                                           ///< Enable cropping in the Y dimension.
+  BoolParameter::ValueType CropZDim;                                           ///< Enable cropping in the Z dimension.
 
   // Precomputed bounds from preflight
-  uint64 XMin;
-  uint64 XMax;
-  uint64 YMin;
-  uint64 YMax;
-  uint64 ZMin;
-  uint64 ZMax;
+  uint64 XMin; ///< Effective minimum X voxel index (inclusive).
+  uint64 XMax; ///< Effective maximum X voxel index (exclusive).
+  uint64 YMin; ///< Effective minimum Y voxel index (inclusive).
+  uint64 YMax; ///< Effective maximum Y voxel index (exclusive).
+  uint64 ZMin; ///< Effective minimum Z voxel index (inclusive).
+  uint64 ZMax; ///< Effective maximum Z voxel index (exclusive).
 };
 
 /**
  * @class CropImageGeometry
- * @brief This algorithm implements support code for the CropImageGeometryFilter
+ * @brief Crops a region of interest from an ImageGeom by copying voxel data
+ * from the source bounds into a new (smaller) ImageGeom.
+ *
+ * @section ooc_optimization Out-of-Core Optimization
+ * The original implementation copied data element-by-element using getValue()/setValue()
+ * in a triple-nested loop (Z, Y, X). For OOC data, each getValue() and setValue()
+ * call triggered a chunk operation.
+ *
+ * The optimized implementation copies data one X-row at a time using bulk
+ * copyIntoBuffer() and copyFromBuffer(). For each (Z, Y) pair, an entire row
+ * of (XMax - XMin) tuples is read/written in a single operation. This reduces
+ * the number of chunk operations from O(voxels * components) to O(Z * Y), a
+ * factor-of-XDim improvement.
  */
-
 class SIMPLNXCORE_EXPORT CropImageGeometry
 {
 public:
@@ -55,13 +70,17 @@ public:
   CropImageGeometry& operator=(const CropImageGeometry&) = delete;
   CropImageGeometry& operator=(CropImageGeometry&&) noexcept = delete;
 
+  /**
+   * @brief Executes the crop operation, copying data row-by-row via bulk I/O.
+   * @return Result<> indicating success or error.
+   */
   Result<> operator()();
 
 private:
-  DataStructure& m_DataStructure;
-  const CropImageGeometryInputValues* m_InputValues = nullptr;
-  const std::atomic_bool& m_ShouldCancel;
-  const IFilter::MessageHandler& m_MessageHandler;
+  DataStructure& m_DataStructure;                              ///< Reference to the DataStructure.
+  const CropImageGeometryInputValues* m_InputValues = nullptr; ///< User-configured parameters.
+  const std::atomic_bool& m_ShouldCancel;                      ///< Cancellation flag.
+  const IFilter::MessageHandler& m_MessageHandler;             ///< Message handler for progress.
 };
 
 } // namespace nx::core

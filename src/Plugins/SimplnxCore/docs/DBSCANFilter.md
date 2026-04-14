@@ -172,6 +172,33 @@ The *Distance Metric* parameter provides the following choices:
 
 The inclusion of randomness in this algorithm is solely to attempt to reduce bias from starting cluster. Three parse order options are available: *Low Density First* (deterministic, no seed needed), *Random* (non-deterministic, uses a time-based seed), and *Seeded Random* (deterministic, uses a user-supplied seed value for reproducibility). Low Density First produced identical results faster in our test cases, but the random initialization is truest to the well known DBSCAN algorithm.
 
+## Algorithm
+
+This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.
+
+### In-Core Algorithm (Direct)
+
+When all input arrays reside in memory, the **Direct** algorithm is used. It accesses array elements via direct per-element operator[] calls, which are optimal for in-memory data.
+
+The grid-based DBSCAN algorithm proceeds in three phases:
+
+1. **Grid construction**: The input array is scanned to determine coordinate bounds, create a regular grid with cell side length epsilon / sqrt(dimensions), and bin each data point into a grid cell. Bit-packed adjacency tables are built for fast neighbor grid queries.
+2. **Clustering**: Core grid cells (those with >= minPoints) are identified and processed according to the selected parse order. Adjacent grid cells are merged into the same cluster if any pair of points between them has distance < epsilon. Non-core cells are then expanded into nearby clusters.
+3. **Labeling**: Final cluster IDs are written to the output array. Points in unassigned cells become outliers (cluster 0).
+
+### Out-of-Core Algorithm (Scanline)
+
+When any input array is backed by chunked on-disk storage (out-of-core), the **Scanline** algorithm is used. Out-of-core data lives in compressed chunks on disk; per-element operator[] access during the multi-pass grid construction and random-access distance checks would trigger repeated chunk load/decompress/evict cycles.
+
+The Scanline algorithm addresses this with two key modifications:
+
+- **Chunked grid construction**: Instead of per-element operator[] access during the 2-3 passes over the input array (bounds detection, binning, cell filling), the Scanline variant reads data in sequential 64K-tuple chunks via copyIntoBuffer(). This converts millions of per-element random accesses into thousands of sequential bulk reads.
+- **On-demand grid cell reads**: During distance checks between adjacent grid cells (canMerge), the Direct variant randomly indexes into the full input array for every point in both cells. The Scanline variant instead bulk-reads all coordinate data for each grid cell into a local buffer, then performs all pairwise distance computations entirely in memory.
+
+### Performance
+
+The in-core Direct algorithm is faster for in-memory data due to the lower overhead of operator[] access. The out-of-core Scanline algorithm converts random per-element access into sequential bulk I/O, which is essential for data stored on disk in compressed chunks. The clustering and cluster-expansion phases operate on the in-memory grid index in both variants, so their performance is identical. Both produce the same clustering results.
+
 % Auto generated parameter table will be inserted here
 
 ## References

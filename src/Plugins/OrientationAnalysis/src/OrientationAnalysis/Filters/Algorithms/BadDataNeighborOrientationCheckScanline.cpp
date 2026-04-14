@@ -16,8 +16,27 @@ using namespace nx::core;
 namespace
 {
 /**
- * @brief Computes misorientation between quat1 and the neighbor at neighborSliceIdx.
- * Returns true if same phase, phase > 0, and misorientation < tolerance.
+ * @brief Checks whether a single face-neighbor has matching orientation.
+ *
+ * Given a neighbor's slice-local index within one of the rolling window buffers,
+ * this function checks:
+ *   1. Same phase as the target voxel (and phase > 0, i.e., not unindexed).
+ *   2. Misorientation between the target quaternion (quat1) and the neighbor's
+ *      quaternion is below the tolerance threshold.
+ *
+ * The misorientation is computed using the Laue-class-specific symmetry operators
+ * via LaueOps::calculateMisorientation(), which returns the minimum misorientation
+ * angle across all symmetrically-equivalent representations.
+ *
+ * @param neighborSliceIdx Index of the neighbor within the slice buffer (not a global voxel index).
+ * @param neighborQuats Quaternion buffer for the slice containing the neighbor (4 components per tuple).
+ * @param neighborPhases Phase buffer for the slice containing the neighbor.
+ * @param curPhase Phase ID of the target (bad) voxel.
+ * @param laueClass Crystal structure enum for the target voxel's phase.
+ * @param quat1 Quaternion of the target (bad) voxel, already in positive orientation.
+ * @param misorientationTolerance Maximum allowed misorientation in radians.
+ * @param orientationOps Vector of all LaueOps instances, indexed by crystal structure enum.
+ * @return true if the neighbor is same-phase with misorientation below tolerance.
  */
 inline bool isMisorientationMatch(int64 neighborSliceIdx, const std::vector<float32>& neighborQuats, const std::vector<int32>& neighborPhases, int32 curPhase, uint32 laueClass,
                                   const ebsdlib::QuatD& quat1, float32 misorientationTolerance, const std::vector<ebsdlib::LaueOps::Pointer>& orientationOps)
@@ -35,9 +54,31 @@ inline bool isMisorientationMatch(int64 neighborSliceIdx, const std::vector<floa
 }
 
 /**
- * @brief Counts matching good face-neighbors for a bad voxel at (xIdx, yIdx)
- * within the current Z-slice, using 3-slice rolling window buffers.
- * Returns the number of good neighbors with matching orientation.
+ * @brief Counts good face-neighbors with matching orientation for a bad voxel.
+ *
+ * Examines all 6 face-neighbors of the voxel at position (xIdx, yIdx, zIdx):
+ *   - -X, +X, -Y, +Y neighbors are looked up in the current slice buffers (curQuats, curPhases, curMask).
+ *   - -Z neighbor is looked up in the previous slice buffers (prevQuats, prevPhases, prevMask).
+ *   - +Z neighbor is looked up in the next slice buffers (nextQuats, nextPhases, nextMask).
+ *
+ * A neighbor "matches" if it is (a) marked as good in the mask, (b) same phase as the
+ * target, and (c) within the misorientation tolerance. Boundary checks prevent out-of-bounds
+ * access at volume edges.
+ *
+ * @param xIdx X coordinate of the target voxel within the slice.
+ * @param yIdx Y coordinate of the target voxel within the slice.
+ * @param zIdx Z coordinate (global) of the target voxel.
+ * @param dimX, dimY, dimZ Volume dimensions.
+ * @param sliceIndex Linear index within the 2D slice: yIdx * dimX + xIdx.
+ * @param prevQuats, curQuats, nextQuats Quaternion rolling window buffers.
+ * @param prevPhases, curPhases, nextPhases Phase rolling window buffers.
+ * @param prevMask, curMask, nextMask Mask rolling window buffers.
+ * @param curPhase Phase ID of the target voxel.
+ * @param laueClass Crystal structure enum for the target voxel's phase.
+ * @param quat1 Quaternion of the target voxel.
+ * @param misorientationTolerance Tolerance in radians.
+ * @param orientationOps LaueOps vector.
+ * @return Number of matching good face-neighbors (0-6).
  */
 inline int32 countMatchingNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, int64 dimX, int64 dimY, int64 dimZ, int64 sliceIndex, const std::vector<float32>& prevQuats,
                                     const std::vector<float32>& curQuats, const std::vector<float32>& nextQuats, const std::vector<int32>& prevPhases, const std::vector<int32>& curPhases,
@@ -88,19 +129,34 @@ BadDataNeighborOrientationCheckScanline::~BadDataNeighborOrientationCheckScanlin
 
 // -----------------------------------------------------------------------------
 /**
- * @brief Flips bad voxels to good using Z-slice rolling window bulk I/O.
+ * @brief OOC-safe bad-voxel flipping using Z-slice rolling window bulk I/O.
  *
- * Zero O(N) memory: no per-voxel neighborCount or mask arrays.  Instead,
- * neighbor counts are recomputed on-the-fly for each bad voxel during every
- * pass using only O(slice) rolling window buffers.  The mask is read/written
- * per-slice from the real OOC-backed mask array.
+ * This algorithm uses O(3 * sliceSize) memory for a 3-slice rolling window
+ * (previous, current, next Z-slices) instead of any global per-voxel arrays.
+ * Neighbor counts are recomputed on-the-fly for each bad voxel on every pass,
+ * trading computation for strictly sequential I/O that avoids chunk thrashing.
  *
- * For each level (6 down to NumberOfNeighbors), repeatedly scan the volume.
- * For each bad voxel, recompute the count of matching good face-neighbors.
- * If count >= currentLevel, flip the voxel.  Repeat until no flips occur.
+ * **Outer loop** (level from 6 down to NumberOfNeighbors):
+ *   At each level, the required neighbor count to flip a voxel decreases by 1.
+ *   Starting at 6 (all neighbors must agree) and relaxing to the user's threshold
+ *   ensures that high-confidence flips happen first, which in turn enables
+ *   additional flips in subsequent levels (cascade effect).
+ *
+ * **Inner loop** (pass until convergence):
+ *   For each pass at a given level:
+ *   1. Load Z-slices 0 and 1 into the rolling window.
+ *   2. Scan every voxel in the current slice. For each bad voxel, recompute the
+ *      count of matching good face-neighbors using the 3-slice window.
+ *   3. If count >= currentLevel, flip the voxel's mask in the local buffer.
+ *   4. If any flips occurred in the slice, write the updated mask back to the
+ *      OOC store and set the "changed" flag to trigger another pass.
+ *   5. Shift the rolling window forward by one Z-slice.
+ *
+ * Passes repeat until no voxels flip in a full volume scan, then the level decrements.
  */
 Result<> BadDataNeighborOrientationCheckScanline::operator()()
 {
+  // Convert misorientation tolerance from degrees to radians for LaueOps comparison.
   const float32 misorientationTolerance = m_InputValues->MisorientationTolerance * numbers::pi_v<float32> / 180.0f;
 
   const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeomPath);
@@ -109,6 +165,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
 
+  // Instantiate the mask comparison utility, which handles both bool and uint8 mask types.
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
   try
   {
@@ -123,11 +180,13 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   const int64 dimZ = static_cast<int64>(udims[2]);
   const int64 xyStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(dimY) * static_cast<usize>(dimX);
-  const usize quatSliceElems = sliceSize * 4;
+  const usize quatSliceElems = sliceSize * 4; // 4 quaternion components per voxel
 
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  // Cache ensemble-level CrystalStructures locally (tiny array)
+  // Cache the ensemble-level crystal structures array locally. This tiny array
+  // (one entry per phase) is accessed for every neighbor comparison, so caching
+  // avoids repeated per-element OOC reads.
   const usize numCrystalStructures = crystalStructures.getNumberOfTuples();
   std::vector<uint32> localCrystalStructures(numCrystalStructures);
   {
@@ -135,10 +194,14 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
     csStore.copyIntoBuffer(0, nonstd::span<uint32>(localCrystalStructures.data(), numCrystalStructures));
   }
 
+  // Obtain DataStore references for bulk slice I/O. All per-element access goes
+  // through copyIntoBuffer()/copyFromBuffer() to maintain sequential access patterns.
   auto& quatsStore = quats.getDataStoreRef();
   const auto& phasesStore = cellPhases.getDataStoreRef();
 
-  // Get the mask DataStore for bulk slice reads and per-element flip writes
+  // For uint8 masks, we can use bulk copyIntoBuffer()/copyFromBuffer() directly
+  // on the mask store. For bool masks, we fall back to per-element maskCompare
+  // access because there is no typed BoolAbstractDataStore with bulk I/O support.
   auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
   const bool maskIsUInt8 = (maskArray.getDataType() == DataType::uint8);
   AbstractDataStore<uint8>* maskStorePtr = nullptr;
@@ -147,7 +210,10 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
     maskStorePtr = &dynamic_cast<UInt8Array&>(maskArray).getDataStoreRef();
   }
 
-  // Rolling window buffers — O(slice) memory only
+  // ---- Rolling window buffers ----
+  // Three Z-slices of quaternions, phases, and mask values. These are swapped
+  // (not copied) as the window advances, so the total memory is 3 * sliceSize
+  // per array type.
   std::vector<float32> prevQuats(quatSliceElems);
   std::vector<float32> curQuats(quatSliceElems);
   std::vector<float32> nextQuats(quatSliceElems);
@@ -158,7 +224,10 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   std::vector<uint8> curMask(sliceSize);
   std::vector<uint8> nextMask(sliceSize);
 
-  // Helper to load a mask slice from the store
+  // Helper to load a mask slice from the store. For uint8 masks, uses bulk
+  // copyIntoBuffer() which is efficient for OOC stores. For bool masks, falls
+  // back to per-element access via maskCompare because BoolArray lacks typed
+  // bulk I/O support. The bool path is slower but only used in rare cases.
   auto loadMaskSlice = [&](usize offset, std::vector<uint8>& dest) {
     if(maskStorePtr != nullptr)
     {
@@ -174,7 +243,9 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
     }
   };
 
-  // Helper to load all 3 arrays for a given Z-slice into dest buffers
+  // Helper to bulk-load all three per-voxel arrays (quaternions, phases, mask) for a
+  // single Z-slice into the destination buffers. Each call issues 3 copyIntoBuffer()
+  // calls against the OOC stores, loading one complete Z-slice per array.
   auto loadSlice = [&](int64 z, std::vector<float32>& dstQuats, std::vector<int32>& dstPhases, std::vector<uint8>& dstMask) {
     const usize offset = static_cast<usize>(z) * sliceSize;
     quatsStore.copyIntoBuffer(offset * 4, nonstd::span<float32>(dstQuats.data(), quatSliceElems));

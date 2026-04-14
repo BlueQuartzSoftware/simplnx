@@ -11,6 +11,49 @@
 
 using namespace nx::core;
 
+// =============================================================================
+// ComputeFeatureNeighborsScanline — Out-of-Core (OOC) Algorithm
+//
+// This file implements the out-of-core (Scanline) variant of ComputeFeatureNeighbors.
+// It is selected by DispatchAlgorithm when any input array uses chunked on-disk
+// storage (e.g., ZarrStore / HDF5 chunked store).
+//
+// PROBLEM:
+//   The Direct variant uses per-element getValue() calls. When data is stored
+//   out-of-core in compressed chunks on disk, each getValue() may trigger:
+//     1. Decompress and load the containing chunk from disk
+//     2. Return the single requested value
+//     3. Evict the chunk when the LRU cache fills
+//   For a 3D image with millions of voxels, this "chunk thrashing" makes the
+//   algorithm catastrophically slow (100-1000x slower than in-core).
+//
+// SOLUTION — Z-SLICE ROLLING WINDOW:
+//   Instead of random per-element access, read entire Z-slices sequentially
+//   using copyIntoBuffer() bulk I/O. Maintain a rolling window of 3 slices:
+//     - prevSlice: Z-slice at (z-1), needed for -Z neighbor lookups
+//     - curSlice:  Z-slice at (z),   the slice currently being processed
+//     - nextSlice: Z-slice at (z+1), needed for +Z neighbor lookups
+//
+//   Within each slice, +/-X and +/-Y neighbors are resolved by simple index
+//   arithmetic on the curSlice buffer. After processing a slice, the buffers
+//   rotate: prev <- cur, cur <- next, and the next slice is loaded from disk.
+//
+// MEMORY BUDGET:
+//   3 slices of FeatureIds (int32) + 1 slice of BoundaryCells (int8)
+//   = 3 * (dimX * dimY * 4 bytes) + (dimX * dimY * 1 byte)
+//   For a 500x500 slice, this is ~3.25 MB regardless of how many Z-slices exist.
+//
+// OUTPUT WRITING:
+//   BoundaryCells output is also written one Z-slice at a time via copyFromBuffer(),
+//   maintaining the sequential I/O pattern for the output store as well.
+//
+// FEATURE ID VALIDATION:
+//   Unlike the Direct variant which scans all FeatureIds up front to find the
+//   maximum, the Scanline variant tracks the maximum FeatureId during the main
+//   loop to avoid a separate full-volume OOC scan. The `feature < totalFeatures`
+//   guard prevents out-of-bounds access during processing.
+// =============================================================================
+
 // -----------------------------------------------------------------------------
 ComputeFeatureNeighborsScanline::ComputeFeatureNeighborsScanline(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                  const ComputeFeatureNeighborsInputValues* inputValues)
@@ -80,7 +123,11 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
   // `feature < totalFeatures` guard prevents out-of-bounds access.
   int32 observedMaxFeatureId = 0;
 
-  // 3-slice rolling window for Z-sequential bulk I/O
+  // 3-slice rolling window for Z-sequential bulk I/O.
+  // Each buffer holds one complete Z-slice of FeatureIds (dimX * dimY int32 values).
+  // At any point during processing, prevSlice holds z-1, curSlice holds z, and
+  // nextSlice holds z+1. After processing slice z, the buffers rotate via std::swap
+  // so that no data is copied — only the pointers change.
   std::vector<int32> prevSlice(sliceSize);
   std::vector<int32> curSlice(sliceSize);
   std::vector<int32> nextSlice(sliceSize);
@@ -235,11 +282,14 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
       boundaryCellsStore->copyFromBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<const int8>(boundaryCellsSlice.data(), sliceSize));
     }
 
-    // Rotate the rolling window
+    // Rotate the rolling window: prev <- cur <- next, then load z+2 into next.
+    // std::swap only exchanges internal pointers/size, not element data, so this
+    // is O(1) regardless of slice size.
     std::swap(prevSlice, curSlice);
     std::swap(curSlice, nextSlice);
     if(z + 2 < dimZ)
     {
+      // Load the next slice ahead of time so it is ready when we advance to z+1.
       featureIds.copyIntoBuffer(static_cast<usize>(z + 2) * sliceSize, nonstd::span<int32>(nextSlice.data(), sliceSize));
     }
   }

@@ -24,6 +24,22 @@ This filter will error out if **ALL** phases are non-hexagonal. Any non-hexagona
 
 The output is a direction vector for each feature.
 
+## Algorithm
+
+For each element, the quaternion orientation is converted to an active rotation matrix (by transposing the passive orientation matrix), which is then applied to the crystallographic c-axis direction <001> to find the c-axis location in the sample reference frame. These rotated c-axis vectors are accumulated per feature using a running average that checks sign consistency (flipping vectors whose dot product with the running average is negative). After all elements are processed, each feature's accumulated c-axis is normalized to produce the final average direction.
+
+### In-Core Path
+
+All cell-level arrays (feature IDs, phases, quaternions) and the feature-level output array are accessed through the AbstractDataStore API. Crystal structures are validated to ensure at least one hexagonal phase is present.
+
+### Out-of-Core Path
+
+Cell-level data is read in sequential 4096-tuple chunks via `copyIntoBuffer`, with separate buffers for feature IDs, cell phases, and quaternions. Feature-level accumulation is performed in a local buffer (`avgCAxesCache`) that is bulk-read at the start and bulk-written back via `copyFromBuffer` after the normalization pass. The ensemble-level crystal structures array is cached locally at startup to avoid per-element OOC overhead.
+
+### Performance
+
+The chunked sequential reads convert what would be millions of individual virtual dispatch calls into a small number of bulk I/O operations. Since the feature-level buffer is proportional to the number of grains (thousands) rather than voxels (millions), it fits comfortably in memory even when cell data is on disk.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

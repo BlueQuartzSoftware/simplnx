@@ -82,6 +82,18 @@ Result<> WriteAvizoUniformCoordinate::generateHeader(FILE* outputFile) const
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Writes the FeatureIds data to the Avizo uniform coordinate output file.
+ *
+ * @section ooc_strategy OOC Strategy
+ * Same chunked copyIntoBuffer() approach as WriteAvizoRectilinearCoordinate::writeData().
+ * The FeatureIds array is read in 64K-tuple chunks to avoid per-element OOC access,
+ * and each chunk is written to the output file in one fwrite (binary) or formatted
+ * fprintf loop (ASCII).
+ *
+ * @param outputFile FILE pointer to the open Avizo output file.
+ * @return Result<> indicating success.
+ */
 Result<> WriteAvizoUniformCoordinate::writeData(FILE* outputFile) const
 {
   fprintf(outputFile, "@1\n");
@@ -89,6 +101,7 @@ Result<> WriteAvizoUniformCoordinate::writeData(FILE* outputFile) const
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const usize totalPoints = featureIds.getNumberOfTuples();
 
+  // Chunked OOC-safe read + file write pattern (see WriteAvizoRectilinearCoordinate for details)
   constexpr usize k_ChunkSize = 65536;
   std::vector<int32> buffer(k_ChunkSize);
   const auto& featureIdsStore = featureIds.getDataStoreRef();

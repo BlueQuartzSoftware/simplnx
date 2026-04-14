@@ -14,6 +14,40 @@
 
 using namespace nx::core;
 
+// =============================================================================
+// DBSCANDirect — In-Core Algorithm
+//
+// This file implements the in-core (Direct) variant of DBSCAN.
+// It is selected by DispatchAlgorithm when all input arrays reside in memory.
+//
+// ALGORITHM OVERVIEW (Grid-based DBSCAN / GDCF):
+//   Based on "Grid-based DBSCAN: Indexing and inference" by Boonchoo et al. 2019.
+//
+//   Phase 1 — Grid Construction:
+//     1. Scan the input array to find min/max bounds per dimension
+//     2. Create a regular grid with cell side length = epsilon / sqrt(dims)
+//     3. Bin each data point into a grid cell
+//     4. Build a compressed grid index (only non-empty cells)
+//     5. Create per-axis bitmap tables for fast neighbor grid queries
+//
+//   Phase 2 — Clustering:
+//     1. Identify "core" grid cells (those with >= minPoints data points)
+//     2. Sort core cells by parse order (low density first, random, etc.)
+//     3. For each core cell, query neighbor grids and merge if canMerge
+//        returns true (any pair of points has distance < epsilon)
+//     4. Expand clusters to border (non-core) grid cells
+//
+//   Phase 3 — Labeling:
+//     Write the final cluster ID for each data point based on its grid cell's
+//     cluster assignment. Points in unassigned cells become outliers (cluster 0).
+//
+// DATA ACCESS PATTERN:
+//   Uses direct operator[] for per-element random access. Grid construction
+//   requires 2-3 full passes over the input array. canMerge requires random
+//   access to arbitrary tuple indices within grid cells. Both patterns are
+//   optimal for in-memory data but would cause chunk thrashing for OOC data.
+// =============================================================================
+
 namespace
 {
 /**
@@ -879,7 +913,11 @@ private:
     QuickSortGrids(sorted, next + 1, end);
   }
 
-  // In-core path: direct random access via operator[] is fast
+  // In-core path: direct random access via operator[] is fast.
+  // For each pair of points (one from each grid cell), compute the distance
+  // and return true as soon as any pair is within epsilon. With in-memory data,
+  // operator[] is a pointer dereference, so random access to arbitrary tuple
+  // indices is efficient. For OOC data, see DBSCANScanline's readGridCellCoords().
   bool canMerge(usize pGridId, usize qGridId)
   {
     for(usize pPointId : hyperGridBitMap.gridVoxels[pGridId])

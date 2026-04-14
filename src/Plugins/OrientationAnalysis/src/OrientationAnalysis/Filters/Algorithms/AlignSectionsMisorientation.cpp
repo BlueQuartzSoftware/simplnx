@@ -26,6 +26,10 @@ AlignSectionsMisorientation::AlignSectionsMisorientation(DataStructure& dataStru
 AlignSectionsMisorientation::~AlignSectionsMisorientation() noexcept = default;
 
 // -----------------------------------------------------------------------------
+// Entry point: delegates to the base AlignSections::execute() which handles
+// the overall alignment pipeline (initialize shift arrays, call findShifts(),
+// apply shifts to the geometry, and optionally subtract a linear background).
+// -----------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::operator()()
 {
   if(m_ShouldCancel)
@@ -38,8 +42,18 @@ Result<> AlignSectionsMisorientation::operator()()
 }
 
 // -----------------------------------------------------------------------------
+// Computes optimal X-Y shifts for each pair of adjacent Z-slices by minimizing
+// the fraction of sampled voxel pairs whose misorientation exceeds the user
+// tolerance.
+//
+// Dispatch logic: if any of the input arrays (quats, cellPhases) are backed by
+// an OOC DataStore, or if ForceOocAlgorithm() is set, the OOC-optimized
+// findShiftsOoc() path is used instead. The check is done in a limited scope
+// so the temporary references are destroyed before the in-core path begins.
+// -----------------------------------------------------------------------------
 Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
 {
+  // OOC dispatch: check if any input array uses out-of-core storage
   {
     const auto& quatsCheck = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);
     const auto& cellPhasesCheck = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);

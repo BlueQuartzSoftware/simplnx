@@ -20,6 +20,21 @@ After all the **Features** have been identified, an **Attribute Matrix** is crea
 
 If the data is specified as **Periodic**, the segmentation will check if features wrap around geometry bounds in a tileable fashion. If any such features are detected, the filter will throw a warning that centroid data may be incorrect.
 
+## Algorithm
+
+The filter has two execution paths selected automatically at runtime:
+
+- **In-core (DFS flood fill)**: The classic depth-first search algorithm described above. Each voxel is visited via element-by-element access through a typed comparator.
+- **Out-of-core (Connected-Component Labeling)**: A slice-by-slice CCL algorithm that processes data Z-slice at a time. This path is activated automatically when the data resides in an out-of-core (OOC) DataStore.
+
+Both paths produce identical segmentation results. After segmentation, the Feature Attribute Matrix is resized, the Active array is initialized, and Feature IDs are optionally randomized.
+
+### Performance
+
+When operating on out-of-core data, the CCL path uses a rolling 2-slot buffer system. Before processing each Z-slice, the algorithm bulk-reads the scalar input and mask arrays for that slice into contiguous in-memory buffers. All voxel comparisons then read from these buffers rather than the underlying disk-backed DataStore, eliminating chunk load/evict cycles. Two buffer slots are maintained simultaneously (current and previous slice) because the CCL algorithm must compare voxels across adjacent slices.
+
+All scalar types are converted to `float64` in the buffer for uniform comparison, so a single comparison code path handles all input data types.
+
 ### Neighbor Scheme
 
 The *Neighbor Scheme* parameter provides the following choices:

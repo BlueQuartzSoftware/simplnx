@@ -41,6 +41,32 @@ since there are no neighbors is the +-Z directions.
 
 Only the *Mask* value defining the cell as *good* or *bad* is changed. No other cell level array is modified.
 
+## Algorithm
+
+The algorithm operates in a multi-level iterative scheme, starting at level 6 (all 6 face-neighbors must agree) and decrementing to the user-specified *Required Number of Neighbors*. At each level, bad voxels are flipped to good if they have at least that many good face-neighbors with matching crystallographic orientation (misorientation below the tolerance). Starting strict and relaxing ensures high-confidence flips happen first, which can cascade to enable additional flips.
+
+### In-Core Path (BadDataNeighborOrientationCheckWorklist)
+
+When all arrays reside in contiguous in-memory storage, the algorithm uses a two-phase worklist approach:
+
+1. **Phase 1 (Initial count)**: A single linear scan counts matching good face-neighbors for every bad voxel, storing the count in a per-voxel array.
+2. **Phase 2 (Worklist propagation)**: For each level, a deque is seeded with all bad voxels meeting the threshold. As each voxel is flipped, its still-bad neighbors' counts are incremented. If a neighbor's count now meets the threshold, it is enqueued. This breadth-first flood-fill processes each voxel at most once per level, achieving O(flipped) amortized cost.
+
+### Out-of-Core Path (BadDataNeighborOrientationCheckScanline)
+
+When any of the quaternion, mask, or phase arrays are backed by chunked (OOC) disk storage, the algorithm uses a 3-slice rolling window over the Z axis:
+
+1. Three Z-slices of quaternions, phases, and mask data are maintained in memory (previous, current, next).
+2. For each bad voxel in the current slice, the count of matching good face-neighbors is recomputed on-the-fly using the rolling window buffers.
+3. If a voxel is flipped, the mask change is written back to the OOC store per-slice via `copyFromBuffer()`.
+4. The window shifts forward one Z-slice at a time, with only one new slice loaded per step.
+
+This approach trades recomputation (no persistent neighbor-count array) for strictly sequential I/O that avoids the random-access chunk thrashing that would occur with the worklist variant's BFS pattern.
+
+### Performance
+
+The in-core worklist variant is significantly faster for datasets that fit in RAM because each voxel is processed at most once per level (O(flipped) cost vs. O(N * passes) for the scanline variant). The OOC scanline variant is slower in absolute terms but avoids catastrophic performance degradation on disk-backed datasets where the worklist's random access pattern would trigger continuous chunk load/evict cycles. Memory usage is O(N) for the worklist variant vs. O(3 * sliceSize) for the scanline variant.
+
 ## Example Data
 
 | Example Input Image                                                       | Example Output Image                                                                                                                          |

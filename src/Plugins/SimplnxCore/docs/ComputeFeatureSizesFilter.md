@@ -16,6 +16,16 @@ Note here that **Image Geometry** will always be faster than its equivalent **Re
 
 During the computation of the **Feature** sizes, the size of each individual **Element** is computed and stored in the corresponding **Geometry**. By default, these sizes are deleted after executing the **Filter** to save memory. If you wish to store the **Element** sizes, select the *Generate Missing Element Sizes* option. The sizes will be stored within the **Geometry** definition itself, not as a separate **Attribute Array**.
 
+## Algorithm
+
+For **Image Geometry**, the algorithm counts voxels per feature, then multiplies by the uniform voxel volume (product of spacings) to obtain volumes. For 2D image geometries (one dimension equals 1), areas and equivalent circular diameters are computed instead.
+
+For **Rectilinear Grid Geometry**, where each cell can have a different volume, the algorithm reads both the Feature IDs and element sizes in lockstep and uses Kahan summation to accurately accumulate per-feature volumes.
+
+### Performance
+
+This filter is optimized for out-of-core (OOC) data storage. The Feature IDs array (and element sizes for Rectilinear Grid) is read in fixed-size chunks (64K tuples) via `copyIntoBuffer()`. Per-feature voxel counts and volumes are accumulated in plain `std::vector` buffers. This chunked approach reduces the number of OOC I/O operations from O(total_voxels) to O(total_voxels / 64K).
+
 ## Image Geometry Additional Considerations
 
 A typical Image Stack *(an `Image Geometry` that contains 3 dimensions greater than 1)* conceptually consists of a series of 2D images stacked on top of one another to create a 3D object, thus it functions in 3D space as expected. This means it produces **Volumes** and **Equivalent Spherical Diameters**.

@@ -17,11 +17,35 @@ This **Filter** determines whether a **Feature** touches an outer *Surface* of t
 + Any cell location is x<sub>min</sub>, x<sub>max</sub>, y<sub>min</sub>, y<sub>max</sub>, z<sub>min</sub> or z<sub>max</sub>
 + Any cell has **Feature ID = 0** as a neighbor.
 
-## Algorithm Details
+## Algorithm
 
-- First, all the boundary **Cells** are found for each **Feature**. 
-- Next, the surface area for each face that is in contact with a different **Feature** is totalled as long as that neighboring *featureId* is > 0.
-- This number is divided by the volume of each **Feature**, calculated by taking the number of **Cells** of each **Feature** and multiplying by the volume of a **Cell**.
+The filter computes the surface-area-to-volume ratio for each feature in two phases:
+
+**Phase 1 -- Surface area accumulation**: For each voxel in the image geometry, examine its 6 face-connected neighbors. When a neighbor belongs to a different feature (and the neighbor's Feature ID > 0), the area of the shared face is added to the current feature's surface area total. The face area depends on which axis the face is normal to:
+
++ Z-normal faces (shared by +/-Z neighbors): spacing.x * spacing.y
++ Y-normal faces (shared by +/-Y neighbors): spacing.y * spacing.z
++ X-normal faces (shared by +/-X neighbors): spacing.z * spacing.x
+
+**Phase 2 -- Ratio and sphericity**: For each feature, divide the accumulated surface area by the feature's volume (number of cells * voxel volume). If sphericity is requested, it is computed as: sphericity = (pi^(1/3) * (6V)^(2/3)) / SA, where a perfect sphere has sphericity = 1.0.
+
+### In-Core Algorithm (Direct)
+
+The in-core variant iterates all voxels in Z-Y-X order and uses pre-computed flat-index offsets to look up the 6 face neighbors directly via operator[] on the FeatureIds DataStore. Surface area is accumulated into a local vector (since multiple voxels contribute to each feature), and the final ratio is written to the output array.
+
+### Out-of-Core Algorithm (Scanline)
+
+When the FeatureIds array is stored out-of-core in chunked format, the in-core algorithm's scattered neighbor lookups would trigger chunk thrashing. The Scanline variant reads one complete Z-slice at a time using sequential bulk I/O, maintaining a 3-slice rolling window:
+
++ **prevSlice**: Z-slice at z-1, needed for -Z neighbor lookups
++ **curSlice**: Z-slice at z (being processed)
++ **nextSlice**: Z-slice at z+1, needed for +Z neighbor lookups
+
+Within a Z-slice, X and Y neighbors are simple index offsets within curSlice. After the voxel scan, the feature-level NumCells array is also bulk-read into a local cache, the ratio and optional sphericity are computed locally, and the results are bulk-written back. This ensures zero random-access operator[] calls on any OOC DataStore.
+
+### Performance
+
+The in-core and out-of-core variants produce identical results. The algorithm dispatch is automatic based on the storage type of the FeatureIds array.
 
 ### WARNING - Aliasing
 

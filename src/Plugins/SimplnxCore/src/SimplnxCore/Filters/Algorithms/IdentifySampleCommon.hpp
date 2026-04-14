@@ -1,3 +1,29 @@
+// -----------------------------------------------------------------------------
+// IdentifySampleCommon.hpp -- Shared utilities for IdentifySample algorithms
+// -----------------------------------------------------------------------------
+//
+// This header contains two components shared between the BFS and CCL variants
+// of the IdentifySample algorithm:
+//
+// 1. VectorUnionFind: A lightweight, vector-based union-find (disjoint set)
+//    data structure optimized for dense, sequentially-assigned label sets.
+//    Used by the CCL variant (IdentifySampleCCL) for tracking connected
+//    component equivalences during scanline labeling. Uses union-by-rank
+//    and path-halving for near-O(1) amortized operations.
+//
+// 2. IdentifySampleSliceBySliceFunctor: A type-dispatched functor that
+//    performs BFS-based sample identification on individual 2D slices of
+//    the volume. Used by BOTH algorithm classes when the user enables
+//    slice-by-slice mode. Since a single 2D slice always fits in memory,
+//    BFS is safe and efficient regardless of whether the underlying data
+//    store is in-core or out-of-core.
+//
+//    The functor supports three orthogonal slice planes (XY, XZ, YZ) and
+//    includes a batched YZ code path that amortizes HDF5 I/O by reading
+//    each Z-slice once per batch of X positions (instead of once per X
+//    position), providing approximately 10x speedup for OOC data.
+// -----------------------------------------------------------------------------
+
 #pragma once
 
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -14,10 +40,25 @@ namespace nx::core
 
 /**
  * @class VectorUnionFind
- * @brief Vector-based union-find for dense label sets (labels 1..N).
+ * @brief Vector-based union-find (disjoint set) for dense, sequentially-assigned
+ * label sets (labels 1..N).
  *
- * Uses flat vectors instead of hash maps for O(1) access. Suitable for
- * connected component labeling where labels are assigned sequentially.
+ * Uses flat vectors instead of hash maps for O(1) indexed access with no hash
+ * overhead. Suitable for connected component labeling where labels are assigned
+ * sequentially starting from 1 and the maximum label count is not known in advance
+ * (internal storage grows dynamically).
+ *
+ * Features:
+ * - Union-by-rank for balanced merges (O(alpha(N)) amortized)
+ * - Path halving in find() for near-O(1) amortized lookups
+ * - Dynamic growth via makeSet() -- no need to pre-size
+ * - No flatten() method -- the CCL code accumulates sizes externally and
+ *   resolves roots via find() after the forward scan completes
+ *
+ * This class is used by IdentifySampleCCL (in IdentifySampleCCL.cpp) for the
+ * 3D CCL algorithm. FillBadDataCCL uses the separate UnionFind class (in
+ * simplnx/Utilities/UnionFind.hpp) which includes built-in size tracking and
+ * a flatten() method.
  */
 class VectorUnionFind
 {

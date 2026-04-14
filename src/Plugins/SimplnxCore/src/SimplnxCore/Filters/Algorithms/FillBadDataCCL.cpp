@@ -1,3 +1,63 @@
+// -----------------------------------------------------------------------------
+// FillBadDataCCL.cpp -- Out-of-core CCL algorithm for filling bad data
+// -----------------------------------------------------------------------------
+//
+// This file implements the out-of-core optimized variant of the FillBadData
+// algorithm. It replaces the BFS flood-fill approach (see FillBadDataBFS.cpp)
+// with a four-phase pipeline built on scanline Connected Component Labeling
+// (CCL) and Union-Find, designed to process data in strict Z-slice sequential
+// order to avoid chunk thrashing in OOC storage.
+//
+// ## The Chunk Thrashing Problem
+//
+// When data is stored in compressed HDF5 chunks (e.g., 64x64x64 voxels per
+// chunk), each random access to a voxel may trigger decompression of an entire
+// chunk. BFS flood-fill visits neighbors in a wavefront pattern that crosses
+// chunk boundaries unpredictably, causing the same chunks to be loaded and
+// evicted thousands of times. For a 300x300x300 volume, this can turn a
+// ~1-second in-core operation into a multi-hour ordeal.
+//
+// ## How CCL Avoids Thrashing
+//
+// The CCL approach processes voxels in a fixed Z-Y-X scan order, reading each
+// Z-slice exactly once via bulk copyIntoBuffer/copyFromBuffer calls. Cross-slice
+// connectivity is resolved symbolically through a Union-Find data structure,
+// requiring only O(labels) memory rather than O(volume). A rolling 2-slice
+// label buffer provides backward neighbor lookups using O(dimX * dimY) memory.
+//
+// ## Four-Phase Pipeline
+//
+// Phase 1: Z-Slice Sequential CCL
+//   Scans Z-slices sequentially, assigning provisional labels to bad-data voxels
+//   (FeatureId == 0). Uses a 2-slice rolling label buffer for backward neighbor
+//   reads. Records equivalences in Union-Find. Accumulates per-label voxel counts.
+//   Writes provisional labels to the FeatureIds store for Phase 3 to read.
+//
+// Phase 2: Global Resolution
+//   Flattens the Union-Find so every label points directly to its root.
+//   Accumulates per-label sizes to root labels for size classification.
+//
+// Phase 3: Region Classification and Relabeling
+//   Reads provisional labels from FeatureIds (one Z-slice at a time), resolves
+//   each to its root, and classifies by total component size:
+//   - Small regions (< threshold): relabeled to -1 for filling in Phase 4
+//   - Large regions (>= threshold): relabeled to 0 (optionally new phase)
+//
+// Phase 4: Iterative Morphological Fill (Temp-File Deferred)
+//   Each iteration has two passes:
+//   - Pass 1 (Vote): 3-slice rolling window scan. For each -1 voxel, majority
+//     vote among face neighbors. Write (dest, src) pairs to temp file.
+//   - Pass 2 (Apply): Read pairs back, apply fills via 3-slice buffered bulk I/O.
+//   No O(N) memory allocations. Uses O(features) vote counter + temp file I/O.
+//   Repeats until no -1 voxels remain.
+//
+// ## Result Equivalence
+//
+// This algorithm produces identical results to FillBadDataBFS for the same inputs.
+// The four-phase decomposition is purely an optimization of the data access pattern.
+//
+// -----------------------------------------------------------------------------
+
 #include "FillBadDataCCL.hpp"
 
 #include "FillBadData.hpp"
@@ -14,39 +74,15 @@
 
 using namespace nx::core;
 
-// -----------------------------------------------------------------------------
-// FillBadData Algorithm Overview
-// -----------------------------------------------------------------------------
-//
-// This file implements an optimized algorithm for filling bad data (voxels with
-// FeatureId == 0) in image geometries. The algorithm handles out-of-core datasets
-// efficiently by processing data in Z-slice buffers and uses a four-phase approach:
-//
-// Phase 1: Z-Slice Sequential Connected Component Labeling (CCL)
-//   - Process Z-slices sequentially, assigning provisional labels to bad data regions
-//   - Use Union-Find to track equivalences between labels across slice boundaries
-//   - Track size of each connected component
-//
-// Phase 2: Global Resolution
-//   - Flatten Union-Find structure to resolve all equivalences
-//   - Accumulate region sizes to root labels
-//
-// Phase 3: Region Classification and Relabeling
-//   - Classify regions as "small" (below threshold) or "large" (above threshold)
-//   - Small regions: mark with -1 for filling in Phase 4
-//   - Large regions: keep as 0 or assign to new phase (if requested)
-//
-// Phase 4: Iterative Morphological Fill (On-Disk Deferred)
-//   - Uses a temporary file to defer fills: Pass 1 writes (dest, src) pairs,
-//     Pass 2 reads them back and applies fills.
-//   - No O(N) memory allocations — uses O(features) vote counters + temp file I/O.
-//
-// -----------------------------------------------------------------------------
-
 namespace
 {
 // -----------------------------------------------------------------------------
-// Helper: Copy all components of a single tuple from src to dest in a data store.
+// copyTuple -- Copy all components of a single tuple from src to dest in a data store.
+// -----------------------------------------------------------------------------
+// This is used as a fallback for individual tuple copies when slice-buffered
+// bulk I/O is not possible (e.g., for std::vector<bool> which lacks .data()).
+// For non-bool types, the SliceBufferedCopyFunctor below is preferred because
+// it amortizes I/O across many tuples in the same Z-slice.
 // -----------------------------------------------------------------------------
 template <typename T>
 void copyTuple(AbstractDataStore<T>& store, int64 dest, int64 src)
@@ -57,7 +93,13 @@ void copyTuple(AbstractDataStore<T>& store, int64 dest, int64 src)
   store.copyFromBuffer(static_cast<usize>(dest) * numComp, nonstd::span<const T>(buffer.get(), numComp));
 }
 
-// Functor for type-dispatched single-tuple copy
+/**
+ * @brief Type-dispatched functor for copying a single tuple between indices.
+ *
+ * Used as a fallback when slice-buffered bulk I/O is not possible. In the
+ * Phase 4 fill pipeline, this is only used for bool arrays (extremely rare
+ * in practice) where std::vector<bool> prevents pointer-based bulk access.
+ */
 struct CopyTupleFunctor
 {
   template <typename T>
@@ -68,8 +110,30 @@ struct CopyTupleFunctor
   }
 };
 
-// Functor for type-dispatched slice-buffered copy of all pairs for one array.
-// Uses a 3-slice rolling window to apply fills with bulk I/O.
+// -----------------------------------------------------------------------------
+// SliceBufferedCopyFunctor
+// -----------------------------------------------------------------------------
+// Type-dispatched functor for applying fill pairs to a single cell data array
+// using a 3-slice rolling window for bulk I/O. This is the core I/O optimization
+// in Phase 4 that makes the CCL variant OOC-friendly.
+//
+// WHY a 3-slice window:
+// Each fill pair (dest, src) copies data from a source voxel to a destination
+// voxel. The source is always a face-adjacent neighbor of the destination, so
+// it can be in the same Z-slice, the previous Z-slice (z-1), or the next Z-slice
+// (z+1). By keeping three consecutive Z-slices in memory [prev | cur | next],
+// we can resolve any fill pair without additional I/O. Since pairs are generated
+// in Z-Y-X order (from the Phase 4 vote scan), consecutive pairs tend to be in
+// the same Z-slice, and the window only shifts when the destination moves to a
+// new Z-slice.
+//
+// I/O REDUCTION:
+// Without this optimization, each fill pair would require two per-tuple OOC
+// accesses (one read for src, one write for dest), resulting in potentially
+// millions of individual chunk decompressions. With the 3-slice window, each
+// Z-slice is read/written at most once per iteration, reducing I/O to
+// approximately 3 * dimZ bulk reads + dimZ bulk writes per array per iteration.
+// -----------------------------------------------------------------------------
 struct SliceBufferedCopyFunctor
 {
   template <typename T>
@@ -163,7 +227,7 @@ struct TempFileGuard
 } // namespace
 
 // -----------------------------------------------------------------------------
-// FillBadData Implementation
+// FillBadDataCCL Implementation
 // -----------------------------------------------------------------------------
 
 FillBadDataCCL::FillBadDataCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues)
@@ -187,14 +251,37 @@ const std::atomic_bool& FillBadDataCCL::getCancel() const
 // PHASE 1: Z-Slice Sequential Connected Component Labeling (CCL)
 // -----------------------------------------------------------------------------
 //
-// Performs connected component labeling on bad data voxels (FeatureId == 0)
-// using a Z-slice sequential scanline algorithm. Uses positive labels and an
-// in-memory provisional labels buffer to avoid cross-slice OOC reads.
+// This phase performs connected component labeling on bad-data voxels
+// (FeatureId == 0) using a Z-slice sequential scanline algorithm. The key
+// insight that makes this OOC-friendly is that scanline CCL only needs to
+// check three BACKWARD neighbors (x-1, y-1, z-1), all of which have already
+// been processed. This means we can process voxels in strict Z-Y-X order,
+// reading each Z-slice exactly once with a bulk copyIntoBuffer call.
 //
-// @param featureIdsStore The feature IDs data store (maybe out-of-core)
-// @param unionFind Union-Find structure for tracking label equivalences
-// @param nextLabel Next label to assign (incremented as new labels are created)
-// @param dims Image dimensions [X, Y, Z]
+// Data structures:
+// - labelBuffer: Rolling 2-slice buffer (2 * dimX * dimY int32 values).
+//   Alternates between even/odd Z indices via (z % 2) to store provisional
+//   labels for the current and previous Z-slice. This provides O(1) backward
+//   neighbor lookups without storing labels for the entire volume.
+// - unionFind: Tracks equivalences between provisional labels assigned to
+//   different parts of the same connected component. When a voxel has multiple
+//   differently-labeled backward neighbors, their labels are united.
+// - featureIdsSlice: Temporary buffer for reading/writing one Z-slice of
+//   FeatureIds. Provisional labels are written back to the FeatureIds store
+//   so that Phase 3 can read them without needing a separate label volume.
+//
+// Label assignment:
+// - Each bad-data voxel with no labeled backward neighbor gets a new
+//   provisional label (nextLabel++).
+// - Each bad-data voxel with one or more labeled backward neighbors inherits
+//   the smallest label. If multiple differently-labeled neighbors exist,
+//   they are united in the Union-Find.
+// - Good-data voxels (FeatureId != 0) are skipped and retain their original
+//   FeatureId values.
+//
+// Provisional labels start at (maxExistingFeatureId + 1) to avoid collision
+// with existing good-feature IDs. This allows Phase 3 to distinguish between
+// original feature IDs and CCL-assigned labels using a simple threshold check.
 // -----------------------------------------------------------------------------
 void FillBadDataCCL::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, UnionFind& unionFind, int32& nextLabel, const std::array<int64, 3>& dims)
 {
@@ -745,7 +832,13 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStore& featureI
 }
 
 // -----------------------------------------------------------------------------
-// Main Algorithm Entry Point
+// Main Algorithm Entry Point -- Orchestrates Phases 1-4
+// -----------------------------------------------------------------------------
+// This method performs the initial setup (finding max feature ID and max phase
+// via chunked bulk scans), initializes the Union-Find, and then calls each
+// phase method sequentially. The chunked scans use a Z-slice-sized buffer
+// (dimX * dimY) to read feature IDs and phases in bulk, avoiding per-element
+// OOC access during the setup phase.
 // -----------------------------------------------------------------------------
 Result<> FillBadDataCCL::operator()()
 {

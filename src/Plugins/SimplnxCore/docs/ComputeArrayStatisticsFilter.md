@@ -29,6 +29,10 @@ The input array may also be *standardized*, meaning that the array values will b
 
 Special operations occur for certain statistics if the supplied array is of type *bool* (for example, a mask array produced from threshold filters).  The *length*, *minimum*, *maximum*, *median*, *mode*, and *summation* are computed as normal (although the resulting values may be platform dependent).  The *mean* and *standard deviation* for a boolean array will be true if there are more instances of true in the array than false.  If *Standardize Data* is chosen for a boolean array, no actual modifications will be made to the input.  These operations for boolean inputs are chosen as a basic convention, and are not intended be representative of true boolean logic.
 
+### Performance
+
+This filter is aware of out-of-core (OOC) data storage. When any input array is detected to be backed by an OOC DataStore, parallelization is automatically disabled to prevent concurrent random access to chunk-backed stores, which would cause severe performance degradation from chunk thrashing.
+
 ## Destination Attribute Matrix 
 
 The user must create a destination **Attribute Matrix** in which the computed statistics will be stored. DREAM3D-NX enforces a rule where any Attribute Matrix cannot contain another Attribute Matrix. With this in mind, the user should select a destination that is not itself an Attribute Matrix, such as the top level of a Geometry or the top level of the Data Structure itself. The user could have also created a group (using a previous filter) and use that group as the destination.

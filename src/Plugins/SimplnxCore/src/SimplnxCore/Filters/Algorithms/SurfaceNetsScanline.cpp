@@ -1,3 +1,45 @@
+/**
+ * @file SurfaceNetsScanline.cpp
+ * @brief Out-of-core (OOC) optimized implementation of the SurfaceNets algorithm.
+ *
+ * This file reimplements the Surface Nets algorithm without using the MMSurfaceNet
+ * library (which requires O(volume) memory and per-element FeatureIds access).
+ * Instead, it reads FeatureIds via copyIntoBuffer() in Z-slice pairs and stores
+ * only the O(surface) cells that actually have vertices.
+ *
+ * ## Key Differences from SurfaceNetsDirect
+ *
+ * 1. **No MMSurfaceNet/MMCellMap**: The Direct variant delegates cell classification
+ *    to MMSurfaceNet, which allocates a Cell for every padded voxel (O(volume)).
+ *    The Scanline variant performs cell classification inline using MMCellFlag
+ *    directly, storing only surface cells in a vector + hash map (O(surface)).
+ *
+ * 2. **FeatureIds access**: Direct passes the full array to MMSurfaceNet which
+ *    reads via operator[]. Scanline reads two Z-slices at a time via
+ *    copyIntoBuffer() and resolves cell corner labels from the buffered slices
+ *    using the cornerLabel() helper.
+ *
+ * 3. **Smoothing**: Direct delegates to MMSurfaceNet::relax() which operates on
+ *    the full MMCellMap. Scanline performs smoothing on the O(surface) m_Vertices
+ *    array using neighbor lookups through the m_CellToVertex hash map.
+ *
+ * 4. **Edge quad generation**: Direct uses MMCellMap::getEdgeQuad() which looks
+ *    up neighboring cells in the O(volume) cell array. Scanline uses
+ *    lookupVertex() to find neighbors in the O(surface) hash map.
+ *
+ * 5. **Output writes**: Direct writes per-element. Scanline buffers all output
+ *    (triangle connectivity, face labels, vertex positions, node types) and
+ *    flushes via copyFromBuffer() in bulk.
+ *
+ * ## Memory Comparison
+ *
+ * For a 500x500x500 dataset with ~1% surface cells:
+ *   - Direct (MMCellMap): ~500^3 * sizeof(Cell) = O(125M) entries
+ *   - Scanline: ~500^3 * 0.01 = O(1.25M) entries + hash map overhead
+ *
+ * The Scanline variant uses roughly 100x less memory for cell classification.
+ */
+
 #include "SurfaceNetsScanline.hpp"
 
 #include "SurfaceNets.hpp"
@@ -34,11 +76,19 @@ inline uint64 packCellKey(int32 i, int32 j, int32 k, int32 paddedX, int32 padded
   return static_cast<uint64>(i) + static_cast<uint64>(j) * static_cast<uint64>(paddedX) + static_cast<uint64>(k) * static_cast<uint64>(paddedXY);
 }
 
+/**
+ * @brief Adjusts a node type value for vertices on the exterior boundary.
+ * Same logic as SurfaceNetsDirect but operates on the local buffer.
+ */
 constexpr inline int8 CalculatePadding(int8 value)
 {
   return value + ((9 * static_cast<int8>(value < 10)) + 1);
 }
 
+/**
+ * @brief Marks all 4 vertices of a quad as boundary nodes in the local buffer
+ * when one of the quad's labels is MMSurfaceNet::Padding.
+ */
 inline void HandlePadding(std::array<usize, 4> vertexIndices, std::vector<int8>& nodeTypesBuf)
 {
   nodeTypesBuf[vertexIndices[0]] = CalculatePadding(nodeTypesBuf[vertexIndices[0]]);
@@ -224,10 +274,37 @@ SurfaceNetsScanline::SurfaceNetsScanline(DataStructure& dataStructure, const IFi
 SurfaceNetsScanline::~SurfaceNetsScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Executes the full OOC Surface Nets pipeline.
+ *
+ * This method is the most complex OOC algorithm in the codebase because it
+ * reimplements the entire Surface Nets algorithm from scratch without the
+ * MMSurfaceNet library, using only O(surface) memory and bulk I/O.
+ *
+ * The method is organized into numbered sections (1-13) that correspond to
+ * the phases documented in the header. The sections are:
+ *
+ *   1-4.   Cell classification: iterate padded grid, load Z-slice pairs,
+ *          classify cells using MMCellFlag, store surface cells
+ *   5.     Resize vertex arrays
+ *   6.     Phase 2A: Optional smoothing using O(surface) data structures
+ *   7.     Phase 2B: Transform to world coordinates, assign node types
+ *   8.     Phase 3A: Count triangles from edge crossings
+ *   9.     Phase 3B: Resize face arrays
+ *   10.    Phase 3C: Setup TupleTransfer
+ *   11.    Phase 3D: Generate triangles and buffer output
+ *   12.    Phase 3E: Fix face labels (0 -> -1)
+ *   12b.   Flush all buffered output via copyFromBuffer()
+ *   13.    Phase 3F: Optional winding repair
+ */
 Result<> SurfaceNetsScanline::operator()()
 {
   // -------------------------------------------------------------------------
-  // 1. Get ImageGeom dimensions and compute padded dims
+  // 1. Get ImageGeom dimensions and compute padded dims.
+  // The padded grid adds 1 cell of padding on each side in each dimension,
+  // matching the convention used by MMSurfaceNet. Padding cells always have
+  // the MMSurfaceNet::Padding label, which creates boundary triangles at the
+  // volume edges.
   // -------------------------------------------------------------------------
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
   auto gridDimensions = imageGeom.getDimensions();
@@ -247,21 +324,37 @@ Result<> SurfaceNetsScanline::operator()()
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
 
   // -------------------------------------------------------------------------
-  // 3. Allocate rolling slice buffers (2 NX Z-slices)
+  // 3. Allocate rolling slice buffers (2 NX Z-slices).
+  // Each buffer holds one full XY plane of FeatureIds. The ping-pong scheme
+  // ensures at most 2 Z-slices are in memory at once. The slice0Z/slice1Z
+  // variables track which NX Z-index each buffer currently holds, to avoid
+  // re-reading a slice that is already buffered.
   // -------------------------------------------------------------------------
   const usize sliceSize = dimX * dimY;
   std::vector<int32> sliceBufA(sliceSize);
   std::vector<int32> sliceBufB(sliceSize);
 
-  // Pointers for ping-pong: slice0 is the "lower" Z-slice, slice1 is "upper"
+  // Pointers for ping-pong: slice0 is the "lower" Z-slice, slice1 is "upper".
+  // These are swapped at the end of each k iteration so the "upper" becomes
+  // "lower" for the next iteration.
   std::vector<int32>* slice0 = &sliceBufA;
   std::vector<int32>* slice1 = &sliceBufB;
-  int32 slice0Z = -1;
-  int32 slice1Z = -1;
+  int32 slice0Z = -1; // NX Z-index currently in slice0 (-1 = empty)
+  int32 slice1Z = -1; // NX Z-index currently in slice1 (-1 = empty)
 
   // -------------------------------------------------------------------------
-  // 4. Iterate cells in the same order as setCellVertices():
-  //    k in [0, paddedZ-2), j in [0, paddedY-2), i in [0, paddedX-2)
+  // 4. Phase 1: Cell classification.
+  // Iterate cells in the same order as MMCellMap::setCellVertices():
+  //   k in [0, paddedZ-2), j in [0, paddedY-2), i in [0, paddedX-2)
+  //
+  // For each cell, compute the 8 corner labels using cornerLabel(), which
+  // reads from the buffered Z-slices. The corner ordering matches MMCellMap:
+  //   [0]=(i,j,k) [1]=(i+1,j,k) [2]=(i+1,j+1,k) [3]=(i,j+1,k)
+  //   [4]=(i,j,k+1) [5]=(i+1,j,k+1) [6]=(i+1,j+1,k+1) [7]=(i,j+1,k+1)
+  //
+  // MMCellFlag::set() classifies the cell: if all 8 labels are identical,
+  // it is an interior cell (no vertex). Otherwise it is a surface cell
+  // and gets stored in m_Vertices with its padded coordinates and flag.
   // -------------------------------------------------------------------------
   const usize totalPaddedZSlices = static_cast<usize>(paddedZ - 1);
   for(int32 k = 0; k < paddedZ - 1; k++)
@@ -363,10 +456,23 @@ Result<> SurfaceNetsScanline::operator()()
   std::vector<int8> nodeTypesBuf(numVertices, 0);
 
   // -------------------------------------------------------------------------
-  // 6. Phase 2A: Relaxation (optional — only if smoothing is requested)
+  // 6. Phase 2A: Relaxation (optional -- only if smoothing is requested).
+  //
+  // This reimplements MMSurfaceNet::relax() using the O(surface) m_Vertices
+  // and m_CellToVertex data structures instead of the O(volume) MMCellMap.
+  //
+  // For each surface vertex, the relaxation:
+  //   1. Finds up to 6 face-connected neighbors via m_CellToVertex lookup
+  //   2. Computes the average neighbor position (in cell-local coordinates)
+  //   3. Blends current position toward the average: p' = (1-alpha)*p + alpha*avg
+  //   4. Clamps to [0.5 - maxDist, 0.5 + maxDist] to keep vertices near cell centers
+  //
+  // The face participation rule depends on vertex type:
+  //   - SurfaceVertex: participates if the face has any crossing
+  //   - JunctionVertex: participates only if the face has a junction crossing
+  //
+  // Face offsets define the 6 directions to check for neighbors.
   // -------------------------------------------------------------------------
-  // Face direction offsets: Left(-1,0,0), Right(+1,0,0), Back(0,-1,0),
-  //                         Front(0,+1,0), Bottom(0,0,-1), Top(0,0,+1)
   static constexpr int32 k_FaceOffsets[6][3] = {
       {-1, 0, 0}, // LeftFace
       {+1, 0, 0}, // RightFace
@@ -376,8 +482,9 @@ Result<> SurfaceNetsScanline::operator()()
       {0, 0, +1}  // TopFace
   };
 
-  // Use a local buffer for all position work. Initial value is (0.5, 0.5, 0.5)
-  // -- cell center in local coords. This avoids O(iterations * vertices * 6)
+  // Local position buffer: each vertex starts at (0.5, 0.5, 0.5) which is the
+  // cell center in local coordinates. Smoothing modifies these in-place.
+  // After smoothing, Phase 2B transforms them to world coordinates.
   std::vector<float32> localPos(3 * numVertices);
   for(usize v = 0; v < numVertices; v++)
   {
@@ -485,12 +592,23 @@ Result<> SurfaceNetsScanline::operator()()
 
   // -------------------------------------------------------------------------
   // 7. Phase 2B: Transform vertex positions to world coordinates and assign
-  //    NodeTypes. Replicates SurfaceNetsDirect.cpp lines 148-161.
+  //    NodeTypes.
+  //
+  // Converts cell-local coordinates (where 0.5 = cell center) to world
+  // coordinates using the formula:
+  //   worldPos = voxelSize * (cellIndex + localPos) + origin - halfVoxelOffset
+  //
+  // The halfVoxelOffset accounts for the fact that padded cell index 1
+  // corresponds to the first NX voxel, whose center is at origin + 0.5*spacing.
+  //
+  // Node types are derived from MMCellFlag::numJunctions(): the number of
+  // distinct material junctions at the vertex.
+  //
+  // Note: the Z component of halfVoxelOffset intentionally uses voxelSize[1]
+  // to match the original SurfaceNetsDirect.cpp behavior (line 155).
   // -------------------------------------------------------------------------
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
-  // Note: the Z offset intentionally uses voxelSize[1] to match the original
-  // SurfaceNetsDirect.cpp behavior (line 155).
   const Point3Df halfVoxelOffset(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[1]);
 
   // Build vertex positions in localPos (reusing the smoothing buffer) and
@@ -511,7 +629,21 @@ Result<> SurfaceNetsScanline::operator()()
   }
 
   // -------------------------------------------------------------------------
-  // 8. Phase 3A: First pass — count triangles
+  // 8. Phase 3A: First pass -- count triangles.
+  //
+  // Iterates all surface vertices and checks 3 edges per cell:
+  //   - BackBottomEdge: between this cell and (i+1, j, k)
+  //   - LeftBottomEdge: between this cell and (i, j+1, k)
+  //   - LeftBackEdge:   between this cell and (i, j, k+1)
+  //
+  // Each edge crossing produces a quad = 2 triangles. The 4 quad vertices
+  // are the current cell's vertex plus 3 neighbors found via lookupVertex().
+  //
+  // This pass also marks boundary vertices via HandlePadding() when one of
+  // the quad labels is Padding (exterior of volume).
+  //
+  // After this pass, vertex positions and node types are flushed to their
+  // DataStores via copyFromBuffer() since they are now finalized.
   // -------------------------------------------------------------------------
   usize triangleCount = 0;
   std::array<usize, 2> quadNxArrayIndices = {0, 0};
@@ -612,11 +744,25 @@ Result<> SurfaceNetsScanline::operator()()
   }
 
   // -------------------------------------------------------------------------
-  // 11. Phase 3D: Second pass — generate triangles
+  // 11. Phase 3D: Second pass -- generate triangles.
+  //
+  // Same edge iteration as Phase 3A, but now writes triangle data. All
+  // output is accumulated in local buffers:
+  //   - triConnBuf: triangle connectivity (3 MeshIndexType per triangle)
+  //   - faceLabelBuf: face labels (2 int32 per triangle)
+  //   - ttArgsBuf: TupleTransfer arguments (1 per triangle)
+  //
+  // These are flushed in one bulk write at the end (section 12b). This
+  // avoids per-element writes to OOC DataStores.
+  //
+  // Each edge crossing produces a quad from 4 vertices, which is split into
+  // 2 triangles using getQuadTriangleIDs() (minimal-area diagonal selection).
+  // Face labels are ordered so the smaller label is first.
   // -------------------------------------------------------------------------
   using MeshIndexType = IGeometry::MeshIndexType;
   auto& facesStore = triangleGeom.getFacesRef().getDataStoreRef();
 
+  // Pre-allocate output buffers for all triangles (known count from Phase 3A)
   std::vector<MeshIndexType> triConnBuf;
   std::vector<int32> faceLabelBuf;
   std::vector<SurfaceNetsTransferData> ttArgsBuf;

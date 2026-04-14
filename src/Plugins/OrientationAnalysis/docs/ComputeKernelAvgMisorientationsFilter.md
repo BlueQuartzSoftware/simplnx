@@ -15,6 +15,22 @@ The calculation will **not** consider cells that belong to different 'feature Id
 
 *Note:* All **Cells** in the kernel are weighted equally during the averaging, though they are not equidistant from the central **Cell**.
 
+## Algorithm
+
+For each cell in the ImageGeom, the algorithm examines all cells within a user-specified kernel radius in X, Y, and Z. Only neighbor cells that share the same feature ID as the center cell are included. The crystallographic misorientation angle between the center cell's quaternion and each qualifying neighbor's quaternion is computed using the appropriate LaueOps symmetry operators. The average of these misorientation angles is stored as the KAM value for the center cell.
+
+### In-Core Path
+
+All cell-level arrays (phases, feature IDs, quaternions) are accessed through the AbstractDataStore API. The output array is written directly.
+
+### Out-of-Core Path
+
+The algorithm processes data one Z-plane at a time. For each plane, a slab of input data spanning `[plane - kernelZ, plane + kernelZ]` is bulk-read via `copyIntoBuffer`. This slab contains all data needed for neighbor lookups of cells in the current plane. The crystal structures array is cached locally at startup. Output values for each plane are accumulated in a local buffer and bulk-written via `copyFromBuffer`.
+
+### Performance
+
+The slab-based approach is critical for KAM because each cell needs random access to its neighbors within the kernel radius. By reading the entire slab into memory, all neighbor lookups become local memory accesses rather than individual OOC page faults. The slab size is bounded by `(2 * kernelZ + 1) * sliceSize`, which is manageable even for large kernel radii. Sequential plane processing ensures the data is read in order through the volume.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

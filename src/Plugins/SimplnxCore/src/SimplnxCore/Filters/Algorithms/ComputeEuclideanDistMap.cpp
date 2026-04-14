@@ -237,6 +237,27 @@ ComputeEuclideanDistMap::ComputeEuclideanDistMap(DataStructure& dataStructure, c
 ComputeEuclideanDistMap::~ComputeEuclideanDistMap() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Core distance map computation, templated on the output type (int32 for
+ * Manhattan distance, float32 for Euclidean distance).
+ *
+ * OOC optimization strategy:
+ *   The original implementation accessed FeatureIds and distance DataStores through
+ *   per-element virtual dispatch in three passes: boundary identification, iterative
+ *   Manhattan propagation, and Euclidean distance correction. Each pass iterated
+ *   over all voxels, causing O(totalVoxels * passes) chunk operations for OOC data.
+ *
+ *   The optimized implementation front-loads all DataStore I/O:
+ *   1. Bulk-read the entire FeatureIds array into featureIdsBuf.
+ *   2. Fill distance stores with -1, then bulk-read into local buffers (gbDistBuf, etc.).
+ *   3. Boundary identification runs entirely on local buffers.
+ *   4. Each ComputeDistanceMapImpl worker receives raw pointers (not DataStore refs),
+ *      so propagation and distance correction use plain memory access.
+ *   5. Workers write results back via a single copyFromBuffer() at the end.
+ *
+ *   This reduces OOC round-trips from O(totalVoxels * passes) to O(1) per map.
+ */
+// -----------------------------------------------------------------------------
 template <typename T>
 void FindDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMapInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
@@ -246,7 +267,9 @@ void FindDistanceMap(DataStructure& dataStructure, const ComputeEuclideanDistMap
   const auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(inputValues->FeatureIdsArrayPath).getDataStoreRef();
   usize totalVoxels = featureIdsStoreRef.getNumberOfTuples();
 
-  // Bulk-read featureIds into a local buffer to avoid per-element OOC access
+  // Bulk-read the entire FeatureIds array into a local buffer. This is a
+  // full-volume read but is done once, vs. the original per-element access
+  // that triggered a chunk operation per voxel per pass.
   std::vector<int32> featureIdsBuf(totalVoxels);
   featureIdsStoreRef.copyIntoBuffer(0, nonstd::span<int32>(featureIdsBuf.data(), totalVoxels));
 

@@ -49,6 +49,20 @@ In this new structure, what follows is what the created structures represent:
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
 
+## Algorithm
+
+### In-Core Path
+
+Aligns Z-sections by maximizing the mutual information of orientation data between adjacent slices. The algorithm segments each slice into temporary features, bins the orientations, and computes joint and marginal histograms to evaluate mutual information at each candidate shift position. All orientation and feature ID data is accessed through direct array indexing with `operator[]`.
+
+### Out-of-Core Path
+
+Reads the orientation and phase data for each pair of adjacent Z-slices into local memory buffers using `copyIntoBuffer()` before computing histograms. This eliminates per-voxel out-of-core reads during the histogram binning and mutual information calculation, replacing them with two sequential bulk reads per slice pair.
+
+### Performance
+
+The OOC optimization matters most for large datasets that exceed available RAM. Histogram computation requires visiting every voxel in both slices multiple times (once per candidate shift), so eliminating per-element OOC access prevents repeated decompression of the same disk chunks. For in-memory datasets, the two paths produce identical results with negligible overhead difference.
+
 % Auto generated parameter table will be inserted here
 
 ## References

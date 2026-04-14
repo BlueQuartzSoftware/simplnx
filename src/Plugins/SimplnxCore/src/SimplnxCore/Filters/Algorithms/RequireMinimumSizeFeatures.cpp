@@ -169,6 +169,17 @@ Result<> RequireMinimumSizeFeatures::operator()()
   return {};
 }
 
+/**
+ * @brief Iteratively fills voxels belonging to removed features (featureId < 0)
+ * by majority-voting among their 6 face-neighbors.
+ *
+ * OOC optimization: The voting scan uses a rolling 3-slice buffer for FeatureIds.
+ * For each Z-slice, the current slice and its Z-neighbors (prev, next) are in
+ * memory, so all 6 face-neighbor reads come from local buffers rather than
+ * per-element OOC DataStore access. The buffer slides forward one Z-slice per
+ * iteration. Only changed voxels are tracked and have their data arrays updated,
+ * rather than iterating over all voxels for each data array.
+ */
 void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int32AbstractDataStore& featureNumCellsStoreRef)
 {
   MessageHelper messageHelper(m_MessageHandler);
@@ -203,8 +214,10 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
   {
     counter = 0;
 
-    // Scan phase: read featureIds in z-slice chunks for voting
-    // Use 3-slice rolling buffer so all 6 face neighbors are accessible
+    // Rolling 3-slice buffer: holds the previous, current, and next Z-slices so
+    // that all 6 face-neighbor reads come from local memory. The buffer is advanced
+    // one Z-slice at a time by swapping pointers and reading the next slice.
+    // This eliminates per-element OOC DataStore access during the voting scan.
     std::vector<int32> slabBuf(3 * sliceSize, 0);
     int32* prevSlice = slabBuf.data();
     int32* curSlice = slabBuf.data() + sliceSize;
@@ -381,6 +394,10 @@ std::vector<bool> RequireMinimumSizeFeatures::removeSmallFeatures(Int32AbstractD
     return activeObjects;
   }
 
+  // Mark removed features' voxels with featureId = -1 using chunked bulk I/O.
+  // The original per-element setValue(-1) caused a chunk operation per voxel.
+  // Reading/writing in 64K chunks reduces chunk operations by ~64000x.
+  // Only modified chunks are written back (tracked via the `modified` flag).
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
   for(usize offset = 0; offset < totalPoints; offset += k_ChunkTuples)
   {

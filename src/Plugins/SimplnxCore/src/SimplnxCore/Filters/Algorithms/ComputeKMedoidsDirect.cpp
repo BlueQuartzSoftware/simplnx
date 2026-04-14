@@ -13,8 +13,39 @@
 
 using namespace nx::core;
 
+// =============================================================================
+// ComputeKMedoidsDirect — In-Core Algorithm
+//
+// This file implements the in-core (Direct) variant of ComputeKMedoids.
+// It is selected by DispatchAlgorithm when all input arrays reside in memory.
+//
+// ALGORITHM OVERVIEW (Voronoi Iteration / PAM):
+//   1. Randomly select k initial medoids from masked data points
+//   2. Assign each point to the nearest medoid (findClusters)
+//   3. For each cluster, find the member that minimizes total intra-cluster
+//      distance — this becomes the new medoid (optimizeClusters)
+//   4. Repeat steps 2-3 until medoids stop changing (convergence)
+//
+// DATA ACCESS PATTERN:
+//   Uses operator[] for per-element random access to the input array, medoids
+//   array, and featureIds array. This is optimal for in-memory DataStore where
+//   operator[] is essentially a pointer dereference. For out-of-core data, this
+//   pattern would cause chunk thrashing — see ComputeKMedoidsScanline instead.
+//
+// COMPLEXITY:
+//   findClusters:     O(n * k * d) per iteration
+//   optimizeClusters: O(k * n_i^2 * d) per iteration, where n_i is cluster size
+//   Total:            O(iter * (n*k*d + k*n_i^2*d))
+// =============================================================================
+
 namespace
 {
+/**
+ * @brief Type-specialized template that performs the actual K-Medoids computation
+ * for the in-core (Direct) path.
+ *
+ * @tparam T The element type of the clustering array (e.g., float32, int32)
+ */
 template <typename T>
 class KMedoidsTemplate
 {
@@ -37,6 +68,10 @@ public:
   void operator=(const KMedoidsTemplate&) = delete;   // Move assignment Not Implemented
 
   // -----------------------------------------------------------------------------
+  /**
+   * @brief Main K-Medoids loop: initialize medoids, then iterate findClusters +
+   * optimizeClusters until convergence (medoid indices stop changing).
+   */
   void operator()()
   {
     usize numTuples = m_InputArray.getNumberOfTuples();
@@ -109,6 +144,16 @@ private:
   std::mt19937_64::result_type m_Seed;
 
   // -----------------------------------------------------------------------------
+  /**
+   * @brief Assigns each data point to the nearest medoid using direct operator[] access.
+   *
+   * For each masked data point, computes the distance to all k medoids and assigns
+   * the point to the cluster of the nearest medoid. Uses direct per-element access
+   * via operator[] — optimal for in-memory data but would cause chunk thrashing for OOC.
+   *
+   * @param tuples Total number of tuples in the input array
+   * @param dims Number of components per tuple
+   */
   void findClusters(usize tuples, int32 dims)
   {
     for(usize i = 0; i < tuples; i++)
@@ -134,6 +179,21 @@ private:
   }
 
   // -----------------------------------------------------------------------------
+  /**
+   * @brief Finds the optimal medoid for each cluster by minimizing total intra-cluster distance.
+   *
+   * For each cluster i, iterates over all members j of that cluster. For each candidate
+   * medoid j, computes the total distance from j to all other members k. The member with
+   * the lowest total cost becomes the new medoid.
+   *
+   * Complexity: O(k * n_i^2 * dims) where n_i is the size of cluster i.
+   * Uses direct per-element access via operator[].
+   *
+   * @param tuples Total number of tuples in the input array
+   * @param dims Number of components per tuple
+   * @param clusterIdxs In/out: current medoid indices, updated with new optimal medoids
+   * @return Per-cluster minimum cost vector
+   */
   std::vector<float64> optimizeClusters(usize tuples, int32 dims, std::vector<usize>& clusterIdxs)
   {
     std::vector<float64> minCosts(m_NumClusters, std::numeric_limits<float64>::max());

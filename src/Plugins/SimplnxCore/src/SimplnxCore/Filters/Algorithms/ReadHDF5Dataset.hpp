@@ -7,27 +7,25 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/ReadHDF5DatasetParameter.hpp"
 
-/**
-* This is example code to put in the Execute Method of the filter.
-  ReadHDF5DatasetInputValues inputValues;
-  inputValues.ImportHdf5Object = filterArgs.value<ReadHDF5DatasetParameter::ValueType>(import_hdf5_object);
-  return ReadHDF5Dataset(dataStructure, messageHandler, shouldCancel, &inputValues)();
-
-*/
-
 namespace nx::core
 {
 
+/**
+ * @brief Input values for the ReadHDF5Dataset algorithm.
+ */
 struct SIMPLNXCORE_EXPORT ReadHDF5DatasetInputValues
 {
-  ReadHDF5DatasetParameter::ValueType ImportHdf5Object;
+  ReadHDF5DatasetParameter::ValueType ImportHdf5Object; ///< HDF5 import configuration (file path, parent, dataset list).
 };
 
 /**
  * @class ReadHDF5Dataset
- * @brief This algorithm implements support code for the ReadHDF5DatasetFilter
+ * @brief Reads one or more datasets from an HDF5 file into the DataStructure.
+ *
+ * Iterates over the user-selected datasets, reads each via the HDF5 support library,
+ * and populates the corresponding DataArray. Progress messages report the current
+ * dataset being imported.
  */
-
 class SIMPLNXCORE_EXPORT ReadHDF5Dataset
 {
 public:

@@ -65,6 +65,21 @@ const std::atomic_bool& WriteGBCDGMTFile::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Writes GBCD data in GMT (Generic Mapping Tools) format for stereographic projection plotting.
+ *
+ * @section ooc_strategy OOC Strategy
+ * The GBCD array can be very large (5-dimensional, hundreds of MB). Rather than accessing
+ * individual bins via operator[] during the nested symmetry loops (which would cause
+ * devastating chunk thrashing on OOC stores), we:
+ *   1. Cache the crystal structures array locally (ensemble-level, tiny).
+ *   2. Extract only the phase-of-interest slice of the GBCD via a single copyIntoBuffer()
+ *      call, bringing just the relevant subset into a local buffer.
+ *   3. All subsequent GBCD bin lookups in the O(nSym^2 * thetaPoints * phiPoints) inner
+ *      loops use the local buffer, with zero OOC store access.
+ *
+ * @return Result<> indicating success or an error if file creation fails.
+ */
 Result<> WriteGBCDGMTFile::operator()()
 {
   auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);

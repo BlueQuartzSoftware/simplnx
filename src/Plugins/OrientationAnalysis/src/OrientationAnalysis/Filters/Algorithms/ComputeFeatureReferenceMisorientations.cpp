@@ -40,6 +40,18 @@ const std::atomic_bool& ComputeFeatureReferenceMisorientations::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes the misorientation between each cell's quaternion and a
+ * reference orientation for its feature. Two reference modes are supported:
+ *   Mode 0: use the feature's average quaternion (from a prior filter).
+ *   Mode 1: use the quaternion of the voxel farthest from the grain boundary
+ *           (the "center" voxel, found via grain boundary Euclidean distances).
+ *
+ * OOC strategy: All cell-level arrays are read in 64K-tuple chunks via
+ * copyIntoBuffer. Feature-level and ensemble-level arrays are cached entirely
+ * in local vectors at startup (small enough to fit in RAM). Misorientation
+ * output is accumulated in a chunk buffer and bulk-written via copyFromBuffer.
+ */
 Result<> ComputeFeatureReferenceMisorientations::operator()()
 {
   DataPath imageGeomPath = m_InputValues->CellPhasesArrayPath.getParent().getParent();
@@ -80,12 +92,14 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
     return MakeErrorResult(-34900, "Total features was zero. The filter cannot proceed. Check either the feature attribute matrix or the average quaternions for proper size");
   }
 
-  // Cache crystal structures locally (ensemble-level, tiny)
+  // Bulk-read ensemble-level crystal structures (typically < 10 entries) into
+  // local memory to avoid per-element OOC virtual dispatch in the cell loop.
   const usize numXtalEntries = crystalStructures.getNumberOfTuples();
   std::vector<uint32> localCrystalStructures(numXtalEntries);
   crystalStructures.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(localCrystalStructures.data(), numXtalEntries));
 
-  // Cache avgQuats locally (feature-level) — used in mode 0
+  // Cache average quaternions locally when using mode 0 (feature average).
+  // This avoids random-access OOC reads during the main cell loop.
   std::vector<float32> localAvgQuats;
   if(m_InputValues->ReferenceOrientation == 0 && avgQuatsPtr != nullptr)
   {
@@ -102,7 +116,9 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
   const auto& quatsStore = quats.getDataStoreRef();
   auto& misoStore = featureReferenceMisorientations.getDataStoreRef();
 
-  // Mode 1: find center voxels using chunked I/O
+  // Mode 1: find the center voxel for each feature — the voxel with the largest
+  // grain boundary Euclidean distance. Uses chunked sequential reads of both
+  // featureIds and GB distances to avoid random OOC access.
   if(m_InputValues->ReferenceOrientation == 1)
   {
     const auto& gbDistStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->GBEuclideanDistancesArrayPath).getDataStoreRef();
@@ -136,6 +152,9 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
       euclideanCellCenters->setTuple(i, cellCenter.data());
     }
 
+    // Cache the quaternion at each feature's center voxel. These are point
+    // reads from the quats store (one per feature), so we read them individually
+    // rather than reading the entire quats array into RAM.
     centerQuats.resize(totalFeatures * 4, 0.0f);
     for(usize i = 1; i < totalFeatures; i++)
     {
@@ -148,15 +167,19 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
     }
   }
 
+  // Accumulators for computing per-feature average misorientation
   std::vector<float32> avgMisorientationSums(totalFeatures, 0.0f);
   std::vector<float32> avgMisorientationCounts(totalFeatures, 0.0f);
   featureReferenceMisorientations.fill(0.0f);
 
+  // Pre-allocate chunk I/O buffers for the main misorientation computation loop.
+  // The misoBuf accumulates output values per chunk, then is bulk-written.
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
   auto phasesBuf = std::make_unique<int32[]>(k_ChunkTuples);
   auto quatsBuf = std::make_unique<float32[]>(k_ChunkTuples * 4);
   auto misoBuf = std::make_unique<float32[]>(k_ChunkTuples);
 
+  // Main cell loop — sequential chunked reads of cell data, chunked writes of output
   for(usize offset = 0; offset < totalVoxels; offset += k_ChunkTuples)
   {
     if(m_ShouldCancel)
@@ -197,9 +220,11 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
         avgMisorientationSums[featureId] += misoValue;
       }
     }
+    // Bulk-write this chunk's misorientation values to the output DataStore
     misoStore.copyFromBuffer(offset, nonstd::span<const float32>(misoBuf.get(), count));
   }
 
+  // Compute per-feature average misorientation from the accumulated sums
   avgReferenceMisorientation[0] = 0.0f;
   for(usize featureIdx = 1; featureIdx < totalFeatures; featureIdx++)
   {

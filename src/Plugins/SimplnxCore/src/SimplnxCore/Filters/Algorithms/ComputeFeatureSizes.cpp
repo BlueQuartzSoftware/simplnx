@@ -17,6 +17,9 @@ using namespace nx::core;
 
 namespace
 {
+/// Number of FeatureId tuples to read per bulk I/O call. 64K tuples balances
+/// between minimizing copyIntoBuffer() round-trips and keeping per-chunk buffers
+/// small enough to stay in CPU cache.
 constexpr usize k_ChunkTuples = 65536;
 constexpr int32 k_BadFeatureCount = -78231;
 constexpr uint64 k_MaxVoxelCount = std::numeric_limits<int32>::max();
@@ -41,7 +44,8 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
 
   msgHelper.sendMessage("Finding Voxel Counts...");
-  // Count voxels per feature using chunked bulk I/O
+  // Count voxels per feature using chunked bulk I/O. Reading FeatureIds in 64K
+  // chunks via copyIntoBuffer() avoids per-element OOC chunk load/evict cycles.
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
   for(usize offset = 0; offset < numVoxels; offset += k_ChunkTuples)
   {
@@ -205,7 +209,9 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   std::vector<float64> featureCompensators(numFeatures, 0.0);
 
   msgHelper.sendMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
-  // Count voxels and sum volumes using chunked bulk I/O
+  // Count voxels and sum volumes using chunked bulk I/O. For RectGrid, both
+  // FeatureIds and element sizes are read in lockstep chunks so that the
+  // per-element Kahan volume accumulation runs on local buffer data.
   auto featureIdBuf = std::make_unique<int32[]>(k_ChunkTuples);
   auto elemSizeBuf = std::make_unique<float32[]>(k_ChunkTuples);
   for(usize offset = 0; offset < numVoxels; offset += k_ChunkTuples)

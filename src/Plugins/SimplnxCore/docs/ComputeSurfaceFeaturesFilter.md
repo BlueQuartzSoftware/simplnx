@@ -34,6 +34,36 @@ If the structure/data is actually 2D, then the dimension that is planar is not c
 | ![ComputeSurfaceFeatures_Cylinder](Images/ComputeSurfaceFeatures_Cylinder.png) |  ![ComputeSurfaceFeatures_Square](Images/ComputeSurfaceFeatures_Square.png) |
 | Example showing features touching Feature ID=0 (Black voxels) "Mark Feature 0 Neighbors" is **ON** | Example showing features touching the outer surface of the bounding box |
 
+## Algorithm
+
+The filter examines every voxel in the image geometry and determines whether the feature owning that voxel qualifies as a "surface feature." A feature is marked as a surface feature the first time any of its voxels meets the surface criteria; once marked, subsequent voxels of that feature are skipped (short-circuit optimization).
+
+A voxel qualifies its feature as a surface feature if:
+
+1. The voxel is located on the outer boundary of the image geometry (x, y, or z is at its minimum or maximum value), **OR**
+2. Any of the voxel's face neighbors has Feature ID = 0 (when **Mark Feature 0 Neighbors** is enabled).
+
+For 2D geometries (where one dimension has size 1), the degenerate dimension is collapsed and only the 4 in-plane neighbors are checked.
+
+### In-Core Algorithm (Direct)
+
+The in-core variant uses separate code paths for 3D and 2D geometries. For 3D, it iterates all voxels in Z-Y-X order and checks 6 face neighbors via operator[] on the FeatureIds DataStore. For 2D, it determines which dimension is degenerate and iterates the non-degenerate plane, checking 4 neighbors. This approach works well when all data is resident in memory.
+
+### Out-of-Core Algorithm (Scanline)
+
+When the FeatureIds array is stored out-of-core in chunked format, the in-core algorithm's random neighbor lookups would trigger chunk load/evict cycles. The Scanline variant reads one complete native Z-slice at a time using sequential bulk I/O, maintaining a 3-slice rolling window (prevSlice, curSlice, nextSlice).
+
+For 3D geometries, the neighbor lookups map directly to the rolling window buffers. For 2D geometries, the algorithm still iterates the native Z-Y-X grid but remaps coordinates to the logical 2D plane:
+
++ **Degenerate Z** (most common): All data fits in a single Z-slice; all 4 neighbors come from curSlice.
++ **Degenerate X or Y**: The remapped-Y direction maps to the native Z axis, so +/-Y neighbors come from the adjacent Z-slice buffers.
+
+The feature-level SurfaceFeatures output is cached in a local vector during processing and bulk-written once at the end, avoiding per-voxel random writes to the OOC store.
+
+### Performance
+
+The in-core and out-of-core variants produce identical results. The algorithm dispatch is automatic based on the storage type of the FeatureIds array. Memory overhead for the Scanline variant is 3 Z-slices of int32 (for the rolling window) plus a small feature-level vector.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

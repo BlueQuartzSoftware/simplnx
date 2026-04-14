@@ -49,6 +49,22 @@ is to still use the 6 face neighbors ("Face Only") in order to stay consistent w
 |:--:|:--:|
 | ![Shared Edges & Points With Disconnected Region - "Face Only"](Images/SegmentFeatures/combination_face_only.png) | ![Shared Edges & Points With Disconnected Region - "All Connected"](Images/SegmentFeatures/combination_all_connected.png) |
 
+## Algorithm
+
+This filter segments EBSD orientation data into crystallographic grains using flood-fill region growing. Voxels are grouped into the same feature if their misorientation is below a user-defined tolerance threshold.
+
+### In-Core Path
+
+Uses a BFS-style flood fill where seed voxels are compared to their neighbors via random array access with `operator[]`. Each neighbor whose misorientation falls within tolerance is added to the current feature and queued for further comparison.
+
+### Out-of-Core Path
+
+Adapted to use sequential data access through the `SegmentFeatures` base class OOC support. The base class manages bulk I/O so that the flood-fill algorithm can proceed without triggering per-voxel OOC reads across chunk boundaries.
+
+### Performance
+
+The OOC optimization matters most for large datasets that exceed available RAM. Flood-fill naturally exhibits random access patterns as it grows regions across Z-slices, which can cause severe chunk thrashing with compressed on-disk storage. The OOC path mitigates this by leveraging the base class sequential access strategy. For in-memory datasets, the two paths produce identical results with negligible overhead difference.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

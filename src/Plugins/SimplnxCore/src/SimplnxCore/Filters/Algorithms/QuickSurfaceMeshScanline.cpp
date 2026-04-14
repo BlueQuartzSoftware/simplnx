@@ -1,3 +1,50 @@
+/**
+ * @file QuickSurfaceMeshScanline.cpp
+ * @brief Out-of-core (OOC) optimized implementation of the QuickSurfaceMesh algorithm.
+ *
+ * This file implements the scanline variant of QuickSurfaceMesh that avoids
+ * per-element random access to chunked DataStores. Instead of using operator[]
+ * on the FeatureIds array (which triggers chunk load/evict cycles on OOC stores),
+ * this algorithm reads exactly two Z-slices at a time via copyIntoBuffer() and
+ * processes them entirely in local buffers.
+ *
+ * ## Key Differences from QuickSurfaceMeshDirect
+ *
+ * 1. **FeatureIds access**: Direct uses operator[], Scanline uses copyIntoBuffer()
+ *    to bulk-read one Z-slice (xP * yP elements) at a time.
+ *
+ * 2. **Node ID mapping**: Direct allocates an O(volume) nodeIds array of size
+ *    (xP+1)*(yP+1)*(zP+1). Scanline uses two rolling node-plane buffers of
+ *    size O((xP+1)*(yP+1)) each, swapped after each Z-slice. This reduces
+ *    memory from O(volume) to O(slice).
+ *
+ * 3. **Output writes**: Direct writes vertices, triangles, and face labels
+ *    per-element via operator[]. Scanline buffers all vertex coordinates in
+ *    a single allocation and flushes once, while triangle connectivity and
+ *    face labels are buffered per-slice and flushed via copyFromBuffer().
+ *
+ * 4. **Problem voxel correction**: Direct reads/writes the DataStore directly.
+ *    Scanline loads Z-slice pairs, mutates the local buffers, and only writes
+ *    back slices that were actually modified (dirty flag optimization).
+ *
+ * 5. **TupleTransfer**: Direct calls quickSurfaceTransfer() per-triangle.
+ *    Scanline uses quickSurfaceTransferBatch() to process all triangles from
+ *    a Z-slice in one call, reducing virtual function call overhead.
+ *
+ * ## Rolling Buffer Diagram
+ *
+ * For Z-slice k, the algorithm needs:
+ *   - curSlice[]:  FeatureIds for Z = k     (xP * yP elements)
+ *   - nextSlice[]: FeatureIds for Z = k+1   (xP * yP elements)
+ *   - nodePlane0[]: Vertex IDs for Z = k    ((xP+1) * (yP+1) elements)
+ *   - nodePlane1[]: Vertex IDs for Z = k+1  ((xP+1) * (yP+1) elements)
+ *
+ * After processing slice k:
+ *   - std::swap(curSlice, nextSlice)   -- old next becomes current
+ *   - std::swap(nodePlane0, nodePlane1) -- plane1 becomes plane0
+ *   - nodePlane1 is reset to sentinel values
+ */
+
 #include "QuickSurfaceMeshScanline.hpp"
 
 #include "QuickSurfaceMesh.hpp"
@@ -20,13 +67,17 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 namespace
 {
+// RNG constants -- must match QuickSurfaceMeshDirect.cpp to produce identical
+// problem-voxel corrections (same seed, same sequence of random draws).
 constexpr float64 k_RangeMin = 0.0;
 constexpr float64 k_RangeMax = 1.0;
 constexpr std::mt19937_64::result_type k_Seed = 3412341234123412;
 std::mt19937_64 generator(k_Seed);
 std::uniform_real_distribution<> distribution(k_RangeMin, k_RangeMax);
 
-// Buffer-based flip functions that operate on raw int32 pointers
+// Buffer-based flip functions that operate on raw int32 pointers into local
+// slice buffers rather than through the DataStore. These are functionally
+// identical to the Direct variant's flip functions but take raw pointers.
 // -----------------------------------------------------------------------------
 void FlipProblemVoxelCase1(int32* buf, QuickSurfaceMeshScanline::MeshIndexType v1, QuickSurfaceMeshScanline::MeshIndexType v2, QuickSurfaceMeshScanline::MeshIndexType v3,
                            QuickSurfaceMeshScanline::MeshIndexType v4, QuickSurfaceMeshScanline::MeshIndexType v5, QuickSurfaceMeshScanline::MeshIndexType v6)
@@ -122,6 +173,17 @@ QuickSurfaceMeshScanline::QuickSurfaceMeshScanline(DataStructure& dataStructure,
 QuickSurfaceMeshScanline::~QuickSurfaceMeshScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Executes the full OOC meshing pipeline.
+ *
+ * Orchestrates three phases: problem voxel correction, node/triangle counting,
+ * and mesh generation. Between the counting and generation phases, the output
+ * TriangleGeom arrays are resized to their final sizes. After mesh generation,
+ * optional winding repair is applied.
+ *
+ * All FeatureIds access uses copyIntoBuffer() for bulk Z-slice reads.
+ * All output writes use copyFromBuffer() for bulk sequential writes.
+ */
 Result<> QuickSurfaceMeshScanline::operator()()
 {
   auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
@@ -137,6 +199,7 @@ Result<> QuickSurfaceMeshScanline::operator()()
   MeshIndexType triangleCount = 0;
   usize numFeatures = 0;
 
+  // Phase 1: Fix diagonal-conflict voxel configurations (optional)
   if(m_InputValues->FixProblemVoxels)
   {
     correctProblemVoxels();
@@ -191,6 +254,27 @@ Result<> QuickSurfaceMeshScanline::operator()()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief OOC problem-voxel correction using double-buffered Z-slice pairs.
+ *
+ * This is the OOC equivalent of QuickSurfaceMeshDirect::correctProblemVoxels().
+ * Instead of using operator[] to read/write the FeatureIds DataStore directly,
+ * it loads two adjacent Z-slices (sliceA = k-1, sliceB = k) into local buffers
+ * via copyIntoBuffer(), performs all the same diagonal-conflict checks and
+ * random reassignments in local memory, then writes back only modified slices
+ * via copyFromBuffer() using dirty flags.
+ *
+ * The problem voxel checks examine 2x2x2 blocks where the 8 voxels span two
+ * adjacent Z-slices. voxels v1-v4 are in sliceA (Z = k-1) and v5-v8 are in
+ * sliceB (Z = k). The Case1/Case2/Case3 flip logic is inlined rather than
+ * delegated to helper functions because the mutations may target either
+ * sliceA or sliceB, and we need to track which slice was modified.
+ *
+ * The doCase2 lambda handles Case2 variants that may target 4 voxels across
+ * either or both slices. It takes buffer pointers and dirty-flag references
+ * for each of the 4 voxel positions, allowing it to work with any combination
+ * of sliceA and sliceB targets.
+ */
 void QuickSurfaceMeshScanline::correctProblemVoxels()
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Correcting Problem Voxels");
@@ -206,7 +290,8 @@ void QuickSurfaceMeshScanline::correctProblemVoxels()
 
   const MeshIndexType sliceSize = xP * yP;
 
-  // Buffer two consecutive z-slices at a time
+  // Double-buffered Z-slices: sliceA holds Z = (k-1), sliceB holds Z = k.
+  // Each buffer is xP * yP elements (one full Z-slice of FeatureIds).
   auto sliceA = std::make_unique<int32[]>(sliceSize);
   auto sliceB = std::make_unique<int32[]>(sliceSize);
 
@@ -555,6 +640,33 @@ void QuickSurfaceMeshScanline::correctProblemVoxels()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Counting pass using rolling 2-plane node buffers and double-buffered
+ * FeatureId Z-slices.
+ *
+ * This is the OOC equivalent of QuickSurfaceMeshDirect::determineActiveNodes().
+ * The key difference is memory reduction: instead of an O(volume) nodeIds array,
+ * this method uses two node-plane buffers of size O((xP+1)*(yP+1)) each.
+ *
+ * ## Rolling Buffer Strategy
+ *
+ * For Z-slice k, the dual-grid nodes lie on two planes:
+ *   - nodePlane0: nodes at Z = k   (the "current" plane)
+ *   - nodePlane1: nodes at Z = k+1 (the "next" plane)
+ *
+ * After processing all voxels in slice k:
+ *   1. nodePlane0 is discarded (all its nodes have been assigned)
+ *   2. nodePlane1 becomes nodePlane0 for the next iteration
+ *   3. A fresh nodePlane1 is initialized with sentinel values
+ *
+ * This works because each node is referenced only by voxels at Z = k and Z = k-1.
+ * Once we advance past Z = k, nodes in the Z = k plane are never accessed again.
+ *
+ * The FeatureIds are double-buffered similarly: curSlice holds Z = k, nextSlice
+ * holds Z = k+1. After processing, they swap so the old next becomes current.
+ *
+ * Also tracks the maximum FeatureId value (numFeatures) for later array sizing.
+ */
 void QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& nodeCount, MeshIndexType& triangleCount, usize& numFeatures)
 {
   m_MessageHandler(IFilter::Message::Type::Info, "Counting active nodes and triangles");
@@ -572,11 +684,14 @@ void QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& nodeC
   const MeshIndexType nodePlaneSize = (xP + 1) * (yP + 1);
   constexpr auto kMax = std::numeric_limits<MeshIndexType>::max();
 
-  // Rolling node-plane buffers: O(2 * nodePlaneSize) instead of O((xP+1)*(yP+1)*(zP+1))
+  // Rolling node-plane buffers: O(2 * nodePlaneSize) instead of O((xP+1)*(yP+1)*(zP+1)).
+  // nodePlane0 corresponds to Z = k (current), nodePlane1 to Z = k+1 (next).
+  // Entries start at kMax (sentinel) and are assigned sequential IDs on first use.
   std::vector<MeshIndexType> nodePlane0(nodePlaneSize, kMax);
   std::vector<MeshIndexType> nodePlane1(nodePlaneSize, kMax);
 
-  // Lambda to count a node: if not yet assigned, assign and increment
+  // Lambda to count a node: if not yet assigned in this plane, assign the
+  // next sequential vertex ID and increment the counter.
   auto countNode = [&](std::vector<MeshIndexType>& plane, MeshIndexType offset) {
     if(plane[offset] == kMax)
     {
@@ -585,11 +700,11 @@ void QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& nodeC
     }
   };
 
-  // Buffer current and next z-slices for featureIds
+  // Double-buffered FeatureId Z-slices: curSlice holds Z = k, nextSlice holds Z = k+1.
   auto curSlice = std::make_unique<int32[]>(sliceSize);
   auto nextSlice = std::make_unique<int32[]>(sliceSize);
 
-  // Load first slice
+  // Load the first Z-slice (k = 0) via bulk I/O
   featureIdsStore.copyIntoBuffer(0, nonstd::span<int32>(curSlice.get(), sliceSize));
 
   numFeatures = 0;
@@ -708,6 +823,40 @@ void QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& nodeC
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Generation pass: creates the output triangle mesh with OOC-safe I/O.
+ *
+ * This is the OOC equivalent of QuickSurfaceMeshDirect::createNodesAndTriangles().
+ * It produces identical output but uses bulk I/O for all reads and writes:
+ *
+ * ## Output Buffering Strategy
+ *
+ * - **Vertex coordinates**: Buffered in vertCoordBuf (nodeCount * 3 floats),
+ *   flushed once at the end via a single copyFromBuffer() call. This avoids
+ *   per-vertex OOC writes. The buffer is O(surface) not O(volume) because
+ *   only boundary nodes get vertices.
+ *
+ * - **Triangle connectivity**: Accumulated in triBuffer per Z-slice, flushed
+ *   via copyFromBuffer() at the end of each slice. This keeps peak memory
+ *   proportional to the number of triangles in one Z-slice.
+ *
+ * - **Face labels**: Accumulated in faceLabelBuf per Z-slice, flushed with
+ *   triangle connectivity.
+ *
+ * - **TupleTransfer**: Arguments accumulated in ttArgsBuf per Z-slice and
+ *   flushed via quickSurfaceTransferBatch() to reduce virtual call overhead.
+ *
+ * - **Node types**: Computed from ownerLists after all triangles are generated,
+ *   buffered in a local array, and flushed via one copyFromBuffer() call.
+ *
+ * ## Node Assignment
+ *
+ * Uses the same rolling 2-plane node buffer strategy as countActiveNodesAndTriangles().
+ * The assignNode lambda both assigns sequential vertex IDs and writes vertex
+ * coordinates into vertCoordBuf. Multiple calls to assignNode with the same
+ * plane offset are harmless -- the coordinate write is idempotent (last-write-wins
+ * matches the Direct variant's behavior).
+ */
 void QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCount, MeshIndexType triangleCount, usize numFeatures)
 {
   if(m_ShouldCancel)

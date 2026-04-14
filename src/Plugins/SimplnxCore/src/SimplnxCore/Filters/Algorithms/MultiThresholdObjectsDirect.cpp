@@ -11,8 +11,38 @@
 
 using namespace nx::core;
 
+// =============================================================================
+// MultiThresholdObjectsDirect — In-Core Algorithm
+//
+// This file implements the in-core (Direct) variant of MultiThresholdObjects.
+// It is selected by DispatchAlgorithm when all input arrays reside in memory.
+//
+// ALGORITHM OVERVIEW:
+//   For each threshold condition in the user-defined threshold tree:
+//   1. Allocate an O(n) temporary result vector initialized to FALSE
+//   2. Read each element of the input array via getComponentValue()
+//   3. Apply the comparison (< > == !=) to produce TRUE/FALSE per element
+//   4. Merge the temporary results into the output mask using AND/OR logic
+//
+//   Threshold conditions can be nested in ArrayThresholdSets (which recursively
+//   apply AND/OR between their children) or be individual ArrayThreshold comparisons.
+//
+// DATA ACCESS PATTERN:
+//   Uses getComponentValue() for per-element random access to input arrays, and
+//   operator[] for per-element writes to the output mask and temporary vectors.
+//   This is optimal for in-memory data. The O(n) temporary vector is acceptable
+//   when data is in memory but would be wasteful for OOC data — see the Scanline
+//   variant which uses O(chunkSize) temporaries instead.
+// =============================================================================
+
 namespace
 {
+/**
+ * @brief Helper class that applies a single threshold comparison to an input array
+ * and writes TRUE/FALSE results into an output vector.
+ *
+ * @tparam U The output mask element type (e.g., uint8, bool, float32)
+ */
 template <class U>
 class ThresholdFilterHelper
 {

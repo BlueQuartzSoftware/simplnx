@@ -54,6 +54,35 @@ A clustering algorithm can be considered a kind of segmentation; this implementa
 
 This **Filter** will store the medoids for the final clusters within the created **Attribute Matrix**.
 
+## Algorithm
+
+This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.
+
+### In-Core Algorithm (Direct)
+
+When all input arrays reside in memory, the **Direct** algorithm is used. It accesses array elements via direct per-element operator[] calls, which are optimal for in-memory data (essentially pointer dereferences).
+
+The algorithm performs the standard Voronoi iteration:
+
+1. **Initialize**: Randomly select k data points as initial medoids
+2. **Assign clusters**: For each data point, compute the distance to all k medoids and assign it to the nearest
+3. **Optimize medoids**: For each cluster, find the member that minimizes the total intra-cluster distance
+4. **Repeat** steps 2-3 until medoids stop changing (convergence)
+
+### Out-of-Core Algorithm (Scanline)
+
+When any input array is backed by chunked on-disk storage (out-of-core), the **Scanline** algorithm is used. Out-of-core data lives in compressed chunks on disk; each per-element operator[] access would trigger a chunk load/decompress/evict cycle ("chunk thrashing"), making the iterative algorithm extremely slow.
+
+The Scanline algorithm avoids this with three key optimizations:
+
+- **Medoid caching**: The medoids array is small (k points), so it is cached entirely in a local buffer before each cluster assignment pass, eliminating k * N per-element OOC reads per iteration.
+- **Chunked cluster assignment**: The input data and cluster IDs are read and written in aligned 64K-tuple chunks via bulk I/O (copyIntoBuffer/copyFromBuffer). All distance computations for each chunk are done in memory.
+- **Per-cluster member scanning**: During medoid optimization, cluster member indices are collected by scanning the cluster IDs in chunks. Pairwise distances within each cluster are computed using single-tuple bulk reads. Peak memory is proportional to the largest cluster, not the total data size.
+
+### Performance
+
+The in-core Direct algorithm is faster for in-memory data due to the lower overhead of operator[] access. The out-of-core Scanline algorithm converts random per-element access into sequential bulk I/O, which is essential for data stored on disk in compressed chunks. Both produce identical clustering results.
+
 % Auto generated parameter table will be inserted here
 
 ## References

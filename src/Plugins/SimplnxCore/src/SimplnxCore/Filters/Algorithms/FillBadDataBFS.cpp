@@ -1,3 +1,26 @@
+// -----------------------------------------------------------------------------
+// FillBadDataBFS.cpp -- In-core BFS flood-fill algorithm for filling bad data
+// -----------------------------------------------------------------------------
+//
+// This file implements the BFS (breadth-first search) variant of the FillBadData
+// algorithm, optimized for in-core (contiguous memory) data access. The algorithm
+// identifies connected regions of bad data (FeatureId == 0), classifies them by
+// size, and fills small regions by copying cell data from neighboring good features.
+//
+// The BFS approach uses O(N) temporary buffers and relies on random access to
+// both the FeatureIds array and the temporary vectors. This is efficient when all
+// data fits in RAM but causes catastrophic chunk thrashing when data is stored
+// out-of-core in compressed HDF5 chunks. For OOC data, FillBadDataCCL should be
+// used instead (selected automatically by the FillBadData dispatcher).
+//
+// Algorithm Steps:
+//   Step 1: Linear scan to find max FeatureId (and optionally max Phase)
+//   Step 2: BFS flood-fill to discover and classify connected bad-data regions
+//   Step 3: Iterative morphological dilation to fill small regions via neighbor voting
+//
+// See FillBadDataBFS.hpp for detailed algorithm documentation.
+// -----------------------------------------------------------------------------
+
 #include "FillBadDataBFS.hpp"
 
 #include "FillBadData.hpp"
@@ -29,6 +52,14 @@ namespace
 //
 // All components of the tuple are copied (e.g., 3-component RGB, 6-component
 // tensor, etc.), preserving multi-component array semantics.
+//
+// WHY featureIds are checked during copy:
+// The iterative fill processes one dilation layer at a time. Within a single
+// iteration, a voxel that was just filled (featureId changed from -1 to a
+// positive value) must NOT serve as a copy source for other voxels in the same
+// iteration, because its non-featureId arrays have not yet been updated. The
+// check `featureIds[neighbor] > 0` combined with updating featureIds LAST
+// (after all other arrays) ensures this ordering is maintained.
 // -----------------------------------------------------------------------------
 template <typename T>
 void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int32>& neighbors)

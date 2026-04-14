@@ -12,6 +12,31 @@
 
 using namespace nx::core;
 
+// ----------------------------------------------------------------------------
+// ComputeSurfaceAreaToVolumeDirect -- In-Core Algorithm
+//
+// Computes the surface-area-to-volume ratio (and optional sphericity) for each
+// feature in an image geometry. The algorithm has two phases:
+//
+// Phase 1 -- Surface area accumulation:
+//   Iterate every voxel in Z-Y-X order. For each voxel with FeatureId > 0,
+//   check its 6 face neighbors. When a neighbor belongs to a different feature,
+//   the area of the shared face is added to the current feature's accumulator.
+//   Face areas depend on the voxel spacing:
+//     - Z-normal faces (shared by +/-Z neighbors): spacing[0] * spacing[1]
+//     - Y-normal faces (shared by +/-Y neighbors): spacing[1] * spacing[2]
+//     - X-normal faces (shared by +/-X neighbors): spacing[2] * spacing[0]
+//
+// Phase 2 -- Ratio and sphericity computation:
+//   For each feature, divide accumulated surface area by feature volume
+//   (numCells * voxelVolume). Optionally compute sphericity using:
+//     sphericity = (pi^(1/3) * (6*V)^(2/3)) / SA
+//
+// Data access pattern: Uses operator[] on the FeatureIds DataStore with
+// pre-computed flat-index offsets for the 6 face neighbors. This is efficient
+// for in-memory data but would cause chunk thrashing on OOC storage.
+// ----------------------------------------------------------------------------
+
 // -----------------------------------------------------------------------------
 ComputeSurfaceAreaToVolumeDirect::ComputeSurfaceAreaToVolumeDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                    const ComputeSurfaceAreaToVolumeInputValues* inputValues)
@@ -27,25 +52,43 @@ ComputeSurfaceAreaToVolumeDirect::~ComputeSurfaceAreaToVolumeDirect() noexcept =
 
 // -----------------------------------------------------------------------------
 /**
- * @brief Computes surface-area-to-volume ratio using direct Z-Y-X iteration.
- * In-core path: accumulates per-feature surface area from face-neighbor
- * comparisons, then divides by voxel volume. Optionally computes sphericity.
+ * @brief Computes surface-area-to-volume ratio (and optional sphericity) using
+ * direct in-memory array indexing.
+ *
+ * The algorithm proceeds in two phases:
+ *
+ * **Phase 1 -- Surface area accumulation** (voxel-level):
+ *   For each voxel in Z-Y-X order, check 6 face neighbors via flat-index offsets.
+ *   Boundary neighbors (outside the volume) are skipped. When a valid neighbor
+ *   belongs to a different feature, the shared face area is added to the current
+ *   feature's surface-area accumulator. The face area depends on which axis the
+ *   face is normal to (Z-normal = spacing.x * spacing.y, etc.).
+ *
+ * **Phase 2 -- Ratio computation** (feature-level):
+ *   For each feature (starting from feature 1, since feature 0 is background):
+ *   - Compute volume = numCells * voxelVolume
+ *   - SA/V ratio = surfaceArea / volume
+ *   - Sphericity (optional) = (pi^(1/3) * (6*V)^(2/3)) / SA
+ *
+ * @return Result<> indicating success, validation errors, or cancellation.
  */
 Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 {
-  // Input Cell Data
+  // -- Setup: Retrieve input arrays and geometry --
+
+  // Cell-level FeatureIds: one int32 per voxel identifying which feature owns it
   auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& featureIdsStoreRef = featureIdsArrayPtr->getDataStoreRef();
 
-  // Input Feature Data
+  // Feature-level NumCells: pre-computed count of how many voxels each feature has
   const auto& numCells = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumCellsArrayPath)->getDataStoreRef();
 
-  // Output Feature Data
+  // Output: SA/V ratio per feature
   auto& surfaceAreaVolumeRatio = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SurfaceAreaVolumeRatioArrayName)->getDataStoreRef();
 
-  // Required Geometry
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
 
+  // Validate that the max FeatureId does not exceed the feature AttributeMatrix size
   auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->NumCellsArrayPath.getParent(), *featureIdsArrayPtr, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
@@ -59,10 +102,22 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
   auto yPoints = static_cast<int64>(dims[1]);
   auto zPoints = static_cast<int64>(dims[2]);
 
+  // Volume of a single voxel, used to convert numCells to physical volume
   float32 voxelVol = spacing[0] * spacing[1] * spacing[2];
 
+  // Local accumulator for per-feature surface area. Using a std::vector here
+  // (rather than the output DataStore) because multiple voxels contribute to
+  // the same feature and we need read-modify-write access during accumulation.
   std::vector<float32> featureSurfaceArea(static_cast<usize>(numFeatures), 0.0f);
 
+  // Pre-compute flat-index offsets for the 6 face neighbors.
+  // For a voxel at flat index i:
+  //   -Z neighbor: i - (xPoints * yPoints)   (one full Z-slice back)
+  //   -Y neighbor: i - xPoints               (one row back)
+  //   -X neighbor: i - 1                     (one element back)
+  //   +X neighbor: i + 1                     (one element forward)
+  //   +Y neighbor: i + xPoints               (one row forward)
+  //   +Z neighbor: i + (xPoints * yPoints)   (one full Z-slice forward)
   int64 neighborOffset[6] = {0, 0, 0, 0, 0, 0};
   neighborOffset[0] = -xPoints * yPoints; // -Z
   neighborOffset[1] = -xPoints;           // -Y
@@ -70,6 +125,9 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
   neighborOffset[3] = 1;                  // +X
   neighborOffset[4] = xPoints;            // +Y
   neighborOffset[5] = xPoints * yPoints;  // +Z
+
+  // -- Phase 1: Surface area accumulation --
+  // Iterate every voxel, check 6 neighbors, accumulate shared face areas.
 
   for(int64 zIdx = 0; zIdx < zPoints; zIdx++)
   {
@@ -85,13 +143,17 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
       {
         float32 onSurface = 0.0f;
         int32 currentFeatureId = featureIdsStoreRef[zStride + yStride + xIdx];
+        // Skip background voxels (FeatureId <= 0)
         if(currentFeatureId < 1)
         {
           continue;
         }
 
+        // Check each of the 6 face neighbors. Skip neighbors that would be
+        // outside the volume (boundary voxels have fewer valid neighbors).
         for(int32 neighborOffsetIndex = 0; neighborOffsetIndex < 6; neighborOffsetIndex++)
         {
+          // Boundary guards: skip neighbor if it would be out of bounds
           if(neighborOffsetIndex == 0 && zIdx == 0)
           {
             continue;
@@ -119,28 +181,35 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
 
           int64 neighborIndex = zStride + yStride + xIdx + neighborOffset[neighborOffsetIndex];
 
+          // If the neighbor belongs to a different feature, the shared face
+          // contributes to this feature's surface area. The face area depends
+          // on which axis the face is normal to.
           if(featureIdsStoreRef[neighborIndex] != currentFeatureId)
           {
-            if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5) // XY face shared
+            if(neighborOffsetIndex == 0 || neighborOffsetIndex == 5) // Z-normal face (XY plane)
             {
               onSurface = onSurface + spacing[0] * spacing[1];
             }
-            if(neighborOffsetIndex == 1 || neighborOffsetIndex == 4) // YZ face shared
+            if(neighborOffsetIndex == 1 || neighborOffsetIndex == 4) // Y-normal face (XZ plane)
             {
               onSurface = onSurface + spacing[1] * spacing[2];
             }
-            if(neighborOffsetIndex == 2 || neighborOffsetIndex == 3) // XZ face shared
+            if(neighborOffsetIndex == 2 || neighborOffsetIndex == 3) // X-normal face (YZ plane)
             {
               onSurface = onSurface + spacing[2] * spacing[0];
             }
           }
         }
+        // Add this voxel's boundary face contributions to the feature total
         int32 featureId = featureIdsStoreRef[zStride + yStride + xIdx];
         featureSurfaceArea[featureId] = featureSurfaceArea[featureId] + onSurface;
       }
     }
   }
 
+  // -- Phase 2: Ratio and sphericity computation --
+
+  // Compute SA/V ratio for each feature (skip feature 0 = background)
   const float32 thirdRootPi = std::pow(nx::core::Constants::k_PiF, 0.333333f);
   for(usize i = 1; i < numFeatures; i++)
   {
@@ -148,6 +217,9 @@ Result<> ComputeSurfaceAreaToVolumeDirect::operator()()
     surfaceAreaVolumeRatio[i] = featureSurfaceArea[i] / featureVolume;
   }
 
+  // Optionally compute sphericity: how close each feature's shape is to a sphere.
+  // Sphericity = (pi^(1/3) * (6V)^(2/3)) / SA
+  // A perfect sphere has sphericity = 1.0; more irregular shapes have lower values.
   if(m_InputValues->CalculateSphericity)
   {
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));

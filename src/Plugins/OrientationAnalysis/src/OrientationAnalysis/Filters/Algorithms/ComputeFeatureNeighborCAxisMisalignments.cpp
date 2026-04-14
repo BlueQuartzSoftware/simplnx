@@ -27,10 +27,22 @@ ComputeFeatureNeighborCAxisMisalignments::ComputeFeatureNeighborCAxisMisalignmen
 ComputeFeatureNeighborCAxisMisalignments::~ComputeFeatureNeighborCAxisMisalignments() noexcept = default;
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes the c-axis misalignment angle between each pair of neighboring
+ * hexagonal features. For each feature, the average quaternion is converted to a
+ * c-axis direction, then the angle between neighboring c-axes is computed and
+ * stored in a per-feature neighbor list. Optionally computes the average
+ * misalignment per feature.
+ *
+ * OOC strategy: Feature-level arrays (featurePhases, avgQuats) and ensemble-level
+ * arrays (crystalStructures) are bulk-read into local vectors at startup. The
+ * main loop operates entirely on these local caches. Output avgCAxisMisalignment
+ * is accumulated in a local buffer, then bulk-written via copyFromBuffer at the end.
+ */
 Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
 {
   // -------------------------------------------------------------------------
-  // Cache ensemble-level crystalStructures locally (tiny array)
+  // Bulk-read ensemble-level crystalStructures into local memory (tiny array).
   // -------------------------------------------------------------------------
   const auto& crystalStructuresStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
   const usize numPhases = crystalStructuresStore.getNumberOfTuples();
@@ -63,7 +75,9 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   }
 
   // -------------------------------------------------------------------------
-  // Cache feature-level arrays locally (O(features) — thousands, not millions)
+  // Bulk-read feature-level arrays into local vectors (O(features) -- thousands,
+  // not millions of elements). The main loop accesses these randomly by feature
+  // and neighbor IDs, which would cause OOC thrashing if left in DataStores.
   // -------------------------------------------------------------------------
   const auto& featurePhasesStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
   const usize totalFeatures = featurePhasesStore.getNumberOfTuples();
@@ -81,7 +95,9 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   auto& cAxisMisalignmentList = m_DataStructure.getDataRefAs<NeighborList<float32>>(m_InputValues->CAxisMisalignmentListArrayName);
 
   // -------------------------------------------------------------------------
-  // Output buffer for avgCAxisMisalignment — accumulate locally, bulk-write at end
+  // Local accumulation buffer for avgCAxisMisalignment. Using a local vector
+  // avoids per-element OOC writes during the neighbor loop. The final result
+  // is bulk-written to the DataStore at the end.
   // -------------------------------------------------------------------------
   Float32Array* avgCAxisMisalignmentPtr = nullptr;
   std::vector<float32> avgCAxisBuf;
@@ -190,7 +206,8 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   }
 
   // -------------------------------------------------------------------------
-  // Bulk-write the avgCAxisMisalignment output buffer back to the DataStore
+  // Single bulk-write of the completed avgCAxisMisalignment buffer back to the
+  // DataStore. All accumulation and normalization was done in local RAM.
   // -------------------------------------------------------------------------
   if(m_InputValues->FindAvgMisals)
   {

@@ -38,9 +38,23 @@ const std::atomic_bool& ComputeAvgCAxes::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes the average crystallographic c-axis direction per feature for
+ * hexagonal phases. Each cell's quaternion is converted to a passive rotation
+ * matrix, transposed to an active rotation, and multiplied by <0,0,1> to get
+ * the c-axis in the sample reference frame. A running average c-axis is
+ * accumulated per feature, then normalized.
+ *
+ * OOC strategy: Cell-level arrays (featureIds, phases, quats) are read in
+ * fixed-size chunks (k_ChunkSize tuples) via copyIntoBuffer. Feature-level
+ * avgCAxes is cached entirely in a local buffer (random access by featureId
+ * would cause severe OOC chunk thrashing). The final result is bulk-written
+ * back to the DataStore via copyFromBuffer.
+ */
 Result<> ComputeAvgCAxes::operator()()
 {
-  // Cache ensemble-level crystal structures locally to avoid per-element OOC overhead
+  // Bulk-read ensemble-level crystal structures into local memory to avoid
+  // per-element OOC virtual dispatch during the cell loop
   const auto& crystalStructuresStoreRef = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStoreRef.getSize();
   auto crystalStructuresCache = std::make_unique<uint32[]>(numCrystalStructures);
@@ -71,6 +85,8 @@ Result<> ComputeAvgCAxes::operator()()
     result.warnings().push_back({-76403, "Non Hexagonal phases were found. All calculations for non Hexagonal phases will be skipped and a NaN value inserted."});
   }
 
+  // DataStore references for cell-level arrays — all access goes through
+  // copyIntoBuffer/copyFromBuffer to avoid per-element OOC overhead.
   const auto& featureIdsStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
   const auto& quatsStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath)->getDataStoreRef();
   const auto& cellPhasesStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath)->getDataStoreRef();
@@ -79,7 +95,9 @@ Result<> ComputeAvgCAxes::operator()()
   const usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
   const usize totalFeatures = avgCAxesStoreRef.getNumberOfTuples();
 
-  // Cache feature-level avgCAxes locally (random access by featureId in the hot loop)
+  // Cache feature-level avgCAxes entirely in a local buffer. The cell loop
+  // accesses this by featureId (random order), which would cause severe OOC
+  // chunk thrashing if left in the DataStore.
   const usize avgCAxesElements = totalFeatures * 3;
   auto avgCAxesCache = std::make_unique<float32[]>(avgCAxesElements);
   avgCAxesStoreRef.copyIntoBuffer(0, nonstd::span<float32>(avgCAxesCache.get(), avgCAxesElements));
@@ -89,12 +107,14 @@ Result<> ComputeAvgCAxes::operator()()
 
   auto counter = std::make_unique<int32[]>(totalFeatures);
 
-  // Allocate chunk buffers for cell-level arrays (sequential access)
+  // Pre-allocate chunk buffers for sequential cell-level reads. These are
+  // reused every iteration to avoid repeated heap allocations.
   auto featureIdsChunk = std::make_unique<int32[]>(k_ChunkSize);
   auto cellPhasesChunk = std::make_unique<int32[]>(k_ChunkSize);
   auto quatsChunk = std::make_unique<float32[]>(k_ChunkSize * 4);
 
-  // Loop over each cell in chunks to minimize OOC overhead
+  // Process cells in fixed-size chunks. Each chunk triggers one bulk read per
+  // array, amortizing OOC overhead over k_ChunkSize tuples.
   usize tupleIdx = 0;
   while(tupleIdx < totalPoints)
   {
@@ -105,7 +125,7 @@ Result<> ComputeAvgCAxes::operator()()
 
     const usize chunkTuples = std::min(k_ChunkSize, totalPoints - tupleIdx);
 
-    // Bulk-read cell-level data for this chunk
+    // Bulk-read this chunk of cell data (sequential access pattern, OOC-friendly)
     featureIdsStoreRef.copyIntoBuffer(tupleIdx, nonstd::span<int32>(featureIdsChunk.get(), chunkTuples));
     cellPhasesStoreRef.copyIntoBuffer(tupleIdx, nonstd::span<int32>(cellPhasesChunk.get(), chunkTuples));
     quatsStoreRef.copyIntoBuffer(tupleIdx * 4, nonstd::span<float32>(quatsChunk.get(), chunkTuples * 4));
@@ -200,7 +220,8 @@ Result<> ComputeAvgCAxes::operator()()
     }
   }
 
-  // Write cached avgCAxes data back to the store
+  // Single bulk-write of the completed feature-level avgCAxes back to the DataStore.
+  // All accumulation and normalization was done in the local buffer.
   avgCAxesStoreRef.copyFromBuffer(0, nonstd::span<const float32>(avgCAxesCache.get(), avgCAxesElements));
 
   return result;

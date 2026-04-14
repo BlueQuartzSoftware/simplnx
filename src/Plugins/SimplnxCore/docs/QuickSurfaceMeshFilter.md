@@ -71,6 +71,40 @@ Each triangle that is created will have an 2 component attribute called `Face La
 side of the triangle. If one of the triangles represents the border of the virtual box then one of the FaceLables will
 have a value of -1.
 
+## Algorithm
+
+This filter uses a dispatch mechanism to select the optimal algorithm implementation based on the storage type of the input arrays.
+
+### In-Core Algorithm (Direct)
+
+When all input arrays are backed by in-memory storage, the **QuickSurfaceMeshDirect** algorithm is used. This is the original implementation that accesses the FeatureIds array via direct element indexing.
+
+The algorithm proceeds in three phases:
+
+1. **Problem Voxel Correction** (optional): Iteratively examines every 2x2x2 block of voxels to detect diagonal-conflict configurations that would produce non-manifold mesh geometry. Conflicting voxels are randomly reassigned to a neighbor's FeatureId using a seeded RNG for reproducibility. Up to 20 correction iterations are performed.
+
+2. **Node and Triangle Counting**: A single pass over all voxels counts the number of unique mesh vertices (nodes) and boundary triangles. For each voxel, the algorithm checks whether the FeatureId differs from the +X, +Y, and +Z neighbors. Volume boundary faces also produce triangles. A mapping array of size (xP+1) x (yP+1) x (zP+1) assigns sequential vertex IDs to active dual-grid corners.
+
+3. **Mesh Generation**: A second pass writes vertex coordinates, triangle connectivity, face labels, and node types. Face labels ensure the smaller FeatureId is always in component[0], with -1 used for exterior boundary faces. Each vertex is classified by how many features share it (2=interior face, 3=triple line, 4=quad point, +10 for boundary vertices).
+
+### Out-of-Core Algorithm (Scanline)
+
+When any input array uses chunked out-of-core (OOC) storage, the **QuickSurfaceMeshScanline** algorithm is selected automatically. This variant produces identical output but avoids random-access reads that would cause chunk thrashing on disk-backed data stores.
+
+Key optimizations:
+
+- **Z-slice bulk I/O**: FeatureIds are read one Z-slice at a time (xP x yP elements) via `copyIntoBuffer()` instead of per-element reads. At most two adjacent Z-slices are buffered simultaneously.
+
+- **Rolling node-plane buffers**: Instead of the O(volume) node mapping array used by the Direct variant, two node-plane buffers of size O((xP+1) x (yP+1)) each are maintained and swapped after each Z-slice. This reduces memory from O(volume) to O(slice).
+
+- **Buffered output writes**: Triangle connectivity and face labels are accumulated in per-slice buffers and flushed via `copyFromBuffer()`. Vertex coordinates are buffered for all nodes and flushed once at the end.
+
+- **Dirty-flag write-back**: During problem voxel correction, modified Z-slices are tracked with dirty flags and only written back if they were actually changed.
+
+### Performance
+
+The in-core (Direct) variant is fastest for datasets that fit in memory. The out-of-core (Scanline) variant avoids the 100-1000x performance penalty that would occur from chunk thrashing on OOC datasets, at the cost of slightly more complex bookkeeping. Both variants produce bit-identical output.
+
 ## Notes
 
 The Quick Mesh algorithm is very crude and naive in its implementation. This filter

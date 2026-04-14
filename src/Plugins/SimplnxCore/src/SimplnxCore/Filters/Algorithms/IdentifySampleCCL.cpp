@@ -1,3 +1,48 @@
+// -----------------------------------------------------------------------------
+// IdentifySampleCCL.cpp -- Out-of-core CCL for sample identification
+// -----------------------------------------------------------------------------
+//
+// This file implements the out-of-core optimized variant of the IdentifySample
+// algorithm. It replaces the BFS flood-fill approach (see IdentifySampleBFS.cpp)
+// with scanline Connected Component Labeling (CCL) and a "replay" technique
+// designed to process data in strict Z-slice sequential order, avoiding chunk
+// thrashing in OOC storage.
+//
+// ## Architecture: Generic CCL + Replay
+//
+// The implementation is built on two generic template functions:
+//
+// 1. runForwardCCL<T>(store, dims, condition, cancel)
+//    Performs a single forward scan through the volume in Z-Y-X order. For each
+//    voxel where `condition` returns true, assigns a provisional label by
+//    checking three backward neighbors (x-1, y-1, z-1) in a rolling 2-slice
+//    label buffer. Records equivalences in a VectorUnionFind. Returns a CCLResult
+//    containing the flattened Union-Find, per-root sizes, and the largest root.
+//
+// 2. replayForwardCCL<T>(store, dims, unionFind, condition, action, cancel)
+//    Re-executes the exact same forward scan to re-derive the same provisional
+//    labels deterministically. For each labeled voxel, resolves the provisional
+//    label to its root via the (already flattened) Union-Find, then calls
+//    `action(data, inSlice, root, x, y, z)` to apply per-voxel logic. If the
+//    action modifies the slice data, the slice is written back via copyFromBuffer.
+//
+// This "run then replay" pattern avoids O(volume) label storage. The trade-off
+// is reading each Z-slice twice (once during run, once during replay), but for
+// OOC datasets the memory savings are critical -- the volume itself may not fit
+// in RAM.
+//
+// ## Phase Structure
+//
+// The IdentifySampleCCLFunctor orchestrates up to four phases:
+//   Phase 1: runForwardCCL on good voxels -> find largest component
+//   Phase 2: replayForwardCCL on good voxels -> mask non-sample voxels
+//   Phase 3: runForwardCCL on bad voxels -> find hole components (if FillHoles)
+//   Phase 4a: replayForwardCCL on bad voxels -> identify boundary-touching roots
+//   Phase 4b: replayForwardCCL on bad voxels -> fill interior holes
+//
+// See IdentifySampleCCL.hpp for detailed algorithm documentation.
+// -----------------------------------------------------------------------------
+
 #include "IdentifySampleCCL.hpp"
 
 #include "IdentifySample.hpp"

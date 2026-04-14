@@ -128,13 +128,26 @@ const std::atomic_bool& ComputeFeatureClustering::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+/**
+ * @brief Computes the radial distribution function (RDF) for features in a
+ * specified phase. The O(n^2) pairwise distance computation is the bottleneck.
+ *
+ * OOC optimization: The FeaturePhases and Centroids arrays are accessed in the
+ * inner O(n^2) loop. For OOC data, per-element virtual dispatch inside a
+ * quadratic loop causes n^2 chunk operations -- catastrophic for performance.
+ * Both arrays are bulk-read into local std::vectors at the start via
+ * copyIntoBuffer(). The RDF histogram is also accumulated into a local vector
+ * and written back via copyFromBuffer() after normalization.
+ */
+// -----------------------------------------------------------------------------
 Result<> ComputeFeatureClustering::operator()()
 {
   const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
   const auto& featurePhasesStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
   const auto& centroidsStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
-  // Cache feature-level arrays locally to avoid per-element OOC overhead in O(n^2) loops
+  // Bulk-read feature-level arrays into local caches. These are small (one entry
+  // per feature, typically thousands) but accessed O(n^2) times in the distance loop.
   const usize numPhases = featurePhasesStoreRef.getSize();
   std::vector<int32> featurePhasesCache(numPhases);
   featurePhasesStoreRef.copyIntoBuffer(0, nonstd::span<int32>(featurePhasesCache.data(), numPhases));
@@ -147,7 +160,9 @@ Result<> ComputeFeatureClustering::operator()()
   auto& rdfStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->RDFArrayName)->getDataStoreRef();
   auto& minMaxDistancesStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->MaxMinArrayName)->getDataStoreRef();
 
-  // Cache rdf output array locally
+  // Accumulate RDF bins into a local vector to avoid per-increment OOC overhead.
+  // The original code used rdfStore[index].inc() which triggers a DataStore
+  // virtual call per bin increment.
   const usize rdfSize = rdfStore.getSize();
   std::vector<float32> rdfCache(rdfSize, 0.0f);
   std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
