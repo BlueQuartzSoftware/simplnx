@@ -7,6 +7,7 @@
 #include "simplnx/UnitTest/SegmentFeaturesTestUtils.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -127,7 +128,8 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: FaceEdgeVertex Connectivity", "[S
   auto setupScalar = [](Arguments& args, DataStructure& ds, const DataPath& geomPath, const DataPath& cellDataPath, ChoicesParameter::ValueType neighborScheme) {
     const ShapeType cellShape = {3, 3, 3};
     auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
-    auto scalarDS = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+    const DataPath scalarPath = cellDataPath.createChildPath("ScalarData");
+    auto scalarDS = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, scalarPath, cellShape, {1});
     auto* scalarArr = DataArray<int32>::Create(ds, "ScalarData", scalarDS, am.getId());
     auto& store = scalarArr->getDataStoreRef();
     store.fill(0);

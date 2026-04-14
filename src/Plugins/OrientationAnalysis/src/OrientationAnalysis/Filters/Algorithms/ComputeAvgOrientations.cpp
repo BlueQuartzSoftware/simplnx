@@ -421,7 +421,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     {
       const int32 currentFeatureId = featureIdBuf[i];
       const int32 currentPhase = phasesBuf[i];
-      if(currentFeatureId > 0 && currentPhase > 0)
+      if(currentPhase > 0)
       {
         const uint32 xtal = crystalStructures[currentPhase];
         counts[currentFeatureId] += 1.0f;
@@ -453,7 +453,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
   // Second pass: normalize and convert to Euler angles (feature-level only)
   std::vector<float32> localAvgEuler(totalFeatures * 3, 0.0f);
 
-  for(usize featureId = 1; featureId < totalFeatures; featureId++)
+  for(usize featureId = 0; featureId < totalFeatures; featureId++)
   {
     if(m_ShouldCancel)
     {
@@ -467,6 +467,7 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
       localAvgQuats[fi + 1] = identityQuat.y();
       localAvgQuats[fi + 2] = identityQuat.z();
       localAvgQuats[fi + 3] = identityQuat.w();
+      continue;
     }
 
     ebsdlib::QuatF curAvgQuat(localAvgQuats[fi], localAvgQuats[fi + 1], localAvgQuats[fi + 2], localAvgQuats[fi + 3]);

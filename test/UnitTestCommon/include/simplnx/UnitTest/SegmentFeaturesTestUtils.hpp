@@ -56,7 +56,8 @@ inline void BuildScalarTestData(DataStructure& ds, const ShapeType& cellShape, D
   const usize dimY = cellShape[1];
   const usize dimX = cellShape[2];
 
-  auto scalarDataStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  const DataPath scalarPath = ds.getDataPathsForId(amId)[0].createChildPath(arrayName);
+  auto scalarDataStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, scalarPath, cellShape, {1});
   auto* scalarArray = DataArray<int32>::Create(ds, arrayName, scalarDataStore, amId);
   auto& store = scalarArray->getDataStoreRef();
 
@@ -119,11 +120,14 @@ inline void BuildOrientationTestData(DataStructure& ds, const ShapeType& cellSha
   const usize dimY = cellShape[1];
   const usize dimX = cellShape[2];
 
-  auto quatsDataStore = DataStoreUtilities::CreateDataStore<float32>(cellShape, {4}, IDataAction::Mode::Execute);
+  const DataPath amPath = ds.getDataPathsForId(amId)[0];
+  const DataPath quatsPath = amPath.createChildPath("Quats");
+  auto quatsDataStore = DataStoreUtilities::CreateResolvedDataStore<float32>(ds, quatsPath, cellShape, {4});
   auto* quatsArray = DataArray<float32>::Create(ds, "Quats", quatsDataStore, amId);
   auto& quatsStore = quatsArray->getDataStoreRef();
 
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  const DataPath phasesPath = amPath.createChildPath("Phases");
+  auto phasesDataStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, phasesPath, cellShape, {1});
   auto* phasesArray = DataArray<int32>::Create(ds, "Phases", phasesDataStore, amId);
   auto& phasesStore = phasesArray->getDataStoreRef();
 
@@ -223,7 +227,8 @@ inline void BuildOrientationTestData(DataStructure& ds, const ShapeType& cellSha
   // Create CellEnsembleData with CrystalStructures
   const ShapeType ensembleTupleShape = {2};
   auto* ensembleAM = AttributeMatrix::Create(ds, "CellEnsembleData", ensembleTupleShape, geomId);
-  auto crystalDataStore = DataStoreUtilities::CreateDataStore<uint32>(ensembleTupleShape, {1}, IDataAction::Mode::Execute);
+  const DataPath crystalStructsPath = ds.getDataPathsForId(geomId)[0].createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
+  auto crystalDataStore = DataStoreUtilities::CreateResolvedDataStore<uint32>(ds, crystalStructsPath, ensembleTupleShape, {1});
   auto* crystalStructsArray = DataArray<uint32>::Create(ds, "CrystalStructures", crystalDataStore, ensembleAM->getId());
   auto& crystalStructsStore = crystalStructsArray->getDataStoreRef();
   crystalStructsStore[0] = 999; // Phase 0: Unknown
@@ -248,7 +253,8 @@ inline void BuildSphericalMask(DataStructure& ds, const ShapeType& cellShape, Da
   const usize dimY = cellShape[1];
   const usize dimX = cellShape[2];
 
-  auto maskDataStore = DataStoreUtilities::CreateDataStore<uint8>(cellShape, {1}, IDataAction::Mode::Execute);
+  const DataPath maskPath = ds.getDataPathsForId(amId)[0].createChildPath(maskName);
+  auto maskDataStore = DataStoreUtilities::CreateResolvedDataStore<uint8>(ds, maskPath, cellShape, {1});
   auto* maskArray = DataArray<uint8>::Create(ds, maskName, maskDataStore, amId);
   auto& maskStore = maskArray->getDataStoreRef();
 

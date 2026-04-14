@@ -44,7 +44,8 @@ void BuildOctantWithNumCells(DataStructure& ds)
   auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 
-  auto fidsStore = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  const DataPath featureIdsPath = DataPath({k_GeomName, Constants::k_CellData, Constants::k_FeatureIds});
+  auto fidsStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, featureIdsPath, cellTupleShape, {1});
   auto* featureIds = DataArray<int32>::Create(ds, Constants::k_FeatureIds, fidsStore, cellAM->getId());
   auto& fidsRef = featureIds->getDataStoreRef();
 
@@ -74,7 +75,8 @@ void BuildOctantWithNumCells(DataStructure& ds)
   auto* cellFeatureAM = AttributeMatrix::Create(ds, Constants::k_CellFeatureData, {static_cast<usize>(k_NumOctantFeatures + 1)}, imageGeom->getId());
 
   // NumCells is small (9 tuples) — per-element writes are fine
-  auto numCellsStore = DataStoreUtilities::CreateDataStore<int32>({static_cast<usize>(k_NumOctantFeatures + 1)}, {1}, IDataAction::Mode::Execute);
+  const DataPath numCellsPath = DataPath({k_GeomName, Constants::k_CellFeatureData, Constants::k_NumElements});
+  auto numCellsStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, numCellsPath, {static_cast<usize>(k_NumOctantFeatures + 1)}, {1});
   auto* numCells = DataArray<int32>::Create(ds, Constants::k_NumElements, numCellsStore, cellFeatureAM->getId());
   auto& numCellsRef = numCells->getDataStoreRef();
   std::vector<int32> localNumCells(featureCounts.begin(), featureCounts.end());

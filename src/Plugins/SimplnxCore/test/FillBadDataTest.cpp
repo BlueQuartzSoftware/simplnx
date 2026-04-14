@@ -36,11 +36,13 @@ void BuildFillBadDataTestData(DataStructure& ds, usize dimX, usize dimY, usize d
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 
-  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  const DataPath featureIdsPath = DataPath({"DataContainer", "CellData", "FeatureIds"});
+  auto featureIdsDataStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, featureIdsPath, cellShape, {1});
   auto* featureIdsArray = DataArray<int32>::Create(ds, "FeatureIds", featureIdsDataStore, cellAM->getId());
   auto& featureIdsStore = featureIdsArray->getDataStoreRef();
 
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+  const DataPath phasesPath = DataPath({"DataContainer", "CellData", "Phases"});
+  auto phasesDataStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, phasesPath, cellShape, {1});
   auto* phasesArray = DataArray<int32>::Create(ds, "Phases", phasesDataStore, cellAM->getId());
   auto& phasesStore = phasesArray->getDataStoreRef();
 
@@ -523,7 +525,8 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
 
   // Add an extra "IgnoredArray" filled with a sentinel value
   auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"DataContainer", "CellData"}));
-  auto ignoredDataStore = DataStoreUtilities::CreateDataStore<int32>(cellAM.getShape(), {1}, IDataAction::Mode::Execute);
+  const DataPath ignoredArrayPath = DataPath({"DataContainer", "CellData", "IgnoredArray"});
+  auto ignoredDataStore = DataStoreUtilities::CreateResolvedDataStore<int32>(dataStructure, ignoredArrayPath, cellAM.getShape(), {1});
   auto* ignoredArray = DataArray<int32>::Create(dataStructure, "IgnoredArray", ignoredDataStore, cellAM.getId());
   auto& ignoredStore = ignoredArray->getDataStoreRef();
   ignoredStore.fill(k_Sentinel);

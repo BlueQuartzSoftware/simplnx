@@ -87,6 +87,39 @@ std::shared_ptr<AbstractDataStore<T>> CreateDataStore(const ShapeType& tupleShap
 }
 
 /**
+ * @brief Creates a DataStore whose format is resolved through the IOCollection's
+ * format resolver, exactly like filter CreateArrayActions do.
+ *
+ * Use this instead of CreateDataStore when you need the store format to respect
+ * user preferences (OOC thresholds, forced OOC mode, etc.). This is the correct
+ * function for test code that builds DataArrays which should be OOC when the
+ * OOC plugin is active.
+ *
+ * @tparam T Primitive type (int8, float32, uint64, etc.)
+ * @param dataStructure The DataStructure the array will live in (needed for format resolution)
+ * @param arrayPath The DataPath where the array will be inserted
+ * @param tupleShape The tuple dimensions
+ * @param componentShape The component dimensions
+ * @return Shared pointer to the created AbstractDataStore
+ */
+template <class T>
+std::shared_ptr<AbstractDataStore<T>> CreateResolvedDataStore(const DataStructure& dataStructure, const DataPath& arrayPath, const ShapeType& tupleShape, const ShapeType& componentShape)
+{
+  uint64 numElements = 1;
+  for(auto dim : tupleShape)
+  {
+    numElements *= dim;
+  }
+  for(auto dim : componentShape)
+  {
+    numElements *= dim;
+  }
+  uint64 requiredBytes = numElements * sizeof(T);
+  std::string resolvedFormat = GetIOCollection().resolveFormat(dataStructure, arrayPath, GetDataType<T>(), requiredBytes);
+  return GetIOCollection().createDataStoreWithType<T>(resolvedFormat, tupleShape, componentShape);
+}
+
+/**
  * @brief Simple factory that creates a ListStore with the given properties.
  *
  * This function does NOT resolve the storage format. The caller is responsible

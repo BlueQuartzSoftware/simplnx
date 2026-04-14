@@ -39,7 +39,8 @@ void BuildOctantFeatureIds(DataStructure& ds)
   auto* cellAM = AttributeMatrix::Create(ds, Constants::k_CellData, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 
-  auto store = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  const DataPath featureIdsPath = DataPath({k_GeomName, Constants::k_CellData, Constants::k_FeatureIds});
+  auto store = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, featureIdsPath, cellTupleShape, {1});
   auto* featureIds = DataArray<int32>::Create(ds, Constants::k_FeatureIds, store, cellAM->getId());
   auto& fidsRef = featureIds->getDataStoreRef();
   const usize sliceSize = k_DimY * k_DimX;

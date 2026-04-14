@@ -320,8 +320,8 @@ inline IDataStore::StoreType ExpectedStoreType()
   auto* prefs = Application::GetOrCreateInstance()->getPreferences();
   if(prefs->forceOocData())
   {
-    auto ioCollection = DataStoreUtilities::GetIOCollection();
-    auto manager = ioCollection->getManager(prefs->largeDataFormat());
+    auto& ioCollection = DataStoreUtilities::GetIOCollection();
+    auto manager = ioCollection.getManager(prefs->largeDataFormat());
     if(manager != nullptr)
     {
       return IDataStore::StoreType::OutOfCore;

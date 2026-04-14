@@ -52,7 +52,8 @@ void BuildIdentifySampleTestData(DataStructure& ds, usize dimX, usize dimY, usiz
   auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 
-  auto maskDataStore = DataStoreUtilities::CreateDataStore<uint8>(cellShape, {1}, IDataAction::Mode::Execute);
+  const DataPath maskPath = DataPath({geomName, "CellData", "Mask"});
+  auto maskDataStore = DataStoreUtilities::CreateResolvedDataStore<uint8>(ds, maskPath, cellShape, {1});
   auto* maskArray = DataArray<uint8>::Create(ds, "Mask", maskDataStore, cellAM->getId());
   auto& maskStore = maskArray->getDataStoreRef();
 
@@ -89,13 +90,13 @@ void BuildIdentifySampleTestData(DataStructure& ds, usize dimX, usize dimY, usiz
         if(good)
         {
           const float32 h1 = std::sqrt((static_cast<float32>(x) - h1cx) * (static_cast<float32>(x) - h1cx) + (static_cast<float32>(y) - h1cy) * (static_cast<float32>(y) - h1cy) +
-                                     (static_cast<float32>(z) - h1cz) * (static_cast<float32>(z) - h1cz));
+                                       (static_cast<float32>(z) - h1cz) * (static_cast<float32>(z) - h1cz));
           if(h1 < h1r)
           {
             good = false;
           }
           const float32 h2 = std::sqrt((static_cast<float32>(x) - h2cx) * (static_cast<float32>(x) - h2cx) + (static_cast<float32>(y) - h2cy) * (static_cast<float32>(y) - h2cy) +
-                                     (static_cast<float32>(z) - h2cz) * (static_cast<float32>(z) - h2cz));
+                                       (static_cast<float32>(z) - h2cz) * (static_cast<float32>(z) - h2cz));
           if(h2 < h2r)
           {
             good = false;

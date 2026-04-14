@@ -9,6 +9,7 @@
 #include "simplnx/UnitTest/SegmentFeaturesTestUtils.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/AlgorithmDispatch.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <set>
 
@@ -292,7 +293,7 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity
 
     // Quaternions: background = 60° X-rotation, pairs = identity (EBSDlib order: x,y,z,w)
     const float32 bgHalf = 60.0f * k_DegToRad * 0.5f;
-    auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(cellShape, {4}, IDataAction::Mode::Execute);
+    auto quatsDS = DataStoreUtilities::CreateResolvedDataStore<float32>(ds, cellDataPath.createChildPath("Quats"), cellShape, {4});
     auto* quatsArr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
     auto& quatsStore = quatsArr->getDataStoreRef();
     for(usize i = 0; i < 27; i++)
@@ -321,14 +322,15 @@ TEST_CASE("OrientationAnalysis::EBSDSegmentFeatures: FaceEdgeVertex Connectivity
     }
 
     // Phases: all phase 1
-    auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(cellShape, {1}, IDataAction::Mode::Execute);
+    auto phasesDS = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, cellDataPath.createChildPath("Phases"), cellShape, {1});
     auto* phasesArr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
     phasesArr->fill(1);
 
     // CrystalStructures: phase 0 = unknown, phase 1 = Cubic_High
     const ShapeType ensShape = {2};
     auto* ensAM = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
-    auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(ensShape, {1}, IDataAction::Mode::Execute);
+    const DataPath crystStructsPath = geomPath.createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
+    auto crystDS = DataStoreUtilities::CreateResolvedDataStore<uint32>(ds, crystStructsPath, ensShape, {1});
     auto* crystArr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAM->getId());
     auto& crystStore = crystArr->getDataStoreRef();
     crystStore[0] = 999;
