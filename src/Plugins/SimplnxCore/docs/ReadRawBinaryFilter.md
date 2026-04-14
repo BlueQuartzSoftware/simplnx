@@ -29,15 +29,13 @@ The types of data that can be read with this **Filter** include:
 
 ---
 
-### Tuple Dimensions
+### A Note about Tuple and Component Dimensions
 
 The tuple dimensions define the shape of the output **Data Array**. For example, a 3D volume with 100 x 200 x 50 voxels would have tuple dimensions of `50, 200, 100` (slowest to fastest, i.e., Z, Y, X).
 
 When creating the output array inside an **Attribute Matrix**, the tuple dimensions are automatically inherited from the Attribute Matrix shape. In this case, the *Set Tuple Dimensions* checkbox can be unchecked to hide the tuple dimensions entry table.
 
 If the output array is **not** inside an Attribute Matrix, then the user **must** check *Set Tuple Dimensions* and provide the dimensions explicitly.
-
-### Component Dimensions
 
 This parameter tells the program how many values are present for each *tuple* and how they are organized. The component dimensions are specified as a table of values (slowest to fastest dimension).
 

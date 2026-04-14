@@ -69,6 +69,7 @@ public:
     int32_t SpaceGroup;
     std::vector<double> UnitCell; //  ABC, Alpha, Beta, Gamma
     std::string UniversalHermannMauguin;
+    int32_t PhaseIndex;
   } GrainMapperPhase;
 
   nx::core::Result<> readHeaderOnly();

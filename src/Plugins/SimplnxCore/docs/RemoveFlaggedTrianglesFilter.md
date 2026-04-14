@@ -12,14 +12,14 @@ This **Filter** removes **Triangles** from the supplied **Triangle Geometry** th
 
 For each of the vertex and triangle (face) data attribute matrices, the user can select to copy none, some or all of the associated data arrays into the newly created geometry. If the user wishes to not copy any of the data, just leave the choice to "Copy Selected XXX Data" but do not populate the list with any selections.
 
-### Vertex Data Handling
+### A Note About Vertex Data Handling
 
 The *Vertex Data Handling* parameter controls which vertex data arrays are transferred to the reduced geometry:
 
 - **Copy Selected Vertex Data [0]**: Copies only the vertex arrays selected by the user into the new geometry.
 - **Copy All Vertex Data [1]**: Copies all arrays from the vertex attribute matrix into the new geometry.
 
-### Triangle Data Handling
+### A Note About Triangle Data Handling
 
 The *Triangle Data Handling* parameter controls which triangle (face) data arrays are transferred to the reduced geometry:
 

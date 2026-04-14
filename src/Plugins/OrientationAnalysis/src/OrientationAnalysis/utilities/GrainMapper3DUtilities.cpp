@@ -380,7 +380,7 @@ herr_t GrainMapperReader::readPhaseInfo(hid_t parentId)
   m_PhaseInfos.clear();
 
   // Now we know how many phases we have, we need to programmatically generate those phase names
-  // in order to keep them consistent. Yep, someone didn't really think through the parsing of this
+  // to keep them consistent. Yep, no one really thought through the parsing of this
   // or assumptions are being made about the order that HDF5 is going to give them back to you. Either
   // is bad.
   for(int i = 0; i < phaseNames.size(); i++)
@@ -391,6 +391,7 @@ herr_t GrainMapperReader::readPhaseInfo(hid_t parentId)
     auto phaseDGidSentinel = H5Support::H5ScopedGroupSentinel(phaseGid, true);
 
     GrainMapperPhase phase;
+    phase.PhaseIndex = i;
     error = H5Lite::readStringDataset(phaseGid, Constants::k_Name, phase.Name);
     if(error < 0)
     {
