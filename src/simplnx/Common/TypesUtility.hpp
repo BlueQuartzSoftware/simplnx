@@ -378,10 +378,10 @@ inline const std::vector<std::string>& GetNumericDataTypesAsHumanStrings()
  */
 inline const std::vector<std::string>& GetIntegerDataTypesAsHumanStrings()
 {
-  static const std::vector<std::string> dataTypes = {DataTypeToHumanString(nx::core::DataType::int8),    DataTypeToHumanString(nx::core::DataType::uint8),
-                                                     DataTypeToHumanString(nx::core::DataType::int16),   DataTypeToHumanString(nx::core::DataType::uint16),
-                                                     DataTypeToHumanString(nx::core::DataType::int32),   DataTypeToHumanString(nx::core::DataType::uint32),
-                                                     DataTypeToHumanString(nx::core::DataType::int64),   DataTypeToHumanString(nx::core::DataType::uint64)};
+  static const std::vector<std::string> dataTypes = {DataTypeToHumanString(nx::core::DataType::int8),  DataTypeToHumanString(nx::core::DataType::uint8),
+                                                     DataTypeToHumanString(nx::core::DataType::int16), DataTypeToHumanString(nx::core::DataType::uint16),
+                                                     DataTypeToHumanString(nx::core::DataType::int32), DataTypeToHumanString(nx::core::DataType::uint32),
+                                                     DataTypeToHumanString(nx::core::DataType::int64), DataTypeToHumanString(nx::core::DataType::uint64)};
   return dataTypes;
 }
 

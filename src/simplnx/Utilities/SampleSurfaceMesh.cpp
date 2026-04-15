@@ -8,7 +8,6 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-
 using namespace nx::core;
 
 namespace
