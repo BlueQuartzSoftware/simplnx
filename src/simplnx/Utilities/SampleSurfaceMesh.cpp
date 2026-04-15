@@ -8,22 +8,22 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include <chrono>
 
 using namespace nx::core;
 
 namespace
 {
+template <typename T>
 class SampleSurfaceMeshImpl
 {
 public:
   SampleSurfaceMeshImpl(const TriangleGeom& faces, const std::vector<std::vector<int32>>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, const std::vector<Point3Df>& points,
-                        Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel)
+                        IDataArray& iPolyIds, const std::atomic_bool& shouldCancel)
   : m_Faces(faces)
   , m_FaceIds(faceIds)
   , m_FaceBBs(faceBBs)
   , m_Points(points)
-  , m_PolyIds(polyIds)
+  , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_ShouldCancel(shouldCancel)
   {
   }
@@ -60,7 +60,7 @@ public:
           char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceIds[iter], m_FaceBBs, point, boundingBox, radius);
           if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
           {
-            m_PolyIds[i] = iter;
+            m_PolyIds[i] = static_cast<T>(iter);
           }
         }
       }
@@ -77,23 +77,23 @@ private:
   const std::vector<std::vector<int32>>& m_FaceIds;
   const std::vector<BoundingBox3Df>& m_FaceBBs;
   const std::vector<Point3Df>& m_Points;
-  Int32AbstractDataStore& m_PolyIds;
+  AbstractDataStore<T>& m_PolyIds;
   const std::atomic_bool& m_ShouldCancel;
 };
 
 // -----------------------------------------------------------------------------
+template <typename T>
 class SampleSurfaceMeshImplByPoints
 {
 public:
-  SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3Df>& faceBBs,
-                                const std::vector<Point3Df>& points, const usize featureId, Int32AbstractDataStore& polyIds, const std::atomic_bool& shouldCancel,
-                                ProgressMessageHelper& progressMessageHelper)
+  SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<int32>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, IDataArray& iPolyIds,
+                                const std::vector<Point3Df>& points, const usize featureId, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
   , m_FaceBBs(faceBBs)
   , m_Points(points)
-  , m_PolyIds(polyIds)
+  , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_FeatureId(featureId)
   , m_ShouldCancel(shouldCancel)
   , m_ProgressMessageHelper(progressMessageHelper)
@@ -121,7 +121,7 @@ public:
         char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceIds, m_FaceBBs, point, boundingBox, radius);
         if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
         {
-          m_PolyIds[i] = iter;
+          m_PolyIds[i] = static_cast<T>(iter);
         }
       }
       pointsVisited++;
@@ -151,7 +151,7 @@ private:
   const std::vector<int32>& m_FaceIds;
   const std::vector<BoundingBox3Df>& m_FaceBBs;
   const std::vector<Point3Df>& m_Points;
-  Int32AbstractDataStore& m_PolyIds;
+  AbstractDataStore<T>& m_PolyIds;
   const usize m_FeatureId = 0;
   const std::atomic_bool& m_ShouldCancel;
   ProgressMessageHelper& m_ProgressMessageHelper;
@@ -276,7 +276,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   generatePoints(points);
 
   // create array to hold which polyhedron (feature) each point falls in
-  auto& polyIds = m_DataStructure.getDataAs<Int32Array>(inputValues.FeatureIdsArrayPath)->getDataStoreRef();
+  auto& polyIds = m_DataStructure.getDataRefAs<IDataArray>(inputValues.FeatureIdsArrayPath);
 
   m_MessageHelper.sendMessage("Sampling triangle geometry ...");
 
@@ -291,7 +291,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   {
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(0, numFeatures);
-    dataAlg.execute(SampleSurfaceMeshImpl(triangleGeom, faceLists, faceBBs, points, polyIds, m_ShouldCancel));
+    ExecuteParallelFunction<::SampleSurfaceMeshImpl>(polyIds.getDataType(), dataAlg, triangleGeom, faceLists, faceBBs, points, polyIds, m_ShouldCancel);
   }
   else
   {
@@ -299,7 +299,8 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
     {
       ParallelDataAlgorithm dataAlg;
       dataAlg.setRange(0, points.size());
-      dataAlg.execute(SampleSurfaceMeshImplByPoints(this, triangleGeom, faceLists[featureId], faceBBs, points, featureId, polyIds, m_ShouldCancel, progressMessageHelper));
+      ExecuteParallelFunction<::SampleSurfaceMeshImplByPoints>(polyIds.getDataType(), dataAlg, this, triangleGeom, faceLists[featureId], faceBBs, polyIds, points, featureId, m_ShouldCancel,
+                                                               progressMessageHelper);
     }
   }
 

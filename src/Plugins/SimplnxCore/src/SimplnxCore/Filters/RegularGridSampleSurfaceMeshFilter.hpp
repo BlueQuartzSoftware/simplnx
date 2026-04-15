@@ -36,6 +36,10 @@ public:
   static constexpr StringLiteral k_UseExistingGeometry_Key = "use_existing_geometry_index";
   static constexpr StringLiteral k_ExistingImageGeomPath_Key = "existing_image_geometry_path";
 
+  // V4 Keys
+  static constexpr StringLiteral k_UseCustomOutputType_Key = "use_custom_output_type";
+  static constexpr StringLiteral k_OutputType_Key = "output_type_index";
+
   enum GeometryOption : uint64
   {
     Create = 0,

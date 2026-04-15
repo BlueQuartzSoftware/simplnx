@@ -343,7 +343,7 @@ inline constexpr StringLiteral DataTypeToHumanString(DataType dataType)
 
 /**
  *
- * @param humanReadable Strings that would be good for a User interface
+ * @brief Human-readable Datatype strings that would be good for a User interface
  * @return
  */
 inline const std::vector<std::string>& GetAllDataTypesAsHumanStrings()
@@ -353,6 +353,35 @@ inline const std::vector<std::string>& GetAllDataTypesAsHumanStrings()
       DataTypeToHumanString(nx::core::DataType::uint16),  DataTypeToHumanString(nx::core::DataType::int32),  DataTypeToHumanString(nx::core::DataType::uint32),
       DataTypeToHumanString(nx::core::DataType::int64),   DataTypeToHumanString(nx::core::DataType::uint64), DataTypeToHumanString(nx::core::DataType::float32),
       DataTypeToHumanString(nx::core::DataType::float64), DataTypeToHumanString(nx::core::DataType::boolean)};
+  return dataTypes;
+}
+
+/**
+ *
+ * @brief Human-readable numeric (no bool) Datatype strings that would be good for a User interface
+ * @return
+ */
+inline const std::vector<std::string>& GetNumericDataTypesAsHumanStrings()
+{
+  static const std::vector<std::string> dataTypes = {DataTypeToHumanString(nx::core::DataType::int8),    DataTypeToHumanString(nx::core::DataType::uint8),
+                                                     DataTypeToHumanString(nx::core::DataType::int16),   DataTypeToHumanString(nx::core::DataType::uint16),
+                                                     DataTypeToHumanString(nx::core::DataType::int32),   DataTypeToHumanString(nx::core::DataType::uint32),
+                                                     DataTypeToHumanString(nx::core::DataType::int64),   DataTypeToHumanString(nx::core::DataType::uint64),
+                                                     DataTypeToHumanString(nx::core::DataType::float32), DataTypeToHumanString(nx::core::DataType::float64)};
+  return dataTypes;
+}
+
+/**
+ *
+ * @brief Human-readable integer Datatype strings that would be good for a User interface
+ * @return
+ */
+inline const std::vector<std::string>& GetIntegerDataTypesAsHumanStrings()
+{
+  static const std::vector<std::string> dataTypes = {DataTypeToHumanString(nx::core::DataType::int8),    DataTypeToHumanString(nx::core::DataType::uint8),
+                                                     DataTypeToHumanString(nx::core::DataType::int16),   DataTypeToHumanString(nx::core::DataType::uint16),
+                                                     DataTypeToHumanString(nx::core::DataType::int32),   DataTypeToHumanString(nx::core::DataType::uint32),
+                                                     DataTypeToHumanString(nx::core::DataType::int64),   DataTypeToHumanString(nx::core::DataType::uint64)};
   return dataTypes;
 }
 

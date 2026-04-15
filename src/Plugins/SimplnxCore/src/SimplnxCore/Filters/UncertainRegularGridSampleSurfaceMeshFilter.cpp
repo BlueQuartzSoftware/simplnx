@@ -78,13 +78,15 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType ::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Array specifying which Features are on either side of each Face", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          nx::core::GetIntegerDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeomPath_Key, "Image Geometry", "The name and path for the image geometry to be created", DataPath{}));
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAMName_Key, "Cell Data Name", "The name for the cell data Attribute Matrix within the Image geometry", "Cell Data"));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
+  params.insert(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Type for Feature Ids", "The data type for the `Feature Ids` array",
+                                                   static_cast<ChoicesParameter::ValueType>(to_underlying(DataType::int32)), GetIntegerDataTypesAsHumanStrings()));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Feature Ids Name", "The name for the feature ids array in cell data Attribute Matrix", "Feature Ids"));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -96,7 +98,14 @@ Parameters UncertainRegularGridSampleSurfaceMeshFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType UncertainRegularGridSampleSurfaceMeshFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1->2
+  // Description:
+  // Expanded acceptable output types
+  //
+  // Change 1:
+  // Added - k_OutputType_Key = "output_type";
+  // Solution - None, default value preserves backwards functionality
 }
 
 //------------------------------------------------------------------------------
@@ -118,6 +127,7 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
   auto pCellAMNameValue = filterArgs.value<std::string>(k_CellAMName_Key);
   auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
   auto pSeedArrayNameValue = filterArgs.value<std::string>(k_SeedArrayName_Key);
+  auto pOutputTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
@@ -135,7 +145,7 @@ IFilter::PreflightResult UncertainRegularGridSampleSurfaceMeshFilter::preflightI
   }
   DataPath featIdsPath = cellAMPath.createChildPath(pFeatureIdsArrayNameValue);
   {
-    auto createDataGroupAction = std::make_unique<CreateArrayAction>(DataType::int32, tupleDims, std::vector<usize>{1}, featIdsPath);
+    auto createDataGroupAction = std::make_unique<CreateArrayAction>(static_cast<DataType>(pOutputTypeValue), tupleDims, std::vector<usize>{1}, featIdsPath);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 

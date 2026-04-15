@@ -37,6 +37,9 @@ public:
   static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
   static constexpr StringLiteral k_Dimensions_Key = "dimensions";
 
+  // V2 Key
+  static constexpr StringLiteral k_OutputType_Key = "output_type_index";
+
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
