@@ -23,6 +23,7 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 
+#define CANVAS_ITY_IMPLEMENTATION
 #include <canvas_ity.hpp>
 
 #include <filesystem>

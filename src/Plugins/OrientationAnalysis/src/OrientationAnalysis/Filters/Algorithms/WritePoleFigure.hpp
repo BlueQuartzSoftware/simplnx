@@ -99,10 +99,6 @@ private:
   const WritePoleFigureInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-
-  std::vector<unsigned char> m_FiraSansRegular;
-  std::vector<unsigned char> m_LatoRegular;
-  std::vector<unsigned char> m_LatoBold;
 };
 
 } // namespace nx::core
