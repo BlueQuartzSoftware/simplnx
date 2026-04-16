@@ -110,8 +110,9 @@ Result<> ErodeDilateBadData::operator()()
     }
   }
 
-  std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   std::vector<int32> featureCount(numFeatures + 1, 0);
 
@@ -131,7 +132,7 @@ Result<> ErodeDilateBadData::operator()()
           {
             int32 most = 0;
             // Loop over the 6 face neighbors of the voxel
-            std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
@@ -159,7 +160,6 @@ Result<> ErodeDilateBadData::operator()()
             if(m_InputValues->Operation == detail::k_ErodeIndex)
             {
               // Loop over the 6 face neighbors of the voxel
-              isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
               for(const auto& faceIndex : faceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])

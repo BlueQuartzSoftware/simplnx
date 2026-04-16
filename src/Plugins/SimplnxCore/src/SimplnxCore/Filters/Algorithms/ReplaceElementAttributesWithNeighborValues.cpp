@@ -113,7 +113,8 @@ struct ExecuteTemplate
     int64 row = 0;
     int64 plane = 0;
 
-    const std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+    constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+    const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
     std::vector<int64_t> bestNeighbor(totalPoints, -1);
 
     size_t count = 0;

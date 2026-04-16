@@ -18,6 +18,8 @@ struct ComputeFeatureNeighborsFunctor
                       Int32AbstractDataStore& numNeighbors, const Int32AbstractDataStore& featureIds, usize totalFeatures, const std::array<int64, 3>& dims, const std::array<float64, 3> spacing,
                       ThrottledMessenger& throttledMessenger, const std::atomic_bool& shouldCancel) const
   {
+    constexpr FaceNeighborType k_NeighborCount = VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount;
+
     if(ProcessSurfaceFeaturesV)
     {
       if(surfaceFeatures == nullptr)
@@ -33,11 +35,11 @@ struct ComputeFeatureNeighborsFunctor
         return MakeErrorResult(-789621, "Process Boundary Cells selected, but the supplied Boundary Cells Array invalid.");
       }
     }
-    const std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimensionStateT>(dims);
+    const std::array<int64, k_NeighborCount> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimensionStateT>(dims);
 
     const usize totalPoints = featureIds.getNumberOfTuples();
 
-    const std::vector<float64> precomputedFaceAreas = computeFaceSurfaceAreas<ImageDimensionStateT>(spacing);
+    const std::array<float64, k_NeighborCount> precomputedFaceAreas = computeFaceSurfaceAreas<ImageDimensionStateT>(spacing);
     std::vector<std::map<usize, float64>> neighborSurfaceAreas(totalFeatures);
 
     /**
@@ -64,7 +66,7 @@ struct ComputeFeatureNeighborsFunctor
      * areas, but was decided against to conserve memory. At least until the issue presents itself
      * in a real world dataset.
      */
-    const std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimensionStateT>();
+    constexpr std::array<FaceNeighborType, k_NeighborCount> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimensionStateT>();
 
     // Process Corners
     {
@@ -81,7 +83,7 @@ struct ComputeFeatureNeighborsFunctor
           }
 
           // Loop over the 6 face neighbors of the voxel
-          std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
+          std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
           for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
           {
             if(!isValidFaceNeighbor[faceIndex])
@@ -124,7 +126,7 @@ struct ComputeFeatureNeighborsFunctor
           }
 
           // Loop over the 6 face neighbors of the voxel
-          std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
+          std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
           for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
           {
             if(!isValidFaceNeighbor[faceIndex])

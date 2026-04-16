@@ -1,6 +1,5 @@
 #pragma once
 
-#include "NeighborUtilities.hpp"
 #include "simplnx/Common/Types.hpp"
 
 #include <array>
@@ -198,7 +197,7 @@ struct VoxelNeighbors<SingleVoxelImage>
  * @return
  */
 template <detail::ImageDimensionality ImageDimensionStateT = Image3D>
-std::vector<FaceNeighborType> initializeFaceNeighborInternalIdx()
+constexpr std::array<FaceNeighborType, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> initializeFaceNeighborInternalIdx()
 {
   using Neighbors = VoxelNeighbors<ImageDimensionStateT>;
   if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
@@ -241,7 +240,7 @@ std::vector<FaceNeighborType> initializeFaceNeighborInternalIdx()
  * @return Array of 6 neighbor offsets
  */
 template <detail::ImageDimensionality ImageDimensionStateT = Image3D>
-std::vector<int64> initializeFaceNeighborOffsets(const std::array<int64, 3>& dims)
+std::array<int64, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> initializeFaceNeighborOffsets(const std::array<int64, 3>& dims)
 {
   if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
   {
@@ -249,15 +248,15 @@ std::vector<int64> initializeFaceNeighborOffsets(const std::array<int64, 3>& dim
   }
   if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2D>)
   {
-    return {-dims[2], -1, 1, dims[2]};
+    return {-dims[1], -1, 1, dims[1]};
   }
   if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2D>)
   {
-    return {-dims[2], -1, 1, dims[2]};
+    return {-dims[0], -1, 1, dims[0]};
   }
   if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2D>)
   {
-    return {-dims[1], -1, 1, dims[1]};
+    return {-dims[0], -1, 1, dims[0]};
   }
   if constexpr(ImageDimensionStateT::Is1DImageDimsState())
   {
@@ -277,7 +276,7 @@ std::vector<int64> initializeFaceNeighborOffsets(const std::array<int64, 3>& dim
  * @return
  */
 template <detail::ImageDimensionality ImageDimensionStateT = Image3D>
-std::vector<bool> computeValidFaceNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, const std::array<int64, 3>& dims)
+std::array<bool, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> computeValidFaceNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, const std::array<int64, 3>& dims)
 {
   if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
   {
@@ -319,11 +318,11 @@ std::vector<bool> computeValidFaceNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, 
  * @return
  */
 template <detail::ImageDimensionality ImageDimensionStateT = Image3D>
-std::vector<float64> computeFaceSurfaceAreas(const std::array<float64, 3>& spacing)
+std::array<float64, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> computeFaceSurfaceAreas(const std::array<float64, 3>& spacing)
 {
-  const auto zFace = static_cast<float32>(spacing[0] * spacing[1]);
-  const auto yFace = static_cast<float32>(spacing[0] * spacing[2]);
-  const auto xFace = static_cast<float32>(spacing[1] * spacing[2]);
+  const auto zFace = spacing[0] * spacing[1];
+  const auto yFace = spacing[0] * spacing[2];
+  const auto xFace = spacing[1] * spacing[2];
 
   if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
   {

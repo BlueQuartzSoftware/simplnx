@@ -28,8 +28,9 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
       static_cast<int64>(uDims[2]),
   };
 
-  const std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  const std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   bool shouldLoop = false;
 
@@ -70,7 +71,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
         std::vector<int32> discoveredFeatures = {};
         discoveredFeatures.reserve(6);
         // Loop over the 6 face neighbors of the voxel
-        std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
         for(const auto& faceIndex : faceNeighborInternalIdx)
         {
           if(!isValidFaceNeighbor[faceIndex])

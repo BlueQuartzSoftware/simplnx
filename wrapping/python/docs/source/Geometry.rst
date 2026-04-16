@@ -31,22 +31,22 @@ Z to the fastest moving dimension X in a positive direction.
 The dimensionality of images is defined exclusively by the dimensions array. If a "1" appears in the dimensions array that
 dimension is considered empty. Thus the general case of a 2D image is represented by a "1" and 2 numbers greater than "1" in
 the dimensions array. This handling extends to lower dimensions as well where 2 "1"s in dimension array signifies a 1D (line).
-Algorithms that are dimesnional dependent may fork if a 1 is present, think about volume versus surface area.
+Algorithms that are dimensional dependent may fork if a 1 is present, think about volume versus surface area.
 
 There exists cases where proper output is use case dependent, and rather than enforce an opinionated solution, we leave it up to
 the user. Image spacing is one such case, specifically images with one or more "empty" dimensions. Since 2D and 3D images share 
 the same image container, we know some users may want "2D" images to have depth, like a piece of paper, and others may want a 
-2D analysis that could not be replicated in a 3D space by ignoring depth. In order to accomodate both cases, we do NOT treat 
+2D analysis that could not be replicated in a 3D space by ignoring depth. In order to accommodate both cases, we do NOT treat
 the empty dimension's spacing as "empty" for any calculations, thus for a 2D calculation to ignore depth the user must simply 
 set the empty dimension's spacing to "1.0".
 
 To illustrate the 2D image handling consider the following example:
-A digital representation of a peice of paper. Say we want each voxel (cell) to be defined in half inches. This makes our length 
+A digital representation of a piece of paper. Say we want each voxel (cell) to be defined in half inches. This makes our length
 measurement unit inches. The set dimensions would be {17, 22, 1}. The set spacing would be {0.5, 0.5, 0.004}. For the sake of 
 simplicity, origin is irrelevant. Now assume we want to find the shared surface area between 2 neighboring voxels, 
-index 0 and index 1. The shared face in this case is the positive X face so the caluclation would be Y spacing times Z spacing,
-giving us 0.002 inches. Now assume we want to evalute the image printed on said paper, rather than the paper itself. In this case,
-the dimensions remain the same, but the spacing becomes {0.5, 0.5, 1.0}. This may seem counter-intuitative initially, as the empty
+index 0 and index 1. The shared face in this case is the positive X face so the calculation would be Y spacing times Z spacing,
+giving us 0.002 inches. Now assume we want to evaluate the image printed on said paper, rather than the paper itself. In this case,
+the dimensions remain the same, but the spacing becomes {0.5, 0.5, 1.0}. This may seem counter-intuitive initially, as the empty
 dimension is larger than the "real" dimensions, but the same shared surface area calculation gives us 0.5 inches. Logically this
 is no longer shared surface area, but instead shared edge length. Thus it is left up to the user to determine what analysis is
 required and supply the appropriate spacing accordingly.

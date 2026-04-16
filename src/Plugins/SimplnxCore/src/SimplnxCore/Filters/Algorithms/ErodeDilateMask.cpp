@@ -43,8 +43,9 @@ Result<> ErodeDilateMask::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  const std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   for(int32_t iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
@@ -67,7 +68,7 @@ Result<> ErodeDilateMask::operator()()
           if(!mask[voxelIndex])
           {
             // Loop over the 6 face neighbors of the voxel
-            std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])

@@ -10,12 +10,14 @@ using namespace nx::core;
 
 namespace
 {
-template <typename ImageDimsStateT>
+template <detail::ImageDimensionality ImageDimsStateT>
 struct IdentifySampleFunctor
 {
   template <typename T>
   void operator()(const ImageGeom* imageGeom, IDataArray* goodVoxelsPtr, bool fillHoles, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
+    constexpr FaceNeighborType k_NeighborCount = VoxelNeighbors<ImageDimsStateT>::k_FaceNeighborCount;
+
     MessageHelper messageHelper(messageHandler);
     ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
 
@@ -33,8 +35,8 @@ struct IdentifySampleFunctor
     };
 
     int64_t neighborPoint = 0;
-    std::vector<int64> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimsStateT>(dims);
-    std::vector<FaceNeighborType> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimsStateT>();
+    const std::array<int64, k_NeighborCount> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimsStateT>(dims);
+    constexpr std::array<FaceNeighborType, k_NeighborCount> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimsStateT>();
 
     std::vector<int64> currentVList;
     std::vector<bool> checked(totalPoints, false);
@@ -43,7 +45,6 @@ struct IdentifySampleFunctor
 
     // In this loop over the data we are finding the biggest contiguous set of GoodVoxels and calling that the 'sample'  All GoodVoxels that do not touch the 'sample'
     // are flipped to be called 'bad' voxels or 'not sample'
-    float threshold = 0.0f;
     for(int64 zLoopIdx = 0; zLoopIdx < dims[2]; zLoopIdx++)
     {
       const int64 zStride = dims[0] * dims[1] * zLoopIdx;
@@ -69,7 +70,7 @@ struct IdentifySampleFunctor
               int64 xIndex = index % dims[0];
               int64 yIndex = (index / dims[0]) % dims[1];
               int64 zIndex = index / (dims[0] * dims[1]);
-              std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
+              const std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
               for(const auto& faceIndex : faceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
@@ -112,7 +113,6 @@ struct IdentifySampleFunctor
 
     // In this loop we are going to 'close' all the 'holes' inside the region already identified as the 'sample' if the user chose to do so.
     // This is done by flipping all 'bad' voxel features that do not touch the outside of the sample (i.e. they are fully contained inside the 'sample').
-    threshold = 0.0F;
     if(fillHoles)
     {
       messageHelper.sendMessage("Filling holes in sample...");
@@ -143,7 +143,7 @@ struct IdentifySampleFunctor
                 int64 yIndex = (index / dims[0]) % dims[1];
                 int64 zIndex = index / (dims[0] * dims[1]);
                 // Loop over the 6 face neighbors of the voxel
-                std::vector<bool> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
+                const std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
                 for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
                 {
                   if(!isValidFaceNeighbor[faceIndex])
@@ -154,7 +154,7 @@ struct IdentifySampleFunctor
 
                   neighborPoint = index + neighborVoxelIndexOffsets[faceIndex];
 
-                  if(!checked.at(neighborPoint) && !goodVoxels.getValue(neighborPoint))
+                  if(!checked[neighborPoint] && !goodVoxels.getValue(neighborPoint))
                   {
                     currentVList.push_back(neighborPoint);
                     checked[neighborPoint] = true;
@@ -194,9 +194,9 @@ struct IdentifySampleSliceBySliceFunctor
     auto& goodVoxels = goodVoxelsPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
     SizeVec3 uDims = imageGeom->getDimensions();
-    const int64 dimX = static_cast<int64>(uDims[0]);
-    const int64 dimY = static_cast<int64>(uDims[1]);
-    const int64 dimZ = static_cast<int64>(uDims[2]);
+    const auto dimX = static_cast<int64>(uDims[0]);
+    const auto dimY = static_cast<int64>(uDims[1]);
+    const auto dimZ = static_cast<int64>(uDims[2]);
 
     int64 planeDim1, planeDim2, fixedDim;
     int64 stride1, stride2, fixedStride;
@@ -437,8 +437,6 @@ void ProcessVoxels(const DataType& dataType, const ImageGeom* imageGeom, ArgsT&&
   {
     return ExecuteDataFunction(FunctorT<SingleVoxelImage>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
   }
-
-  return;
 }
 } // namespace
 
