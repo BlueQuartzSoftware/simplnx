@@ -26,15 +26,7 @@ bool hasBackwardsCompatFixture(const std::string& filterName)
 {
   // Check all plugin directories for a 6_5 fixture
   // Includes both in-tree plugins and known external plugins
-  const std::vector<fs::path> pluginDirs = {
-      fs::path(nx::core::unit_test::k_SourceDir.view()) / "src/Plugins/SimplnxCore",
-      fs::path(nx::core::unit_test::k_SourceDir.view()) / "src/Plugins/OrientationAnalysis",
-      fs::path(nx::core::unit_test::k_SourceDir.view()) / "src/Plugins/ITKImageProcessing",
-      "/Users/mjackson/Workspace1/DREAM3D_Plugins/SimplnxReview",
-      "/Users/mjackson/Workspace1/DREAM3D_Plugins/Synthetic",
-  };
-
-  for(const auto& pluginDir : pluginDirs)
+  for(const auto& pluginDir : nx::core::unit_test::k_PluginSourceDirs)
   {
     fs::path fixturePath = pluginDir / "test" / "simpl_conversion" / "6_5" / (filterName + ".json");
     if(fs::exists(fixturePath))
