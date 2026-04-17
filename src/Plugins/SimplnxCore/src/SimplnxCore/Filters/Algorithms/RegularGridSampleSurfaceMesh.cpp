@@ -100,7 +100,7 @@ class ZSliceWorker
 public:
   ZSliceWorker(RegularGridSampleSurfaceMesh* algorithm, usize zSlice, usize xDim, usize yDim, usize numTriangles, usize numFaceLabelComps, const FloatVec3& origin, const FloatVec3& spacing,
                const AbstractDataStore<IGeometry::MeshIndexType>& facesRef, const AbstractDataStore<float32>& verticesRef, const AbstractDataStore<FaceLabelsT>& faceLabelsRef,
-               const std::vector<TriangleZRange>& triZRanges)
+               const std::vector<TriangleZRange>& triZRanges, std::atomic_bool& overflowHit)
   : m_Algorithm(algorithm)
   , m_ZSlice(zSlice)
   , m_XDim(xDim)
@@ -113,6 +113,7 @@ public:
   , m_VerticesRef(verticesRef)
   , m_FaceLabelsRef(faceLabelsRef)
   , m_TriZRanges(triZRanges)
+  , m_OverflowHit(overflowHit)
   {
   }
 
@@ -198,6 +199,11 @@ public:
       {
         const float32 xCoord = m_Origin[0] + (static_cast<float32>(x) + 0.5f) * m_Spacing[0];
 
+        if(m_OverflowHit)
+        {
+          return;
+        }
+
         // Process all crossings up to this voxel center
         while(nextIsect < intersections.size() && intersections[nextIsect].x <= xCoord)
         {
@@ -209,11 +215,27 @@ public:
             {
               label0 = static_cast<uint8>(m_FaceLabelsRef[faceIdx * 2]);
               label1 = static_cast<uint8>(m_FaceLabelsRef[faceIdx * 2 + 1]);
+
+              if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+              {
+                if(std::numeric_limits<OutputT>::max() < label0 || std::numeric_limits<OutputT>::max() < label1)
+                {
+                  m_OverflowHit = true;
+                }
+              }
             }
             else
             {
               label0 = static_cast<uint8>(m_FaceLabelsRef[faceIdx]);
               label1 = OutputT{0};
+
+              if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+              {
+                if(std::numeric_limits<OutputT>::max() < label0)
+                {
+                  m_OverflowHit = true;
+                }
+              }
             }
           }
           else
@@ -222,11 +244,27 @@ public:
             {
               label0 = m_FaceLabelsRef[faceIdx * 2];
               label1 = m_FaceLabelsRef[faceIdx * 2 + 1];
+
+              if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+              {
+                if(std::numeric_limits<OutputT>::max() < label0 || std::numeric_limits<OutputT>::max() < label1)
+                {
+                  m_OverflowHit = true;
+                }
+              }
             }
             else
             {
               label0 = m_FaceLabelsRef[faceIdx];
               label1 = OutputT{0};
+
+              if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+              {
+                if(std::numeric_limits<OutputT>::max() < label0)
+                {
+                  m_OverflowHit = true;
+                }
+              }
             }
           }
 
@@ -285,6 +323,7 @@ private:
   const AbstractDataStore<float32>& m_VerticesRef;
   const AbstractDataStore<FaceLabelsT>& m_FaceLabelsRef;
   const std::vector<TriangleZRange>& m_TriZRanges;
+  std::atomic_bool& m_OverflowHit;
 };
 
 // -----------------------------------------------------------------------------
@@ -295,8 +334,8 @@ template <typename FaceLabelsT>
 struct ZSliceFunctor
 {
   template <typename OutputT>
-  void operator()(const AbstractDataStore<FaceLabelsT>& faceLabelsRef, RegularGridSampleSurfaceMesh* algorithm, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
-                  const ImageGeom& imageGeom, const TriangleGeom& triangleGeom)
+  Result<> operator()(const AbstractDataStore<FaceLabelsT>& faceLabelsRef, RegularGridSampleSurfaceMesh* algorithm, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                      const ImageGeom& imageGeom, const TriangleGeom& triangleGeom)
   {
     // -------------------------------------------------------------------------
     // 1. Get references to input data
@@ -336,13 +375,15 @@ struct ZSliceFunctor
 
     if(shouldCancel)
     {
-      return;
+      return {};
     }
 
     // -------------------------------------------------------------------------
     // 3. Dispatch Z-slices in parallel using ParallelTaskAlgorithm
     // -------------------------------------------------------------------------
     messageHandler({IFilter::Message::Type::Info, fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
+
+    std::atomic_bool overflowHit(false);
 
     ParallelTaskAlgorithm taskAlgorithm;
     for(usize z = 0; z < zDim; z++)
@@ -352,9 +393,18 @@ struct ZSliceFunctor
         break;
       }
 
-      taskAlgorithm.execute(ZSliceWorker<FaceLabelsT, OutputT>(algorithm, z, xDim, yDim, numTriangles, numFaceLabelComps, origin, spacing, facesRef, verticesRef, faceLabelsRef, triZRanges));
+      taskAlgorithm.execute(
+          ZSliceWorker<FaceLabelsT, OutputT>(algorithm, z, xDim, yDim, numTriangles, numFaceLabelComps, origin, spacing, facesRef, verticesRef, faceLabelsRef, triZRanges, overflowHit));
     }
     taskAlgorithm.wait();
+
+    if(overflowHit)
+    {
+      return MakeErrorResult(-158640, fmt::format("Overflow occurred when downcasting a Face Label value of type {} to a feature Id value of type {}",
+                                                  DataTypeToHumanString(GetDataType<FaceLabelsT>()), DataTypeToHumanString(GetDataType<OutputT>())));
+    }
+
+    return {};
   }
 };
 
@@ -364,7 +414,7 @@ struct OutputTypeDispatcher
   auto operator()(const IDataArray& iFaceLabels, DataType outputType, ArgsT&&... args)
   {
     const auto& faceLabels = dynamic_cast<const DataArray<FaceLabelsT>&>(iFaceLabels).getDataStoreRef();
-    ExecuteDataFunctionIntType(ZSliceFunctor<FaceLabelsT>{}, outputType, faceLabels, std::forward<ArgsT>(args)...);
+    return ExecuteDataFunctionIntType(ZSliceFunctor<FaceLabelsT>{}, outputType, faceLabels, std::forward<ArgsT>(args)...);
   }
 };
 
@@ -394,7 +444,5 @@ Result<> RegularGridSampleSurfaceMesh::operator()()
   SizeVec3 dims = imageGeom.getDimensions();
   m_CellsPerSlice = dims[0] * dims[1];
 
-  ExecuteDataFunctionIntType(OutputTypeDispatcher{}, iFaceLabels.getDataType(), iFaceLabels, outputType, this, m_ShouldCancel, m_MessageHandler, imageGeom, triangleGeom);
-
-  return {};
+  return ExecuteDataFunctionIntType(OutputTypeDispatcher{}, iFaceLabels.getDataType(), iFaceLabels, outputType, this, m_ShouldCancel, m_MessageHandler, imageGeom, triangleGeom);
 }

@@ -18,13 +18,14 @@ class SampleSurfaceMeshImpl
 {
 public:
   SampleSurfaceMeshImpl(const TriangleGeom& faces, const std::vector<std::vector<FaceLabelsT>>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, const std::vector<Point3Df>& points,
-                        IDataArray& iPolyIds, const std::atomic_bool& shouldCancel)
+                        IDataArray& iPolyIds, const std::atomic_bool& shouldCancel, std::atomic_bool& overflowHit)
   : m_Faces(faces)
   , m_FaceIds(faceIds)
   , m_FaceBBs(faceBBs)
   , m_Points(points)
   , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<OutputT>>())
   , m_ShouldCancel(shouldCancel)
+  , m_OverflowHit(overflowHit)
   {
   }
 
@@ -37,6 +38,13 @@ public:
 
   void checkPoints(const usize start, const usize end) const
   {
+    if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+    {
+      if(std::numeric_limits<OutputT>::max() < end - 1)
+      {
+        m_OverflowHit = true;
+      }
+    }
     for(usize iter = start; iter < end; iter++)
     {
       const usize numPoints = m_Points.size();
@@ -48,8 +56,8 @@ public:
       // check points in vertex array to see if they are in the bounding box of the feature
       for(usize i = 0; i < numPoints; i++)
       {
-        // Check for the filter being cancelled.
-        if(m_ShouldCancel)
+        // Check for the filter being canceled.
+        if(m_ShouldCancel || m_OverflowHit)
         {
           return;
         }
@@ -79,6 +87,7 @@ private:
   const std::vector<Point3Df>& m_Points;
   AbstractDataStore<OutputT>& m_PolyIds;
   const std::atomic_bool& m_ShouldCancel;
+  std::atomic_bool& m_OverflowHit;
 };
 
 // -----------------------------------------------------------------------------
@@ -87,7 +96,8 @@ class SampleSurfaceMeshImplByPoints
 {
 public:
   SampleSurfaceMeshImplByPoints(SampleSurfaceMesh* filter, const TriangleGeom& faces, const std::vector<FaceLabelsT>& faceIds, const std::vector<BoundingBox3Df>& faceBBs, IDataArray& iPolyIds,
-                                const std::vector<Point3Df>& points, const usize featureId, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
+                                const std::vector<Point3Df>& points, const usize featureId, const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper,
+                                std::atomic_bool& overflowHit)
   : m_Filter(filter)
   , m_Faces(faces)
   , m_FaceIds(faceIds)
@@ -97,6 +107,7 @@ public:
   , m_FeatureId(featureId)
   , m_ShouldCancel(shouldCancel)
   , m_ProgressMessageHelper(progressMessageHelper)
+  , m_OverflowHit(overflowHit)
   {
   }
   virtual ~SampleSurfaceMeshImplByPoints() = default;
@@ -104,6 +115,14 @@ public:
   void checkPoints(const usize start, const usize end) const
   {
     ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
+
+    if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+    {
+      if(std::numeric_limits<OutputT>::max() < m_FeatureId)
+      {
+        m_OverflowHit = true;
+      }
+    }
 
     const OutputT iter = m_FeatureId;
 
@@ -132,8 +151,8 @@ public:
         progressMessenger.sendProgressMessage(
             1000, [&](usize currentProgress, usize maxProgress) { return fmt::format("Feature {} | Points Completed: {} of {}", m_FeatureId, currentProgress, maxProgress); });
       }
-      // Check for the filter being cancelled.
-      if(m_ShouldCancel)
+      // Check for the filter being canceled.
+      if(m_ShouldCancel || m_OverflowHit)
       {
         return;
       }
@@ -155,6 +174,7 @@ private:
   const usize m_FeatureId = 0;
   const std::atomic_bool& m_ShouldCancel;
   ProgressMessageHelper& m_ProgressMessageHelper;
+  std::atomic_bool& m_OverflowHit;
 };
 
 template <template <typename, typename> class ParallelClassT, typename FaceLabelsT>
@@ -278,6 +298,8 @@ struct SampleSurfaceMeshFunctor
     ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
     progressMessageHelper.setMaxProgresss(points.size());
 
+    std::atomic_bool overflowHit(false);
+
     // C++11 RIGHT HERE....
     auto nthreads = static_cast<int32>(std::thread::hardware_concurrency()); // Returns ZERO if not defined on this platform
     // If the number of features is larger than the number of cores to do the work then parallelize over the number of features
@@ -287,7 +309,7 @@ struct SampleSurfaceMeshFunctor
       using PFunctT = GenerateParallelClassFunctor<::SampleSurfaceMeshImpl, T>;
       ParallelDataAlgorithm dataAlg;
       dataAlg.setRange(0, numFeatures);
-      ExecuteParallelFunctor<PFunctT, ArrayUseIntegerTypes>(PFunctT{}, polyIds.getDataType(), dataAlg, triangleGeom, faceLists, faceBBs, points, polyIds, shouldCancel);
+      ExecuteParallelFunctor<PFunctT, ArrayUseIntegerTypes>(PFunctT{}, polyIds.getDataType(), dataAlg, triangleGeom, faceLists, faceBBs, points, polyIds, shouldCancel, overflowHit);
     }
     else
     {
@@ -297,8 +319,15 @@ struct SampleSurfaceMeshFunctor
         ParallelDataAlgorithm dataAlg;
         dataAlg.setRange(0, points.size());
         ExecuteParallelFunctor<PFunctT, ArrayUseIntegerTypes>(PFunctT{}, polyIds.getDataType(), dataAlg, algorithm, triangleGeom, faceLists[featureId], faceBBs, polyIds, points, featureId,
-                                                              shouldCancel, progressMessageHelper);
+                                                              shouldCancel, progressMessageHelper, overflowHit);
       }
+    }
+
+    if(overflowHit)
+    {
+      return MakeErrorResult(-158630,
+                             fmt::format("Overflow occurred when downcasting a Face Label value of type {} to a feature Id value of type {}. Feature count of {} is greater than max value ({})",
+                                         DataTypeToHumanString(GetDataType<T>()), DataTypeToHumanString(polyIds.getDataType()), maxFeatureId, DataTypeToHumanString(polyIds.getDataType())));
     }
 
     messageHelper.sendMessage("Complete");
