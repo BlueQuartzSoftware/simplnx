@@ -417,18 +417,134 @@ nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfVertices(nx::core::INod
 
 /**
  * @brief Returns the BoundingBox around the specified face.
+ * @tparam T type of face Ids vector
  * @param faces
  * @param faceId
  * @return nx::core::BoundingBox<float32>
  */
-nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& triangleGeom, int32 faceId, std::vector<usize>& verts);
+template <typename T>
+nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache& cache, const nx::core::TriangleGeom& triangleGeom, T faceId, std::vector<usize>& verts)
+{
+  // Unavoidable branch to verify integrity of subsequent function
+  // specifically because this an exposed function, however, the
+  // CPU should quickly be able to predict once it has run a few
+  // iterations of the function making it relatively lightweight
+  if(verts.size() != cache.NumVertsPerFace)
+  {
+    verts = std::vector<usize>(cache.NumVertsPerFace);
+  }
+  std::array<Point3Df, 3> points = GeometryMath::detail::GetFaceCoordinates<float32>(cache, faceId, verts);
 
+  Point3Df ll = points[0];
+  Point3Df ur = points[0];
+
+  if(points[1][0] < ll[0])
+  {
+    ll[0] = points[1][0];
+  }
+  if(points[1][0] > ur[0])
+  {
+    ur[0] = points[1][0];
+  }
+  if(points[1][1] < ll[1])
+  {
+    ll[1] = points[1][1];
+  }
+  if(points[1][1] > ur[1])
+  {
+    ur[1] = points[1][1];
+  }
+  if(points[1][2] < ll[2])
+  {
+    ll[2] = points[1][2];
+  }
+  if(points[1][2] > ur[2])
+  {
+    ur[2] = points[1][2];
+  }
+  if(points[2][0] < ll[0])
+  {
+    ll[0] = points[2][0];
+  }
+  if(points[2][0] > ur[0])
+  {
+    ur[0] = points[2][0];
+  }
+  if(points[2][1] < ll[1])
+  {
+    ll[1] = points[2][1];
+  }
+  if(points[2][1] > ur[1])
+  {
+    ur[1] = points[2][1];
+  }
+  if(points[2][2] < ll[2])
+  {
+    ll[2] = points[2][2];
+  }
+  if(points[2][2] > ur[2])
+  {
+    ur[2] = points[2][2];
+  }
+
+  return {ll, ur};
+}
 /**
+ * @tparam T type of face Ids vector
  * @param TriangleGeom* faces
  * @param Int32Int32DynamicListArray.ElementList faceIds
  * @return nx::core::BoundingBox<float32>
  */
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<int32>& faceIds);
+template <typename T>
+nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<T>& faceIds)
+{
+  Point3Df ll(0, 0, 0);
+  Point3Df ur(0, 0, 0);
+
+  if(faceIds.empty())
+  {
+    return {ll, ur};
+  }
+
+  detail::GeometryStoreCache cache(triangleGeom.getVertices()->getDataStoreRef(), triangleGeom.getFaces()->getDataStoreRef(), triangleGeom.getNumberOfVerticesPerFace());
+
+  // initialize temp storage 'verts' vector to avoid expensive
+  // calls during tight loops below
+  std::vector<usize> verts(cache.NumVertsPerFace);
+  for(const auto& id : faceIds)
+  {
+    auto bounds = FindBoundingBoxOfFace(cache, triangleGeom, id, verts);
+    Point3Df min = bounds.getMinPoint();
+    Point3Df max = bounds.getMaxPoint();
+
+    if(min[0] < ll[0])
+    {
+      ll[0] = min[0];
+    }
+    if(min[1] < ll[1])
+    {
+      ll[1] = min[1];
+    }
+    if(min[2] < ll[2])
+    {
+      ll[2] = min[2];
+    }
+    if(max[0] > ur[0])
+    {
+      ur[0] = max[0];
+    }
+    if(max[1] > ur[1])
+    {
+      ur[1] = max[1];
+    }
+    if(max[2] > ur[2])
+    {
+      ur[2] = max[2];
+    }
+  }
+
+  return {ll, ur};
+}
 
 /**
  * @brief Returns true if the specified Ray crosses into or out of the triangle
@@ -696,13 +812,13 @@ char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Point3D<T>& 
  * @param faceIds the list of feature ids
  * @param faceBBs the bounding boxes of each id in the geometry
  * @param point search point
- * @param bounds overarching bounding box for all of the geometry
+ * @param bounds overarching bounding box for all the geometry
  * @param radius length of ray
  * distToBoundary param can be added down the line (subtract intersect point from origin)
  * @return bool
  */
-template <typename T>
-char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<int32>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
+template <typename T, typename FaceIdsT = int32>
+char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<FaceIdsT>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
                          const nx::core::BoundingBox3D<T>& bounds, T radius)
 {
   usize iter = 0, crossings = 0;
