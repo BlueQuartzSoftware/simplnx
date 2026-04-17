@@ -3,6 +3,7 @@
 #include "simplnx/Common/Types.hpp"
 
 #include <array>
+#include <vector>
 
 /**
  * @brief This set of enumerations and functions help facilitate a consistent algorithm

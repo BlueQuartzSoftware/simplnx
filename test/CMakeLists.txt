@@ -37,6 +37,7 @@ add_executable(simplnx_test
   IntersectionUtilitiesTest.cpp
   IOFormat.cpp
   MontageTest.cpp
+  NeighborUtilitiesTest.cpp
   PluginTest.cpp
   ParametersTest.cpp
   PipelineSaveTest.cpp
