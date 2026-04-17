@@ -316,6 +316,115 @@ DataStructure Create2DEmptyXDataStructure()
   return dataStructure;
 }
 
+// -----------------------------------------------------------------------------
+// Hand-built non-square 2D fixture. The existing 5x5x1 fixtures mask any stride
+// bug because dims[0] == dims[1]. This helper builds a 3x2 (non-square) layout
+// with two features — one per row — and attaches hand-computed exemplar results
+// so the test forces the dispatch to use the correct row stride.
+//
+// Layout with two features and varied spacings (each dimensionality picks the
+// appropriate row/column orientation for the empty axis):
+//   row 0 (first non-empty axis) -> feature 1
+//   row 1 (first non-empty axis) -> feature 2
+// With a 3x2 shape this gives 3 faces on the F1-F2 boundary, all of which are
+// normal to the "row axis" and therefore share a per-face area determined by
+// the two non-empty spacings.
+// -----------------------------------------------------------------------------
+void FillNonSquare2DFeatures(DataStructure& dataStructure, const ShapeType& imageShape, float32 expectedBoundaryFaceArea)
+{
+  auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
+
+  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, imageShape, imageGeom->getId());
+  imageGeom->setCellData(*cellData);
+
+  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3}, imageGeom->getId());
+
+  // Populate feature ids: first half of the buffer is feature 1, second half is feature 2.
+  // Because the "row stride" is always the first non-empty axis and all three
+  // dimensionalities are shaped 3x2 (with the empty dim being size 1), the first
+  // 3 linear indices are the first row (feature 1) and the next 3 are the second
+  // row (feature 2).
+  const usize totalVoxels = featureIds->getNumberOfTuples();
+  REQUIRE(totalVoxels == 6);
+  for(usize i = 0; i < 3; i++)
+  {
+    featureIds->setValue(i, 1);
+  }
+  for(usize i = 3; i < 6; i++)
+  {
+    featureIds->setValue(i, 2);
+  }
+
+  // Exemplar boundary cells: every voxel touches the feature 1/2 boundary once
+  // (1 diff face neighbor) since the layout is two rows of the same feature.
+  Int8Array* exemplarBoundaryCells = Int8Array::CreateWithStore<Int8DataStore>(dataStructure, k_ExemplarBoundaryCellsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  for(usize i = 0; i < 6; i++)
+  {
+    exemplarBoundaryCells->setValue(i, 1);
+  }
+
+  // Both features touch the image boundary, so both are "surface features".
+  BoolArray* exemplarSurfaceFeatures = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_ExemplarSurfaceFeaturesName, featureData->getShape(), ShapeType{1}, featureData->getId());
+  exemplarSurfaceFeatures->setValue(1, true);
+  exemplarSurfaceFeatures->setValue(2, true);
+
+  Int32Array* exemplarNumNeighbors = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ExemplarNumNeighborsName, featureData->getShape(), ShapeType{1}, featureData->getId());
+  exemplarNumNeighbors->setValue(1, 1);
+  exemplarNumNeighbors->setValue(2, 1);
+
+  Int32NeighborList* exemplarNeighborsList = Int32NeighborList::Create(dataStructure, k_ExemplarNeighborsListName, featureData->getShape(), featureData->getId());
+  exemplarNeighborsList->setList(1, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{2}));
+  exemplarNeighborsList->setList(2, std::make_shared<Int32NeighborList::VectorType>(Int32NeighborList::VectorType{1}));
+
+  // With the row stride correct, three voxels on each side of the boundary
+  // contribute one boundary face each, so SSA = 3 * <boundary face area>.
+  // The old EmptyX/Y/Z stride bug would step the wrong number of indices,
+  // miss one of the three boundary faces, and yield 2 * area instead.
+  const float32 expectedSSA = 3.0f * expectedBoundaryFaceArea;
+  Float32NeighborList* exemplarSSAList = Float32NeighborList::Create(dataStructure, k_ExemplarSSAListName, featureData->getShape(), featureData->getId());
+  exemplarSSAList->setList(1, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{expectedSSA}));
+  exemplarSSAList->setList(2, std::make_shared<Float32NeighborList::VectorType>(Float32NeighborList::VectorType{expectedSSA}));
+}
+
+DataStructure Create2DNonSquareEmptyZDataStructure()
+{
+  DataStructure dataStructure = {};
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  // Non-square: dims[0] = 3, dims[1] = 2. With the wrong-stride bug the
+  // computed row stride would be dims[1] = 2 rather than dims[0] = 3.
+  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 3.0f, 1.0f}});
+  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 2, 1}});
+  // F1-F2 boundary faces have a Y-axis normal -> area = spacing[0] * spacing[2] = 2.0.
+  FillNonSquare2DFeatures(dataStructure, ShapeType{3, 2, 1}, 2.0f);
+  return dataStructure;
+}
+
+DataStructure Create2DNonSquareEmptyYDataStructure()
+{
+  DataStructure dataStructure = {};
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{2.0f, 1.0f, 3.0f}});
+  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{3, 1, 2}});
+  // F1-F2 boundary faces have a Z-axis normal -> area = spacing[0] * spacing[1] = 2.0.
+  FillNonSquare2DFeatures(dataStructure, ShapeType{3, 1, 2}, 2.0f);
+  return dataStructure;
+}
+
+DataStructure Create2DNonSquareEmptyXDataStructure()
+{
+  DataStructure dataStructure = {};
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.0f, 2.0f, 3.0f}});
+  imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
+  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{1, 3, 2}});
+  // F1-F2 boundary faces have a Z-axis normal -> area = spacing[0] * spacing[1] = 2.0.
+  FillNonSquare2DFeatures(dataStructure, ShapeType{1, 3, 2}, 2.0f);
+  return dataStructure;
+}
+
 DataStructure Create3DDataStructure()
 {
   // Create an ImageGeom
@@ -716,6 +825,32 @@ TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 3.0.3: 3D - No Optio
   DataStructure dataStructure = Create3DDataStructure();
 
   ExecuteFilter(dataStructure, false, false);
+}
+
+// -----------------------------------------------------------------------------
+// Non-square 2D regression tests. The existing 5x5x1 cases all have
+// dims[0] == dims[1], which masks an incorrect row-stride calculation in
+// initializeFaceNeighborOffsets for any of the three Empty2D dispatches.
+// A non-square 3x2 layout causes the wrong stride to either skip a boundary
+// face (producing SSA = 2 * area instead of 3 * area) or run off the end of
+// the buffer, so the hand-computed SSA below fails under the original bug.
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.0.4: 2D Empty Z - Non-Square {3,2,1}", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+{
+  DataStructure dataStructure = Create2DNonSquareEmptyZDataStructure();
+  ExecuteFilter(dataStructure, true, true);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.1.4: 2D Empty Y - Non-Square {3,1,2}", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+{
+  DataStructure dataStructure = Create2DNonSquareEmptyYDataStructure();
+  ExecuteFilter(dataStructure, true, true);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Case 2.2.4: 2D Empty X - Non-Square {1,3,2}", "[SimplnxCore][ComputeFeatureNeighborsFilter]")
+{
+  DataStructure dataStructure = Create2DNonSquareEmptyXDataStructure();
+  ExecuteFilter(dataStructure, true, true);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureNeighborsFilter: Legacy: SmallIn100", "[SimplnxCore][ComputeFeatureNeighborsFilter]")

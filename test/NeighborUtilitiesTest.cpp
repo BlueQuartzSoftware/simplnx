@@ -263,9 +263,7 @@ TEST_CASE("Simplnx::NeighborUtilities: ProcessEdges visits the expected indices"
 TEST_CASE("Simplnx::NeighborUtilities: ProcessFaces visits the expected indices", "[Simplnx][NeighborUtilities]")
 {
   using Visited = std::vector<std::tuple<int64, int64, int64>>;
-  auto recorder = [](Visited& sink) {
-    return [&](int64 z, int64 y, int64 x, const std::vector<FaceNeighborType>& /*faces*/) { sink.emplace_back(z, y, x); };
-  };
+  auto recorder = [](Visited& sink) { return [&](int64 z, int64 y, int64 x, const std::vector<FaceNeighborType>& /*faces*/) { sink.emplace_back(z, y, x); }; };
 
   SECTION("EmptyZImage2D 4x3x1 visits the XY interior (length 1)")
   {
