@@ -200,6 +200,91 @@ TEST_CASE("ImageGeomTest")
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// -----------------------------------------------------------------------------
+// ImageGeom::findElementSizes was rewritten in the 2D-handling refactor. It no
+// longer silently coerces an empty-dim spacing of 0 to 1 — it now errors on any
+// non-positive spacing. These tests lock in the new contract so future
+// regressions are caught without relying on a pipeline-level test.
+// -----------------------------------------------------------------------------
+TEST_CASE("ImageGeom::findElementSizes 3D valid spacing")
+{
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Image");
+  geom->setDimensions(SizeVec3{2, 3, 4});
+  geom->setSpacing(FloatVec3{2.0f, 3.0f, 5.0f});
+
+  REQUIRE(geom->findElementSizes(false).valid());
+  const auto* voxelSizes = geom->getElementSizes();
+  REQUIRE(voxelSizes != nullptr);
+  REQUIRE(voxelSizes->getNumberOfTuples() == 2 * 3 * 4);
+  // Every voxel has the same volume: spacing[0] * spacing[1] * spacing[2].
+  REQUIRE((*voxelSizes)[0] == Approx(2.0f * 3.0f * 5.0f));
+  REQUIRE((*voxelSizes)[voxelSizes->getNumberOfTuples() - 1] == Approx(2.0f * 3.0f * 5.0f));
+}
+
+TEST_CASE("ImageGeom::findElementSizes 2D uses spacing product verbatim (paper example)")
+{
+  // This mirrors the 'piece of paper' example in Geometry.rst: dims 17x22x1,
+  // spacing {0.5, 0.5, 0.004}. The element size is the product of all three
+  // spacings — the filter treats the empty-axis spacing as real thickness.
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Paper");
+  geom->setDimensions(SizeVec3{17, 22, 1});
+  geom->setSpacing(FloatVec3{0.5f, 0.5f, 0.004f});
+
+  REQUIRE(geom->findElementSizes(false).valid());
+  const auto* voxelSizes = geom->getElementSizes();
+  REQUIRE(voxelSizes != nullptr);
+  REQUIRE((*voxelSizes)[0] == Approx(0.5f * 0.5f * 0.004f));
+
+  // If the user wants to ignore the empty axis (treat z-spacing as unit
+  // thickness), they must set spacing[2] = 1.0 explicitly. The old code
+  // coerced this automatically; the new code requires it to be explicit.
+  geom->setSpacing(FloatVec3{0.5f, 0.5f, 1.0f});
+  REQUIRE(geom->findElementSizes(true).valid());
+  const auto* voxelSizesFlat = geom->getElementSizes();
+  REQUIRE((*voxelSizesFlat)[0] == Approx(0.25f));
+}
+
+TEST_CASE("ImageGeom::findElementSizes rejects non-positive spacing")
+{
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Image");
+  geom->setDimensions(SizeVec3{3, 3, 1});
+
+  SECTION("spacing[2] == 0 (common pitfall for 2D after the refactor)")
+  {
+    geom->setSpacing(FloatVec3{1.0f, 1.0f, 0.0f});
+    const auto result = geom->findElementSizes(false);
+    REQUIRE(result.invalid());
+    REQUIRE(result.errors().front().code == -1530);
+    REQUIRE(geom->getElementSizes() == nullptr);
+  }
+
+  SECTION("negative spacing on any axis")
+  {
+    geom->setSpacing(FloatVec3{1.0f, -1.0f, 1.0f});
+    REQUIRE(geom->findElementSizes(false).invalid());
+  }
+}
+
+TEST_CASE("ImageGeom::findElementSizes 1D image computes length correctly")
+{
+  // 1D images (two empty axes) now work as long as the user supplies unit
+  // spacing for the empty axes. Element size is a line length in the
+  // remaining axis, scaled by the other two spacings.
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Line");
+  geom->setDimensions(SizeVec3{5, 1, 1});
+  geom->setSpacing(FloatVec3{2.0f, 1.0f, 1.0f});
+
+  REQUIRE(geom->findElementSizes(false).valid());
+  const auto* voxelSizes = geom->getElementSizes();
+  REQUIRE(voxelSizes != nullptr);
+  REQUIRE(voxelSizes->getNumberOfTuples() == 5);
+  REQUIRE((*voxelSizes)[0] == Approx(2.0f));
+}
+
 TEST_CASE("QuadGeomTest")
 {
   DataStructure dataStructure;
