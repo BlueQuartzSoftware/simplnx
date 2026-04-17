@@ -13,7 +13,7 @@ using namespace nx::core;
 
 namespace
 {
-template <typename T, typename FaceLabelsT>
+template <typename OutputT, typename FaceLabelsT>
 class SampleSurfaceMeshImpl
 {
 public:
@@ -23,7 +23,7 @@ public:
   , m_FaceIds(faceIds)
   , m_FaceBBs(faceBBs)
   , m_Points(points)
-  , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<OutputT>>())
   , m_ShouldCancel(shouldCancel)
   {
   }
@@ -60,7 +60,7 @@ public:
           char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceIds[iter], m_FaceBBs, point, boundingBox, radius);
           if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
           {
-            m_PolyIds[i] = static_cast<T>(iter);
+            m_PolyIds[i] = static_cast<OutputT>(iter);
           }
         }
       }
@@ -77,12 +77,12 @@ private:
   const std::vector<std::vector<FaceLabelsT>>& m_FaceIds;
   const std::vector<BoundingBox3Df>& m_FaceBBs;
   const std::vector<Point3Df>& m_Points;
-  AbstractDataStore<T>& m_PolyIds;
+  AbstractDataStore<OutputT>& m_PolyIds;
   const std::atomic_bool& m_ShouldCancel;
 };
 
 // -----------------------------------------------------------------------------
-template <typename T, typename FaceLabelsT>
+template <typename OutputT, typename FaceLabelsT>
 class SampleSurfaceMeshImplByPoints
 {
 public:
@@ -93,7 +93,7 @@ public:
   , m_FaceIds(faceIds)
   , m_FaceBBs(faceBBs)
   , m_Points(points)
-  , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_PolyIds(iPolyIds.getIDataStoreRefAs<AbstractDataStore<OutputT>>())
   , m_FeatureId(featureId)
   , m_ShouldCancel(shouldCancel)
   , m_ProgressMessageHelper(progressMessageHelper)
@@ -105,7 +105,7 @@ public:
   {
     ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
-    usize iter = m_FeatureId;
+    const OutputT iter = m_FeatureId;
 
     // find bounding box for current feature
     BoundingBox3Df boundingBox(GeometryMath::FindBoundingBoxOfFaces(m_Faces, m_FaceIds));
@@ -121,7 +121,7 @@ public:
         char code = GeometryMath::IsPointInPolyhedron(m_Faces, m_FaceIds, m_FaceBBs, point, boundingBox, radius);
         if(code == 'i' || code == 'V' || code == 'E' || code == 'F')
         {
-          m_PolyIds[i] = static_cast<T>(iter);
+          m_PolyIds[i] = iter;
         }
       }
       pointsVisited++;
@@ -151,7 +151,7 @@ private:
   const std::vector<FaceLabelsT>& m_FaceIds;
   const std::vector<BoundingBox3Df>& m_FaceBBs;
   const std::vector<Point3Df>& m_Points;
-  AbstractDataStore<T>& m_PolyIds;
+  AbstractDataStore<OutputT>& m_PolyIds;
   const usize m_FeatureId = 0;
   const std::atomic_bool& m_ShouldCancel;
   ProgressMessageHelper& m_ProgressMessageHelper;

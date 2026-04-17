@@ -28,7 +28,6 @@ struct SIMPLNXCORE_EXPORT UncertainRegularGridSampleSurfaceMeshInputValues
 
 /**
  * @class ConditionalSetValueFilter
-
  */
 class SIMPLNXCORE_EXPORT UncertainRegularGridSampleSurfaceMesh : public SampleSurfaceMesh
 {
