@@ -561,19 +561,39 @@ Result<> WritePoleFigure::operator()()
   imageGeom.setDimensions({static_cast<usize>(m_InputValues->ImageSize), static_cast<usize>(m_InputValues->ImageSize), 1});
   imageGeom.getCellData()->resizeTuples(tupleShape);
 
-  // Loop over all the voxels gathering the Euler angles for a specific phase into an array
+  // Chunk size for streaming reads from (possibly OOC-backed) input arrays.
+  // Sized so each cell's working set (1 int32 phase + 3 float32 eulers +
+  // optional mask) fits comfortably in L2/L3 cache and the HDF5 chunked-
+  // read path hits whole chunks per call rather than per-element.
+  constexpr usize k_StreamChunkTuples = 65536;
+
+  std::vector<int32> phaseChunk(k_StreamChunkTuples);
+  std::vector<float32> eulerChunk(k_StreamChunkTuples * 3);
+
+  // Loop over all the voxels gathering the Euler angles for a specific phase into an array.
+  // Inside the phase loop we stream the input arrays in fixed-size chunks via
+  // copyIntoBuffer() rather than indexing one element at a time, which would
+  // fire one HDF5 read per [] on OOC-backed stores. Streaming keeps peak
+  // memory bounded to k_StreamChunkTuples * 16 bytes (~1 MB) regardless of
+  // input size; we never materialize the full input arrays in-core.
   for(usize phase = 1; phase < numPhases; ++phase)
   {
     usize count = 0;
     // First find out how many voxels we are going to have. This is probably faster to loop twice than to
     // keep allocating memory everytime we find one.
-    for(usize i = 0; i < numPoints; ++i)
+    for(usize chunkStart = 0; chunkStart < numPoints; chunkStart += k_StreamChunkTuples)
     {
-      if(phases[i] == phase)
+      const usize chunkLen = std::min(k_StreamChunkTuples, numPoints - chunkStart);
+      phases.getDataStoreRef().copyIntoBuffer(chunkStart, nonstd::span<int32>(phaseChunk.data(), chunkLen));
+      for(usize i = 0; i < chunkLen; ++i)
       {
-        if(!m_InputValues->UseMask || maskCompare->isTrue(i))
+        if(phaseChunk[i] == static_cast<int32>(phase))
         {
-          count++;
+          const usize globalIdx = chunkStart + i;
+          if(!m_InputValues->UseMask || maskCompare->isTrue(globalIdx))
+          {
+            count++;
+          }
         }
       }
     }
@@ -582,18 +602,25 @@ Result<> WritePoleFigure::operator()()
     subEulerAnglesPtr->initializeWithValue(std::numeric_limits<float32>::signaling_NaN());
     ebsdlib::FloatArrayType& subEulerAngles = *subEulerAnglesPtr;
 
-    // Now loop through the Euler angles again and this time add them to the sub-Euler angle Array
+    // Now loop through the Euler angles again and this time add them to the sub-Euler angle Array.
     count = 0;
-    for(usize i = 0; i < numPoints; ++i)
+    for(usize chunkStart = 0; chunkStart < numPoints; chunkStart += k_StreamChunkTuples)
     {
-      if(phases[i] == phase)
+      const usize chunkLen = std::min(k_StreamChunkTuples, numPoints - chunkStart);
+      phases.getDataStoreRef().copyIntoBuffer(chunkStart, nonstd::span<int32>(phaseChunk.data(), chunkLen));
+      eulerAngles.getDataStoreRef().copyIntoBuffer(chunkStart * 3, nonstd::span<float32>(eulerChunk.data(), chunkLen * 3));
+      for(usize i = 0; i < chunkLen; ++i)
       {
-        if(!m_InputValues->UseMask || maskCompare->isTrue(i))
+        if(phaseChunk[i] == static_cast<int32>(phase))
         {
-          subEulerAngles[count * 3] = eulerAngles[i * 3];
-          subEulerAngles[count * 3 + 1] = eulerAngles[i * 3 + 1];
-          subEulerAngles[count * 3 + 2] = eulerAngles[i * 3 + 2];
-          count++;
+          const usize globalIdx = chunkStart + i;
+          if(!m_InputValues->UseMask || maskCompare->isTrue(globalIdx))
+          {
+            subEulerAngles[count * 3] = eulerChunk[i * 3];
+            subEulerAngles[count * 3 + 1] = eulerChunk[i * 3 + 1];
+            subEulerAngles[count * 3 + 2] = eulerChunk[i * 3 + 2];
+            count++;
+          }
         }
       }
     }
@@ -696,9 +723,22 @@ Result<> WritePoleFigure::operator()()
         intensityImages[imageIndex] = flipAndMirrorPoleFigure<double>(intensityImages[imageIndex].get(), config);
       }
 
-      std::copy(intensityImages[0]->begin(), intensityImages[0]->end(), intensityPlot1Array.begin());
-      std::copy(intensityImages[1]->begin(), intensityImages[1]->end(), intensityPlot2Array.begin());
-      std::copy(intensityImages[2]->begin(), intensityImages[2]->end(), intensityPlot3Array.begin());
+      // Bulk-write the intensity plot images into the DataStructure arrays.
+      // std::copy with operator[] iterators falls into per-element writes on
+      // OOC-backed stores (one HDF5 write per pixel). copyFromBuffer issues
+      // a single write per array.
+      {
+        const usize plotElems = static_cast<usize>(intensityImages[0]->getNumberOfTuples()) * intensityImages[0]->getNumberOfComponents();
+        intensityPlot1Array.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(intensityImages[0]->getPointer(0), plotElems));
+      }
+      {
+        const usize plotElems = static_cast<usize>(intensityImages[1]->getNumberOfTuples()) * intensityImages[1]->getNumberOfComponents();
+        intensityPlot2Array.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(intensityImages[1]->getPointer(0), plotElems));
+      }
+      {
+        const usize plotElems = static_cast<usize>(intensityImages[2]->getNumberOfTuples()) * intensityImages[2]->getNumberOfComponents();
+        intensityPlot3Array.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(intensityImages[2]->getPointer(0), plotElems));
+      }
 
       DataPath metaDataPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_MetaDataName);
       auto metaDataArrayRef = m_DataStructure.getDataRefAs<StringArray>(metaDataPath);
@@ -767,17 +807,24 @@ Result<> WritePoleFigure::operator()()
           return arrayCreationResult;
         }
 
-        // Get a reference to the RGB final array and then copy ONLY the RGB pixels from the RGBA data.
+        // Get a reference to the RGB final array and then copy ONLY the RGB
+        // pixels from the RGBA data. Build the packed RGB buffer in memory
+        // first, then write it out in a single copyFromBuffer call. Writing
+        // per-element via operator[] would issue one HDF5 hit per byte on
+        // OOC-backed imageData (~786K hits for a 512x512 image); bulk writes
+        // collapse that to one.
         auto& imageData = m_DataStructure.getDataRefAs<UInt8Array>(imageArrayPath);
         imageData.fill(0);
         const usize tupleCount = static_cast<usize>(pageHeight) * pageWidth;
         const uint8_t* rgbaPtr = compositeResult.image->getPointer(0);
+        std::vector<uint8> rgbBuf(tupleCount * 3);
         for(usize t = 0; t < tupleCount; t++)
         {
-          imageData[t * 3 + 0] = rgbaPtr[t * 4 + 0];
-          imageData[t * 3 + 1] = rgbaPtr[t * 4 + 1];
-          imageData[t * 3 + 2] = rgbaPtr[t * 4 + 2];
+          rgbBuf[t * 3 + 0] = rgbaPtr[t * 4 + 0];
+          rgbBuf[t * 3 + 1] = rgbaPtr[t * 4 + 1];
+          rgbBuf[t * 3 + 2] = rgbaPtr[t * 4 + 2];
         }
+        imageData.getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(rgbBuf.data(), rgbBuf.size()));
       }
 
       // Write out the full RGBA data
