@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/MaskCompareUtilities.hpp"
 
 #include <cmath>
 #include <limits>
@@ -57,8 +58,8 @@ struct WriteWeightedAverageFunctor
 
 void computeKernel(uint64 interpolationTechnique, const std::vector<float32>& sigmas, std::vector<float32>& kernel, const int64 kernelNumVoxels[3])
 {
-  usize kDimX = static_cast<usize>(2 * kernelNumVoxels[0] + 1);
-  usize kDimY = static_cast<usize>(2 * kernelNumVoxels[1] + 1);
+  const auto kDimX = static_cast<usize>(2 * kernelNumVoxels[0] + 1);
+  const auto kDimY = static_cast<usize>(2 * kernelNumVoxels[1] + 1);
 
   for(int64 z = -kernelNumVoxels[2]; z <= kernelNumVoxels[2]; z++)
   {
@@ -66,10 +67,10 @@ void computeKernel(uint64 interpolationTechnique, const std::vector<float32>& si
     {
       for(int64 x = -kernelNumVoxels[0]; x <= kernelNumVoxels[0]; x++)
       {
-        usize kx = static_cast<usize>(x + kernelNumVoxels[0]);
-        usize ky = static_cast<usize>(y + kernelNumVoxels[1]);
-        usize kz = static_cast<usize>(z + kernelNumVoxels[2]);
-        usize idx = kz * kDimY * kDimX + ky * kDimX + kx;
+        const auto kx = static_cast<usize>(x + kernelNumVoxels[0]);
+        const auto ky = static_cast<usize>(y + kernelNumVoxels[1]);
+        const auto kz = static_cast<usize>(z + kernelNumVoxels[2]);
+        const usize idx = kz * kDimY * kDimX + ky * kDimX + kx;
 
         if(interpolationTechnique == InterpolatePointCloudToRegularGrid::k_Uniform)
         {
@@ -140,9 +141,9 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
     kernelNumVoxels[2] = 0;
   }
 
-  usize kDimX = static_cast<usize>(2 * kernelNumVoxels[0] + 1);
-  usize kDimY = static_cast<usize>(2 * kernelNumVoxels[1] + 1);
-  usize kDimZ = static_cast<usize>(2 * kernelNumVoxels[2] + 1);
+  auto kDimX = static_cast<usize>(2 * kernelNumVoxels[0] + 1);
+  auto kDimY = static_cast<usize>(2 * kernelNumVoxels[1] + 1);
+  auto kDimZ = static_cast<usize>(2 * kernelNumVoxels[2] + 1);
   usize totalKernel = kDimX * kDimY * kDimZ;
 
   // Compute kernel weights
@@ -150,10 +151,19 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
   computeKernel(m_InputValues->interpolationTechnique, m_InputValues->sigmas, kernel, kernelNumVoxels);
 
   // Mask
-  BoolArray::store_type* mask = nullptr;
+  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
   if(m_InputValues->useMask)
   {
-    mask = m_DataStructure.getDataAs<BoolArray>(m_InputValues->maskDataPath)->getDataStore();
+    try
+    {
+      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->maskDataPath);
+    } catch(const std::out_of_range& exception)
+    {
+      // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
+      // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->maskDataPath.toString());
+      return MakeErrorResult(-54060, message);
+    }
   }
 
   const bool needWelford = m_InputValues->findStdDeviation;
@@ -206,7 +216,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       return {};
     }
 
-    if(m_InputValues->useMask && mask != nullptr && !mask->getValue(i))
+    if(m_InputValues->useMask && maskCompare != nullptr && !maskCompare->isTrue(i))
     {
       continue;
     }
@@ -239,9 +249,9 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
         for(int64 gx = startX; gx <= endX; gx++)
         {
           // Compute kernel index using 3D offset
-          usize kx = static_cast<usize>(gx - static_cast<int64>(curX) + kernelNumVoxels[0]);
-          usize ky = static_cast<usize>(gy - static_cast<int64>(curY) + kernelNumVoxels[1]);
-          usize kz = static_cast<usize>(gz - static_cast<int64>(curZ) + kernelNumVoxels[2]);
+          auto kx = static_cast<usize>(gx - static_cast<int64>(curX) + kernelNumVoxels[0]);
+          auto ky = static_cast<usize>(gy - static_cast<int64>(curY) + kernelNumVoxels[1]);
+          auto kz = static_cast<usize>(gz - static_cast<int64>(curZ) + kernelNumVoxels[2]);
           usize kernelIdx = kz * kDimY * kDimX + ky * kDimX + kx;
 
           float32 weight = kernel[kernelIdx];
@@ -250,7 +260,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
           // Update interpolated array accumulators (using actual kernel weight)
           if(weight != 0.0f)
           {
-            float64 w = static_cast<float64>(weight);
+            auto w = static_cast<float64>(weight);
             for(usize a = 0; a < numInterpArrays; a++)
             {
               float64 sourceVal = interpSourceData[a][i];
@@ -286,7 +296,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
 
     if(i > prog)
     {
-      usize progressInt = static_cast<usize>((static_cast<float64>(i) / static_cast<float64>(numVerts)) * 100.0);
+      auto progressInt = static_cast<usize>((static_cast<float64>(i) / static_cast<float64>(numVerts)) * 100.0);
       m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Interpolating Point Cloud || {}% Completed", progressInt));
       prog += progIncrement;
     }
