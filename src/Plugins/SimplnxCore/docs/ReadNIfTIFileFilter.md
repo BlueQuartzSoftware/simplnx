@@ -54,6 +54,70 @@ read time and promotes the output array to `float32`. Per the NIfTI-1
 specification, scaling is never applied to `RGB24` or `RGBA32` data and a
 warning is emitted if a scaling transform is present for those types.
 
+### Cropping on read
+
+When the *Cropping Options* parameter is set to anything other than
+*No Cropping*, only the selected sub-volume is ingested — the rest of the
+file is read and discarded on the fly, never reaching a DataArray. Two
+cropping modes are supported:
+
+* **Voxel Subvolume** — pick an inclusive `[start..end]` voxel index range
+  per axis. The range is zero-based and uses the source file's voxel
+  grid.
+* **Physical Subvolume** — pick an inclusive physical coordinate range per
+  axis. The filter builds a temporary axis-aligned ImageGeom from the
+  source file's origin and spacing (the same values the Orientation
+  section would use) and converts the requested bounds to voxel indices
+  via `ImageGeom::getIndex()`. Bounds that fall outside the volume
+  produce a descriptive error rather than silently clamping.
+
+Each axis can be toggled on or off independently via the *Crop X / Y / Z*
+flags. An axis whose flag is off is *not* cropped — its full extent from
+the source file is used, even if the physical or voxel bound values are
+populated.
+
+#### How the cropped ImageGeom relates to the source
+
+* **Dimensions** equal the cropped voxel count on each axis.
+* **Spacing** is the same as the source file's spacing (cropping never
+  resamples).
+* **Origin** is shifted so that the center of the first cropped voxel
+  lands at its correct physical position, i.e. `new_origin[i] =
+  source_origin[i] + start_voxel[i] * spacing[i]`. This is produced by
+  running `CropImageGeometryFilter::preflight` on a temp geometry, so the
+  behavior matches what you'd get from piping a standalone read +
+  `CropImageGeometry` sequence.
+
+#### Interaction with other options
+
+* **Scaling** — if *Apply Scaling Transform* is on, `y = slope*x + inter`
+  is applied only to the retained voxels. Voxels outside the crop region
+  are discarded before scaling.
+* **RGB24 / RGBA32** — all per-voxel components are preserved. The crop
+  operates on the voxel grid, not on individual color bytes.
+* **Orientation** — cropping runs on the axis-aligned ImageGeom that was
+  already constructed from the sform / qform / pixdim fallback chain; a
+  stored rotation warning (if any) is emitted independently of cropping.
+
+#### Memory vs. wall-clock
+
+Cropping on read primarily saves **memory**, not I/O time, in this
+version:
+
+* For `.nii.gz` the file is not seekable without linear decompression, so
+  the full compressed stream is still read and decompressed even when
+  the cropped region is small. Peak resident memory, however, is
+  proportional to the cropped region, not the full uncompressed volume.
+  This matters when the source file scaled up to `float32` would not fit
+  in RAM.
+* For plain `.nii` this version also reads linearly (scan-line by
+  scan-line, discarding out-of-range rows in place of a true
+  seek-skip). A seek-skip optimization for uncompressed files may come
+  later if real-world timings warrant it.
+
+In short: use cropping to keep the output DataArray small, not to make
+large compressed files read faster.
+
 ## Parameters
 
 | Parameter | Type | Default | Description |
@@ -66,17 +130,6 @@ warning is emitted if a scaling transform is present for those types.
 | Cell Attribute Matrix Name | String | `Cell Data` | Name of the attribute matrix holding voxel values. |
 | Image Data Array Name | String | `ImageData` | Name of the array receiving voxel values. |
 
-### Cropping behavior
-
-When cropping is enabled the filter does **not** materialize the full volume
-before cropping. It reads the source file one scan-line at a time; scan-lines
-outside the selected sub-volume are read and discarded without being copied
-into a DataArray. This keeps peak memory usage proportional to the cropped
-region, not the source file size. For `.nii.gz` this is the best that can be
-done (gzip is not seekable without linear decompression); for plain `.nii` we
-still read linearly in this version to keep the code simple — a true
-seek-skip optimization may come later if timings warrant it.
-
 ## Caveats
 
 * Only the single-file NIfTI-1 format (magic `n+1`) is supported. The
@@ -85,6 +138,14 @@ seek-skip optimization may come later if timings warrant it.
   time series, diffusion series, etc.) are rejected in this release.
 * Non-trivial rotations in `sform` / `qform` are flattened — the Image
   Geometry is axis-aligned in simplnx.
+* Cropping saves memory, not wall-clock read time. A `.nii.gz` file must
+  still be fully decompressed regardless of how small the cropped region
+  is; plain `.nii` files are also read linearly in this version.
+* Physical-subvolume crop bounds must map to voxels inside the source
+  volume. Bounds outside the extent produce an error rather than
+  silently clamping.
+* `start <= end` is required on each cropped axis; reversed ranges are
+  rejected at execute time.
 
 % Auto generated parameter table will be inserted here                                                                    
 
