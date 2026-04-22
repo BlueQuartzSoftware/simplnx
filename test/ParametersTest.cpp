@@ -1,6 +1,7 @@
 #include "simplnx/Filter/Parameters.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 
@@ -91,4 +92,88 @@ TEST_CASE("ParametersTest")
   args.insertOrAssign(k_BarParamKey, true);
   args.insertOrAssign(k_BizParamKey, std::make_any<ChoicesParameter::ValueType>(1));
   REQUIRE(params.isParameterActive(k_BazParamKey, args));
+}
+
+TEST_CASE("FileSystemPathParameter::MatchExtension")
+{
+  using ExtensionsType = FileSystemPathParameter::ExtensionsType;
+
+  SECTION("simple single-dot match")
+  {
+    const ExtensionsType accepted = {".nii"};
+    auto m = FileSystemPathParameter::MatchExtension("scan.nii", accepted);
+    REQUIRE(m.has_value());
+    REQUIRE(*m == ".nii");
+  }
+
+  SECTION("compound .nii.gz match")
+  {
+    const ExtensionsType accepted = {".nii.gz"};
+    auto m = FileSystemPathParameter::MatchExtension("scan.nii.gz", accepted);
+    REQUIRE(m.has_value());
+    REQUIRE(*m == ".nii.gz");
+  }
+
+  SECTION("longest-wins when .gz and .nii.gz are both registered")
+  {
+    const ExtensionsType accepted = {".gz", ".nii.gz"};
+    auto m = FileSystemPathParameter::MatchExtension("scan.nii.gz", accepted);
+    REQUIRE(m.has_value());
+    REQUIRE(*m == ".nii.gz");
+  }
+
+  SECTION(".gz still wins for plain .gz when no compound is registered")
+  {
+    const ExtensionsType accepted = {".gz", ".nii.gz"};
+    auto m = FileSystemPathParameter::MatchExtension("archive.tar.gz", accepted);
+    REQUIRE(m.has_value());
+    REQUIRE(*m == ".gz");
+  }
+
+  SECTION("case-insensitive matching on both sides")
+  {
+    const ExtensionsType accepted = {".NII.GZ"};
+    auto m = FileSystemPathParameter::MatchExtension("Scan.nii.gz", accepted);
+    REQUIRE(m.has_value());
+    REQUIRE(*m == ".NII.GZ");
+  }
+
+  SECTION("non-matching suffix returns nullopt")
+  {
+    const ExtensionsType accepted = {".nii", ".nii.gz"};
+    auto m = FileSystemPathParameter::MatchExtension("image.tif", accepted);
+    REQUIRE_FALSE(m.has_value());
+  }
+
+  SECTION("empty accepted set returns nullopt")
+  {
+    const ExtensionsType accepted;
+    auto m = FileSystemPathParameter::MatchExtension("scan.nii", accepted);
+    REQUIRE_FALSE(m.has_value());
+  }
+
+  SECTION("accepted extension longer than filename is skipped, not an error")
+  {
+    const ExtensionsType accepted = {".nii.gz"};
+    auto m = FileSystemPathParameter::MatchExtension("a", accepted);
+    REQUIRE_FALSE(m.has_value());
+  }
+
+  SECTION("partial stem ending in the extension still matches")
+  {
+    // Matching is a pure literal suffix test, consistent with how users drop
+    // files that happen to end in ".nii.gz" regardless of the stem.
+    const ExtensionsType accepted = {".nii.gz"};
+    auto m = FileSystemPathParameter::MatchExtension("subject42.nii.gz", accepted);
+    REQUIRE(m.has_value());
+    REQUIRE(*m == ".nii.gz");
+  }
+
+  SECTION("file that merely contains '.gz' inside its name is not matched as .gz")
+  {
+    // "foo.gz.bak" should NOT match ".gz" because ".gz" is not a suffix.
+    const ExtensionsType accepted = {".gz"};
+    auto m = FileSystemPathParameter::MatchExtension("foo.gz.bak", accepted);
+    REQUIRE_FALSE(m.has_value());
+  }
 }

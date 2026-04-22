@@ -227,6 +227,35 @@ FileSystemPathParameter::ExtensionsType FileSystemPathParameter::getAvailableExt
 }
 
 //-----------------------------------------------------------------------------
+std::optional<std::string> FileSystemPathParameter::MatchExtension(std::string_view filename, const ExtensionsType& accepted)
+{
+  if(accepted.empty() || filename.empty())
+  {
+    return std::nullopt;
+  }
+
+  const std::string lowerName = nx::core::StringUtilities::toLower(std::string(filename));
+
+  std::optional<std::string> best;
+  usize bestLen = 0;
+  for(const auto& ext : accepted)
+  {
+    if(ext.empty() || ext.size() > lowerName.size())
+    {
+      continue;
+    }
+    const std::string lowerExt = nx::core::StringUtilities::toLower(ext);
+    const auto offset = lowerName.size() - lowerExt.size();
+    if(lowerName.compare(offset, lowerExt.size(), lowerExt) == 0 && ext.size() > bestLen)
+    {
+      best = ext;
+      bestLen = ext.size();
+    }
+  }
+  return best;
+}
+
+//-----------------------------------------------------------------------------
 Result<> FileSystemPathParameter::validate(const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
@@ -251,8 +280,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
       {
         return MakeErrorResult(-3002, fmt::format("{} File System Path must include a file extension.\n  FilePath: '{}'", prefix, path.string()));
       }
-      std::string lowerExtension = nx::core::StringUtilities::toLower(path.extension().string());
-      if(path.has_extension() && !m_AvailableExtensions.empty() && m_AvailableExtensions.find(lowerExtension) == m_AvailableExtensions.end())
+      if(!m_AvailableExtensions.empty() && !MatchExtension(path.filename().string(), m_AvailableExtensions).has_value())
       {
         return MakeErrorResult(-3003, fmt::format("{} File extension '{}' is not a valid file extension", prefix, path.extension().string()));
       }
