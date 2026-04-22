@@ -84,7 +84,7 @@ std::string ReadNIfTIFileFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ReadNIfTIFileFilter::defaultTags() const
 {
-  return {"Read", "Import", "NIfTI", "NII", "Medical", "MRI"};
+  return {"Read", "Import", "NIfTI", "NII", "Medical", "MRI", "CT", "xCT"};
 }
 
 //------------------------------------------------------------------------------
@@ -94,7 +94,7 @@ Parameters ReadNIfTIFileFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFilePath_Key, "Input NIfTI File", "The NIfTI-1 file to read (.nii or .nii.gz)", fs::path("input.nii"),
-                                                          FileSystemPathParameter::ExtensionsType{".nii", ".gz"}, FileSystemPathParameter::PathType::InputFile));
+                                                          FileSystemPathParameter::ExtensionsType{".nii", ".nii.gz"}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<BoolParameter>(k_UseAffineIfPresent_Key, "Use Stored Affine Transform",
                                                 "If enabled and the file contains an sform/qform, use it to set the ImageGeom origin and spacing. Rotation components cannot be represented in an "
                                                 "axis-aligned image geometry; a warning will be emitted if the transform has a non-trivial rotation.",
