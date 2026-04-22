@@ -92,6 +92,14 @@ DataStructure CreateTestDataStructure()
   return dataStructure;
 }
 
+/**
+* @brief Creates a single threshold for the filter to use.
+* @param arrayPath Input DataArray path
+* @param comparisonType type of comparison
+* @param value Value to threshold against
+* @param isInverted Should the threshold output be inverted
+* componentIndex Component index of the array to threshold against.
+*/
 ArrayThresholdSet CreateSingleThreshold(const DataPath& arrayPath, ArrayThreshold::ComparisonType comparisonType, double value, bool isInverted, int componentIndex)
 {
   ArrayThresholdSet thresholdSet;
@@ -106,6 +114,15 @@ ArrayThresholdSet CreateSingleThreshold(const DataPath& arrayPath, ArrayThreshol
   return thresholdSet;
 }
 
+/**
+ * @brief
+ * @param dataStructure
+ * @param arrayPath Path to use for the threshold DataArray
+ * @param comparisonType Type of comparison to perform
+ * @param value Value to threshold against
+ * @param isInverted should the output mask value be inverted
+ * @param componentIndex Which component of the array the threshold should use.
+ */
 void RunSingleThresholdTest(DataStructure& dataStructure, const DataPath& arrayPath, ArrayThreshold::ComparisonType comparisonType, double value, bool isInverted, int32 componentIndex = 0)
 {
   MultiThresholdObjectsFilter filter;
@@ -132,6 +149,7 @@ void RunSingleThresholdTest(DataStructure& dataStructure, const DataPath& arrayP
   REQUIRE(thresholdArrayPtr->getNumberOfComponents() == 1);
 }
 
+// Integer checks
 void CheckIntTestDataGreaterThanSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
@@ -153,6 +171,71 @@ void CheckIntTestDataGreaterThanSingleComponent(const DataStructure& dataStructu
   }
 }
 
+void CheckIntTestDataLessThanSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
+{
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
+
+  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+
+  for(usize i = 0; i < k_TupleCount; i++)
+  {
+    bool value = thresholdStore[i];
+    bool expected = InputIntValue(i) < thresholdValue;
+
+    if(isInverted)
+    {
+      expected = !expected;
+    }
+
+    REQUIRE(value == expected);
+  }
+}
+
+void CheckIntTestDataEqualToSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
+{
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
+
+  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+
+  for(usize i = 0; i < k_TupleCount; i++)
+  {
+    bool value = thresholdStore[i];
+    bool expected = InputIntValue(i) == thresholdValue;
+
+    if(isInverted)
+    {
+      expected = !expected;
+    }
+
+    REQUIRE(value == expected);
+  }
+}
+
+void CheckIntTestDataNotEqualToSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
+{
+  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
+  REQUIRE(thresholdArrayPtr != nullptr);
+
+  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
+
+  for(usize i = 0; i < k_TupleCount; i++)
+  {
+    bool value = thresholdStore[i];
+    bool expected = InputIntValue(i) != thresholdValue;
+
+    if(isInverted)
+    {
+      expected = !expected;
+    }
+
+    REQUIRE(value == expected);
+  }
+}
+
+// Floating point checks
+
 void CheckFloatTestDataGreaterThanSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
@@ -164,27 +247,6 @@ void CheckFloatTestDataGreaterThanSingleComponent(const DataStructure& dataStruc
   {
     bool value = thresholdStore[i];
     bool expected = InputFloatValue(i) > thresholdValue;
-
-    if(isInverted)
-    {
-      expected = !expected;
-    }
-
-    REQUIRE(value == expected);
-  }
-}
-
-void CheckIntTestDataLessThanSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
-{
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-  REQUIRE(thresholdArrayPtr != nullptr);
-
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
-
-  for(usize i = 0; i < k_TupleCount; i++)
-  {
-    bool value = thresholdStore[i];
-    bool expected = i < static_cast<int>(thresholdValue);
 
     if(isInverted)
     {
@@ -217,27 +279,6 @@ void CheckFloatTestDataLessThanSingleComponent(const DataStructure& dataStructur
   }
 }
 
-void CheckIntTestDataEqualToSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
-{
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-  REQUIRE(thresholdArrayPtr != nullptr);
-
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
-
-  for(usize i = 0; i < k_TupleCount; i++)
-  {
-    bool value = thresholdStore[i];
-    bool expected = i == static_cast<int>(thresholdValue);
-
-    if(isInverted)
-    {
-      expected = !expected;
-    }
-
-    REQUIRE(value == expected);
-  }
-}
-
 void CheckFloatTestDataEqualToSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
@@ -259,7 +300,7 @@ void CheckFloatTestDataEqualToSingleComponent(const DataStructure& dataStructure
   }
 }
 
-void CheckIntTestDataNotEqualToSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
+void CheckFloatTestDataNotEqualToSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
 {
   const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
@@ -269,7 +310,7 @@ void CheckIntTestDataNotEqualToSingleComponent(const DataStructure& dataStructur
   for(usize i = 0; i < k_TupleCount; i++)
   {
     bool value = thresholdStore[i];
-    bool expected = i != thresholdValue;
+    bool expected = InputFloatValue(i) != thresholdValue;
 
     if(isInverted)
     {
@@ -291,8 +332,7 @@ void CheckIntTestDataGreaterThanMultiComponent(const DataStructure& dataStructur
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
-    usize arrayIndex = i * k_MultiComponentCount + componentIndex;
-    bool value = thresholdStore[arrayIndex];
+    bool value = thresholdStore[i];
     bool expected = InputIntComponentValue(i, componentIndex) > thresholdValue;
 
     if(isInverted)
@@ -313,8 +353,7 @@ void CheckIntTestDataLessThanMultiComponent(const DataStructure& dataStructure, 
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
-    usize arrayIndex = i * k_MultiComponentCount + componentIndex;
-    bool value = thresholdStore[arrayIndex];
+    bool value = thresholdStore[i];
     bool expected = InputIntComponentValue(i, componentIndex) < thresholdValue;
 
     if(isInverted)
@@ -333,13 +372,9 @@ void CheckIntTestDataEqualToMultiComponent(const DataStructure& dataStructure, d
 
   auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
-  const auto& inputStore = dataStructure.getDataAs<Int32Array>(k_MultiComponentArrayPath)->getDataStoreRef();
-
   for(usize i = 0; i < k_TupleCount; i++)
   {
-    usize arrayIndex = i * k_MultiComponentCount + componentIndex;
-    int32 inputValue = inputStore[arrayIndex]; // store value for breakpoint testing purposes.
-    bool value = thresholdStore[arrayIndex];
+    bool value = thresholdStore[i];
     bool expected = InputIntComponentValue(i, componentIndex) == thresholdValue;
 
     if(isInverted)
@@ -360,30 +395,8 @@ void CheckIntTestDataNotEqualToMultiComponent(const DataStructure& dataStructure
 
   for(usize i = 0; i < k_TupleCount; i++)
   {
-    usize arrayIndex = i * k_MultiComponentCount + componentIndex;
-    bool value = thresholdStore[arrayIndex];
-    bool expected = InputIntComponentValue(i, componentIndex) != thresholdValue;
-
-    if(isInverted)
-    {
-      expected = !expected;
-    }
-
-    REQUIRE(value == expected);
-  }
-}
-
-void CheckFloatTestDataNotEqualToSingleComponent(const DataStructure& dataStructure, double thresholdValue, bool isInverted)
-{
-  const auto* thresholdArrayPtr = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-  REQUIRE(thresholdArrayPtr != nullptr);
-
-  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
-
-  for(usize i = 0; i < k_TupleCount; i++)
-  {
     bool value = thresholdStore[i];
-    bool expected = InputFloatValue(i) != thresholdValue;
+    bool expected = InputIntComponentValue(i, componentIndex) != thresholdValue;
 
     if(isInverted)
     {
@@ -422,70 +435,29 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int", "[
 
   DataStructure dataStructure = CreateTestDataStructure();
   const DataPath targetArray = k_TestArrayIntPath;
-  bool isInverted = false;
+  double thresholdValue = GENERATE(-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 22.0, 5.5);
+  bool isInverted = GENERATE(false, true);
 
   SECTION("ArrayThreshold: >")
   {
-    const double thresholdValue = 2.0;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::GreaterThan, thresholdValue, isInverted);
     CheckIntTestDataGreaterThanSingleComponent(dataStructure, thresholdValue, isInverted);
   }
 
   SECTION("ArrayThreshold: <")
   {
-    const double thresholdValue = 3.0;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::LessThan, thresholdValue, isInverted);
     CheckIntTestDataLessThanSingleComponent(dataStructure, thresholdValue, isInverted);
   }
 
   SECTION("ArrayThreshold: ==")
   {
-    const double thresholdValue = 3.0;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
     CheckIntTestDataEqualToSingleComponent(dataStructure, thresholdValue, isInverted);
     CheckIntTestDataNotEqualToSingleComponent(dataStructure, thresholdValue, !isInverted);
   }
   SECTION("ArrayThreshold: !=")
   {
-    const double thresholdValue = 4.0;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
-    CheckIntTestDataEqualToSingleComponent(dataStructure, thresholdValue, !isInverted);
-    CheckIntTestDataNotEqualToSingleComponent(dataStructure, thresholdValue, isInverted);
-  }
-}
-
-TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int Inverted", "[SimplnxCore][MultiThresholdObjectsFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  DataStructure dataStructure = CreateTestDataStructure();
-  const DataPath targetArray = k_TestArrayIntPath;
-  bool isInverted = true;
-
-  SECTION("ArrayThreshold: >")
-  {
-    const double thresholdValue = 2.0;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::GreaterThan, thresholdValue, isInverted);
-    CheckIntTestDataGreaterThanSingleComponent(dataStructure, thresholdValue, isInverted);
-  }
-
-  SECTION("ArrayThreshold: <")
-  {
-    const double thresholdValue = 3.0;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::LessThan, thresholdValue, isInverted);
-    CheckIntTestDataLessThanSingleComponent(dataStructure, thresholdValue, isInverted);
-  }
-
-  SECTION("ArrayThreshold: ==")
-  {
-    const double thresholdValue = 3.0;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
-    CheckIntTestDataEqualToSingleComponent(dataStructure, thresholdValue, isInverted);
-    CheckIntTestDataNotEqualToSingleComponent(dataStructure, thresholdValue, !isInverted);
-  }
-  SECTION("ArrayThreshold: !=")
-  {
-    const double thresholdValue = 4.0;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
     CheckIntTestDataEqualToSingleComponent(dataStructure, thresholdValue, !isInverted);
     CheckIntTestDataNotEqualToSingleComponent(dataStructure, thresholdValue, isInverted);
@@ -498,72 +470,30 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Float", 
 
   DataStructure dataStructure = CreateTestDataStructure();
   const DataPath targetArray = k_TestArrayFloatPath;
-  bool isInverted = false;
+  double thresholdValue = GENERATE(0.0, 0.01, 0.02, 0.03, 0.04, 26.2);
+  bool isInverted = GENERATE(false, true);
 
   // RunSingleComponentThresholdTests(dataStructure, k_TestArrayIntPath, 3.0, false);
   SECTION("ArrayThreshold: >")
   {
-    const double thresholdValue = 0.04;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::GreaterThan, thresholdValue, isInverted);
     CheckFloatTestDataGreaterThanSingleComponent(dataStructure, thresholdValue, isInverted);
   }
 
   SECTION("ArrayThreshold: <")
   {
-    const double thresholdValue = 0.02;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::LessThan, thresholdValue, isInverted);
     CheckFloatTestDataLessThanSingleComponent(dataStructure, thresholdValue, isInverted);
   }
 
   SECTION("ArrayThreshold: ==")
   {
-    const double thresholdValue = 0.03;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
     CheckFloatTestDataEqualToSingleComponent(dataStructure, thresholdValue, isInverted);
     CheckFloatTestDataNotEqualToSingleComponent(dataStructure, thresholdValue, !isInverted);
   }
   SECTION("ArrayThreshold: !=")
   {
-    const double thresholdValue = 0.02;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
-    CheckFloatTestDataEqualToSingleComponent(dataStructure, thresholdValue, !isInverted);
-    CheckFloatTestDataNotEqualToSingleComponent(dataStructure, thresholdValue, isInverted);
-  }
-}
-
-TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Float Inverted", "[SimplnxCore][MultiThresholdObjectsFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  DataStructure dataStructure = CreateTestDataStructure();
-  const DataPath targetArray = k_TestArrayFloatPath;
-  bool isInverted = true;
-
-  // RunSingleComponentThresholdTests(dataStructure, k_TestArrayIntPath, 3.0, false);
-  SECTION("ArrayThreshold: >")
-  {
-    const double thresholdValue = 0.02;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::GreaterThan, thresholdValue, isInverted);
-    CheckFloatTestDataGreaterThanSingleComponent(dataStructure, thresholdValue, isInverted);
-  }
-
-  SECTION("ArrayThreshold: <")
-  {
-    const double thresholdValue = 0.03;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::LessThan, thresholdValue, isInverted);
-    CheckFloatTestDataLessThanSingleComponent(dataStructure, thresholdValue, isInverted);
-  }
-
-  SECTION("ArrayThreshold: ==")
-  {
-    const double thresholdValue = 0.02;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
-    CheckFloatTestDataEqualToSingleComponent(dataStructure, thresholdValue, isInverted);
-    CheckFloatTestDataNotEqualToSingleComponent(dataStructure, thresholdValue, !isInverted);
-  }
-  SECTION("ArrayThreshold: !=")
-  {
-    const double thresholdValue = 0.01;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
     CheckFloatTestDataEqualToSingleComponent(dataStructure, thresholdValue, !isInverted);
     CheckFloatTestDataNotEqualToSingleComponent(dataStructure, thresholdValue, isInverted);
@@ -576,34 +506,31 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Int Mult
 
   DataStructure dataStructure = CreateTestDataStructure();
   const DataPath targetArray = k_MultiComponentArrayPath;
-  bool isInverted = false;
+  double thresholdValue = GENERATE(-1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 22.0, 5.5);
+  bool isInverted = GENERATE(false, true);
   int32 componentIndex = GENERATE(0, 1, 2);
 
   SECTION("ArrayThreshold: >")
   {
-    const double thresholdValue = 2.0;
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::GreaterThan, thresholdValue, isInverted, componentIndex);
     CheckIntTestDataGreaterThanMultiComponent(dataStructure, thresholdValue, isInverted, componentIndex);
   }
 
   SECTION("ArrayThreshold: <")
   {
-    const double thresholdValue = 3.0;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::LessThan, thresholdValue, isInverted);
+    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::LessThan, thresholdValue, isInverted, componentIndex);
     CheckIntTestDataLessThanMultiComponent(dataStructure, thresholdValue, isInverted, componentIndex);
   }
 
   SECTION("ArrayThreshold: ==")
   {
-    const double thresholdValue = 3.0;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted);
+    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_Equal, thresholdValue, isInverted, componentIndex);
     CheckIntTestDataEqualToMultiComponent(dataStructure, thresholdValue, isInverted, componentIndex);
     CheckIntTestDataNotEqualToMultiComponent(dataStructure, thresholdValue, !isInverted, componentIndex);
   }
   SECTION("ArrayThreshold: !=")
   {
-    const double thresholdValue = 4.0;
-    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted);
+    RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::Operator_NotEqual, thresholdValue, isInverted, componentIndex);
     CheckIntTestDataEqualToMultiComponent(dataStructure, thresholdValue, !isInverted, componentIndex);
     CheckIntTestDataNotEqualToMultiComponent(dataStructure, thresholdValue, isInverted, componentIndex);
   }
