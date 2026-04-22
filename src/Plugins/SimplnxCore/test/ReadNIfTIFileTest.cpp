@@ -4,12 +4,10 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include "SimplnxCore/utils/nifti1.h"
 
+#include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
-#include "simplnx/Parameters/DataGroupCreationParameter.hpp"
-#include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
@@ -38,13 +36,20 @@ struct SyntheticNiftiParams
   int16_t bitpix{8};
   float sclSlope{0.0f};
   float sclInter{0.0f};
+  int16_t rank{3};       // dim[0]; override to 1/2/4 for rejection tests
+  int16_t qformCode{1};  // set to 0 to disable qform
+  float quaternB{0.0f};
+  float quaternC{0.0f};
+  float quaternD{0.0f};
+  int16_t sformCode{0};                          // >0 enables srow_* population
+  std::array<std::array<float, 4>, 3> sform{};   // 3x4 affine when sformCode > 0
 };
 
 nifti_1_header MakeHeader(const SyntheticNiftiParams& p)
 {
   nifti_1_header hdr{};
   hdr.sizeof_hdr = 348;
-  hdr.dim[0] = 3;
+  hdr.dim[0] = p.rank;
   hdr.dim[1] = p.dims[0];
   hdr.dim[2] = p.dims[1];
   hdr.dim[3] = p.dims[2];
@@ -65,16 +70,98 @@ nifti_1_header MakeHeader(const SyntheticNiftiParams& p)
   hdr.scl_slope = p.sclSlope;
   hdr.scl_inter = p.sclInter;
 
-  hdr.qform_code = 1; // NIFTI_XFORM_SCANNER_ANAT
+  hdr.qform_code = p.qformCode;
   hdr.qoffset_x = p.origin[0];
   hdr.qoffset_y = p.origin[1];
   hdr.qoffset_z = p.origin[2];
-  hdr.quatern_b = 0.0f;
-  hdr.quatern_c = 0.0f;
-  hdr.quatern_d = 0.0f;
+  hdr.quatern_b = p.quaternB;
+  hdr.quatern_c = p.quaternC;
+  hdr.quatern_d = p.quaternD;
+
+  hdr.sform_code = p.sformCode;
+  if(p.sformCode > 0)
+  {
+    for(int i = 0; i < 4; i++)
+    {
+      hdr.srow_x[i] = p.sform[0][i];
+      hdr.srow_y[i] = p.sform[1][i];
+      hdr.srow_z[i] = p.sform[2][i];
+    }
+  }
 
   std::memcpy(hdr.magic, "n+1\0", 4);
   return hdr;
+}
+
+template <typename T>
+void ByteSwap(T& v)
+{
+  v = nx::core::byteswap(v);
+}
+
+// Mirrors the private ByteSwapHeader in NiftiUtilities.cpp so the test can
+// synthesize files in foreign byte order and exercise the endian-detection
+// path in ReadNiftiHeader.
+void ByteSwapHeader(nifti_1_header& hdr)
+{
+  ByteSwap(hdr.sizeof_hdr);
+  ByteSwap(hdr.extents);
+  ByteSwap(hdr.session_error);
+  for(auto& v : hdr.dim)
+  {
+    ByteSwap(v);
+  }
+  ByteSwap(hdr.intent_p1);
+  ByteSwap(hdr.intent_p2);
+  ByteSwap(hdr.intent_p3);
+  ByteSwap(hdr.intent_code);
+  ByteSwap(hdr.datatype);
+  ByteSwap(hdr.bitpix);
+  ByteSwap(hdr.slice_start);
+  for(auto& v : hdr.pixdim)
+  {
+    ByteSwap(v);
+  }
+  ByteSwap(hdr.vox_offset);
+  ByteSwap(hdr.scl_slope);
+  ByteSwap(hdr.scl_inter);
+  ByteSwap(hdr.slice_end);
+  ByteSwap(hdr.cal_max);
+  ByteSwap(hdr.cal_min);
+  ByteSwap(hdr.slice_duration);
+  ByteSwap(hdr.toffset);
+  ByteSwap(hdr.glmax);
+  ByteSwap(hdr.glmin);
+  ByteSwap(hdr.qform_code);
+  ByteSwap(hdr.sform_code);
+  ByteSwap(hdr.quatern_b);
+  ByteSwap(hdr.quatern_c);
+  ByteSwap(hdr.quatern_d);
+  ByteSwap(hdr.qoffset_x);
+  ByteSwap(hdr.qoffset_y);
+  ByteSwap(hdr.qoffset_z);
+  for(auto& v : hdr.srow_x)
+  {
+    ByteSwap(v);
+  }
+  for(auto& v : hdr.srow_y)
+  {
+    ByteSwap(v);
+  }
+  for(auto& v : hdr.srow_z)
+  {
+    ByteSwap(v);
+  }
+}
+
+template <typename T>
+std::vector<uint8_t> ToBytesByteSwapped(std::vector<T> values)
+{
+  for(auto& v : values)
+  {
+    ByteSwap(v);
+  }
+  return std::vector<uint8_t>(reinterpret_cast<const uint8_t*>(values.data()), reinterpret_cast<const uint8_t*>(values.data()) + values.size() * sizeof(T));
 }
 
 void WriteNiftiFile(const fs::path& path, const nifti_1_header& hdr, const std::vector<uint8_t>& voxelBytes, bool gzipped)
@@ -744,4 +831,613 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.img pa
     const auto preflight = filter.preflight(dataStructure, args);
     REQUIRE(preflight.outputActions.invalid());
   }
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: rejects missing input file, 1D/2D volumes, and unsupported datatypes", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const fs::path outDir = OutputDir();
+  const DataPath geomPath({"NIfTI Bad"});
+
+  SECTION("missing input file")
+  {
+    const fs::path filePath = outDir / "does_not_exist_123456.nii";
+    std::error_code ec;
+    fs::remove(filePath, ec);
+
+    DataStructure dataStructure;
+    ReadNIfTIFileFilter filter;
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+    const auto preflight = filter.preflight(dataStructure, args);
+    REQUIRE(preflight.outputActions.invalid());
+  }
+
+  for(int16_t rank : {int16_t{1}, int16_t{2}})
+  {
+    DYNAMIC_SECTION("rank=" << rank << " is rejected")
+    {
+      SyntheticNiftiParams params;
+      params.dims = {2, 2, 2};
+      params.niftiDatatype = NIFTI_TYPE_UINT8;
+      params.bitpix = 8;
+      params.rank = rank;
+      nifti_1_header hdr = MakeHeader(params);
+
+      const fs::path filePath = outDir / fmt::format("rank_{}.nii", rank);
+      std::vector<uint8_t> voxels(8, 0);
+      WriteNiftiFile(filePath, hdr, voxels, false);
+
+      DataStructure dataStructure;
+      ReadNIfTIFileFilter filter;
+      const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+      const auto preflight = filter.preflight(dataStructure, args);
+      REQUIRE(preflight.outputActions.invalid());
+    }
+  }
+
+  SECTION("unsupported datatype (complex64) is rejected")
+  {
+    SyntheticNiftiParams params;
+    params.dims = {2, 2, 2};
+    params.niftiDatatype = NIFTI_TYPE_COMPLEX64;
+    params.bitpix = 64;
+    nifti_1_header hdr = MakeHeader(params);
+
+    const fs::path filePath = outDir / "complex64.nii";
+    std::vector<uint8_t> voxels(2 * 2 * 2 * 8, 0);
+    WriteNiftiFile(filePath, hdr, voxels, false);
+
+    DataStructure dataStructure;
+    ReadNIfTIFileFilter filter;
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+    const auto preflight = filter.preflight(dataStructure, args);
+    REQUIRE(preflight.outputActions.invalid());
+  }
+
+  SECTION("truncated voxel body fails at execute")
+  {
+    SyntheticNiftiParams params;
+    params.dims = {4, 4, 4};
+    params.niftiDatatype = NIFTI_TYPE_UINT8;
+    params.bitpix = 8;
+    nifti_1_header hdr = MakeHeader(params);
+
+    // Header announces 64 voxels, but we only write 8 bytes of body.
+    std::vector<uint8_t> voxels(8, 0);
+    const fs::path filePath = outDir / "truncated.nii";
+    WriteNiftiFile(filePath, hdr, voxels, false);
+
+    DataStructure dataStructure;
+    ReadNIfTIFileFilter filter;
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const auto execute = filter.execute(dataStructure, args);
+    REQUIRE(execute.result.invalid());
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: sform-based origin and spacing extraction", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {3, 3, 3};
+  const float sx = 2.0f;
+  const float sy = 3.0f;
+  const float sz = 4.0f;
+  const std::array<float, 3> tOrigin = {7.5f, -1.0f, 2.25f};
+
+  SyntheticNiftiParams params;
+  params.dims = dims;
+  params.spacing = {1.0f, 1.0f, 1.0f};           // pixdim deliberately different from sform
+  params.origin = {0.0f, 0.0f, 0.0f};             // qoffset deliberately different
+  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.bitpix = 8;
+  params.qformCode = 0;                           // force sform path
+  params.sformCode = 1;                           // NIFTI_XFORM_SCANNER_ANAT
+  params.sform = {{{sx, 0.0f, 0.0f, tOrigin[0]}, {0.0f, sy, 0.0f, tOrigin[1]}, {0.0f, 0.0f, sz, tOrigin[2]}}};
+
+  nifti_1_header hdr = MakeHeader(params);
+  std::vector<uint8_t> voxels(static_cast<usize>(dims[0]) * dims[1] * dims[2], 0);
+  const fs::path filePath = OutputDir() / "sform_diag.nii";
+  WriteNiftiFile(filePath, hdr, voxels, false);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const DataPath geomPath({"NIfTI Sform"});
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+  REQUIRE(preflight.outputActions.warnings().empty());
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  const auto outOrigin = geom.getOrigin();
+  const auto outSpacing = geom.getSpacing();
+  constexpr float tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0] - tOrigin[0]) < tol);
+  REQUIRE(std::fabs(outOrigin[1] - tOrigin[1]) < tol);
+  REQUIRE(std::fabs(outOrigin[2] - tOrigin[2]) < tol);
+  REQUIRE(std::fabs(outSpacing[0] - sx) < tol);
+  REQUIRE(std::fabs(outSpacing[1] - sy) < tol);
+  REQUIRE(std::fabs(outSpacing[2] - sz) < tol);
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: sform rotation emits a warning", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // 45deg rotation about z, unit spacing, zero translation — off-diagonal
+  // srow entries should trip the affineHasRotation detector.
+  const float c = std::cos(0.7853981633974483f);
+  const float s = std::sin(0.7853981633974483f);
+
+  SyntheticNiftiParams params;
+  params.dims = {2, 2, 2};
+  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.bitpix = 8;
+  params.qformCode = 0;
+  params.sformCode = 1;
+  params.sform = {{{c, -s, 0.0f, 0.0f}, {s, c, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}}};
+
+  nifti_1_header hdr = MakeHeader(params);
+  std::vector<uint8_t> voxels(8, 0);
+  const fs::path filePath = OutputDir() / "sform_rotated.nii";
+  WriteNiftiFile(filePath, hdr, voxels, false);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const DataPath geomPath({"NIfTI Rotated"});
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+
+  const auto& warnings = preflight.outputActions.warnings();
+  REQUIRE_FALSE(warnings.empty());
+  bool foundRotationWarning = false;
+  for(const auto& w : warnings)
+  {
+    if(w.code == -34750)
+    {
+      foundRotationWarning = true;
+      break;
+    }
+  }
+  REQUIRE(foundRotationWarning);
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: UseAffineIfPresent=false falls back to pixdim + zero origin", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // File advertises origin (100, 200, 300) via sform and spacing (5, 5, 5)
+  // via sform column magnitudes. pixdim stays at (1, 1, 1). When the user
+  // disables the affine, we should fall back to pixdim + zero origin.
+  SyntheticNiftiParams params;
+  params.dims = {2, 2, 2};
+  params.spacing = {1.0f, 1.0f, 1.0f};
+  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.bitpix = 8;
+  params.qformCode = 0;
+  params.sformCode = 1;
+  params.sform = {{{5.0f, 0.0f, 0.0f, 100.0f}, {0.0f, 5.0f, 0.0f, 200.0f}, {0.0f, 0.0f, 5.0f, 300.0f}}};
+
+  nifti_1_header hdr = MakeHeader(params);
+  std::vector<uint8_t> voxels(8, 0);
+  const fs::path filePath = OutputDir() / "no_affine.nii";
+  WriteNiftiFile(filePath, hdr, voxels, false);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const DataPath geomPath({"NIfTI NoAffine"});
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/false);
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  const auto outOrigin = geom.getOrigin();
+  const auto outSpacing = geom.getSpacing();
+  constexpr float tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0]) < tol);
+  REQUIRE(std::fabs(outOrigin[1]) < tol);
+  REQUIRE(std::fabs(outOrigin[2]) < tol);
+  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < tol);
+  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < tol);
+  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < tol);
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: big-endian uint16 round trip", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {3, 3, 2};
+  const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
+
+  std::vector<uint16_t> voxels(numVoxels);
+  for(usize i = 0; i < numVoxels; i++)
+  {
+    voxels[i] = static_cast<uint16_t>(0x0100 + i); // values whose bytes differ to exercise the swap
+  }
+
+  SyntheticNiftiParams params;
+  params.dims = dims;
+  params.niftiDatatype = NIFTI_TYPE_UINT16;
+  params.bitpix = 16;
+  nifti_1_header hdr = MakeHeader(params);
+
+  // Swap the header and voxel data so the file is in the opposite byte order
+  // from the host. The filter should detect this via sizeof_hdr and swap back.
+  ByteSwapHeader(hdr);
+  const std::vector<uint8_t> voxelBytes = ToBytesByteSwapped(voxels);
+
+  const fs::path filePath = OutputDir() / "big_endian_uint16.nii";
+  WriteNiftiFile(filePath, hdr, voxelBytes, false);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const DataPath geomPath({"NIfTI BE"});
+  const std::string arrName = "ImageData";
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true);
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+  const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath(arrName);
+  RequireArrayEquals<uint16>(dataStructure, arrPath, voxels);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: round-trips remaining native datatypes", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {3, 2, 2};
+  const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
+
+  auto runCase = [&](const std::string& label, int16_t niftiDatatype, int16_t bitpix, auto sample) {
+    using T = decltype(sample);
+
+    DYNAMIC_SECTION(label)
+    {
+      std::vector<T> voxels(numVoxels);
+      for(usize i = 0; i < numVoxels; i++)
+      {
+        voxels[i] = static_cast<T>(static_cast<int64_t>(i) - 3);
+      }
+
+      SyntheticNiftiParams params;
+      params.dims = dims;
+      params.niftiDatatype = niftiDatatype;
+      params.bitpix = bitpix;
+      nifti_1_header hdr = MakeHeader(params);
+
+      const fs::path filePath = OutputDir() / fmt::format("type_{}.nii", label);
+      WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+      DataStructure dataStructure;
+      ReadNIfTIFileFilter filter;
+      const DataPath geomPath({fmt::format("NIfTI {}", label)});
+      const std::string arrName = "ImageData";
+      const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true);
+
+      const auto preflight = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+      const auto execute = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+      const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath(arrName);
+      RequireArrayEquals<T>(dataStructure, arrPath, voxels);
+    }
+  };
+
+  runCase("int8", NIFTI_TYPE_INT8, 8, int8_t{0});
+  runCase("uint32", NIFTI_TYPE_UINT32, 32, uint32_t{0});
+  runCase("int32", NIFTI_TYPE_INT32, 32, int32_t{0});
+  runCase("uint64", NIFTI_TYPE_UINT64, 64, uint64_t{0});
+  runCase("int64", NIFTI_TYPE_INT64, 64, int64_t{0});
+
+  DYNAMIC_SECTION("float64")
+  {
+    std::vector<double> voxels(numVoxels);
+    for(usize i = 0; i < numVoxels; i++)
+    {
+      voxels[i] = 0.125 * static_cast<double>(i) - 1.0;
+    }
+
+    SyntheticNiftiParams params;
+    params.dims = dims;
+    params.niftiDatatype = NIFTI_TYPE_FLOAT64;
+    params.bitpix = 64;
+    nifti_1_header hdr = MakeHeader(params);
+
+    const fs::path filePath = OutputDir() / "type_float64.nii";
+    WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+    DataStructure dataStructure;
+    ReadNIfTIFileFilter filter;
+    const DataPath geomPath({"NIfTI float64"});
+    const std::string arrName = "ImageData";
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true);
+
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const auto execute = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+    const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath(arrName);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float64>>(arrPath));
+    const auto& arr = dataStructure.getDataRefAs<DataArray<float64>>(arrPath);
+    const auto& store = arr.getDataStoreRef();
+    REQUIRE(store.getSize() == voxels.size());
+    for(usize i = 0; i < voxels.size(); i++)
+    {
+      REQUIRE(std::fabs(static_cast<double>(store[i]) - voxels[i]) < 1e-9);
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: crop edge cases", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {4, 4, 4};
+  const usize nx = static_cast<usize>(dims[0]);
+  const usize ny = static_cast<usize>(dims[1]);
+  const usize nz = static_cast<usize>(dims[2]);
+  const usize numVoxels = nx * ny * nz;
+
+  std::vector<uint8_t> voxels(numVoxels);
+  for(usize i = 0; i < numVoxels; i++)
+  {
+    voxels[i] = static_cast<uint8_t>(i);
+  }
+
+  SyntheticNiftiParams params;
+  params.dims = dims;
+  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.bitpix = 8;
+  nifti_1_header hdr = MakeHeader(params);
+
+  const fs::path outDir = OutputDir();
+  const DataPath geomPath({"NIfTI CropEdge"});
+  const std::string arrName = "ImageData";
+  const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath(arrName);
+
+  SECTION("per-axis crop toggles: cropY=false leaves y at full extent")
+  {
+    const fs::path filePath = outDir / "per_axis_toggle.nii";
+    WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+    CropGeometryParameter::ValueType crop;
+    crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
+    crop.cropX = true;
+    crop.cropY = false;
+    crop.cropZ = true;
+    crop.xBoundVoxels = {1, 2};
+    crop.yBoundVoxels = {99, 99}; // deliberately nonsense; should be ignored
+    crop.zBoundVoxels = {0, 2};
+
+    DataStructure dataStructure;
+    ReadNIfTIFileFilter filter;
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true, crop);
+
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const auto execute = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+    const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+    const auto outDims = geom.getDimensions();
+    REQUIRE(outDims[0] == 2);
+    REQUIRE(outDims[1] == 4); // full y extent
+    REQUIRE(outDims[2] == 3);
+
+    std::vector<uint8_t> expected;
+    expected.reserve(2 * 4 * 3);
+    for(usize dz = 0; dz < 3; dz++)
+    {
+      for(usize dy = 0; dy < 4; dy++)
+      {
+        for(usize dx = 0; dx < 2; dx++)
+        {
+          const usize srcLinear = dz * ny * nx + dy * nx + (1 + dx);
+          expected.push_back(static_cast<uint8_t>(srcLinear));
+        }
+      }
+    }
+    RequireArrayEquals<uint8>(dataStructure, arrPath, expected);
+  }
+
+  SECTION("gzipped file combined with VoxelSubvolume crop")
+  {
+    const fs::path filePath = outDir / "crop.nii.gz";
+    WriteNiftiFile(filePath, hdr, ToBytes(voxels), /*gzipped=*/true);
+
+    CropGeometryParameter::ValueType crop;
+    crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
+    crop.cropX = true;
+    crop.cropY = true;
+    crop.cropZ = true;
+    crop.xBoundVoxels = {1, 3};
+    crop.yBoundVoxels = {1, 2};
+    crop.zBoundVoxels = {0, 1};
+
+    DataStructure dataStructure;
+    ReadNIfTIFileFilter filter;
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true, crop);
+
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    const auto execute = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+    std::vector<uint8_t> expected;
+    expected.reserve(3 * 2 * 2);
+    for(usize dz = 0; dz < 2; dz++)
+    {
+      for(usize dy = 0; dy < 2; dy++)
+      {
+        for(usize dx = 0; dx < 3; dx++)
+        {
+          const usize srcLinear = (0 + dz) * ny * nx + (1 + dy) * nx + (1 + dx);
+          expected.push_back(static_cast<uint8_t>(srcLinear));
+        }
+      }
+    }
+    RequireArrayEquals<uint8>(dataStructure, arrPath, expected);
+  }
+
+  SECTION("physical bounds entirely outside the volume are rejected")
+  {
+    const fs::path filePath = outDir / "phys_oob.nii";
+    WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+    CropGeometryParameter::ValueType crop;
+    crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+    crop.cropX = true;
+    crop.cropY = true;
+    crop.cropZ = true;
+    crop.xBoundPhysical = {100.0f, 200.0f};
+    crop.yBoundPhysical = {100.0f, 200.0f};
+    crop.zBoundPhysical = {100.0f, 200.0f};
+
+    DataStructure dataStructure;
+    ReadNIfTIFileFilter filter;
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true, crop);
+
+    const auto preflight = filter.preflight(dataStructure, args);
+    REQUIRE(preflight.outputActions.invalid());
+  }
+
+  SECTION("reversed voxel bounds are rejected")
+  {
+    const fs::path filePath = outDir / "reversed_bounds.nii";
+    WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+    CropGeometryParameter::ValueType crop;
+    crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
+    crop.cropX = true;
+    crop.cropY = true;
+    crop.cropZ = true;
+    crop.xBoundVoxels = {3, 1};
+    crop.yBoundVoxels = {0, 2};
+    crop.zBoundVoxels = {0, 2};
+
+    DataStructure dataStructure;
+    ReadNIfTIFileFilter filter;
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true, crop);
+
+    const auto preflight = filter.preflight(dataStructure, args);
+    REQUIRE(preflight.outputActions.invalid());
+  }
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: identity scaling transform is not applied and does not promote", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {2, 2, 2};
+  const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
+  std::vector<int16_t> voxels(numVoxels);
+  for(usize i = 0; i < numVoxels; i++)
+  {
+    voxels[i] = static_cast<int16_t>(i) - 2;
+  }
+
+  SyntheticNiftiParams params;
+  params.dims = dims;
+  params.niftiDatatype = NIFTI_TYPE_INT16;
+  params.bitpix = 16;
+  params.sclSlope = 1.0f;   // identity
+  params.sclInter = 0.0f;
+  nifti_1_header hdr = MakeHeader(params);
+
+  const fs::path filePath = OutputDir() / "identity_scale.nii";
+  WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const DataPath geomPath({"NIfTI IdentityScale"});
+  const std::string arrName = "ImageData";
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true);
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+  // No promotion to float32 — native int16 array should be present.
+  const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath(arrName);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<int16>>(arrPath));
+  RequireArrayEquals<int16>(dataStructure, arrPath, voxels);
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: header cache is reused across preflight calls", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {2, 2, 2};
+  const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
+  std::vector<uint8_t> voxels(numVoxels);
+  for(usize i = 0; i < numVoxels; i++)
+  {
+    voxels[i] = static_cast<uint8_t>(i);
+  }
+
+  SyntheticNiftiParams params;
+  params.dims = dims;
+  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.bitpix = 8;
+  nifti_1_header hdr = MakeHeader(params);
+
+  const fs::path filePath = OutputDir() / "cache_reuse.nii";
+  WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const DataPath geomPath({"NIfTI Cached"});
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+
+  // First preflight populates the cache.
+  const auto firstPreflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(firstPreflight.outputActions);
+
+  // Record the mtime, then overwrite the first 4 bytes of the file with
+  // garbage and restore the mtime. A cache miss would read the corrupted
+  // sizeof_hdr and fail; a cache hit skips the file read entirely.
+  const auto originalMtime = fs::last_write_time(filePath);
+  {
+    std::fstream f(filePath, std::ios::in | std::ios::out | std::ios::binary);
+    REQUIRE(f.is_open());
+    const std::array<char, 4> garbage = {'X', 'X', 'X', 'X'};
+    f.seekp(0);
+    f.write(garbage.data(), garbage.size());
+    f.close();
+  }
+  fs::last_write_time(filePath, originalMtime);
+
+  // Second preflight on the SAME filter instance should hit the cache and
+  // succeed despite the corrupted header bytes.
+  DataStructure dataStructure2;
+  const auto secondPreflight = filter.preflight(dataStructure2, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(secondPreflight.outputActions);
+
+  // Sanity check: a fresh filter instance (new m_InstanceId → cold cache)
+  // should see the corruption and fail.
+  DataStructure dataStructure3;
+  ReadNIfTIFileFilter freshFilter;
+  const auto freshPreflight = freshFilter.preflight(dataStructure3, args);
+  REQUIRE(freshPreflight.outputActions.invalid());
 }
