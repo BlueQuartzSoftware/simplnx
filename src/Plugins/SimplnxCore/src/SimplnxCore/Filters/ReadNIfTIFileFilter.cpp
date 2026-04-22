@@ -19,6 +19,7 @@
 #include <atomic>
 #include <filesystem>
 #include <map>
+#include <mutex>
 
 namespace fs = std::filesystem;
 
@@ -36,6 +37,7 @@ struct ReadNiftiHeaderCache
 
 std::atomic_int32_t s_InstanceId = 0;
 std::map<int32, ReadNiftiHeaderCache> s_HeaderCache;
+std::mutex s_HeaderCacheMutex;
 } // namespace
 
 namespace nx::core
@@ -44,12 +46,14 @@ namespace nx::core
 ReadNIfTIFileFilter::ReadNIfTIFileFilter()
 : m_InstanceId(s_InstanceId.fetch_add(1))
 {
+  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
   s_HeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ReadNIfTIFileFilter::~ReadNIfTIFileFilter() noexcept
 {
+  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
   s_HeaderCache.erase(m_InstanceId);
 }
 
@@ -150,24 +154,38 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     return {MakeErrorResult<OutputActions>(-34710, fmt::format("Input NIfTI file does not exist: '{}'", pInputFilePath.string()))};
   }
 
-  auto& cache = s_HeaderCache[m_InstanceId];
+  // Check the cache under the lock; copy the metadata out so the rest of
+  // preflight can work on a local value without holding the mutex across the
+  // action-building / CropImageGeometry subfilter dance.
   const auto currentTimeStamp = fs::last_write_time(pInputFilePath);
-  const bool cacheStale = (cache.inputFile != pInputFilePath.string()) || (cache.timeStamp != currentTimeStamp) || (cache.useAffineIfPresent != pUseAffineIfPresent);
+  nifti::NiftiMetadata md;
+  bool cacheValid = false;
+  {
+    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
+    auto& cache = s_HeaderCache[m_InstanceId];
+    if(cache.inputFile == pInputFilePath.string() && cache.timeStamp == currentTimeStamp && cache.useAffineIfPresent == pUseAffineIfPresent)
+    {
+      md = cache.metadata;
+      cacheValid = true;
+    }
+  }
 
-  if(cacheStale)
+  if(!cacheValid)
   {
     auto metadataResult = nifti::ReadNiftiHeader(pInputFilePath, pUseAffineIfPresent);
     if(metadataResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
     }
+    md = metadataResult.value();
+
+    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
+    auto& cache = s_HeaderCache[m_InstanceId];
     cache.inputFile = pInputFilePath.string();
     cache.timeStamp = currentTimeStamp;
     cache.useAffineIfPresent = pUseAffineIfPresent;
-    cache.metadata = metadataResult.value();
+    cache.metadata = md;
   }
-
-  const auto& md = cache.metadata;
 
   // Start with the full-volume geometry from the header
   std::vector<usize> dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};

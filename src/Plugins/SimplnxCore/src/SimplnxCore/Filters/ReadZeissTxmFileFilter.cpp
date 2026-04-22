@@ -15,6 +15,8 @@
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <mutex>
+
 using namespace nx::core;
 using namespace read_zeiss_txm;
 
@@ -22,6 +24,7 @@ namespace
 {
 std::atomic_int32_t s_InstanceId = 0;
 std::map<int32, ReadZeissTxmFilterFileCache> s_HeaderCache;
+std::mutex s_HeaderCacheMutex;
 } // namespace
 
 namespace nx::core
@@ -30,12 +33,14 @@ namespace nx::core
 ReadZeissTxmFileFilter::ReadZeissTxmFileFilter()
 : m_InstanceId(s_InstanceId.fetch_add(1))
 {
+  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
   s_HeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ReadZeissTxmFileFilter::~ReadZeissTxmFileFilter() noexcept
 {
+  std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
   s_HeaderCache.erase(m_InstanceId);
 }
 
@@ -119,24 +124,37 @@ IFilter::PreflightResult ReadZeissTxmFileFilter::preflightImpl(const DataStructu
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  // Read from the file if the input file has changed or the input file's time stamp is out of date.
-  if(pInputFilePathValue != s_HeaderCache[m_InstanceId].inputFile || s_HeaderCache[m_InstanceId].timeStamp < fs::last_write_time(pInputFilePathValue))
+  // Check the cache under the lock. If the cached entry is fresh, copy the
+  // metadata out so the rest of preflight can work on a local value without
+  // holding the cache mutex across actions/IO.
+  ZeissTxmHeaderMetadata metadata;
+  bool cacheValid = false;
+  const auto currentTimeStamp = fs::last_write_time(pInputFilePathValue);
+  {
+    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
+    auto& cached = s_HeaderCache[m_InstanceId];
+    if(pInputFilePathValue == cached.inputFile && cached.timeStamp >= currentTimeStamp)
+    {
+      metadata = cached.metaData;
+      cacheValid = true;
+    }
+  }
+
+  if(!cacheValid)
   {
     Result<ZeissTxmHeaderMetadata> metadataResult = ReadHeaderMetaData(pInputFilePathValue.string());
     if(metadataResult.invalid())
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
     }
+    metadata = metadataResult.value();
 
-    // Cache the results from algorithm run
-    ReadZeissTxmFilterFileCache inputFileCache = {};
-    inputFileCache.inputFile = pInputFilePathValue.string();
-    inputFileCache.timeStamp = fs::last_write_time(pInputFilePathValue.string());
-    inputFileCache.metaData = metadataResult.value();
-    s_HeaderCache[m_InstanceId] = inputFileCache;
+    std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
+    auto& cached = s_HeaderCache[m_InstanceId];
+    cached.inputFile = pInputFilePathValue.string();
+    cached.timeStamp = currentTimeStamp;
+    cached.metaData = metadata;
   }
-
-  ZeissTxmHeaderMetadata& metadata = s_HeaderCache[m_InstanceId].metaData;
   preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(metadata.Dimensions, metadata.Spacing, metadata.Origin, metadata.Units)});
 
   CreateImageGeometryAction::DimensionType dims = metadata.Dimensions;
