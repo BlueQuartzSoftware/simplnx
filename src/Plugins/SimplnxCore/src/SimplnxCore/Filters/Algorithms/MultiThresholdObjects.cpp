@@ -15,11 +15,12 @@ template <class U>
 class ThresholdFilterHelper
 {
 public:
-  ThresholdFilterHelper(ArrayThreshold::ComparisonType compType, ArrayThreshold::ComparisonValue compValue, usize componentIndex, std::vector<U>& output)
+  ThresholdFilterHelper(ArrayThreshold::ComparisonType compType, ArrayThreshold::ComparisonValue compValue, usize componentIndex, std::vector<U>& output, bool isInverted)
   : m_ComparisonOperator(compType)
   , m_ComparisonValue(compValue)
   , m_ComponentIndex(componentIndex)
   , m_Output(output)
+  , m_IsInverted(isInverted)
   {
   }
 
@@ -31,7 +32,12 @@ public:
     for(size_t tupleIndex = 0; tupleIndex < numTuples; ++tupleIndex)
     {
       T inputValue = m_Input.getComponentValue(tupleIndex, m_ComponentIndex);
-      T outputValue = CompT{}(inputValue, value) ? trueValue : falseValue;
+      bool comparison = CompT{}(inputValue, value);
+      if (m_IsInverted)
+      {
+        comparison = !comparison;
+      }
+      T outputValue = comparison ? trueValue : falseValue;
       m_Output[tupleIndex] = outputValue;
     }
   }
@@ -67,6 +73,7 @@ private:
   ArrayThreshold::ComparisonValue m_ComparisonValue;
   usize m_ComponentIndex = 0;
   std::vector<U>& m_Output;
+  bool m_IsInverted = false;
 };
 
 struct ExecuteThresholdHelper
@@ -120,12 +127,13 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
   nx::core::ArrayThreshold::ComparisonType compOperator = comparisonValue.getComparisonType();
   nx::core::ArrayThreshold::ComparisonValue compValue = comparisonValue.getComparisonValue();
   nx::core::IArrayThreshold::UnionOperator unionOperator = comparisonValue.getUnionOperator();
+  bool isInverted = comparisonValue.isInverted();
 
   DataPath inputDataArrayPath = comparisonValue.getArrayPath();
 
   usize componentIndex = comparisonValue.getComponentIndex();
 
-  ThresholdFilterHelper<T> helper(compOperator, compValue, componentIndex, tempResultVector);
+  ThresholdFilterHelper<T> helper(compOperator, compValue, componentIndex, tempResultVector, isInverted);
 
   const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
 
@@ -259,12 +267,14 @@ Result<> MultiThresholdObjects::operator()()
     const IArrayThreshold* thresholdPtr = threshold.get();
     if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {
+      // Do not replace values on first threshold, update firstValueFound to reflect that a threshold has been run.
       ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, *comparisonSet, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
                           thresholdsObject.isInverted(), trueValue, falseValue);
       firstValueFound = true;
     }
     else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
+      // Do not replace values on first threshold, update firstValueFound to reflect that a threshold has been run.
       ExecuteDataFunction(ThresholdValueFunctor{}, maskArrayType, *comparisonValue, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
                           thresholdsObject.isInverted(), trueValue, falseValue);
       firstValueFound = true;
