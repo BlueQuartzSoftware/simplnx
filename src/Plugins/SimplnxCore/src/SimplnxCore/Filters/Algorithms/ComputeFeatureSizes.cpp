@@ -17,10 +17,11 @@ using namespace nx::core;
 
 namespace
 {
-/// Number of FeatureId tuples to read per bulk I/O call. 64K tuples balances
-/// between minimizing copyIntoBuffer() round-trips and keeping per-chunk buffers
-/// small enough to stay in CPU cache.
-constexpr usize k_ChunkTuples = 65536;
+/// Number of FeatureId tuples to read per bulk I/O call. 256K tuples = 1 MB of int32
+/// per chunk, which minimizes copyIntoBuffer() round-trips on multi-billion-voxel
+/// datasets while keeping per-chunk buffers bounded. The RectGrid path reads a second
+/// 256K-tuple float32 buffer alongside, for ~2 MB peak working set per chunk.
+constexpr usize k_ChunkTuples = 262144;
 constexpr int32 k_BadFeatureCount = -78231;
 constexpr uint64 k_MaxVoxelCount = std::numeric_limits<int32>::max();
 /**
