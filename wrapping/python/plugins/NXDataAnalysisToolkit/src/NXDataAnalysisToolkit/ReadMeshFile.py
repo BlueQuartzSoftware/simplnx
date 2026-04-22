@@ -46,9 +46,9 @@ class ReadMeshFile:
 # -----------------------------------------------------------------------------
 # These methods CAN (and probably should) be updated. For instance, the 
 # human_name() is what users of the filter will see in the DREAM3D-NX GUI. You
-# might want to consider putting spaces between workd, using proper capitalization
+# might want to consider putting spaces between words, using proper capitalization
 # and putting "(Python)" at the end of the name (or beginning if you want the 
-# filter list to group your filters togther)
+# filter list to group your filters together)
 # -----------------------------------------------------------------------------
   def human_name(self) -> str:
     """This returns the name of the filter as a user of DREAM3DNX would see it
