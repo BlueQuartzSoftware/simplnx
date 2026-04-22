@@ -491,12 +491,12 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache&
 }
 /**
  * @tparam T type of face Ids vector
- * @param TriangleGeom* faces
- * @param Int32Int32DynamicListArray.ElementList faceIds
+ * @param triangleGeom the input triangle geometry
+ * @param faceIds vector of face ids
  * @return nx::core::BoundingBox<float32>
  */
 template <typename T>
-nx::core::BoundingBox3Df SIMPLNX_EXPORT FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<T>& faceIds)
+nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<T>& faceIds)
 {
   Point3Df ll(0, 0, 0);
   Point3Df ur(0, 0, 0);
@@ -808,7 +808,7 @@ char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Point3D<T>& 
 
 /**
  * @breif !!!Uses unseeded randomness, but only for validity checks [SHOULD not affect outcomes]!!! Determines if a point is in the polyhedron
- * @param faces the geometry to query
+ * @param triangleGeomRef the geometry to query
  * @param faceIds the list of feature ids
  * @param faceBBs the bounding boxes of each id in the geometry
  * @param point search point
