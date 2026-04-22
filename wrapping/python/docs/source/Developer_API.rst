@@ -638,7 +638,7 @@ General Parameters
    Description
    ~~~~~~~~~~~
    The ``DataObjectNameParameter`` is used to specify the name of a data object within the data structure. This parameter 
-   is used most often when the developer of the filter intends the output "Group|Array|ArrtributeMatrix|Geometry" to be 
+   is used most often when the developer of the filter intends the output "Group|Array|AttributeMatrix|Geometry" to be 
    created as a sibling to an input DataObject or as a Child of an input DataObject. Examples would be a filter that asks 
    for an input array "Foo" and creates an output array that they want to be a sibling of "Foo" called "Bar". Another 
    example would be a filter that asks for an input Attribute Matrix and wants to create an output array as a child of 
