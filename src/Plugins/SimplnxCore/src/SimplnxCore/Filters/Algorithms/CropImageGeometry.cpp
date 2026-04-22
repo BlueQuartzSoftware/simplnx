@@ -23,8 +23,23 @@ const std::string k_TempGeometryName = ".cropped_image_geometry";
 constexpr uint64 k_ZSliceBatch = 32;
 
 /**
- * @brief
- * @tparam T
+ * @brief Copy a single cell-level data array from the source image geometry into the
+ * cropped destination geometry using Z-slice-batched bulk I/O.
+ *
+ * The cropping operation is conceptually a 3D subarray copy: for every destination
+ * voxel (x, y, z), the value is read from source voxel (x + xMin, y + yMin, z + zMin).
+ *
+ * A naive per-voxel implementation issues one DataStore access per component per
+ * voxel, which thrashes HDF5 chunk caches on out-of-core arrays. This class instead
+ * reads a batch of k_ZSliceBatch full source Z-slices into a contiguous RAM slab,
+ * extracts the cropped (xMin..xMax, yMin..yMax) region via per-row std::memcpy,
+ * and writes the corresponding destination slab back in a single bulk call.
+ *
+ * Peak working-set memory is bounded by the slab size
+ * (k_ZSliceBatch * srcDimX * srcDimY + k_ZSliceBatch * cropX * cropY) * numComps * sizeof(T),
+ * independent of the total dataset size.
+ *
+ * @tparam T The element type of the cell-level array (uint8, int32, float32, ...).
  */
 template <typename T>
 class CropImageGeomDataArray
