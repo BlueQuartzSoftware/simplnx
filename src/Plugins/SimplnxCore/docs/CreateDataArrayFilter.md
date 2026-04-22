@@ -8,7 +8,7 @@ Core (Generation)
 
 This **Filter** creates an **Data Array** of any primitive type with any number of components along a *single component dimension*. For example, a scalar as (1) or a 3-vector as (3), but *not* a matrix as (3, 3). The array is initialized to a user defined value.
 
-When initializing a multicomponent array square bracket notation can be used to specify different initialization values for each component. For example say that I want to intialize a 2 component array where the first component is 0 and the second component is 1 we would use the following input string for the *Initialization Value*
+When initializing a multicomponent array square bracket notation can be used to specify different initialization values for each component. For example say that I want to initialize a 2 component array where the first component is 0 and the second component is 1 we would use the following input string for the *Initialization Value*
 
     0;1
 

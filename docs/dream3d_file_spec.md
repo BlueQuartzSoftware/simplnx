@@ -72,7 +72,7 @@ These attributes are on every DataObject:
 
 ### Specific ObjectType Attributes
 
-Based on the ObjectType, there can be additional attriutes that can be read based on the ObjectType value
+Based on the ObjectType, there can be additional attributes that can be read based on the ObjectType value
 
 #### AttributeMatrix
 
