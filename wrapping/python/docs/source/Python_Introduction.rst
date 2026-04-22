@@ -41,7 +41,7 @@ If you will need functionality from either of the other *simplnx* plugins then y
 Creating the DataStructure
 --------------------------
 
-In order to effectively use the *simplnx* classes and functions, you will need to create at leaset one :ref:`DataStructure` object. 
+In order to effectively use the *simplnx* classes and functions, you will need to create at least one :ref:`DataStructure` object. 
 The :ref:`DataStructure` object holds the various *DataGroup*, *AttributeMatrix*, and *DataArray* that will be created. When
 then :ref:`DataStructure` goes out of scope those items will also be cleaned up. The code to create the
 :ref:`DataStructure` object is straight forward.
@@ -128,7 +128,7 @@ of the method is as follows.
 
 .. code:: python
 
-    # Instantiate and execute immediately teh CreateDataArrayFilter Filter
+    # Instantiate and execute immediately the CreateDataArrayFilter Filter
     result  = nx.CreateDataArrayFilter.execute(data_structure=data_structure, 
                                         component_count=1, 
                                         data_format="", 

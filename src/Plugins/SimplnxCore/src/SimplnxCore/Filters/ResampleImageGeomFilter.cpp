@@ -235,7 +235,7 @@ IFilter::PreflightResult ResampleImageGeomFilter::preflightImpl(const DataStruct
   // also push this attribute matrix into the `ignorePaths` variable since we do
   // not need to manually copy these arrays to the destination image geometry
   {
-    // Get the name of the Cell Attribute Matrix, so we can use that in teh CreateImageGeometryAction
+    // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
     const AttributeMatrix* selectedCellData = srcImageGeom->getCellData();
     if(selectedCellData == nullptr)
     {

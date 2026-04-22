@@ -263,7 +263,7 @@ codes that are based on the `simplnx <https://www.github.com/bluequartzsoftware/
 
 + name: Each **DataArray** has a name that is assigned to it. Most any character can be used except for the '/' character.
 + tuple_shape: The DataArray will have a tuple shape that is describe by an array values that are listed in "C" order of slowest to fastest moving dimension.
-+ component_shape: At **each** tuple, there can be multiple values which are described by the *component shape* which is an array of values that are listed in teh "C" order of slowest to fastest moving dimension.
++ component_shape: At **each** tuple, there can be multiple values which are described by the *component shape* which is an array of values that are listed in the "C" order of slowest to fastest moving dimension.
 
 Referring to the figure above, The **DataArray** that has been created is a 2D DataArray with 
 dimensions of 4 high and 5 tuples wide. Each tuple has 3 components, the RGB values of a color image. Refer to the 

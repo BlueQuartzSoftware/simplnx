@@ -78,7 +78,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
     return MakeErrorResult(-34900, "Total features was zero. The filter cannot proceed. Check either the feature attribute matrix or the average quaternions for proper size");
   }
 
-  // Create local storage for teh centers and center distances
+  // Create local storage for the centers and center distances
   std::vector<size_t> m_Centers(totalFeatures, 0);
   std::vector<float> m_CenterDistances(totalFeatures, 0.0f);
 
