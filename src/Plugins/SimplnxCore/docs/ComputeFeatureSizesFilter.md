@@ -18,13 +18,59 @@ During the computation of the **Feature** sizes, the size of each individual **E
 
 ## Algorithm
 
-For **Image Geometry**, the algorithm counts voxels per feature, then multiplies by the uniform voxel volume (product of spacings) to obtain volumes. For 2D image geometries (one dimension equals 1), areas and equivalent circular diameters are computed instead.
+### What the filter computes
 
-For **Rectilinear Grid Geometry**, where each cell can have a different volume, the algorithm reads both the Feature IDs and element sizes in lockstep and uses Kahan summation to accurately accumulate per-feature volumes.
+Each **Feature** occupies some number of **Cells** (voxels) in the input grid. The filter produces three arrays indexed by Feature ID:
 
-### Performance
+- **NumElements** — the number of voxels belonging to each feature (int32).
+- **Volume** (or **Area** in 2D) — the physical volume (area) of each feature (float32).
+- **EquivalentDiameter** — the diameter of the sphere (or circle in 2D) that would have the same volume (area) as the feature (float32).
 
-This filter is optimized for out-of-core (OOC) data storage. The Feature IDs array (and element sizes for Rectilinear Grid) is read in fixed-size chunks (64K tuples) via `copyIntoBuffer()`. Per-feature voxel counts and volumes are accumulated in plain `std::vector` buffers. This chunked approach reduces the number of OOC I/O operations from O(total_voxels) to O(total_voxels / 64K).
+Equivalent spherical diameter `d` is computed from volume `V` using `V = (4π/3)·r³`, giving `d = 2·(V / (4π/3))^(1/3)`. The 2D equivalent circular diameter uses `A = π·r²`, giving `d = 2·(A/π)^(1/2)`.
+
+### Image Geometry path
+
+An **Image Geometry** has uniform voxel spacing, so the volume of every voxel is the same: `V_voxel = dx · dy · dz`. The filter exploits this to skip per-voxel volume computations:
+
+1. **Count voxels per feature.** Stream the per-cell Feature IDs array in 256K-tuple chunks. For each chunk:
+   - Bulk-read the chunk via `copyIntoBuffer()` into a 1 MB RAM buffer.
+   - Loop over the buffer, incrementing `featureVoxelCounts[id]` for each voxel's Feature ID.
+   - The counter array is indexed by feature (thousands of entries, ~8 bytes each) and easily fits in L2 cache, so increments cost a few cycles.
+2. **Compute per-feature outputs** in a single pass over the feature-level arrays:
+   - `NumElements[f] = featureVoxelCounts[f]`
+   - `Volume[f] = featureVoxelCounts[f] * V_voxel`
+   - `EquivalentDiameter[f] = 2·cbrt(Volume[f] / (4π/3))`
+
+A 2D fallback (when any one of the three dimensions equals 1) computes area and **Equivalent Circular Diameter** using `2·sqrt(Area/π)` instead. The filter errors out in preflight if two or more dimensions equal 1, because the intended orientation for the 1D/2D scaling is ambiguous in that case.
+
+### Rectilinear Grid Geometry path
+
+A **Rectilinear Grid** has per-voxel spacing, so cell volumes vary. The filter can't use the uniform-spacing shortcut and must sum each feature's member voxel volumes explicitly:
+
+1. **Cache element sizes** via the geometry's `findElementSizes()` helper (stored as a cell-level array).
+2. **Count voxels and sum volumes in lockstep.** Stream both the Feature IDs array and the element sizes array in 256K-tuple chunks (~2 MB working set total):
+   - Bulk-read matching chunks of Feature IDs and element sizes.
+   - For each voxel in the chunks:
+     - Increment `featureVoxelCounts[id]`.
+     - Accumulate `featureVolumes[id] += elementSize[i]` using **Kahan summation** (tracks per-feature compensator terms to correct floating-point rounding error). Kahan is necessary because summing billions of float32 volumes in native precision would lose low-order bits, especially for large features.
+3. **Compute per-feature outputs** using `featureVolumes[f]` directly (no post-multiplication).
+
+If `Save Element Sizes` is off, the element sizes array created in step 1 is deleted at the end to save memory.
+
+### Why 256K chunks
+
+The voxel-counting pass is I/O-bound on OOC-backed Feature IDs. Each `copyIntoBuffer()` call carries fixed HDF5 chunk-lookup overhead; the compute (a single indexed increment) is memory-bandwidth-bound on a counter that easily fits in L2. On a 2 B-voxel volume, 256 K-tuple chunks reduce the call count from ~30 K (at the old 64 K chunk) to ~7.5 K while keeping per-chunk memory at a bounded 1 MB. Larger chunks yield diminishing returns because they no longer align with any HDF5 chunk shape.
+
+### Memory footprint
+
+Peak working memory:
+
+- `featureVoxelCounts` — `numFeatures × 8 B` (thousands of features → tens of KB).
+- `featureVolumes`, `featureCompensators` — same size (RectGrid only).
+- Feature IDs chunk buffer — 1 MB.
+- Element sizes chunk buffer — 1 MB (RectGrid only).
+
+All feature-level allocations are O(features), which is inherently small (thousands); chunk buffers are O(1) in dataset size. Billion-voxel volumes run without pressure on RAM.
 
 ## Image Geometry Additional Considerations
 
