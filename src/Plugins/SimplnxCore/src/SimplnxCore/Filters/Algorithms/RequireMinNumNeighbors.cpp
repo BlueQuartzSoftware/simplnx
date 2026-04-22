@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
@@ -12,7 +13,7 @@ using namespace nx::core;
 namespace
 {
 Result<> CopyTupleFromArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<usize>& badFeatureIdIndexes, const AbstractDataStore<int32_t>& featureIds,
-                            const std::vector<int32>& neighbors, const IFilter::MessageHandler& mesgHandler)
+                            const AbstractDataStore<int32>& neighbors, const IFilter::MessageHandler& mesgHandler)
 {
   auto* voxelArray = dataStructure.getDataAs<IDataArray>(dataArrayPath);
   auto arraySize = voxelArray->getSize();
@@ -55,32 +56,8 @@ RequireMinNumNeighbors::RequireMinNumNeighbors(DataStructure& dataStructure, con
 RequireMinNumNeighbors::~RequireMinNumNeighbors() noexcept = default;
 
 // -----------------------------------------------------------------------------
-Result<> RequireMinNumNeighbors::operator()()
+Result<> RequireMinNumNeighbors::CheckForAvailablePhase()
 {
-  // If running on a single phase, validate that the user has not entered a phase number
-  // that is not in the system ; the filter would not crash otherwise, but the user should
-  // be notified of unanticipated behavior ; this cannot be done in the dataCheck since
-  // we don't have access to the data yet
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
-  auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumNeighborsPath)->getDataStoreRef();
-
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
-  usize totalPoints = imageGeom.getNumberOfCells();
-  usize totalFeatures = numNeighbors.getNumberOfTuples();
-
-  // The Cell Attribute Matrix is the parent of the "Feature Ids" array. Always.
-  DataPath cellDataAttrMatrixPath = m_InputValues->FeatureIdsPath.getParent();
-  std::optional<std::vector<DataPath>> result = nx::core::GetAllChildDataPaths(m_DataStructure, cellDataAttrMatrixPath, DataObject::Type::DataArray, m_InputValues->IgnoredVoxelArrayPaths);
-  if(!result.has_value())
-  {
-    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Attribute Matrix '{}'", cellDataAttrMatrixPath.toString()));
-  }
-  std::vector<DataPath> cellDataArrayPaths = result.value();
-
-  // Run the algorithm.
-  // This was checked up in the execute function (which is called before this function),
-  // so if we got this far then all should be good with the return. We might get
-  // an empty vector<> but that is OK.
   if(m_InputValues->ApplyToSinglePhase)
   {
     auto& featurePhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesPath)->getDataStoreRef();
@@ -104,8 +81,12 @@ Result<> RequireMinNumNeighbors::operator()()
     }
   }
 
+  return {};
+}
+
+Result<> RequireMinNumNeighbors::CheckNumNeighbors(Int32AbstractDataStore& numNeighbors, usize totalFeatures, std::vector<bool>& activeObjects)
+{
   bool valid = false;
-  std::vector<bool> activeObjects(totalFeatures, true);
   if(m_InputValues->ApplyToSinglePhase)
   {
     auto& featurePhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesPath)->getDataStoreRef();
@@ -139,23 +120,13 @@ Result<> RequireMinNumNeighbors::operator()()
   {
     return MakeErrorResult(-55569, "The minimum number of neighbors is larger than the Feature with the most neighbors.  All Features would be removed");
   }
-  if(m_ShouldCancel)
-  {
-    return {};
-  }
-  auto numInactiveObjects = std::count(activeObjects.begin(), activeObjects.end(), false);
-  m_MessageHandler({nx::core::IFilter::Message::Type::Info, fmt::format("Removing {} features", numInactiveObjects)});
 
-  // Mark all features to be removed with a -1 value.
-  for(usize i = 0; i < totalPoints; i++)
-  {
-    int32 featureId = featureIds[i];
-    if(!activeObjects[featureId])
-    {
-      featureIds[i] = -1;
-    }
-  }
+  return {};
+}
 
+// -----------------------------------------------------------------------------
+Result<> RequireMinNumNeighbors::FindFeatureCount(ImageGeom& imageGeom, std::vector<DataPath>& cellDataArrayPaths, Int32AbstractDataStore& featureIds, Int32AbstractDataStore& numNeighbors)
+{
   SizeVec3 udims = imageGeom.getDimensions();
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -164,7 +135,10 @@ Result<> RequireMinNumNeighbors::operator()()
   };
 
   // Create a temp array to hold the neighbor values
-  std::vector<int32> neighbors(featureIds.getNumberOfTuples(), -1);
+  // This should be able to store out-of-core data sizes
+  auto neighborsPtr = DataStoreUtilities::CreateDataStore<int32>({featureIds.getNumberOfTuples()}, {1});
+  AbstractDataStore<int32>& neighbors = *neighborsPtr.get();
+  neighbors.fill(-1);
 
   int32 current = 0;
   int32 most = 0;
@@ -181,6 +155,12 @@ Result<> RequireMinNumNeighbors::operator()()
   int32 featureName = 0;
   int32 feature = 0;
   int32 neighbor = 0;
+
+  // Update featureCount for out-of-core data sizes
+  auto featureCountPtr = DataStoreUtilities::CreateDataStore<int32>({numFeatures + 1}, {1});
+  AbstractDataStore<int32>& featureCount = *featureCountPtr.get();
+  featureCount.fill(0);
+
   std::vector<int32> voteCount(numFeatures + 1, 0);
   std::vector<usize> badFeatureIdIndexes;
 
@@ -218,11 +198,13 @@ Result<> RequireMinNumNeighbors::operator()()
               }
               neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
               {
-                feature = featureIds[neighborPoint];
+                voteCount[feature]++;
+                current = voteCount[feature];
+                //feature = featureIds[neighborPoint];
                 if(feature >= 0)
                 {
-                  voteCount[feature]++;
-                  current = voteCount[feature];
+                  featureCount[feature].inc();
+                  current = featureCount[feature];
                   if(current > most)
                   {
                     most = current;
@@ -233,7 +215,7 @@ Result<> RequireMinNumNeighbors::operator()()
             }
 
             // Reset the voteCount array to all zeros
-            std::fill(voteCount.begin(), voteCount.end(), 0);
+            std::fill(voteCount.begin(), voteCount.end(), 0); //
           }
           else if(featureName >= numFeatures)
           {
@@ -266,6 +248,70 @@ Result<> RequireMinNumNeighbors::operator()()
     }
   }
 
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+Result<> RequireMinNumNeighbors::operator()()
+{
+  // If running on a single phase, validate that the user has not entered a phase number
+  // that is not in the system ; the filter would not crash otherwise, but the user should
+  // be notified of unanticipated behavior ; this cannot be done in the dataCheck since
+  // we don't have access to the data yet
+  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
+  auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumNeighborsPath)->getDataStoreRef();
+
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
+  usize totalPoints = imageGeom.getNumberOfCells();
+  usize totalFeatures = numNeighbors.getNumberOfTuples();
+
+  // The Cell Attribute Matrix is the parent of the "Feature Ids" array. Always.
+  DataPath cellDataAttrMatrixPath = m_InputValues->FeatureIdsPath.getParent();
+  std::optional<std::vector<DataPath>> result = nx::core::GetAllChildDataPaths(m_DataStructure, cellDataAttrMatrixPath, DataObject::Type::DataArray, m_InputValues->IgnoredVoxelArrayPaths);
+  if(!result.has_value())
+  {
+    return MakeErrorResult(-5556, fmt::format("Error fetching all Data Arrays from Attribute Matrix '{}'", cellDataAttrMatrixPath.toString()));
+  }
+  std::vector<DataPath> cellDataArrayPaths = result.value();
+
+  // Run the algorithm.
+  // This was checked up in the execute function (which is called before this function),
+  // so if we got this far then all should be good with the return. We might get
+  // an empty vector<> but that is OK.
+  if (Result<> result2 = CheckForAvailablePhase(); result2.invalid())
+  {
+    return result2;
+  }
+
+  std::vector<bool> activeObjects(totalFeatures, true);
+  if (Result<> result2 = CheckNumNeighbors(numNeighbors, totalFeatures, activeObjects); result2.invalid())
+  {
+    return result2;
+  }
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+  auto numInactiveObjects = std::count(activeObjects.begin(), activeObjects.end(), false);
+  m_MessageHandler({nx::core::IFilter::Message::Type::Info, fmt::format("Removing {} features", numInactiveObjects)});
+
+  // Mark all features to be removed with a -1 value.
+  for(usize i = 0; i < totalPoints; i++)
+  {
+    int32 featureId = featureIds[i];
+    if(!activeObjects[featureId])
+    {
+      featureIds[i] = -1;
+    }
+  }
+
+  if (Result<> result2 = FindFeatureCount(imageGeom, cellDataArrayPaths, featureIds, numNeighbors); result2.invalid())
+  {
+    return result2;
+  }
+  
+  // Remove inactive objects
   int32 count = 0;
   for(const auto& value : activeObjects)
   {

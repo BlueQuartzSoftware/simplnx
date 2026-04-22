@@ -2,8 +2,10 @@
 
 #include "SimplnxCore/SimplnxCore_export.hpp"
 
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
@@ -37,6 +39,11 @@ public:
   RequireMinNumNeighbors& operator=(RequireMinNumNeighbors&&) noexcept = delete;
 
   Result<> operator()();
+
+protected:
+  Result<> CheckForAvailablePhase();
+  Result<> CheckNumNeighbors(Int32AbstractDataStore& numNeighbors, usize totalFeatures, std::vector<bool>& activeObjects);
+  Result<> FindFeatureCount(ImageGeom& imageGeom, std::vector<DataPath>& cellDataArrayPaths, Int32AbstractDataStore& featureIds, Int32AbstractDataStore& numNeighbors);
 
 private:
   DataStructure& m_DataStructure;
