@@ -223,8 +223,8 @@ IFilter::PreflightResult MultiThresholdObjectsFilter::preflightImpl(const DataSt
   }
 
   // Create the output boolean array
-  auto action =
-      std::make_unique<CreateArrayAction>(maskArrayType, dataArray.getIDataStoreRef().getTupleShape(), std::vector<usize>{1}, firstDataPath.replaceName(maskArrayName), dataArray.getDataFormat());
+  const auto& dataStore = dataArray.getIDataStoreRef();
+  auto action = std::make_unique<CreateArrayAction>(maskArrayType, dataStore.getTupleShape(), dataStore.getComponentShape(), firstDataPath.replaceName(maskArrayName), dataArray.getDataFormat());
 
   OutputActions actions;
   actions.appendAction(std::move(action));
