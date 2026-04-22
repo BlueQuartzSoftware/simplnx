@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "Replace Element Attributes With Neighbor Values 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Replace Element Attributes With Neighbor Values",
+    "Filter_Name": "ReplaceElementAttributesWithNeighborValues",
+    "MinConfidence": 2.5,
+    "SelectedComparison": 0,
+    "Loop": 1,
+    "ConfidenceIndexArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "Create Color Map Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create Color Map",
+    "Filter_Name": "GenerateColorTable",
+    "Filter_Uuid": "{0d0a6535-6565-51c5-a3fc-fbc00008606d}",
+    "SelectedPresetName": "TestName",
+    "SelectedDataArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "RgbArrayName": "TestName"
+  }
+}

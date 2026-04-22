@@ -1,0 +1,19 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write LAMMPS File Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write LAMMPS File",
+    "Filter_Name": "ExportLAMMPSFile",
+    "Filter_Uuid": "{33c10889-4cdc-5992-ae00-1795e9bee022}",
+    "LammpsFile": "/test/path/file.txt",
+    "AtomFeatureLabelsPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Feature Sizes Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Feature Sizes",
+    "Filter_Name": "FindSizes",
+    "Filter_Uuid": "{656f144c-a120-5c3b-bee5-06deab438588}",
+    "SaveElementSizes": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureAttributeMatrixName": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "EquivalentDiametersArrayName": "TestName",
+    "NumElementsArrayName": "TestName",
+    "VolumesArrayName": "TestName"
+  }
+}

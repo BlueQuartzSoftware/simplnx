@@ -5,12 +5,16 @@
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
+#include <fstream>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -28,7 +32,7 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(default)", "
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   { // Start Image Comparison Scope
-    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
+    const fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/RA-Short.nrrd";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
     SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
@@ -65,7 +69,7 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(two_on_float
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   { // Start Image Comparison Scope
-    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/Ramp-Zero-One-Float.nrrd";
+    const fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/Ramp-Zero-One-Float.nrrd";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
     SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
@@ -104,7 +108,7 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(three_on)", 
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   { // Start Image Comparison Scope
-    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
+    const fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
     SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
@@ -144,7 +148,7 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(valley_empha
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   { // Start Image Comparison Scope
-    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
+    const fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
     SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
@@ -171,4 +175,48 @@ TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter(valley_empha
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ITKImageProcessing::ITKOtsuMultipleThresholdsImageFilter: SIMPL Backwards Compatibility", "[ITKImageProcessing][ITKOtsuMultipleThresholdsImageFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ITKOtsuMultipleThresholdsImageFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ITKOtsuMultipleThresholdsImageFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ITKOtsuMultipleThresholdsImageFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<uint8>(ITKOtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key) == 5);
+      CHECK(args.value<uint8>(ITKOtsuMultipleThresholdsImageFilter::k_LabelOffset_Key) == 5);
+      CHECK(args.value<uint32>(ITKOtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key) == 5);
+      CHECK(args.value<bool>(ITKOtsuMultipleThresholdsImageFilter::k_ValleyEmphasis_Key) == true);
+      CHECK(args.value<DataPath>(ITKOtsuMultipleThresholdsImageFilter::k_InputImageGeomPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(ITKOtsuMultipleThresholdsImageFilter::k_InputImageDataPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<std::string>(ITKOtsuMultipleThresholdsImageFilter::k_OutputImageArrayName_Key) == "TestName");
+    }
+  }
 }

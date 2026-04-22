@@ -1,10 +1,13 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumericTypeParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/ComputeGBCDMetricBasedFilter.hpp"
@@ -12,6 +15,7 @@
 #include "OrientationAnalysisTestUtils.hpp"
 
 #include <filesystem>
+#include <fstream>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -247,4 +251,58 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: InValid Filter Exe
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeGBCDMetricBasedFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeGBCDMetricBasedFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeGBCDMetricBasedFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeGBCDMetricBasedFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ComputeGBCDMetricBasedFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<int32>(ComputeGBCDMetricBasedFilter::k_PhaseOfInterest_Key) == 5);
+      // Complex type (AxisAngleFilterParameterConverter<float32>) - verified by successful pipeline loading
+      CHECK(args.value<ChoicesParameter::ValueType>(ComputeGBCDMetricBasedFilter::k_ChosenLimitDists_Key) == 0);
+      CHECK(args.value<int32>(ComputeGBCDMetricBasedFilter::k_NumSamplPts_Key) == 5);
+      CHECK(args.value<bool>(ComputeGBCDMetricBasedFilter::k_ExcludeTripleLines_Key) == true);
+      CHECK(args.value<FileSystemPathParameter::ValueType>(ComputeGBCDMetricBasedFilter::k_DistOutputFile_Key) == fs::path("/test/path/file.txt"));
+      CHECK(args.value<FileSystemPathParameter::ValueType>(ComputeGBCDMetricBasedFilter::k_ErrOutputFile_Key) == fs::path("/test/path/file.txt"));
+      CHECK(args.value<bool>(ComputeGBCDMetricBasedFilter::k_SaveRelativeErr_Key) == true);
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_TriangleGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_NodeTypesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceNormalsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFaceAreasArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_SurfaceMeshFeatureFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_FeatureEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeGBCDMetricBasedFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+    }
+  }
 }

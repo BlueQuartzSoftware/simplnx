@@ -1,0 +1,30 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Discrete Gaussian Image 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Discrete Gaussian Image",
+    "Filter_Name": "ITKDiscreteGaussianImage",
+    "Variance": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "MaximumKernelWidth": 5,
+    "MaximumError": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "UseImageSpacing": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

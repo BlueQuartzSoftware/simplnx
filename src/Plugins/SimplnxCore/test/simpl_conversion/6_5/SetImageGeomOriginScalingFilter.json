@@ -1,0 +1,28 @@
+{
+  "PipelineBuilder": {
+    "Name": "Set Image Geom Origin Scaling Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Set Image Geom Origin Scaling",
+    "Filter_Name": "SetOriginResolutionImageGeom",
+    "Filter_Uuid": "{6d3a3852-6251-5d2e-b749-6257fd0d8951}",
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "ChangeOrigin": 1,
+    "Origin": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "ChangeResolution": 1,
+    "Resolution": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    }
+  }
+}

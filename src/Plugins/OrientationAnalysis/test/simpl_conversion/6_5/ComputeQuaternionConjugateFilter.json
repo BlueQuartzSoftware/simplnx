@@ -1,0 +1,24 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Quaternion Conjugate Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Quaternion Conjugate",
+    "Filter_Name": "GenerateQuaternionConjugate",
+    "Filter_Uuid": "{630d7486-75ea-5e04-874c-894460cd7c4d}",
+    "QuaternionDataArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "OutputDataArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "DeleteOriginalData": 1
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute GBCD Metric Based 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute GBCD Metric Based",
+    "Filter_Name": "FindGBCDMetricBased",
+    "PhaseOfInterest": 5,
+    "MisorientationRotation": {
+      "angle": 90.0,
+      "h": 1.0,
+      "k": 0.0,
+      "l": 0.0
+    },
+    "ChosenLimitDists": 0,
+    "NumSamplPts": 5,
+    "ExcludeTripleLines": 1,
+    "DistOutputFile": "/test/path/file.txt",
+    "ErrOutputFile": "/test/path/file.txt",
+    "SaveRelativeErr": 1,
+    "NodeTypesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceMeshFaceLabelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceMeshFaceNormalsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceMeshFaceAreasArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceMeshFeatureFaceLabelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureEulerAnglesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

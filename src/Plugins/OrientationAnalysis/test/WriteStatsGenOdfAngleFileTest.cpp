@@ -1,6 +1,9 @@
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "OrientationAnalysis/Filters/WriteStatsGenOdfAngleFileFilter.hpp"
@@ -9,6 +12,7 @@
 #include <catch2/catch.hpp>
 
 #include <filesystem>
+#include <fstream>
 #include <sstream>
 namespace fs = std::filesystem;
 
@@ -114,4 +118,50 @@ TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: InValid Filter 
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::WriteStatsGenOdfAngleFileFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][WriteStatsGenOdfAngleFileFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "WriteStatsGenOdfAngleFileFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "WriteStatsGenOdfAngleFileFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<WriteStatsGenOdfAngleFileFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<FileSystemPathParameter::ValueType>(WriteStatsGenOdfAngleFileFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
+      CHECK(args.value<float32>(WriteStatsGenOdfAngleFileFilter::k_Weight_Key) == 2.5f);
+      CHECK(args.value<int32>(WriteStatsGenOdfAngleFileFilter::k_Sigma_Key) == 5);
+      CHECK(args.value<ChoicesParameter::ValueType>(WriteStatsGenOdfAngleFileFilter::k_Delimiter_Key) == 0);
+      CHECK(args.value<bool>(WriteStatsGenOdfAngleFileFilter::k_ConvertToDegrees_Key) == true);
+      CHECK(args.value<bool>(WriteStatsGenOdfAngleFileFilter::k_UseMask_Key) == true);
+      CHECK(args.value<DataPath>(WriteStatsGenOdfAngleFileFilter::k_CellEulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(WriteStatsGenOdfAngleFileFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(WriteStatsGenOdfAngleFileFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+    }
+  }
 }

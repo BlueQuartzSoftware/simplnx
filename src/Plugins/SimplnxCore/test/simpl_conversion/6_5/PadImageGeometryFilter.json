@@ -1,0 +1,31 @@
+{
+  "PipelineBuilder": {
+    "Name": "Pad Image Geometry Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Pad Image Geometry",
+    "Filter_Name": "PadImageGeometry",
+    "Filter_Uuid": "{c0ac6c9d-c130-5055-a69b-2f4011846ff0}",
+    "AttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "DefaultFillValue": 5,
+    "UpdateOrigin": 1,
+    "XMinMax": {
+      "x": 1,
+      "y": 2
+    },
+    "YMinMax": {
+      "x": 3,
+      "y": 4
+    },
+    "ZMinMax": {
+      "x": 5,
+      "y": 6
+    }
+  }
+}

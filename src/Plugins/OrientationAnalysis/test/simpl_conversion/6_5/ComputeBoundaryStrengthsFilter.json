@@ -1,0 +1,42 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Boundary Strengths Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Boundary Strengths",
+    "Filter_Name": "FindBoundaryStrengths",
+    "Filter_Uuid": "{8071facb-8905-5699-b345-105ae4ac33ff}",
+    "Loading": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "SurfaceMeshFaceLabelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AvgQuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceMeshF1sArrayName": "TestName",
+    "SurfaceMeshF1sptsArrayName": "TestName",
+    "SurfaceMeshF7sArrayName": "TestName",
+    "SurfaceMeshmPrimesArrayName": "TestName"
+  }
+}

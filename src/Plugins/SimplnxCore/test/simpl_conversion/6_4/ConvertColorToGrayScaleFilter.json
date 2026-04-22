@@ -1,0 +1,32 @@
+{
+  "PipelineBuilder": {
+    "Name": "Convert Color To Gray Scale 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Convert Color To Gray Scale",
+    "Filter_Name": "ConvertColorToGrayScale",
+    "ConversionAlgorithm": 0,
+    "ColorWeights": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "ColorChannel": 5,
+    "InputDataArrayVector": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ],
+    "OutputArrayPrefix": "TestName"
+  }
+}

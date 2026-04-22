@@ -1,0 +1,29 @@
+{
+  "PipelineBuilder": {
+    "Name": "Move Data 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Move Data",
+    "Filter_Name": "MoveData",
+    "WhatToMove": 0,
+    "AttributeMatrixSource": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "DataContainerDestination": {
+      "Data Container Name": "DataContainer"
+    },
+    "DataArraySource": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AttributeMatrixDestination": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    }
+  }
+}

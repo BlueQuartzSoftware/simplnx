@@ -1,0 +1,40 @@
+{
+  "PipelineBuilder": {
+    "Name": "Uncertain Regular Grid Sample Surface Mesh 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Uncertain Regular Grid Sample Surface Mesh",
+    "Filter_Name": "UncertainRegularGridSampleSurfaceMesh",
+    "XPoints": 1,
+    "YPoints": 1,
+    "ZPoints": 1,
+    "SurfaceMeshFaceLabelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "Spacing": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "Origin": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "Uncertainty": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CellAttributeMatrixName": "TestName",
+    "FeatureIdsArrayName": "TestName"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "PipelineBuilder": {
+    "Name": "Fill Bad Data Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Fill Bad Data",
+    "Filter_Name": "FillBadData",
+    "Filter_Uuid": "{30ae0a1e-3d94-5dab-b279-c5727ab5d7ff}",
+    "MinAllowedDefectSize": 5,
+    "StoreAsNewPhase": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "IgnoredDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ]
+  }
+}

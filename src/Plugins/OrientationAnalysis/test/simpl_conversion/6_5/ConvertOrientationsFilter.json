@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "Convert Orientations Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Convert Orientations",
+    "Filter_Name": "ConvertOrientations",
+    "Filter_Uuid": "{e5629880-98c4-5656-82b8-c9fe2b9744de}",
+    "InputType": 0,
+    "OutputType": 0,
+    "InputOrientationArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "OutputOrientationArrayName": "TestName"
+  }
+}

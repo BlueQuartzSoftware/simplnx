@@ -1,0 +1,29 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Binary CT Northstar Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Import Binary CT File (North Star Imaging)",
+    "Filter_Name": "ImportBinaryCTNorthstarFilter",
+    "Filter_Uuid": "{f2259481-5011-5f22-9fcb-c92fb6f8be10}",
+    "InputHeaderFile": "/test/path/file.nsihdr",
+    "DataContainerName": "DataContainer",
+    "CellAttributeMatrixName": "CellData",
+    "DensityArrayName": "Density",
+    "LengthUnit": 0,
+    "ImportSubvolume": 1,
+    "StartVoxelCoord": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "EndVoxelCoord": {
+      "x": 10,
+      "y": 20,
+      "z": 30
+    }
+  }
+}

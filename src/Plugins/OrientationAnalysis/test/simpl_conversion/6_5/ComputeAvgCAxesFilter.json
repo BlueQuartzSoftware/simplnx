@@ -1,0 +1,28 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Avg C Axes Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Avg C Axes",
+    "Filter_Name": "FindAvgCAxes",
+    "Filter_Uuid": "{c5a9a96c-7570-5279-b383-cc25ebae0046}",
+    "QuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AvgCAxesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

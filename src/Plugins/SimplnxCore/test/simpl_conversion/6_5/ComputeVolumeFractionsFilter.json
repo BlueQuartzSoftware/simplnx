@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Volume Fractions Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Volume Fractions",
+    "Filter_Name": "FindVolFractions",
+    "Filter_Uuid": "{68246a67-7f32-5c80-815a-bec82008d7bc}",
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "VolFractionsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

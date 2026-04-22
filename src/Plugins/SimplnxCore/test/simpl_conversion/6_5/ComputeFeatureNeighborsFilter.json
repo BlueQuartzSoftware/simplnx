@@ -1,0 +1,29 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Feature Neighbors Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Feature Neighbors",
+    "Filter_Name": "FindNeighbors",
+    "Filter_Uuid": "{97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac}",
+    "StoreBoundaryCells": 1,
+    "StoreSurfaceFeatures": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellFeatureAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "BoundaryCellsArrayName": "TestName",
+    "NumNeighborsArrayName": "TestName",
+    "NeighborListArrayName": "TestName",
+    "SharedSurfaceAreaListArrayName": "TestName",
+    "SurfaceFeaturesArrayName": "TestName"
+  }
+}

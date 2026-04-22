@@ -1,0 +1,48 @@
+{
+  "PipelineBuilder": {
+    "Name": "Neighbor Orientation Correlation Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Neighbor Orientation Correlation",
+    "Filter_Name": "NeighborOrientationCorrelation",
+    "Filter_Uuid": "{6427cd5e-0ad2-5a24-8847-29f8e0720f4f}",
+    "MinConfidence": 2.5,
+    "MisorientationTolerance": 2.5,
+    "Level": 5,
+    "ConfidenceIndexArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "QuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "IgnoredDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ]
+  }
+}

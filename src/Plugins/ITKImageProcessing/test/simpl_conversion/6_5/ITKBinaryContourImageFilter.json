@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Binary Contour Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Binary Contour Image",
+    "Filter_Name": "ITKBinaryContourImage",
+    "Filter_Uuid": "{3c451ac9-bfef-5e41-bae9-3957a0fc26a1}",
+    "FullyConnected": 1,
+    "BackgroundValue": 2.5,
+    "ForegroundValue": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

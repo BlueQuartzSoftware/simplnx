@@ -1,19 +1,25 @@
 #include "SimplnxCore/Filters/QuickSurfaceMeshFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry0D.hpp"
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
+#include <filesystem>
+#include <fstream>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 using namespace nx::core::Constants;
+namespace fs = std::filesystem;
 
 TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMeshFilter]")
 {
@@ -389,4 +395,53 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarVertexAttrMatPath, dataStructure, vertexGroupDataPath, true);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: SIMPL Backwards Compatibility", "[SimplnxCore][QuickSurfaceMeshFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "QuickSurfaceMeshFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "QuickSurfaceMeshFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<QuickSurfaceMeshFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      if(label == "SIMPL 6.5 (UUID)")
+      {
+        CHECK(args.value<bool>(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key) == true);
+      }
+      CHECK(args.value<DataPath>(QuickSurfaceMeshFilter::k_GridGeometryDataPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(QuickSurfaceMeshFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<DataPath>(QuickSurfaceMeshFilter::k_CreatedTriangleGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<std::string>(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key) == "TestName");
+      CHECK(args.value<std::string>(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key) == "TestName");
+      CHECK(args.value<std::string>(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key) == "TestName");
+    }
+  }
 }

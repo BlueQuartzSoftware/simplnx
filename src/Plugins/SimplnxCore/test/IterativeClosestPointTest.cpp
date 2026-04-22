@@ -1,6 +1,9 @@
 #include "SimplnxCore/Filters/IterativeClosestPointFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -76,4 +79,45 @@ TEST_CASE("SimplnxCore::IterativeClosestPointFilter: Test Algorithm", "[DREAM3DR
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::IterativeClosestPointFilter: SIMPL Backwards Compatibility", "[SimplnxCore][IterativeClosestPointFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "IterativeClosestPointFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<IterativeClosestPointFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<DataPath>(IterativeClosestPointFilter::k_MovingVertexPath_Key) == DataPath({"MovingGeometry"}));
+      CHECK(args.value<DataPath>(IterativeClosestPointFilter::k_TargetVertexPath_Key) == DataPath({"TargetGeometry"}));
+      CHECK(args.value<uint64>(IterativeClosestPointFilter::k_NumIterations_Key) == 5);
+      CHECK(args.value<bool>(IterativeClosestPointFilter::k_ApplyTransformation_Key) == true);
+      CHECK(args.value<DataPath>(IterativeClosestPointFilter::k_TransformArrayPath_Key) == DataPath({"TransformArray"}));
+    }
+  }
 }

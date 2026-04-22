@@ -1,0 +1,19 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Sqrt Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Sqrt Image",
+    "Filter_Name": "ITKSqrtImage",
+    "Filter_Uuid": "{8087dcad-68f2-598b-9670-d0f57647a445}",
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "PipelineBuilder": {
+    "Name": "Erode Dilate Bad Data 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Erode Dilate Bad Data",
+    "Filter_Name": "ErodeDilateBadData",
+    "Direction": 0,
+    "NumIterations": 5,
+    "XDirOn": 1,
+    "YDirOn": 1,
+    "ZDirOn": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "IgnoredDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ]
+  }
+}

@@ -4,6 +4,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 #include "OrientationAnalysisTestUtils.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
@@ -12,9 +13,12 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Parameters/util/ReadCSVData.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -331,4 +335,46 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][WriteGBCDGMTFileFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "WriteGBCDGMTFileFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "WriteGBCDGMTFileFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<WriteGBCDGMTFileFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<int32>(WriteGBCDGMTFileFilter::k_PhaseOfInterest_Key) == 5);
+      // Complex type (AxisAngleFilterParameterConverter<float32>) - verified by successful pipeline loading
+      CHECK(args.value<FileSystemPathParameter::ValueType>(WriteGBCDGMTFileFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
+      CHECK(args.value<DataPath>(WriteGBCDGMTFileFilter::k_GBCDArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(WriteGBCDGMTFileFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+    }
+  }
 }

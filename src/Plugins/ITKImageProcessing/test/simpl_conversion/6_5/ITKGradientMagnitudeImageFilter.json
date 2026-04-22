@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Gradient Magnitude Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Gradient Magnitude Image",
+    "Filter_Name": "ITKGradientMagnitudeImage",
+    "Filter_Uuid": "{3aa99151-e722-51a0-90ba-71e93347ab09}",
+    "UseImageSpacing": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

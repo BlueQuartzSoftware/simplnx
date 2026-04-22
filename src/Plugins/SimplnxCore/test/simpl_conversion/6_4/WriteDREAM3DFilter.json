@@ -1,0 +1,14 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write DREAM3D File 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write DREAM.3D Data File",
+    "Filter_Name": "DataContainerWriter",
+    "OutputFile": "/test/path/output.dream3d",
+    "WriteXdmfFile": 1
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Grouping Density Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Find Grouping Density",
+    "Filter_Name": "FindGroupingDensity",
+    "Filter_Uuid": "{708be082-8b08-4db2-94be-52781ed4d53d}",
+    "CheckedFeaturesArrayName": "CheckedFeatures",
+    "ContiguousNeighborListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FeatureData",
+      "Data Array Name": "ContiguousNeighborList"
+    },
+    "FindCheckedFeatures": 1,
+    "NonContiguousNeighborListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FeatureData",
+      "Data Array Name": "NonContiguousNeighborList"
+    },
+    "ParentDensitiesArrayName": "GroupingDensities",
+    "ParentIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FeatureData",
+      "Data Array Name": "ParentIds"
+    },
+    "ParentVolumesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FeatureData",
+      "Data Array Name": "ParentVolumes"
+    },
+    "UseNonContiguousNeighbors": 1,
+    "VolumesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FeatureData",
+      "Data Array Name": "Volumes"
+    }
+  }
+}

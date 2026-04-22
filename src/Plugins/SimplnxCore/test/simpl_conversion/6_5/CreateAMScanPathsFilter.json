@@ -1,0 +1,32 @@
+{
+  "PipelineBuilder": {
+    "Name": "Create AM Scan Paths Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create AM Scan Paths",
+    "Filter_Name": "CreateAMScanPaths",
+    "Filter_Uuid": "{08de1ffb-6cb1-5896-8133-a30d2dd0f937}",
+    "StripeWidth": 2.5,
+    "HatchSpacing": 2.5,
+    "CADSliceDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CADSliceIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "SliceIds"
+    },
+    "CADRegionIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "RegionIds"
+    },
+    "HatchDataContainerName": "HatchDataContainer",
+    "VertexAttributeMatrixName": "VertexData",
+    "HatchAttributeMatrixName": "HatchData",
+    "RegionIdsArrayName": "RegionIds"
+  }
+}

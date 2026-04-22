@@ -1,0 +1,37 @@
+{
+  "PipelineBuilder": {
+    "Name": "Extract Vertex Geometry Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Extract Vertex Geometry",
+    "Filter_Name": "ExtractVertexGeometry",
+    "Filter_Uuid": "{bc8a91ca-0cee-59c6-b5cb-acc1aab8617f}",
+    "UseMask": 1,
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "IncludedDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ],
+    "SelectedDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "VertexDataContainerName": {
+      "Data Container Name": "DataContainer"
+    }
+  }
+}

@@ -4,11 +4,15 @@
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 
@@ -30,11 +34,11 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(2d)", "[ITKImageProcessing][IT
   DataPath maskCellDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   DataPath maskDataPath = maskCellDataPath.createChildPath(ITKTestBase::k_MaskDataPath);
 
-  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE1.png";
+  fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE1.png";
   Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
-  fs::path maskInputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE2.png";
+  fs::path maskInputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/STAPLE2.png";
   Result<> maskImageReadResult = ITKTestBase::ReadImage(dataStructure, maskInputFilePath, maskGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_MaskDataPath);
   SIMPLNX_RESULT_REQUIRE_VALID(maskImageReadResult);
 
@@ -81,11 +85,11 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(cthead1)", "[ITKImageProcessin
   DataPath maskCellDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   DataPath maskDataPath = maskCellDataPath.createChildPath(ITKTestBase::k_MaskDataPath);
 
-  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-Float.mha";
+  fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-Float.mha";
   Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
-  fs::path maskInputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-mask.png";
+  fs::path maskInputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-mask.png";
   Result<> maskImageReadResult = ITKTestBase::ReadImage(dataStructure, maskInputFilePath, maskGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_MaskDataPath);
   SIMPLNX_RESULT_REQUIRE_VALID(maskImageReadResult);
 
@@ -132,11 +136,11 @@ TEST_CASE("ITKImageProcessing::ITKMaskImageFilter(rgb)", "[ITKImageProcessing][I
   DataPath maskCellDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_ImageCellDataName);
   DataPath maskDataPath = maskCellDataPath.createChildPath(ITKTestBase::k_MaskDataPath);
 
-  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGB.png";
+  fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-RGB.png";
   Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
-  fs::path maskInputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-mask.png";
+  fs::path maskInputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/VM1111Shrink-mask.png";
   Result<> maskImageReadResult = ITKTestBase::ReadImage(dataStructure, maskInputFilePath, maskGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_MaskDataPath);
   SIMPLNX_RESULT_REQUIRE_VALID(maskImageReadResult);
 
@@ -183,11 +187,11 @@ TEST_CASE("ITKMaskImageFilter(cthead1_maskvalue)", "[ITKImageProcessing][ITKMask
   DataPath maskGeometryPath({ITKTestBase::k_MaskGeometryPath});
   DataPath maskDataPath = maskGeometryPath.createChildPath(ITKTestBase::k_MaskDataPath);
 
-  fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
+  fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1.png";
   Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
   SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
 
-  fs::path maskInputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/2th_cthead1.mha";
+  fs::path maskInputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/2th_cthead1.mha";
   Result<> maskImageReadResult = ITKTestBase::ReadImage(dataStructure, maskInputFilePath, inputGeometryPath, maskDataPath);
   SIMPLNX_RESULT_REQUIRE_VALID(maskImageReadResult);
 
@@ -219,3 +223,45 @@ TEST_CASE("ITKMaskImageFilter(cthead1_maskvalue)", "[ITKImageProcessing][ITKMask
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 #endif
+
+TEST_CASE("ITKImageProcessing::ITKMaskImageFilter: SIMPL Backwards Compatibility", "[ITKImageProcessing][ITKMaskImageFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ITKMaskImageFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ITKMaskImageFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ITKMaskImageFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<float64>(ITKMaskImageFilter::k_OutsideValue_Key) == 2.5);
+      CHECK(args.value<DataPath>(ITKMaskImageFilter::k_InputImageGeomPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(ITKMaskImageFilter::k_InputImageDataPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ITKMaskImageFilter::k_MaskImageDataPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<std::string>(ITKMaskImageFilter::k_OutputImageArrayName_Key) == "TestName");
+    }
+  }
+}

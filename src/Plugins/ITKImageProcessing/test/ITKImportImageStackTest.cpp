@@ -1,13 +1,18 @@
 #include <catch2/catch.hpp>
+#include <filesystem>
+#include <fstream>
 
 #include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 #include "ITKImageProcessing/Filters/ITKImportImageStackFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
@@ -1267,4 +1272,51 @@ TEST_CASE("ITKImportImageStack::Interaction_FullPipeline", "[ITKImageProcessing]
   const auto& generatedArray = ds.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8>(exemplarArray, generatedArray);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImportImageStackFilter: SIMPL Backwards Compatibility", "[ITKImageProcessing][ITKImportImageStackFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ITKImportImageStackFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ITKImportImageStackFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ITKImportImageStackFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      if(label == "SIMPL 6.5 (UUID)")
+      {
+        CHECK(args.value<ChoicesParameter::ValueType>(ITKImportImageStackFilter::k_ImageTransformChoice_Key) == 0);
+      }
+      // Complex type (FileListInfoFilterParameterConverter) - verified by successful pipeline loading
+      // Complex type (DoubleVec3FilterParameterConverter) - verified by successful pipeline loading
+      // Complex type (DoubleVec3FilterParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<DataPath>(ITKImportImageStackFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<std::string>(ITKImportImageStackFilter::k_CellDataName_Key) == "TestName");
+      CHECK(args.value<std::string>(ITKImportImageStackFilter::k_ImageDataArrayPath_Key) == "TestName");
+    }
+  }
 }

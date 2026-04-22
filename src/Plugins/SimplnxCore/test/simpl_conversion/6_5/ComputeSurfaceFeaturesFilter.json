@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Surface Features Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Surface Features",
+    "Filter_Name": "FindSurfaceFeatures",
+    "Filter_Uuid": "{d2b0ae3d-686a-5dc0-a844-66bc0dc8f3cb}",
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceFeaturesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

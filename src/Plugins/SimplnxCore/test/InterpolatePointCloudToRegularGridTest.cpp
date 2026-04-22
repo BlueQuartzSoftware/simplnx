@@ -2,16 +2,21 @@
 #include "SimplnxCore/Filters/InterpolatePointCloudToRegularGridFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <cmath>
 
+namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
@@ -319,5 +324,47 @@ TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: Invalid Filter
     args.insertOrAssign(InterpolatePointCloudToRegularGridFilter::k_GaussianSigmas_Key, std::make_any<std::vector<float32>>(std::vector<float32>{0.0f, 0.0f, 0.0f}));
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  }
+}
+
+TEST_CASE("SimplnxCore::InterpolatePointCloudToRegularGridFilter: SIMPL Backwards Compatibility", "[SimplnxCore][InterpolatePointCloudToRegularGridFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "InterpolatePointCloudToRegularGridFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<InterpolatePointCloudToRegularGridFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<bool>(InterpolatePointCloudToRegularGridFilter::k_UseMask_Key) == true);
+      CHECK(args.value<ChoicesParameter::ValueType>(InterpolatePointCloudToRegularGridFilter::k_InterpolationTechnique_Key) == 0);
+      CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_SelectedVertexGeometryPath_Key) == DataPath({"VertexDataContainer"}));
+      CHECK(args.value<DataPath>(InterpolatePointCloudToRegularGridFilter::k_InputMaskPath_Key) == DataPath({"DataContainer", "CellData", "Mask"}));
+      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
+    }
   }
 }

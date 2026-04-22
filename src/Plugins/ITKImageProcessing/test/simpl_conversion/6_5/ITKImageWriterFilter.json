@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Image Writer Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Image Writer",
+    "Filter_Name": "ITKImageWriter",
+    "Filter_Uuid": "{11473711-f94d-5d96-b749-ec36a81ad338}",
+    "Plane": 0,
+    "IndexOffset": 5,
+    "FileName": "/test/path/file.txt",
+    "ImageArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

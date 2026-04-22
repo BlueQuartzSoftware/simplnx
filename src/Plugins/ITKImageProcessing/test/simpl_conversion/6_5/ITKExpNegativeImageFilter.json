@@ -1,0 +1,19 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Exp Negative Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Exp Negative Image",
+    "Filter_Name": "ITKExpNegativeImage",
+    "Filter_Uuid": "{634c2306-c1ee-5a45-a55c-f8286e36999a}",
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Otsu Multiple Thresholds Image 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Otsu Multiple Thresholds Image",
+    "Filter_Name": "ITKOtsuMultipleThresholdsImage",
+    "NumberOfThresholds": 5,
+    "LabelOffset": 5,
+    "NumberOfHistogramBins": 5,
+    "ValleyEmphasis": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

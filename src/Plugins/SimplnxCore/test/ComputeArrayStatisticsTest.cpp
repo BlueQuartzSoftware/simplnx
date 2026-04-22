@@ -1,16 +1,22 @@
 #include "SimplnxCore/Filters/ComputeArrayStatisticsFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
+#include <filesystem>
+#include <fstream>
 
 using namespace nx::core;
 using namespace nx::core::Constants;
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -1292,4 +1298,63 @@ TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: Test Algorithm By Index - 
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ComputeArrayStatisticsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeArrayStatisticsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeArrayStatisticsFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeArrayStatisticsFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ComputeArrayStatisticsFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_FindLength_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_FindMin_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_FindMax_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_FindMean_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_FindMedian_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_FindStdDeviation_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_FindSummation_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_UseMask_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_ComputeByIndex_Key) == true);
+      CHECK(args.value<bool>(ComputeArrayStatisticsFilter::k_StandardizeData_Key) == true);
+      CHECK(args.value<DataPath>(ComputeArrayStatisticsFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeArrayStatisticsFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeArrayStatisticsFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeArrayStatisticsFilter::k_DestinationAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
+      CHECK(args.value<std::string>(ComputeArrayStatisticsFilter::k_LengthArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeArrayStatisticsFilter::k_MinimumArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeArrayStatisticsFilter::k_MaximumArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeArrayStatisticsFilter::k_MeanArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeArrayStatisticsFilter::k_MedianArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeArrayStatisticsFilter::k_StdDeviationArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeArrayStatisticsFilter::k_SummationArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeArrayStatisticsFilter::k_StandardizedArrayName_Key) == "TestName");
+    }
+  }
 }

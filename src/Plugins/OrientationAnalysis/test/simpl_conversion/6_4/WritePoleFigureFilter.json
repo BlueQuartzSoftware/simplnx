@@ -1,0 +1,46 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Pole Figure 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write Pole Figure",
+    "Filter_Name": "WritePoleFigure",
+    "Title": "TestName",
+    "GenerationAlgorithm": 0,
+    "LambertSize": 5,
+    "NumColors": 5,
+    "ImageLayout": 0,
+    "OutputPath": "/test/path/file.txt",
+    "ImagePrefix": "TestName",
+    "ImageSize": 5,
+    "UseGoodVoxels": 1,
+    "CellEulerAnglesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellPhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "GoodVoxelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "MaterialNameArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

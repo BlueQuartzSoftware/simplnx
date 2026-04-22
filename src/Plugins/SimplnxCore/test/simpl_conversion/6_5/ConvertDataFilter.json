@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "Convert Data Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Convert Data",
+    "Filter_Name": "ConvertData",
+    "Filter_Uuid": "{f4ba5fa4-bb5c-5dd1-9429-0dd86d0ecb37}",
+    "ScalarType": 0,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "OutputArrayName": "TestName"
+  }
+}

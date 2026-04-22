@@ -1,0 +1,26 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Adaptive Histogram Equalization Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Adaptive Histogram Equalization Image",
+    "Filter_Name": "ITKAdaptiveHistogramEqualizationImage",
+    "Filter_Uuid": "{2d5a7599-5e01-5489-a107-23b704d2b5eb}",
+    "Radius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "Alpha": 2.5,
+    "Beta": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

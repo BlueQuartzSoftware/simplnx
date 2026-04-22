@@ -1,0 +1,22 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Raw Binary 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read Raw Binary",
+    "Filter_Name": "RawBinaryReader",
+    "InputFile": "/test/path/file.txt",
+    "ScalarType": 0,
+    "NumberOfComponents": 1,
+    "Endian": 0,
+    "SkipHeaderBytes": "5",
+    "CreatedAttributeArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

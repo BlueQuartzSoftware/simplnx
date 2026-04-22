@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Mask Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Mask Image",
+    "Filter_Name": "ITKMaskImage",
+    "Filter_Uuid": "{97102d65-9c32-576a-9177-c59d958bad10}",
+    "OutsideValue": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "MaskCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

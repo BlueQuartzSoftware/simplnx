@@ -1,14 +1,18 @@
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/DBSCAN.hpp"
 #include "SimplnxCore/Filters/DBSCANFilter.hpp"
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include <filesystem>
+#include <fstream>
 namespace fs = std::filesystem;
 
 using namespace nx::core;
@@ -298,4 +302,49 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
   UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(k_GeneratedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxCore][DBSCANFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "DBSCANFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "DBSCANFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<DBSCANFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      // Complex type (AMPathBuilderFilterParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<float32>(DBSCANFilter::k_Epsilon_Key) == 2.5f);
+      CHECK(args.value<int32>(DBSCANFilter::k_MinPoints_Key) == 5);
+      CHECK(args.value<ChoicesParameter::ValueType>(DBSCANFilter::k_DistanceMetric_Key) == 0);
+      CHECK(args.value<bool>(DBSCANFilter::k_UseMask_Key) == true);
+      CHECK(args.value<DataPath>(DBSCANFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(DBSCANFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<std::string>(DBSCANFilter::k_FeatureIdsArrayName_Key) == "TestName");
+    }
+  }
 }

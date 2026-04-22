@@ -1,12 +1,16 @@
 #include "OrientationAnalysis/Filters/ComputeTwinBoundariesFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
 
 #include <Eigen/Core>
 #include <filesystem>
+#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -216,4 +220,51 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: NaN Warning Check",
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeTwinBoundariesFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeTwinBoundariesFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeTwinBoundariesFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ComputeTwinBoundariesFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<bool>(ComputeTwinBoundariesFilter::k_FindCoherence_Key) == true);
+      CHECK(args.value<float32>(ComputeTwinBoundariesFilter::k_AxisTolerance_Key) == 2.5f);
+      CHECK(args.value<float32>(ComputeTwinBoundariesFilter::k_AngleTolerance_Key) == 2.5f);
+      CHECK(args.value<DataPath>(ComputeTwinBoundariesFilter::k_FaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeTwinBoundariesFilter::k_FaceNormalsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeTwinBoundariesFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeTwinBoundariesFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeTwinBoundariesFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<std::string>(ComputeTwinBoundariesFilter::k_TwinBoundariesName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeTwinBoundariesFilter::k_TwinBoundariesIncoherenceName_Key) == "TestName");
+    }
+  }
 }

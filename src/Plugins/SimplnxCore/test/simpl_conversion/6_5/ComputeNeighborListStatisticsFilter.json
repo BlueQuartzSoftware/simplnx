@@ -1,0 +1,32 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Neighbor List Statistics Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Find Neighbor List Statistics",
+    "Filter_Name": "FindNeighborListStatistics",
+    "Filter_Uuid": "{73ee33b6-7622-5004-8b88-4d145514fb6a}",
+    "FindLength": 1,
+    "FindMin": 1,
+    "FindMax": 1,
+    "FindMean": 1,
+    "FindMedian": 1,
+    "FindStdDeviation": 1,
+    "FindSummation": 1,
+    "SelectedArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "FeatureData",
+      "Data Array Name": "NeighborList"
+    },
+    "LengthArrayName": "Length",
+    "MinimumArrayName": "Minimum",
+    "MaximumArrayName": "Maximum",
+    "MeanArrayName": "Mean",
+    "MedianArrayName": "Median",
+    "StdDeviationArrayName": "StdDeviation",
+    "SummationArrayName": "Summation"
+  }
+}

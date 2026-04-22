@@ -1,0 +1,26 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK White Top Hat Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK White Top Hat Image",
+    "Filter_Name": "ITKWhiteTopHatImage",
+    "Filter_Uuid": "{02e059f7-8055-52b4-9d48-915b67d1e39a}",
+    "KernelType": 0,
+    "SafeBorder": 1,
+    "KernelRadius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

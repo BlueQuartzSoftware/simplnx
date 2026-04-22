@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "Erode Dilate Mask Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Erode Dilate Mask",
+    "Filter_Name": "ErodeDilateMask",
+    "Filter_Uuid": "{4fff1aa6-4f62-56c4-8ee9-8e28ec2fcbba}",
+    "Direction": 0,
+    "NumIterations": 5,
+    "XDirOn": 1,
+    "YDirOn": 1,
+    "ZDirOn": 1,
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

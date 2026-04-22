@@ -1,0 +1,30 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute K Medoids 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute K Medoids",
+    "Filter_Name": "KMedoids",
+    "SelectedArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureAttributeMatrixName": "TestName",
+    "InitClusters": 5,
+    "DistanceMetric": 0,
+    "UseMask": 1,
+    "UseRandomSeed": 1,
+    "RandomSeedValue": "5",
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayName": "TestName",
+    "MedoidsArrayName": "TestName"
+  }
+}

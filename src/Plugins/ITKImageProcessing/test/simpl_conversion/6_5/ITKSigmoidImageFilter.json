@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Sigmoid Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Sigmoid Image",
+    "Filter_Name": "ITKSigmoidImage",
+    "Filter_Uuid": "{e6675be7-e98d-5e0f-a088-ba15cc301038}",
+    "Alpha": 2.5,
+    "Beta": 2.5,
+    "OutputMaximum": 2.5,
+    "OutputMinimum": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

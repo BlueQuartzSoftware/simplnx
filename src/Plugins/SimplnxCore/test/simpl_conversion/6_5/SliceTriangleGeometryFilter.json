@@ -1,0 +1,30 @@
+{
+  "PipelineBuilder": {
+    "Name": "Slice Triangle Geometry Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Slice Triangle Geometry",
+    "Filter_Name": "SliceTriangleGeometryFilter",
+    "Filter_Uuid": "{222307a4-67fd-5cb5-a12e-d80f9fb970ae}",
+    "SliceRange": 0,
+    "Zstart": 2.5,
+    "Zend": 2.5,
+    "SliceResolution": 2.5,
+    "HaveRegionIds": 1,
+    "RegionIdArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "RegionIds"
+    },
+    "CADDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "SliceDataContainerName": "SliceDataContainer",
+    "EdgeAttributeMatrixName": "EdgeData",
+    "SliceAttributeMatrixName": "SliceData",
+    "SliceIdArrayName": "SliceIds"
+  }
+}

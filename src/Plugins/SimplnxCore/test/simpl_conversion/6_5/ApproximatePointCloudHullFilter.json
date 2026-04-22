@@ -1,0 +1,23 @@
+{
+  "PipelineBuilder": {
+    "Name": "Approximate Point Cloud Hull Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Approximate Point Cloud Hull",
+    "Filter_Name": "ApproximatePointCloudHull",
+    "Filter_Uuid": "{fab669ad-66c6-5a39-bdb7-fc47b94311ed}",
+    "GridResolution": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "NumberOfEmptyNeighbors": 5,
+    "VertexDataContainerName": {
+      "Data Container Name": "VertexDataContainer"
+    },
+    "HullDataContainerName": "HullDataContainer"
+  }
+}

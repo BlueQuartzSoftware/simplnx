@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Binary Projection Image 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Binary Projection Image",
+    "Filter_Name": "ITKBinaryProjectionImage",
+    "ProjectionDimension": 5,
+    "ForegroundValue": 2.5,
+    "BackgroundValue": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Grayscale Grind Peak Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Grayscale Grind Peak Image",
+    "Filter_Name": "ITKGrayscaleGrindPeakImage",
+    "Filter_Uuid": "{d910551f-4eec-55c9-b0ce-69c2277e61bd}",
+    "FullyConnected": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

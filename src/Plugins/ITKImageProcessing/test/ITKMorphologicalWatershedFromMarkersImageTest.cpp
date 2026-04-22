@@ -27,13 +27,13 @@ TEST_CASE("ITKImageProcessing::ITKMorphologicalWatershedFromMarkersImageFilter(d
   const DataObjectNameParameter::ValueType outputArrayName = ITKTestBase::k_OutputDataPath;
 
   { // Start Image Comparison Scope
-    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-grad-mag.nrrd";
+    const fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-grad-mag.nrrd";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
     SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope
 
   { // Start Image Comparison Scope
-    const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-marker.png";
+    const fs::path inputFilePath = fs::path(nx::core::unit_test::k_SourceDir.view()) / unit_test::k_DataDir.view() / "JSONFilters" / "Input/cthead1-marker.png";
     Result<> imageReadResult = ITKTestBase::ReadImage(dataStructure, inputFilePath, inputGeometryPath, ITKTestBase::k_ImageCellDataName, ITKTestBase::k_InputDataName);
     SIMPLNX_RESULT_REQUIRE_VALID(imageReadResult)
   } // End Image Comparison Scope

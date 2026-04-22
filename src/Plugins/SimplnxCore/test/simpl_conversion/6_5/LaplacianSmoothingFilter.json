@@ -1,0 +1,32 @@
+{
+  "PipelineBuilder": {
+    "Name": "Laplacian Smoothing Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Laplacian Smoothing",
+    "Filter_Name": "LaplacianSmoothing",
+    "Filter_Uuid": "{601c4885-c218-5da6-9fc7-519d85d241ad}",
+    "IterationSteps": 5,
+    "Lambda": 2.5,
+    "UseTaubinSmoothing": 1,
+    "MuFactor": 2.5,
+    "TripleLineLambda": 2.5,
+    "QuadPointLambda": 2.5,
+    "SurfacePointLambda": 2.5,
+    "SurfaceTripleLineLambda": 2.5,
+    "SurfaceQuadPointLambda": 2.5,
+    "SurfaceMeshFaceLabelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceMeshNodeTypeArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

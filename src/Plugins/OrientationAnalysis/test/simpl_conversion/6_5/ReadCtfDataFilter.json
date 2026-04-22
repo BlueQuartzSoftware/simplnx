@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "ReadCtfData Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Import Oxford Instr. EBSD Data (.ctf)",
+    "Filter_Name": "ReadCtfData",
+    "Filter_Uuid": "{d1df969c-0428-53c3-b61d-99ea2bb6da28}",
+    "InputFile": "/some/test/path/data.ctf",
+    "DegreesToRadians": 1,
+    "EdaxHexagonalAlignment": 0,
+    "DataContainerName": {
+      "Data Container Name": "ImageDataContainer"
+    },
+    "CellAttributeMatrixName": "CellData",
+    "CellEnsembleAttributeMatrixName": "CellEnsembleData"
+  }
+}

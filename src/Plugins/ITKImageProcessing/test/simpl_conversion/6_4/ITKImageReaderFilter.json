@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Image Reader 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Image Reader",
+    "Filter_Name": "ITKImageReader",
+    "FileName": "/test/path/file.txt",
+    "DataContainerName": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellAttributeMatrixName": "TestName",
+    "ImageDataArrayName": "TestName"
+  }
+}

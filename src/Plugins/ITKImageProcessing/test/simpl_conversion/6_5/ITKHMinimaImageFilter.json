@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITKH Minima Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITKH Minima Image",
+    "Filter_Name": "ITKHMinimaImage",
+    "Filter_Uuid": "{f1d7cf59-9b7c-53cb-b71a-76cf91c86e8f}",
+    "Height": 2.5,
+    "FullyConnected": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

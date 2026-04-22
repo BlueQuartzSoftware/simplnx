@@ -1,0 +1,43 @@
+{
+  "PipelineBuilder": {
+    "Name": "Merge Twins 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Merge Twins",
+    "Filter_Name": "MergeTwins",
+    "ContiguousNeighborListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AxisTolerance": 2.5,
+    "AngleTolerance": 2.5,
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AvgQuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellParentIdsArrayName": "TestName",
+    "NewCellFeatureAttributeMatrixName": "TestName",
+    "FeatureParentIdsArrayName": "TestName",
+    "ActiveArrayName": "TestName"
+  }
+}

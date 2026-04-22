@@ -1,0 +1,30 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write ASCII Data 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write ASCII Data",
+    "Filter_Name": "WriteASCIIData",
+    "OutputStyle": 0,
+    "OutputPath": "/test/path/file.txt",
+    "FileExtension": "TestName",
+    "MaxValPerLine": 5,
+    "OutputFilePath": "/test/path/file.txt",
+    "Delimiter": 0,
+    "SelectedDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ]
+  }
+}

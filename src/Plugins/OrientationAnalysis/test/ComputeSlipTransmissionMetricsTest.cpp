@@ -1,12 +1,18 @@
 #include <catch2/catch.hpp>
+#include <filesystem>
+#include <fstream>
 
 #include "OrientationAnalysis/Filters/ComputeSlipTransmissionMetricsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -66,4 +72,49 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Valid Filt
   UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("mPrimeList"), grainDataPath.createChildPath(k_mPrimes));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeSlipTransmissionMetricsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeSlipTransmissionMetricsFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeSlipTransmissionMetricsFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ComputeSlipTransmissionMetricsFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<DataPath>(ComputeSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeSlipTransmissionMetricsFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<std::string>(ComputeSlipTransmissionMetricsFilter::k_F1ListArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeSlipTransmissionMetricsFilter::k_F1sptListArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeSlipTransmissionMetricsFilter::k_F7ListArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeSlipTransmissionMetricsFilter::k_mPrimeListArrayName_Key) == "TestName");
+    }
+  }
 }

@@ -1,0 +1,28 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Binary Dilate Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Binary Dilate Image",
+    "Filter_Name": "ITKBinaryDilateImage",
+    "Filter_Uuid": "{f86167ad-a1a1-557b-97ea-92a3618baa8f}",
+    "KernelType": 0,
+    "BackgroundValue": 2.5,
+    "ForegroundValue": 2.5,
+    "BoundaryToForeground": 1,
+    "KernelRadius": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

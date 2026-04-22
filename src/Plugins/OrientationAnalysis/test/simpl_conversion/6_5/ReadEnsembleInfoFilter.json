@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Ensemble Info Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read Ensemble Info",
+    "Filter_Name": "EnsembleInfoReader",
+    "Filter_Uuid": "{33a37a47-d002-5c18-b270-86025881fe1e}",
+    "InputFile": "/test/path/file.txt",
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CellEnsembleAttributeMatrixName": "TestName",
+    "CrystalStructuresArrayName": "TestName",
+    "PhaseTypesArrayName": "TestName"
+  }
+}

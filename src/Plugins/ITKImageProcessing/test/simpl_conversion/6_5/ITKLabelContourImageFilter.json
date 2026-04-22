@@ -1,0 +1,21 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Label Contour Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Label Contour Image",
+    "Filter_Name": "ITKLabelContourImage",
+    "Filter_Uuid": "{668f0b90-b504-5fba-b648-7c9677e1f452}",
+    "BackgroundValue": 2.5,
+    "FullyConnected": 1,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Vector Colors Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Vector Colors",
+    "Filter_Name": "GenerateVectorColors",
+    "Filter_Uuid": "{ef28de7e-5bdd-57c2-9318-60ba0dfaf7bc}",
+    "UseGoodVoxels": 1,
+    "VectorsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "GoodVoxelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellVectorColorsArrayName": "TestName"
+  }
+}

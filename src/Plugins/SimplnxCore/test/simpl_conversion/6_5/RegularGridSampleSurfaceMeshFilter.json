@@ -1,0 +1,37 @@
+{
+  "PipelineBuilder": {
+    "Name": "Regular Grid Sample Surface Mesh Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Regular Grid Sample Surface Mesh",
+    "Filter_Name": "RegularGridSampleSurfaceMesh",
+    "Filter_Uuid": "{0df3da89-9106-538e-b1a9-6bbf1cf0aa92}",
+    "LengthUnit": 0,
+    "XPoints": 1,
+    "YPoints": 1,
+    "ZPoints": 1,
+    "SurfaceMeshFaceLabelsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "Resolution": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "Origin": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 3.0
+    },
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CellAttributeMatrixName": "TestName",
+    "FeatureIdsArrayName": "TestName"
+  }
+}

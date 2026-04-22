@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "ITK Invert Intensity Image Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "ITK Invert Intensity Image",
+    "Filter_Name": "ITKInvertIntensityImage",
+    "Filter_Uuid": "{c6e10fa5-5462-546b-b34b-0f0ea75a7e43}",
+    "Maximum": 2.5,
+    "SelectedCellArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NewCellArrayName": "TestName"
+  }
+}

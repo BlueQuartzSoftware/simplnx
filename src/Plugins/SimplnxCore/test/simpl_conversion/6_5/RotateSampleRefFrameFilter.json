@@ -1,0 +1,33 @@
+{
+  "PipelineBuilder": {
+    "Name": "Rotate Sample Ref Frame Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Rotate Sample Ref Frame",
+    "Filter_Name": "RotateSampleRefFrame",
+    "Filter_Uuid": "{e25d9b4c-2b37-578c-b1de-cf7032b5ef19}",
+    "RotationRepresentationChoice": 0,
+    "RotationTable": [
+      [
+        1.0,
+        2.0
+      ],
+      [
+        3.0,
+        4.0
+      ]
+    ],
+    "RotationAxis": {
+      "x": 1.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "RotationAngle": 90.0,
+    "CellAttributeMatrixPath": {
+      "Data Container Name": "DataContainer"
+    }
+  }
+}

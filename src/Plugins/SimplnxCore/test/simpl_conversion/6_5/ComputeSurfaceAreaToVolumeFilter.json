@@ -1,0 +1,26 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Surface Area To Volume Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Surface Area To Volume",
+    "Filter_Name": "FindSurfaceAreaToVolume",
+    "Filter_Uuid": "{5d586366-6b59-566e-8de1-57aa9ae8a91c}",
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "NumCellsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SurfaceAreaVolumeRatioArrayName": "TestName",
+    "CalculateSphericity": 1,
+    "SphericityArrayName": "TestName"
+  }
+}

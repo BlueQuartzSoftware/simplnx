@@ -1,0 +1,20 @@
+{
+  "PipelineBuilder": {
+    "Name": "Write Avizo Uniform Coordinate 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Write Avizo Uniform Coordinate",
+    "Filter_Name": "AvizoUniformCoordinateWriter",
+    "OutputFile": "/test/path/file.txt",
+    "WriteBinaryFile": 1,
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "Units": "TestName"
+  }
+}

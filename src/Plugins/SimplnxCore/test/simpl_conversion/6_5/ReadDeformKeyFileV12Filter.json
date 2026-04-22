@@ -1,0 +1,17 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read Deform Key File V12 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Import Deform Key File (V12)",
+    "Filter_Name": "ImportDeformKeyFileV12Filter",
+    "Filter_Uuid": "{3c6337da-e232-4420-a5ca-451496748d88}",
+    "DEFORMInputFile": "/test/path/file.key",
+    "DataContainerName": "DataContainer",
+    "VertexAttributeMatrixName": "VertexData",
+    "CellAttributeMatrixName": "CellData"
+  }
+}

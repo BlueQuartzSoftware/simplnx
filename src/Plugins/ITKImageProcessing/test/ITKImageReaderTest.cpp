@@ -1,11 +1,17 @@
 #include <catch2/catch.hpp>
+#include <filesystem>
+#include <fstream>
 
 #include "ITKImageProcessing/Common/ReadImageUtils.hpp"
 #include "ITKImageProcessing/Filters/ITKImageReaderFilter.hpp"
 #include "ITKImageProcessing/ITKImageProcessing_test_dirs.hpp"
 #include "ITKTestBase.hpp"
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 namespace fs = std::filesystem;
@@ -549,4 +555,45 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_All", "[ITKImag
   UnitTest::CompareDataArrays<uint16>(exemplarArray, generatedArray);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: SIMPL Backwards Compatibility", "[ITKImageProcessing][ITKImageReaderFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ITKImageReaderFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ITKImageReaderFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ITKImageReaderFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<FileSystemPathParameter::ValueType>(ITKImageReaderFilter::k_FileName_Key) == fs::path("/test/path/file.txt"));
+      CHECK(args.value<DataPath>(ITKImageReaderFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<std::string>(ITKImageReaderFilter::k_CellDataName_Key) == "TestName");
+      CHECK(args.value<std::string>(ITKImageReaderFilter::k_ImageDataArrayPath_Key) == "TestName");
+    }
+  }
 }

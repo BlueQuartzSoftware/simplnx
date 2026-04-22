@@ -1,0 +1,44 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Feature Clustering 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Feature Clustering",
+    "Filter_Name": "FindFeatureClustering",
+    "NumberOfBins": 5,
+    "PhaseNumber": 5,
+    "RemoveBiasedFeatures": 1,
+    "UseRandomSeed": 1,
+    "RandomSeedValue": "5",
+    "EquivalentDiametersArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CentroidsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "BiasedFeaturesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CellEnsembleAttributeMatrixName": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData"
+    },
+    "ClusteringListArrayName": "TestName",
+    "NewEnsembleArrayArrayName": "TestName2",
+    "MaxMinArrayName": "TestName"
+  }
+}

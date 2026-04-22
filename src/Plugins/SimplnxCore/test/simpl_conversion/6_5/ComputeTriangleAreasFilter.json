@@ -1,0 +1,18 @@
+{
+  "PipelineBuilder": {
+    "Name": "ComputeTriangleAreas Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Calculate Triangle Areas",
+    "Filter_Name": "TriangleAreaFilter",
+    "Filter_Uuid": "{a9900cc3-169e-5a1b-bcf4-7569e1950d41}",
+    "SurfaceMeshTriangleAreasArrayPath": {
+      "Data Container Name": "TriangleDataContainer",
+      "Attribute Matrix Name": "FaceData",
+      "Data Array Name": "FaceAreas"
+    }
+  }
+}

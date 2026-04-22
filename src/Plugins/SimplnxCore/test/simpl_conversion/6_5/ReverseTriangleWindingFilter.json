@@ -1,0 +1,16 @@
+{
+  "PipelineBuilder": {
+    "Name": "Reverse Triangle Winding Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Reverse Triangle Winding",
+    "Filter_Name": "ReverseTriangleWinding",
+    "Filter_Uuid": "{9b9fb9e1-074d-54b6-a6ce-0be21ab4496d}",
+    "SurfaceDataContainerName": {
+      "Data Container Name": "DataContainer"
+    }
+  }
+}

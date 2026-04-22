@@ -1,0 +1,37 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Slip Transmission Metrics Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Slip Transmission Metrics",
+    "Filter_Name": "FindSlipTransmissionMetrics",
+    "Filter_Uuid": "{97523038-5fb2-5e82-9177-ed3e8b24b4bd}",
+    "NeighborListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AvgQuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "F1ListArrayName": "TestName",
+    "F1sptListArrayName": "TestName",
+    "F7ListArrayName": "TestName",
+    "mPrimeListArrayName": "TestName"
+  }
+}

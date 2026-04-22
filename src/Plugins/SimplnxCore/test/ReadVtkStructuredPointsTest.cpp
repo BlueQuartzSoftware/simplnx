@@ -1,17 +1,21 @@
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
 
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <filesystem>
+#include <fstream>
 namespace fs = std::filesystem;
 
 #include "SimplnxCore/Filters/Algorithms/ReadVtkStructuredPoints.hpp"
 #include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 using namespace nx::core;
 
@@ -192,4 +196,48 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Other Errors", "[SimplnxC
   test_invalid_case(k_InputDirPath / "unknown_section_keyword_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
   test_invalid_case(k_InputDirPath / "unknown_section_keyword_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
   test_invalid_case(k_InputDirPath / "unknown_section_keyword_err4.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
+}
+
+TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadVtkStructuredPointsFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ReadVtkStructuredPointsFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ReadVtkStructuredPointsFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ReadVtkStructuredPointsFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<std::string>(ReadVtkStructuredPointsFilter::k_CellAttributeMatrixName_Key) == "TestName");
+      CHECK(args.value<FileSystemPathParameter::ValueType>(ReadVtkStructuredPointsFilter::k_InputFile_Key) == fs::path("/test/path/file.txt"));
+      CHECK(args.value<bool>(ReadVtkStructuredPointsFilter::k_ReadCellData_Key) == true);
+      CHECK(args.value<bool>(ReadVtkStructuredPointsFilter::k_ReadPointData_Key) == true);
+      CHECK(args.value<std::string>(ReadVtkStructuredPointsFilter::k_VertexAttributeMatrixName_Key) == "TestName");
+      CHECK(args.value<DataPath>(ReadVtkStructuredPointsFilter::k_CreatedVertexGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(ReadVtkStructuredPointsFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+    }
+  }
 }

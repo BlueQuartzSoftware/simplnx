@@ -1,0 +1,36 @@
+{
+  "PipelineBuilder": {
+    "Name": "Remove Flagged Features Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Remove Flagged Features",
+    "Filter_Name": "RemoveFlaggedFeatures",
+    "Filter_Uuid": "{a8463056-3fa7-530b-847f-7f4cb78b8602}",
+    "FillRemovedFeatures": 1,
+    "IgnoredDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ],
+    "FeatureIdsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FlaggedFeaturesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

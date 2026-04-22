@@ -1,0 +1,36 @@
+{
+  "PipelineBuilder": {
+    "Name": "Point Sample Triangle Geometry 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Point Sample Triangle Geometry",
+    "Filter_Name": "PointSampleTriangleGeometry",
+    "NumberOfSamples": 5,
+    "UseMask": 1,
+    "TriangleGeometry": {
+      "Data Container Name": "DataContainer"
+    },
+    "TriangleAreasArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "MaskArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SelectedDataArrayPaths": [
+      {
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "TestArray"
+      }
+    ],
+    "VertexGeometry": "VertexGeom",
+    "VertexAttributeMatrixName": "TestName"
+  }
+}

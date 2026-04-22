@@ -1,0 +1,30 @@
+{
+  "PipelineBuilder": {
+    "Name": "Extract Vertex Geometry 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Extract Vertex Geometry",
+    "Filter_Name": "ExtractVertexGeometry",
+    "IncludedDataArrayPaths": [
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA1"
+      },
+      {
+        "Data Container Name": "DC",
+        "Attribute Matrix Name": "AM",
+        "Data Array Name": "DA2"
+      }
+    ],
+    "SelectedDataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "VertexDataContainerName": {
+      "Data Container Name": "DataContainer"
+    }
+  }
+}

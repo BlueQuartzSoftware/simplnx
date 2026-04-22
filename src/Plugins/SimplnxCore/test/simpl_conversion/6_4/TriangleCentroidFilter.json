@@ -1,0 +1,17 @@
+{
+  "PipelineBuilder": {
+    "Name": "Triangle Centroid 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Triangle Centroid",
+    "Filter_Name": "TriangleCentroidFilter",
+    "SurfaceMeshTriangleCentroidsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

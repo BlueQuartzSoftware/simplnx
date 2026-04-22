@@ -1,0 +1,36 @@
+{
+  "PipelineBuilder": {
+    "Name": "Compute Feature Neighbor C Axis Misalignments Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Compute Feature Neighbor C Axis Misalignments",
+    "Filter_Name": "FindFeatureNeighborCAxisMisalignments",
+    "Filter_Uuid": "{cdd50b83-ea09-5499-b008-4b253cf4c246}",
+    "FindAvgMisals": 1,
+    "NeighborListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "AvgQuatsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "FeaturePhasesArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CrystalStructuresArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "CAxisMisalignmentListArrayName": "TestName",
+    "AvgCAxisMisalignmentsArrayName": "TestName"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "PipelineBuilder": {
+    "Name": "Create Geometry Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Create Geometry",
+    "Filter_Name": "CreateGeometry",
+    "Filter_Uuid": "{9ac220b9-14f9-581a-9bac-5714467589cc}",
+    "GeometryType": 0,
+    "TreatWarningsAsErrors": 1,
+    "ArrayHandling": 0,
+    "DataContainerName": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedVertexListArrayPath0": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedVertexListArrayPath1": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedVertexListArrayPath2": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedVertexListArrayPath3": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedVertexListArrayPath4": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedVertexListArrayPath5": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedEdgeListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedTriListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedQuadListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedTetListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "SharedHexListArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "XBoundsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "YBoundsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "ZBoundsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    },
+    "Dimensions": {
+      "x": 1,
+      "y": 2,
+      "z": 3
+    },
+    "Origin": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "Spacing": {
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0
+    },
+    "ImageCellAttributeMatrixName": "CellData",
+    "RectGridCellAttributeMatrixName": "CellData",
+    "VertexAttributeMatrixName0": "VertexData",
+    "VertexAttributeMatrixName1": "VertexData",
+    "VertexAttributeMatrixName2": "VertexData",
+    "VertexAttributeMatrixName3": "VertexData",
+    "VertexAttributeMatrixName4": "VertexData",
+    "VertexAttributeMatrixName5": "VertexData",
+    "EdgeAttributeMatrixName": "EdgeData",
+    "FaceAttributeMatrixName0": "FaceData",
+    "FaceAttributeMatrixName1": "FaceData",
+    "TetCellAttributeMatrixName": "CellData",
+    "HexCellAttributeMatrixName": "CellData"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read DREAM3D File 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read DREAM.3D Data File",
+    "Filter_Name": "DataContainerReader",
+    "InputFile": "/test/path/file.dream3d",
+    "InputFileDataContainerArrayProxy": {
+      "Data Containers": [
+        {
+          "Name": "DataContainer",
+          "Attribute Matricies": [
+            {
+              "Name": "CellData",
+              "Data Arrays": [
+                {
+                  "Name": "TestArray"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

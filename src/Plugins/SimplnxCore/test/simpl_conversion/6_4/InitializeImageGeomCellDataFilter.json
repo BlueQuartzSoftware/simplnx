@@ -1,0 +1,28 @@
+{
+  "PipelineBuilder": {
+    "Name": "Initialize Image Geom Cell Data 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Initialize Image Geom Cell Data",
+    "Filter_Name": "InitializeData",
+    "CellAttributeMatrixPaths": [
+      {
+        "Data Container Name": "DataContainer",
+        "Attribute Matrix Name": "CellData",
+        "Data Array Name": "TestArray"
+      }
+    ],
+    "XMin": 0,
+    "YMin": 0,
+    "ZMin": 0,
+    "XMax": 5,
+    "YMax": 5,
+    "ZMax": 5,
+    "InitType": 0,
+    "InitValue": 2.5,
+    "InitRange": "0;1"
+  }
+}

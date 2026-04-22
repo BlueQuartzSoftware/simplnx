@@ -1,0 +1,18 @@
+{
+  "PipelineBuilder": {
+    "Name": "Triangle Centroid Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Triangle Centroid",
+    "Filter_Name": "TriangleCentroidFilter",
+    "Filter_Uuid": "{7aa33007-4186-5d7f-ba9d-d0a561b3351d}",
+    "SurfaceMeshTriangleCentroidsArrayPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": "TestArray"
+    }
+  }
+}

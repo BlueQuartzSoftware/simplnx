@@ -1,0 +1,30 @@
+{
+  "PipelineBuilder": {
+    "Name": "Read H5 Esprit Data Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Read H5 Esprit Data",
+    "Filter_Name": "ImportH5EspritData",
+    "Filter_Uuid": "{8abdea7d-f715-5a24-8165-7f946bbc2fe9}",
+    "InputFile": "/test/path/file.h5",
+    "SelectedScanNames": {
+      "1": "Scan1"
+    },
+    "ZSpacing": 1.0,
+    "Origin": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    "DegreesToRadians": 1,
+    "ReadPatternData": 1,
+    "DataContainerName": {
+      "Data Container Name": "DataContainer"
+    },
+    "CellAttributeMatrixName": "TestName",
+    "CellEnsembleAttributeMatrixName": "TestName"
+  }
+}

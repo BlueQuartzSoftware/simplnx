@@ -1,15 +1,21 @@
+#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 #include <catch2/catch.hpp>
+#include <filesystem>
+#include <fstream>
 
 #include "SimplnxCore/Filters/Algorithms/ComputeMomentInvariants2D.hpp"
 #include "SimplnxCore/Filters/ComputeMomentInvariants2DFilter.hpp"
-#include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
+#include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Pipeline/Pipeline.hpp"
+#include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
 using namespace nx::core::Constants;
+namespace fs = std::filesystem;
 
 namespace
 {
@@ -190,4 +196,50 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: InValid Filter Executio
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
   UnitTest::CheckArraysInheritTupleDims(ds);
+}
+
+TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeMomentInvariants2DFilter][BackwardsCompatibility]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
+  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
+
+  const std::vector<std::pair<std::string, fs::path>> fixtures = {
+      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "ComputeMomentInvariants2DFilter.json"},
+      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "ComputeMomentInvariants2DFilter.json"},
+  };
+
+  for(const auto& [label, fixturePath] : fixtures)
+  {
+    DYNAMIC_SECTION(label)
+    {
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      REQUIRE(pipelineResult.valid());
+
+      auto& pipeline = pipelineResult.value();
+      REQUIRE(pipeline.size() == 1);
+
+      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilter != nullptr);
+
+      const IFilter* filter = pipelineFilter->getFilter();
+      REQUIRE(filter != nullptr);
+      REQUIRE(filter->uuid() == FilterTraits<ComputeMomentInvariants2DFilter>::uuid);
+
+      CHECK(pipelineFilter->getComments().empty());
+
+      const Arguments args = pipelineFilter->getArguments();
+      CHECK(args.value<DataPath>(ComputeMomentInvariants2DFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<DataPath>(ComputeMomentInvariants2DFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ComputeMomentInvariants2DFilter::k_FeatureRectArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<bool>(ComputeMomentInvariants2DFilter::k_NormalizeMomentInvariants_Key) == true);
+      CHECK(args.value<DataPath>(ComputeMomentInvariants2DFilter::k_FeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
+      CHECK(args.value<std::string>(ComputeMomentInvariants2DFilter::k_Omega1ArrayName_Key) == "TestArray");
+      CHECK(args.value<std::string>(ComputeMomentInvariants2DFilter::k_Omega2ArrayName_Key) == "TestArray");
+      CHECK(args.value<bool>(ComputeMomentInvariants2DFilter::k_SaveCentralMoments_Key) == true);
+      CHECK(args.value<std::string>(ComputeMomentInvariants2DFilter::k_CentralMomentsArrayName_Key) == "TestArray");
+    }
+  }
 }

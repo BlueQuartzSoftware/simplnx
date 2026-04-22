@@ -1,0 +1,19 @@
+{
+  "PipelineBuilder": {
+    "Name": "ReadAngData Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Import EDAX EBSD Data (.ang)",
+    "Filter_Name": "ReadAngData",
+    "Filter_Uuid": "{b8e128a8-c2a3-5e6c-a7ad-e4fb864e5d40}",
+    "InputFile": "/some/test/path/data.ang",
+    "DataContainerName": {
+      "Data Container Name": "ImageDataContainer"
+    },
+    "CellAttributeMatrixName": "CellData",
+    "CellEnsembleAttributeMatrixName": "CellEnsembleData"
+  }
+}
