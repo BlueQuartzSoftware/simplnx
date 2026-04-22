@@ -14,6 +14,12 @@ The filter transparently handles both uncompressed (`.nii`) and gzipped
 (`.nii.gz`) files via zlib, and detects / corrects for file byte order by
 comparing `sizeof_hdr` against the expected value of 348.
 
+NIfTI-1 allows a variable-length extension block between the 348-byte
+header and the voxel data. The filter honors `vox_offset` and seeks
+past the extension block before reading voxels — any custom extension
+metadata (DICOM attributes, AFNI XML, etc.) is **skipped, not
+preserved**.
+
 ### Supported voxel datatypes
 
 | NIfTI code | C type | simplnx `DataType` | Component count |
@@ -57,9 +63,14 @@ warning is emitted if a scaling transform is present for those types.
 ### Cropping on read
 
 When the *Cropping Options* parameter is set to anything other than
-*No Cropping*, only the selected sub-volume is ingested — the rest of the
-file is read and discarded on the fly, never reaching a DataArray. Two
-cropping modes are supported:
+*NoCropping*, only the selected sub-volume is **retained** in the
+output DataArray. The rest of the file is still read (and, for
+`.nii.gz`, still decompressed) but is never stored, so peak memory is
+proportional to the cropped region, not the full source volume. See
+the **Memory vs. wall-clock** note below before assuming cropping
+speeds up I/O.
+
+Two cropping modes are supported:
 
 * **Voxel Subvolume** — pick an inclusive `[start..end]` voxel index range
   per axis. The range is zero-based and uses the source file's voxel
@@ -125,7 +136,7 @@ large compressed files read faster.
 | Input NIfTI File | File path | — | Path to the `.nii` or `.nii.gz` file to read. |
 | Use Stored Affine Transform | Bool | `true` | Use `sform`/`qform` to set origin + spacing when present. |
 | Apply Scaling Transform | Bool | `true` | Apply `y = slope*x + inter` at read time; promotes to float32. |
-| Cropping Options | CropGeometry | *None* | Optional voxel-index or physical-coordinate sub-volume. Only the selected region is streamed into memory; data outside the region is read and discarded. |
+| Cropping Options | CropGeometry | `NoCropping` | Optional voxel-index or physical-coordinate sub-volume. Only the selected region is retained in the output DataArray; data outside the region is read but never stored. |
 | Image Geometry | Data Path | `NIfTI Image` | Path to the created Image Geometry. |
 | Cell Attribute Matrix Name | String | `Cell Data` | Name of the attribute matrix holding voxel values. |
 | Image Data Array Name | String | `ImageData` | Name of the array receiving voxel values. |
@@ -136,6 +147,11 @@ large compressed files read faster.
   separate-file `.hdr` / `.img` pair (magic `ni1`) is not.
 * Only 3D volumes (`dim[0] == 3`) are supported. 4D and higher files (fMRI
   time series, diffusion series, etc.) are rejected in this release.
+* Any of `dim[1]`, `dim[2]`, `dim[3]` being `<= 0` is rejected.
+* Complex (`complex64`, `complex128`, `complex256`) and 128-bit float
+  voxel datatypes are rejected.
+* Extension blocks between the header and voxel data are skipped over
+  (via `vox_offset`) but not preserved.
 * Non-trivial rotations in `sform` / `qform` are flattened — the Image
   Geometry is axis-aligned in simplnx.
 * Cropping saves memory, not wall-clock read time. A `.nii.gz` file must
@@ -145,7 +161,7 @@ large compressed files read faster.
   volume. Bounds outside the extent produce an error rather than
   silently clamping.
 * `start <= end` is required on each cropped axis; reversed ranges are
-  rejected at execute time.
+  rejected at parameter-validation time.
 
 % Auto generated parameter table will be inserted here                                                                    
 
@@ -153,8 +169,6 @@ large compressed files read faster.
 
 * [NIfTI-1 Data Format (official NIMH reference)](https://nifti.nimh.nih.gov/nifti-1/)
 * [`nifti1.h` header (NITRC)](https://www.nitrc.org/docman/view.php/26/64/nifti1.h)
-
-## Example Pipelines
 
 ## License & Copyright
 
