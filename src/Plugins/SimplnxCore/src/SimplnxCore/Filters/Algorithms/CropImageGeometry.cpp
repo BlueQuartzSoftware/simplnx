@@ -8,11 +8,19 @@
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/SamplingUtils.hpp"
 
+#include <cstring>
+
 using namespace nx::core;
 
 namespace
 {
 const std::string k_TempGeometryName = ".cropped_image_geometry";
+// Number of source Z-slices to read per bulk I/O call. Trades memory footprint for
+// I/O call count. At 32 slices with a 1139x1174 uint16 volume the source slab is
+// roughly 86 MB; the paired destination slab is smaller. Empirically dropping the
+// Z-slice-batched I/O call count by this factor removes essentially all of the
+// HDF5 chunk-op overhead that dominated the previous row-at-a-time implementation.
+constexpr uint64 k_ZSliceBatch = 32;
 
 /**
  * @brief
@@ -46,35 +54,89 @@ public:
 protected:
   void convert() const
   {
-    usize numComps = m_OldCellStore.getNumberOfComponents();
+    const usize numComps = m_OldCellStore.getNumberOfComponents();
 
     m_NewCellStore.fill(static_cast<T>(-1));
 
-    auto srcDims = m_SrcImageGeom.getDimensions();
+    const auto srcDims = m_SrcImageGeom.getDimensions();
+    const uint64 srcDimX = srcDims[0];
+    const uint64 srcDimY = srcDims[1];
+    const uint64 srcDimZ = srcDims[2];
 
-    // OOC optimization: Copy one X-row at a time using bulk copyIntoBuffer/
-    // copyFromBuffer. The original code used per-element getValue/setValue in
-    // a triple-nested loop, causing O(voxels * components) chunk operations.
-    // Row-at-a-time reduces this to O(Z * Y) bulk operations.
-    const uint64 rowTuples = m_Bounds[1] - m_Bounds[0];
-    const usize rowElements = rowTuples * numComps;
-    auto rowBuffer = std::make_unique<T[]>(rowElements);
+    // Crop region (in tuples)
+    const uint64 xMin = m_Bounds[0];
+    const uint64 xMax = m_Bounds[1];
+    const uint64 yMin = m_Bounds[2];
+    const uint64 yMax = m_Bounds[3];
+    const uint64 zMin = m_Bounds[4];
+    const uint64 zMax = m_Bounds[5];
+    const uint64 cropX = xMax - xMin;
+    const uint64 cropY = yMax - yMin;
+    const uint64 cropZ = zMax - zMin;
 
-    uint64 destTupleIndex = 0;
-    for(uint64 zIndex = m_Bounds[4]; zIndex < m_Bounds[5]; zIndex++)
+    // OOC optimization: batch K source Z-slices per bulk I/O call. For each batch,
+    // read all K full source Z-slices in a single copyIntoBuffer, extract the crop
+    // region into a destination slab via in-memory memcpy-per-row, then flush the
+    // destination slab with a single copyFromBuffer. Replaces the previous
+    // row-at-a-time implementation which issued one I/O pair per (z, y) pair — for
+    // a 1489x1139 output that is ~1.7M I/O pairs per data array.
+    const uint64 srcSliceTuples = srcDimX * srcDimY;
+    const uint64 dstSliceTuples = cropX * cropY;
+    const uint64 rowTuples = cropX;
+    const uint64 rowElements = rowTuples * numComps;
+    const usize rowBytes = rowElements * sizeof(T);
+
+    // Cap the batch at the number of cropped Z-slices so we do not over-allocate
+    // for small crops. K may be smaller than k_ZSliceBatch on the last iteration.
+    const uint64 initialBatch = std::min<uint64>(k_ZSliceBatch, cropZ);
+    auto srcSlab = std::make_unique<T[]>(initialBatch * srcSliceTuples * numComps);
+    auto dstSlab = std::make_unique<T[]>(initialBatch * dstSliceTuples * numComps);
+    uint64 allocatedBatch = initialBatch;
+
+    for(uint64 zStart = zMin; zStart < zMax; zStart += k_ZSliceBatch)
     {
       if(m_ShouldCancel)
       {
         return;
       }
-      for(uint64 yIndex = m_Bounds[2]; yIndex < m_Bounds[3]; yIndex++)
+      const uint64 batch = std::min<uint64>(k_ZSliceBatch, zMax - zStart);
+
+      // Grow the slab buffers only if the caller's bounds do not divide evenly;
+      // shrinking below the current allocation is a no-op — the buffers are reused.
+      if(batch > allocatedBatch)
       {
-        uint64 srcRowStart = (srcDims[0] * srcDims[1] * zIndex) + (srcDims[0] * yIndex) + m_Bounds[0];
-        m_OldCellStore.copyIntoBuffer(srcRowStart * numComps, nonstd::span<T>(rowBuffer.get(), rowElements));
-        m_NewCellStore.copyFromBuffer(destTupleIndex * numComps, nonstd::span<const T>(rowBuffer.get(), rowElements));
-        destTupleIndex += rowTuples;
+        srcSlab = std::make_unique<T[]>(batch * srcSliceTuples * numComps);
+        dstSlab = std::make_unique<T[]>(batch * dstSliceTuples * numComps);
+        allocatedBatch = batch;
       }
+
+      const usize srcSlabElements = batch * srcSliceTuples * numComps;
+      const usize dstSlabElements = batch * dstSliceTuples * numComps;
+
+      // Bulk read K consecutive source Z-slices in a single I/O call.
+      const uint64 srcStartTuple = zStart * srcSliceTuples;
+      m_OldCellStore.copyIntoBuffer(srcStartTuple * numComps, nonstd::span<T>(srcSlab.get(), srcSlabElements));
+
+      // Extract the crop rows from each in-memory source slice into the destination slab.
+      for(uint64 dz = 0; dz < batch; dz++)
+      {
+        const T* const srcSliceBase = srcSlab.get() + dz * srcSliceTuples * numComps;
+        T* const dstSliceBase = dstSlab.get() + dz * dstSliceTuples * numComps;
+        for(uint64 yIdx = 0; yIdx < cropY; yIdx++)
+        {
+          const T* const srcRow = srcSliceBase + ((yMin + yIdx) * srcDimX + xMin) * numComps;
+          T* const dstRow = dstSliceBase + (yIdx * cropX) * numComps;
+          std::memcpy(dstRow, srcRow, rowBytes);
+        }
+      }
+
+      // Bulk write the K destination Z-slices in a single I/O call.
+      const uint64 dstStartTuple = (zStart - zMin) * dstSliceTuples;
+      m_NewCellStore.copyFromBuffer(dstStartTuple * numComps, nonstd::span<const T>(dstSlab.get(), dstSlabElements));
     }
+
+    // Avoid unused-variable warning when built without assertions.
+    (void)srcDimZ;
   }
 
 private:
