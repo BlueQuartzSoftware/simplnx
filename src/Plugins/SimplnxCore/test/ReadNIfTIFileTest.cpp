@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -114,12 +115,14 @@ std::vector<uint8_t> ToBytes(const std::vector<T>& values)
   return out;
 }
 
-Arguments MakeFilterArgs(const fs::path& inputFile, const DataPath& geomPath, const std::string& amName, const std::string& arrName, bool applyScaling, bool useAffine)
+Arguments MakeFilterArgs(const fs::path& inputFile, const DataPath& geomPath, const std::string& amName, const std::string& arrName, bool applyScaling, bool useAffine,
+                         const CropGeometryParameter::ValueType& crop = CropGeometryParameter::ValueType{})
 {
   Arguments args;
   args.insertOrAssign(ReadNIfTIFileFilter::k_InputFilePath_Key, std::make_any<FileSystemPathParameter::ValueType>(inputFile));
   args.insertOrAssign(ReadNIfTIFileFilter::k_UseAffineIfPresent_Key, std::make_any<bool>(useAffine));
   args.insertOrAssign(ReadNIfTIFileFilter::k_ApplyScalingTransform_Key, std::make_any<bool>(applyScaling));
+  args.insertOrAssign(ReadNIfTIFileFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(crop));
   args.insertOrAssign(ReadNIfTIFileFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(geomPath));
   args.insertOrAssign(ReadNIfTIFileFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(amName));
   args.insertOrAssign(ReadNIfTIFileFilter::k_ImageDataArrayName_Key, std::make_any<std::string>(arrName));
@@ -425,6 +428,271 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", "[Simp
   const auto& arr = dataStructure.getDataRefAs<DataArray<uint8>>(arrPath);
   REQUIRE(arr.getNumberOfComponents() == 4);
   RequireArrayEquals<uint8>(dataStructure, arrPath, voxels);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: VoxelSubvolume crop streams only the selected region", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {6, 5, 4};
+  const std::array<float, 3> spacing = {1.0f, 1.0f, 1.0f};
+  const std::array<float, 3> origin = {0.0f, 0.0f, 0.0f};
+
+  const usize nx = static_cast<usize>(dims[0]);
+  const usize ny = static_cast<usize>(dims[1]);
+  const usize nz = static_cast<usize>(dims[2]);
+  const usize numVoxels = nx * ny * nz;
+
+  std::vector<uint16_t> voxels(numVoxels);
+  for(usize i = 0; i < numVoxels; i++)
+  {
+    voxels[i] = static_cast<uint16_t>(i);
+  }
+
+  SyntheticNiftiParams params;
+  params.dims = dims;
+  params.spacing = spacing;
+  params.origin = origin;
+  params.niftiDatatype = NIFTI_TYPE_UINT16;
+  params.bitpix = 16;
+  nifti_1_header hdr = MakeHeader(params);
+
+  const fs::path outDir = OutputDir();
+  const fs::path filePath = outDir / "uint16_crop_voxel.nii";
+  WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
+  crop.cropX = true;
+  crop.cropY = true;
+  crop.cropZ = true;
+  crop.xBoundVoxels = {1, 3};
+  crop.yBoundVoxels = {1, 3};
+  crop.zBoundVoxels = {1, 2};
+
+  const DataPath geomPath({"NIfTI Cropped"});
+  const std::string amName = "Cell Data";
+  const std::string arrName = "ImageData";
+  const DataPath arrPath = geomPath.createChildPath(amName).createChildPath(arrName);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  const auto outDims = geom.getDimensions();
+  const auto outOrigin = geom.getOrigin();
+  const auto outSpacing = geom.getSpacing();
+  REQUIRE(outDims[0] == 3);
+  REQUIRE(outDims[1] == 3);
+  REQUIRE(outDims[2] == 2);
+  // Origin shifts by start * spacing
+  constexpr float tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0] - 1.0f) < tol);
+  REQUIRE(std::fabs(outOrigin[1] - 1.0f) < tol);
+  REQUIRE(std::fabs(outOrigin[2] - 1.0f) < tol);
+  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < tol);
+  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < tol);
+  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < tol);
+
+  std::vector<uint16_t> expected;
+  expected.reserve(3 * 3 * 2);
+  for(usize dz = 0; dz < 2; dz++)
+  {
+    for(usize dy = 0; dy < 3; dy++)
+    {
+      for(usize dx = 0; dx < 3; dx++)
+      {
+        const usize srcZ = 1 + dz;
+        const usize srcY = 1 + dy;
+        const usize srcX = 1 + dx;
+        const usize srcLinear = srcZ * ny * nx + srcY * nx + srcX;
+        expected.push_back(static_cast<uint16_t>(srcLinear));
+      }
+    }
+  }
+  RequireArrayEquals<uint16>(dataStructure, arrPath, expected);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: PhysicalSubvolume crop maps physical bounds to voxels", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {6, 5, 4};
+  const std::array<float, 3> spacing = {0.5f, 1.0f, 2.0f};
+  const std::array<float, 3> origin = {0.0f, 0.0f, 0.0f};
+
+  const usize nx = static_cast<usize>(dims[0]);
+  const usize ny = static_cast<usize>(dims[1]);
+  const usize nz = static_cast<usize>(dims[2]);
+  const usize numVoxels = nx * ny * nz;
+
+  std::vector<uint8_t> voxels(numVoxels);
+  for(usize i = 0; i < numVoxels; i++)
+  {
+    voxels[i] = static_cast<uint8_t>(i);
+  }
+
+  SyntheticNiftiParams params;
+  params.dims = dims;
+  params.spacing = spacing;
+  params.origin = origin;
+  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.bitpix = 8;
+  nifti_1_header hdr = MakeHeader(params);
+
+  const fs::path outDir = OutputDir();
+  const fs::path filePath = outDir / "uint8_crop_physical.nii";
+  WriteNiftiFile(filePath, hdr, ToBytes(voxels), false);
+
+  // With origin=0, spacing=(0.5, 1.0, 2.0), voxel (xi, yi, zi) has cell-center
+  // (xi*0.5+0.25, yi*1.0+0.5, zi*2.0+1.0). Target voxels x=[1..4] y=[1..3] z=[0..2]:
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  crop.cropX = true;
+  crop.cropY = true;
+  crop.cropZ = true;
+  crop.xBoundPhysical = {0.6f, 2.4f};
+  crop.yBoundPhysical = {1.2f, 3.7f};
+  crop.zBoundPhysical = {0.5f, 5.5f};
+
+  const DataPath geomPath({"NIfTI Cropped Physical"});
+  const std::string amName = "Cell Data";
+  const std::string arrName = "ImageData";
+  const DataPath arrPath = geomPath.createChildPath(amName).createChildPath(arrName);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, true, true, crop);
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  const auto outDims = geom.getDimensions();
+  REQUIRE(outDims[0] == 4);
+  REQUIRE(outDims[1] == 3);
+  REQUIRE(outDims[2] == 3);
+
+  const usize destNx = outDims[0];
+  const usize destNy = outDims[1];
+  const usize destNz = outDims[2];
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<uint8>>(arrPath));
+  const auto& arr = dataStructure.getDataRefAs<DataArray<uint8>>(arrPath);
+  const auto& store = arr.getDataStoreRef();
+  REQUIRE(store.getSize() == destNx * destNy * destNz);
+
+  std::vector<uint8_t> expected;
+  expected.reserve(destNx * destNy * destNz);
+  for(usize dz = 0; dz < destNz; dz++)
+  {
+    for(usize dy = 0; dy < destNy; dy++)
+    {
+      for(usize dx = 0; dx < destNx; dx++)
+      {
+        const usize srcZ = 0 + dz;
+        const usize srcY = 1 + dy;
+        const usize srcX = 1 + dx;
+        const usize srcLinear = srcZ * ny * nx + srcY * nx + srcX;
+        expected.push_back(static_cast<uint8_t>(srcLinear));
+      }
+    }
+  }
+  RequireArrayEquals<uint8>(dataStructure, arrPath, expected);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: VoxelSubvolume crop preserves RGB24 components", "[SimplnxCore][ReadNIfTIFileFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::array<int16_t, 3> dims = {4, 3, 3};
+  const usize nx = static_cast<usize>(dims[0]);
+  const usize ny = static_cast<usize>(dims[1]);
+  const usize nz = static_cast<usize>(dims[2]);
+  const usize numVoxels = nx * ny * nz;
+
+  std::vector<uint8_t> voxels(numVoxels * 3);
+  for(usize i = 0; i < numVoxels; i++)
+  {
+    voxels[i * 3 + 0] = static_cast<uint8_t>((i * 3 + 0) & 0xFF);
+    voxels[i * 3 + 1] = static_cast<uint8_t>((i * 3 + 1) & 0xFF);
+    voxels[i * 3 + 2] = static_cast<uint8_t>((i * 3 + 2) & 0xFF);
+  }
+
+  SyntheticNiftiParams params;
+  params.dims = dims;
+  params.niftiDatatype = NIFTI_TYPE_RGB24;
+  params.bitpix = 24;
+  nifti_1_header hdr = MakeHeader(params);
+
+  const fs::path outDir = OutputDir();
+  const fs::path filePath = outDir / "rgb24_crop.nii";
+  WriteNiftiFile(filePath, hdr, voxels, false);
+
+  CropGeometryParameter::ValueType crop;
+  crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
+  crop.cropX = true;
+  crop.cropY = true;
+  crop.cropZ = true;
+  crop.xBoundVoxels = {1, 2};
+  crop.yBoundVoxels = {0, 1};
+  crop.zBoundVoxels = {1, 2};
+
+  const DataPath geomPath({"NIfTI RGB Cropped"});
+  const std::string amName = "Cell Data";
+  const std::string arrName = "ImageData";
+  const DataPath arrPath = geomPath.createChildPath(amName).createChildPath(arrName);
+
+  DataStructure dataStructure;
+  ReadNIfTIFileFilter filter;
+  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, true, true, crop);
+
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto execute = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<uint8>>(arrPath));
+  const auto& arr = dataStructure.getDataRefAs<DataArray<uint8>>(arrPath);
+  REQUIRE(arr.getNumberOfComponents() == 3);
+
+  const usize destNx = 2;
+  const usize destNy = 2;
+  const usize destNz = 2;
+  std::vector<uint8_t> expected;
+  expected.reserve(destNx * destNy * destNz * 3);
+  for(usize dz = 0; dz < destNz; dz++)
+  {
+    for(usize dy = 0; dy < destNy; dy++)
+    {
+      for(usize dx = 0; dx < destNx; dx++)
+      {
+        const usize srcX = 1 + dx;
+        const usize srcY = 0 + dy;
+        const usize srcZ = 1 + dz;
+        const usize srcLinear = srcZ * ny * nx + srcY * nx + srcX;
+        expected.push_back(static_cast<uint8_t>((srcLinear * 3 + 0) & 0xFF));
+        expected.push_back(static_cast<uint8_t>((srcLinear * 3 + 1) & 0xFF));
+        expected.push_back(static_cast<uint8_t>((srcLinear * 3 + 2) & 0xFF));
+      }
+    }
+  }
+  RequireArrayEquals<uint8>(dataStructure, arrPath, expected);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

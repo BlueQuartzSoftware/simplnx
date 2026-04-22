@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/CropGeometryParameter.hpp"
 
 #include <filesystem>
 
@@ -19,6 +20,7 @@ struct SIMPLNXCORE_EXPORT ReadNIfTIFileInputValues
   std::string ImageDataArrayName;
   bool UseAffineIfPresent{true};
   bool ApplyScalingTransform{true};
+  CropGeometryParameter::ValueType CroppingOptions;
 };
 
 /**

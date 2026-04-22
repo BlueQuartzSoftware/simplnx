@@ -61,9 +61,21 @@ warning is emitted if a scaling transform is present for those types.
 | Input NIfTI File | File path | — | Path to the `.nii` or `.nii.gz` file to read. |
 | Use Stored Affine Transform | Bool | `true` | Use `sform`/`qform` to set origin + spacing when present. |
 | Apply Scaling Transform | Bool | `true` | Apply `y = slope*x + inter` at read time; promotes to float32. |
+| Cropping Options | CropGeometry | *None* | Optional voxel-index or physical-coordinate sub-volume. Only the selected region is streamed into memory; data outside the region is read and discarded. |
 | Image Geometry | Data Path | `NIfTI Image` | Path to the created Image Geometry. |
 | Cell Attribute Matrix Name | String | `Cell Data` | Name of the attribute matrix holding voxel values. |
 | Image Data Array Name | String | `ImageData` | Name of the array receiving voxel values. |
+
+### Cropping behavior
+
+When cropping is enabled the filter does **not** materialize the full volume
+before cropping. It reads the source file one scan-line at a time; scan-lines
+outside the selected sub-volume are read and discarded without being copied
+into a DataArray. This keeps peak memory usage proportional to the cropped
+region, not the source file size. For `.nii.gz` this is the best that can be
+done (gzip is not seekable without linear decompression); for plain `.nii` we
+still read linearly in this version to keep the code simple — a true
+seek-skip optimization may come later if timings warrant it.
 
 ## Caveats
 

@@ -5,6 +5,8 @@
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 
 #include <fmt/format.h>
 #include <zlib.h>
@@ -17,100 +19,215 @@ using namespace nx::core;
 
 namespace
 {
-constexpr usize k_ChunkElementCount = 1u << 20; // ~1M elements per chunk
-constexpr usize k_ProgressStride = 1u << 22;    // report progress every ~4M elements processed
+constexpr usize k_ProgressStride = 1u << 22; // ~4M elements processed per progress message
+
+struct CropBounds
+{
+  usize xStart{0};
+  usize xEnd{0};
+  usize yStart{0};
+  usize yEnd{0};
+  usize zStart{0};
+  usize zEnd{0};
+};
+
+Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, const CropGeometryParameter::ValueType& opts)
+{
+  CropBounds b;
+  b.xEnd = md.dimensions[0] - 1;
+  b.yEnd = md.dimensions[1] - 1;
+  b.zEnd = md.dimensions[2] - 1;
+
+  using Type = CropGeometryParameter::CropValues::TypeEnum;
+  if(opts.type == Type::NoCropping)
+  {
+    return {b};
+  }
+
+  if(opts.type == Type::VoxelSubvolume)
+  {
+    if(opts.cropX)
+    {
+      b.xStart = static_cast<usize>(opts.xBoundVoxels[0]);
+      b.xEnd = static_cast<usize>(opts.xBoundVoxels[1]);
+    }
+    if(opts.cropY)
+    {
+      b.yStart = static_cast<usize>(opts.yBoundVoxels[0]);
+      b.yEnd = static_cast<usize>(opts.yBoundVoxels[1]);
+    }
+    if(opts.cropZ)
+    {
+      b.zStart = static_cast<usize>(opts.zBoundVoxels[0]);
+      b.zEnd = static_cast<usize>(opts.zBoundVoxels[1]);
+    }
+  }
+  else // PhysicalSubvolume
+  {
+    DataStructure tmpDs;
+    auto* srcImageGeom = ImageGeom::Create(tmpDs, "srcImageGeom");
+    srcImageGeom->setOrigin({md.origin[0], md.origin[1], md.origin[2]});
+    srcImageGeom->setSpacing({md.spacing[0], md.spacing[1], md.spacing[2]});
+    srcImageGeom->setDimensions({md.dimensions[0], md.dimensions[1], md.dimensions[2]});
+
+    const auto startCoords = srcImageGeom->getCoordsf(b.xStart, b.yStart, b.zStart);
+    const auto endCoords = srcImageGeom->getCoordsf(b.xEnd, b.yEnd, b.zEnd);
+
+    FloatVec2Type xBoundPhysical = opts.cropX ? opts.xBoundPhysical : FloatVec2Type{startCoords[0], endCoords[0]};
+    FloatVec2Type yBoundPhysical = opts.cropY ? opts.yBoundPhysical : FloatVec2Type{startCoords[1], endCoords[1]};
+    FloatVec2Type zBoundPhysical = opts.cropZ ? opts.zBoundPhysical : FloatVec2Type{startCoords[2], endCoords[2]};
+
+    auto startIndex = srcImageGeom->getIndex(xBoundPhysical[0], yBoundPhysical[0], zBoundPhysical[0]);
+    if(!startIndex.has_value())
+    {
+      return MakeErrorResult<CropBounds>(-34740, fmt::format("Could not map starting physical bounds ({}, {}, {}) to a valid voxel index within the NIfTI volume.", xBoundPhysical[0], yBoundPhysical[0],
+                                                             zBoundPhysical[0]));
+    }
+    b.xStart = startIndex.value() % md.dimensions[0];
+    b.yStart = (startIndex.value() / md.dimensions[0]) % md.dimensions[1];
+    b.zStart = startIndex.value() / (md.dimensions[0] * md.dimensions[1]);
+
+    auto endIndex = srcImageGeom->getIndex(xBoundPhysical[1], yBoundPhysical[1], zBoundPhysical[1]);
+    if(!endIndex.has_value())
+    {
+      return MakeErrorResult<CropBounds>(-34741, fmt::format("Could not map ending physical bounds ({}, {}, {}) to a valid voxel index within the NIfTI volume.", xBoundPhysical[1], yBoundPhysical[1],
+                                                             zBoundPhysical[1]));
+    }
+    b.xEnd = endIndex.value() % md.dimensions[0];
+    b.yEnd = (endIndex.value() / md.dimensions[0]) % md.dimensions[1];
+    b.zEnd = endIndex.value() / (md.dimensions[0] * md.dimensions[1]);
+  }
+
+  if(b.xStart > b.xEnd || b.yStart > b.yEnd || b.zStart > b.zEnd)
+  {
+    return MakeErrorResult<CropBounds>(-34742, fmt::format("Invalid crop bounds: start ({}, {}, {}) must be <= end ({}, {}, {}).", b.xStart, b.yStart, b.zStart, b.xEnd, b.yEnd, b.zEnd));
+  }
+  if(b.xEnd >= md.dimensions[0] || b.yEnd >= md.dimensions[1] || b.zEnd >= md.dimensions[2])
+  {
+    return MakeErrorResult<CropBounds>(-34743, fmt::format("Crop end voxel ({}, {}, {}) exceeds NIfTI volume extent ({}, {}, {}).", b.xEnd, b.yEnd, b.zEnd, md.dimensions[0] - 1, md.dimensions[1] - 1,
+                                                           md.dimensions[2] - 1));
+  }
+
+  return {b};
+}
 
 template <class NativeT, class OutputT>
-Result<> StreamTypedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, usize totalElements, bool byteSwap, bool applyScaling, float32 slope, float32 inter, const std::atomic_bool& shouldCancel,
-                           const IFilter::MessageHandler& messageHandler, const std::string& filePath)
+Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const nx::core::nifti::NiftiMetadata& md, const CropBounds& b, bool applyScaling, const std::atomic_bool& shouldCancel,
+                             const IFilter::MessageHandler& messageHandler)
 {
-  static_assert(std::is_arithmetic_v<NativeT>, "StreamTypedVoxels requires arithmetic native type");
+  static_assert(std::is_arithmetic_v<NativeT>, "StreamCroppedVoxels requires arithmetic native type");
 
-  std::vector<NativeT> buffer(k_ChunkElementCount);
-  usize processed = 0;
-  usize nextProgress = k_ProgressStride;
+  const usize srcNx = md.dimensions[0];
+  const usize srcNy = md.dimensions[1];
+  const usize srcNz = md.dimensions[2];
+  const usize componentCount = md.componentCount;
+  const bool byteSwap = md.byteSwapRequired;
+  const float32 slope = md.sclSlope;
+  const float32 inter = md.sclInter;
+  const std::string& filePath = md.filePath;
 
-  while(processed < totalElements)
+  const usize scanlineElements = srcNx * componentCount;
+  const usize scanlineBytes = scanlineElements * sizeof(NativeT);
+  std::vector<NativeT> scanline(scanlineElements);
+
+  const usize destNx = b.xEnd - b.xStart + 1;
+  const usize destNy = b.yEnd - b.yStart + 1;
+  const usize destNz = b.zEnd - b.zStart + 1;
+  const usize totalDestElements = destNx * destNy * destNz * componentCount;
+
+  usize destIdx = 0;
+  usize lastProgressIdx = 0;
+
+  for(usize srcZ = 0; srcZ < srcNz; srcZ++)
   {
     if(shouldCancel)
     {
       return {};
     }
+    const bool zInRange = (srcZ >= b.zStart && srcZ <= b.zEnd);
 
-    const usize toRead = std::min<usize>(k_ChunkElementCount, totalElements - processed);
-    const usize bytesToRead = toRead * sizeof(NativeT);
-    const int actuallyRead = gzread(gz, buffer.data(), static_cast<unsigned int>(bytesToRead));
-    if(actuallyRead != static_cast<int>(bytesToRead))
+    for(usize srcY = 0; srcY < srcNy; srcY++)
     {
-      return MakeErrorResult(-34730, fmt::format("Short voxel read from '{}': expected {} bytes at element offset {}, got {}", filePath, bytesToRead, processed, actuallyRead));
-    }
-
-    for(usize i = 0; i < toRead; i++)
-    {
-      NativeT raw = buffer[i];
-      if(byteSwap)
+      const int actuallyRead = gzread(gz, scanline.data(), static_cast<unsigned int>(scanlineBytes));
+      if(actuallyRead != static_cast<int>(scanlineBytes))
       {
-        raw = nx::core::byteswap(raw);
+        return MakeErrorResult(-34730, fmt::format("Short voxel read from '{}' at (z={}, y={}): expected {} bytes, got {}", filePath, srcZ, srcY, scanlineBytes, actuallyRead));
       }
 
-      OutputT outVal;
-      if constexpr(std::is_same_v<OutputT, float32>)
+      if(!zInRange)
       {
-        const auto promoted = static_cast<float32>(raw);
-        outVal = applyScaling ? (promoted * slope + inter) : promoted;
+        continue;
       }
-      else
+      const bool yInRange = (srcY >= b.yStart && srcY <= b.yEnd);
+      if(!yInRange)
       {
-        outVal = static_cast<OutputT>(raw);
+        continue;
       }
 
-      store.setValue(processed + i, outVal);
-    }
+      for(usize srcX = b.xStart; srcX <= b.xEnd; srcX++)
+      {
+        const usize baseIdx = srcX * componentCount;
+        for(usize c = 0; c < componentCount; c++)
+        {
+          NativeT raw = scanline[baseIdx + c];
+          if(byteSwap)
+          {
+            raw = nx::core::byteswap(raw);
+          }
 
-    processed += toRead;
-    if(processed >= nextProgress || processed == totalElements)
-    {
-      const auto pct = static_cast<int32>((processed * 100ULL) / totalElements);
-      messageHandler({IFilter::Message::Type::Info, fmt::format("Reading ... {}%)", pct)});
-      nextProgress += k_ProgressStride;
+          OutputT outVal;
+          if constexpr(std::is_same_v<OutputT, float32>)
+          {
+            const auto promoted = static_cast<float32>(raw);
+            outVal = applyScaling ? (promoted * slope + inter) : promoted;
+          }
+          else
+          {
+            outVal = static_cast<OutputT>(raw);
+          }
+          store.setValue(destIdx++, outVal);
+        }
+      }
+
+      if(destIdx - lastProgressIdx >= k_ProgressStride || destIdx == totalDestElements)
+      {
+        const auto pct = static_cast<int32>((destIdx * 100ULL) / std::max<usize>(1, totalDestElements));
+        messageHandler({IFilter::Message::Type::Info, fmt::format("Reading NIfTI voxels... {}%", pct)});
+        lastProgressIdx = destIdx;
+      }
     }
   }
   return {};
 }
 
 template <class OutputT>
-Result<> DispatchByNiftiType(gzFile gz, AbstractDataStore<OutputT>& store, const nx::core::nifti::NiftiMetadata& md, usize totalElements, bool applyScaling, const std::atomic_bool& shouldCancel,
+Result<> DispatchByNiftiType(gzFile gz, AbstractDataStore<OutputT>& store, const nx::core::nifti::NiftiMetadata& md, const CropBounds& b, bool applyScaling, const std::atomic_bool& shouldCancel,
                              const IFilter::MessageHandler& messageHandler)
 {
-  const float32 slope = md.sclSlope;
-  const float32 inter = md.sclInter;
-  const bool bs = md.byteSwapRequired;
-  const std::string& fp = md.filePath;
-
   switch(md.niftiDatatype)
   {
   case NIFTI_TYPE_UINT8:
   case NIFTI_TYPE_RGB24:
   case NIFTI_TYPE_RGBA32:
-    return StreamTypedVoxels<uint8, OutputT>(gz, store, totalElements, false, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<uint8, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_INT8:
-    return StreamTypedVoxels<int8, OutputT>(gz, store, totalElements, false, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<int8, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_UINT16:
-    return StreamTypedVoxels<uint16, OutputT>(gz, store, totalElements, bs, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<uint16, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_INT16:
-    return StreamTypedVoxels<int16, OutputT>(gz, store, totalElements, bs, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<int16, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_UINT32:
-    return StreamTypedVoxels<uint32, OutputT>(gz, store, totalElements, bs, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<uint32, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_INT32:
-    return StreamTypedVoxels<int32, OutputT>(gz, store, totalElements, bs, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<int32, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_UINT64:
-    return StreamTypedVoxels<uint64, OutputT>(gz, store, totalElements, bs, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<uint64, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_INT64:
-    return StreamTypedVoxels<int64, OutputT>(gz, store, totalElements, bs, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<int64, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_FLOAT32:
-    return StreamTypedVoxels<float32, OutputT>(gz, store, totalElements, bs, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<float32, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   case NIFTI_TYPE_FLOAT64:
-    return StreamTypedVoxels<float64, OutputT>(gz, store, totalElements, bs, applyScaling, slope, inter, shouldCancel, messageHandler, fp);
+    return StreamCroppedVoxels<float64, OutputT>(gz, store, md, b, applyScaling, shouldCancel, messageHandler);
   default:
     return MakeErrorResult(-34731, fmt::format("Unsupported NIfTI datatype code {} encountered during voxel read (header validation should have rejected this).", md.niftiDatatype));
   }
@@ -143,8 +260,12 @@ Result<> ReadNIfTIFile::operator()()
   }
   const auto& md = metadataResult.value();
 
-  const usize numVoxels = md.dimensions[0] * md.dimensions[1] * md.dimensions[2];
-  const usize totalElements = numVoxels * md.componentCount;
+  auto boundsResult = ComputeCropBounds(md, m_InputValues->CroppingOptions);
+  if(boundsResult.invalid())
+  {
+    return ConvertResult(std::move(boundsResult));
+  }
+  const CropBounds bounds = boundsResult.value();
 
   const bool applyScaling = m_InputValues->ApplyScalingTransform && md.hasNontrivialScaling && md.componentCount == 1;
 
@@ -168,35 +289,34 @@ Result<> ReadNIfTIFile::operator()()
   switch(dataArrayBase.getDataType())
   {
   case DataType::uint8:
-    streamResult = DispatchByNiftiType<uint8>(gz, m_DataStructure.getDataRefAs<DataArray<uint8>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<uint8>(gz, m_DataStructure.getDataRefAs<DataArray<uint8>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::int8:
-    streamResult = DispatchByNiftiType<int8>(gz, m_DataStructure.getDataRefAs<DataArray<int8>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<int8>(gz, m_DataStructure.getDataRefAs<DataArray<int8>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::uint16:
-    streamResult = DispatchByNiftiType<uint16>(gz, m_DataStructure.getDataRefAs<DataArray<uint16>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<uint16>(gz, m_DataStructure.getDataRefAs<DataArray<uint16>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::int16:
-    streamResult = DispatchByNiftiType<int16>(gz, m_DataStructure.getDataRefAs<DataArray<int16>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<int16>(gz, m_DataStructure.getDataRefAs<DataArray<int16>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::uint32:
-    streamResult = DispatchByNiftiType<uint32>(gz, m_DataStructure.getDataRefAs<DataArray<uint32>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<uint32>(gz, m_DataStructure.getDataRefAs<DataArray<uint32>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::int32:
-    streamResult = DispatchByNiftiType<int32>(gz, m_DataStructure.getDataRefAs<DataArray<int32>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<int32>(gz, m_DataStructure.getDataRefAs<DataArray<int32>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::uint64:
-    streamResult = DispatchByNiftiType<uint64>(gz, m_DataStructure.getDataRefAs<DataArray<uint64>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<uint64>(gz, m_DataStructure.getDataRefAs<DataArray<uint64>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::int64:
-    streamResult = DispatchByNiftiType<int64>(gz, m_DataStructure.getDataRefAs<DataArray<int64>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<int64>(gz, m_DataStructure.getDataRefAs<DataArray<int64>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::float32:
-    streamResult =
-        DispatchByNiftiType<float32>(gz, m_DataStructure.getDataRefAs<DataArray<float32>>(dataArrayPath).getDataStoreRef(), md, totalElements, applyScaling, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<float32>(gz, m_DataStructure.getDataRefAs<DataArray<float32>>(dataArrayPath).getDataStoreRef(), md, bounds, applyScaling, m_ShouldCancel, m_MessageHandler);
     break;
   case DataType::float64:
-    streamResult = DispatchByNiftiType<float64>(gz, m_DataStructure.getDataRefAs<DataArray<float64>>(dataArrayPath).getDataStoreRef(), md, totalElements, false, m_ShouldCancel, m_MessageHandler);
+    streamResult = DispatchByNiftiType<float64>(gz, m_DataStructure.getDataRefAs<DataArray<float64>>(dataArrayPath).getDataStoreRef(), md, bounds, false, m_ShouldCancel, m_MessageHandler);
     break;
   default:
     gzclose(gz);

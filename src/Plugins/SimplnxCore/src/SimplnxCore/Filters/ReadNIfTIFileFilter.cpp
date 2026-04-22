@@ -1,15 +1,19 @@
 #include "ReadNIfTIFileFilter.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/ReadNIfTIFile.hpp"
+#include "SimplnxCore/Filters/CropImageGeometryFilter.hpp"
 #include "SimplnxCore/utils/NiftiUtilities.hpp"
 
 #include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 
 #include <atomic>
@@ -96,6 +100,12 @@ Parameters ReadNIfTIFileFilter::parameters() const
                                                 "output array will be promoted to float32. Scaling is never applied to RGB24/RGBA32 data per the NIfTI-1 specification.",
                                                 true));
 
+  params.insertSeparator(Parameters::Separator{"Cropping Options"});
+  params.insert(std::make_unique<CropGeometryParameter>(k_CroppingOptions_Key, "Cropping Options",
+                                                        "Optional cropping of the volume while it is being read. When cropping is enabled, only the selected sub-volume is streamed into memory; the "
+                                                        "rest of the file is discarded on read. Supports both voxel index and physical coordinate bounds.",
+                                                        CropGeometryParameter::ValueType{}));
+
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to the created Image Geometry", DataPath({"NIfTI Image"})));
 
@@ -127,6 +137,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   auto pInputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto pUseAffineIfPresent = filterArgs.value<bool>(k_UseAffineIfPresent_Key);
   auto pApplyScaling = filterArgs.value<bool>(k_ApplyScalingTransform_Key);
+  auto pCroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
   auto pImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pCellAttrMatName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   auto pImageDataArrayName = filterArgs.value<std::string>(k_ImageDataArrayName_Key);
@@ -158,9 +169,74 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 
   const auto& md = cache.metadata;
 
-  CreateImageGeometryAction::DimensionType dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};
-  CreateImageGeometryAction::OriginType origin = {md.origin[0], md.origin[1], md.origin[2]};
-  CreateImageGeometryAction::SpacingType spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
+  // Start with the full-volume geometry from the header
+  std::vector<usize> dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};
+  std::vector<float32> origin = {md.origin[0], md.origin[1], md.origin[2]};
+  std::vector<float32> spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
+
+  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+
+  // If cropping is enabled, run CropImageGeometryFilter::preflight on a temp
+  // DataStructure to compute the cropped dims / origin / spacing
+  if(pCroppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
+  {
+    DataStructure tmpDs;
+    OutputActions tmpActions;
+    {
+      auto tmpGeomAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPath, dims, origin, spacing, pCellAttrMatName);
+      tmpActions.appendAction(std::move(tmpGeomAction));
+    }
+    Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
+    if(tmpActionsResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+    }
+
+    CropImageGeometryFilter cropImageGeomFilter;
+    Arguments cropImageGeomArgs;
+    cropImageGeomArgs.insertOrAssign("input_image_geometry_path", std::make_any<DataPath>(pImageGeomPath));
+    cropImageGeomArgs.insertOrAssign("use_physical_bounds", std::make_any<bool>(pCroppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume));
+    cropImageGeomArgs.insertOrAssign("crop_x_dim", std::make_any<bool>(pCroppingOptions.cropX));
+    cropImageGeomArgs.insertOrAssign("crop_y_dim", std::make_any<bool>(pCroppingOptions.cropY));
+    cropImageGeomArgs.insertOrAssign("crop_z_dim", std::make_any<bool>(pCroppingOptions.cropZ));
+    if(pCroppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
+    {
+      cropImageGeomArgs.insertOrAssign("min_voxel",
+                                       std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(pCroppingOptions.xBoundVoxels[0]), static_cast<uint64>(pCroppingOptions.yBoundVoxels[0]),
+                                                                                        static_cast<uint64>(pCroppingOptions.zBoundVoxels[0])}));
+      cropImageGeomArgs.insertOrAssign("max_voxel",
+                                       std::make_any<VectorUInt64Parameter::ValueType>({static_cast<uint64>(pCroppingOptions.xBoundVoxels[1]), static_cast<uint64>(pCroppingOptions.yBoundVoxels[1]),
+                                                                                        static_cast<uint64>(pCroppingOptions.zBoundVoxels[1])}));
+    }
+    else
+    {
+      cropImageGeomArgs.insertOrAssign(
+          "min_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(pCroppingOptions.xBoundPhysical[0]), static_cast<float64>(pCroppingOptions.yBoundPhysical[0]),
+                                                                         static_cast<float64>(pCroppingOptions.zBoundPhysical[0])}));
+      cropImageGeomArgs.insertOrAssign(
+          "max_coord", std::make_any<VectorFloat64Parameter::ValueType>({static_cast<float64>(pCroppingOptions.xBoundPhysical[1]), static_cast<float64>(pCroppingOptions.yBoundPhysical[1]),
+                                                                         static_cast<float64>(pCroppingOptions.zBoundPhysical[1])}));
+    }
+    cropImageGeomArgs.insertOrAssign("remove_original_geometry", std::make_any<bool>(false));
+    const DataPath croppedGeomPath({pImageGeomPath.getTargetName() + "_cropped"});
+    cropImageGeomArgs.insertOrAssign("output_image_geometry_path", std::make_any<DataPath>(croppedGeomPath));
+
+    PreflightResult cropImageResult = cropImageGeomFilter.preflight(tmpDs, cropImageGeomArgs, messageHandler, shouldCancel);
+    if(cropImageResult.outputActions.invalid())
+    {
+      return cropImageResult;
+    }
+    Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    if(actionsResult.invalid())
+    {
+      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+    }
+
+    const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
+    dims = croppedGeom.getDimensions().toContainer<std::vector<usize>>();
+    origin = croppedGeom.getOrigin().toContainer<std::vector<float32>>();
+    spacing = croppedGeom.getSpacing().toContainer<std::vector<float32>>();
+  }
 
   {
     auto createGeomAction = std::make_unique<CreateImageGeometryAction>(pImageGeomPath, dims, origin, spacing, pCellAttrMatName);
@@ -168,7 +244,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   }
 
   // Determine output DataType. If the file has non-trivial scaling and the user
-  // wants to apply it, promote single-component integer types to float32.
+  // wants to apply it, promote single-component types to float32.
   DataType outputDataType = md.dataType;
   if(pApplyScaling && md.hasNontrivialScaling && md.componentCount == 1)
   {
@@ -176,7 +252,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
   }
 
   // DataArray tuple dims mirror the reversed image dims (z, y, x)
-  const std::vector<usize> tupleDims = {md.dimensions[2], md.dimensions[1], md.dimensions[0]};
+  const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
   const std::vector<usize> componentDims = {md.componentCount};
   const DataPath dataArrayPath = pImageGeomPath.createChildPath(pCellAttrMatName).createChildPath(pImageDataArrayName);
   {
@@ -218,6 +294,7 @@ Result<> ReadNIfTIFileFilter::executeImpl(DataStructure& dataStructure, const Ar
   inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   inputValues.UseAffineIfPresent = filterArgs.value<bool>(k_UseAffineIfPresent_Key);
   inputValues.ApplyScalingTransform = filterArgs.value<bool>(k_ApplyScalingTransform_Key);
+  inputValues.CroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
   inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
   inputValues.ImageDataArrayName = filterArgs.value<std::string>(k_ImageDataArrayName_Key);
