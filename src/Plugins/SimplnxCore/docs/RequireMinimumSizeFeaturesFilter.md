@@ -12,17 +12,55 @@ The **Filter** can be run in a mode where the minimum number of neighbors is app
 
 ## Algorithm
 
-The algorithm operates in two phases:
+### What the filter does (conceptually)
 
-1. **Feature Removal**: Features with fewer voxels than the threshold have their voxels' Feature IDs set to -1 (invalid). This is done using chunked bulk I/O (64K tuples per chunk).
-2. **Gap Filling**: The resulting "holes" (voxels with Feature ID = -1) are iteratively filled by majority voting among each hole voxel's 6 face-neighbors. Each iteration assigns the most-voted valid neighbor's Feature ID. This repeats until no holes remain.
+The input is a segmented volume: every **Cell** has a **Feature ID** identifying which **Feature** (grain, particle, phase domain, etc.) it belongs to. Small features — often from noise, bad data, or over-segmentation — are frequently not physically meaningful. This filter removes any feature whose voxel count is below a user-specified threshold and then reassigns those voxels to their neighbors so the volume remains fully labeled.
 
-### Performance
+Running the filter leaves the volume without any sub-threshold features and with no "holes" (no voxels left unlabeled), ready for downstream analysis. Any previously-computed **feature-level** data (centroids, average orientations, neighbor lists) is invalidated by the cleanup and must be recomputed.
 
-This filter is optimized for out-of-core (OOC) data storage in both phases:
+### Phase 1 — Mark small features as removed
 
-- **Feature Removal**: Feature IDs are read and written in 64K-tuple chunks via `copyIntoBuffer()` / `copyFromBuffer()`. Only chunks that contain modifications are written back.
-- **Gap Filling**: A rolling 3-slice buffer holds the previous, current, and next Z-slices of Feature IDs in memory. All 6 face-neighbor reads come from these local buffers rather than per-element OOC DataStore access. Changed voxels are tracked in a compact list, and only those voxels have their data arrays updated, rather than scanning all voxels for each data array.
+The filter first walks the **per-feature voxel count** array (an array indexed by Feature ID, typically of length "thousands") and marks any feature with a count below the threshold as inactive. If "Apply Single Phase" is enabled, only features belonging to the selected phase are considered.
+
+Then it scans the full per-cell **Feature IDs** volume in 64K-tuple chunks:
+
+1. Bulk-read one chunk of Feature IDs into RAM (`copyIntoBuffer`).
+2. For each voxel in the chunk, if its feature was marked inactive, overwrite the voxel's Feature ID with `-1` (the "bad voxel" sentinel).
+3. If the chunk contained any modifications, write the chunk back (`copyFromBuffer`); otherwise skip the write.
+
+This replaces a naive per-voxel `setValue(-1)` loop, which would issue one HDF5 chunk-op per voxel on OOC-backed data. Only chunks that actually changed incur a write.
+
+If **every** feature would be removed by the threshold, the filter errors out — this is almost always a sign the user chose the threshold incorrectly.
+
+### Phase 2 — Fill the gaps by majority neighbor vote
+
+After phase 1, every voxel whose feature was too small is sitting at Feature ID `-1`. The filter iteratively relabels these bad voxels by **majority vote among their 6 face-neighbors** (±X, ±Y, ±Z). The voting is done across a series of passes:
+
+1. **Scan pass** — walk the volume in Z-major order using a **rolling 3-slice buffer** (previous, current, and next Z-slices of Feature IDs loaded in RAM). For each bad voxel, tally the Feature IDs of its 6 face-neighbors into a small vote counter indexed by Feature ID. The neighbor whose ID received the most votes is chosen.
+2. Because every neighbor read comes from the 3-slice RAM buffer (not the OOC store), the expensive "chunk thrashing" access pattern is eliminated. At the end of each Z-slice the bottom slice is evicted, a new top slice is loaded, and the buffers slide forward.
+3. Bad voxels that picked a winner (some bad voxels have no valid neighbor, e.g. when they're surrounded by other bad voxels) are recorded into a **sparse parallel list**: one vector of changed voxel global indices, one vector of chosen neighbor global indices. The list grows with the number of bad voxels processed **per iteration**, not with the volume size.
+4. **Transfer phase** — the chosen Feature IDs are written back into the Feature IDs volume, and every other cell-level array (the full set of arrays in the **Cell Attribute Matrix**) has the neighbor's tuple copied into the bad voxel's tuple. This runs one `ChunkedTransferWorker` per cell-level array in parallel via `ParallelTaskAlgorithm`. Each worker:
+   - Allocates a slab buffer sized to its per-array memory budget (64 MB by default) and walks the sorted `changedVoxels` list one Z-batch at a time.
+   - Reads the batch's Z-range **plus a ±1 Z-slice margin** into the slab — the margin guarantees every neighbor index falls inside the loaded slab, even when the neighbor is one Z-slice off from the voxel.
+   - Applies every `(voxel ← neighbor)` copy entirely in-memory on the slab.
+   - Writes back **only the interior** (the margin is never mutated).
+
+   Because each worker owns its own DataArray, the outer parallelism across arrays is safe even though an individual DataStore is not internally thread-safe.
+5. **Iteration** — phase 2 repeats (scan + transfer) until no bad voxels remain. Each iteration shrinks the bad-voxel set.
+
+### Why the rolling buffer matters
+
+Without it, each bad-voxel evaluation would read its 6 neighbors via per-element `getValue()` on the OOC store. For a 2 billion-voxel volume with tens of millions of bad voxels per iteration across several iterations, that is a nine-digit count of chunk load/evict cycles. With the 3-slice buffer, the total chunk-load count drops to roughly the Z dimension per iteration — typically a four-digit count — and all neighbor reads hit RAM.
+
+### Memory footprint
+
+Peak working memory is bounded by:
+
+- A 3-slice Feature IDs buffer during the scan: `3 * Dx * Dy * sizeof(int32)`.
+- Two sparse vectors sized to the per-iteration bad-voxel count (not the full volume).
+- A per-array transfer slab capped at 64 MB per parallel worker.
+
+All three terms are O(slice) or O(iteration bad count), never O(volume). The filter handles billion-voxel volumes without OOM.
 
 ## WARNING: Feature Data Will Become Invalid
 
