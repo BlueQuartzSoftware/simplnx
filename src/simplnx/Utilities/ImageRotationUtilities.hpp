@@ -8,12 +8,14 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/simplnx_export.hpp"
 
 #include <Eigen/Dense>
 
 #include <chrono>
 #include <concepts>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <mutex>
@@ -336,6 +338,75 @@ private:
 };
 
 /**
+ * @brief Update a Z-slice slab cache to cover [newZMin, newZMax].
+ *
+ * The slab cache holds a contiguous range of source Z-slices in a pre-allocated buffer.
+ * When the caller asks for a new range that overlaps the cached range, this helper shifts
+ * the surviving slices to their new position via memmove and issues bulk reads only for
+ * the delta slices (below or above the overlap). When there is no overlap (or the buffer
+ * had to grow), the entire new range is re-read.
+ *
+ * The caller owns \a slabBuf and \a slabBufSize; this function may grow the buffer but
+ * will not shrink it. \a cachedZMin and \a cachedZMax are updated in place.
+ *
+ * Preconditions: \a newZMin <= \a newZMax, both within the source dataset's Z range.
+ */
+template <typename T>
+inline void updateSlabCache(const AbstractDataStore<T>& srcStore, std::unique_ptr<T[]>& slabBuf, usize& slabBufSize, int64& cachedZMin, int64& cachedZMax, int64 newZMin, int64 newZMax,
+                            usize sliceTuples, usize numComps)
+{
+  const usize sliceElems = sliceTuples * numComps;
+  const usize needElems = static_cast<usize>(newZMax - newZMin + 1) * sliceElems;
+
+  bool validCache = (cachedZMin >= 0 && cachedZMax >= cachedZMin);
+
+  // Grow buffer if needed. Growth discards the old contents, so the cache must be re-read in full.
+  if(needElems > slabBufSize)
+  {
+    slabBuf = std::make_unique<T[]>(needElems);
+    slabBufSize = needElems;
+    validCache = false;
+  }
+
+  const int64 overlapMin = std::max(newZMin, cachedZMin);
+  const int64 overlapMax = std::min(newZMax, cachedZMax);
+  const bool hasOverlap = validCache && overlapMin <= overlapMax;
+
+  if(hasOverlap)
+  {
+    // Shift the surviving slices to their new position (memmove handles overlap in either direction).
+    const usize srcOff = static_cast<usize>(overlapMin - cachedZMin) * sliceElems;
+    const usize dstOff = static_cast<usize>(overlapMin - newZMin) * sliceElems;
+    const usize moveCount = static_cast<usize>(overlapMax - overlapMin + 1) * sliceElems;
+    if(srcOff != dstOff)
+    {
+      std::memmove(slabBuf.get() + dstOff, slabBuf.get() + srcOff, moveCount * sizeof(T));
+    }
+    // Read slices below the overlap (the new range extends further back).
+    if(newZMin < overlapMin)
+    {
+      const usize readElems = static_cast<usize>(overlapMin - newZMin) * sliceElems;
+      srcStore.copyIntoBuffer(static_cast<usize>(newZMin) * sliceElems, nonstd::span<T>(slabBuf.get(), readElems));
+    }
+    // Read slices above the overlap (the new range extends further forward — typical case).
+    if(newZMax > overlapMax)
+    {
+      const usize readElems = static_cast<usize>(newZMax - overlapMax) * sliceElems;
+      const usize readStartZ = static_cast<usize>(overlapMax + 1);
+      const usize dstReadOff = static_cast<usize>(overlapMax + 1 - newZMin) * sliceElems;
+      srcStore.copyIntoBuffer(readStartZ * sliceElems, nonstd::span<T>(slabBuf.get() + dstReadOff, readElems));
+    }
+  }
+  else
+  {
+    srcStore.copyIntoBuffer(static_cast<usize>(newZMin) * sliceElems, nonstd::span<T>(slabBuf.get(), needElems));
+  }
+
+  cachedZMin = newZMin;
+  cachedZMax = newZMax;
+}
+
+/**
  * @brief The RotateImageGeometryWithTrilinearInterpolation class
  */
 template <typename T>
@@ -419,12 +490,19 @@ public:
    * @brief This is the main algorithm to perform the interpolation and get a final value that is placed into the transformed
    * voxel. This uses Trilinear interpolation which will devolve into Bilinear and Linear interpolation depending on the
    * values of U, V and W.
+   *
+   * OOC optimization: mirrors the RotateImageGeometryWithNearestNeighbor slab-cache pattern but
+   * with a +/- 1 Z margin added to the needed source Z range so that all 8 trilinear corner
+   * neighbors around every output voxel are guaranteed to live inside the cached slab. Each
+   * output Z-slice is accumulated into a local buffer and flushed with a single
+   * copyFromBuffer(), eliminating per-voxel virtual dispatch and HDF5 chunk thrashing.
    */
   void operator()() const
   {
     using DataArrayType = DataArray<T>;
 
     const auto& sourceArray = dynamic_cast<const DataArrayType&>(*m_SourceArray);
+    const auto& oldDataStore = sourceArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize numComps = sourceArray.getNumberOfComponents();
     if(numComps == 0)
     {
@@ -447,9 +525,23 @@ public:
     destImageGeomPtr->setSpacing(m_Params.TransformedSpacing);
     destImageGeomPtr->setOrigin(m_Params.TransformedOrigin);
 
-    std::vector<AccumulationValueType<T>> pValues(8 * numComps);
+    const int64 srcDimX = static_cast<int64>(m_Params.OriginalDims[0]);
+    const int64 srcDimY = static_cast<int64>(m_Params.OriginalDims[1]);
+    const int64 srcDimZ = static_cast<int64>(m_Params.OriginalDims[2]);
+    const usize srcSliceSize = static_cast<usize>(srcDimX * srcDimY);
+    const usize outSliceSize = static_cast<usize>(m_Params.outputDims[0] * m_Params.outputDims[1]);
 
     Matrix4fR inverseTransform = m_TransformationMatrix.inverse();
+
+    // Output slice buffer (one Z-slice of the output geometry)
+    auto outSliceBuf = std::make_unique<T[]>(outSliceSize * numComps);
+    std::fill(outSliceBuf.get(), outSliceBuf.get() + outSliceSize * numComps, static_cast<T>(0));
+
+    // Source slab cache: holds a contiguous range of source Z-slices
+    std::unique_ptr<T[]> srcSlabBuf;
+    usize srcSlabBufSize = 0;
+    int64 cachedSrcZMin = -1;
+    int64 cachedSrcZMax = -2; // invalid range initially
 
     for(int64 k = 0; k < m_Params.outputDims[2]; k++)
     {
@@ -458,48 +550,145 @@ public:
         break;
       }
       m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Interpolating values for slice '{}/{}'", m_SourceArray->getName(), k, m_Params.outputDims[2]));
-      int64 ktot = (m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
 
-      for(int64 j = 0; j < m_Params.outputDims[1]; j++)
+      // Determine source Z range needed for this output slice analytically using the 4 corners
+      // of the output slice's XY bounding box (same idea as RotateImageGeometryWithNearestNeighbor)
+      // and then pad by +/- 1 on each side to cover the 8-corner trilinear neighbors.
+      int64 neededZMin = srcDimZ;
+      int64 neededZMax = -1;
+      for(int cj = 0; cj <= 1; cj++)
       {
-        int64 jtot = (m_Params.outputDims[0]) * j;
-        for(int64 i = 0; i < m_Params.outputDims[0]; i++)
+        for(int ci = 0; ci <= 1; ci++)
         {
-          int64 destIndex = ktot + jtot + i;
-          Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
-          // Last value is 1. See https://www.euclideanspace.com/maths/geometry/affine/matrix4x4/index.htm
-          Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
-          // Transform back to the old coordinate
-          Eigen::Array4f coordsOld = inverseTransform * coordsNew;
+          int64 cx = ci == 0 ? 0 : static_cast<int64>(m_Params.outputDims[0] - 1);
+          int64 cy = cj == 0 ? 0 : static_cast<int64>(m_Params.outputDims[1] - 1);
+          int64 cornerFlatIdx = cx + cy * static_cast<int64>(m_Params.outputDims[0]) + k * static_cast<int64>(m_Params.outputDims[0] * m_Params.outputDims[1]);
+          Point3Df cornerPt = destImageGeomPtr->getCoordsf(cornerFlatIdx);
+          Eigen::Vector4f cornerNew(cornerPt.getX(), cornerPt.getY(), cornerPt.getZ(), 1.0f);
+          Eigen::Array4f cornerOld = inverseTransform * cornerNew;
+          float32 srcPhysZ = cornerOld[2];
+          float32 srcOriginZ = m_Params.OriginalOrigin[2];
+          float32 srcSpacingZ = m_Params.OriginalSpacing[2];
+          int64 srcZIdx = static_cast<int64>(std::floor((srcPhysZ - srcOriginZ) / srcSpacingZ));
+          neededZMin = std::min(neededZMin, srcZIdx);
+          neededZMax = std::max(neededZMax, srcZIdx);
+        }
+      }
+      // +/- 1 margin for trilinear corner neighbors, plus +1 extra slop for floor/ceil ambiguity
+      neededZMin = std::max(static_cast<int64>(0), neededZMin - 2);
+      neededZMax = std::min(srcDimZ - 1, neededZMax + 2);
 
-          // Now compute the old Cell Index from the old coordinate
-          SizeVec3 oldGeomIndices;
-          auto errorResult = origImageGeomPtr->computeCellIndex(coordsOld.data(), oldGeomIndices);
+      if(neededZMin > neededZMax || neededZMin >= srcDimZ || neededZMax < 0)
+      {
+        // No valid source mapping for this slice — fill with zeros
+        std::fill(outSliceBuf.get(), outSliceBuf.get() + outSliceSize * numComps, static_cast<T>(0));
+        newDataStore.copyFromBuffer(static_cast<usize>(k) * outSliceSize * numComps, nonstd::span<const T>(outSliceBuf.get(), outSliceSize * numComps));
+        continue;
+      }
 
-          // Now we know what voxel the new cell center maps back to in the original geometry.
-          if(errorResult == ImageGeom::ErrorType::NoError)
+      // Slide the slab cache to cover [neededZMin, neededZMax]. When the new range overlaps the
+      // cached range (typical case, where consecutive output slices shift the source window by a
+      // small amount), only the delta slices are read from disk; the surviving slices are moved
+      // to their new position in the buffer via memmove.
+      updateSlabCache<T>(oldDataStore, srcSlabBuf, srcSlabBufSize, cachedSrcZMin, cachedSrcZMax, neededZMin, neededZMax, srcSliceSize, numComps);
+
+      // Process output slice into local buffer. Zero-fill first so that destination voxels whose
+      // inverse-transformed coordinate falls outside the source grid remain zero.
+      std::fill(outSliceBuf.get(), outSliceBuf.get() + outSliceSize * numComps, static_cast<T>(0));
+
+      // Capture state used inside the parallel worker. `destImageGeomPtr`, `origImageGeomPtr`,
+      // `srcSlabBuf`, `outSliceBuf`, and `m_Params` / `inverseTransform` are read-only for the
+      // duration of the parallel region; threads write to disjoint Y-rows of outSliceBuf.
+      T* outSliceBufPtr = outSliceBuf.get();
+      const T* srcSlabBufPtr = srcSlabBuf.get();
+      const int64 outDimX = static_cast<int64>(m_Params.outputDims[0]);
+      const int64 outDimY = static_cast<int64>(m_Params.outputDims[1]);
+      const int64 destSliceBaseIdx = outDimX * outDimY * k;
+
+      auto readFromSlab = [&](int64 xIdx, int64 yIdx, int64 zIdx, usize compIndex) -> T {
+        int64 xClamped = std::min(std::max<int64>(0, xIdx), srcDimX - 1);
+        int64 yClamped = std::min(std::max<int64>(0, yIdx), srcDimY - 1);
+        int64 zClamped = std::min(std::max<int64>(0, zIdx), srcDimZ - 1);
+        const usize slabLocalIdx = (static_cast<usize>(zClamped - cachedSrcZMin) * srcSliceSize + static_cast<usize>(yClamped) * static_cast<usize>(srcDimX) + static_cast<usize>(xClamped)) * numComps;
+        return srcSlabBufPtr[slabLocalIdx + compIndex];
+      };
+
+      ParallelDataAlgorithm dataAlg;
+      dataAlg.setRange(0, static_cast<usize>(outDimY));
+      dataAlg.execute([&](const Range& range) {
+        // Per-thread scratch. pValues holds the 8 corner voxel values for one destination voxel.
+        std::vector<AccumulationValueType<T>> pValues(8 * numComps);
+
+        for(int64 j = static_cast<int64>(range.min()); j < static_cast<int64>(range.max()); j++)
+        {
+          for(int64 i = 0; i < outDimX; i++)
           {
+            const int64 destIndex = destSliceBaseIdx + outDimX * j + i;
+            const usize outBufIdx = static_cast<usize>(j * outDimX + i);
+            Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
+            Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
+            Eigen::Array4f coordsOld = inverseTransform * coordsNew;
+
+            SizeVec3 oldGeomIndices;
+            auto errorResult = origImageGeomPtr->computeCellIndex(coordsOld.data(), oldGeomIndices);
+
+            if(errorResult != ImageGeom::ErrorType::NoError)
+            {
+              // Already zero-filled above; leave as zero.
+              continue;
+            }
+
             usize oldIndex = (m_Params.OriginalDims[0] * m_Params.OriginalDims[1] * oldGeomIndices[2]) + (m_Params.OriginalDims[0] * oldGeomIndices[1]) + oldGeomIndices[0];
-
             auto oldVoxelCenterPoint = origImageGeomPtr->getCoordsf(oldIndex);
-
             int octant = FindOctant(m_Params, oldVoxelCenterPoint, coordsOld);
 
+            // Inlined slab-aware version of FindInterpolationValues: read 8 corner voxels from the
+            // cached slab instead of issuing per-element virtual dispatches against sourceArray.
+            const std::array<Vector3i64, 8>& indexOffset = k_AllOctantOffsets[octant];
+            const Vector3i64 oldIndicesV(static_cast<int64>(oldGeomIndices[0]), static_cast<int64>(oldGeomIndices[1]), static_cast<int64>(oldGeomIndices[2]));
+            Eigen::Vector3f p1Coord;
+            for(usize ci = 0; ci < 8; ci++)
+            {
+              auto pIndices = oldIndicesV + indexOffset[ci];
+              for(usize compIndex = 0; compIndex < numComps; compIndex++)
+              {
+                pValues[ci * numComps + compIndex] = readFromSlab(pIndices[0], pIndices[1], pIndices[2], compIndex);
+              }
+              if(ci == 0)
+              {
+                p1Coord = {static_cast<float32>(pIndices[0]) * m_Params.xRes + (0.5F * m_Params.xRes) + m_Params.OriginalOrigin[0],
+                           static_cast<float32>(pIndices[1]) * m_Params.yRes + (0.5F * m_Params.yRes) + m_Params.OriginalOrigin[1],
+                           static_cast<float32>(pIndices[2]) * m_Params.zRes + (0.5F * m_Params.zRes) + m_Params.OriginalOrigin[2]};
+              }
+            }
+            // Compute uvw (normalized interpolation weights) from the coordinate of the coordsOld
+            // relative to the P1 corner. Matches the computation in FindInterpolationValues().
             Eigen::Vector3f uvw;
-            FindInterpolationValues(m_Params, octant, oldGeomIndices, coordsOld, sourceArray, pValues, uvw, oldVoxelCenterPoint);
+            for(usize axis = 0; axis < 3; axis++)
+            {
+              float32 cellSize = (axis == 0) ? m_Params.xRes : (axis == 1) ? m_Params.yRes : m_Params.zRes;
+              uvw[axis] = (static_cast<float32>(coordsOld[axis]) - p1Coord[axis]) / cellSize;
+              if(uvw[axis] < 0.0f)
+              {
+                uvw[axis] = 0.0f;
+              }
+              if(uvw[axis] > 1.0f)
+              {
+                uvw[axis] = 1.0f;
+              }
+            }
 
             for(usize compIndex = 0; compIndex < numComps; compIndex++)
             {
               T value = calculateInterpolatedValue(pValues, uvw, numComps, compIndex);
-              newDataStore.setComponent(destIndex, compIndex, value);
+              outSliceBufPtr[outBufIdx * numComps + compIndex] = value;
             }
           }
-          else
-          {
-            newDataStore.fillTuple(destIndex, static_cast<T>(0));
-          }
         }
-      }
+      });
+
+      // Flush output slice with a single bulk write
+      newDataStore.copyFromBuffer(static_cast<usize>(k) * outSliceSize * numComps, nonstd::span<const T>(outSliceBuf.get(), outSliceSize * numComps));
     }
     m_FilterCallback->sendThreadSafeProgressMessage(fmt::format("{}: Transform Ending", sourceArray.getName()));
   }
@@ -629,57 +818,58 @@ public:
       neededZMin = std::max(neededZMin, static_cast<int64>(0));
       neededZMax = std::min(neededZMax, srcDimZ - 1);
 
-      // Read source slab if not already cached (or if range changed)
-      if(neededZMin < cachedSrcZMin || neededZMax > cachedSrcZMax)
-      {
-        cachedSrcZMin = neededZMin;
-        cachedSrcZMax = neededZMax;
-        usize slabTuples = static_cast<usize>(cachedSrcZMax - cachedSrcZMin + 1) * srcSliceSize;
-        usize slabElements = slabTuples * numComps;
-        if(slabElements > srcSlabBufSize)
-        {
-          srcSlabBuf = std::make_unique<T[]>(slabElements);
-          srcSlabBufSize = slabElements;
-        }
-        oldDataStore.copyIntoBuffer(static_cast<usize>(cachedSrcZMin) * srcSliceSize * numComps, nonstd::span<T>(srcSlabBuf.get(), slabElements));
-      }
+      // Slide the slab cache to cover [neededZMin, neededZMax]. Only the delta slices are
+      // re-read when the new range overlaps the cached range.
+      updateSlabCache<T>(oldDataStore, srcSlabBuf, srcSlabBufSize, cachedSrcZMin, cachedSrcZMax, neededZMin, neededZMax, srcSliceSize, numComps);
 
-      // Process output slice
+      // Process output slice. Zero-fill first so destination voxels with no valid source mapping
+      // remain zero.
       std::fill(outSliceBuf.get(), outSliceBuf.get() + outSliceSize * numComps, static_cast<T>(0));
 
-      int64 const ktot = static_cast<int64>(m_Params.outputDims[0] * m_Params.outputDims[1]) * k;
-      for(int64 j = 0; j < m_Params.outputDims[1]; j++)
-      {
-        int64 jtot = static_cast<int64>(m_Params.outputDims[0]) * j;
-        for(int64 i = 0; i < m_Params.outputDims[0]; i++)
+      // Capture state used inside the parallel worker. srcSlabBuf/outSliceBuf are shared: threads
+      // read disjoint slab locations and write disjoint Y-rows of outSliceBuf.
+      T* outSliceBufPtr = outSliceBuf.get();
+      const T* srcSlabBufPtr = srcSlabBuf.get();
+      const int64 outDimX = static_cast<int64>(m_Params.outputDims[0]);
+      const int64 outDimY = static_cast<int64>(m_Params.outputDims[1]);
+      const int64 destSliceBaseIdx = outDimX * outDimY * k;
+      const bool sliceBySlice = m_SliceBySlice;
+
+      ParallelDataAlgorithm dataAlg;
+      dataAlg.setRange(0, static_cast<usize>(outDimY));
+      dataAlg.execute([&](const Range& range) {
+        for(int64 j = static_cast<int64>(range.min()); j < static_cast<int64>(range.max()); j++)
         {
-          const int64 destIndex = ktot + jtot + i;
-          const usize outBufIdx = static_cast<usize>(j * static_cast<int64>(m_Params.outputDims[0]) + i);
-          Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
-          Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
-          Eigen::Array4f coordsOld = inverseTransform * coordsNew;
-
-          SizeVec3 oldGeomIndices;
-          auto errorResult = srcImageGeomPtr->computeCellIndex(coordsOld.data(), oldGeomIndices);
-
-          if(errorResult == ImageGeom::ErrorType::NoError)
+          for(int64 i = 0; i < outDimX; i++)
           {
-            if(m_SliceBySlice)
+            const int64 destIndex = destSliceBaseIdx + outDimX * j + i;
+            const usize outBufIdx = static_cast<usize>(j * outDimX + i);
+            Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
+            Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
+            Eigen::Array4f coordsOld = inverseTransform * coordsNew;
+
+            SizeVec3 oldGeomIndices;
+            auto errorResult = srcImageGeomPtr->computeCellIndex(coordsOld.data(), oldGeomIndices);
+
+            if(errorResult == ImageGeom::ErrorType::NoError)
             {
-              oldGeomIndices[2] = k;
-            }
-            int64 srcZ = static_cast<int64>(oldGeomIndices[2]);
-            if(srcZ >= cachedSrcZMin && srcZ <= cachedSrcZMax)
-            {
-              usize slabLocalIdx = (static_cast<usize>(srcZ - cachedSrcZMin) * srcSliceSize + oldGeomIndices[1] * static_cast<usize>(srcDimX) + oldGeomIndices[0]) * numComps;
-              for(usize c = 0; c < numComps; c++)
+              if(sliceBySlice)
               {
-                outSliceBuf.get()[outBufIdx * numComps + c] = srcSlabBuf.get()[slabLocalIdx + c];
+                oldGeomIndices[2] = k;
+              }
+              int64 srcZ = static_cast<int64>(oldGeomIndices[2]);
+              if(srcZ >= cachedSrcZMin && srcZ <= cachedSrcZMax)
+              {
+                usize slabLocalIdx = (static_cast<usize>(srcZ - cachedSrcZMin) * srcSliceSize + oldGeomIndices[1] * static_cast<usize>(srcDimX) + oldGeomIndices[0]) * numComps;
+                for(usize c = 0; c < numComps; c++)
+                {
+                  outSliceBufPtr[outBufIdx * numComps + c] = srcSlabBufPtr[slabLocalIdx + c];
+                }
               }
             }
           }
         }
-      }
+      });
 
       newDataStore.copyFromBuffer(static_cast<usize>(k) * outSliceSize * numComps, nonstd::span<const T>(outSliceBuf.get(), outSliceSize * numComps));
     }
@@ -715,28 +905,48 @@ public:
 
   void convert(usize start, usize end) const
   {
+    // OOC optimization: process vertices in fixed-size chunks using bulk I/O. Each chunk reads
+    // a contiguous range of vertex components into a local buffer, performs the transform in
+    // memory, then writes the whole chunk back with a single copyFromBuffer. This replaces
+    // per-element at()/setValue() virtual dispatches that force chunk load/evict thrashing in
+    // OOC-backed SharedVertexList stores.
+    constexpr usize k_ChunkVertices = 16384; // 16K vertices * 3 components * 4 bytes = 192 KB per chunk
+    auto& vertexStore = m_Vertices.getDataStoreRef();
+    auto chunkBuf = std::make_unique<float32[]>(k_ChunkVertices * 3);
+
     int64 progCounter = 0;
     const usize totalElements = (end - start);
-    const usize progIncrement = static_cast<int64>(totalElements / 100);
+    const usize progIncrement = std::max(totalElements / 100, static_cast<usize>(1));
 
-    for(usize i = start; i < end; i++)
+    for(usize chunkStart = start; chunkStart < end; chunkStart += k_ChunkVertices)
     {
       if(m_FilterCallback->getCancel())
       {
         return;
       }
-      const Eigen::Vector4f position(m_Vertices.at(3 * i + 0), m_Vertices.at(3 * i + 1), m_Vertices.at(3 * i + 2), 1);
-      Eigen::Vector4f transformedPosition = m_TransformationMatrix * position;
-      m_Vertices.setValue(3 * i + 0, transformedPosition[0]);
-      m_Vertices.setValue(3 * i + 1, transformedPosition[1]);
-      m_Vertices.setValue(3 * i + 2, transformedPosition[2]);
+      const usize chunkCount = std::min(k_ChunkVertices, end - chunkStart);
+      const usize elementOffset = chunkStart * 3;
+      const usize elementCount = chunkCount * 3;
 
-      if(progCounter > progIncrement)
+      vertexStore.copyIntoBuffer(elementOffset, nonstd::span<float32>(chunkBuf.get(), elementCount));
+
+      for(usize i = 0; i < chunkCount; i++)
+      {
+        const Eigen::Vector4f position(chunkBuf[3 * i + 0], chunkBuf[3 * i + 1], chunkBuf[3 * i + 2], 1.0f);
+        const Eigen::Vector4f transformedPosition = m_TransformationMatrix * position;
+        chunkBuf[3 * i + 0] = transformedPosition[0];
+        chunkBuf[3 * i + 1] = transformedPosition[1];
+        chunkBuf[3 * i + 2] = transformedPosition[2];
+      }
+
+      vertexStore.copyFromBuffer(elementOffset, nonstd::span<const float32>(chunkBuf.get(), elementCount));
+
+      progCounter += chunkCount;
+      if(progCounter > static_cast<int64>(progIncrement))
       {
         m_FilterCallback->sendThreadSafeProgressMessage(progCounter);
         progCounter = 0;
       }
-      progCounter++;
     }
   }
 
