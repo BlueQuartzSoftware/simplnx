@@ -4,7 +4,7 @@
 
 These builds can on the order of **multiple hours** to complete on x86 systems that predate Intel 13th Generation processors. Be patient. The build looks like it is stuck but python is just taking it's time to recursively figure out the needed DLLs because ITK and VTK create a ton of DLL libraries. This is especially slow on Windows systems.
 
-## Python Varitions
+## Python Variations
 
 - 3.9
 - 3.10
