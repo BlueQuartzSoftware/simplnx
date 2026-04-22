@@ -102,7 +102,7 @@ inline instantiate the filter and execute it all in the same line. Some things t
 
 - There will **always** be a required :ref:`DataStructure` object. All arguments in the `execute()` method are named arguments. None are positional. This means that each argument must be in the form of 'name=value'.
 - The 2nd argument shows a use of the :ref:`DataPath` object. Lots of filters will require a :ref:`DataPath` object so this is a common use.
-- There is a method called `hierarchy_to_str()` that is a part of the :ref:`DataStructure` class which will print the heirarchy of the DataStructure.
+- There is a method called `hierarchy_to_str()` that is a part of the :ref:`DataStructure` class which will print the hierarchy of the DataStructure.
 
 
 .. code:: python
@@ -150,7 +150,7 @@ And the output would look like the following:
 ################################################
 
 Each time a filter is executed, it will return a :ref:`nx.IFilter.ExecuteResult <result>` object. This 
-object can be interrogated for both warnings and errors that occured while the 
+object can be interrogated for both warnings and errors that occurred while the 
 filter was executing. A typical function that can be written to properly error
 check the 'result' value is the following:
 

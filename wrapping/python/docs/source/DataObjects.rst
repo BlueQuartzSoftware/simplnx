@@ -233,7 +233,7 @@ DataPath can act as a List[str] object, such as getting the length or looping on
 DataGroup
 ---------
 
-The DataStructure_ is a flexible heirarchy that stores all **simplnx** :ref:`DataObjects <DataObject>`
+The DataStructure_ is a flexible hierarchy that stores all **simplnx** :ref:`DataObjects <DataObject>`
 that are created. A basic :ref:`DataObject` that can be created is a :ref:`DataGroup` which is a 
 simple grouping mechanism that can be thought of as similar in concept to a folder or directory that 
 is created on the file system. The programmer can use the :ref:`CreateDataGroupFilter<CreateDataGroupFilter>` filter to create
