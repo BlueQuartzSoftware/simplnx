@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataArrayUtilities.hpp"
 
 #include <fmt/format.h>
 #include <zlib.h>
@@ -19,7 +20,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr usize k_ProgressStride = 1u << 22; // ~4M elements processed per progress message
+constexpr usize k_ProgressTupleStride = 1u << 18; // ~256k destination tuples between progress messages
 
 struct CropBounds
 {
@@ -126,17 +127,20 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
   const float32 inter = md.sclInter;
   const std::string& filePath = md.filePath;
 
-  const usize scanlineElements = srcNx * componentCount;
-  const usize scanlineBytes = scanlineElements * sizeof(NativeT);
-  std::vector<NativeT> scanline(scanlineElements);
+  const usize srcScanlineElements = srcNx * componentCount;
+  const usize srcScanlineBytes = srcScanlineElements * sizeof(NativeT);
+  std::vector<NativeT> srcScanline(srcScanlineElements);
 
   const usize destNx = b.xEnd - b.xStart + 1;
   const usize destNy = b.yEnd - b.yStart + 1;
   const usize destNz = b.zEnd - b.zStart + 1;
-  const usize totalDestElements = destNx * destNy * destNz * componentCount;
+  const usize destScanlineElements = destNx * componentCount;
+  std::vector<OutputT> destScanline(destScanlineElements);
 
-  usize destIdx = 0;
-  usize lastProgressIdx = 0;
+  const usize totalDestTuples = destNx * destNy * destNz;
+
+  usize destTupleOffset = 0;
+  usize lastProgressTuples = 0;
 
   for(usize srcZ = 0; srcZ < srcNz; srcZ++)
   {
@@ -148,10 +152,10 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
 
     for(usize srcY = 0; srcY < srcNy; srcY++)
     {
-      const int actuallyRead = gzread(gz, scanline.data(), static_cast<unsigned int>(scanlineBytes));
-      if(actuallyRead != static_cast<int>(scanlineBytes))
+      const int actuallyRead = gzread(gz, srcScanline.data(), static_cast<unsigned int>(srcScanlineBytes));
+      if(actuallyRead != static_cast<int>(srcScanlineBytes))
       {
-        return MakeErrorResult(-34730, fmt::format("Short voxel read from '{}' at (z={}, y={}): expected {} bytes, got {}", filePath, srcZ, srcY, scanlineBytes, actuallyRead));
+        return MakeErrorResult(-34730, fmt::format("Short voxel read from '{}' at (z={}, y={}): expected {} bytes, got {}", filePath, srcZ, srcY, srcScanlineBytes, actuallyRead));
       }
 
       if(!zInRange)
@@ -164,36 +168,45 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
         continue;
       }
 
+      // Convert the x-subrange of this source scanline into a contiguous,
+      // destination-typed scratch buffer so the DataStore receives one bulk
+      // write per scanline instead of componentCount * destNx virtual setValue
+      // calls. This matters a lot for OOC-backed stores.
+      usize writeIdx = 0;
       for(usize srcX = b.xStart; srcX <= b.xEnd; srcX++)
       {
         const usize baseIdx = srcX * componentCount;
         for(usize c = 0; c < componentCount; c++)
         {
-          NativeT raw = scanline[baseIdx + c];
+          NativeT raw = srcScanline[baseIdx + c];
           if(byteSwap)
           {
             raw = nx::core::byteswap(raw);
           }
-
-          OutputT outVal;
           if constexpr(std::is_same_v<OutputT, float32>)
           {
             const auto promoted = static_cast<float32>(raw);
-            outVal = applyScaling ? (promoted * slope + inter) : promoted;
+            destScanline[writeIdx++] = applyScaling ? (promoted * slope + inter) : promoted;
           }
           else
           {
-            outVal = static_cast<OutputT>(raw);
+            destScanline[writeIdx++] = static_cast<OutputT>(raw);
           }
-          store.setValue(destIdx++, outVal);
         }
       }
 
-      if(destIdx - lastProgressIdx >= k_ProgressStride || destIdx == totalDestElements)
+      Result<> copyResult = CopyFromArray::CopyData(destScanline, store, destTupleOffset, 0, destNx, componentCount);
+      if(copyResult.invalid())
       {
-        const auto pct = static_cast<int32>((destIdx * 100ULL) / std::max<usize>(1, totalDestElements));
+        return copyResult;
+      }
+      destTupleOffset += destNx;
+
+      if(destTupleOffset - lastProgressTuples >= k_ProgressTupleStride || destTupleOffset == totalDestTuples)
+      {
+        const auto pct = static_cast<int32>((destTupleOffset * 100ULL) / std::max<usize>(1, totalDestTuples));
         messageHandler({IFilter::Message::Type::Info, fmt::format("Reading NIfTI voxels... {}%", pct)});
-        lastProgressIdx = destIdx;
+        lastProgressTuples = destTupleOffset;
       }
     }
   }
