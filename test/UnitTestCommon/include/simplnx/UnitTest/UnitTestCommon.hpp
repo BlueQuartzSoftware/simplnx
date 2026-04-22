@@ -1694,9 +1694,9 @@ inline std::string CropTypeToString(CropGeometryParameter::CropValues::TypeEnum 
 
 struct AxisBoundsChoices
 {
-  std::vector<IntVec2Type> voxelX;
-  std::vector<IntVec2Type> voxelY;
-  std::vector<IntVec2Type> voxelZ;
+  std::vector<SizeVec2> voxelX;
+  std::vector<SizeVec2> voxelY;
+  std::vector<SizeVec2> voxelZ;
   std::vector<FloatVec2Type> physX;
   std::vector<FloatVec2Type> physY;
   std::vector<FloatVec2Type> physZ;
@@ -1730,11 +1730,11 @@ inline std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const
   // --------------------
   for(const auto& [cx, cy, cz] : flagOrder)
   {
-    std::vector<std::optional<IntVec2Type>> xOpts = cx ? std::vector<std::optional<IntVec2Type>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+    std::vector<std::optional<SizeVec2>> xOpts = cx ? std::vector<std::optional<SizeVec2>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<SizeVec2>>{std::nullopt};
 
-    std::vector<std::optional<IntVec2Type>> yOpts = cy ? std::vector<std::optional<IntVec2Type>>(C.voxelY.begin(), C.voxelY.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+    std::vector<std::optional<SizeVec2>> yOpts = cy ? std::vector<std::optional<SizeVec2>>(C.voxelY.begin(), C.voxelY.end()) : std::vector<std::optional<SizeVec2>>{std::nullopt};
 
-    std::vector<std::optional<IntVec2Type>> zOpts = (!is2D && cz) ? std::vector<std::optional<IntVec2Type>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<IntVec2Type>>{std::nullopt};
+    std::vector<std::optional<SizeVec2>> zOpts = (!is2D && cz) ? std::vector<std::optional<SizeVec2>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<SizeVec2>>{std::nullopt};
 
     for(const auto& xb : xOpts)
     {

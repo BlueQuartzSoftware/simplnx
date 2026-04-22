@@ -24,9 +24,9 @@ public:
     bool cropX = true;
     bool cropY = true;
     bool cropZ = true;
-    IntVec2Type xBoundVoxels;
-    IntVec2Type yBoundVoxels;
-    IntVec2Type zBoundVoxels;
+    SizeVec2 xBoundVoxels;
+    SizeVec2 yBoundVoxels;
+    SizeVec2 zBoundVoxels;
     FloatVec2Type xBoundPhysical;
     FloatVec2Type yBoundPhysical;
     FloatVec2Type zBoundPhysical;

@@ -168,8 +168,8 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Cropping", "[ITKImageProces
   std::vector<float64> spacing = {2.0, 2.0, 1.0};
   std::vector<float64> origin = {20.0, 30.0, 0.0};
   UnitTest::Cropping::AxisBoundsChoices bounds;
-  bounds.voxelX = {IntVec2Type{50, 149}};
-  bounds.voxelY = {IntVec2Type{50, 149}};
+  bounds.voxelX = {SizeVec2{50, 149}};
+  bounds.voxelY = {SizeVec2{50, 149}};
   bounds.physX = {FloatVec2Type{120.0f, 318.0f}};
   bounds.physY = {FloatVec2Type{130.0f, 328.0f}};
   auto allCropVals = UnitTest::Cropping::GenerateAllCropValues(bounds, true);

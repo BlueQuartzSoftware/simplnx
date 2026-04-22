@@ -80,8 +80,8 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
     auto startIndex = srcImageGeom->getIndex(xBoundPhysical[0], yBoundPhysical[0], zBoundPhysical[0]);
     if(!startIndex.has_value())
     {
-      return MakeErrorResult<CropBounds>(-34740, fmt::format("Could not map starting physical bounds ({}, {}, {}) to a valid voxel index within the NIfTI volume.", xBoundPhysical[0], yBoundPhysical[0],
-                                                             zBoundPhysical[0]));
+      return MakeErrorResult<CropBounds>(
+          -34740, fmt::format("Could not map starting physical bounds ({}, {}, {}) to a valid voxel index within the NIfTI volume.", xBoundPhysical[0], yBoundPhysical[0], zBoundPhysical[0]));
     }
     b.xStart = startIndex.value() % md.dimensions[0];
     b.yStart = (startIndex.value() / md.dimensions[0]) % md.dimensions[1];
@@ -90,8 +90,8 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
     auto endIndex = srcImageGeom->getIndex(xBoundPhysical[1], yBoundPhysical[1], zBoundPhysical[1]);
     if(!endIndex.has_value())
     {
-      return MakeErrorResult<CropBounds>(-34741, fmt::format("Could not map ending physical bounds ({}, {}, {}) to a valid voxel index within the NIfTI volume.", xBoundPhysical[1], yBoundPhysical[1],
-                                                             zBoundPhysical[1]));
+      return MakeErrorResult<CropBounds>(
+          -34741, fmt::format("Could not map ending physical bounds ({}, {}, {}) to a valid voxel index within the NIfTI volume.", xBoundPhysical[1], yBoundPhysical[1], zBoundPhysical[1]));
     }
     b.xEnd = endIndex.value() % md.dimensions[0];
     b.yEnd = (endIndex.value() / md.dimensions[0]) % md.dimensions[1];
@@ -104,8 +104,8 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
   }
   if(b.xEnd >= md.dimensions[0] || b.yEnd >= md.dimensions[1] || b.zEnd >= md.dimensions[2])
   {
-    return MakeErrorResult<CropBounds>(-34743, fmt::format("Crop end voxel ({}, {}, {}) exceeds NIfTI volume extent ({}, {}, {}).", b.xEnd, b.yEnd, b.zEnd, md.dimensions[0] - 1, md.dimensions[1] - 1,
-                                                           md.dimensions[2] - 1));
+    return MakeErrorResult<CropBounds>(
+        -34743, fmt::format("Crop end voxel ({}, {}, {}) exceeds NIfTI volume extent ({}, {}, {}).", b.xEnd, b.yEnd, b.zEnd, md.dimensions[0] - 1, md.dimensions[1] - 1, md.dimensions[2] - 1));
   }
 
   return {b};
