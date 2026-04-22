@@ -112,6 +112,7 @@ set(FilterList
   ReadDeformKeyFileV12Filter
   ReadDREAM3DFilter
   ReadHDF5DatasetFilter
+  ReadNIfTIFileFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
   ReadStringDataArrayFilter
@@ -274,6 +275,7 @@ set(AlgorithmList
   ReadDeformKeyFileV12
 #  ReadDREAM3D
   ReadHDF5Dataset
+  ReadNIfTIFile
   ReadRawBinary
   ReadStlFile
   ReadStringDataArray
@@ -358,10 +360,15 @@ get_property(SIMPLNX_EXTRA_LIBRARY_DIRS GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DI
 set_property(GLOBAL PROPERTY SIMPLNX_EXTRA_LIBRARY_DIRS ${SIMPLNX_EXTRA_LIBRARY_DIRS} ${reproc_dll_path})
 
 
+# ------------------------------------------------------------------------------
+# The ReadNIfTIFileFilter requires zlib for transparent .nii/.nii.gz support
+# ------------------------------------------------------------------------------
+find_package(ZLIB REQUIRED)
+
 #------------------------------------------------------------------------------
 # If there are additional libraries that this plugin needs to link against you
 # can use the target_link_libraries() cmake call
-target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++)
+target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++ ZLIB::ZLIB)
 
 #------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin
@@ -375,6 +382,9 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/PythonPluginTemplateFile.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/VtkUtilities.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nifti1.h"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NiftiUtilities.hpp"
+    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NiftiUtilities.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellFlag.h"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/SurfaceNets/MMCellMap.cpp"
