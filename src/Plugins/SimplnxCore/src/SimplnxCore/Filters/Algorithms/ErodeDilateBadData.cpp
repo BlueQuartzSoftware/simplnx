@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 using namespace nx::core;
 namespace
@@ -17,7 +18,7 @@ public:
   ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
 
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
-                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
+                                     const Int64AbstractDataStore& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_Operation(operation)
@@ -57,7 +58,7 @@ private:
   ErodeDilateBadData* m_FilterAlg = nullptr;
   usize m_TotalPoints = 0;
   ChoicesParameter::ValueType m_Operation = 0;
-  std::vector<int64> m_Neighbors;
+  const Int64AbstractDataStore& m_Neighbors;
   const std::shared_ptr<IDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
   MessageHelper& m_MessageHelper;
@@ -83,12 +84,145 @@ const std::atomic_bool& ErodeDilateBadData::getCancel()
 }
 
 // -----------------------------------------------------------------------------
+bool shouldSkipData(const ErodeDilateBadDataInputValues* inputValues, int32 neighPointIdx, const std::array<int64, 3>& dims, int64 xIndex, int64 yIndex, int64 zIndex)
+{
+  if(neighPointIdx == 0 && (zIndex == 0 || !inputValues->ZDirOn))
+  {
+    return true;
+  }
+  if(neighPointIdx == 5 && (zIndex == (dims[2] - 1) || !inputValues->ZDirOn))
+  {
+    return true;
+  }
+  if(neighPointIdx == 1 && (yIndex == 0 || !inputValues->YDirOn))
+  {
+    return true;
+  }
+  if(neighPointIdx == 4 && (yIndex == (dims[1] - 1) || !inputValues->YDirOn))
+  {
+    return true;
+  }
+  if(neighPointIdx == 2 && (xIndex == 0 || !inputValues->XDirOn))
+  {
+    return true;
+  }
+  if(neighPointIdx == 3 && (xIndex == (dims[0] - 1) || !inputValues->XDirOn))
+  {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * @brief Parses over the neighbor indices and sets the feature counts to 0 for existing points.
+ * @param featureIds Feature ID data store for determining neighboring feature IDs.
+ * @param featureCount Running total of the number of features it neighbors.
+ * @param neighpoints Pre-created array for determining neighbor indices.
+ * @param dims Geometry dimentions for determining boundaries.
+ * @param voxelIndex Array index of the 3D geometry position.
+ * @param xIndex X index in the geometry position used for determing neighbor validity.
+ * @param yIndex Y index in the geometry position used for determing neighbor validity.
+ * @param zIndex Z index in the geometry position used for determing neighbor validity.
+ */
+void ErodeBadDataPostOp(const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, const std::array<int64, 6>& neighpoints, const std::array<int64, 3>& dims, const int64 voxelIndex,
+                        int64 xIndex, int64 yIndex, int64 zIndex)
+{
+  for(int32 neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
+  {
+    const int64 neighborPoint = voxelIndex + neighpoints[neighPointIdx];
+    if(neighPointIdx == 0 && zIndex == 0)
+    {
+      continue;
+    }
+    if(neighPointIdx == 5 && zIndex == (dims[2] - 1))
+    {
+      continue;
+    }
+    if(neighPointIdx == 1 && yIndex == 0)
+    {
+      continue;
+    }
+    if(neighPointIdx == 4 && yIndex == (dims[1] - 1))
+    {
+      continue;
+    }
+    if(neighPointIdx == 2 && xIndex == 0)
+    {
+      continue;
+    }
+    if(neighPointIdx == 3 && xIndex == (dims[0] - 1))
+    {
+      continue;
+    }
+
+    const int32 feature = featureIds[neighborPoint];
+    featureCount[feature] = 0;
+  }
+}
+
+/**
+ * @brief
+ * @param inputValues Algorithm input values
+ * @param featureIds Feature ID data store.
+ * @param featureCount Running total of the number of features it neighbors.
+ * @param neighbors
+ * @param neighpoints Pre-created array for determining neighbor indices.
+ * @param dims Geometry dimentions for determining boundaries.
+ * @param voxelIndex Array index of the 3D geometry position.
+ * @param xIndex X index in the geometry position used for determing neighbor validity.
+ * @param yIndex Y index in the geometry position used for determing neighbor validity.
+ * @param zIndes Z index in the geometry position used for determing neighbor validity.
+ */
+void erodeDilateBadDataVoxel(const ErodeDilateBadDataInputValues* inputValues, const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, Int64AbstractDataStore& neighbors,
+                             const std::array<int64, 6>& neighpoints, const std::array<int64, 3>& dims, int64 voxelIndex, int64 xIndex, int64 yIndex, int64 zIndex)
+{
+  const int32 featureName = featureIds[voxelIndex];
+  if(featureName == 0)
+  {
+    int32 most = 0;
+    for(int32 neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
+    {
+      const int64 neighborPoint = voxelIndex + neighpoints[neighPointIdx];
+      if(shouldSkipData(inputValues, neighPointIdx, dims, xIndex, yIndex, zIndex))
+      {
+        continue;
+      }
+
+      const int32 feature = featureIds[neighborPoint];
+      if(inputValues->Operation == detail::k_DilateIndex && feature > 0)
+      {
+        neighbors[neighborPoint] = voxelIndex;
+      }
+      if(feature > 0 && inputValues->Operation == detail::k_ErodeIndex)
+      {
+        featureCount[feature]++;
+        const int32 current = featureCount[feature];
+        if(current > most)
+        {
+          most = current;
+          neighbors[voxelIndex] = neighborPoint;
+        }
+      }
+    }
+    // Erode operation
+    if(inputValues->Operation == detail::k_ErodeIndex)
+    {
+      ErodeBadDataPostOp(featureIds, featureCount, neighpoints, dims, voxelIndex, xIndex, yIndex, zIndex);
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
 Result<> ErodeDilateBadData::operator()()
 {
   const auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
   const usize totalPoints = featureIds.getNumberOfTuples();
 
-  std::vector<int64> neighbors(totalPoints, -1);
+  // Update for OOC data sizes
+  std::shared_ptr<Int64AbstractDataStore> neighborsPtr = DataStoreUtilities::CreateDataStore<int64>({totalPoints}, {1});
+  auto& neighbors = *neighborsPtr.get();
+  neighbors.fill(-1);
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
 
@@ -100,15 +234,7 @@ Result<> ErodeDilateBadData::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  usize numFeatures = 0;
-  for(usize i = 0; i < totalPoints; i++)
-  {
-    const int32 featureName = featureIds[i];
-    if(featureName > numFeatures)
-    {
-      numFeatures = featureName;
-    }
-  }
+  usize numFeatures = std::max(0, *(std::max_element(featureIds.begin(), featureIds.end())));
 
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
@@ -116,16 +242,20 @@ Result<> ErodeDilateBadData::operator()()
 
   std::vector<int32> featureCount(numFeatures + 1, 0);
 
+  // Iterate over the geometry to handle every voxel
   for(int32 iteration = 0; iteration < m_InputValues->NumIterations; iteration++)
   {
-    for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
+    for(int64 zIndex = 0; zIndex < dims[2]; zIndex++)
     {
-      const int64 zStride = dims[0] * dims[1] * zIdx;
-      for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
+      const int64 zStride = dims[0] * dims[1] * zIndex;
+      for(int64 yIndex = 0; yIndex < dims[1]; yIndex++)
       {
-        const int64 yStride = dims[0] * yIdx;
-        for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
+        const int64 yStride = dims[0] * yIndex;
+        for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
         {
+          const int64 voxelIndex = zStride + yStride + xIndex;
+          erodeDilateBadDataVoxel(m_InputValues, featureIds, featureCount, neighbors, neighborVoxelIndexOffsets, dims, voxelIndex, xIndex, yIndex, zIndex);
+          #if 0
           const int64 voxelIndex = zStride + yStride + xIdx;
           const int32 featureName = featureIds[voxelIndex];
           if(featureName == 0)
@@ -173,6 +303,7 @@ Result<> ErodeDilateBadData::operator()()
               }
             }
           }
+          #endif
         }
       }
     }
