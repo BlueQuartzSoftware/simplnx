@@ -4,36 +4,280 @@
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
+#include <nonstd/span.hpp>
+
+#include <bit>
+#include <cstdint>
 #include <limits>
-#include <unordered_map>
+#include <memory>
+#include <vector>
 
 using namespace nx::core;
 
 namespace
 {
 
-struct RemoveFlaggedVerticesFunctor
-{
-  // copy data to masked geometry
-  template <class T>
-  void operator()(IDataArray* inputDataPtr, IDataArray* outputDataArray, const std::vector<IGeometry::MeshIndexType>& indexMapping) const
-  {
-    auto& inputData = inputDataPtr->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    auto& outputData = outputDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    usize nComps = inputData.getNumberOfComponents();
-    IGeometry::MeshIndexType notSeen = std::numeric_limits<IGeometry::MeshIndexType>::max();
+// -----------------------------------------------------------------------------
+// Compact bookkeeping for the "which elements survive" question:
+//   - vertNewIndex: dense per-vertex map (8 B * numVerts). New indices are assigned
+//     in triangle-traversal order to preserve the contiguous-per-triangle invariant
+//     relied on by downstream filters (triangle 0's three vertices land at new
+//     indices 0..2 when all are newly-seen, etc.).
+//   - triMask + triPrefixSum: 1-bit-per-triangle keep mask plus a sparse prefix-sum popcount
+//     table sampled every k_PrefixSumGranularity bits. This replaces the legacy 8 B per
+//     triangle dense map and delivers O(1)+small-popcount lookup of each kept triangle's
+//     compact new index.
+// The triangle-side savings compared to the legacy dense map are ~6.4x at the bit level
+// plus the tiny prefix-sum table; vertex-side memory is unchanged vs legacy because the
+// triangle-traversal ordering can't be recovered from a bitmap alone.
+// -----------------------------------------------------------------------------
+constexpr uint64 k_PrefixSumGranularity = 4096;
+static_assert(k_PrefixSumGranularity % 64 == 0, "k_PrefixSumGranularity must be a multiple of 64");
+constexpr uint64 k_WordsPerPrefixSum = k_PrefixSumGranularity / 64;
 
-    for(usize i = 0; i < indexMapping.size(); i++)
+// Chunk size (in tuples) for streaming reads/writes. 65536 tuples keeps transient buffers
+// under ~1 MB for typical element sizes while amortizing HDF5 chunk-op overhead.
+constexpr usize k_ChunkTuples = 65536;
+
+inline void bitmapSet(std::vector<uint64>& bitmap, uint64 bit)
+{
+  bitmap[bit >> 6] |= (1ULL << (bit & 63));
+}
+
+inline bool bitmapTest(const std::vector<uint64>& bitmap, uint64 bit)
+{
+  return (bitmap[bit >> 6] & (1ULL << (bit & 63))) != 0;
+}
+
+// Return popcount(bitmap[0..bit-1]), i.e. the new compact index assigned to the kept
+// element at position `bit`.
+inline uint64 remapIndex(uint64 bit, const std::vector<uint64>& bitmap, const std::vector<uint64>& prefixSum)
+{
+  const uint64 prefixSumIndex = bit / k_PrefixSumGranularity;
+  uint64 result = prefixSum[prefixSumIndex];
+  const uint64 startWord = prefixSumIndex * k_WordsPerPrefixSum;
+  const uint64 bitWord = bit >> 6;
+  for(uint64 w = startWord; w < bitWord; w++)
+  {
+    result += static_cast<uint64>(std::popcount(bitmap[w]));
+  }
+  const uint64 bitOffset = bit & 63;
+  if(bitOffset != 0)
+  {
+    const uint64 partialMask = (1ULL << bitOffset) - 1;
+    result += static_cast<uint64>(std::popcount(bitmap[bitWord] & partialMask));
+  }
+  return result;
+}
+
+// Build the prefix-sum popcount table for a completed bitmap. Returns total kept count
+// (equivalent to popcount of the whole bitmap).
+uint64 buildPrefixSumTable(const std::vector<uint64>& bitmap, std::vector<uint64>& prefixSum, uint64 numBits)
+{
+  const uint64 numPrefixSumEntries = (numBits + k_PrefixSumGranularity - 1) / k_PrefixSumGranularity;
+  prefixSum.assign(numPrefixSumEntries, 0);
+  uint64 running = 0;
+  for(uint64 c = 0; c < numPrefixSumEntries; c++)
+  {
+    prefixSum[c] = running;
+    const uint64 startWord = c * k_WordsPerPrefixSum;
+    const uint64 endWord = std::min<uint64>(startWord + k_WordsPerPrefixSum, static_cast<uint64>(bitmap.size()));
+    for(uint64 w = startWord; w < endWord; w++)
     {
-      IGeometry::MeshIndexType newIndex = indexMapping[i];
-      if(newIndex != notSeen)
+      running += static_cast<uint64>(std::popcount(bitmap[w]));
+    }
+  }
+  return running;
+}
+
+// Pass 1a: stream NodeTypes and mark vertices whose type is in [minType, maxType].
+void buildVertOkMask(const Int8AbstractDataStore& nodeTypesStore, std::vector<uint64>& vertOkMask, int8 minType, int8 maxType, const std::atomic_bool& shouldCancel)
+{
+  const usize numVerts = nodeTypesStore.getNumberOfTuples();
+  auto chunkBuf = std::make_unique<int8[]>(k_ChunkTuples);
+  for(usize offset = 0; offset < numVerts; offset += k_ChunkTuples)
+  {
+    if(shouldCancel)
+    {
+      return;
+    }
+    const usize count = std::min(k_ChunkTuples, numVerts - offset);
+    nodeTypesStore.copyIntoBuffer(offset, nonstd::span<int8>(chunkBuf.get(), count));
+    for(usize i = 0; i < count; i++)
+    {
+      const int8 nt = chunkBuf[i];
+      if(nt >= minType && nt <= maxType)
       {
-        for(usize compIdx = 0; compIdx < nComps; compIdx++)
+        bitmapSet(vertOkMask, offset + i);
+      }
+    }
+  }
+}
+
+// Pass 1b: stream triangles, for each "all three vertices pass criterion" triangle:
+//   - set its bit in triMask
+//   - assign NEW-INDEX to any unseen vertex in vertNewIndex using triangle-traversal order
+// The latter preserves the legacy behavior where triangle 0's freshly-seen vertices get
+// new indices 0, 1, 2 in the order they're encountered within the triangle.
+void scanTrianglesAndAssignVertexIndices(const UInt64AbstractDataStore& triangleStore, const std::vector<uint64>& vertOkMask, std::vector<uint64>& triMask,
+                                         std::vector<IGeometry::MeshIndexType>& vertNewIndex, IGeometry::MeshIndexType& outNumKeptVerts, usize numTris, const std::atomic_bool& shouldCancel)
+{
+  using MeshIndexType = IGeometry::MeshIndexType;
+  const MeshIndexType notSeen = std::numeric_limits<MeshIndexType>::max();
+  MeshIndexType currentNewVertIndex = 0;
+
+  auto chunkBuf = std::make_unique<uint64[]>(k_ChunkTuples * 3);
+  for(usize offset = 0; offset < numTris; offset += k_ChunkTuples)
+  {
+    if(shouldCancel)
+    {
+      outNumKeptVerts = currentNewVertIndex;
+      return;
+    }
+    const usize count = std::min(k_ChunkTuples, numTris - offset);
+    triangleStore.copyIntoBuffer(offset * 3, nonstd::span<uint64>(chunkBuf.get(), count * 3));
+    for(usize i = 0; i < count; i++)
+    {
+      const uint64 v0 = chunkBuf[i * 3 + 0];
+      const uint64 v1 = chunkBuf[i * 3 + 1];
+      const uint64 v2 = chunkBuf[i * 3 + 2];
+      if(bitmapTest(vertOkMask, v0) && bitmapTest(vertOkMask, v1) && bitmapTest(vertOkMask, v2))
+      {
+        bitmapSet(triMask, offset + i);
+        if(vertNewIndex[v0] == notSeen)
         {
-          usize destinationIndex = newIndex * nComps + compIdx;
-          usize sourceIndex = i * nComps + compIdx;
-          outputData[destinationIndex] = inputData[sourceIndex];
+          vertNewIndex[v0] = currentNewVertIndex++;
         }
+        if(vertNewIndex[v1] == notSeen)
+        {
+          vertNewIndex[v1] = currentNewVertIndex++;
+        }
+        if(vertNewIndex[v2] == notSeen)
+        {
+          vertNewIndex[v2] = currentNewVertIndex++;
+        }
+      }
+    }
+  }
+  outNumKeptVerts = currentNewVertIndex;
+}
+
+// Pass 3 / Pass 5 body: vertex-level array copy using the dense vertNewIndex map.
+// Sources are bulk-read a chunk at a time; destinations are written one tuple at a
+// time because the triangle-traversal new-index ordering is not monotonic in source
+// order. This is still a strict improvement over the legacy operator[] loop, which
+// issued one chunk read AND one chunk write per element.
+struct VertexRemapCopyFunctor
+{
+  template <class T>
+  void operator()(IDataArray* src, IDataArray* dst, const std::vector<IGeometry::MeshIndexType>& vertNewIndex, usize numInputTuples, const std::atomic_bool& shouldCancel) const
+  {
+    using MeshIndexType = IGeometry::MeshIndexType;
+    const MeshIndexType notSeen = std::numeric_limits<MeshIndexType>::max();
+    auto& srcStore = src->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& dstStore = dst->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    const usize numComps = srcStore.getNumberOfComponents();
+
+    auto srcBuf = std::make_unique<T[]>(k_ChunkTuples * numComps);
+
+    for(usize offset = 0; offset < numInputTuples; offset += k_ChunkTuples)
+    {
+      if(shouldCancel)
+      {
+        return;
+      }
+      const usize count = std::min(k_ChunkTuples, numInputTuples - offset);
+      srcStore.copyIntoBuffer(offset * numComps, nonstd::span<T>(srcBuf.get(), count * numComps));
+      for(usize i = 0; i < count; i++)
+      {
+        const MeshIndexType newIdx = vertNewIndex[offset + i];
+        if(newIdx != notSeen)
+        {
+          // Per-tuple random write — one OOC chunk-op per kept vertex. Matches legacy cost
+          // profile on the write side, but saves ~50% by bulk-reading the source.
+          dstStore.copyFromBuffer(newIdx * numComps, nonstd::span<const T>(srcBuf.get() + i * numComps, numComps));
+        }
+      }
+    }
+  }
+};
+
+// Pass 4 body: copy kept triangles with their vertex indices rewritten to the new
+// compact numbering. Because triMask+triPrefixSum assign new triangle indices sequentially
+// in source order, both reads AND writes are bulk-chunked here.
+void copyTrianglesRemapped(const UInt64AbstractDataStore& srcStore, UInt64AbstractDataStore& dstStore, const std::vector<uint64>& triMask, const std::vector<uint64>& triPrefixSum,
+                           const std::vector<IGeometry::MeshIndexType>& vertNewIndex, usize numInputTris, const std::atomic_bool& shouldCancel)
+{
+  auto srcBuf = std::make_unique<uint64[]>(k_ChunkTuples * 3);
+  auto dstBuf = std::make_unique<uint64[]>(k_ChunkTuples * 3);
+
+  for(usize offset = 0; offset < numInputTris; offset += k_ChunkTuples)
+  {
+    if(shouldCancel)
+    {
+      return;
+    }
+    const usize count = std::min(k_ChunkTuples, numInputTris - offset);
+    srcStore.copyIntoBuffer(offset * 3, nonstd::span<uint64>(srcBuf.get(), count * 3));
+
+    const uint64 dstStartNewTriIdx = remapIndex(offset, triMask, triPrefixSum);
+    usize localKeptIdx = 0;
+    for(usize i = 0; i < count; i++)
+    {
+      if(bitmapTest(triMask, offset + i))
+      {
+        dstBuf[localKeptIdx * 3 + 0] = vertNewIndex[srcBuf[i * 3 + 0]];
+        dstBuf[localKeptIdx * 3 + 1] = vertNewIndex[srcBuf[i * 3 + 1]];
+        dstBuf[localKeptIdx * 3 + 2] = vertNewIndex[srcBuf[i * 3 + 2]];
+        localKeptIdx++;
+      }
+    }
+    if(localKeptIdx > 0)
+    {
+      dstStore.copyFromBuffer(dstStartNewTriIdx * 3, nonstd::span<const uint64>(dstBuf.get(), localKeptIdx * 3));
+    }
+  }
+}
+
+// Pass 6 body: triangle-level attached-array copy. New triangle indices are monotonic
+// in source order (via triMask+triPrefixSum) so both reads and writes are bulk-chunked.
+struct TriangleAttachedCopyFunctor
+{
+  template <class T>
+  void operator()(IDataArray* src, IDataArray* dst, const std::vector<uint64>& mask, const std::vector<uint64>& prefixSum, usize numInputTuples, const std::atomic_bool& shouldCancel) const
+  {
+    auto& srcStore = src->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    auto& dstStore = dst->template getIDataStoreRefAs<AbstractDataStore<T>>();
+    const usize numComps = srcStore.getNumberOfComponents();
+
+    auto srcBuf = std::make_unique<T[]>(k_ChunkTuples * numComps);
+    auto dstBuf = std::make_unique<T[]>(k_ChunkTuples * numComps);
+
+    for(usize offset = 0; offset < numInputTuples; offset += k_ChunkTuples)
+    {
+      if(shouldCancel)
+      {
+        return;
+      }
+      const usize count = std::min(k_ChunkTuples, numInputTuples - offset);
+      srcStore.copyIntoBuffer(offset * numComps, nonstd::span<T>(srcBuf.get(), count * numComps));
+
+      const uint64 dstStartNewIdx = remapIndex(offset, mask, prefixSum);
+      usize localKeptIdx = 0;
+      for(usize i = 0; i < count; i++)
+      {
+        if(bitmapTest(mask, offset + i))
+        {
+          for(usize c = 0; c < numComps; c++)
+          {
+            dstBuf[localKeptIdx * numComps + c] = srcBuf[i * numComps + c];
+          }
+          localKeptIdx++;
+        }
+      }
+      if(localKeptIdx > 0)
+      {
+        dstStore.copyFromBuffer(dstStartNewIdx * numComps, nonstd::span<const T>(dstBuf.get(), localKeptIdx * numComps));
       }
     }
   }
@@ -57,21 +301,15 @@ ExtractInternalSurfacesFromTriangleGeometry::~ExtractInternalSurfacesFromTriangl
 // -----------------------------------------------------------------------------
 Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
 {
-  // auto nodeTypesArrayPath = filterArgs.value<DataPath>(k_NodeTypesPath_Key);
-  // auto triangleGeomPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
   auto internalTrianglesPath = m_InputValues->OutputTriangleGeometryPath;
-  // auto copyVertexPaths = filterArgs.value<std::vector<DataPath>>(k_CopyVertexPaths_Key);
-  // auto copyTrianglePaths = filterArgs.value<std::vector<DataPath>>(k_CopyTrianglePaths_Key);
-  // auto vertexDataName = filterArgs.value<std::string>(k_VertexAttributeMatrixName_Key);
-  // auto faceDataName = filterArgs.value<std::string>(k_TriangleAttributeMatrixName_Key);
   auto minMaxNodeValues = m_InputValues->NodeTypeRange;
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->InputTriangleGeometryPath);
   auto& internalTriangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(internalTrianglesPath);
   auto& vertices = *triangleGeom.getVertices();
   auto& triangles = *triangleGeom.getFaces();
-  auto numVerts = triangleGeom.getNumberOfVertices();
-  auto numTris = triangleGeom.getNumberOfFaces();
+  const usize numVerts = triangleGeom.getNumberOfVertices();
+  const usize numTris = triangleGeom.getNumberOfFaces();
 
   auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesPath);
 
@@ -81,129 +319,93 @@ Result<> ExtractInternalSurfacesFromTriangleGeometry::operator()()
   auto internalFacesPath = internalTrianglesPath.createChildPath(TriangleGeom::k_SharedFacesListName);
   internalTriangleGeom.setFaceList(*m_DataStructure.getDataAs<UInt64Array>(internalFacesPath));
 
-  // int64 progIncrement = numTris / 100;
-  // int64 prog = 1;
-  // int64 progressInt = 0;
-  // int64 counter = 0;
-  using MeshIndexType = IGeometry::MeshIndexType;
+  const auto& trianglesStore = triangles.getDataStoreRef();
+  const auto& nodeTypesStore = nodeTypes.getDataStoreRef();
 
+  using MeshIndexType = IGeometry::MeshIndexType;
   const MeshIndexType notSeen = std::numeric_limits<MeshIndexType>::max();
 
-  std::vector<MeshIndexType> vertNewIndex(numVerts, notSeen);
-  std::vector<MeshIndexType> triNewIndex(numTris, notSeen);
-  MeshIndexType currentNewTriIndex = 0;
-  MeshIndexType currentNewVertIndex = 0;
-
-  // Loop over all the triangles mapping the triangle and the vertices to the new array locations
-  for(MeshIndexType triIndex = 0; triIndex < numTris; triIndex++)
+  // Pass 1a — stream NodeTypes once to build a per-vertex "passes criterion" bitmap.
+  // Transient-only; freed after Pass 1b consumes it.
+  m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Scanning NodeTypes..."});
+  std::vector<uint64> vertOkMask((numVerts + 63) / 64, 0ULL);
+  buildVertOkMask(nodeTypesStore, vertOkMask, minMaxNodeValues[0], minMaxNodeValues[1], m_ShouldCancel);
+  if(m_ShouldCancel)
   {
-    MeshIndexType v0Index = triangles[3 * triIndex + 0];
-    MeshIndexType v1Index = triangles[3 * triIndex + 1];
-    MeshIndexType v2Index = triangles[3 * triIndex + 2];
-    // Check if the NodeType is either 2, 3, 4
-    if((nodeTypes[v0Index] >= minMaxNodeValues[0] && nodeTypes[v0Index] <= minMaxNodeValues[1]) && (nodeTypes[v1Index] >= minMaxNodeValues[0] && nodeTypes[v1Index] <= minMaxNodeValues[1]) &&
-       (nodeTypes[v2Index] >= minMaxNodeValues[0] && nodeTypes[v2Index] <= minMaxNodeValues[1]))
-    {
-      // All Nodes are the correct type
-      triNewIndex[triIndex] = currentNewTriIndex;
-      currentNewTriIndex++; // increment the index into which this triangle would be place in the new triangle array
-      // Now figure out if we have seen each vertex
-      if(vertNewIndex[v0Index] == notSeen)
-      {
-        vertNewIndex[v0Index] = currentNewVertIndex;
-        currentNewVertIndex++;
-      }
-      if(vertNewIndex[v1Index] == notSeen)
-      {
-        vertNewIndex[v1Index] = currentNewVertIndex;
-        currentNewVertIndex++;
-      }
-      if(vertNewIndex[v2Index] == notSeen)
-      {
-        vertNewIndex[v2Index] = currentNewVertIndex;
-        currentNewVertIndex++;
-      }
-    }
-
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
+    return {};
   }
 
-  // Resize the vertex and triangle arrays
-  internalTriangleGeom.resizeVertexList(currentNewVertIndex);
-  internalTriangleGeom.resizeFaceList(currentNewTriIndex);
-  internalTriangleGeom.getVertexAttributeMatrix()->resizeTuples({currentNewVertIndex});
-  internalTriangleGeom.getFaceAttributeMatrix()->resizeTuples({currentNewTriIndex});
+  // Pass 1b — stream triangles: for each "all three vertices ok" triangle set its triMask
+  // bit AND assign new indices to its unseen vertices in triangle-traversal order. This
+  // matches the legacy filter's ordering invariant.
+  m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Scanning triangles..."});
+  std::vector<uint64> triMask((numTris + 63) / 64, 0ULL);
+  std::vector<MeshIndexType> vertNewIndex(numVerts, notSeen);
+  MeshIndexType numKeptVerts = 0;
+  scanTrianglesAndAssignVertexIndices(trianglesStore, vertOkMask, triMask, vertNewIndex, numKeptVerts, numTris, m_ShouldCancel);
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // vertOkMask only needed during Pass 1b — release its RAM.
+  vertOkMask.clear();
+  vertOkMask.shrink_to_fit();
+
+  // Pass 2 — build the triangle prefix-sum table (sparse, O(numTris / k_PrefixSumGranularity)).
+  std::vector<uint64> triPrefixSum;
+  const uint64 numKeptTris = buildPrefixSumTable(triMask, triPrefixSum, numTris);
+
+  // Resize the output geometry and attribute matrices to the compact kept counts.
+  internalTriangleGeom.resizeVertexList(numKeptVerts);
+  internalTriangleGeom.resizeFaceList(numKeptTris);
+  internalTriangleGeom.getVertexAttributeMatrix()->resizeTuples({numKeptVerts});
+  internalTriangleGeom.getFaceAttributeMatrix()->resizeTuples({numKeptTris});
 
   IGeometry::SharedVertexList* internalVerts = internalTriangleGeom.getVertices();
   IGeometry::SharedFaceList* internalTriangles = internalTriangleGeom.getFaces();
 
-  // Transfer the data from the old SharedVertexList to the new VertexList
-  for(MeshIndexType vertIndex = 0; vertIndex < numVerts; vertIndex++)
+  // Pass 3 — copy kept vertex XYZ coordinates into the compact output.
+  m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Copying vertices..."});
+  VertexRemapCopyFunctor{}.operator()<float32>(&vertices, internalVerts, vertNewIndex, numVerts, m_ShouldCancel);
+  if(m_ShouldCancel)
   {
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
-    MeshIndexType mappedIndex = vertNewIndex[vertIndex];
-    if(mappedIndex != notSeen)
-    {
-      // Get the actual XYZ coordinate
-      float x = vertices[vertIndex * 3 + 0];
-      float y = vertices[vertIndex * 3 + 1];
-      float z = vertices[vertIndex * 3 + 2];
-
-      (*internalVerts)[mappedIndex * 3 + 0] = x;
-      (*internalVerts)[mappedIndex * 3 + 1] = y;
-      (*internalVerts)[mappedIndex * 3 + 2] = z;
-    }
+    return {};
   }
 
-  // Transfer the data from the old SharedTriangleList to the new TriangleList
-  for(MeshIndexType triIndex = 0; triIndex < numTris; triIndex++)
+  // Pass 4 — copy kept triangles with vertex indices remapped.
+  m_MessageHandler(nx::core::IFilter::Message{nx::core::IFilter::Message::Type::Info, "Copying triangles..."});
+  copyTrianglesRemapped(trianglesStore, internalTriangles->getDataStoreRef(), triMask, triPrefixSum, vertNewIndex, numTris, m_ShouldCancel);
+  if(m_ShouldCancel)
   {
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
-    MeshIndexType mappedIndex = triNewIndex[triIndex];
-    if(mappedIndex != notSeen)
-    {
-      // Get the 3 original vertex indices for this triangle
-      MeshIndexType v0 = triangles[triIndex * 3 + 0];
-      MeshIndexType v1 = triangles[triIndex * 3 + 1];
-      MeshIndexType v2 = triangles[triIndex * 3 + 2];
-
-      MeshIndexType v0New = vertNewIndex[v0];
-      MeshIndexType v1New = vertNewIndex[v1];
-      MeshIndexType v2New = vertNewIndex[v2];
-
-      (*internalTriangles)[mappedIndex * 3 + 0] = v0New;
-      (*internalTriangles)[mappedIndex * 3 + 1] = v1New;
-      (*internalTriangles)[mappedIndex * 3 + 2] = v2New;
-    }
+    return {};
   }
 
-  // Copy any Vertex and Triangle DataArrays to extracted surface mesh
+  // Pass 5 — copy per-vertex attached arrays using the dense vertex map.
   for(const auto& targetArrayPath : m_InputValues->CopyVertexArrayPaths)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     DataPath destinationPath = internalTrianglesPath.createChildPath(m_InputValues->VertexAttributeMatrixName).createChildPath(targetArrayPath.getTargetName());
     auto* src = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
     auto* dest = m_DataStructure.getDataAs<IDataArray>(destinationPath);
-
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src->getDataType(), src, dest, vertNewIndex);
+    ExecuteDataFunction(VertexRemapCopyFunctor{}, src->getDataType(), src, dest, vertNewIndex, numVerts, m_ShouldCancel);
   }
 
+  // Pass 6 — copy per-triangle attached arrays using the triangle mask + prefix sum.
   for(const auto& targetArrayPath : m_InputValues->CopyTriangleArrayPaths)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     DataPath destinationPath = internalTrianglesPath.createChildPath(m_InputValues->TriangleAttributeMatrixName).createChildPath(targetArrayPath.getTargetName());
     auto* src = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
     auto* dest = m_DataStructure.getDataAs<IDataArray>(destinationPath);
-    dest->resizeTuples({currentNewTriIndex});
-
-    ExecuteDataFunction(RemoveFlaggedVerticesFunctor{}, src->getDataType(), src, dest, triNewIndex);
+    dest->resizeTuples({numKeptTris});
+    ExecuteDataFunction(TriangleAttachedCopyFunctor{}, src->getDataType(), src, dest, triMask, triPrefixSum, numTris, m_ShouldCancel);
   }
 
   return {};
