@@ -36,13 +36,13 @@ struct SyntheticNiftiParams
   int16_t bitpix{8};
   float sclSlope{0.0f};
   float sclInter{0.0f};
-  int16_t rank{3};       // dim[0]; override to 1/2/4 for rejection tests
-  int16_t qformCode{1};  // set to 0 to disable qform
+  int16_t rank{3};      // dim[0]; override to 1/2/4 for rejection tests
+  int16_t qformCode{1}; // set to 0 to disable qform
   float quaternB{0.0f};
   float quaternC{0.0f};
   float quaternD{0.0f};
-  int16_t sformCode{0};                          // >0 enables srow_* population
-  std::array<std::array<float, 4>, 3> sform{};   // 3x4 affine when sformCode > 0
+  int16_t sformCode{0};                        // >0 enables srow_* population
+  std::array<std::array<float, 4>, 3> sform{}; // 3x4 affine when sformCode > 0
 };
 
 nifti_1_header MakeHeader(const SyntheticNiftiParams& p)
@@ -417,7 +417,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: float32 round trip", "[SimplnxCore]
 
   DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
-  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, true, true);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -459,7 +459,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "[Simpl
 
   DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
-  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, true, true);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -504,7 +504,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", "[Simp
 
   DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
-  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, true, true);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -660,7 +660,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: PhysicalSubvolume crop maps physica
 
   DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
-  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, true, true, crop);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -747,7 +747,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: VoxelSubvolume crop preserves RGB24
 
   DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
-  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, true, true, crop);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -807,7 +807,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.img pa
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
     const auto preflight = filter.preflight(dataStructure, args);
     REQUIRE(preflight.outputActions.invalid());
   }
@@ -827,7 +827,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.img pa
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
     const auto preflight = filter.preflight(dataStructure, args);
     REQUIRE(preflight.outputActions.invalid());
   }
@@ -848,7 +848,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: rejects missing input file, 1D/2D v
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
     const auto preflight = filter.preflight(dataStructure, args);
     REQUIRE(preflight.outputActions.invalid());
   }
@@ -870,7 +870,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: rejects missing input file, 1D/2D v
 
       DataStructure dataStructure;
       ReadNIfTIFileFilter filter;
-      const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+      const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
       const auto preflight = filter.preflight(dataStructure, args);
       REQUIRE(preflight.outputActions.invalid());
     }
@@ -890,7 +890,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: rejects missing input file, 1D/2D v
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
     const auto preflight = filter.preflight(dataStructure, args);
     REQUIRE(preflight.outputActions.invalid());
   }
@@ -910,7 +910,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: rejects missing input file, 1D/2D v
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
 
     const auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -931,12 +931,12 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: sform-based origin and spacing extr
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.spacing = {1.0f, 1.0f, 1.0f};           // pixdim deliberately different from sform
-  params.origin = {0.0f, 0.0f, 0.0f};             // qoffset deliberately different
+  params.spacing = {1.0f, 1.0f, 1.0f}; // pixdim deliberately different from sform
+  params.origin = {0.0f, 0.0f, 0.0f};  // qoffset deliberately different
   params.niftiDatatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
-  params.qformCode = 0;                           // force sform path
-  params.sformCode = 1;                           // NIFTI_XFORM_SCANNER_ANAT
+  params.qformCode = 0; // force sform path
+  params.sformCode = 1; // NIFTI_XFORM_SCANNER_ANAT
   params.sform = {{{sx, 0.0f, 0.0f, tOrigin[0]}, {0.0f, sy, 0.0f, tOrigin[1]}, {0.0f, 0.0f, sz, tOrigin[2]}}};
 
   nifti_1_header hdr = MakeHeader(params);
@@ -947,7 +947,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: sform-based origin and spacing extr
   DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
   const DataPath geomPath({"NIfTI Sform"});
-  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -993,7 +993,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: sform rotation emits a warning", "[
   DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
   const DataPath geomPath({"NIfTI Rotated"});
-  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -1086,7 +1086,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: big-endian uint16 round trip", "[Si
   ReadNIfTIFileFilter filter;
   const DataPath geomPath({"NIfTI BE"});
   const std::string arrName = "ImageData";
-  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -1130,7 +1130,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: round-trips remaining native dataty
       ReadNIfTIFileFilter filter;
       const DataPath geomPath({fmt::format("NIfTI {}", label)});
       const std::string arrName = "ImageData";
-      const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true);
+      const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
       const auto preflight = filter.preflight(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -1169,7 +1169,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: round-trips remaining native dataty
     ReadNIfTIFileFilter filter;
     const DataPath geomPath({"NIfTI float64"});
     const std::string arrName = "ImageData";
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
     const auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -1231,7 +1231,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: crop edge cases", "[SimplnxCore][Re
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true, crop);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
     const auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -1276,7 +1276,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: crop edge cases", "[SimplnxCore][Re
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true, crop);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
     const auto preflight = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
@@ -1315,7 +1315,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: crop edge cases", "[SimplnxCore][Re
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true, crop);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
     const auto preflight = filter.preflight(dataStructure, args);
     REQUIRE(preflight.outputActions.invalid());
@@ -1337,7 +1337,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: crop edge cases", "[SimplnxCore][Re
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
-    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, true, true, crop);
+    const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
     const auto preflight = filter.preflight(dataStructure, args);
     REQUIRE(preflight.outputActions.invalid());
@@ -1360,7 +1360,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: identity scaling transform is not a
   params.dims = dims;
   params.niftiDatatype = NIFTI_TYPE_INT16;
   params.bitpix = 16;
-  params.sclSlope = 1.0f;   // identity
+  params.sclSlope = 1.0f; // identity
   params.sclInter = 0.0f;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -1408,7 +1408,7 @@ TEST_CASE("SimplnxCore::ReadNIfTIFileFilter: header cache is reused across prefl
   DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
   const DataPath geomPath({"NIfTI Cached"});
-  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", true, true);
+  const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
 
   // First preflight populates the cache.
   const auto firstPreflight = filter.preflight(dataStructure, args);

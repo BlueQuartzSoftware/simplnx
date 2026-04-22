@@ -177,7 +177,7 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
     {
       return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
     }
-    md = metadataResult.value();
+    md = std::move(metadataResult).value();
 
     std::lock_guard<std::mutex> lock(s_HeaderCacheMutex);
     auto& cache = s_HeaderCache[m_InstanceId];

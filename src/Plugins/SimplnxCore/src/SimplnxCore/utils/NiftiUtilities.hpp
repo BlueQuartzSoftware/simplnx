@@ -64,7 +64,6 @@ struct SIMPLNXCORE_EXPORT NiftiMetadata
   int16 sformCode{0};
   std::array<std::array<float32, 4>, 3> sformMatrix{};
   bool affineHasRotation{false};
-  bool affineApplied{false};
 
   // Other
   int16 intentCode{0};

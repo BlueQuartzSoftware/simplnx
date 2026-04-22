@@ -49,18 +49,18 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
   {
     if(opts.cropX)
     {
-      b.xStart = static_cast<usize>(opts.xBoundVoxels[0]);
-      b.xEnd = static_cast<usize>(opts.xBoundVoxels[1]);
+      b.xStart = opts.xBoundVoxels[0];
+      b.xEnd = opts.xBoundVoxels[1];
     }
     if(opts.cropY)
     {
-      b.yStart = static_cast<usize>(opts.yBoundVoxels[0]);
-      b.yEnd = static_cast<usize>(opts.yBoundVoxels[1]);
+      b.yStart = opts.yBoundVoxels[0];
+      b.yEnd = opts.yBoundVoxels[1];
     }
     if(opts.cropZ)
     {
-      b.zStart = static_cast<usize>(opts.zBoundVoxels[0]);
-      b.zEnd = static_cast<usize>(opts.zBoundVoxels[1]);
+      b.zStart = opts.zBoundVoxels[0];
+      b.zEnd = opts.zBoundVoxels[1];
     }
   }
   else // PhysicalSubvolume
@@ -188,6 +188,11 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
             const auto promoted = static_cast<float32>(raw);
             destScanline[writeIdx++] = applyScaling ? (promoted * slope + inter) : promoted;
           }
+          else if constexpr(std::is_same_v<OutputT, float64>)
+          {
+            const auto promoted = static_cast<float64>(raw);
+            destScanline[writeIdx++] = applyScaling ? (promoted * slope + inter) : promoted;
+          }
           else
           {
             destScanline[writeIdx++] = static_cast<OutputT>(raw);
@@ -201,13 +206,13 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
         return copyResult;
       }
       destTupleOffset += destNx;
-
-      if(destTupleOffset - lastProgressTuples >= k_ProgressTupleStride || destTupleOffset == totalDestTuples)
-      {
-        const auto pct = static_cast<int32>((destTupleOffset * 100ULL) / std::max<usize>(1, totalDestTuples));
-        messageHandler({IFilter::Message::Type::Info, fmt::format("Reading NIfTI voxels... {}%", pct)});
-        lastProgressTuples = destTupleOffset;
-      }
+    }
+    // Only update progress on z-slices.
+    if(destTupleOffset - lastProgressTuples >= k_ProgressTupleStride || destTupleOffset == totalDestTuples)
+    {
+      const auto pct = static_cast<int32>((destTupleOffset * 100ULL) / std::max<usize>(1, totalDestTuples));
+      messageHandler({IFilter::Message::Type::Info, fmt::format("{}% Complete", pct)});
+      lastProgressTuples = destTupleOffset;
     }
   }
   return {};

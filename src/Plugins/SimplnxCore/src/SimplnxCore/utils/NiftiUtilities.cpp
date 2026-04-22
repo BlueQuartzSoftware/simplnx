@@ -257,7 +257,6 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
         }
       }
     }
-    md.affineApplied = true;
   }
   else if(useAffineIfPresent && hdr.qform_code > 0)
   {
@@ -267,7 +266,6 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
     {
       md.affineHasRotation = true;
     }
-    md.affineApplied = true;
   }
   else
   {
