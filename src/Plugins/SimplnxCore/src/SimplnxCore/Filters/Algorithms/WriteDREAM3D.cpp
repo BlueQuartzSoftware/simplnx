@@ -15,7 +15,8 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_FailedFindPipelineError = -15;
+constexpr nx::core::int32 k_NoExportPathError = -1;
+constexpr nx::core::int32 k_FailedFindPipelineError = -15;
 } // namespace
 
 // -----------------------------------------------------------------------------
@@ -29,6 +30,71 @@ WriteDREAM3D::WriteDREAM3D(DataStructure& dataStructure, const IFilter::MessageH
 
 // -----------------------------------------------------------------------------
 WriteDREAM3D::~WriteDREAM3D() noexcept = default;
+
+/**
+ * @brief Extracts the preceding Pipeline from the PipelineFilter.
+ * This method returns an empty Pipeline if the PipelineFilter is null.
+ * @param pipelineNode The PipelineFilter to extract the Pipeline from.
+ * @return Result<Pipeline> The target Pipeline or an error message if the process failed to complete.
+ */
+Result<Pipeline> ExtractPipeline(const PipelineFilter* pipelineNode)
+{
+  Pipeline pipeline;
+  if(pipelineNode != nullptr)
+  {
+    auto pipelinePtr = pipelineNode->getPrecedingPipeline();
+    if(pipelinePtr == nullptr)
+    {
+      return MakeErrorResult<Pipeline>(k_FailedFindPipelineError, "Failed to retrieve pipeline.");
+    }
+
+    pipeline = *pipelinePtr;
+  }
+  return {pipeline};
+}
+
+/**
+ * @brief Writes the DREAM3D file to the temp file, commits changes, and then writes the XDMF file if requested.
+ * @param atomicFile Temp file for writing the DREAM3D file
+ * @param dataStructure DataStructure to be written to file.
+ * @param pipeline Pipeline to write to file.
+ * @param writeXdmfFile
+ * @return Result<>
+ */
+Result<> WriteDREAM3DFile(AtomicFile& atomicFile, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmfFile)
+{
+  auto exportFilePath = atomicFile.tempFilePath();
+
+  auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmfFile);
+  if(results.invalid())
+  {
+    return results;
+  }
+
+  // Commit changes to the temp file. Return an invalid Result if errors occured.
+  if(auto commitResult = atomicFile.commit(); commitResult.invalid())
+  {
+    return commitResult;
+  }
+
+  // Write the XDMF file if specified
+  if(writeXdmfFile)
+  {
+    // TODO: Double check this
+    fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
+    std::error_code errorCode;
+    fs::rename(xdmfFilePath, fs::path(exportFilePath).replace_extension(".xdmf"), errorCode);
+    
+    // If the XDMF file failed to be renamed, return an invalid Result
+    if(errorCode)
+    {
+      std::string ss = fmt::format("Failed to rename xdmf file with error: '{}'", errorCode.message());
+      return MakeErrorResult(errorCode.value(), ss);
+    }
+  }
+
+  return {};
+}
 
 // -----------------------------------------------------------------------------
 Result<> WriteDREAM3D::operator()()
@@ -61,22 +127,13 @@ Result<> WriteDREAM3D::operator()()
   auto results = DREAM3D::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
   if(results.valid())
   {
-    Result<> commitResult = atomicFile.commit();
-    if(commitResult.invalid())
-    {
-      return commitResult;
-    }
-    if(writeXdmf)
-    {
-      fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
-      std::error_code errorCode;
-      fs::rename(xdmfFilePath, m_InputValues->ExportFilePath.parent_path() / m_InputValues->ExportFilePath.stem().concat(".xdmf"), errorCode);
-      if(errorCode)
-      {
-        std::string ss = fmt::format("Failed to rename xdmf file with error: '{}'", errorCode.message());
-        return MakeErrorResult(errorCode.value(), ss);
-      }
-    }
+    return ConvertResult(std::move(result));
   }
-  return results;
+  else
+  {
+    pipeline = std::move(result.value());
+  }
+
+  // Write DREAM.3D file
+  return WriteDREAM3DFile(atomicFile, m_DataStructure, pipeline, m_InputValues->WriteXdmfFile);
 }
