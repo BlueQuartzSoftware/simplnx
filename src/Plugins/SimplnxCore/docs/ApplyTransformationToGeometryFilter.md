@@ -137,6 +137,78 @@ represents the following 4x4 Matrix
     9   10  11  12
     13  14  15  16
 
+## Algorithm
+
+### The transform
+
+Regardless of how the user specifies the transformation (rotation, scale, translation, or a raw matrix), the filter first converts it into a single homogeneous **4x4 matrix `M`** that maps points from the original coordinate space to the transformed one. Points are stored as `(x, y, z, 1)` column vectors; `M * p` gives the transformed point. Combining multiple transforms (e.g. translate-to-origin → rotate → translate-back) is a matrix multiplication.
+
+From that point on, applying the transform is a two-step procedure: (1) figure out where each output element lives in space, (2) populate its data. How step 2 works depends on whether the target is a **node geometry** or an **image geometry**.
+
+### Node geometries (Vertex, Edge, Triangle, Quad, Tetra, Hex)
+
+Node geometries store **explicit vertex coordinates**. Applying the transform is straightforward: multiply every vertex by `M`. Cell-level arrays (triangle labels, vertex attributes, etc.) are unchanged — the topology and per-element data still apply to the same cell, just at a new position in space.
+
+The filter processes vertices in **16K-vertex chunks** using bulk I/O:
+
+1. `copyIntoBuffer()` reads a chunk of 16,384 vertices (48 KB = 3 floats × 16K × 4 B) from the vertex list into a RAM buffer.
+2. The loop applies `M * p` to each vertex in-buffer.
+3. `copyFromBuffer()` writes the transformed chunk back.
+
+This replaces a per-element `at()` / `setValue()` loop that would thrash HDF5 chunk caches on out-of-core vertex lists. Memory is bounded at 48 KB per worker.
+
+### Image geometries — the re-gridding problem
+
+An **Image Geometry** stores data on a rigid regular grid; there are no explicit vertex coordinates to transform. Instead, the filter must build a **new** grid aligned with the transformed space, then decide — for every output voxel — what value the corresponding input location had. This is called **re-gridding** or **resampling**.
+
+For each output voxel:
+1. Compute the physical coordinate `p_out` of the voxel's center.
+2. Apply the **inverse** transform: `p_in = M^(-1) * p_out`. This is the physical coordinate in the original image.
+3. Look up (or interpolate) the input value at `p_in`.
+
+The user picks one of two strategies for step 3:
+
+- **Nearest Neighbor** — snap `p_in` to the nearest input voxel and copy its value. Fast and preserves sharp labels (e.g. FeatureIds), but has blocky artifacts.
+- **Trilinear Interpolation** — find the 8 input voxels surrounding `p_in` and compute a weighted average based on the fractional position inside that 8-corner cube. Smoother but blurs sharp boundaries.
+
+### Z-slice slab cache (both Image paths)
+
+A naive implementation would read individual source voxels on demand as it walks the output volume. For a tilted rotation, each output slice may pull from dozens of different source Z-slices, blasting the HDF5 chunk cache. The filter avoids this with a **Z-slice slab cache**:
+
+For each output Z-slice `k`:
+1. **Analytically determine the source Z range** by computing the inverse transform of the four XY corners of the output slice. Take the min and max source Z coordinates those corners land in. For trilinear, pad by ±2 slices so all 8 corner neighbors for every interior voxel are guaranteed to be inside the cached range.
+2. **Ensure the slab cache covers that range.** If the current cache is missing some of the needed slices, update it (see the next section).
+3. **Process the full output slice** reading the source only from the RAM slab — no OOC access per voxel.
+4. Write the computed output slice back with a single `copyFromBuffer()`.
+
+The slab cache is a single contiguous buffer holding K consecutive source Z-slices at their logical positions. Reads from the slab are plain `buffer[z_offset * sliceSize + y * dimX + x]` indexing, no virtual dispatch.
+
+### Sliding-window slab updates
+
+When consecutive output slices need source Z ranges that overlap heavily (typical for small or moderate rotations), re-reading the entire slab for each output slice would waste most of the I/O. Instead, the helper `updateSlabCache<T>()` does **incremental updates**:
+
+1. Compute the intersection of the current cached `[cachedZMin, cachedZMax]` and the newly needed `[newZMin, newZMax]` ranges.
+2. If they overlap:
+   - **Shift** the surviving slices inside the buffer via `std::memmove` to their new positions.
+   - **Read** only the slices below the overlap (if the new range extends further back) and above the overlap (if the new range extends further forward). Typically this is 1–2 new slices per output slice for a mild rotation — orders of magnitude less I/O than re-reading the full slab.
+3. If there's no overlap (first iteration, or large jump), fall back to a full slab re-read.
+
+### Intra-slice parallelism
+
+Inside the output slice loop, the inner `for y in [0, outDimY): for x in [0, outDimX):` work is farmed out to threads via `ParallelDataAlgorithm`:
+
+- Each thread processes a contiguous range of Y rows.
+- All threads **share** the slab buffer (read-only for the duration of the compute phase — no thread writes to it).
+- Each thread writes to its own, disjoint Y-row range of a local output slice buffer.
+- `ImageGeom::computeCellIndex()` and `getCoordsf()` are const and thread-safe; `FindOctant()` (used by trilinear) is a pure function.
+- Trilinear's per-voxel `pValues` scratch (8 vertices × numComps) is declared inside the lambda body so each thread gets its own.
+
+No `DataStore` is touched inside the parallel region — I/O is strictly serialized between phases. This sidesteps the well-documented thread-safety limitations of `AbstractDataStore`.
+
+### Putting it all together
+
+For the CT_align rotation case (1472 × 1139 × 1174 uint16 = 1.97 B voxels, tilted rotation), the combination of slab caching, sliding-window updates, and intra-slice parallelism turns an otherwise infeasible operation (>5 min, OOM risk) into a ~20 s operation with peak working memory bounded by the slab size and the output slice buffer (both a few tens of MB).
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
