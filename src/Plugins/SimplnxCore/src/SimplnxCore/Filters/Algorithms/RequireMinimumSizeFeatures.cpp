@@ -5,6 +5,7 @@
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
+#include "simplnx/Utilities/ParallelAlgorithmUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 #include "simplnx/Utilities/TimeUtilities.hpp"
 
@@ -16,70 +17,143 @@ using namespace nx::core;
 
 namespace
 {
+// Chunk size for bulk-I/O scans of FeatureIds in removeSmallFeatures(). 65536 tuples balances
+// HDF5 chunk-op amortization against transient RAM (64K * sizeof(int32) = 256 KB per task).
 constexpr usize k_ChunkTuples = 65536;
-} // namespace
 
-namespace
-{
+// Memory budget for one per-array transfer slab. At 64 MB and typical CT volumes a single slab
+// covers several Z-slices at once, so a batch handles thousands of bad voxels in one HDF5 read +
+// write pair instead of one per voxel. With ParallelTaskAlgorithm running one task per cell-level
+// array, peak transient memory is (num_parallel_tasks * k_TransferSlabBudgetBytes), typically in
+// the low hundreds of MB.
+constexpr usize k_TransferSlabBudgetBytes = 64 * 1024 * 1024;
 
-class RequireMinimumSizeFeaturesTransferDataImpl
+// -----------------------------------------------------------------------------
+// ChunkedTransferWorker
+//
+// Type-dispatched worker that applies the "copy neighbor's tuple to bad voxel" action for ALL
+// bad voxels of a single cell-level array, using chunked Z-slab bulk I/O (copyIntoBuffer +
+// copyFromBuffer) instead of per-voxel copyTuple().
+//
+// Safety w.r.t. parallelism across arrays: Each task operates on a distinct IDataArray, so the
+// outer ParallelTaskAlgorithm is safe even though each DataStore is not internally thread-safe
+// — different threads never touch the same DataStore.
+//
+// Correctness w.r.t. neighbor reads: The scan phase invariant guarantees that every recorded
+// neighbor voxel has a non-negative feature ID (i.e., it's not a bad voxel). Since bad voxels
+// are the only ones we mutate, no pair's neighbor index points at another bad voxel — therefore
+// there is no read/write ordering dependency between pairs within a batch, and we can do in-slab
+// in-place updates safely.
+//
+// Read range vs. write range: Neighbor offsets are ±1, ±Dx, ±(Dx*Dy), so a neighbor's Z can be
+// at most 1 slice away from its voxel's Z. We read the slab with a ±1 Z margin so every
+// neighbor-tuple read is guaranteed to land inside the slab; we only write back the interior
+// (excluding the margin) so the margin slices are never mutated.
+// -----------------------------------------------------------------------------
+template <typename T>
+class ChunkedTransferWorker
 {
 public:
-  RequireMinimumSizeFeaturesTransferDataImpl() = delete;
-  RequireMinimumSizeFeaturesTransferDataImpl(const RequireMinimumSizeFeaturesTransferDataImpl&) = default;
-
-  RequireMinimumSizeFeaturesTransferDataImpl(RequireMinimumSizeFeatures* filterAlg, usize totalPoints, const Int32AbstractDataStore& featureIds, const std::vector<int64>& neighborVoxelIndex,
-                                             const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper, const std::atomic_bool& shouldCancel)
-  : m_FilterAlg(filterAlg)
-  , m_TotalPoints(totalPoints)
-  , m_NeighborsVoxelIndex(neighborVoxelIndex)
-  , m_DataArrayPtr(dataArrayPtr)
-  , m_FeatureIds(featureIds)
-  , m_MessageHelper(messageHelper)
+  ChunkedTransferWorker(IDataArray& array, const std::vector<usize>& changedVoxels, const std::vector<int64>& neighborVoxelIdxs, std::array<int64, 3> dims, const std::atomic_bool& shouldCancel)
+  : m_Store(array.template getIDataStoreRefAs<AbstractDataStore<T>>())
+  , m_ChangedVoxels(changedVoxels)
+  , m_NeighborVoxelIdxs(neighborVoxelIdxs)
+  , m_Dims(dims)
   , m_ShouldCancel(shouldCancel)
   {
   }
-  RequireMinimumSizeFeaturesTransferDataImpl(RequireMinimumSizeFeaturesTransferDataImpl&&) = default;                // Move Constructor is Not Implemented
-  RequireMinimumSizeFeaturesTransferDataImpl& operator=(const RequireMinimumSizeFeaturesTransferDataImpl&) = delete; // Copy Assignment is Not Implemented
-  RequireMinimumSizeFeaturesTransferDataImpl& operator=(RequireMinimumSizeFeaturesTransferDataImpl&&) = delete;      // Move Assignment is Not Implemented
+  ~ChunkedTransferWorker() = default;
 
-  ~RequireMinimumSizeFeaturesTransferDataImpl() = default;
+  ChunkedTransferWorker(const ChunkedTransferWorker&) = default;
+  ChunkedTransferWorker(ChunkedTransferWorker&&) noexcept = default;
+  ChunkedTransferWorker& operator=(const ChunkedTransferWorker&) = delete;
+  ChunkedTransferWorker& operator=(ChunkedTransferWorker&&) noexcept = delete;
 
   void operator()() const
   {
-    ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
-    std::string arrayName = m_DataArrayPtr->getName();
-    usize prog = std::max(m_TotalPoints / 100ULL, 1ULL);
-    for(usize voxelIndex = 0; voxelIndex < m_TotalPoints; voxelIndex++)
+    if(m_ChangedVoxels.empty())
     {
-      if(voxelIndex % prog == 0)
-      {
-        throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(voxelIndex, m_TotalPoints)); });
-      }
+      return;
+    }
+    const usize numComps = m_Store.getNumberOfComponents();
+    const usize sliceSize = static_cast<usize>(m_Dims[0]) * static_cast<usize>(m_Dims[1]);
+    const usize tupleBytes = sizeof(T) * numComps;
+    const usize sliceBytes = sliceSize * tupleBytes;
+
+    // Pick the largest Z-batch that fits inside the per-slab memory budget. The read slab is
+    // (zBatch + 2) slices wide (margin for neighbors), so we subtract 2 when sizing from the
+    // budget. Floor at 1 slice so we always make forward progress even on very large tuples.
+    const int64 budgetSlices = std::max<int64>(1, static_cast<int64>(k_TransferSlabBudgetBytes / std::max<usize>(sliceBytes, 1)) - 2);
+    const int64 zBatch = std::min<int64>(budgetSlices, m_Dims[2]);
+
+    // Read slab: (zBatch + 2) slices to cover the ±1 Z-neighbor margin.
+    const usize slabTupleCapacity = static_cast<usize>(zBatch + 2) * sliceSize;
+    auto slab = std::make_unique<T[]>(slabTupleCapacity * numComps);
+
+    // changedVoxels is produced by the Z-major scan so it is already sorted by tuple index —
+    // we can walk it with a single monotone cursor rather than searching per batch.
+    usize cursor = 0;
+    for(int64 zStart = 0; zStart < m_Dims[2]; zStart += zBatch)
+    {
       if(m_ShouldCancel)
       {
         return;
       }
+      const int64 zEnd = std::min<int64>(zStart + zBatch, m_Dims[2]);
+      const usize batchUpperLimit = static_cast<usize>(zEnd) * sliceSize;
 
-      int32 currentFeatureId = m_FeatureIds.getValue(voxelIndex);
-      int64 currentNeighborFeatureId = m_NeighborsVoxelIndex[voxelIndex];
-      if(currentNeighborFeatureId >= 0)
+      const usize batchLo = cursor;
+      while(cursor < m_ChangedVoxels.size() && m_ChangedVoxels[cursor] < batchUpperLimit)
       {
-        if(currentFeatureId < 0 && m_FeatureIds.getValue(currentNeighborFeatureId) >= 0)
+        cursor++;
+      }
+      const usize batchHi = cursor;
+      if(batchLo == batchHi)
+      {
+        continue; // no bad voxels fall in this Z-batch
+      }
+
+      // Extend read range by ±1 slice (clamped to volume) to cover the 6-face neighbor window.
+      const int64 readZStart = std::max<int64>(0, zStart - 1);
+      const int64 readZEnd = std::min<int64>(m_Dims[2], zEnd + 1);
+      const usize readTuples = static_cast<usize>(readZEnd - readZStart) * sliceSize;
+      const usize readElements = readTuples * numComps;
+      m_Store.copyIntoBuffer(static_cast<usize>(readZStart) * sliceSize * numComps, nonstd::span<T>(slab.get(), readElements));
+
+      // Apply (voxel <- neighbor) tuple copies in-memory on the slab. The scan invariant
+      // guarantees every neighborGlobal lands inside [readZStart, readZEnd) so the local
+      // offsets below are always in range of the allocated slab.
+      const int64 slabBaseTuple = readZStart * static_cast<int64>(sliceSize);
+      for(usize k = batchLo; k < batchHi; k++)
+      {
+        const int64 voxelGlobal = static_cast<int64>(m_ChangedVoxels[k]);
+        const int64 neighborGlobal = m_NeighborVoxelIdxs[k];
+        if(neighborGlobal < 0)
         {
-          m_DataArrayPtr->copyTuple(currentNeighborFeatureId, voxelIndex);
+          continue;
+        }
+        const usize voxelLocal = static_cast<usize>(voxelGlobal - slabBaseTuple);
+        const usize neighborLocal = static_cast<usize>(neighborGlobal - slabBaseTuple);
+        T* const voxelDst = slab.get() + voxelLocal * numComps;
+        const T* const neighborSrc = slab.get() + neighborLocal * numComps;
+        for(usize c = 0; c < numComps; c++)
+        {
+          voxelDst[c] = neighborSrc[c];
         }
       }
+
+      // Write back only the [zStart, zEnd) interior — the ±1 margin is read-only scratch.
+      const usize writeStartTupleInSlab = static_cast<usize>(zStart - readZStart) * sliceSize;
+      const usize writeTupleCount = static_cast<usize>(zEnd - zStart) * sliceSize;
+      m_Store.copyFromBuffer(static_cast<usize>(zStart) * sliceSize * numComps, nonstd::span<const T>(slab.get() + writeStartTupleInSlab * numComps, writeTupleCount * numComps));
     }
   }
 
 private:
-  RequireMinimumSizeFeatures* m_FilterAlg = nullptr;
-  usize m_TotalPoints = 0;
-  std::vector<int64> m_NeighborsVoxelIndex;
-  const std::shared_ptr<IDataArray> m_DataArrayPtr;
-  const Int32AbstractDataStore& m_FeatureIds;
-  MessageHelper& m_MessageHelper;
+  AbstractDataStore<T>& m_Store;
+  const std::vector<usize>& m_ChangedVoxels;
+  const std::vector<int64>& m_NeighborVoxelIdxs;
+  std::array<int64, 3> m_Dims;
   const std::atomic_bool& m_ShouldCancel;
 };
 
@@ -186,39 +260,40 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
   messageHelper.sendMessage(fmt::format("Assigning voxels...."));
 
   Int32AbstractDataStore& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
-  usize totalPoints = featureIds.getNumberOfTuples();
 
-  std::array<int64, 3> dims = {
+  const std::array<int64, 3> dims = {
       static_cast<int64>(dimensions[0]),
       static_cast<int64>(dimensions[1]),
       static_cast<int64>(dimensions[2]),
   };
 
-  // Track which voxels need data copied from a neighbor
-  std::vector<int64> neighborsVoxelIndex(totalPoints, -1);
+  const std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  const std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  int64 neighborVoxelIdx = 0;
-
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
-  usize counter = 1;
-  int64 kstride = 0;
-  int64 jstride = 0;
-
+  // voteCounter is indexed by FEATURE ID, not by cell — its size tracks feature count (~thousands)
+  // and is independent of volume size. Safe for OOC.
   std::vector<uint8> voteCounter(featureNumCellsStoreRef.getNumberOfTuples(), 0);
 
-  // Chunked scan: read featureIds in chunks for the voting scan
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
+  // Rolling 3-slice buffer: holds the previous, current, and next Z-slices so all 6 face-neighbor
+  // reads come from local memory. Allocated once and reused across convergence iterations rather
+  // than reallocated per iteration. Size is O(X*Y), bounded by slice area (not O(n_cells)).
+  std::vector<int32> slabBuf(3 * sliceSize, 0);
+
+  // Sparse record of (bad-voxel index, chosen-neighbor index) pairs produced by each scan pass.
+  // Allocated empty; grows only to the number of bad voxels that find a valid neighbor, and is
+  // cleared between iterations. Replaces the old O(n_cells) dense neighborsVoxelIndex vector
+  // which allocated 8 bytes per voxel across the entire volume.
+  std::vector<usize> changedVoxels;
+  std::vector<int64> neighborVoxelIdxs;
+
+  usize counter = 1;
   while(counter != 0)
   {
     counter = 0;
 
-    // Rolling 3-slice buffer: holds the previous, current, and next Z-slices so
-    // that all 6 face-neighbor reads come from local memory. The buffer is advanced
-    // one Z-slice at a time by swapping pointers and reading the next slice.
-    // This eliminates per-element OOC DataStore access during the voting scan.
-    std::vector<int32> slabBuf(3 * sliceSize, 0);
+    std::fill(slabBuf.begin(), slabBuf.end(), 0);
     int32* prevSlice = slabBuf.data();
     int32* curSlice = slabBuf.data() + sliceSize;
     int32* nextSlice = slabBuf.data() + 2 * sliceSize;
@@ -229,8 +304,8 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
       featureIds.copyIntoBuffer(sliceSize, nonstd::span<int32>(nextSlice, sliceSize));
     }
 
-    // Collect indices of voxels that get assigned this iteration
-    std::vector<usize> changedVoxels;
+    changedVoxels.clear();
+    neighborVoxelIdxs.clear();
 
     for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
     {
@@ -238,20 +313,21 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
       {
         return;
       }
-      kstride = dims[0] * dims[1] * zIdx;
+      const int64 kstride = dims[0] * dims[1] * zIdx;
       for(int64 yIdx = 0; yIdx < dims[1]; yIdx++)
       {
-        jstride = dims[0] * yIdx;
+        const int64 jstride = dims[0] * yIdx;
         for(int64 xIdx = 0; xIdx < dims[0]; xIdx++)
         {
           const int64 globalIdx = kstride + jstride + xIdx;
           const int64 localIdx = yIdx * dims[0] + xIdx;
-          int32 currentFeatureId = curSlice[localIdx];
+          const int32 currentFeatureId = curSlice[localIdx];
           if(currentFeatureId < 0)
           {
             counter++;
             uint8 maxVoteCount = 0;
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            int64 chosenNeighborIdx = -1;
+            const std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
@@ -259,11 +335,8 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
                 continue;
               }
 
-              neighborVoxelIdx = globalIdx + neighborVoxelIndexOffsets[faceIndex];
-
-              // Read neighbor from slab buffer
-              int32 neighborFeatureId = 0;
               const int64 neighborOffset = neighborVoxelIndexOffsets[faceIndex];
+              int32 neighborFeatureId = 0;
               if(neighborOffset == -dims[0] * dims[1])
               {
                 neighborFeatureId = prevSlice[localIdx];
@@ -280,18 +353,19 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
               if(neighborFeatureId >= 0)
               {
                 voteCounter[neighborFeatureId]++;
-                uint8 currentVoteCount = voteCounter[neighborFeatureId];
+                const uint8 currentVoteCount = voteCounter[neighborFeatureId];
                 if(currentVoteCount > maxVoteCount)
                 {
                   maxVoteCount = currentVoteCount;
-                  neighborsVoxelIndex[globalIdx] = neighborVoxelIdx;
+                  chosenNeighborIdx = globalIdx + neighborOffset;
                 }
               }
             }
 
-            if(neighborsVoxelIndex[globalIdx] >= 0)
+            if(chosenNeighborIdx >= 0)
             {
               changedVoxels.push_back(static_cast<usize>(globalIdx));
+              neighborVoxelIdxs.push_back(chosenNeighborIdx);
             }
 
             std::fill(voteCounter.begin(), voteCounter.end(), 0);
@@ -299,7 +373,7 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
         }
       }
 
-      // Slide the slab window
+      // Slide the slab window forward: what was nextSlice becomes curSlice, etc.
       std::swap(prevSlice, curSlice);
       std::swap(curSlice, nextSlice);
       if(zIdx + 2 < dims[2])
@@ -308,7 +382,7 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
       }
     }
 
-    // Skip transfer entirely if no voxels were assigned
+    // Skip transfer entirely if no voxels were assigned this iteration.
     if(changedVoxels.empty())
     {
       break;
@@ -316,30 +390,21 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
 
     messageHelper.sendMessage(fmt::format("Remaining voxels: {} - Updating {} changed voxels... ", counter, changedVoxels.size()));
 
-    // Transfer phase: only copy tuples for voxels that actually changed
+    // Transfer phase: dispatch one ChunkedTransferWorker per cell-level array across threads.
+    // Each worker does Z-batched bulk I/O (copyIntoBuffer + in-memory edits + copyFromBuffer)
+    // — orders of magnitude fewer HDF5 chunk ops than the old per-voxel copyTuple loop.
     const std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsPath, {});
 
+    ParallelTaskAlgorithm taskRunner;
     for(const auto& voxelArray : voxelArrays)
     {
       if(m_ShouldCancel)
       {
-        return;
+        break;
       }
-      for(const usize voxelIndex : changedVoxels)
-      {
-        int64 neighborIdx = neighborsVoxelIndex[voxelIndex];
-        if(neighborIdx >= 0 && featureIds.getValue(neighborIdx) >= 0)
-        {
-          voxelArray->copyTuple(neighborIdx, voxelIndex);
-        }
-      }
+      ExecuteParallelFunction<ChunkedTransferWorker>(voxelArray->getDataType(), taskRunner, *voxelArray, changedVoxels, neighborVoxelIdxs, dims, m_ShouldCancel);
     }
-
-    // Reset neighborsVoxelIndex for changed voxels
-    for(const usize voxelIndex : changedVoxels)
-    {
-      neighborsVoxelIndex[voxelIndex] = -1;
-    }
+    taskRunner.wait();
   }
 }
 

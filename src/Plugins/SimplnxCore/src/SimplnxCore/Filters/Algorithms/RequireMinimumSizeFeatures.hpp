@@ -44,9 +44,12 @@ struct SIMPLNXCORE_EXPORT RequireMinimumSizeFeaturesInputValues
  * chunk thrashing across the entire volume on every iteration. The optimized version
  * uses a rolling 3-slice buffer: for each Z-slice, the current slice and its Z-neighbors
  * are in memory so all 6 face-neighbor reads come from local buffers. The buffer slides
- * forward one slice at a time. Changed voxels are tracked in a compact list, and only
- * those voxels have their data arrays updated (via copyTuple) rather than iterating
- * over all voxels for each data array.
+ * forward one slice at a time. Changed voxels and their chosen neighbors are tracked in
+ * compact parallel sparse vectors (O(bad_voxels), not O(n_cells)) — the earlier dense
+ * per-voxel index vector has been removed. The transfer phase dispatches one
+ * ChunkedTransferWorker per cell-level array via ParallelTaskAlgorithm; each worker
+ * does Z-batched bulk I/O (copyIntoBuffer + in-memory edits + copyFromBuffer) to
+ * replace per-voxel copyTuple() with a small number of HDF5 chunk operations.
  */
 class SIMPLNXCORE_EXPORT RequireMinimumSizeFeatures
 {
