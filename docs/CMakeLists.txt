@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 # Building the Developer Documentation using Doxygen is probably not supported
 # and has not been updated since 2021. This is being left in here for historical
-# reasons and incase someone wants to add this capability in the future.
+# reasons and in case someone wants to add this capability in the future.
 # ------------------------------------------------------------------------------
 
 option(SIMPLNX_BUILD_SPHINX_DOCS "Use Doxygen to build developer documentation (Not Supported)" OFF)
