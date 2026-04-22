@@ -20,18 +20,48 @@ using namespace nx::core;
 
 namespace
 {
-constexpr usize k_ProgressTupleStride = 1u << 18; // ~256k destination tuples between progress messages
+/// How many destination tuples to process between progress messages.
+constexpr usize k_ProgressTupleStride = 1u << 18; // ~256k tuples
 
+/**
+ * @brief Inclusive voxel-index range that the streamer will retain on
+ *        each axis.
+ *
+ * Everything in `StreamCroppedVoxels` operates on these bounds; the
+ * "no cropping" case is represented as the full [0, dim-1] range so
+ * the streamer only needs one code path.
+ */
 struct CropBounds
 {
-  usize xStart{0};
-  usize xEnd{0};
+  usize xStart{0}; ///< First source voxel retained on the x axis (inclusive).
+  usize xEnd{0};   ///< Last source voxel retained on the x axis (inclusive).
   usize yStart{0};
   usize yEnd{0};
   usize zStart{0};
   usize zEnd{0};
 };
 
+/**
+ * @brief Resolves the user-supplied cropping options against the NIfTI
+ *        volume's extent and returns inclusive voxel-index bounds.
+ *
+ * Three cases:
+ *
+ * - `NoCropping` → bounds cover the full volume.
+ * - `VoxelSubvolume` → bounds copied from `opts.xBoundVoxels` /
+ *   `yBoundVoxels` / `zBoundVoxels` for the axes whose `cropX/Y/Z`
+ *   flag is set; other axes default to the full extent.
+ * - `PhysicalSubvolume` → a temporary axis-aligned `ImageGeom` is
+ *   built from the NIfTI metadata's origin / spacing / dimensions and
+ *   `ImageGeom::getIndex()` converts the physical bounds into voxel
+ *   indices. Bounds that don't map to a valid voxel produce
+ *   `-34740` / `-34741`.
+ *
+ * Returns errors:
+ * - `-34740` / `-34741` — physical bound does not resolve to a voxel.
+ * - `-34742` — start > end on at least one axis.
+ * - `-34743` — end voxel exceeds the volume extent on at least one axis.
+ */
 Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, const CropGeometryParameter::ValueType& opts)
 {
   CropBounds b;
@@ -112,6 +142,44 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nifti::NiftiMetadata& md, c
   return {b};
 }
 
+/**
+ * @brief Scan-line streamer that copies a cropped sub-volume from the
+ *        gzip-or-plain input stream into the destination DataStore.
+ *
+ * The streamer reads one source scan-line (`srcNx * componentCount`
+ * elements) per `gzread`. Out-of-range z-slices and y-rows are read
+ * and discarded in place, so peak memory stays proportional to the
+ * cropped region rather than the full source volume. In-range rows
+ * are converted (byteswap if needed, cast to `OutputT`, and optional
+ * `slope * x + inter` scaling when promoting to `float32` or
+ * `float64`) into a destination-typed scratch buffer, then pushed
+ * into the DataStore via a single `CopyFromArray::CopyData` call per
+ * in-range scan-line. That bulk-write pattern avoids the virtual
+ * `setValue` call per element, which matters a lot for
+ * OOC-backed stores.
+ *
+ * @tparam NativeT The element type as it sits in the file (before
+ *                 byteswap / scaling).
+ * @tparam OutputT The element type of the destination DataArray.
+ *                 Typically the same as `NativeT`; becomes `float32`
+ *                 when the filter promotes for scaling.
+ *
+ * @param gz              Already-open gzip stream, positioned at the
+ *                        first byte of voxel data.
+ * @param store           Destination DataStore to fill.
+ * @param md              Parsed NIfTI metadata. Provides source
+ *                        extent, component count, byte order, and
+ *                        scaling coefficients.
+ * @param b               Inclusive source-voxel range to retain.
+ * @param applyScaling    True when the output array is a floating-point
+ *                        type and the filter wants
+ *                        `y = slope * x + inter` applied on read.
+ * @param shouldCancel    Cancel flag polled once per source z-slice.
+ * @param messageHandler  Sink for progress messages.
+ *
+ * @return `Result<>` carrying `-34730` for a short read, or an error
+ *         forwarded from `CopyFromArray::CopyData`.
+ */
 template <class NativeT, class OutputT>
 Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const nx::core::nifti::NiftiMetadata& md, const CropBounds& b, bool applyScaling, const std::atomic_bool& shouldCancel,
                              const IFilter::MessageHandler& messageHandler)
@@ -218,6 +286,23 @@ Result<> StreamCroppedVoxels(gzFile gz, AbstractDataStore<OutputT>& store, const
   return {};
 }
 
+/**
+ * @brief Bridge between the runtime NIfTI datatype code and the
+ *        compile-time `NativeT` that `StreamCroppedVoxels` needs.
+ *
+ * The destination type `OutputT` is known at the caller site (from
+ * the DataStore the filter's preflight created). The source type is
+ * known only at runtime from `md.niftiDatatype`. This function
+ * dispatches on that code to pick the right `StreamCroppedVoxels<NativeT, OutputT>`
+ * instantiation. RGB24 and RGBA32 are folded into the `uint8` case
+ * because their on-disk representation is a packed byte stream — the
+ * per-tuple component count is carried in `md.componentCount` and
+ * handled inside the streamer.
+ *
+ * @return Forwards the streamer's result, or `-34731` for a code the
+ *         dispatcher does not recognize (header validation should
+ *         have rejected it earlier).
+ */
 template <class OutputT>
 Result<> DispatchByNiftiType(gzFile gz, AbstractDataStore<OutputT>& store, const nx::core::nifti::NiftiMetadata& md, const CropBounds& b, bool applyScaling, const std::atomic_bool& shouldCancel,
                              const IFilter::MessageHandler& messageHandler)
