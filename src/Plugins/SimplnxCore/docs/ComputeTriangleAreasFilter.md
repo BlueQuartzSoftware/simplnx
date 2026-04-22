@@ -12,6 +12,53 @@ This **Filter** computes the area of each **Triangle** in a **Triangle Geometry*
 
 where *O* is the angle between |AB| and |AC|.
 
+## Algorithm
+
+### What the filter computes
+
+Given a triangle with vertices `A`, `B`, `C` in 3D space, its area equals half the magnitude of the cross product of two of its edge vectors:
+
+    area = 0.5 * |(A - B) × (A - C)|
+
+This is a closed-form, per-triangle computation — there is no iteration, no dependence on other triangles, and no geometry-wide state. The only inputs are the three vertex coordinates for each triangle; the output is one `float64` area per triangle.
+
+### Data access pattern
+
+A **Triangle Geometry** stores two cell-level arrays relevant here:
+
+- **Triangle connectivity**: per triangle, three uint64 vertex indices pointing into the vertex list.
+- **Vertex coordinates**: per vertex, three float32s (x, y, z).
+
+For each triangle, the naive implementation issues one triangle-connectivity read plus three random vertex reads — six OOC chunk-cache hits per triangle. At tens of millions of triangles on a CT-scale mesh, that is hundreds of millions of virtual dispatches through the DataStore layer, each with ~50–100 ns of overhead even when the backing chunk is cached. Real-world pipelines spent 20+ seconds inside this filter alone.
+
+### Chunked bulk I/O with span-bounded vertex loads
+
+Filter-generated meshes (QuickSurfaceMesh, SurfaceNets, ExtractInternalSurfaces) create triangles in spatial-locality order, so consecutive triangles tend to reference nearby vertex indices. The filter exploits this with a chunked pipeline:
+
+**For each chunk of 65,536 triangles:**
+
+1. **Bulk-read connectivity** — read all `3 × 65,536` vertex indices for this chunk in one `copyIntoBuffer()` call (~1.5 MB).
+2. **Determine the vertex-index span** — scan the connectivity buffer to find `[minVertIdx, maxVertIdx]`. For spatially-coherent meshes, this span is typically in the tens of thousands, not the millions.
+3. **Bulk-read the vertex-coordinate range** — if `maxVertIdx − minVertIdx + 1 ≤ 16M vertices` (~192 MB cap for float32 xyz), read that entire range of vertex coords into a local buffer in one `copyIntoBuffer()` call.
+4. **Parallel compute** — dispatch the area formula across the chunk's triangles using `ParallelDataAlgorithm`. Threads read from the shared triangle-connectivity and vertex-coordinate RAM buffers (both plain `T[]` / `std::vector<T>`, not `DataStore`) and write to disjoint positions in a local area output buffer. No `DataStore` access inside the parallel region — sidesteps the thread-safety constraint on `AbstractDataStore`.
+5. **Bulk-write areas** — flush this chunk's computed areas in one `copyFromBuffer()` call.
+
+Total I/O cost per chunk: 1 triangle read + 1 vertex-range read + 1 area write = **3 bulk calls per 65K triangles**. A typical 10M-triangle mesh takes ~150 chunks, for ~450 HDF5 chunk operations instead of the naive ~60 M.
+
+### Fallback for pathological meshes
+
+If a chunk's vertex span exceeds 16 M vertices (a corner case — it means the mesh's vertex indexing is extremely scattered), the filter falls back to a **serial per-triangle vertex read** path within that chunk. Each triangle issues 3 small `copyIntoBuffer()` calls, each reading a single vertex's 3 floats. This is slower (roughly the original performance), but it runs serially because the `DataStore` isn't thread-safe for concurrent reads. In practice this fallback is never triggered on filter-produced meshes.
+
+### Memory footprint
+
+Peak working memory per filter invocation:
+
+- Triangle connectivity scratch: 1.5 MB (`k_ChunkTriangles × 3 × sizeof(uint64)`)
+- Area output scratch: 512 KB (`k_ChunkTriangles × sizeof(float64)`)
+- Vertex coordinate scratch: up to ~192 MB (chunk span × 3 × sizeof(float32)), typically a few MB in practice
+
+All bounded, independent of mesh size — the whole mesh is never materialized at once.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
