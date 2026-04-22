@@ -33,7 +33,7 @@ const std::atomic_bool& ComputeCAxisLocations::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeCAxisLocations::operator()()
 {
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath).getDataStoreRef();
   bool allPhasesHexagonal = true;
   bool noPhasesHexagonal = true;
   for(usize i = 1; i < crystalStructures.size(); ++i)
@@ -58,11 +58,12 @@ Result<> ComputeCAxisLocations::operator()()
 
   std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  const auto& quaternions = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& cAxisLocation = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CAxisLocationsArrayName);
+  const auto& quaternionsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
+  auto& cAxisLocation = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CAxisLocationsArrayName).getDataStoreRef();
 
-  const usize totalPoints = quaternions.getNumberOfTuples();
+  const usize totalPoints = quaternionsArray.getNumberOfTuples();
+  const auto& quaternions = quaternionsArray.getDataStoreRef();
 
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
