@@ -1217,7 +1217,7 @@ General Parameters
          - ``file_prefix`` : str
             - **Description**: The string part of the file name that appears **before** the index digits.
          - ``file_suffix`` : str
-            - **Description**: The string part of the file anem that appears **after** the index digits.
+            - **Description**: The string part of the file name that appears **after** the index digits.
          - ``increment_index`` : int
             - **Description**: The value that determines how much to increment the index value when generating the file list.
          - ``input_path`` : str
