@@ -71,7 +71,7 @@ Median is not supported because it requires storing every vertex's contribution,
 
 ### Mask
 
-An optional boolean mask array may be provided. Vertices where the mask value is *false* are skipped entirely during interpolation – they do not contribute to any voxel's accumulated value or statistics.
+An optional boolean or uint8 mask array may be provided. Vertices where the mask value is *false* or *0* are skipped entirely during interpolation – they do not contribute to any voxel's accumulated value or statistics.
 
 ### Memory Usage
 
