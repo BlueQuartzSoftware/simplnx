@@ -11,16 +11,31 @@ using namespace nx::core;
 
 namespace
 {
+template <typename T>
+void ApplyThresholdValues(const IArrayThreshold& arrayThreshold, std::vector<T>& outputResultVector, std::vector<T>& inputThresholdVector, bool replaceInput, T trueValue, T falseValue)
+{
+  usize totalTuples = outputResultVector.size();
+  auto unionOperator = arrayThreshold.getUnionOperator();
+  bool inverse = arrayThreshold.isInverted();
+
+  if(replaceInput)
+  {
+    unionOperator = IArrayThreshold::UnionOperator::Or;
+  }
+
+  // insert into current threshold
+  InsertThreshold<T>(totalTuples, outputResultVector, unionOperator, inputThresholdVector, inverse, trueValue, falseValue);
+}
+
 template <class U>
 class ThresholdFilterHelper
 {
 public:
-  ThresholdFilterHelper(ArrayThreshold::ComparisonType compType, ArrayThreshold::ComparisonValue compValue, usize componentIndex, std::vector<U>& output, bool isInverted)
+  ThresholdFilterHelper(ArrayThreshold::ComparisonType compType, ArrayThreshold::ComparisonValue compValue, usize componentIndex, std::vector<U>& output)
   : m_ComparisonOperator(compType)
   , m_ComparisonValue(compValue)
   , m_ComponentIndex(componentIndex)
   , m_Output(output)
-  , m_IsInverted(isInverted)
   {
   }
 
@@ -33,10 +48,6 @@ public:
     {
       T inputValue = m_Input.getComponentValue(tupleIndex, m_ComponentIndex);
       bool comparison = CompT{}(inputValue, value);
-      if(m_IsInverted)
-      {
-        comparison = !comparison;
-      }
       T outputValue = comparison ? trueValue : falseValue;
       m_Output[tupleIndex] = outputValue;
     }
@@ -73,7 +84,6 @@ private:
   ArrayThreshold::ComparisonValue m_ComparisonValue;
   usize m_ComponentIndex = 0;
   std::vector<U>& m_Output;
-  bool m_IsInverted = false;
 };
 
 struct ExecuteThresholdHelper
@@ -117,8 +127,7 @@ void InsertThreshold(usize numItems, std::vector<T>& currentVector, nx::core::IA
 }
 
 template <typename T>
-void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, std::vector<T>& outputResultVector, int32_t& err, bool replaceInput, bool inverse, T trueValue,
-                    T falseValue)
+void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, std::vector<T>& outputResultVector, int32_t& err, bool replaceInput, T trueValue, T falseValue)
 {
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultVector.size();
@@ -127,35 +136,18 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
   nx::core::ArrayThreshold::ComparisonType compOperator = comparisonValue.getComparisonType();
   nx::core::ArrayThreshold::ComparisonValue compValue = comparisonValue.getComparisonValue();
   nx::core::IArrayThreshold::UnionOperator unionOperator = comparisonValue.getUnionOperator();
-  bool isInverted = comparisonValue.isInverted();
 
   DataPath inputDataArrayPath = comparisonValue.getArrayPath();
 
   usize componentIndex = comparisonValue.getComponentIndex();
 
-  ThresholdFilterHelper<T> helper(compOperator, compValue, componentIndex, tempResultVector, isInverted);
+  ThresholdFilterHelper<T> helper(compOperator, compValue, componentIndex, tempResultVector);
 
   const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
 
   ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray, trueValue, falseValue);
 
-  if(replaceInput)
-  {
-    if(inverse)
-    {
-      std::reverse(tempResultVector.begin(), tempResultVector.end());
-    }
-    // copy the temp uint8 vector to the final uint8 result array
-    for(size_t i = 0; i < totalTuples; i++)
-    {
-      outputResultVector[i] = tempResultVector[i];
-    }
-  }
-  else
-  {
-    // insert into current threshold
-    InsertThreshold<T>(totalTuples, outputResultVector, unionOperator, tempResultVector, inverse, trueValue, falseValue);
-  }
+  ApplyThresholdValues<T>(comparisonValue, outputResultVector, tempResultVector, replaceInput, trueValue, falseValue);
 }
 
 struct ThresholdValueFunctor
@@ -178,8 +170,7 @@ struct ThresholdValueFunctor
 };
 
 template <typename T>
-void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, std::vector<T>& outputResultVector, int32_t& err, bool replaceInput, bool inverse, T trueValue,
-                  T falseValue)
+void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, std::vector<T>& outputResultVector, int32_t& err, bool replaceInput, T trueValue, T falseValue)
 {
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
   size_t totalTuples = outputResultVector.size();
@@ -193,56 +184,31 @@ void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructu
     const IArrayThreshold* thresholdPtr = threshold.get();
     if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {
-      ThresholdSet<T>(*comparisonSet, dataStructure, tempResultVector, err, !firstValueFound, false, trueValue, falseValue);
+      ThresholdSet<T>(*comparisonSet, dataStructure, tempResultVector, err, !firstValueFound, trueValue, falseValue);
       firstValueFound = true;
     }
     else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
-      ThresholdValue<T>(*comparisonValue, dataStructure, tempResultVector, err, !firstValueFound, false, trueValue, falseValue);
+      ThresholdValue<T>(*comparisonValue, dataStructure, tempResultVector, err, !firstValueFound, trueValue, falseValue);
       firstValueFound = true;
     }
   }
 
-  // Allow ThresholdSets to be invertable
-  if(inputComparisonSet.isInverted())
-  {
-    for(size_t i = 0; i < totalTuples; i++)
-    {
-      tempResultVector[i] = (tempResultVector[i] == trueValue) ? falseValue : trueValue;
-    }
-  }
-
-  if(replaceInput)
-  {
-    if(inverse)
-    {
-      std::reverse(tempResultVector.begin(), tempResultVector.end());
-    }
-    // copy the temp uint8 vector to the final uint8 result array
-    for(size_t i = 0; i < totalTuples; i++)
-    {
-      outputResultVector[i] = tempResultVector[i];
-    }
-  }
-  else
-  {
-    // insert into current threshold
-    InsertThreshold<T>(totalTuples, outputResultVector, inputComparisonSet.getUnionOperator(), tempResultVector, inverse, trueValue, falseValue);
-  }
+  // Apply resulting values to output
+  ApplyThresholdValues<T>(inputComparisonSet, outputResultVector, tempResultVector, replaceInput, trueValue, falseValue);
 }
 
 struct ThresholdSetFunctor
 {
   template <typename T>
-  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, IDataArray& outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue,
-                  T falseValue)
+  void operator()(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, IDataArray& outputResultArray, int32_t& err, bool replaceInput, T trueValue, T falseValue)
   {
     // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
     // was essentially done in the preflight part.
     auto& outputDataStore = outputResultArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize totalTuples = outputDataStore.getNumberOfTuples();
     std::vector<T> tmpVector(totalTuples, falseValue);
-    ThresholdSet<T>(inputComparisonSet, dataStructure, tmpVector, err, replaceInput, inverse, trueValue, falseValue);
+    ThresholdSet<T>(inputComparisonSet, dataStructure, tmpVector, err, replaceInput, trueValue, falseValue);
 
     for(size_t i = 0; i < totalTuples; i++)
     {
@@ -284,32 +250,7 @@ Result<> MultiThresholdObjects::operator()()
   int32_t err = 0;
   ArrayThresholdSet::CollectionType thresholdSet = thresholdsObject.getArrayThresholds();
 
-  ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, thresholdsObject, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
-                      thresholdsObject.isInverted(), trueValue, falseValue);
-  #if 0
-  for(const std::shared_ptr<IArrayThreshold>& threshold : thresholdSet)
-  {
-    if(m_ShouldCancel)
-    {
-      return {};
-    }
-    const IArrayThreshold* thresholdPtr = threshold.get();
-    if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
-    {
-      // Do not replace values on first threshold, update firstValueFound to reflect that a threshold has been run.
-      ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, *comparisonSet, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
-                          thresholdsObject.isInverted(), trueValue, falseValue);
-      firstValueFound = true;
-    }
-    else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
-    {
-      // Do not replace values on first threshold, update firstValueFound to reflect that a threshold has been run.
-      ExecuteDataFunction(ThresholdValueFunctor{}, maskArrayType, *comparisonValue, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound,
-                          thresholdsObject.isInverted(), trueValue, falseValue);
-      firstValueFound = true;
-    }
-  }
-  #endif
+  ExecuteDataFunction(ThresholdSetFunctor{}, maskArrayType, thresholdsObject, m_DataStructure, m_DataStructure.getDataRefAs<IDataArray>(maskArrayPath), err, !firstValueFound, trueValue, falseValue);
 
   return {};
 }

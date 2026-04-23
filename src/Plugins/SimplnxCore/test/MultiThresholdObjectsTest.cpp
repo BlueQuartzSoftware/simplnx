@@ -573,7 +573,7 @@ void CheckThresholdSet3(DataStructure& dataStructure, bool inverted)
     bool expectedMask2 = ExpectedThresholdSet2Mask(i, false);
 
     bool expected = expectedMask1 && expectedMask2;
-    if (inverted)
+    if(inverted)
     {
       expected = !expected;
     }
@@ -631,8 +631,7 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Threshold Sets", "[SimplnxC
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure = CreateTestDataStructure();
-  //bool isInverted = GENERATE(false, true);
-  bool isInverted = true;
+  bool isInverted = GENERATE(false, true);
 
   SECTION("ArraySet 1")
   {
