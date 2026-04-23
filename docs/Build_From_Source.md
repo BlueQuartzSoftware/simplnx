@@ -78,7 +78,7 @@ This example shows how to configure simplnx to build using Visual Studio IDE
 
 ```shell
 set BUILD_DIR=VisualStudio
-set VCPKG_INSTALL_ROOT=C:/Appications/vcpkg
+set VCPKG_INSTALL_ROOT=C:/Applications/vcpkg
 cd simplnx
 mkdir %BUILD_DIR%
 cd %BUILD_DIR%
@@ -87,15 +87,15 @@ cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALL_RO
 
 ### Windows with Ninja and IDE of choice (QtCreator, CLion, command line)
 
-Adjust the below commands to the sytle of your shell (The below example is done in Windows Command Prompt Batch file style).
+Adjust the below commands to the style of your shell (The below example is done in Windows Command Prompt Batch file style).
 
-In this example we are building a Release version of compled into a directory called `Release` inside the source directory. We will be using the `ninja` generator so be sure that ninja.exe is on your PATH
+In this example we are building a Release version compiled into a directory called `Release` inside the source directory. We will be using the `ninja` generator so be sure that ninja.exe is on your PATH
 
 ```shell
 set NINJA_INSTALL=C:/Applications/ninja-win
 set PATH=%PATH%:%NINJA_INSTALL%
 set BUILD_DIR=Release
-set VCPKG_INSTALL_ROOT=C:/Appications/vcpkg
+set VCPKG_INSTALL_ROOT=C:/Applications/vcpkg
 cd simplnx
 mkdir %BUILD_DIR%
 cd %BUILD_DIR%
@@ -140,13 +140,13 @@ cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALL_ROOT/scripts/buildsystems/v
 
 | Identifier | Type | Explanation |
 |------------|------|-------------|
-| `ITKImageProcessing_USE_JOB_POOL` | `BOOL` | When `ON` the amount of threads used to build `ITK` library plugin is capped (see `ITKImageProcessing_JOB_POOL`). Some of the `ITK` files more 2+ GB of memory to compile due to heavy templating. This is to prevent sytems from running out of memory during compilation. |
+| `ITKImageProcessing_USE_JOB_POOL` | `BOOL` | When `ON` the amount of threads used to build `ITK` library plugin is capped (see `ITKImageProcessing_JOB_POOL`). Some of the `ITK` files more 2+ GB of memory to compile due to heavy templating. This is to prevent systems from running out of memory during compilation. |
 | `ITKImageProcessing_JOB_POOL` | `STRING` | If `ITKImageProcessing_USE_JOB_POOL` is `ON`, this variable is the maximum number of threads available to the `ITK` plugin during compilation. For example on a system with 32 threads and 64GB of RAM a value of `16` will prevent out-of-memory errors during compilation. |
 | `SIMPLNX_BUILD_TESTS` | `BOOL` | Turning this on will compile the filter/library tests and include them in the all ctests target |
 | `SIMPLNX_BUILD_DOCS` | `BOOL` | Turning this on will build the library/filters documentation, `SPHINX_BUILD_EXECUTABLE` must be defined |
 | `SPHINX_BUILD_EXECUTABLE` | `PATH` | The absolute path to to the sphinx executable; *required* for `SIMPLNX_BUILD_PYTHON_DOCS` and/or `SIMPLNX_BUILD_DOCS` |
-| `SIMPLNX_EXTRA_PLUGINS` | `STRING` | A list of plugin targets (separated by `;`) to include into the library. Currently the only offical additional plugin not bundled is `SimplnxReview` which is untested filters |
-| `SIMPLNX_ENABLE_BENCHMARK_UTILITY` | `BOOL` | Turning this on will include the preffered benchmarking library; Be sure to **add** `benchmark` **to** `VCPKG_MANIFEST_FEATURES` **list** |
+| `SIMPLNX_EXTRA_PLUGINS` | `STRING` | A list of plugin targets (separated by `;`) to include into the library. Currently the only official additional plugin not bundled is `SimplnxReview` which is untested filters |
+| `SIMPLNX_ENABLE_BENCHMARK_UTILITY` | `BOOL` | Turning this on will include the preferred benchmarking library; Be sure to **add** `benchmark` **to** `VCPKG_MANIFEST_FEATURES` **list** |
 
 ### Python Binding CMake Arguments
 

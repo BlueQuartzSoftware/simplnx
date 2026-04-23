@@ -231,7 +231,7 @@ created.
    print(f'{create_array_filter.human_name()}')
    print(f'{create_array_filter.uuid()}')
 
-For examles of executing a filter, please see any of the example python files included
+For examples of executing a filter, please see any of the example python files included
 with the source package.
 
 .. _Pipeline:

@@ -73,7 +73,7 @@ folder.
 
 The backwards compatibility will begin testing immediately as long as the filter is registered in the `PluginNameUUIDLegacyMapping.hpp` file. The only exception is new filters that have no **SIMPL** equivalent.
 
-To run the test in advance select the `conversion_test` ctest target and run it. Most of the errors are from issues in the filter's `FromSIMPLJson()` function. The error messages should guide you towards a solution. The following cases are exceptions that can be hard to diagnose without apriori knowledge.
+To run the test in advance select the `conversion_test` ctest target and run it. Most of the errors are from issues in the filter's `FromSIMPLJson()` function. The error messages should guide you towards a solution. The following cases are exceptions that can be hard to diagnose without a priori knowledge.
 
 How To Update Test For Filter Changes/Ports
 
@@ -200,7 +200,7 @@ At the current time, the only filters that should be made parallel are those tha
 
 ### Syntax for Simplnx
 
-This is an examplar use case and doesn't truly encompass all possible use cases for the functions, but instead serves to show how it should be structured in most cases.  
+This is an exemplar use case and doesn't truly encompass all possible use cases for the functions, but instead serves to show how it should be structured in most cases.  
 
 In an anonymous namespace:
 ```cpp
@@ -233,7 +233,7 @@ private:
 };
 ```
 
-In the exectuting function:
+In the executing function:
 
 ```cpp
 ParallelDataAlgorithm dataAlg;  
@@ -275,7 +275,7 @@ For progress messaging a throttled messenger class is provided. To initialize it
 ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
 ```
 
-The throttled messenger will print every 1000 milliseconds (1 second) by default, to change this intialize it as follows:
+The throttled messenger will print every 1000 milliseconds (1 second) by default, to change this initialize it as follows:
 
 ```cpp
 ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger(static_cast<std::chrono::milliseconds>(number_in_milliseconds));

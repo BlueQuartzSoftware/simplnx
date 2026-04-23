@@ -28,7 +28,7 @@ a yellow box at the right side of the user interface.
 
       Retrieves the DataObject at the given DataPath_
 
-      :param DataPath data_path: The DataPath (or string convertable to a DataPath) to retrieve.
+      :param DataPath data_path: The DataPath (or string convertible to a DataPath) to retrieve.
 
    .. py:method:: size()
 
@@ -38,7 +38,7 @@ a yellow box at the right side of the user interface.
    .. py:method:: remove(data_path)
                   remove(string)
 
-      :param DataPath data_path: The DataPath (or string convertable to a DataPath) to remove from the DataStructure.
+      :param DataPath data_path: The DataPath (or string convertible to a DataPath) to remove from the DataStructure.
       :return: A boolean indicating if the path was removed or not.
       :rtype: Bool
 
@@ -55,7 +55,7 @@ a yellow box at the right side of the user interface.
    .. py:method:: get_children(simplnx.DataPath)
                   get_children(string)
 
-      :param DataPath data_path: The DataPath (or string convertable to a DataPath) to get the children. An empty DataPath object will return the top level DataPaths.
+      :param DataPath data_path: The DataPath (or string convertible to a DataPath) to get the children. An empty DataPath object will return the top level DataPaths.
       :return: A string that attempts to show the internal hierarchy of the DataStructure
       :rtype: List of DataPath_
       
@@ -180,7 +180,7 @@ DataPath can act as a List[str] object, such as getting the length or looping on
 
    .. py:method:: create_child_path(child_name)
 
-      Creates a new DataPath object that is the exisiting DataPath with the new child_path appended
+      Creates a new DataPath object that is the existing DataPath with the new child_path appended
 
       :param str child_name: This will be appended to the existing DataPath
 
@@ -233,7 +233,7 @@ DataPath can act as a List[str] object, such as getting the length or looping on
 DataGroup
 ---------
 
-The DataStructure_ is a flexible heirarchy that stores all **simplnx** :ref:`DataObjects <DataObject>`
+The DataStructure_ is a flexible hierarchy that stores all **simplnx** :ref:`DataObjects <DataObject>`
 that are created. A basic :ref:`DataObject` that can be created is a :ref:`DataGroup` which is a 
 simple grouping mechanism that can be thought of as similar in concept to a folder or directory that 
 is created on the file system. The programmer can use the :ref:`CreateDataGroupFilter<CreateDataGroupFilter>` filter to create
@@ -263,12 +263,12 @@ codes that are based on the `simplnx <https://www.github.com/bluequartzsoftware/
 
 + name: Each **DataArray** has a name that is assigned to it. Most any character can be used except for the '/' character.
 + tuple_shape: The DataArray will have a tuple shape that is describe by an array values that are listed in "C" order of slowest to fastest moving dimension.
-+ component_shape: At **each** tuple, there can be multiple values which are described by the *component shape* which is an array of values that are listed in teh "C" order of slowest to fastest moving dimension.
++ component_shape: At **each** tuple, there can be multiple values which are described by the *component shape* which is an array of values that are listed in the "C" order of slowest to fastest moving dimension.
 
 Referring to the figure above, The **DataArray** that has been created is a 2D DataArray with 
 dimensions of 4 high and 5 tuples wide. Each tuple has 3 components, the RGB values of a color image. Refer to the 
-memory schemtic in the above image to understand how this would be layed out in memory and subsequently
-accessed with the *numpy* API. The following is the python code that would craete the *DataArray* used
+memory schematic in the above image to understand how this would be laid out in memory and subsequently
+accessed with the *numpy* API. The following is the python code that would create the *DataArray* used
 in the example.
 
 .. py:class:: DataArray
@@ -325,8 +325,8 @@ DataStore
 ----------
 
 The DataStore is the C++ object that actually allocates the memory necessary to store
-data in simplnx/DREAM3D. The Python API is intentially limited to getting a Numpy.View()
-so that python developers can have a consistent well known interace to the DataArray_. The
+data in simplnx/DREAM3D. The Python API is intentionally limited to getting a Numpy.View()
+so that python developers can have a consistent well known interface to the DataArray_. The
 programmer will never need to create from scratch a **DataStore** object. They should be fetched
 from a created DataArray_ by executing the :ref:`Create Data Array <CreateDataArrayFilter>` filter.
 
@@ -595,7 +595,7 @@ Pipeline
          pipeline = nx.Pipeline().from_file( 'Pipelines/lesson_2_ebsd.d3dpipeline')
          # Get the parameter dictionary for the first filter and
          # modify the input file. Then set the modified dictionary back into
-         # the pipeine at the same location
+         # the pipeline at the same location
          read_ang_parameters = pipeline[0].get_args()
          read_ang_parameters["input_file"] = f"Data/Small_IN100/Slice_{i}.ang"
          pipeline[0].set_args(read_ang_parameters)

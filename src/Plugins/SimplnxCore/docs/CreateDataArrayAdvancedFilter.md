@@ -24,7 +24,7 @@ The *Step Operation* parameter is active when *Initialization Type* is set to **
 - **Addition [0]**: Each successive element value is the previous value plus the step amount (ascending sequence).
 - **Subtraction [1]**: Each successive element value is the previous value minus the step amount (descending sequence).
 
-When initializing a multicomponent array square bracket notation can be used to specify different initialization values for each component. For example say that I want to intialize a 2 component array where the first component is 0 and the second component is 1 we would use the following input string for the *Initialization Value*
+When initializing a multicomponent array square bracket notation can be used to specify different initialization values for each component. For example say that I want to initialize a 2 component array where the first component is 0 and the second component is 1 we would use the following input string for the *Initialization Value*
 
     0;1
 

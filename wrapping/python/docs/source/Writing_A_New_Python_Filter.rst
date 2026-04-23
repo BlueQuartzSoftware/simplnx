@@ -28,9 +28,9 @@ Wait until the environment is fully installed.
 .. attention::
 
     For those with older Anaconda installations that cannot update, you can install the 'mamba' package
-    which is a drop in replacement for 'conda'. Mamba is built as a native applicaiton with native application
+    which is a drop in replacement for 'conda'. Mamba is built as a native application with native application
     speeds. Mamba can dramatically improve the 'solving the environment' waiting game.
-    Conda versions starting at 23.11.x use the underlying 'libmamba' and are therefor just as fast at
+    Conda versions starting at 23.11.x use the underlying 'libmamba' and are therefore just as fast at
     solving an environment.
     
 
@@ -278,7 +278,7 @@ The skeleton provides a basic structure with placeholders and conventions that a
 
             return params
   
-- **Preflight and Execute Methods:** These are crucial methods where your filter's logic will reside. The preflight_impl() is called every time an input parameter is modified in the user interface therefor the preflight_impl should run as fast as possible. The execute_impl() method is where the actual work that your filter performs is kept.
+- **Preflight and Execute Methods:** These are crucial methods where your filter's logic will reside. The preflight_impl() is called every time an input parameter is modified in the user interface therefore the preflight_impl should run as fast as possible. The execute_impl() method is where the actual work that your filter performs is kept.
 
     .. code-block:: python
 

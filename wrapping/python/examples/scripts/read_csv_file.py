@@ -67,7 +67,7 @@ result = nx.ReadCSVFileFilter.execute(data_structure=data_structure,
                                       created_data_group_path=nx.DataPath(["Imported Data"]),  
                                       # We are not using this parameter but it still needs a value
                                       selected_attribute_matrix_path=nx.DataPath(),  
-                                      # Use an existing DataGroup or AttributeMatrix. If an AttributemMatrix is used, the total number of tuples must match
+                                      # Use an existing DataGroup or AttributeMatrix. If an AttributeMatrix is used, the total number of tuples must match
                                       use_existing_group=False,   
                                       # The ReadCSVData object with all member variables set.
                                       read_csv_data_object=read_csv_data # The ReadCSVData object with all member variables set.

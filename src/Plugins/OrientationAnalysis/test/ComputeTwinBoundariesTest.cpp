@@ -143,7 +143,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
 
   // Compare the output arrays with those precalculated from the file
   {
-    // The exemplar algorithm skips invalid values while this algorithm doesn't due to lack of apriori knowledge (face normals array) so we simulate it here
+    // The exemplar algorithm skips invalid values while this algorithm doesn't due to lack of a priori knowledge (face normals array) so we simulate it here
     auto& faceNormals = dataStructure.getDataRefAs<Float64Array>(TwinBoundariesConstants::k_FaceNormalsPath);
     auto& exemplarBoundaries = dataStructure.getDataRefAs<UInt8Array>(TwinBoundariesConstants::k_ExemplarBoundariesPath);
     auto& generatedBoundaries = dataStructure.getDataRefAs<UInt8Array>(TwinBoundariesConstants::k_GeneratedBoundariesPath);

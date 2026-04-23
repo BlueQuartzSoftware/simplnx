@@ -79,7 +79,7 @@ Parameters ITKSigmoidImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64Parameter>(k_Alpha_Key, "Alpha", "The Alpha value from the Sigmoid equation. ", 1));
-  params.insert(std::make_unique<Float64Parameter>(k_Beta_Key, "Beta", "The Beta value from teh sigmoid equation", 0));
+  params.insert(std::make_unique<Float64Parameter>(k_Beta_Key, "Beta", "The Beta value from the sigmoid equation", 0));
   params.insert(std::make_unique<Float64Parameter>(k_OutputMaximum_Key, "Output Maximum", "The maximum output value", 255));
   params.insert(std::make_unique<Float64Parameter>(k_OutputMinimum_Key, "Output Minimum", "The minimum output value", 0));
 

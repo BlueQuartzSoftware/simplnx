@@ -369,7 +369,7 @@ General Parameters
    infix_equation = "Confidence Index * 10"
    calc_param = nx.CalculatorParameter.ValueType( selected_group, infix_equation, nx.CalculatorParameter.AngleUnits.Radians)
    result = nx.ArrayCalculatorFilter.execute(data_structure = data_structure,
-                                             calculated_array=nx.DataPath("Small IN100/Scan Data/Calulated CI"),
+                                             calculated_array=nx.DataPath("Small IN100/Scan Data/Calculated CI"),
                                              calculator_parameter = calc_param, 
                                              scalar_type=nx.NumericType.float32)
 
@@ -498,7 +498,7 @@ General Parameters
 .. _DynamicTableParameter:
 .. py:class:: DynamicTableParameter
 
-    This paramter holds values from a 2D table of values. This parameter can be initialized from a 
+    This parameter holds values from a 2D table of values. This parameter can be initialized from a 
     python "list of lists". For a 2D table the values are rastered with the columns moving the fastest.
     For example in the code below we are creating a 2D DynamicTable info where the first row is "1,2,3"
     and the second row is "4,5,6"
@@ -609,8 +609,8 @@ General Parameters
   :ivar input_path: The file system path to the directory that contains the input files
   :ivar ordering: This describes how to generate the files. One of nx.GeneratedFileListParameter.Ordering.LowToHigh or nx.GeneratedFileListParameter.Ordering.HighToLow
   :ivar file_prefix: The string part of the file name that appears **before** the index digits
-  :ivar file_suffix: The string part of the file anem that appears **after** the index digits
-  :ivar file_extension: The file extension of the input files includeing the "." character.
+  :ivar file_suffix: The string part of the file name that appears **after** the index digits
+  :ivar file_extension: The file extension of the input files including the "." character.
   :ivar start_index: The starting index value
   :ivar end_index: The ending index value (inclusive)
   :ivar increment_index: The value of how much to increment the index value when generating the file list
@@ -718,7 +718,7 @@ General Parameters
                                          created_data_group=nx.DataPath(["Imported Data"]),
                                          # We are not using this parameter but it still needs a value
                                          selected_data_group=nx.DataPath(),
-                                         # Use an existing DataGroup or AttributeMatrix. If an AttributemMatrix is used, the total number of tuples must match
+                                         # Use an existing DataGroup or AttributeMatrix. If an AttributeMatrix is used, the total number of tuples must match
                                          use_existing_group=False,
                                          # The ReadCSVData object with all member variables set.
                                          read_csv_data=read_csv_data # The ReadCSVData object with all member variables set.
@@ -778,7 +778,7 @@ General Parameters
 
       :ivar input_file: A "PathLike" value to the HDF5 file on the file system
       :ivar datasets: list[ReadHDF5DatasetParameter.DatasetImportInfo, ....]
-      :ivar parent: Optional: The :ref:`DataPath <DataPath>` object to a parente group to create the :ref:`DataArray <DataArray>` into. If left blank the :ref:`DataArray <DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`
+      :ivar parent: Optional: The :ref:`DataPath <DataPath>` object to a parent group to create the :ref:`DataArray <DataArray>` into. If left blank the :ref:`DataArray <DataArray>` will be created at the top level of the :ref:`DataStructure<DataStructure>`
 
    .. py:class:: ReadHDF5DatasetParameter.DatasetImportInfo
 
@@ -870,7 +870,7 @@ using standard python integers or decimal values. For example.
 
    .. code:: python
 
-      some_varible = 10
+      some_variable = 10
       other_variable = 22.342
 
 

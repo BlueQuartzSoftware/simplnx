@@ -638,7 +638,7 @@ General Parameters
    Description
    ~~~~~~~~~~~
    The ``DataObjectNameParameter`` is used to specify the name of a data object within the data structure. This parameter 
-   is used most often when the developer of the filter intends the output "Group|Array|ArrtributeMatrix|Geometry" to be 
+   is used most often when the developer of the filter intends the output "Group|Array|AttributeMatrix|Geometry" to be 
    created as a sibling to an input DataObject or as a Child of an input DataObject. Examples would be a filter that asks 
    for an input array "Foo" and creates an output array that they want to be a sibling of "Foo" called "Bar". Another 
    example would be a filter that asks for an input Attribute Matrix and wants to create an output array as a child of 
@@ -1217,7 +1217,7 @@ General Parameters
          - ``file_prefix`` : str
             - **Description**: The string part of the file name that appears **before** the index digits.
          - ``file_suffix`` : str
-            - **Description**: The string part of the file anem that appears **after** the index digits.
+            - **Description**: The string part of the file name that appears **after** the index digits.
          - ``increment_index`` : int
             - **Description**: The value that determines how much to increment the index value when generating the file list.
          - ``input_path`` : str
