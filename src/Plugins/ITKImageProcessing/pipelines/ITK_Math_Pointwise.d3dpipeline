@@ -1,0 +1,330 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Math_Pointwise.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "type": 0,
+            "is_2d": true,
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "bounds_x_voxels": [0, 0],
+            "bounds_y_voxels": [0, 0],
+            "bounds_z_voxels": [0, 0],
+            "bounds_x_physical": [0.0, 0.0],
+            "bounds_y_physical": [0.0, 0.0],
+            "bounds_z_physical": [0.0, 0.0]
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/GammaPrime/GammaPrime0028.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [0.0, 0.0, 0.0],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [1.0, 1.0, 1.0],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Abs",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute absolute value of each pixel (identity for unsigned types, useful for signed data)",
+      "filter": {
+        "name": "nx::core::ITKAbsImageFilter",
+        "uuid": "e9dd12bc-f7fa-4ba2-98b0-fec3326bf620"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Square",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Square each pixel value: output = input^2",
+      "filter": {
+        "name": "nx::core::ITKSquareImageFilter",
+        "uuid": "385ca853-626c-43bb-ae86-db8d8b72693b"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Sqrt",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute square root of each pixel value",
+      "filter": {
+        "name": "nx::core::ITKSqrtImageFilter",
+        "uuid": "05c7c812-4e33-4e9a-bf27-d4c17f5dff68"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Log",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute natural logarithm (ln) of each pixel value. Pixels with value 0 produce -inf.",
+      "filter": {
+        "name": "nx::core::ITKLogImageFilter",
+        "uuid": "4b6655ad-4e6c-4e68-a771-55ca0ae40915"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Log10",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute base-10 logarithm of each pixel value. Pixels with value 0 produce -inf.",
+      "filter": {
+        "name": "nx::core::ITKLog10ImageFilter",
+        "uuid": "900ca377-e79d-4b54-b298-33d518238099"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Exp",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute exponential (e^x) of each pixel value",
+      "filter": {
+        "name": "nx::core::ITKExpImageFilter",
+        "uuid": "264977e7-cc0d-4d2b-ba9c-a30765b498b2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "ExpNegative",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute e^(-x) for each pixel value, producing a decay function",
+      "filter": {
+        "name": "nx::core::ITKExpNegativeImageFilter",
+        "uuid": "2c84cc7c-01ab-4550-9ba5-b9fa58b74599"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Not",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute bitwise NOT (complement) of each pixel value",
+      "filter": {
+        "name": "nx::core::ITKNotImageFilter",
+        "uuid": "6d67ad50-7e89-4678-85db-0b3247a2cfb9"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "alpha": {
+          "value": 1.0,
+          "version": 1
+        },
+        "beta": {
+          "value": 128.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Sigmoid",
+          "version": 1
+        },
+        "output_maximum": {
+          "value": 255.0,
+          "version": 1
+        },
+        "output_minimum": {
+          "value": 0.0,
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Apply sigmoid function: output = (Max-Min) * 1/(1+exp(-(x-Beta)/Alpha)) + Min. Alpha controls width, Beta controls center.",
+      "filter": {
+        "name": "nx::core::ITKSigmoidImageFilter",
+        "uuid": "cb9ec2b6-80d9-42e6-807b-d908bea6daea"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "Data/Output/ITK_Math_Pointwise.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

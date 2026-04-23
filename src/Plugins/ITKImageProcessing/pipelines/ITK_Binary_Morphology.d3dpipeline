@@ -1,0 +1,458 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Binary_Morphology.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/GammaPrime/GammaPrime0028.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "inside_value": {
+          "value": 255,
+          "version": 1
+        },
+        "lower_threshold": {
+          "value": 128.0,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryMask",
+          "version": 1
+        },
+        "outside_value": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "upper_threshold": {
+          "value": 255.0,
+          "version": 1
+        }
+      },
+      "comments": "Apply a binary threshold at 128: pixels in [128, 255] become 255, all others become 0",
+      "filter": {
+        "name": "nx::core::ITKBinaryThresholdImageFilter",
+        "uuid": "ba2494b0-c4f0-43ff-9d08-900395900e0c"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "boundary_to_foreground": {
+          "value": true,
+          "version": 1
+        },
+        "foreground_value": {
+          "value": 255.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryDilate",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Binary dilation expands foreground (255) regions using a box structuring element with radius 3",
+      "filter": {
+        "name": "nx::core::ITKBinaryDilateImageFilter",
+        "uuid": "d4e973cb-c501-4c64-af26-fcf791c0f36d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "boundary_to_foreground": {
+          "value": true,
+          "version": 1
+        },
+        "foreground_value": {
+          "value": 255.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryErode",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Binary erosion shrinks foreground (255) regions using a box structuring element with radius 3",
+      "filter": {
+        "name": "nx::core::ITKBinaryErodeImageFilter",
+        "uuid": "243dd30b-d1f0-42ad-8b47-77d57f9fc262"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "foreground_value": {
+          "value": 255.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryMorphClosing",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "safe_border": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Binary morphological closing (dilate then erode) fills small gaps in foreground regions",
+      "filter": {
+        "name": "nx::core::ITKBinaryMorphologicalClosingImageFilter",
+        "uuid": "abb27e0c-b049-4f60-8355-178d86bb1de4"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "foreground_value": {
+          "value": 255.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryMorphOpening",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Binary morphological opening (erode then dilate) removes small foreground features",
+      "filter": {
+        "name": "nx::core::ITKBinaryMorphologicalOpeningImageFilter",
+        "uuid": "861ccb46-dbce-41bf-a66f-25cc18cd1073"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "foreground_value": {
+          "value": 255.0,
+          "version": 1
+        },
+        "fully_connected": {
+          "value": false,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryOpeningByRecon",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Binary opening by reconstruction preserves shape of remaining foreground objects",
+      "filter": {
+        "name": "nx::core::ITKBinaryOpeningByReconstructionImageFilter",
+        "uuid": "02c15392-382c-406d-a174-07ea6fa11b67"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryThinning",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Binary thinning reduces foreground objects to their topological skeleton",
+      "filter": {
+        "name": "nx::core::ITKBinaryThinningImageFilter",
+        "uuid": "8fcd24cb-769d-400f-97cf-9b4dad1b8cd2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "foreground_value": {
+          "value": 255.0,
+          "version": 1
+        },
+        "fully_connected": {
+          "value": false,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryContour",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Extract the contour (boundary) of binary foreground objects",
+      "filter": {
+        "name": "nx::core::ITKBinaryContourImageFilter",
+        "uuid": "ed214e76-6954-49b4-817b-13f92315e722"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/ITK_Binary_Morphology.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "pipeline_uuid": "0abe6159-73ca-417f-bb44-b2beca19b739",
+  "version": 1,
+  "workflowParams": []
+}

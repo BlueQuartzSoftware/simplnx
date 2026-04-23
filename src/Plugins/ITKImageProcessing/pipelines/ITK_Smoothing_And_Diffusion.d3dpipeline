@@ -1,0 +1,340 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Smoothing_And_Diffusion.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "type": 0,
+            "is_2d": true,
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "bounds_x_voxels": [0, 0],
+            "bounds_y_voxels": [0, 0],
+            "bounds_z_voxels": [0, 0],
+            "bounds_x_physical": [0.0, 0.0],
+            "bounds_y_physical": [0.0, 0.0],
+            "bounds_z_physical": [0.0, 0.0]
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/GammaPrime/GammaPrime0028.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [0.0, 0.0, 0.0],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [1.0, 1.0, 1.0],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image into an Image Geometry",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "DiscreteGaussian",
+          "version": 1
+        },
+        "maximum_error": {
+          "value": [0.01, 0.01, 0.01],
+          "version": 1
+        },
+        "maximum_kernel_width": {
+          "value": 32,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_image_spacing": {
+          "value": true,
+          "version": 1
+        },
+        "variance": {
+          "value": [4.0, 4.0, 4.0],
+          "version": 1
+        }
+      },
+      "comments": "Apply a discrete Gaussian blur with variance 4.0 to smooth noise while preserving edges",
+      "filter": {
+        "name": "nx::core::ITKDiscreteGaussianImageFilter",
+        "uuid": "025edc1a-986d-4005-92d1-545dfdc13abd"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Median",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "radius": {
+          "value": [2, 2, 2],
+          "version": 1
+        }
+      },
+      "comments": "Apply a median filter with radius 2 to reduce salt-and-pepper noise while preserving edges",
+      "filter": {
+        "name": "nx::core::ITKMedianImageFilter",
+        "uuid": "a60ca165-59ac-486b-b4b4-0f0c24d80af8"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "NormalizedFloat",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Convert uint8 image to float64 (normalized) so it can be used by the diffusion filters which require floating-point input",
+      "filter": {
+        "name": "nx::core::ITKNormalizeImageFilter",
+        "uuid": "9d8ce30e-c75e-4ca8-b6be-0b11baa7e6ce"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "conductance_parameter": {
+          "value": 3.0,
+          "version": 1
+        },
+        "conductance_scaling_update_interval": {
+          "value": 1,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/NormalizedFloat",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "number_of_iterations": {
+          "value": 5,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "CurvatureAnisotropicDiffusion",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "time_step": {
+          "value": 0.0625,
+          "version": 1
+        }
+      },
+      "comments": "Apply curvature anisotropic diffusion to smooth while preserving edges. Uses curvature-based conductance.",
+      "filter": {
+        "name": "nx::core::ITKCurvatureAnisotropicDiffusionImageFilter",
+        "uuid": "ada68f29-b1f2-44a2-86dc-f0cd28f54633"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/NormalizedFloat",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "number_of_iterations": {
+          "value": 5,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "CurvatureFlow",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "time_step": {
+          "value": 0.0625,
+          "version": 1
+        }
+      },
+      "comments": "Apply curvature flow smoothing which smooths along iso-intensity contours",
+      "filter": {
+        "name": "nx::core::ITKCurvatureFlowImageFilter",
+        "uuid": "fe5b2ed3-54dd-4207-ad88-48a95134684a"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "conductance_parameter": {
+          "value": 3.0,
+          "version": 1
+        },
+        "conductance_scaling_update_interval": {
+          "value": 1,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/NormalizedFloat",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "number_of_iterations": {
+          "value": 5,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GradientAnisotropicDiffusion",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "time_step": {
+          "value": 0.0625,
+          "version": 1
+        }
+      },
+      "comments": "Apply gradient anisotropic diffusion to smooth while preserving edges. Uses gradient magnitude-based conductance.",
+      "filter": {
+        "name": "nx::core::ITKGradientAnisotropicDiffusionImageFilter",
+        "uuid": "9dcef77b-e7d2-4a2a-b310-bfa80e8ea7c5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/NormalizedFloat",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "number_of_iterations": {
+          "value": 5,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "MinMaxCurvatureFlow",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "stencil_radius": {
+          "value": 1,
+          "version": 1
+        },
+        "time_step": {
+          "value": 0.0625,
+          "version": 1
+        }
+      },
+      "comments": "Apply min-max curvature flow which applies curvature flow selectively based on local neighborhood statistics",
+      "filter": {
+        "name": "nx::core::ITKMinMaxCurvatureFlowImageFilter",
+        "uuid": "b836c081-6692-411d-81d0-a50afce6b288"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "Data/Output/ITK_Smoothing_And_Diffusion.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

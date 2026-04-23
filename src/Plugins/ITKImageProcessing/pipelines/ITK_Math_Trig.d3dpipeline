@@ -1,0 +1,299 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Math_Trig.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "type": 0,
+            "is_2d": true,
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "bounds_x_voxels": [0, 0],
+            "bounds_y_voxels": [0, 0],
+            "bounds_z_voxels": [0, 0],
+            "bounds_x_physical": [0.0, 0.0],
+            "bounds_y_physical": [0.0, 0.0],
+            "bounds_z_physical": [0.0, 0.0]
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "Data/GammaPrime/GammaPrime0028.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [0.0, 0.0, 0.0],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [1.0, 1.0, 1.0],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "NormalizedFloat",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Convert uint8 image to float64 (needed for trig functions and to support negative value ranges)",
+      "filter": {
+        "name": "nx::core::ITKNormalizeImageFilter",
+        "uuid": "9d8ce30e-c75e-4ca8-b6be-0b11baa7e6ce"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/NormalizedFloat",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Normalized01",
+          "version": 1
+        },
+        "output_maximum": {
+          "value": 1.0,
+          "version": 1
+        },
+        "output_minimum": {
+          "value": -1.0,
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Rescale the float image to [-1, 1] range so that Acos, Asin produce valid outputs",
+      "filter": {
+        "name": "nx::core::ITKRescaleIntensityImageFilter",
+        "uuid": "f08ea34d-9ad8-456c-a81b-9b3790b29379"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/Normalized01",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Acos",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute arc cosine of each pixel (input must be in [-1, 1])",
+      "filter": {
+        "name": "nx::core::ITKAcosImageFilter",
+        "uuid": "e7411c44-95ab-4623-8bf4-59b63d2d08c5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/Normalized01",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Asin",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute arc sine of each pixel (input must be in [-1, 1])",
+      "filter": {
+        "name": "nx::core::ITKAsinImageFilter",
+        "uuid": "1b463492-041f-4680-abb1-0b94a3019063"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/Normalized01",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Atan",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute arc tangent of each pixel",
+      "filter": {
+        "name": "nx::core::ITKAtanImageFilter",
+        "uuid": "39933f50-088c-46ac-a421-d238f1b178fd"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/Normalized01",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Cos",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute cosine of each pixel value",
+      "filter": {
+        "name": "nx::core::ITKCosImageFilter",
+        "uuid": "6fe37f77-ceae-4839-9cf6-3ca7a70e14d0"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/Normalized01",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Sin",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute sine of each pixel value",
+      "filter": {
+        "name": "nx::core::ITKSinImageFilter",
+        "uuid": "06c76c7a-c384-44be-bd01-6fd58070cd65"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/Normalized01",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Tan",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute tangent of each pixel value",
+      "filter": {
+        "name": "nx::core::ITKTanImageFilter",
+        "uuid": "7cf3c08e-1af1-4540-aa08-4488a74923fc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "Data/Output/ITK_Math_Trig.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

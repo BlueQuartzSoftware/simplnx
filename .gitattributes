@@ -2,3 +2,4 @@
 
 *.bat text eol=crlf
 *.sh text eol=lf
+*.d3dpipeline text eol=lf

@@ -1,0 +1,128 @@
+{
+  "isDisabled": false,
+  "name": "ITK_TopHat_And_Reconstruction.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": { "value": "Cell Data", "version": 1 },
+        "change_image_data_type": { "value": false, "version": 1 },
+        "change_origin": { "value": false, "version": 1 },
+        "center_origin": { "value": false, "version": 1 },
+        "change_spacing": { "value": false, "version": 1 },
+        "cropping_options": { "value": { "type": 0, "is_2d": true, "crop_x": true, "crop_y": true, "crop_z": true, "bounds_x_voxels": [0,0], "bounds_y_voxels": [0,0], "bounds_z_voxels": [0,0], "bounds_x_physical": [0.0,0.0], "bounds_y_physical": [0.0,0.0], "bounds_z_physical": [0.0,0.0] }, "version": 1 },
+        "file_name": { "value": "Data/GammaPrime/GammaPrime0028.tif", "version": 1 },
+        "image_data_array_name": { "value": "ImageData", "version": 1 },
+        "image_data_type_index": { "value": 0, "version": 1 },
+        "length_unit_index": { "value": 6, "version": 1 },
+        "origin": { "value": [0.0, 0.0, 0.0], "version": 1 },
+        "origin_spacing_processing_index": { "value": 1, "version": 1 },
+        "output_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "parameters_version": 1,
+        "spacing": { "value": [1.0, 1.0, 1.0], "version": 1 }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": { "name": "nx::core::ITKImageReaderFilter", "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "BlackTopHat", "version": 1 },
+        "kernel_radius": { "value": [5, 5, 0], "version": 1 },
+        "kernel_type_index": { "value": 1, "version": 1 },
+        "safe_border": { "value": true, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Black top-hat extracts dark features smaller than the structuring element from the image",
+      "filter": { "name": "nx::core::ITKBlackTopHatImageFilter", "uuid": "b7471b64-2282-449b-82b4-3ce359e9dda0" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "WhiteTopHat", "version": 1 },
+        "kernel_radius": { "value": [5, 5, 0], "version": 1 },
+        "kernel_type_index": { "value": 1, "version": 1 },
+        "safe_border": { "value": true, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "White top-hat extracts bright features smaller than the structuring element from the image",
+      "filter": { "name": "nx::core::ITKWhiteTopHatImageFilter", "uuid": "2f377682-d0a8-4dea-8c68-60c2c523a074" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "DilateObject", "version": 1 },
+        "kernel_radius": { "value": [3, 3, 0], "version": 1 },
+        "kernel_type_index": { "value": 1, "version": 1 },
+        "object_value": { "value": 128.0, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Dilate object morphology expands regions matching the object value using a box structuring element",
+      "filter": { "name": "nx::core::ITKDilateObjectMorphologyImageFilter", "uuid": "e3f7c642-4c16-47f6-ac5c-cd276d61bfa6" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "ErodeObject", "version": 1 },
+        "kernel_radius": { "value": [3, 3, 0], "version": 1 },
+        "kernel_type_index": { "value": 1, "version": 1 },
+        "object_value": { "value": 128.0, "version": 1 },
+        "background_value": { "value": 0.0, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Erode object morphology shrinks regions matching the object value using a box structuring element",
+      "filter": { "name": "nx::core::ITKErodeObjectMorphologyImageFilter", "uuid": "db3fe379-6ce4-4be3-baca-1cbff00aca6a" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "ClosingByRecon", "version": 1 },
+        "kernel_radius": { "value": [3, 3, 0], "version": 1 },
+        "kernel_type_index": { "value": 1, "version": 1 },
+        "fully_connected": { "value": false, "version": 1 },
+        "preserve_intensities": { "value": true, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Closing by reconstruction fills dark holes while preserving the original intensity values",
+      "filter": { "name": "nx::core::ITKClosingByReconstructionImageFilter", "uuid": "b5ff32a8-e799-4f72-8d13-e2581f748562" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "OpeningByRecon", "version": 1 },
+        "kernel_radius": { "value": [3, 3, 0], "version": 1 },
+        "kernel_type_index": { "value": 1, "version": 1 },
+        "fully_connected": { "value": false, "version": 1 },
+        "preserve_intensities": { "value": true, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Opening by reconstruction removes bright peaks while preserving the original intensity values",
+      "filter": { "name": "nx::core::ITKOpeningByReconstructionImageFilter", "uuid": "c4225a23-0b23-4782-b509-296fb39a672b" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": { "value": "Data/Output/ITK_TopHat_And_Reconstruction.dream3d", "version": 1 },
+        "parameters_version": 1,
+        "write_xdmf_file": { "value": true, "version": 1 }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": { "name": "nx::core::WriteDREAM3DFilter", "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003" },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

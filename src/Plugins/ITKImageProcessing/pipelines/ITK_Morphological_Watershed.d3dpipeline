@@ -1,0 +1,82 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Morphological_Watershed.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": { "value": "Cell Data", "version": 1 },
+        "change_image_data_type": { "value": false, "version": 1 },
+        "change_origin": { "value": false, "version": 1 },
+        "center_origin": { "value": false, "version": 1 },
+        "change_spacing": { "value": false, "version": 1 },
+        "cropping_options": { "value": { "type": 0, "is_2d": true, "crop_x": true, "crop_y": true, "crop_z": true, "bounds_x_voxels": [0,0], "bounds_y_voxels": [0,0], "bounds_z_voxels": [0,0], "bounds_x_physical": [0.0,0.0], "bounds_y_physical": [0.0,0.0], "bounds_z_physical": [0.0,0.0] }, "version": 1 },
+        "file_name": { "value": "Data/GammaPrime/GammaPrime0028.tif", "version": 1 },
+        "image_data_array_name": { "value": "ImageData", "version": 1 },
+        "image_data_type_index": { "value": 0, "version": 1 },
+        "length_unit_index": { "value": 6, "version": 1 },
+        "origin": { "value": [0.0, 0.0, 0.0], "version": 1 },
+        "origin_spacing_processing_index": { "value": 1, "version": 1 },
+        "output_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "parameters_version": 1,
+        "spacing": { "value": [1.0, 1.0, 1.0], "version": 1 }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": { "name": "nx::core::ITKImageReaderFilter", "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "maximum_error": { "value": [0.01, 0.01, 0.01], "version": 1 },
+        "maximum_kernel_width": { "value": 32, "version": 1 },
+        "output_array_name": { "value": "SmoothedImage", "version": 1 },
+        "parameters_version": 1,
+        "use_image_spacing": { "value": true, "version": 1 },
+        "variance": { "value": [2.0, 2.0, 2.0], "version": 1 }
+      },
+      "comments": "Smooth the image with a discrete Gaussian filter (variance 2.0) to reduce noise before watershed segmentation",
+      "filter": { "name": "nx::core::ITKDiscreteGaussianImageFilter", "uuid": "025edc1a-986d-4005-92d1-545dfdc13abd" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/SmoothedImage", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "GradientMag", "version": 1 },
+        "parameters_version": 1,
+        "use_image_spacing": { "value": true, "version": 1 }
+      },
+      "comments": "Compute the gradient magnitude of the smoothed image to highlight edges for watershed input",
+      "filter": { "name": "nx::core::ITKGradientMagnitudeImageFilter", "uuid": "719df7b2-8db2-43eb-a40c-a015982eec08" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": { "value": false, "version": 1 },
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/GradientMag", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "level": { "value": 0.5, "version": 1 },
+        "mark_watershed_line": { "value": true, "version": 1 },
+        "output_array_name": { "value": "Watershed", "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Apply morphological watershed segmentation on the gradient magnitude image with level 0.5",
+      "filter": { "name": "nx::core::ITKMorphologicalWatershedImageFilter", "uuid": "f70337e5-4435-41f7-aecc-d79b4b1faccd" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": { "value": "Data/Output/ITK_Morphological_Watershed.dream3d", "version": 1 },
+        "parameters_version": 1,
+        "write_xdmf_file": { "value": true, "version": 1 }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": { "name": "nx::core::WriteDREAM3DFilter", "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003" },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

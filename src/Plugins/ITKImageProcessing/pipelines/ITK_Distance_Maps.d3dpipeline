@@ -1,0 +1,344 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Distance_Maps.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/GammaPrime/GammaPrime0028.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "inside_value": {
+          "value": 255,
+          "version": 1
+        },
+        "lower_threshold": {
+          "value": 128.0,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryMask",
+          "version": 1
+        },
+        "outside_value": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "upper_threshold": {
+          "value": 255.0,
+          "version": 1
+        }
+      },
+      "comments": "Apply a binary threshold at 128: pixels in [128, 255] become 255, all others become 0",
+      "filter": {
+        "name": "nx::core::ITKBinaryThresholdImageFilter",
+        "uuid": "ba2494b0-c4f0-43ff-9d08-900395900e0c"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "inside_value": {
+          "value": 255.0,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "ApproxSignedDistMap",
+          "version": 1
+        },
+        "outside_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute an approximate signed distance map from the binary mask. NOTE: This filter may fail on certain images with 'gradient norm is lower than pixel precision' - disable if needed.",
+      "filter": {
+        "name": "nx::core::ITKApproximateSignedDistanceMapImageFilter",
+        "uuid": "87ed0d3a-c394-4bb5-ac7f-6cc746984b09"
+      },
+      "isDisabled": true
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "input_is_binary": {
+          "value": true,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "DanielssonDistMap",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "squared_distance": {
+          "value": false,
+          "version": 1
+        },
+        "use_image_spacing": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Compute Danielsson distance map from the binary mask using image spacing",
+      "filter": {
+        "name": "nx::core::ITKDanielssonDistanceMapImageFilter",
+        "uuid": "f0cd4faf-a676-41ed-9ea5-859035f94836"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "inside_is_positive": {
+          "value": true,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "SignedDanielssonDistMap",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "squared_distance": {
+          "value": false,
+          "version": 1
+        },
+        "use_image_spacing": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Compute signed Danielsson distance map with positive values inside foreground objects",
+      "filter": {
+        "name": "nx::core::ITKSignedDanielssonDistanceMapImageFilter",
+        "uuid": "2f42e771-1d84-4468-8991-9a1fad7eb740"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "inside_is_positive": {
+          "value": true,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "SignedMaurerDistMap",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "squared_distance": {
+          "value": false,
+          "version": 1
+        },
+        "use_image_spacing": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Compute signed Maurer distance map with positive values inside foreground objects",
+      "filter": {
+        "name": "nx::core::ITKSignedMaurerDistanceMapImageFilter",
+        "uuid": "e81f72d3-e806-4afe-ab4c-795c6a3f526f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "far_value": {
+          "value": 10.0,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/SignedMaurerDistMap",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "level_set_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "IsoContourDist",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute iso-contour distance from the signed Maurer distance map at the zero level set",
+      "filter": {
+        "name": "nx::core::ITKIsoContourDistanceImageFilter",
+        "uuid": "e82fa143-7ac2-4c09-a88c-9ea71d47d594"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/ITK_Distance_Maps.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "pipeline_uuid": "8a3b0030-336f-470f-b0fa-e9fad65a0491",
+  "version": 1,
+  "workflowParams": []
+}

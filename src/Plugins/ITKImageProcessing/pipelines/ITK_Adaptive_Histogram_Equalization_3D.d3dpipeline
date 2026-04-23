@@ -1,0 +1,311 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Adaptive_Histogram_Equalization_3D.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "color_weights": {
+          "value": [
+            0.21250000596046448,
+            0.715399980545044,
+            0.07209999859333038
+          ],
+          "version": 1
+        },
+        "convert_to_gray_scale": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": false,
+            "type": 0
+          },
+          "version": 1
+        },
+        "exact_xy_dimensions": {
+          "value": [
+            0,
+            0
+          ],
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "image_transform_index": {
+          "value": 0,
+          "version": 1
+        },
+        "input_file_list_object": {
+          "value": {
+            "end_index": 56,
+            "file_extension": ".tif",
+            "file_prefix": "GammaPrime",
+            "file_suffix": "",
+            "increment_index": 1,
+            "input_path": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/GammaPrime/",
+            "ordering": 0,
+            "padding_digits": 4,
+            "start_index": 0
+          },
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 2,
+        "resample_images_index": {
+          "value": 0,
+          "version": 1
+        },
+        "scaling": {
+          "value": 1.0,
+          "version": 1
+        },
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Import the full GammaPrime 3D image stack (57 slices) for volumetric processing",
+      "filter": {
+        "name": "nx::core::ITKImportImageStackFilter",
+        "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb"
+      },
+      "isDisabled": true
+    },
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/GammaPrime/GammaPrime0000.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "alpha": {
+          "value": 0.30000001192092896,
+          "version": 1
+        },
+        "beta": {
+          "value": 0.30000001192092896,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "AdaptiveHistogramEqualization",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "radius": {
+          "value": [
+            3,
+            3,
+            3
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Apply adaptive histogram equalization on the full 3D stack. The radius [10, 10, 5] defines the local neighborhood for contrast enhancement across XY and Z. Alpha=0.5 blends between classic histogram equalization and unsharp masking.",
+      "filter": {
+        "name": "nx::core::ITKAdaptiveHistogramEqualizationImageFilter",
+        "uuid": "ea3e7439-8327-4190-8ff7-49ecc321718f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/ITK_Adaptive_Histogram_Equalization_3D.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "pipeline_uuid": "96fc7737-3226-445d-9acd-684613ce8e71",
+  "version": 1,
+  "workflowParams": []
+}

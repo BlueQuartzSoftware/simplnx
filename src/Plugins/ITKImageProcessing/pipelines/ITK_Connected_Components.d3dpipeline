@@ -1,0 +1,289 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Connected_Components.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Porosity_Image/slice_11.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "maximum": {
+          "value": 255.0,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "Output Image Data",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ITKInvertIntensityImageFilter",
+        "uuid": "9958d587-5698-4ea5-b8ea-fb71428b5d02"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/Output Image Data",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "inside_value": {
+          "value": 255,
+          "version": 1
+        },
+        "lower_threshold": {
+          "value": 128.0,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "BinaryMask",
+          "version": 1
+        },
+        "outside_value": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 1,
+        "upper_threshold": {
+          "value": 255.0,
+          "version": 1
+        }
+      },
+      "comments": "Apply a binary threshold: pixels in range [128, 255] become 255, all others become 0",
+      "filter": {
+        "name": "nx::core::ITKBinaryThresholdImageFilter",
+        "uuid": "ba2494b0-c4f0-43ff-9d08-900395900e0c"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/BinaryMask",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "ConnectedComponents",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Label connected components in the binary mask image; each distinct object receives a unique label",
+      "filter": {
+        "name": "nx::core::ITKConnectedComponentImageFilter",
+        "uuid": "905354c1-d55b-4436-b9f7-f4a6e80e5c0f"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ConnectedComponents",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "minimum_object_size": {
+          "value": 25,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "RelabeledComponents",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "sort_by_object_size": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Relabel connected components by size, discarding objects smaller than 25 pixels",
+      "filter": {
+        "name": "nx::core::ITKRelabelComponentImageFilter",
+        "uuid": "37e29d16-1020-478c-a506-c121e8f670ad"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0.0,
+          "version": 1
+        },
+        "fully_connected": {
+          "value": true,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ConnectedComponents",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "LabelContour",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Extract contour pixels from the connected component label image",
+      "filter": {
+        "name": "nx::core::ITKLabelContourImageFilter",
+        "uuid": "b64ff45d-3661-4926-9e87-5dd7b379b261"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/ITK_Connected_Components.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "pipeline_uuid": "954efc4f-7679-44ac-9dee-6b074524366e",
+  "version": 1,
+  "workflowParams": []
+}

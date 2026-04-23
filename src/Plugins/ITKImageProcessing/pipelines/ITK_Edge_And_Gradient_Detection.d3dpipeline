@@ -1,0 +1,254 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Edge_And_Gradient_Detection.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/GammaPrime/GammaPrime0028.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image into an Image Geometry",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GradientMagnitude",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "use_image_spacing": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Compute the gradient magnitude at each pixel to detect edges",
+      "filter": {
+        "name": "nx::core::ITKGradientMagnitudeImageFilter",
+        "uuid": "719df7b2-8db2-43eb-a40c-a015982eec08"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "normalize_across_scale": {
+          "value": false,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GradientMagnitudeRecursiveGaussian",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "sigma": {
+          "value": 1.0,
+          "version": 1
+        }
+      },
+      "comments": "Compute the gradient magnitude using a recursive Gaussian smoothing (sigma=1.0) for noise-robust edge detection",
+      "filter": {
+        "name": "nx::core::ITKGradientMagnitudeRecursiveGaussianImageFilter",
+        "uuid": "32db4ae4-4087-4688-874a-b1d725188f18"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "normalize_across_scale": {
+          "value": false,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "LaplacianRecursiveGaussian",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "sigma": {
+          "value": 1.0,
+          "version": 1
+        }
+      },
+      "comments": "Compute the Laplacian of the Gaussian-smoothed image to detect edges and blobs",
+      "filter": {
+        "name": "nx::core::ITKLaplacianRecursiveGaussianImageFilter",
+        "uuid": "782d76a4-e3f6-4c2a-a1b0-7456a3e77f24"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": {
+          "value": 0,
+          "version": 1
+        },
+        "foreground_value": {
+          "value": 1,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/LaplacianRecursiveGaussian",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "ZeroCrossing",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Detect zero crossings in the Laplacian output to find edges. Uses the LaplacianRecursiveGaussian output as input.",
+      "filter": {
+        "name": "nx::core::ITKZeroCrossingImageFilter",
+        "uuid": "89a14057-776a-4e35-80b6-69361e078394"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/ITK_Edge_And_Gradient_Detection.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "pipeline_uuid": "62184af9-c6f7-4156-9d85-6ea8cef44bde",
+  "version": 1,
+  "workflowParams": []
+}

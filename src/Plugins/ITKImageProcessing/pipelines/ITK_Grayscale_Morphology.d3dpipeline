@@ -1,0 +1,371 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Grayscale_Morphology.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": {
+          "value": "Cell Data",
+          "version": 1
+        },
+        "center_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_image_data_type": {
+          "value": false,
+          "version": 1
+        },
+        "change_origin": {
+          "value": false,
+          "version": 1
+        },
+        "change_spacing": {
+          "value": false,
+          "version": 1
+        },
+        "cropping_options": {
+          "value": {
+            "bounds_x_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_x_voxels": [
+              0,
+              0
+            ],
+            "bounds_y_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_y_voxels": [
+              0,
+              0
+            ],
+            "bounds_z_physical": [
+              0.0,
+              0.0
+            ],
+            "bounds_z_voxels": [
+              0,
+              0
+            ],
+            "crop_x": true,
+            "crop_y": true,
+            "crop_z": true,
+            "is_2d": true,
+            "type": 0
+          },
+          "version": 1
+        },
+        "file_name": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/GammaPrime/GammaPrime0028.tif",
+          "version": 1
+        },
+        "image_data_array_name": {
+          "value": "ImageData",
+          "version": 1
+        },
+        "image_data_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "length_unit_index": {
+          "value": 6,
+          "version": 1
+        },
+        "origin": {
+          "value": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "version": 1
+        },
+        "origin_spacing_processing_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "spacing": {
+          "value": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "version": 1
+        }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": {
+        "name": "nx::core::ITKImageReaderFilter",
+        "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GrayscaleDilate",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Grayscale dilation expands bright regions using a ball structuring element with radius 3",
+      "filter": {
+        "name": "nx::core::ITKGrayscaleDilateImageFilter",
+        "uuid": "944f4d1a-adb1-401a-9c0f-e2085ef2f6dc"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GrayscaleErode",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Grayscale erosion shrinks bright regions using a ball structuring element with radius 3",
+      "filter": {
+        "name": "nx::core::ITKGrayscaleErodeImageFilter",
+        "uuid": "3ceb1e6f-f4a4-4d8f-82d5-ecd20d4fc285"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GrayscaleMorphologicalClosing",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "safe_border": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Morphological closing (dilate then erode) fills small dark gaps in bright regions",
+      "filter": {
+        "name": "nx::core::ITKGrayscaleMorphologicalClosingImageFilter",
+        "uuid": "8b859b54-93d4-4341-8fbf-85e1e461d5b5"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            3,
+            3,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GrayscaleMorphologicalOpening",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "safe_border": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Morphological opening (erode then dilate) removes small bright features",
+      "filter": {
+        "name": "nx::core::ITKGrayscaleMorphologicalOpeningImageFilter",
+        "uuid": "54433e92-fb7d-40f4-95bf-eb3db76d5caa"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": false,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GrayscaleFillhole",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Fill holes in a grayscale image by applying reconstruction by erosion from the image border",
+      "filter": {
+        "name": "nx::core::ITKGrayscaleFillholeImageFilter",
+        "uuid": "1f1dd9e4-d361-432b-a22b-5535664ee545"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "fully_connected": {
+          "value": false,
+          "version": 1
+        },
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "GrayscaleGrindPeak",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Remove peaks (local maxima) from a grayscale image using reconstruction by dilation from the image border",
+      "filter": {
+        "name": "nx::core::ITKGrayscaleGrindPeakImageFilter",
+        "uuid": "6aa5b193-c290-4fe3-a409-7759a62d48ea"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": {
+          "value": "ImageDataContainer/Cell Data/ImageData",
+          "version": 1
+        },
+        "input_image_geometry_path": {
+          "value": "ImageDataContainer",
+          "version": 1
+        },
+        "kernel_radius": {
+          "value": [
+            2,
+            2,
+            0
+          ],
+          "version": 1
+        },
+        "kernel_type_index": {
+          "value": 1,
+          "version": 1
+        },
+        "output_array_name": {
+          "value": "MorphologicalGradient",
+          "version": 1
+        },
+        "parameters_version": 1
+      },
+      "comments": "Compute morphological gradient (dilation - erosion) to highlight edges and boundaries",
+      "filter": {
+        "name": "nx::core::ITKMorphologicalGradientImageFilter",
+        "uuid": "9103009a-8884-4097-8c34-aec7019589ea"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "/Users/mjackson/Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/Data/Output/ITK_Grayscale_Morphology.dream3d",
+          "version": 1
+        },
+        "parameters_version": 1,
+        "write_xdmf_file": {
+          "value": true,
+          "version": 1
+        }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "pipeline_uuid": "c3ffec9f-39fd-45d4-9e3b-773f66c62bfa",
+  "version": 1,
+  "workflowParams": []
+}

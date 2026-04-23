@@ -92,7 +92,10 @@ target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
 
 catch_discover_tests(simplnx_test)
 
-
+#------------------------------------------------------------------------------
+# Download Test Data
+#------------------------------------------------------------------------------
+download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME GammaPrime.tar.gz SHA512 60550efcfbe30983dd734da62adcc9f89c6eba5b97cbf7430a33902310b369cd2e5a2f0ec3a20bfa37fd72e8f1b53ca7cbe53b1ca1d571a73d99c06f1407db73 INSTALL COPY_DATA)
 download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME simpl_json_exemplars.tar.gz SHA512 550a1ad3c9c31b1093d961fdda2057d63a48f08c04d2831c70c1ec65d499f39b354a5a569903ff68e9b703ef45c23faba340aa0c61f9a927fbc845c15b87d05e )
 
 add_custom_target(Copy_simplnx_Test_Data ALL

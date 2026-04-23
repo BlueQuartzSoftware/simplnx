@@ -1,0 +1,133 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Regional_Extrema.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": { "value": "Cell Data", "version": 1 },
+        "change_image_data_type": { "value": false, "version": 1 },
+        "change_origin": { "value": false, "version": 1 },
+        "center_origin": { "value": false, "version": 1 },
+        "change_spacing": { "value": false, "version": 1 },
+        "cropping_options": { "value": { "type": 0, "is_2d": true, "crop_x": true, "crop_y": true, "crop_z": true, "bounds_x_voxels": [0,0], "bounds_y_voxels": [0,0], "bounds_z_voxels": [0,0], "bounds_x_physical": [0.0,0.0], "bounds_y_physical": [0.0,0.0], "bounds_z_physical": [0.0,0.0] }, "version": 1 },
+        "file_name": { "value": "Data/GammaPrime/GammaPrime0028.tif", "version": 1 },
+        "image_data_array_name": { "value": "ImageData", "version": 1 },
+        "image_data_type_index": { "value": 0, "version": 1 },
+        "length_unit_index": { "value": 6, "version": 1 },
+        "origin": { "value": [0.0, 0.0, 0.0], "version": 1 },
+        "origin_spacing_processing_index": { "value": 1, "version": 1 },
+        "output_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "parameters_version": 1,
+        "spacing": { "value": [1.0, 1.0, 1.0], "version": 1 }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": { "name": "nx::core::ITKImageReaderFilter", "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "HConvex", "version": 1 },
+        "height": { "value": 30.0, "version": 1 },
+        "fully_connected": { "value": false, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "H-Convex filter identifies pixels in local convexities with height contrast above 30",
+      "filter": { "name": "nx::core::ITKHConvexImageFilter", "uuid": "620240a1-0b04-4bc7-a4c3-531917de4bc0" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "HMaxima", "version": 1 },
+        "height": { "value": 30.0, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "H-Maxima suppresses local maxima whose height is less than 30 intensity levels",
+      "filter": { "name": "nx::core::ITKHMaximaImageFilter", "uuid": "40039f72-30b0-4a3f-8ea4-2f76c5f65bc1" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "HMinima", "version": 1 },
+        "height": { "value": 30.0, "version": 1 },
+        "fully_connected": { "value": false, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "H-Minima suppresses local minima whose depth is less than 30 intensity levels",
+      "filter": { "name": "nx::core::ITKHMinimaImageFilter", "uuid": "9b2eb24b-90e5-41c0-9230-1044170ee8ea" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "RegionalMaxima", "version": 1 },
+        "background_value": { "value": 0.0, "version": 1 },
+        "foreground_value": { "value": 255.0, "version": 1 },
+        "fully_connected": { "value": false, "version": 1 },
+        "flat_is_maxima": { "value": true, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Detect regional maxima: connected regions where all pixels have the same value and neighbors are strictly lower",
+      "filter": { "name": "nx::core::ITKRegionalMaximaImageFilter", "uuid": "a2b8a295-5730-477a-b97b-8a0b0400397c" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "RegionalMinima", "version": 1 },
+        "background_value": { "value": 0.0, "version": 1 },
+        "foreground_value": { "value": 255.0, "version": 1 },
+        "fully_connected": { "value": false, "version": 1 },
+        "flat_is_minima": { "value": true, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Detect regional minima: connected regions where all pixels have the same value and neighbors are strictly higher",
+      "filter": { "name": "nx::core::ITKRegionalMinimaImageFilter", "uuid": "7ec0883e-ac48-40e9-8b97-11bdfde721e2" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "ValuedRegionalMaxima", "version": 1 },
+        "fully_connected": { "value": false, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Valued regional maxima returns the original intensity at regional maxima locations, zero elsewhere",
+      "filter": { "name": "nx::core::ITKValuedRegionalMaximaImageFilter", "uuid": "2c0bb4f6-69fe-4c43-a32e-21b4b11efcff" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "ValuedRegionalMinima", "version": 1 },
+        "fully_connected": { "value": false, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Valued regional minima returns the original intensity at regional minima locations, max value elsewhere",
+      "filter": { "name": "nx::core::ITKValuedRegionalMinimaImageFilter", "uuid": "38548e01-6a3c-49fb-b7b6-489f965cc61e" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": { "value": "Data/Output/ITK_Regional_Extrema.dream3d", "version": 1 },
+        "parameters_version": 1,
+        "write_xdmf_file": { "value": true, "version": 1 }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": { "name": "nx::core::WriteDREAM3DFilter", "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003" },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

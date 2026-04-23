@@ -1,0 +1,143 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Projection_Filters_3D.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": { "value": "Cell Data", "version": 1 },
+        "change_image_data_type": { "value": false, "version": 1 },
+        "change_origin": { "value": false, "version": 1 },
+        "change_spacing": { "value": false, "version": 1 },
+        "color_weights": { "value": [0.2125, 0.7154, 0.0721], "version": 1 },
+        "convert_to_gray_scale": { "value": false, "version": 1 },
+        "exact_xy_dimensions": { "value": [0, 0], "version": 1 },
+        "image_data_array_name": { "value": "ImageData", "version": 1 },
+        "image_data_type_index": { "value": 0, "version": 1 },
+        "image_transform_index": { "value": 0, "version": 1 },
+        "input_file_list_object": {
+          "value": {
+            "end_index": 56,
+            "file_extension": ".tif",
+            "file_prefix": "GammaPrime",
+            "file_suffix": "",
+            "increment_index": 1,
+            "input_path": "Data/GammaPrime/",
+            "ordering": 0,
+            "padding_digits": 4,
+            "start_index": 0
+          },
+          "version": 1
+        },
+        "origin": { "value": [0.0, 0.0, 0.0], "version": 1 },
+        "output_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "parameters_version": 2,
+        "resample_images_index": { "value": 0, "version": 1 },
+        "scaling": { "value": 1.0, "version": 1 },
+        "spacing": { "value": [1.0, 1.0, 1.0], "version": 1 }
+      },
+      "comments": "Import the full GammaPrime 3D image stack (57 slices)",
+      "filter": { "name": "nx::core::ITKImportImageStackFilter", "uuid": "dcf980b7-ecca-46d1-af31-ac65f6e3b6bb" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "inside_value": { "value": 255, "version": 1 },
+        "lower_threshold": { "value": 128, "version": 1 },
+        "output_array_name": { "value": "BinaryMask", "version": 1 },
+        "outside_value": { "value": 0, "version": 1 },
+        "parameters_version": 1,
+        "upper_threshold": { "value": 255, "version": 1 }
+      },
+      "comments": "Apply a binary threshold: pixels in range [128, 255] become 255, all others become 0",
+      "filter": { "name": "nx::core::ITKBinaryThresholdImageFilter", "uuid": "ba2494b0-c4f0-43ff-9d08-900395900e0c" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "background_value": { "value": 0.0, "version": 1 },
+        "foreground_value": { "value": 255.0, "version": 1 },
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/BinaryMask", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "BinaryProjection", "version": 1 },
+        "output_image_geometry_name": { "value": "BinaryProjectionGeom", "version": 1 },
+        "parameters_version": 2,
+        "projection_dimension": { "value": 2, "version": 1 },
+        "remove_original_geometry": { "value": false, "version": 1 }
+      },
+      "comments": "Binary projection along Z axis: collapse the 3D binary mask into a 2D image",
+      "filter": { "name": "nx::core::ITKBinaryProjectionImageFilter", "uuid": "04ea495e-2cf0-4dba-8d29-cf33a38c094d" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "MaxProjection", "version": 1 },
+        "output_image_geometry_name": { "value": "MaxProjectionGeom", "version": 1 },
+        "parameters_version": 1,
+        "projection_dimension": { "value": 2, "version": 1 },
+        "remove_original_geometry": { "value": false, "version": 1 }
+      },
+      "comments": "Maximum intensity projection along Z axis: retain the brightest voxel at each XY position",
+      "filter": { "name": "nx::core::ITKMaximumProjectionImageFilter", "uuid": "6dfe9167-d77d-41c7-aebf-569d6190645d" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "MeanProjection", "version": 1 },
+        "output_image_geometry_name": { "value": "MeanProjectionGeom", "version": 1 },
+        "parameters_version": 1,
+        "projection_dimension": { "value": 2, "version": 1 },
+        "remove_original_geometry": { "value": false, "version": 1 }
+      },
+      "comments": "Mean projection along Z axis: average voxel intensity at each XY position",
+      "filter": { "name": "nx::core::ITKMeanProjectionImageFilter", "uuid": "62ffddba-cc57-45fc-a93a-27914eea11ad" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "MedianProjection", "version": 1 },
+        "output_image_geometry_name": { "value": "MedianProjectionGeom", "version": 1 },
+        "parameters_version": 1,
+        "projection_dimension": { "value": 2, "version": 1 },
+        "remove_original_geometry": { "value": false, "version": 1 }
+      },
+      "comments": "Median projection along Z axis: median voxel intensity at each XY position",
+      "filter": { "name": "nx::core::ITKMedianProjectionImageFilter", "uuid": "00e48f6b-8a00-414f-b3d9-49d48a3f9a00" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "output_array_name": { "value": "MinProjection", "version": 1 },
+        "output_image_geometry_name": { "value": "MinProjectionGeom", "version": 1 },
+        "parameters_version": 1,
+        "projection_dimension": { "value": 2, "version": 1 },
+        "remove_original_geometry": { "value": false, "version": 1 }
+      },
+      "comments": "Minimum intensity projection along Z axis: retain the darkest voxel at each XY position",
+      "filter": { "name": "nx::core::ITKMinimumProjectionImageFilter", "uuid": "86898336-8680-4c4e-b166-3f8de9e3d4f2" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": { "value": "Data/Output/ITK_Projection_Filters_3D.dream3d", "version": 1 },
+        "parameters_version": 1,
+        "write_xdmf_file": { "value": true, "version": 1 }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": { "name": "nx::core::WriteDREAM3DFilter", "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003" },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}

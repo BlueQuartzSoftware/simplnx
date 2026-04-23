@@ -1,0 +1,69 @@
+{
+  "isDisabled": false,
+  "name": "ITK_Mask_Image.d3dpipeline",
+  "pinnedParams": [],
+  "pipeline": [
+    {
+      "args": {
+        "cell_attribute_matrix_name": { "value": "Cell Data", "version": 1 },
+        "change_image_data_type": { "value": false, "version": 1 },
+        "change_origin": { "value": false, "version": 1 },
+        "center_origin": { "value": false, "version": 1 },
+        "change_spacing": { "value": false, "version": 1 },
+        "cropping_options": { "value": { "type": 0, "is_2d": true, "crop_x": true, "crop_y": true, "crop_z": true, "bounds_x_voxels": [0,0], "bounds_y_voxels": [0,0], "bounds_z_voxels": [0,0], "bounds_x_physical": [0.0,0.0], "bounds_y_physical": [0.0,0.0], "bounds_z_physical": [0.0,0.0] }, "version": 1 },
+        "file_name": { "value": "Data/GammaPrime/GammaPrime0028.tif", "version": 1 },
+        "image_data_array_name": { "value": "ImageData", "version": 1 },
+        "image_data_type_index": { "value": 0, "version": 1 },
+        "length_unit_index": { "value": 6, "version": 1 },
+        "origin": { "value": [0.0, 0.0, 0.0], "version": 1 },
+        "origin_spacing_processing_index": { "value": 1, "version": 1 },
+        "output_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "parameters_version": 1,
+        "spacing": { "value": [1.0, 1.0, 1.0], "version": 1 }
+      },
+      "comments": "Read a single GammaPrime TIFF image",
+      "filter": { "name": "nx::core::ITKImageReaderFilter", "uuid": "d72eaf98-9b1d-44c9-88f2-a5c3cf57b4f2" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "inside_value": { "value": 255, "version": 1 },
+        "lower_threshold": { "value": 128, "version": 1 },
+        "output_array_name": { "value": "MaskArray", "version": 1 },
+        "outside_value": { "value": 0, "version": 1 },
+        "parameters_version": 1,
+        "upper_threshold": { "value": 255, "version": 1 }
+      },
+      "comments": "Apply a binary threshold to create a mask: pixels in range [128, 255] become 255, all others become 0",
+      "filter": { "name": "nx::core::ITKBinaryThresholdImageFilter", "uuid": "ba2494b0-c4f0-43ff-9d08-900395900e0c" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "input_image_data_path": { "value": "ImageDataContainer/Cell Data/ImageData", "version": 1 },
+        "input_image_geometry_path": { "value": "ImageDataContainer", "version": 1 },
+        "mask_image_data_path": { "value": "ImageDataContainer/Cell Data/MaskArray", "version": 1 },
+        "output_array_name": { "value": "MaskedImage", "version": 1 },
+        "outside_value": { "value": 0.0, "version": 1 },
+        "parameters_version": 1
+      },
+      "comments": "Apply the binary mask to the original image: pixels where the mask is zero are set to the outside value (0)",
+      "filter": { "name": "nx::core::ITKMaskImageFilter", "uuid": "d3138266-3f34-4d6e-8e21-904c94351293" },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": { "value": "Data/Output/ITK_Mask_Image.dream3d", "version": 1 },
+        "parameters_version": 1,
+        "write_xdmf_file": { "value": true, "version": 1 }
+      },
+      "comments": "Write all results to a DREAM3D file for inspection",
+      "filter": { "name": "nx::core::WriteDREAM3DFilter", "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003" },
+      "isDisabled": false
+    }
+  ],
+  "version": 1,
+  "workflowParams": []
+}
