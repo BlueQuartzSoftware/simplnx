@@ -11,10 +11,18 @@ using namespace nx::core;
 
 namespace
 {
+/**
+ * @brief Consolidate all assignment calls to a single method to prevent unintended diverging behavior.
+ * @param arrayThreshold Current threshold to pull settings from.
+ * @param outputResultVector Output vector for the current ThresholdSet.
+ * @param inputThresholdVector Resulting output for the target array threshold.
+ * @param replaceInput The first threshould in every set has its output applied to the output regardless of union operator.
+ * @param trueValue Output mask value when the threshold is satisfied.
+ * @param falseValue Output mask value when the threshold is not satisfied.
+ */
 template <typename T>
 void ApplyThresholdValues(const IArrayThreshold& arrayThreshold, std::vector<T>& outputResultVector, std::vector<T>& inputThresholdVector, bool replaceInput, T trueValue, T falseValue)
 {
-  usize totalTuples = outputResultVector.size();
   auto unionOperator = arrayThreshold.getUnionOperator();
   bool inverse = arrayThreshold.isInverted();
 
@@ -24,7 +32,7 @@ void ApplyThresholdValues(const IArrayThreshold& arrayThreshold, std::vector<T>&
   }
 
   // insert into current threshold
-  InsertThreshold<T>(totalTuples, outputResultVector, unionOperator, inputThresholdVector, inverse, trueValue, falseValue);
+  InsertThreshold<T>(outputResultVector, unionOperator, inputThresholdVector, inverse, trueValue, falseValue);
 }
 
 template <class U>
@@ -105,8 +113,10 @@ struct ExecuteThresholdHelper
  * @param inverse
  */
 template <typename T>
-void InsertThreshold(usize numItems, std::vector<T>& currentVector, nx::core::IArrayThreshold::UnionOperator unionOperator, std::vector<T>& newVector, bool inverse, T trueValue, T falseValue)
+void InsertThreshold(std::vector<T>& currentVector, nx::core::IArrayThreshold::UnionOperator unionOperator, std::vector<T>& newVector, bool inverse, T trueValue, T falseValue)
 {
+  usize numItems = currentVector.size();
+
   for(usize i = 0; i < numItems; i++)
   {
     // invert the current comparison if necessary
@@ -149,25 +159,6 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
 
   ApplyThresholdValues<T>(comparisonValue, outputResultVector, tempResultVector, replaceInput, trueValue, falseValue);
 }
-
-struct ThresholdValueFunctor
-{
-  template <typename T>
-  void operator()(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, IDataArray& outputResultArray, int32_t& err, bool replaceInput, bool inverse, T trueValue, T falseValue)
-  {
-    // Traditionally we would do a check to ensure we get a valid pointer, I'm forgoing that check because it
-    // was essentially done in the preflight part.
-    auto& outputDataStore = outputResultArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
-    usize totalTuples = outputDataStore.getNumberOfTuples();
-    std::vector<T> tmpVector(totalTuples, falseValue);
-    ThresholdValue(comparisonValue, dataStructure, tmpVector, err, replaceInput, inverse, trueValue, falseValue);
-
-    for(size_t i = 0; i < totalTuples; i++)
-    {
-      outputDataStore[i] = tmpVector[i];
-    }
-  }
-};
 
 template <typename T>
 void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, std::vector<T>& outputResultVector, int32_t& err, bool replaceInput, T trueValue, T falseValue)
