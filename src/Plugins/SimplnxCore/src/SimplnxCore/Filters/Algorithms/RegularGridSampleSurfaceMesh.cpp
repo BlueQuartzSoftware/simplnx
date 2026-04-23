@@ -94,13 +94,13 @@ bool sliceTriangleAtZ(const std::array<Point3Df, 3>& verts, float32 zPlane, floa
 // then copies results back to the output DataArray via the parent algorithm's
 // mutex-protected sendThreadSafeSliceUpdate() method.
 // -----------------------------------------------------------------------------
-template <typename T>
+template <typename FaceLabelsT, typename OutputT>
 class ZSliceWorker
 {
 public:
-  ZSliceWorker(RegularGridSampleSurfaceMesh* algorithm, usize zSlice, usize xDim, usize yDim, usize numTriangles, usize numFaceLabelComps, FloatVec3 origin, FloatVec3 spacing,
-               const AbstractDataStore<IGeometry::MeshIndexType>& facesRef, const AbstractDataStore<float32>& verticesRef, const AbstractDataStore<T>& faceLabelsRef,
-               const std::vector<TriangleZRange>& triZRanges)
+  ZSliceWorker(RegularGridSampleSurfaceMesh* algorithm, usize zSlice, usize xDim, usize yDim, usize numTriangles, usize numFaceLabelComps, const FloatVec3& origin, const FloatVec3& spacing,
+               const AbstractDataStore<IGeometry::MeshIndexType>& facesRef, const AbstractDataStore<float32>& verticesRef, const AbstractDataStore<FaceLabelsT>& faceLabelsRef,
+               const std::vector<TriangleZRange>& triZRanges, std::atomic_bool& overflowHit)
   : m_Algorithm(algorithm)
   , m_ZSlice(zSlice)
   , m_XDim(xDim)
@@ -113,15 +113,16 @@ public:
   , m_VerticesRef(verticesRef)
   , m_FaceLabelsRef(faceLabelsRef)
   , m_TriZRanges(triZRanges)
+  , m_OverflowHit(overflowHit)
   {
   }
 
   void operator()() const
   {
     usize cellsPerSlice = m_XDim * m_YDim;
-    std::vector<T> sliceBuffer(cellsPerSlice, T{0});
+    std::vector<OutputT> sliceBuffer(cellsPerSlice, OutputT{0});
 
-    float32 zCoord = m_Origin[2] + (static_cast<float32>(m_ZSlice) + 0.5f) * m_Spacing[2];
+    const float32 zCoord = m_Origin[2] + (static_cast<float32>(m_ZSlice) + 0.5f) * m_Spacing[2];
 
     // ----- Find all triangles spanning this Z and compute 2D edges -----
     std::vector<SliceEdge> edges;
@@ -133,9 +134,9 @@ public:
         continue;
       }
 
-      usize v0Idx = m_FacesRef[t * 3];
-      usize v1Idx = m_FacesRef[t * 3 + 1];
-      usize v2Idx = m_FacesRef[t * 3 + 2];
+      const usize v0Idx = m_FacesRef[t * 3];
+      const usize v1Idx = m_FacesRef[t * 3 + 1];
+      const usize v2Idx = m_FacesRef[t * 3 + 2];
       std::array<Point3Df, 3> verts = {Point3Df{m_VerticesRef[v0Idx * 3], m_VerticesRef[v0Idx * 3 + 1], m_VerticesRef[v0Idx * 3 + 2]},
                                        Point3Df{m_VerticesRef[v1Idx * 3], m_VerticesRef[v1Idx * 3 + 1], m_VerticesRef[v1Idx * 3 + 2]},
                                        Point3Df{m_VerticesRef[v2Idx * 3], m_VerticesRef[v2Idx * 3 + 1], m_VerticesRef[v2Idx * 3 + 2]}};
@@ -151,7 +152,7 @@ public:
     std::vector<ScanlineIntersection> intersections;
     for(usize y = 0; y < m_YDim; y++)
     {
-      float32 yCoord = m_Origin[1] + (static_cast<float32>(y) + 0.5f) * m_Spacing[1];
+      const float32 yCoord = m_Origin[1] + (static_cast<float32>(y) + 0.5f) * m_Spacing[1];
 
       // Find X-intersections of this scanline with all 2D edges
       intersections.clear();
@@ -175,14 +176,14 @@ public:
           continue;
         }
 
-        float32 dy = edge.y2 - edge.y1;
+        const float32 dy = edge.y2 - edge.y1;
         if(std::abs(dy) < 1e-10f)
         {
           continue; // Skip horizontal edges
         }
 
-        float32 t = (yCoord - edge.y1) / dy;
-        float32 xIntersect = edge.x1 + t * (edge.x2 - edge.x1);
+        const float32 t = (yCoord - edge.y1) / dy;
+        const float32 xIntersect = edge.x1 + t * (edge.x2 - edge.x1);
         intersections.push_back({xIntersect, edge.faceIndex});
       }
 
@@ -190,28 +191,81 @@ public:
       std::sort(intersections.begin(), intersections.end(), [](const ScanlineIntersection& a, const ScanlineIntersection& b) { return a.x < b.x; });
 
       // Walk left to right, toggling feature IDs at each crossing
-      T currentFeature = 0;
+      OutputT currentFeature = 0;
       usize nextIsect = 0;
-      usize rowOffset = y * m_XDim;
+      const usize rowOffset = y * m_XDim;
 
       for(usize x = 0; x < m_XDim; x++)
       {
-        float32 xCoord = m_Origin[0] + (static_cast<float32>(x) + 0.5f) * m_Spacing[0];
+        const float32 xCoord = m_Origin[0] + (static_cast<float32>(x) + 0.5f) * m_Spacing[0];
+
+        if(m_OverflowHit)
+        {
+          return;
+        }
 
         // Process all crossings up to this voxel center
         while(nextIsect < intersections.size() && intersections[nextIsect].x <= xCoord)
         {
           usize faceIdx = intersections[nextIsect].faceIndex;
-          T label0, label1;
-          if(m_NumFaceLabelComps == 2)
+          OutputT label0, label1;
+          if constexpr(std::is_same_v<FaceLabelsT, int8>)
           {
-            label0 = m_FaceLabelsRef[faceIdx * 2];
-            label1 = m_FaceLabelsRef[faceIdx * 2 + 1];
+            if(m_NumFaceLabelComps == 2)
+            {
+              label0 = static_cast<uint8>(m_FaceLabelsRef[faceIdx * 2]);
+              label1 = static_cast<uint8>(m_FaceLabelsRef[faceIdx * 2 + 1]);
+
+              if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+              {
+                if(std::numeric_limits<OutputT>::max() < label0 || std::numeric_limits<OutputT>::max() < label1)
+                {
+                  m_OverflowHit = true;
+                }
+              }
+            }
+            else
+            {
+              label0 = static_cast<uint8>(m_FaceLabelsRef[faceIdx]);
+              label1 = OutputT{0};
+
+              if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+              {
+                if(std::numeric_limits<OutputT>::max() < label0)
+                {
+                  m_OverflowHit = true;
+                }
+              }
+            }
           }
           else
           {
-            label0 = m_FaceLabelsRef[faceIdx];
-            label1 = T{0};
+            if(m_NumFaceLabelComps == 2)
+            {
+              label0 = m_FaceLabelsRef[faceIdx * 2];
+              label1 = m_FaceLabelsRef[faceIdx * 2 + 1];
+
+              if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+              {
+                if(std::numeric_limits<OutputT>::max() < label0 || std::numeric_limits<OutputT>::max() < label1)
+                {
+                  m_OverflowHit = true;
+                }
+              }
+            }
+            else
+            {
+              label0 = m_FaceLabelsRef[faceIdx];
+              label1 = OutputT{0};
+
+              if constexpr(std::numeric_limits<FaceLabelsT>::max() > std::numeric_limits<OutputT>::max())
+              {
+                if(std::numeric_limits<OutputT>::max() < label0)
+                {
+                  m_OverflowHit = true;
+                }
+              }
+            }
           }
 
           // Toggle: if we are currently in one of the two bordering features,
@@ -229,7 +283,6 @@ public:
           {
             // Neither label matches current feature (first crossing from
             // outside or mesh inconsistency). Pick the positive label.
-            currentFeature = 0;
             if(label0 > 0 && label1 <= 0)
             {
               currentFeature = label0;
@@ -264,30 +317,32 @@ private:
   usize m_YDim;
   usize m_NumTriangles;
   usize m_NumFaceLabelComps;
-  FloatVec3 m_Origin;
-  FloatVec3 m_Spacing;
+  const FloatVec3& m_Origin;
+  const FloatVec3& m_Spacing;
   const AbstractDataStore<IGeometry::MeshIndexType>& m_FacesRef;
   const AbstractDataStore<float32>& m_VerticesRef;
-  const AbstractDataStore<T>& m_FaceLabelsRef;
+  const AbstractDataStore<FaceLabelsT>& m_FaceLabelsRef;
   const std::vector<TriangleZRange>& m_TriZRanges;
+  std::atomic_bool& m_OverflowHit;
 };
 
 // -----------------------------------------------------------------------------
 // Functor dispatched by ExecuteDataFunctionIntType to handle the templated T.
 // Sets up shared read-only data and dispatches Z-slice workers in parallel.
 // -----------------------------------------------------------------------------
+template <typename FaceLabelsT>
 struct ZSliceFunctor
 {
-  template <typename T>
-  void operator()(RegularGridSampleSurfaceMesh* algorithm, DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
-                  const ImageGeom& imageGeom, const TriangleGeom& triangleGeom, const DataPath& faceLabelsArrayPath)
+  template <typename OutputT>
+  Result<> operator()(const AbstractDataStore<FaceLabelsT>& faceLabelsRef, RegularGridSampleSurfaceMesh* algorithm, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                      const ImageGeom& imageGeom, const TriangleGeom& triangleGeom)
   {
     // -------------------------------------------------------------------------
     // 1. Get references to input data
     // -------------------------------------------------------------------------
-    SizeVec3 dims = imageGeom.getDimensions();
-    FloatVec3 origin = imageGeom.getOrigin();
-    FloatVec3 spacing = imageGeom.getSpacing();
+    const SizeVec3 dims = imageGeom.getDimensions();
+    const FloatVec3 origin = imageGeom.getOrigin();
+    const FloatVec3 spacing = imageGeom.getSpacing();
 
     usize xDim = dims[0];
     usize yDim = dims[1];
@@ -296,10 +351,7 @@ struct ZSliceFunctor
     const auto& verticesRef = triangleGeom.getVertices()->getDataStoreRef();
     const auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
 
-    using DataArrayType = DataArray<T>;
-    const auto& faceLabelsArray = dataStructure.getDataRefAs<DataArrayType>(faceLabelsArrayPath);
-    usize numFaceLabelComps = faceLabelsArray.getNumberOfComponents();
-    const auto& faceLabelsRef = faceLabelsArray.getDataStoreRef();
+    usize numFaceLabelComps = faceLabelsRef.getNumberOfComponents();
 
     // -------------------------------------------------------------------------
     // 2. Precompute per-triangle Z-range for fast rejection
@@ -309,9 +361,9 @@ struct ZSliceFunctor
     std::vector<TriangleZRange> triZRanges(numTriangles);
     for(usize t = 0; t < numTriangles; t++)
     {
-      usize v0Idx = facesRef[t * 3];
-      usize v1Idx = facesRef[t * 3 + 1];
-      usize v2Idx = facesRef[t * 3 + 2];
+      const usize v0Idx = facesRef[t * 3];
+      const usize v1Idx = facesRef[t * 3 + 1];
+      const usize v2Idx = facesRef[t * 3 + 2];
 
       float32 z0 = verticesRef[v0Idx * 3 + 2];
       float32 z1 = verticesRef[v1Idx * 3 + 2];
@@ -323,13 +375,15 @@ struct ZSliceFunctor
 
     if(shouldCancel)
     {
-      return;
+      return {};
     }
 
     // -------------------------------------------------------------------------
     // 3. Dispatch Z-slices in parallel using ParallelTaskAlgorithm
     // -------------------------------------------------------------------------
     messageHandler({IFilter::Message::Type::Info, fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
+
+    std::atomic_bool overflowHit(false);
 
     ParallelTaskAlgorithm taskAlgorithm;
     for(usize z = 0; z < zDim; z++)
@@ -339,9 +393,28 @@ struct ZSliceFunctor
         break;
       }
 
-      taskAlgorithm.execute(ZSliceWorker<T>(algorithm, z, xDim, yDim, numTriangles, numFaceLabelComps, origin, spacing, facesRef, verticesRef, faceLabelsRef, triZRanges));
+      taskAlgorithm.execute(
+          ZSliceWorker<FaceLabelsT, OutputT>(algorithm, z, xDim, yDim, numTriangles, numFaceLabelComps, origin, spacing, facesRef, verticesRef, faceLabelsRef, triZRanges, overflowHit));
     }
     taskAlgorithm.wait();
+
+    if(overflowHit)
+    {
+      return MakeErrorResult(-158640, fmt::format("Overflow occurred when downcasting a Face Label value of type {} to a feature Id value of type {}",
+                                                  DataTypeToHumanString(GetDataType<FaceLabelsT>()), DataTypeToHumanString(GetDataType<OutputT>())));
+    }
+
+    return {};
+  }
+};
+
+struct OutputTypeDispatcher
+{
+  template <typename FaceLabelsT, typename... ArgsT>
+  auto operator()(const IDataArray& iFaceLabels, DataType outputType, ArgsT&&... args)
+  {
+    const auto& faceLabels = dynamic_cast<const DataArray<FaceLabelsT>&>(iFaceLabels).getDataStoreRef();
+    return ExecuteDataFunctionIntType(ZSliceFunctor<FaceLabelsT>{}, outputType, faceLabels, std::forward<ArgsT>(args)...);
   }
 };
 
@@ -365,12 +438,11 @@ Result<> RegularGridSampleSurfaceMesh::operator()()
 {
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryOutputPath);
+  const auto& iFaceLabels = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
+  const DataType outputType = m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->FeatureIdsArrayPath)->getDataType();
 
   SizeVec3 dims = imageGeom.getDimensions();
   m_CellsPerSlice = dims[0] * dims[1];
 
-  ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->SurfaceMeshFaceLabelsArrayPath)->getDataType(), this, m_DataStructure, m_ShouldCancel,
-                             m_MessageHandler, imageGeom, triangleGeom, m_InputValues->SurfaceMeshFaceLabelsArrayPath);
-
-  return {};
+  return ExecuteDataFunctionIntType(OutputTypeDispatcher{}, iFaceLabels.getDataType(), iFaceLabels, outputType, this, m_ShouldCancel, m_MessageHandler, imageGeom, triangleGeom);
 }

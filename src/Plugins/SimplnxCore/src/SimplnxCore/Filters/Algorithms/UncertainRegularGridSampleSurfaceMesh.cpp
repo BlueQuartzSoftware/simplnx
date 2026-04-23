@@ -1,7 +1,5 @@
 #include "UncertainRegularGridSampleSurfaceMesh.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
-
 #include <random>
 
 using namespace nx::core;

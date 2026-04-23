@@ -38,7 +38,6 @@ public:
    */
   Result<> execute(SampleSurfaceMeshInputValues& inputValues);
 
-protected:
   virtual void generatePoints(std::vector<Point3Df>& points) = 0;
 
 private:

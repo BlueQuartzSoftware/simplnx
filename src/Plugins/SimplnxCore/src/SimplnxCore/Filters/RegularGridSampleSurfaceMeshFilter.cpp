@@ -1,6 +1,7 @@
 #include "RegularGridSampleSurfaceMeshFilter.hpp"
 
 #include "SimplnxCore/Filters/Algorithms/RegularGridSampleSurfaceMesh.hpp"
+#include "SurfaceNetsFilter.hpp"
 
 #include "simplnx/Common/DataTypeUtilities.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
@@ -89,6 +90,8 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
       std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Units (For Description Only)", "The units to be displayed below", to_underlying(IGeometry::LengthUnit::Micrometer),
                                                    IGeometry::GetAllLengthUnitStrings()));
+  params.insert(std::make_unique<BoolParameter>(k_UseCustomOutputType_Key, "Use Custom Output Type",
+                                                "If true user will be prompted for desired output type, else Face Labels/Part Numbers type will be used", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
@@ -104,6 +107,8 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output Cell Attribute Matrix"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAMName_Key, "Cell Attribute Matrix", "The name for the cell data Attribute Matrix within the Image geometry", "Cell Data"));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
+  params.insert(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Type for Feature Ids", "The data type for the `Feature Ids` array",
+                                                   static_cast<ChoicesParameter::ValueType>(to_underlying(DataType::int32)), GetIntegerDataTypesAsHumanStrings()));
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureIdsArrayName_Key, "Feature Ids", "The name for the feature ids array in cell data Attribute Matrix", "Feature Ids"));
 
   params.linkParameters(k_UseExistingGeometry_Key, k_Dimensions_Key, to_underlying(GeometryOption::Create));
@@ -121,7 +126,18 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType RegularGridSampleSurfaceMeshFilter::parametersVersion() const
 {
-  return 3;
+  return 4;
+
+  // Version 3->4
+  // Description:
+  // Expanded acceptable output types
+  // Change 1:
+  // Added - k_UseCustomOutputType_Key = "use_custom_output_type";
+  // Solution - default functionality disables this so no change needed
+  //
+  // Change 2:
+  // Added - k_OutputType_Key = "output_type_index";
+  // Solution - accept default value for k_UseCustomOutputType_Key or manually set it to false
 }
 
 //------------------------------------------------------------------------------
@@ -144,8 +160,10 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   auto pFeatureIdsArrayNameValue = filterArgs.value<std::string>(k_FeatureIdsArrayName_Key);
   auto geometryOptionIndex = static_cast<GeometryOption>(filterArgs.value<ChoicesParameter::ValueType>(k_UseExistingGeometry_Key));
   auto existingImageGeomPathValue = filterArgs.value<DataPath>(k_ExistingImageGeomPath_Key);
+  auto pUseCustomOutputType = filterArgs.value<BoolParameter::ValueType>(k_UseCustomOutputType_Key);
+  auto pOutputTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
 
-  nx::core::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   DataPath cellAttributeMatrixPath;
@@ -177,13 +195,18 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
     cellAttributeMatrixPath = imageGeom.getCellDataPath();
     tupleDims = imageGeom.getCellDataRef().getShape();
   }
-  // Create Feature Ids array with the same type as the input Face Labels array, but always single component
-  const auto& faceLabelsArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
-  DataType faceLabelsType = faceLabelsArray.getDataType();
 
+  // Create Feature Ids with user supplied type
+  auto outputType = static_cast<DataType>(pOutputTypeValue);
+  if(!pUseCustomOutputType)
+  {
+    // Create Feature Ids array with the same type as the input Face Labels array, but always single component
+    auto& faceLabelsArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
+    outputType = faceLabelsArray.getDataType();
+  }
   DataPath featIdsPath = cellAttributeMatrixPath.createChildPath(pFeatureIdsArrayNameValue);
   {
-    auto createDataGroupAction = std::make_unique<CreateArrayAction>(faceLabelsType, tupleDims, ShapeType{1}, featIdsPath);
+    auto createDataGroupAction = std::make_unique<CreateArrayAction>(outputType, tupleDims, ShapeType{1}, featIdsPath);
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 

@@ -54,11 +54,11 @@ public:
    * @param zSlice The Z-slice index
    * @param sliceBuffer The thread-local buffer containing rasterized feature IDs
    */
-  template <typename T>
-  void sendThreadSafeSliceUpdate(usize zSlice, const std::vector<T>& sliceBuffer)
+  template <typename OutputT>
+  void sendThreadSafeSliceUpdate(usize zSlice, const std::vector<OutputT>& sliceBuffer)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    auto& featureIdsRef = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+    auto& featureIdsRef = m_DataStructure.getDataRefAs<DataArray<OutputT>>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
     usize offset = zSlice * m_CellsPerSlice;
     for(usize i = 0; i < m_CellsPerSlice; i++)
     {
