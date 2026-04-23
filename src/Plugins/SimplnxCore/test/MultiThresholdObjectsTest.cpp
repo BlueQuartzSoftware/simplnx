@@ -674,6 +674,72 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Threshold Sets", "[SimplnxC
   }
 }
 
+// Invalid executions
+
+TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore][MultiThresholdObjectsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  MultiThresholdObjectsFilter filter;
+  DataStructure dataStructure = CreateTestDataStructure();
+  Arguments args;
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
+
+  SECTION("Empty ArrayThresholdSet")
+  {
+    ArrayThresholdSet thresholdSet;
+
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("Empty ArrayThreshold DataPath")
+  {
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("Out of Bounds Component Index")
+  {
+    ArrayThresholdSet thresholdSet;
+    auto threshold = std::make_shared<ArrayThreshold>();
+    threshold->setArrayPath(k_TestArrayFloatPath);
+    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold->setComparisonValue(0.1);
+    threshold->setComponentIndex(1);
+    thresholdSet.setArrayThresholds({threshold});
+
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+  SECTION("Mismatching Tuples in Threshold Arrays")
+  {
+    ArrayThresholdSet thresholdSet;
+    auto threshold1 = std::make_shared<ArrayThreshold>();
+    threshold1->setArrayPath(k_TestArrayFloatPath);
+    threshold1->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold1->setComparisonValue(0.1);
+    auto threshold2 = std::make_shared<ArrayThreshold>();
+    threshold2->setArrayPath(k_MismatchingTuplesArrayPath);
+    threshold2->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+    threshold2->setComparisonValue(0.1);
+    thresholdSet.setArrayThresholds({threshold1, threshold2});
+
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  }
+
+  // Preflight the filter and check result
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+
+  // Execute the filter and check the result
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 /// <summary>
 /// ///////
 /// </summary>
@@ -822,84 +888,7 @@ TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom
   }
 }
 
-TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore][MultiThresholdObjectsFilter]")
-{
-  UnitTest::LoadPlugins();
 
-  MultiThresholdObjectsFilter filter;
-  DataStructure dataStructure = CreateTestDataStructure();
-  Arguments args;
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-
-  SECTION("Empty ArrayThresholdSet")
-  {
-    ArrayThresholdSet thresholdSet;
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-  SECTION("Empty ArrayThreshold DataPath")
-  {
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-  SECTION("Mismatching Components in Threshold Arrays")
-  {
-    ArrayThresholdSet thresholdSet;
-    auto threshold1 = std::make_shared<ArrayThreshold>();
-    threshold1->setArrayPath(k_TestArrayFloatPath);
-    threshold1->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold1->setComparisonValue(0.1);
-    auto threshold2 = std::make_shared<ArrayThreshold>();
-    threshold2->setArrayPath(k_MismatchingComponentsArrayPath);
-    threshold2->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold2->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold1, threshold2});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-  SECTION("Out of Bounds Component Index")
-  {
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    threshold->setComponentIndex(1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-  SECTION("Mismatching Tuples in Threshold Arrays")
-  {
-    ArrayThresholdSet thresholdSet;
-    auto threshold1 = std::make_shared<ArrayThreshold>();
-    threshold1->setArrayPath(k_TestArrayFloatPath);
-    threshold1->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold1->setComparisonValue(0.1);
-    auto threshold2 = std::make_shared<ArrayThreshold>();
-    threshold2->setArrayPath(k_MismatchingTuplesArrayPath);
-    threshold2->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold2->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold1, threshold2});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  }
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
 
 TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32,
                    int64, uint64, float32)
