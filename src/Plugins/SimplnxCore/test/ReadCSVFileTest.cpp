@@ -662,13 +662,9 @@ TEST_CASE("SimplnxCore::ReadCSVFileFilter: SIMPL Backwards Compatibility", "[Sim
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<ReadCSVFileFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // CHECK(args.value<DataPath>(ReadCSVFileFilter::k_CreatedDataGroup_Key) == DataPath({"DataContainer", "CellData"}));
-      // CHECK(args.value<DataPath>(ReadCSVFileFilter::k_CreatedDataGroup_Key) == DataPath({"DataContainer", "CellData"}));
-      // CHECK(args.value<DataPath>(ReadCSVFileFilter::k_SelectedAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
+      // Fixture has Wizard_AutomaticAM=1, so the CreationFilter branch fires and sets k_CreatedDataGroup_Key.
+      CHECK(args.value<DataPath>(ReadCSVFileFilter::k_CreatedDataGroup_Key) == DataPath({"DataContainer", "CellData"}));
     }
   }
 }

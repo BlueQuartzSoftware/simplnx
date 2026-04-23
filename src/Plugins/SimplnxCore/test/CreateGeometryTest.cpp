@@ -3111,44 +3111,12 @@ TEST_CASE("SimplnxCore::CreateGeometryFilter: SIMPL Backwards Compatibility", "[
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<CreateGeometryFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_VertexListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_VertexListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_VertexListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_VertexListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_VertexListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_VertexListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<bool>(CreateGeometryFilter::k_WarningsAsErrors_Key) == true);
-      // CHECK(args.value<ChoicesParameter::ValueType>(CreateGeometryFilter::k_ArrayHandling_Key) == 0);
-      // Complex type (Vec3FilterParameterConverter<uint64>) - verified by successful pipeline loading
-      // Complex type (Vec3FilterParameterConverter<float32>) - verified by successful pipeline loading
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_XBoundsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_YBoundsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_ZBoundsPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_EdgeListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_TriangleListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_QuadrilateralListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_TetrahedralListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_HexahedralListPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(CreateGeometryFilter::k_GeometryPath_Key) == DataPath({"DataContainer"}));
-      // Complex type (AttributeMatrixNameFilterParameterConverter) - verified by successful pipeline loading
+      // Fixture uses GeometryType=0 (Image); only common params + image-specific CellAttributeMatrixName are populated.
+      CHECK(args.value<ChoicesParameter::ValueType>(CreateGeometryFilter::k_GeometryType_Key) == 0);
+      CHECK(args.value<bool>(CreateGeometryFilter::k_WarningsAsErrors_Key) == true);
+      CHECK(args.value<ChoicesParameter::ValueType>(CreateGeometryFilter::k_ArrayHandling_Key) == 0);
+      CHECK(args.value<DataPath>(CreateGeometryFilter::k_GeometryPath_Key) == DataPath({"DataContainer"}));
     }
   }
 }

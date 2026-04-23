@@ -10,10 +10,10 @@
     "Filter_Name": "ImportH5OimData",
     "Filter_Uuid": "{3ff4701b-3a0c-52e3-910a-fa927aa6584c}",
     "InputFile": "/test/path/file.h5",
-    "SelectedScanNames": {
-      "1": "Scan1"
-    },
-    "ZSpacing": 1.0,
+    "SelectedScanNames": [
+      "Scan1"
+    ],
+    "ZSpacing": 2.5,
     "Origin": {
       "x": 0.0,
       "y": 0.0,

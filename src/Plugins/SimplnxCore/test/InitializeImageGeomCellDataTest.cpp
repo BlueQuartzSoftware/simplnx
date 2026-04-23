@@ -263,17 +263,12 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: SIMPL Backwards Compa
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<InitializeImageGeomCellDataFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (UInt64ToVec3FilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (DataContainerFromMultiSelectionFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (MultiDataArraySelectionFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<ChoicesParameter::ValueType>(InitializeImageGeomCellDataFilter::k_InitType_Key) == 0);
-      // CHECK(args.value<float64>(InitializeImageGeomCellDataFilter::k_InitValue_Key) == 2.5);
-      // Complex type (RangeFilterParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<ChoicesParameter::ValueType>(InitializeImageGeomCellDataFilter::k_InitType_Key) == 0);
+      CHECK(args.value<float64>(InitializeImageGeomCellDataFilter::k_InitValue_Key) == 2.5);
+      CHECK(args.value<std::vector<float64>>(InitializeImageGeomCellDataFilter::k_InitRange_Key) == std::vector<float64>{0.0, 1.0});
+      CHECK(args.value<std::vector<uint64>>(InitializeImageGeomCellDataFilter::k_MinPoint_Key) == std::vector<uint64>{0, 0, 0});
+      CHECK(args.value<std::vector<uint64>>(InitializeImageGeomCellDataFilter::k_MaxPoint_Key) == std::vector<uint64>{5, 5, 5});
     }
   }
 }

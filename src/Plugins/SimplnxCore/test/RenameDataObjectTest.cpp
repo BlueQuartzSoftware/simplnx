@@ -208,16 +208,9 @@ TEST_CASE("SimplnxCore::RenameDataObjectFilter: SIMPL Backwards Compatibility", 
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<RenameDataObjectFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // CHECK(args.value<DataPath>(RenameDataObjectFilter::k_SourceDataObjectPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<std::string>(RenameDataObjectFilter::k_NewName_Key) == "TestName");
-      // CHECK(args.value<DataPath>(RenameDataObjectFilter::k_SourceDataObjectPath_Key) == DataPath({"DataContainer", "CellData"}));
-      // CHECK(args.value<std::string>(RenameDataObjectFilter::k_NewName_Key) == "TestName");
-      // CHECK(args.value<DataPath>(RenameDataObjectFilter::k_SourceDataObjectPath_Key) == DataPath({"DataContainer"}));
-      // Complex type (DataContainerNameFilterParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<DataPath>(RenameDataObjectFilter::k_SourceDataObjectPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<std::string>(RenameDataObjectFilter::k_NewName_Key) == "TestName");
     }
   }
 }

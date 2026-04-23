@@ -262,7 +262,9 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
 {
   Arguments args = MultiThresholdObjectsFilter().getDefaultArguments();
   static constexpr StringLiteral k_FilterUuidKey = "Filter_Uuid";
+  static constexpr StringLiteral k_FilterClassNameKey = "Filter_Name";
   static constexpr StringLiteral v1Uuid = "{014b7300-cf36-5ede-a751-5faf9b119dae}";
+  static constexpr StringLiteral v1ClassName = "MultiThresholdObjects";
 
   std::vector<Result<>> results;
 
@@ -270,6 +272,11 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
   if(json.contains(k_FilterUuidKey))
   {
     isAdvanced = json[k_FilterUuidKey].get<std::string>() != v1Uuid;
+  }
+  else if(json.contains(k_FilterClassNameKey))
+  {
+    // SIMPL 6.4 pipelines do not include Filter_Uuid; fall back to the legacy class name.
+    isAdvanced = json[k_FilterClassNameKey].get<std::string>() != v1ClassName;
   }
   if(isAdvanced)
   {

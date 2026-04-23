@@ -161,14 +161,11 @@ TEST_CASE("SIMPL Map Inventory: Validate Coverage", "[BackwardsCompatibility][In
     }
   }
 
-  if(!missingFixtures.empty())
+  std::string message = fmt::format("{} filters are missing backwards compatibility fixtures:\n", missingFixtures.size());
+  for(const auto& name : missingFixtures)
   {
-    std::string message = fmt::format("{} filters are missing backwards compatibility fixtures:\n", missingFixtures.size());
-    for(const auto& name : missingFixtures)
-    {
-      message += fmt::format("  - {}\n", name);
-    }
-    CAPTURE(message);
+    message += fmt::format("  - {}\n", name);
   }
+  INFO(message);
   CHECK(missingFixtures.empty());
 }

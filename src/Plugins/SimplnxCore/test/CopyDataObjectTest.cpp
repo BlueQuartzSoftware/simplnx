@@ -165,14 +165,8 @@ TEST_CASE("SimplnxCore::CopyDataObjectFilter: SIMPL Backwards Compatibility", "[
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<CopyDataObjectFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (SingleToMultiDataPathSelectionFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (SingleToMultiDataPathSelectionFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (SingleToMultiDataPathSelectionFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<std::string>(CopyDataObjectFilter::k_NewPathSuffix_Key) == "TestName");
+      CHECK(args.value<std::string>(CopyDataObjectFilter::k_NewPathSuffix_Key) == "TestName");
     }
   }
 }

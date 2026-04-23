@@ -188,13 +188,17 @@ TEST_CASE("OrientationAnalysis::ReadH5EbsdFilter: SIMPL Backwards Compatibility"
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<ReadH5EbsdFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // CHECK(args.value<DataPath>(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      // CHECK(args.value<std::string>(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key) == "TestName");
-      // CHECK(args.value<std::string>(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");
+      CHECK(args.value<DataPath>(ReadH5EbsdFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<std::string>(ReadH5EbsdFilter::k_CellAttributeMatrixName_Key) == "TestName");
+      CHECK(args.value<std::string>(ReadH5EbsdFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");
+
+      const auto h5EbsdValue = args.value<ReadH5EbsdFileParameter::ValueType>(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key);
+      CHECK(h5EbsdValue.inputFilePath == "/test/path/file.h5ebsd");
+      CHECK(h5EbsdValue.startSlice == 0);
+      CHECK(h5EbsdValue.endSlice == 10);
+      CHECK(h5EbsdValue.useRecommendedTransform == true);
+      CHECK(h5EbsdValue.selectedArrayNames == std::vector<std::string>{"Confidence Index", "Image Quality"});
     }
   }
 }

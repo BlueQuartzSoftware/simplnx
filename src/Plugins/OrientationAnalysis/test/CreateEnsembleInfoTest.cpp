@@ -184,15 +184,16 @@ TEST_CASE("OrientationAnalysis::CreateEnsembleInfoFilter: SIMPL Backwards Compat
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<CreateEnsembleInfoFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (AMPathBuilderFilterParameterConverter) - verified by successful pipeline loading
-      // Complex type (EnsembleInfoFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key) == "TestName");
-      // CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key) == "TestName");
-      // CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_CrystalStructuresArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_PhaseTypesArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(CreateEnsembleInfoFilter::k_PhaseNamesArrayName_Key) == "TestName");
+      CHECK(args.value<DataPath>(CreateEnsembleInfoFilter::k_CellEnsembleAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellEnsembleData"}));
+      const auto ensembleValue = args.value<EnsembleInfoParameter::ValueType>(CreateEnsembleInfoFilter::k_Ensemble_Key);
+      REQUIRE(ensembleValue.size() == 1);
+      CHECK(ensembleValue[0][0] == "Cubic-High m-3m");
+      CHECK(ensembleValue[0][1] == "Primary");
+      CHECK(ensembleValue[0][2] == "Primary");
     }
   }
 }
