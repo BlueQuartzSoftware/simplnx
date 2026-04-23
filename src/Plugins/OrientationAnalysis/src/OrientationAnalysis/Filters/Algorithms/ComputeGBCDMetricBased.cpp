@@ -383,8 +383,8 @@ Result<> ComputeGBCDMetricBased::operator()()
   float64 misResolution = k_ResolutionChoices[m_InputValues->ChosenLimitDists][0];
   float64 planeResolution = k_ResolutionChoices[m_InputValues->ChosenLimitDists][1];
 
-  misResolution *= nx::core::Constants::k_PiOver180F;
-  planeResolution *= nx::core::Constants::k_PiOver180F;
+  misResolution *= nx::core::Constants::k_PiOver180D;
+  planeResolution *= nx::core::Constants::k_PiOver180D;
   const float64 planeResolutionSq = planeResolution * planeResolution;
 
   auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
@@ -455,7 +455,7 @@ Result<> ComputeGBCDMetricBased::operator()()
   }
 
   // Convert axis angle to matrix representation of mis orientation
-  auto gFixedAngle = m_InputValues->MisorientationRotation[3] * nx::core::Constants::k_PiOver180F;
+  auto gFixedAngle = m_InputValues->MisorientationRotation[3] * nx::core::Constants::k_PiOver180D;
   Eigen::Vector3d gFixedAxis = {m_InputValues->MisorientationRotation[0], m_InputValues->MisorientationRotation[1], m_InputValues->MisorientationRotation[2]};
   gFixedAxis.normalize();
   auto oMatrix = ebsdlib::AxisAngleDType(gFixedAxis[0], gFixedAxis[1], gFixedAxis[2], gFixedAngle).toOrientationMatrix();
