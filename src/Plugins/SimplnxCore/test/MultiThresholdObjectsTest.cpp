@@ -347,7 +347,6 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Single Thresholds: Float", 
   double thresholdValue = GENERATE(0.0, 0.01, 0.02, 0.03, 0.04, 26.2);
   bool isInverted = GENERATE(false, true);
 
-  // RunSingleComponentThresholdTests(dataStructure, k_TestArrayIntPath, 3.0, false);
   SECTION("ArrayThreshold: >")
   {
     RunSingleThresholdTest(dataStructure, targetArray, ArrayThreshold::ComparisonType::GreaterThan, thresholdValue, isInverted);
@@ -740,158 +739,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-/// <summary>
-/// ///////
-/// </summary>
-
-#if false
-TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution", "[SimplnxCore][MultiThresholdObjectsFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  DataStructure dataStructure = CreateTestDataStructure();
-
-  SECTION("Float Array Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-    REQUIRE(thresholdArray != nullptr);
-
-    // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
-    for(usize i = 0; i < 20; i++)
-    {
-      if(i < 10)
-      {
-        REQUIRE((*thresholdArray)[i] == false);
-      }
-      else
-      {
-        REQUIRE((*thresholdArray)[i] == true);
-      }
-    }
-  }
-
-  SECTION("Int Array Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayIntPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(15);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-    REQUIRE(thresholdArray != nullptr);
-
-    // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
-    for(usize i = 0; i < 20; i++)
-    {
-      if(i <= 15)
-      {
-        REQUIRE((*thresholdArray)[i] == false);
-      }
-      else
-      {
-        REQUIRE((*thresholdArray)[i] == true);
-      }
-    }
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32, int64, uint64,
-                   float32, float64)
-{
-  UnitTest::LoadPlugins();
-
-  MultiThresholdObjectsFilter filter;
-  DataStructure dataStructure = CreateTestDataStructure();
-  Arguments args;
-
-  float64 trueValue = 25;
-  float64 falseValue = 10;
-
-  ArrayThresholdSet thresholdSet;
-  auto threshold = std::make_shared<ArrayThreshold>();
-  threshold->setArrayPath(k_TestArrayIntPath);
-  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-  threshold->setComparisonValue(15);
-  thresholdSet.setArrayThresholds({threshold});
-
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_UseCustomTrueValue, std::make_any<bool>(true));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CustomTrueValue, std::make_any<float64>(trueValue));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_UseCustomFalseValue, std::make_any<bool>(true));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CustomFalseValue, std::make_any<float64>(falseValue));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(GetDataType<TestType>()));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-  auto* thresholdArray = dataStructure.getDataAs<DataArray<TestType>>(k_ThresholdArrayPath);
-  REQUIRE(thresholdArray != nullptr);
-
-  // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
-  for(usize i = 0; i < 20; i++)
-  {
-    if(i <= 15)
-    {
-      REQUIRE((*thresholdArray)[i] == falseValue);
-    }
-    else
-    {
-      REQUIRE((*thresholdArray)[i] == trueValue);
-    }
-  }
-}
-
-
-
-TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32,
-                   int64, uint64, float32)
+TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
+                  uint64, float32)
 {
   UnitTest::LoadPlugins();
 
@@ -995,329 +844,33 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Boolean Custo
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// DataType checks
+
 template <typename T>
 void checkMaskValues(const DataStructure& dataStructure, const DataPath& thresholdArrayPath)
 {
   auto* thresholdArrayPtr = dataStructure.getDataAs<DataArray<T>>(thresholdArrayPath);
   REQUIRE(thresholdArrayPtr != nullptr);
 
-  auto& thresholdArray = (*thresholdArrayPtr);
+  auto& thresholdStore = thresholdArrayPtr->getDataStoreRef();
 
   // For the comparison value of 0.1, the threshold array elements 0 to 9 should be false and 10 through 19 should be true
-  for(usize i = 0; i < 20; i++)
+  for(usize i = 0; i < k_TupleCount; i++)
   {
-    if(i < 10)
+    if(i < 5)
     {
-      REQUIRE(thresholdArray[i] == static_cast<T>(0));
+      REQUIRE(thresholdStore[i] == static_cast<T>(0));
     }
     else
     {
-      REQUIRE(thresholdArray[i] == static_cast<T>(1));
+      REQUIRE(thresholdStore[i] == static_cast<T>(1));
     }
   }
 }
 
-TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, DataType", "[SimplnxCore][MultiThresholdObjectsFilter]")
+template <typename T>
+void runMaskTypeFilter(MultiThresholdObjectsFilter& filter, Arguments& args, DataStructure& dataStructure)
 {
-  UnitTest::LoadPlugins();
-
-  DataStructure dataStructure = CreateTestDataStructure();
-
-  // Signed
-  SECTION("Int8 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int8));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<int8>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  SECTION("Int16 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int16));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<int16>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  SECTION("Int32 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int32));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<int32>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  SECTION("Int64 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int64));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<int64>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  // Unsigned
-  SECTION("UInt8 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint8));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<uint8>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  SECTION("UInt16 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint16));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<uint16>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  SECTION("UInt32 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint32));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<uint32>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  SECTION("UInt64 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint64));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<uint64>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  // Floating Point
-  SECTION("Float32 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float32));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<float32>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  SECTION("Float64 Threshold")
-  {
-    MultiThresholdObjectsFilter filter;
-    Arguments args;
-
-    ArrayThresholdSet thresholdSet;
-    auto threshold = std::make_shared<ArrayThreshold>();
-    threshold->setArrayPath(k_TestArrayFloatPath);
-    threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-    threshold->setComparisonValue(0.1);
-    thresholdSet.setArrayThresholds({threshold});
-
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float64));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
-
-    checkMaskValues<float64>(dataStructure, k_ThresholdArrayPath);
-  }
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Multicomponent", "[SimplnxCore][MultiThresholdObjectsFilter]")
-{
-  DataStructure dataStructure = CreateTestDataStructure();
-
-  MultiThresholdObjectsFilter filter;
-  Arguments args;
-
-  ArrayThresholdSet thresholdSet;
-  auto threshold = std::make_shared<ArrayThreshold>();
-  threshold->setArrayPath(k_MultiComponentArrayPath);
-  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
-  threshold->setComparisonValue(0);
-  threshold->setComponentIndex(1);
-  thresholdSet.setArrayThresholds({threshold});
-
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
-  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::boolean));
-
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -1326,64 +879,101 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution - Multicomponent"
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  auto* thresholdArray = dataStructure.getDataAs<BoolArray>(k_ThresholdArrayPath);
-  REQUIRE(thresholdArray != nullptr);
+  checkMaskValues<T>(dataStructure, k_ThresholdArrayPath);
+}
 
-  usize numTuples = thresholdArray->getNumberOfTuples();
+TEST_CASE("SimplnxCore::MultiThresholdObjects: Valid Execution, Mask DataType", "[SimplnxCore][MultiThresholdObjectsFilter]")
+{
+  UnitTest::LoadPlugins();
 
-  // (x, y, z)
-  // y > 0
-  // even tuple indices should be true except 0
-  REQUIRE_FALSE((*thresholdArray)[0]);
-  for(usize i = 1; i < numTuples; i++)
+  DataStructure dataStructure = CreateTestDataStructure();
+
+  // Shared filter setup
+  MultiThresholdObjectsFilter filter;
+  Arguments args;
+
+  ArrayThresholdSet thresholdSet;
+  auto threshold = std::make_shared<ArrayThreshold>();
+  threshold->setArrayPath(k_TestArrayFloatPath);
+  threshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
+  threshold->setComparisonValue(0.05);
+  thresholdSet.setArrayThresholds({threshold});
+
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_ArrayThresholdsObject_Key, std::make_any<ArrayThresholdSet>(thresholdSet));
+  args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedDataName_Key, std::make_any<std::string>(k_ThresholdArrayName));
+
+  // Signed
+  SECTION("Int8 Threshold")
   {
-    bool value = (*thresholdArray)[i];
-    if(i % 2 == 0)
-    {
-      REQUIRE(value);
-    }
-    else
-    {
-      REQUIRE_FALSE(value);
-    }
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int8));
+
+    runMaskTypeFilter<int8>(filter, args, dataStructure);
+  }
+
+  SECTION("Int16 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int16));
+
+    runMaskTypeFilter<int16>(filter, args, dataStructure);
+  }
+
+  SECTION("Int32 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int32));
+
+    runMaskTypeFilter<int32>(filter, args, dataStructure);
+  }
+
+  SECTION("Int64 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::int64));
+
+    runMaskTypeFilter<int64>(filter, args, dataStructure);
+  }
+
+  // Unsigned
+  SECTION("UInt8 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint8));
+
+    runMaskTypeFilter<uint8>(filter, args, dataStructure);
+  }
+
+  SECTION("UInt16 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint16));
+
+    runMaskTypeFilter<uint16>(filter, args, dataStructure);
+  }
+
+  SECTION("UInt32 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint32));
+
+    runMaskTypeFilter<uint32>(filter, args, dataStructure);
+  }
+
+  SECTION("UInt64 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::uint64));
+
+    runMaskTypeFilter<uint64>(filter, args, dataStructure);
+  }
+
+  // Floating Point
+  SECTION("Float32 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float32));
+
+    runMaskTypeFilter<float32>(filter, args, dataStructure);
+  }
+
+  SECTION("Float64 Threshold")
+  {
+    args.insertOrAssign(MultiThresholdObjectsFilter::k_CreatedMaskType_Key, std::make_any<DataType>(DataType::float64));
+
+    runMaskTypeFilter<float64>(filter, args, dataStructure);
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-#endif
-
-TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][MultiThresholdObjectsFilter][BackwardsCompatibility]")
-{
-  auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-
-  const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
-
-  const std::vector<std::pair<std::string, fs::path>> fixtures = {
-      {"SIMPL 6.5 (UUID)", conversionDir / "6_5" / "MultiThresholdObjectsFilter.json"},
-      {"SIMPL 6.4 (Filter_Name)", conversionDir / "6_4" / "MultiThresholdObjectsFilter.json"},
-  };
-
-  for(const auto& [label, fixturePath] : fixtures)
-  {
-    DYNAMIC_SECTION(label)
-    {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
-      REQUIRE(pipelineResult.valid());
-
-      auto& pipeline = pipelineResult.value();
-      REQUIRE(pipeline.size() == 1);
-
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
-
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<MultiThresholdObjectsFilter>::uuid);
-
-      const Arguments args = pipelineFilter->getArguments();
-      CHECK(args.value<std::string>(MultiThresholdObjectsFilter::k_CreatedDataName_Key) == "TestName");
-    }
-  }
 }
