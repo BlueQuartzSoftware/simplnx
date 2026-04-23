@@ -24,6 +24,9 @@
     "ZMax": 5,
     "InitType": 0,
     "InitValue": 2.5,
-    "InitRange": "0;1"
+    "InitRange": {
+      "Min": 0,
+      "Max": 1
+    }
   }
 }

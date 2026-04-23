@@ -11,17 +11,13 @@
     "DataContainerName": {
       "Data Container Name": "DataContainer"
     },
-    "Ensemble": {
-      "CrystalStructure": [
-        999
-      ],
-      "PhaseType": [
-        999
-      ],
-      "PhaseName": [
-        "Primary"
-      ]
-    },
+    "Ensemble": [
+      {
+        "CrystalStructure": 1,
+        "PhaseType": 0,
+        "PhaseName": "Primary"
+      }
+    ],
     "CellEnsembleAttributeMatrixName": "CellEnsembleData",
     "CrystalStructuresArrayName": "TestName",
     "PhaseTypesArrayName": "TestName",

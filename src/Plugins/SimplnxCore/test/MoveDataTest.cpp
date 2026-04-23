@@ -194,14 +194,11 @@ TEST_CASE("SimplnxCore::MoveDataFilter: SIMPL Backwards Compatibility", "[Simpln
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<MoveDataFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (SingleToMultiDataPathSelectionFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(MoveDataFilter::k_DestinationParentPath_Key) == DataPath({"DataContainer"}));
-      // Complex type (SingleToMultiDataPathSelectionFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(MoveDataFilter::k_DestinationParentPath_Key) == DataPath({"DataContainer", "CellData"}));
+      // Fixture has WhatToMove=0 (move attribute matrix): source is the AttributeMatrixSource path,
+      // destination is the DataContainerDestination path.
+      CHECK(args.value<DataPath>(MoveDataFilter::k_DestinationParentPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<std::vector<DataPath>>(MoveDataFilter::k_SourceDataPaths_Key) == std::vector<DataPath>{DataPath({"DataContainer", "CellData"})});
     }
   }
 }

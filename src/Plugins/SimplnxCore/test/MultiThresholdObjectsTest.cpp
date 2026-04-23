@@ -810,15 +810,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjectsFilter: SIMPL Backwards Compatibili
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<MultiThresholdObjectsFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      if(label == "SIMPL 6.5 (UUID)")
-      {
-        // Complex type - verified by successful pipeline loading
-      }
-      // CHECK(args.value<std::string>(MultiThresholdObjectsFilter::k_CreatedDataName_Key) == "TestName");
+      CHECK(args.value<std::string>(MultiThresholdObjectsFilter::k_CreatedDataName_Key) == "TestName");
     }
   }
 }

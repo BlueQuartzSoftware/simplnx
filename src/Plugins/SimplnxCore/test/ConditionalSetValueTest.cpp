@@ -434,15 +434,10 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: SIMPL Backwards Compatibility
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<ConditionalSetValueFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (DoubleToStringFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<DataPath>(ConditionalSetValueFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(ConditionalSetValueFilter::k_ConditionalArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // CHECK(args.value<DataPath>(ConditionalSetValueFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      // Complex type (DoubleToStringFilterParameterConverter) - verified by successful pipeline loading
+      CHECK(args.value<DataPath>(ConditionalSetValueFilter::k_SelectedArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<DataPath>(ConditionalSetValueFilter::k_ConditionalArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
+      CHECK(args.value<std::string>(ConditionalSetValueFilter::k_ReplaceValue_Key) == "3.500000");
     }
   }
 }

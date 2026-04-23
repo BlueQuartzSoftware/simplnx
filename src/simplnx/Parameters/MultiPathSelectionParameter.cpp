@@ -145,6 +145,9 @@ namespace SIMPLConversion
 {
 Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> SingleToMultiDataPathSelectionFilterParameterConverter::convert(const nlohmann::json& json)
 {
+  static constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
+  static constexpr StringLiteral k_DataArrayNameKey = "Data Array Name";
+
   if(!json.is_object())
   {
     return MakeErrorResult<ValueType>(-1, fmt::format("MultiDataArraySelectionParameter json '{}' is not an array", json.dump()));
@@ -159,25 +162,33 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
   }
   DataPath dataPath({std::move(dataContainerNameResult.value())});
 
-  auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "DataArrayCreationFilterParameter");
-  if(attributeMatrixNameResult.invalid())
+  // Attribute Matrix Name is optional — a DataContainerSelectionFilterParameter has only Data Container Name.
+  if(json.contains(k_AttributeMatrixNameKey))
   {
-    return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
-  }
-
-  if(attributeMatrixNameResult.value().empty() == false)
-  {
-    dataPath = dataPath.createChildPath(std::move(attributeMatrixNameResult.value()));
-
-    auto dataArrayNameResult = ReadDataArrayName(json, "DataArrayCreationFilterParameter");
-    if(dataArrayNameResult.invalid())
+    auto attributeMatrixNameResult = ReadAttributeMatrixName(json, "AttributeMatrixSelectionFilterParameter");
+    if(attributeMatrixNameResult.invalid())
     {
-      return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+      return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
     }
 
-    if(dataArrayNameResult.value().empty() == false)
+    if(attributeMatrixNameResult.value().empty() == false)
     {
-      dataPath = dataPath.createChildPath(std::move(dataArrayNameResult.value()));
+      dataPath = dataPath.createChildPath(std::move(attributeMatrixNameResult.value()));
+
+      // Data Array Name is optional — an AttributeMatrixSelectionFilterParameter does not include it.
+      if(json.contains(k_DataArrayNameKey))
+      {
+        auto dataArrayNameResult = ReadDataArrayName(json, "DataArraySelectionFilterParameter");
+        if(dataArrayNameResult.invalid())
+        {
+          return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
+        }
+
+        if(dataArrayNameResult.value().empty() == false)
+        {
+          dataPath = dataPath.createChildPath(std::move(dataArrayNameResult.value()));
+        }
+      }
     }
   }
 

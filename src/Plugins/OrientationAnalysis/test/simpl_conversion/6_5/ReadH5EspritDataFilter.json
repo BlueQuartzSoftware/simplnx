@@ -10,10 +10,10 @@
     "Filter_Name": "ImportH5EspritData",
     "Filter_Uuid": "{8abdea7d-f715-5a24-8165-7f946bbc2fe9}",
     "InputFile": "/test/path/file.h5",
-    "SelectedScanNames": {
-      "1": "Scan1"
-    },
-    "ZSpacing": 1.0,
+    "SelectedScanNames": [
+      "Scan1"
+    ],
+    "ZSpacing": 2.5,
     "Origin": {
       "x": 0.0,
       "y": 0.0,

@@ -214,17 +214,15 @@ TEST_CASE("OrientationAnalysis::ReadH5OimDataFilter: SIMPL Backwards Compatibili
       REQUIRE(filter != nullptr);
       REQUIRE(filter->uuid() == FilterTraits<ReadH5OimDataFilter>::uuid);
 
-      // Note: Complex SIMPL parameter conversions may produce warnings
-      // pipelineFilter->getComments() may not be empty for filters with custom converters
-
       const Arguments args = pipelineFilter->getArguments();
-      // Complex type (OEMEbsdScanSelectionFilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<float32>(ReadH5OimDataFilter::k_ZSpacing_Key) == 2.5f);
-      // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
-      // CHECK(args.value<bool>(ReadH5OimDataFilter::k_ReadPatternData_Key) == true);
-      // CHECK(args.value<DataPath>(ReadH5OimDataFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
-      // CHECK(args.value<std::string>(ReadH5OimDataFilter::k_CellAttributeMatrixName_Key) == "TestName");
-      // CHECK(args.value<std::string>(ReadH5OimDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");
+      CHECK(args.value<float32>(ReadH5OimDataFilter::k_ZSpacing_Key) == 2.5f);
+      CHECK(args.value<bool>(ReadH5OimDataFilter::k_ReadPatternData_Key) == true);
+      CHECK(args.value<DataPath>(ReadH5OimDataFilter::k_CreatedImageGeometryPath_Key) == DataPath({"DataContainer"}));
+      CHECK(args.value<std::string>(ReadH5OimDataFilter::k_CellAttributeMatrixName_Key) == "TestName");
+      CHECK(args.value<std::string>(ReadH5OimDataFilter::k_CellEnsembleAttributeMatrixName_Key) == "TestName");
+      const auto scanSel = args.value<OEMEbsdScanSelectionParameter::ValueType>(ReadH5OimDataFilter::k_SelectedScanNames_Key);
+      CHECK(scanSel.inputFilePath == "/test/path/file.h5");
+      CHECK(scanSel.scanNames == std::list<std::string>{"Scan1"});
     }
   }
 }

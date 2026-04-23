@@ -322,6 +322,15 @@ struct ReadH5EbsdFilterParameterConverter
 
   static Result<ValueType> convert(const nlohmann::json& json)
   {
+    static constexpr std::array<StringLiteral, 6> requiredKeys = {k_InputFileKey, k_SelectedArrayNamesKey, k_ZStartIndexKey, k_ZEndIndexKey, k_RefFrameZDirKey, k_UseTransformationsKey};
+    for(const auto& key : requiredKeys)
+    {
+      if(!json.contains(key.view()))
+      {
+        return MakeErrorResult<ValueType>(-3, fmt::format("H5EbsdReaderParameterConverter json is missing required key '{}'", key.view()));
+      }
+    }
+
     if(!json[k_InputFileKey].is_string())
     {
       return MakeErrorResult<ValueType>(-2, fmt::format("H5EbsdReaderParameterConverter json '{}' is not a string", json[k_InputFileKey].dump()));
@@ -342,9 +351,9 @@ struct ReadH5EbsdFilterParameterConverter
     {
       return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_RefFrameZDirKey].dump()));
     }
-    if(!json[k_UseTransformationsKey].is_number_integer())
+    if(!json[k_UseTransformationsKey].is_number_integer() && !json[k_UseTransformationsKey].is_boolean())
     {
-      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer", json[k_UseTransformationsKey].dump()));
+      return MakeErrorResult<ValueType>(-1, fmt::format("H5EbsdReaderParameterConverter json '{}' is not an integer or boolean", json[k_UseTransformationsKey].dump()));
     }
 
     for(const auto& iter : json[k_SelectedArrayNamesKey])
@@ -360,7 +369,7 @@ struct ReadH5EbsdFilterParameterConverter
     value.startSlice = json[k_ZStartIndexKey].get<int32>();
     value.endSlice = json[k_ZEndIndexKey].get<int32>();
     value.eulerRepresentation = json[k_RefFrameZDirKey].get<int32>() - 1;
-    value.useRecommendedTransform = static_cast<bool>(json[k_UseTransformationsKey].get<int32>());
+    value.useRecommendedTransform = json[k_UseTransformationsKey].is_boolean() ? json[k_UseTransformationsKey].get<bool>() : static_cast<bool>(json[k_UseTransformationsKey].get<int32>());
     value.selectedArrayNames = json[k_SelectedArrayNamesKey].get<std::vector<std::string>>();
 
     return {std::move(value)};
@@ -375,7 +384,7 @@ Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertTopParameters<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, k_ReadH5EbsdParameter_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, SIMPL::k_ReadH5EbsdKey, k_ReadH5EbsdParameter_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
