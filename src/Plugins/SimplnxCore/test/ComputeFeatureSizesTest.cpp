@@ -49,7 +49,7 @@ DataStructure Create2DImageDataStructure()
   // Create an ImageGeom
   DataStructure dataStructure = {};
   ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{20.2f, 0.1f, 67777.1f}});
+  imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{20.2f, 0.1f, 1.0f}});
   imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}});
   imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 1}});
 

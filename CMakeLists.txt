@@ -573,7 +573,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/MontageUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SIMPLConversion.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IntersectionUtilities.hpp
-    ${SIMPLNX_SOURCE_DIR}/Utilities/NeighborUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/NeighborUtilities.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Math/GeometryMath.hpp
  # ${SIMPLNX_SOURCE_DIR}/Utilities/Math/MatrixMath.hpp

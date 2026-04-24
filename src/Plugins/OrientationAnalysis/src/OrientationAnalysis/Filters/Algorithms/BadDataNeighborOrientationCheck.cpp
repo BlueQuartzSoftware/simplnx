@@ -59,10 +59,11 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   std::vector<int32> neighborCount(totalPoints, 0);
 
@@ -86,7 +87,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
       int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
       // Loop over the 6 face neighbors of the voxel
-      std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
       for(const auto& faceIndex : faceNeighborInternalIdx)
       {
         if(!isValidFaceNeighbor[faceIndex])
@@ -164,7 +165,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
           int64 zIdx = voxelIndex / (dims[0] * dims[1]);
 
           // Loop over the 6 face neighbors of the voxel
-          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
           for(const auto& faceIndex : faceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])

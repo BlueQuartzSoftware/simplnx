@@ -160,25 +160,8 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
     return MakeErrorResult(-1530, fmt::format("ImageGeom Error: Invalid spacing detected. X-Spacing: {}, Y-Spacing: {}, Z-Spacing: {}", m_Spacing[0], m_Spacing[1], m_Spacing[2]));
   }
 
-  uint32 emptyDimsCount = 0;
-  emptyDimsCount += static_cast<uint32>(m_Dimensions[0] == 1);
-  emptyDimsCount += static_cast<uint32>(m_Dimensions[1] == 1);
-  emptyDimsCount += static_cast<uint32>(m_Dimensions[2] == 1);
-  if(emptyDimsCount > 1)
-  {
-    return MakeErrorResult(
-        -1531, fmt::format("ImageGeom Error: Unable to calculate element sizes.\nImage has 2 or more dimensions equal to 1.\nDimensions: {}", StringUtilities::formatDimensions3D(m_Dimensions)));
-  }
-
-  // if x dimension has a size of 1 then xSpacing = 1; else xSpacing = spacing[0]
-  const float32 xSpacing = (m_Spacing[0] * static_cast<float32>(m_Dimensions[0] > 1ULL)) + (1.0f * static_cast<float32>(m_Dimensions[0] < 2ULL));
-  // if y dimension has a size of 1 then ySpacing = 1; else ySpacing = spacing[1]
-  const float32 ySpacing = (m_Spacing[1] * static_cast<float32>(m_Dimensions[1] > 1ULL)) + (1.0f * static_cast<float32>(m_Dimensions[1] < 2ULL));
-  // if z dimension has a size of 1 then zSpacing = 1; else zSpacing = spacing[2]
-  const float32 zSpacing = (m_Spacing[2] * static_cast<float32>(m_Dimensions[2] > 1ULL)) + (1.0f * static_cast<float32>(m_Dimensions[2] < 2ULL));
-
   // This value will be filled with area if 2D or volume if 3D
-  const float32 singleVoxelSize = xSpacing * ySpacing * zSpacing;
+  const float32 singleVoxelSize = m_Spacing[0] * m_Spacing[1] * m_Spacing[2];
 
   // if true first instance, else recalculate
   if(voxelSizes == nullptr)

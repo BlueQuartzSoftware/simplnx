@@ -4,7 +4,6 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
 using namespace nx::core;
@@ -171,8 +170,9 @@ Result<> RequireMinNumNeighbors::operator()()
   int64 neighborPoint = 0;
   usize numFeatures = numNeighbors.getNumberOfTuples();
 
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   usize counter = 1;
   int64 voxelIndex = 0;
@@ -209,7 +209,7 @@ Result<> RequireMinNumNeighbors::operator()()
             current = 0;
             most = 0;
             // Loop over the 6 face neighbors of the voxel
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])

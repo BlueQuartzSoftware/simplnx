@@ -178,8 +178,9 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
   int64 neighborVoxelIdx = 0;
 
   // These are the offsets that are applied to a voxel index to get to a specific neighbor voxel
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
   usize counter = 1;
   int64 count = 0;
   int64 kstride = 0;
@@ -213,7 +214,7 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
             counter++;
             uint8 maxVoteCount = 0;
             // Loop over the 6 face neighbors of the voxel
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])

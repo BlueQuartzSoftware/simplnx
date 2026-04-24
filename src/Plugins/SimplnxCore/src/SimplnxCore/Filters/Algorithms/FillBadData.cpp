@@ -554,8 +554,9 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
   const usize totalPoints = featureIdsStore.getNumberOfTuples();
 
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   // Neighbor assignment array: neighbors[i] = index of the neighbor to copy from
   std::vector<int32> neighbors(totalPoints, -1);
@@ -604,7 +605,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 
         // Vote for the most common positive neighbor feature
         // Loop over the 6 face neighbors of the voxel
-        std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
         for(const auto& faceIndex : faceNeighborInternalIdx)
         {
           // Skip neighbors outside image bounds
