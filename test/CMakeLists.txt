@@ -94,7 +94,15 @@ target_include_directories(simplnx_test PRIVATE ${SIMPLNX_GENERATED_DIR})
 catch_discover_tests(simplnx_test)
 
 
-download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME simpl_json_exemplars.tar.gz SHA512 550a1ad3c9c31b1093d961fdda2057d63a48f08c04d2831c70c1ec65d499f39b354a5a569903ff68e9b703ef45c23faba340aa0c61f9a927fbc845c15b87d05e )
+
+if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES) 
+  if(NOT EXISTS ${DREAM3D_DATA_DIR}/TestFiles/)
+    file(MAKE_DIRECTORY "${DREAM3D_DATA_DIR}/TestFiles/")
+  endif()
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME simpl_json_exemplars.tar.gz SHA512 550a1ad3c9c31b1093d961fdda2057d63a48f08c04d2831c70c1ec65d499f39b354a5a569903ff68e9b703ef45c23faba340aa0c61f9a927fbc845c15b87d05e )
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME itk_image_reader_test_v3.tar.gz SHA512 e583911e69958f5a270f72f22a07527af313c1e3870923f1c95f1f55bb7c242d9e99daeed7100bfa1f5b4af37c952cf98abe0eb2486c1ec5248470b0ca2dcb85)
+  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME import_image_stack_test_v3.tar.gz SHA512 e9305ac5c3592129cba937bd426c3d987a020a05229cf4519d826bcc538d054b4a173d613ed3e72b7646a523f2f3874c7dab39404cc0ddabffa653cba845abd5)
+endif()
 
 add_custom_target(Copy_simplnx_Test_Data ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${simplnx_SOURCE_DIR}/test/Data" "${DATA_DEST_DIR}/Test_Data"

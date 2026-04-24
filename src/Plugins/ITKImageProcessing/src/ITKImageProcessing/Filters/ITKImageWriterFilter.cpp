@@ -28,10 +28,9 @@
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
+#include <sstream>
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-
-#include <sstream>
 
 namespace fs = std::filesystem;
 

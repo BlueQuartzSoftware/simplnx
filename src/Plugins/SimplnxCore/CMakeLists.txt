@@ -112,6 +112,8 @@ set(FilterList
   ReadDeformKeyFileV12Filter
   ReadDREAM3DFilter
   ReadHDF5DatasetFilter
+  ReadImageFilter
+  ReadImageStackFilter
   ReadNIfTIFileFilter
   ReadRawBinaryFilter
   ReadStlFileFilter
@@ -162,6 +164,7 @@ set(FilterList
   WriteStlFileFilter
   WriteVtkRectilinearGridFilter
   WriteVtkStructuredPointsFilter
+  WriteImageFilter
 )
 
 set(ActionList
@@ -275,6 +278,8 @@ set(AlgorithmList
   ReadDeformKeyFileV12
 #  ReadDREAM3D
   ReadHDF5Dataset
+  ReadImage
+  ReadImageStack
   ReadNIfTIFile
   ReadRawBinary
   ReadStlFile
@@ -326,6 +331,7 @@ set(AlgorithmList
   WriteStlFile
   WriteVtkRectilinearGrid
   WriteVtkStructuredPoints
+  WriteImage
 )
 
 create_simplnx_plugin(NAME ${PLUGIN_NAME}
@@ -572,25 +578,8 @@ endif()
 set(Installed_Data_Files
 )
 
-install(FILES 
+install(FILES
   ${Installed_Data_Files}
   DESTINATION Data/${PLUGIN_NAME}
   COMPONENT Applications
 )
-
-add_executable(txm_reader ${OLESS_SOURCES} ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/txm_reader.cpp)
-target_include_directories(txm_reader PRIVATE ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless)
-
-target_compile_features(txm_reader
-                        PUBLIC
-                        cxx_std_17
-)
-
-set_target_properties(txm_reader
-                      PROPERTIES
-                      DEBUG_POSTFIX "_d"
-)
-# target_include_directories(txm_reader
-#   PUBLIC
-#     ${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless
-# )

@@ -80,7 +80,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
       spacing[i] = static_cast<float32>(imageIO->GetSpacing(i));
     }
 
-    if(imageReaderOptions.ProcessingTiming == OriginSpacingProcessingTiming::Preprocessed)
+    if(imageReaderOptions.ProcessingTiming == OriginSpacingProcessing::Preprocessed)
     {
       ApplyImageOriginAndSpacingOverrides(imageReaderOptions, origin, spacing, dims);
     }
@@ -156,7 +156,7 @@ Result<OutputActions> ReadImagePreflight(const std::string& fileName, DataPath i
       origin = croppedGeom.getOrigin().toContainer<std::vector<float32>>();
     }
 
-    if(imageReaderOptions.ProcessingTiming == OriginSpacingProcessingTiming::Postprocessed)
+    if(imageReaderOptions.ProcessingTiming == OriginSpacingProcessing::Postprocessed)
     {
       ApplyImageOriginAndSpacingOverrides(imageReaderOptions, origin, spacing, dims);
     }

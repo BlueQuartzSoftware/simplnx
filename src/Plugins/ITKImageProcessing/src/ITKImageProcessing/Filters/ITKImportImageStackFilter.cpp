@@ -37,9 +37,6 @@ using namespace nx::core;
 namespace
 {
 const ChoicesParameter::Choices k_SliceOperationChoices = {"None", "Flip about X axis", "Flip about Y axis"};
-const ChoicesParameter::ValueType k_NoImageTransform = 0;
-const ChoicesParameter::ValueType k_FlipAboutXAxis = 1;
-const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
 
 constexpr nx::core::StringLiteral k_NoResamplingMode = "Do Not Resample (0)";
 constexpr nx::core::StringLiteral k_ScalingMode = "Scaling (1)";
@@ -131,10 +128,10 @@ namespace cxITKImportImageStackFilter
 {
 template <class T>
 Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomPath, const std::string& cellDataName, const std::string& imageArrayName, const std::vector<std::string>& files,
-                        ChoicesParameter::ValueType transformType, bool convertToGrayscale, const VectorFloat32Parameter::ValueType& luminosityValues, ChoicesParameter::ValueType resample,
+                        ImageFlipTransform transformType, bool convertToGrayscale, const VectorFloat32Parameter::ValueType& luminosityValues, ChoicesParameter::ValueType resample,
                         float32 scalingFactor, const VectorUInt64Parameter::ValueType& exactDims, bool changeDataType, ChoicesParameter::ValueType destType,
                         CropGeometryParameter::ValueType& croppingOptions, bool shouldChangeOrigin, const VectorFloat64Parameter::ValueType& origin, bool shouldChangeSpacing,
-                        const VectorFloat64Parameter::ValueType& spacing, cxItkImageReaderFilter::OriginSpacingProcessingTiming originSpacingProcessing, const IFilter::MessageHandler& messageHandler,
+                        const VectorFloat64Parameter::ValueType& spacing, OriginSpacingProcessing originSpacingProcessing, const IFilter::MessageHandler& messageHandler,
                         const std::atomic_bool& shouldCancel)
 {
   DataPath destImageGeomPath = imageGeomPath;
@@ -194,12 +191,10 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
       args.insertOrAssign(ITKImageReaderFilter::k_ChangeDataType_Key, std::make_any<bool>(changeDataType));
       args.insertOrAssign(ITKImageReaderFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(destType));
       // Do not set the origin if processing timing is postprocessed, we will set the final origin & spacing at the end
-      args.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key,
-                          std::make_any<BoolParameter::ValueType>(shouldChangeOrigin && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed));
+      args.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key, std::make_any<BoolParameter::ValueType>(shouldChangeOrigin && originSpacingProcessing == OriginSpacingProcessing::Preprocessed));
       args.insertOrAssign(ITKImageReaderFilter::k_Origin_Key, std::make_any<VectorFloat64Parameter::ValueType>(origin));
       // Do not set the spacing if processing timing is postprocessed, we will set the final origin & spacing at the end
-      args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key,
-                          std::make_any<BoolParameter::ValueType>(shouldChangeSpacing && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed));
+      args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, std::make_any<BoolParameter::ValueType>(shouldChangeSpacing && originSpacingProcessing == OriginSpacingProcessing::Preprocessed));
       args.insertOrAssign(ITKImageReaderFilter::k_Spacing_Key, std::make_any<VectorFloat64Parameter::ValueType>(spacing));
       args.insertOrAssign(ITKImageReaderFilter::k_OriginSpacingProcessing_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(originSpacingProcessing)));
       args.insertOrAssign(ITKImageReaderFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(croppingOptions));
@@ -321,11 +316,11 @@ Result<> ReadImageStack(DataStructure& dataStructure, const DataPath& imageGeomP
     auto& srcData = importedDataStructure.getDataRefAs<DataArray<T>>(srcImageDataPath);
     AbstractDataStore<T>& srcDataStore = srcData.getDataStoreRef();
 
-    if(transformType == k_FlipAboutYAxis)
+    if(transformType == ImageFlipTransform::FlipAboutYAxis)
     {
       FlipAboutYAxis<T>(srcData, destDims);
     }
-    else if(transformType == k_FlipAboutXAxis)
+    else if(transformType == ImageFlipTransform::FlipAboutXAxis)
     {
       FlipAboutXAxis<T>(srcData, destDims);
     }
@@ -482,11 +477,11 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
-  auto originSpacingProcessing = static_cast<cxItkImageReaderFilter::OriginSpacingProcessingTiming>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
+  auto originSpacingProcessing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pImageDataArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
-  auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
+  auto imageTransformValue = static_cast<ImageFlipTransform>(filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key));
   auto pConvertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto pColorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   auto pResampleImagesChoiceValue = filterArgs.value<ChoicesParameter::ValueType>(k_ResampleImagesChoice_Key);
@@ -500,7 +495,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  if(imageTransformValue != k_NoImageTransform)
+  if(imageTransformValue != ImageFlipTransform::None)
   {
     const std::unique_ptr<IFilter> rotateSampleRefFrameFilter = CreateRotateSampleRefFrameFilter();
     if(nullptr == rotateSampleRefFrameFilter)
@@ -533,11 +528,11 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(numericType));
   // Do not set the origin if processing timing is postprocessed, we will set the final origin & spacing at the end
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeOrigin_Key,
-                                 std::make_any<BoolParameter::ValueType>(shouldChangeOrigin && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed));
+                                 std::make_any<BoolParameter::ValueType>(shouldChangeOrigin && originSpacingProcessing == OriginSpacingProcessing::Preprocessed));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_Origin_Key, std::make_any<VectorFloat64Parameter::ValueType>(origin));
   // Do not set the spacing if processing timing is postprocessed, we will set the final origin & spacing at the end
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key,
-                                 std::make_any<BoolParameter::ValueType>(shouldChangeSpacing && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed));
+                                 std::make_any<BoolParameter::ValueType>(shouldChangeSpacing && originSpacingProcessing == OriginSpacingProcessing::Preprocessed));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_Spacing_Key, std::make_any<VectorFloat64Parameter::ValueType>(spacing));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_OriginSpacingProcessing_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(originSpacingProcessing)));
   imageReaderArgs.insertOrAssign(ITKImageReaderFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(croppingOptions));
@@ -581,8 +576,8 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
         const float64 zMinPhys = croppingOptions.zBoundPhysical[0];
         const float64 zMaxPhys = croppingOptions.zBoundPhysical[1];
 
-        const float64 originZ = (shouldChangeOrigin && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed) ? origin[2] : 0;
-        const float64 spacingZ = (shouldChangeSpacing && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed) ? spacing[2] : 1;
+        const float64 originZ = (shouldChangeOrigin && originSpacingProcessing == OriginSpacingProcessing::Preprocessed) ? origin[2] : 0;
+        const float64 spacingZ = (shouldChangeSpacing && originSpacingProcessing == OriginSpacingProcessing::Preprocessed) ? spacing[2] : 1;
 
         if(zMaxPhys < zMinPhys)
         {
@@ -784,7 +779,7 @@ IFilter::PreflightResult ITKImportImageStackFilter::preflightImpl(const DataStru
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pathToDelete));
   }
 
-  if(originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Postprocessed && (shouldChangeOrigin || shouldChangeSpacing))
+  if(originSpacingProcessing == OriginSpacingProcessing::Postprocessed && (shouldChangeOrigin || shouldChangeSpacing))
   {
     std::vector<float32> originf(origin.size());
     std::ranges::transform(origin, originf.begin(), [](float64 v) { return static_cast<float32>(v); });
@@ -816,11 +811,11 @@ Result<> ITKImportImageStackFilter::executeImpl(DataStructure& dataStructure, co
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
-  auto originSpacingProcessing = static_cast<cxItkImageReaderFilter::OriginSpacingProcessingTiming>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
+  auto originSpacingProcessing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto imageDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ImageDataArrayPath_Key);
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
-  auto imageTransformValue = filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key);
+  auto imageTransformValue = static_cast<ImageFlipTransform>(filterArgs.value<ChoicesParameter::ValueType>(k_ImageTransformChoice_Key));
   auto convertToGrayScaleValue = filterArgs.value<bool>(k_ConvertToGrayScale_Key);
   auto colorWeightsValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ColorWeights_Key);
   auto resampleImageChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ResampleImagesChoice_Key);

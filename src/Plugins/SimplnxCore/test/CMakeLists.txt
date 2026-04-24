@@ -82,6 +82,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ErodeDilateMaskTest.cpp
   ExecuteProcessTest.cpp
   ExtractComponentAsArrayTest.cpp
+  ExtractFeatureBoundaries2DTest.cpp
   ExtractInternalSurfacesFromTriangleGeometryTest.cpp
   ExtractPipelineToFileTest.cpp
   ExtractVertexGeometryTest.cpp
@@ -105,7 +106,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   PadImageGeometryTest.cpp
   PartitionGeometryTest.cpp
   PipelineTest.cpp
-  ExtractFeatureBoundaries2DTest.cpp
   PointSampleEdgeGeometryTest.cpp
   PointSampleTriangleGeometryFilterTest.cpp
   QuickSurfaceMeshFilterTest.cpp
@@ -113,6 +113,8 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadBinaryCTNorthstarTest.cpp
   ReadCSVFileTest.cpp
   ReadHDF5DatasetTest.cpp
+  ReadImageStackTest.cpp
+  ReadImageTest.cpp
   ReadNIfTIFileTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
@@ -120,6 +122,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadTextDataArrayTest.cpp
   ReadVolumeGraphicsFileTest.cpp
   ReadVtkStructuredPointsTest.cpp
+  ReadZeissTxmFileTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
   RemoveFlaggedEdgesTest.cpp
   RemoveFlaggedFeaturesTest.cpp
@@ -154,6 +157,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteAvizoUniformCoordinateTest.cpp
   WriteBinaryDataTest.cpp
   WriteFeatureDataCSVTest.cpp
+  WriteImageTest.cpp
   WriteLAMMPSFileTest.cpp
   WriteLosAlamosFFTTest.cpp
   WriteNodesAndElementsFilesTest.cpp
@@ -161,7 +165,6 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   WriteSPParksSitesTest.cpp
   WriteStlFileTest.cpp
   WriteVtkRectilinearGridTest.cpp
-  ReadZeissTxmFileTest.cpp
 )
 
 create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}

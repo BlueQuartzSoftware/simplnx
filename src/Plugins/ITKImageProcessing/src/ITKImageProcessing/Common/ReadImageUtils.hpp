@@ -5,6 +5,7 @@
 #include "simplnx/Filter/Actions/CreateImageGeometryAction.hpp"
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
+#include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
 
 #include "ITKImageProcessing/Common/ITKArrayHelper.hpp"
 
@@ -30,9 +31,16 @@ void ConvertImageToDataStoreAsType(itk::Image<PixelT, Dimension>& image, DataSto
 
   const auto* rawBufferPtr = reinterpret_cast<const T*>(pixelContainer->GetBufferPointer());
 
+  // pixelContainer->Size() returns the number of pixels, not the number of scalar
+  // elements. For multi-component pixel types (e.g. itk::Vector<uint8, 3>), the
+  // underlying scalar buffer contains pixelCount * componentsPerPixel elements.
+  // Multiply by the component count so std::transform iterates over every scalar.
+  const std::size_t componentsPerPixel = itk::NumericTraits<PixelT>::GetLength();
+  const std::size_t totalElements = pixelContainer->Size() * componentsPerPixel;
+
   constexpr auto destMaxV = static_cast<float64>(std::numeric_limits<NewStoreT>::max());
   constexpr auto originMaxV = std::numeric_limits<T>::max();
-  std::transform(rawBufferPtr, rawBufferPtr + pixelContainer->Size(), dataStore.data(), [](auto value) {
+  std::transform(rawBufferPtr, rawBufferPtr + totalElements, dataStore.data(), [](auto value) {
     float64 ratio = static_cast<float64>(value) / static_cast<float64>(originMaxV);
     return static_cast<NewStoreT>(ratio * destMaxV);
   });
@@ -64,12 +72,6 @@ struct ConvertImageToDatastoreFunctor
     }
     return {};
   }
-};
-
-enum class OriginSpacingProcessingTiming : uint64_t
-{
-  Preprocessed = 0,
-  Postprocessed = 1
 };
 
 // This functor is a dummy that will return a valid Result<> if the ImageIOBase is a supported type, dimension, etc.
@@ -518,7 +520,7 @@ struct ImageReaderOptions
   bool OverrideSpacing = false;
   FloatVec3 Origin;
   FloatVec3 Spacing;
-  OriginSpacingProcessingTiming ProcessingTiming;
+  OriginSpacingProcessing ProcessingTiming;
   bool ChangeDataType = false;
   DataType ImageDataType = DataType::uint8;
   CropGeometryParameter::ValueType CroppingOptions;
