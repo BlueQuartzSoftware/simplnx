@@ -233,6 +233,7 @@ public:
   Result<> writeData(DataStructureWriter& dataStructureWriter, const nx::core::DataArray<T>& dataArray, group_writer_type& parentGroup, bool importable) const
   {
     auto datasetWriter = parentGroup.createDataset(dataArray.getName());
+    datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
     Result<> result = DataStoreIO::WriteDataStore<T>(datasetWriter, dataArray.getDataStoreRef());
     if(result.invalid())
     {

@@ -23,6 +23,7 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
+#include <hdf5.h>
 
 #include <filesystem>
 #include <mutex>
@@ -264,6 +265,55 @@ Pipeline CreateMultiImportPipeline()
 DREAM3D::FileData CreateFileData()
 {
   return {CreateExportPipeline(), CreateTestDataStructure()};
+}
+
+struct DatasetLayoutInfo
+{
+  H5D_layout_t layout = H5D_LAYOUT_ERROR;
+  bool hasDeflate = false;
+  int deflateLevel = -1;
+};
+
+DatasetLayoutInfo InspectDatasetLayout(const fs::path& filePath, const std::string& hdfDatasetPath)
+{
+  DatasetLayoutInfo info;
+  hid_t f = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  if(f < 0)
+  {
+    return info;
+  }
+  hid_t d = H5Dopen2(f, hdfDatasetPath.c_str(), H5P_DEFAULT);
+  if(d < 0)
+  {
+    H5Fclose(f);
+    return info;
+  }
+  hid_t dcpl = H5Dget_create_plist(d);
+  if(dcpl >= 0)
+  {
+    info.layout = H5Pget_layout(dcpl);
+    const int32 nFilters = H5Pget_nfilters(dcpl);
+    for(int32 i = 0; i < nFilters; ++i)
+    {
+      unsigned int flags = 0;
+      // Match the capacity of cdValues so H5Pget_filter2 can return all client-data values
+      // (DEFLATE uses 1, but overestimating is harmless and avoids a subtle API misuse).
+      size_t cdCapacity = 8;
+      unsigned int cdValues[8] = {0};
+      char filterName[32] = {0};
+      unsigned int filterConfig = 0;
+      if(H5Pget_filter2(dcpl, i, &flags, &cdCapacity, cdValues, sizeof(filterName), filterName, &filterConfig) == H5Z_FILTER_DEFLATE)
+      {
+        info.hasDeflate = true;
+        info.deflateLevel = static_cast<int32>(cdValues[0]);
+        break;
+      }
+    }
+    H5Pclose(dcpl);
+  }
+  H5Dclose(d);
+  H5Fclose(f);
+  return info;
 }
 
 } // End Namespace
@@ -629,5 +679,255 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: SIMPL Backwards Compatibility", "[Si
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteDREAM3DFilter::k_ExportFilePath) == fs::path("/test/path/output.dream3d"));
       CHECK(args.value<bool>(WriteDREAM3DFilter::k_WriteXdmf) == true);
     }
+  }
+}
+
+TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOptions requests it", "[WriteDREAM3DFilter][Compression]")
+{
+  UnitTest::LoadPlugins();
+
+  const fs::path outPath = fs::path(nx::core::unit_test::k_BinaryTestOutputDir.view()) / "dream3d_compressed.dream3d";
+  fs::remove(outPath);
+
+  DataStructure dataStructure;
+  const DataPath arrayPath({"LargeArray"});
+  constexpr usize k_Tuples = 500'000; // 2 MB, above the 16 KiB small-array bypass
+  auto createRes = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{k_Tuples}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute,
+                                                                ArrayCreationUtilities::k_DefaultDataFormat, "0");
+  SIMPLNX_RESULT_REQUIRE_VALID(createRes);
+  {
+    auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
+    auto& store = arr.getDataStoreRef();
+    for(usize i = 0; i < k_Tuples; ++i)
+    {
+      store[i] = static_cast<float32>(i);
+    }
+  }
+
+  HDF5::DataStructureWriter::WriteOptions options;
+  options.compressionLevel = 5;
+  auto writeResult = DREAM3D::WriteFile(outPath, dataStructure, Pipeline{}, false, options);
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  // Inspect on-disk encoding via the RAII-safe helper (never leaks handles on REQUIRE failure).
+  const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/LargeArray";
+  auto info = InspectDatasetLayout(outPath, hdfPath);
+  REQUIRE(info.layout == H5D_CHUNKED);
+  REQUIRE(info.hasDeflate);
+  REQUIRE(info.deflateLevel == 5);
+
+  auto fileReader = HDF5::FileIO::ReadFile(outPath);
+  REQUIRE(fileReader.isValid());
+  auto fileResult = DREAM3D::ReadFile(fileReader);
+  SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
+  auto [pipeline, importedDs] = std::move(fileResult.value());
+  (void)pipeline;
+  REQUIRE_NOTHROW(importedDs.getDataRefAs<DataArray<float32>>(arrayPath));
+  const auto& imported = importedDs.getDataRefAs<DataArray<float32>>(arrayPath);
+  const auto& original = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
+  REQUIRE(imported.getSize() == original.getSize());
+  UnitTest::CompareDataArrays<float32>(original, imported);
+  UnitTest::CheckArraysInheritTupleDims(importedDs);
+}
+
+TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilter][Compression]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_off.dream3d";
+  fs::remove(outPath);
+
+  DataStructure ds;
+  const DataPath arrayPath({"A"});
+  auto cr =
+      ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "1.5");
+  SIMPLNX_RESULT_REQUIRE_VALID(cr);
+
+  WriteDREAM3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
+  args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+  args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, false);
+  args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(5));
+  auto r = filter.execute(ds, args).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(r);
+
+  const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
+  auto info = InspectDatasetLayout(outPath, hdfPath);
+  REQUIRE(info.layout == H5D_CONTIGUOUS);
+  REQUIRE(info.hasDeflate == false);
+}
+
+TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREAM3DFilter][Compression]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_on.dream3d";
+  fs::remove(outPath);
+
+  DataStructure ds;
+  const DataPath arrayPath({"A"});
+  auto cr =
+      ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "0");
+  SIMPLNX_RESULT_REQUIRE_VALID(cr);
+  {
+    auto& arr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
+    auto& store = arr.getDataStoreRef();
+    for(usize i = 0; i < 500'000; ++i)
+    {
+      store[i] = static_cast<float32>(i);
+    }
+  }
+
+  WriteDREAM3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
+  args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+  args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
+  args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(5));
+  auto r = filter.execute(ds, args).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(r);
+
+  const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
+  auto info = InspectDatasetLayout(outPath, hdfPath);
+  REQUIRE(info.layout == H5D_CHUNKED);
+  REQUIRE(info.hasDeflate);
+  REQUIRE(info.deflateLevel == 5);
+
+  auto fr = nx::core::HDF5::FileIO::ReadFile(outPath);
+  auto fileResult = nx::core::DREAM3D::ReadFile(fr);
+  SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
+  auto [unusedPipeline, imported] = std::move(fileResult.value());
+  (void)unusedPipeline;
+  REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
+  const auto& importedArr = imported.getDataRefAs<DataArray<float32>>(arrayPath);
+  const auto& originalArr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
+  UnitTest::CompareDataArrays<float32>(originalArr, importedArr);
+  UnitTest::CheckArraysInheritTupleDims(imported);
+}
+
+TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DFilter][Compression]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_small_bypass.dream3d";
+  fs::remove(outPath);
+
+  DataStructure ds;
+  auto crSmall = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute,
+                                                              ArrayCreationUtilities::k_DefaultDataFormat, "2");
+  SIMPLNX_RESULT_REQUIRE_VALID(crSmall);
+  auto crBig = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute,
+                                                            ArrayCreationUtilities::k_DefaultDataFormat, "3");
+  SIMPLNX_RESULT_REQUIRE_VALID(crBig);
+
+  WriteDREAM3DFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
+  args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+  args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
+  args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(5));
+  auto r = filter.execute(ds, args).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(r);
+
+  const std::string dsRoot = std::string("/") + nx::core::Constants::k_DataStructureTag;
+  auto smallInfo = InspectDatasetLayout(outPath, dsRoot + "/Small");
+  auto bigInfo = InspectDatasetLayout(outPath, dsRoot + "/Big");
+  REQUIRE(smallInfo.layout == H5D_CONTIGUOUS);
+  REQUIRE(smallInfo.hasDeflate == false);
+  REQUIRE(bigInfo.layout == H5D_CHUNKED);
+  REQUIRE(bigInfo.hasDeflate);
+}
+
+TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilter][Compression]")
+{
+  UnitTest::LoadPlugins();
+
+  // Accumulate sizes across a single TEST_CASE run so the monotonicity check at the end actually fires.
+  // (DYNAMIC_SECTION would restart the body per section, losing accumulated state.)
+  std::vector<std::uintmax_t> sizesByLevel;
+  const std::vector<int32> levels = {1, 5, 9};
+
+  for(int32 level : levels)
+  {
+    const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("compression_rt_level_{}.dream3d", level);
+    fs::remove(outPath);
+
+    DataStructure ds;
+    const DataPath arrayPath({"A"});
+    auto cr =
+        ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "0");
+    SIMPLNX_RESULT_REQUIRE_VALID(cr);
+    {
+      auto& arr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
+      auto& store = arr.getDataStoreRef();
+      for(usize i = 0; i < 1'000'000; ++i)
+      {
+        store[i] = static_cast<float32>(i % 1024);
+      }
+    }
+
+    WriteDREAM3DFilter filter;
+    Arguments args;
+    args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
+    args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+    args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
+    args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, level);
+    auto r = filter.execute(ds, args).result;
+    SIMPLNX_RESULT_REQUIRE_VALID(r);
+
+    auto fr = HDF5::FileIO::ReadFile(outPath);
+    REQUIRE(fr.isValid());
+    auto fileResult = DREAM3D::ReadFile(fr);
+    SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
+    auto [unusedPipeline, imported] = std::move(fileResult.value());
+    (void)unusedPipeline;
+    REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
+    UnitTest::CompareDataArrays<float32>(ds.getDataRefAs<DataArray<float32>>(arrayPath), imported.getDataRefAs<DataArray<float32>>(arrayPath));
+
+    // Push after round-trip validation — a corrupt level entry should not enter the monotonicity check.
+    sizesByLevel.push_back(fs::file_size(outPath));
+  }
+
+  // Size non-increasing as level rises. Probabilistic in the general case but reliable for the i%1024 pattern
+  // used here (small symbol alphabet, long runs → deflate dictionary is very effective).
+  REQUIRE(sizesByLevel.size() == levels.size());
+  REQUIRE(sizesByLevel[0] >= sizesByLevel[1]);
+  REQUIRE(sizesByLevel[1] >= sizesByLevel[2]);
+}
+
+TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[WriteDREAM3DFilter][Compression]")
+{
+  UnitTest::LoadPlugins();
+  const fs::path outPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "compression_preflight.dream3d";
+  DataStructure ds;
+
+  WriteDREAM3DFilter filter;
+
+  // use_compression=true + level below [1,9] -> preflight error
+  {
+    Arguments args;
+    args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
+    args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+    args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
+    args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(0));
+    REQUIRE(filter.preflight(ds, args).outputActions.invalid());
+  }
+
+  // use_compression=true + level above [1,9] -> preflight error
+  {
+    Arguments args;
+    args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
+    args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+    args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, true);
+    args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(10));
+    REQUIRE(filter.preflight(ds, args).outputActions.invalid());
+  }
+
+  // use_compression=false -> level is ignored, even if out of range
+  {
+    Arguments args;
+    args.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, outPath);
+    args.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+    args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, false);
+    args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(0));
+    REQUIRE(filter.preflight(ds, args).outputActions.valid());
   }
 }

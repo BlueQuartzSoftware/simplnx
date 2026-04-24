@@ -32,6 +32,9 @@
 
 #include <catch2/catch.hpp>
 
+#include <hdf5.h>
+
+#include <numeric>
 #include <string>
 #include <type_traits>
 
@@ -1022,6 +1025,18 @@ TEST_CASE("HDF5ImplicitCopyIOTest")
   TestH5ImplicitCopy(std::move(datasetIO), "HDF5::DatasetIO");
 }
 
+TEST_CASE("DataStructureWriter: WriteOptions round-trip", "[DataStructureWriter][WriteOptions]")
+{
+  nx::core::HDF5::DataStructureWriter writer;
+  // Default compression level is 0 (off).
+  REQUIRE(writer.getWriteOptions().compressionLevel == 0);
+
+  nx::core::HDF5::DataStructureWriter::WriteOptions options;
+  options.compressionLevel = 7;
+  writer.setWriteOptions(options);
+  REQUIRE(writer.getWriteOptions().compressionLevel == 7);
+}
+
 TEST_CASE("DataStructureAppend")
 {
   const std::filesystem::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/Data/geoms.dream3d";
@@ -1086,4 +1101,127 @@ TEST_CASE("DataStructureAppend")
   // target already exists
   auto appendFailureResult3 = DREAM3D::AppendFile(outputFilePath, baseDataStructure, originalArrayPath);
   SIMPLNX_RESULT_REQUIRE_INVALID(appendFailureResult3);
+}
+
+namespace
+{
+// Probes an HDF5 file for a dataset's storage layout and deflate filter settings.
+// Does all its own handle cleanup, so test code can REQUIRE on the return struct
+// without risking HDF5 handle leaks on assertion failure.
+struct DatasetProbeInfo
+{
+  H5D_layout_t layout = H5D_LAYOUT_ERROR;
+  bool hasDeflate = false;
+  int32 deflateLevel = -1;
+};
+
+DatasetProbeInfo ProbeDataset(const std::filesystem::path& filePath, const std::string& datasetPath)
+{
+  DatasetProbeInfo info;
+  hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  if(fileId < 0)
+  {
+    return info;
+  }
+  hid_t dsetId = H5Dopen2(fileId, datasetPath.c_str(), H5P_DEFAULT);
+  if(dsetId < 0)
+  {
+    H5Fclose(fileId);
+    return info;
+  }
+  hid_t dcplId = H5Dget_create_plist(dsetId);
+  if(dcplId >= 0)
+  {
+    info.layout = H5Pget_layout(dcplId);
+    const int32 nFilters = H5Pget_nfilters(dcplId);
+    for(int32 i = 0; i < nFilters; ++i)
+    {
+      unsigned int flags = 0;
+      size_t cdCapacity = 8;
+      unsigned int cdValues[8] = {0};
+      char filterName[32] = {0};
+      unsigned int filterConfig = 0;
+      if(H5Pget_filter2(dcplId, i, &flags, &cdCapacity, cdValues, sizeof(filterName), filterName, &filterConfig) == H5Z_FILTER_DEFLATE)
+      {
+        info.hasDeflate = true;
+        info.deflateLevel = static_cast<int32>(cdValues[0]);
+        break;
+      }
+    }
+    H5Pclose(dcplId);
+  }
+  H5Dclose(dsetId);
+  H5Fclose(fileId);
+  return info;
+}
+} // namespace
+
+TEST_CASE("DatasetIO: writeSpan uses chunked+deflate when compression level > 0", "[DatasetIO][Compression]")
+{
+  const fs::path outPath = fs::path(nx::core::unit_test::k_BinaryTestOutputDir.view()) / "dataset_compression.h5";
+  fs::remove(outPath);
+
+  const std::string datasetName = "compressed_data";
+  std::vector<float> payload(1'000'000);
+  std::iota(payload.begin(), payload.end(), 0.0f);
+
+  {
+    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(outPath);
+    REQUIRE(fileWriter.isValid());
+    auto group = fileWriter.createGroup("g");
+    auto dataset = group.createDataset(datasetName);
+    dataset.setCompressionLevel(5);
+    auto wr = dataset.writeSpan<float>({payload.size()}, nonstd::span<const float>(payload.data(), payload.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(wr);
+  }
+
+  auto info = ProbeDataset(outPath, "g/" + datasetName);
+  REQUIRE(info.layout == H5D_CHUNKED);
+  REQUIRE(info.hasDeflate);
+  REQUIRE(info.deflateLevel == 5);
+}
+
+TEST_CASE("DatasetIO: writeSpan stays contiguous when compression level is 0", "[DatasetIO][Compression]")
+{
+  const fs::path outPath = fs::path(nx::core::unit_test::k_BinaryTestOutputDir.view()) / "dataset_no_compression.h5";
+  fs::remove(outPath);
+
+  std::vector<float> payload(1'000'000, 3.14f);
+
+  {
+    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(outPath);
+    REQUIRE(fileWriter.isValid());
+    auto group = fileWriter.createGroup("g");
+    auto dataset = group.createDataset("d");
+    // Leave m_CompressionLevel at its 0 default — the opt-in path is not triggered.
+    auto wr = dataset.writeSpan<float>({payload.size()}, nonstd::span<const float>(payload.data(), payload.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(wr);
+  }
+
+  auto info = ProbeDataset(outPath, "g/d");
+  REQUIRE(info.layout == H5D_CONTIGUOUS);
+  REQUIRE(info.hasDeflate == false);
+}
+
+TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with compression on", "[DatasetIO][Compression]")
+{
+  const fs::path outPath = fs::path(nx::core::unit_test::k_BinaryTestOutputDir.view()) / "dataset_small_bypass.h5";
+  fs::remove(outPath);
+
+  // 100 floats = 400 bytes, below the 16 KiB bypass — DCPL helper returns H5P_DEFAULT.
+  std::vector<float> payload(100, 1.0f);
+
+  {
+    auto fileWriter = nx::core::HDF5::FileIO::WriteFile(outPath);
+    REQUIRE(fileWriter.isValid());
+    auto group = fileWriter.createGroup("g");
+    auto dataset = group.createDataset("d");
+    dataset.setCompressionLevel(9);
+    auto wr = dataset.writeSpan<float>({payload.size()}, nonstd::span<const float>(payload.data(), payload.size()));
+    SIMPLNX_RESULT_REQUIRE_VALID(wr);
+  }
+
+  auto info = ProbeDataset(outPath, "g/d");
+  REQUIRE(info.layout == H5D_CONTIGUOUS);
+  REQUIRE(info.hasDeflate == false);
 }
