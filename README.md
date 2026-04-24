@@ -46,7 +46,7 @@ Public additions through the normal PR process will not be affected.
 
 ## Get Help
 
-The current documentation is hosted at [dream3d.io docs](http://www.dream3d.io/nx_reference_manual/Index/).
+The current documentation is hosted at [dream3d.io docs](https://www.dream3d.io/nx_reference_manual/html/).
 
 The current python binding instructions and documentation can be viewed at [dream3d.io python docs](http://www.dream3d.io/python_docs/).
 

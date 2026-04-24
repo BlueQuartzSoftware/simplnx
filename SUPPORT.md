@@ -2,7 +2,7 @@
 
 ## Documentation ##
 
-The current documentation is hosted at <http://www.dream3d.io/nx_reference_manual/Index/>.
+The current documentation is hosted at <https://www.dream3d.io/nx_reference_manual/html/>.
 
 The current python binding instructions and documentation can be viewed at <http://www.dream3d.io/python_docs/>.
 
