@@ -12,6 +12,38 @@ using namespace nx::core;
 namespace
 {
 /**
+ * @brief InsertThreshold
+ * @param numItems
+ * @param currentArrayPtr
+ * @param unionOperator
+ * @param newArrayPtr
+ * @param inverse
+ */
+template <typename T>
+void InsertThreshold(std::vector<T>& currentVector, nx::core::IArrayThreshold::UnionOperator unionOperator, std::vector<T>& newVector, bool inverse, T trueValue, T falseValue)
+{
+  usize numItems = currentVector.size();
+
+  for(usize i = 0; i < numItems; i++)
+  {
+    // invert the current comparison if necessary
+    if(inverse)
+    {
+      newVector[i] = (newVector[i] == trueValue) ? falseValue : trueValue;
+    }
+
+    if(nx::core::IArrayThreshold::UnionOperator::Or == unionOperator)
+    {
+      currentVector[i] = (currentVector[i] == trueValue || newVector[i] == trueValue) ? trueValue : falseValue;
+    }
+    else if(currentVector[i] == falseValue || newVector[i] == falseValue)
+    {
+      currentVector[i] = falseValue;
+    }
+  }
+}
+
+/**
  * @brief Consolidate all assignment calls to a single method to prevent unintended diverging behavior.
  * @param arrayThreshold Current threshold to pull settings from.
  * @param outputResultVector Output vector for the current ThresholdSet.
@@ -103,38 +135,6 @@ struct ExecuteThresholdHelper
     helper.template filterData<Type>(dataStore, trueValue, falseValue);
   }
 };
-
-/**
- * @brief InsertThreshold
- * @param numItems
- * @param currentArrayPtr
- * @param unionOperator
- * @param newArrayPtr
- * @param inverse
- */
-template <typename T>
-void InsertThreshold(std::vector<T>& currentVector, nx::core::IArrayThreshold::UnionOperator unionOperator, std::vector<T>& newVector, bool inverse, T trueValue, T falseValue)
-{
-  usize numItems = currentVector.size();
-
-  for(usize i = 0; i < numItems; i++)
-  {
-    // invert the current comparison if necessary
-    if(inverse)
-    {
-      newVector[i] = (newVector[i] == trueValue) ? falseValue : trueValue;
-    }
-
-    if(nx::core::IArrayThreshold::UnionOperator::Or == unionOperator)
-    {
-      currentVector[i] = (currentVector[i] == trueValue || newVector[i] == trueValue) ? trueValue : falseValue;
-    }
-    else if(currentVector[i] == falseValue || newVector[i] == falseValue)
-    {
-      currentVector[i] = falseValue;
-    }
-  }
-}
 
 template <typename T>
 void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, std::vector<T>& outputResultVector, int32_t& err, bool replaceInput, T trueValue, T falseValue)
