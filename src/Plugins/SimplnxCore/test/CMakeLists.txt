@@ -113,6 +113,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadBinaryCTNorthstarTest.cpp
   ReadCSVFileTest.cpp
   ReadHDF5DatasetTest.cpp
+  ReadNIfTIFileTest.cpp
   ReadRawBinaryTest.cpp
   ReadStlFileTest.cpp
   ReadStringDataArrayTest.cpp
@@ -170,6 +171,10 @@ create_simplnx_plugin_unit_test(PLUGIN_NAME ${PLUGIN_NAME}
 # If there are additional libraries that this plugin needs to link against you
 # can use the target_link_libraries() cmake call
 # target_link_libraries(${PLUGIN_NAME}UnitTest PUBLIC [name of library])
+
+# The ReadNIfTIFileTest synthesizes .nii and .nii.gz files via zlib
+find_package(ZLIB REQUIRED)
+target_link_libraries(${PLUGIN_NAME}UnitTest PUBLIC ZLIB::ZLIB)
 
 # ------------------------------------------------------------------------------
 # If there are additional source files that need to be compiled for this plugin

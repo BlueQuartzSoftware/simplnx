@@ -1385,8 +1385,7 @@ PYBIND11_MODULE(simplnx, mod)
 
   auto cropGeometryParameterCropValues = py::class_<CropGeometryParameter::ValueType>(cropGeometryParameter, "ValueType");
   cropGeometryParameterCropValues.def(py::init<>());
-  cropGeometryParameterCropValues.def(
-      py::init<CropGeometryParameter::ValueType::TypeEnum, bool, bool, bool, bool, IntVec2Type, IntVec2Type, IntVec2Type, FloatVec2Type, FloatVec2Type, FloatVec2Type>());
+  cropGeometryParameterCropValues.def(py::init<CropGeometryParameter::ValueType::TypeEnum, bool, bool, bool, bool, SizeVec2, SizeVec2, SizeVec2, FloatVec2Type, FloatVec2Type, FloatVec2Type>());
   cropGeometryParameterCropValues.def_readwrite("2d", &CropGeometryParameter::ValueType::is2D);
   cropGeometryParameterCropValues.def_readwrite("crop_x", &CropGeometryParameter::ValueType::cropX);
   cropGeometryParameterCropValues.def_readwrite("crop_y", &CropGeometryParameter::ValueType::cropY);

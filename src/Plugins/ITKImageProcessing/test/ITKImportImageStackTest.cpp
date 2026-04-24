@@ -175,9 +175,9 @@ const std::string k_FilePrefix = "200x200_";
 const std::string k_FileExtension = ".tif";
 
 // Cropping boundaries (crop to the colored square: 50:150 in X/Y, all Z)
-const IntVec2Type k_VoxelCropX = {50, 150};
-const IntVec2Type k_VoxelCropY = {50, 150};
-const IntVec2Type k_VoxelCropZ = {0, 1};
+const SizeVec2 k_VoxelCropX = {50, 150};
+const SizeVec2 k_VoxelCropY = {50, 150};
+const SizeVec2 k_VoxelCropZ = {0, 1};
 
 const FloatVec2Type k_PhysicalCropX = {50.0f, 150.0f};
 const FloatVec2Type k_PhysicalCropY = {50.0f, 150.0f};

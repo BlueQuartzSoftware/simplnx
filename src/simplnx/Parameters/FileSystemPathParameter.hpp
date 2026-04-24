@@ -5,6 +5,9 @@
 #include "simplnx/simplnx_export.hpp"
 
 #include <filesystem>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <unordered_set>
 
 namespace nx::core
@@ -117,6 +120,30 @@ public:
    * @return
    */
   ExtensionsType getAvailableExtensions() const;
+
+  /**
+   * @brief Finds the longest accepted file extension that matches @p filename
+   * as a case-insensitive suffix.
+   *
+   * Unlike `std::filesystem::path::extension()`, which only returns the last
+   * dot-delimited token, this helper treats each entry of @p accepted as a
+   * literal suffix of the filename. That allows compound extensions like
+   * ".nii.gz" to be matched correctly: for a file named "foo.nii.gz" with
+   * accepted = { ".gz", ".nii.gz" }, this returns ".nii.gz" because the
+   * longer match wins.
+   *
+   * Accepted extensions are expected to include the leading '.'. Matching
+   * is case-insensitive on both sides. If @p accepted is empty, or no entry
+   * is a suffix of @p filename, returns std::nullopt.
+   *
+   * @param filename The filename to test. Callers should pass a bare
+   *                 filename (no directory component) to avoid false matches
+   *                 against parent-directory names.
+   * @param accepted The set of accepted extensions.
+   * @return The matched accepted extension (with its original casing) or
+   *         std::nullopt.
+   */
+  static std::optional<std::string> MatchExtension(std::string_view filename, const ExtensionsType& accepted);
 
   /**
    * @brief

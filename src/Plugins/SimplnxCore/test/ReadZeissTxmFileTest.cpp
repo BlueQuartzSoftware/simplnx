@@ -80,9 +80,9 @@ TEST_CASE("SimplnxReview::ReadZeissTxmFileFilter:Read_Sub_Volume", "[SimplnxRevi
   // ************************************************************************************************
   // This section creates all the possible cropping options and then uses GENERATE_COPY to execute the full test case for each cropping option
   UnitTest::Cropping::AxisBoundsChoices bounds;
-  bounds.voxelX = {IntVec2Type{10, 30}};
-  bounds.voxelY = {IntVec2Type{10, 30}};
-  bounds.voxelZ = {IntVec2Type{50, 100}};
+  bounds.voxelX = {SizeVec2{10, 30}};
+  bounds.voxelY = {SizeVec2{10, 30}};
+  bounds.voxelZ = {SizeVec2{50, 100}};
   bounds.physX = {FloatVec2Type{10.0f, 100.0f}};
   bounds.physY = {FloatVec2Type{80.0f, 120.0f}};
   bounds.physZ = {FloatVec2Type{150.0f, 200.0f}};
