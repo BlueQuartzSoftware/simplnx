@@ -739,8 +739,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution", "[SimplnxCore
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
-                  uint64, float32)
+TEMPLATE_TEST_CASE("SimplnxCore::MultiThresholdObjects: Invalid Execution - Out of Bounds Custom Values", "[SimplnxCore][MultiThresholdObjectsFilter]", int8, uint8, int16, uint16, int32, uint32,
+                   int64, uint64, float32)
 {
   UnitTest::LoadPlugins();
 
