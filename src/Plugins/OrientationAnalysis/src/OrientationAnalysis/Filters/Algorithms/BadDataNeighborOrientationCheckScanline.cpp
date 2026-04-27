@@ -199,15 +199,31 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   auto& quatsStore = quats.getDataStoreRef();
   const auto& phasesStore = cellPhases.getDataStoreRef();
 
-  // For uint8 masks, we can use bulk copyIntoBuffer()/copyFromBuffer() directly
-  // on the mask store. For bool masks, we fall back to per-element maskCompare
-  // access because there is no typed BoolAbstractDataStore with bulk I/O support.
+  // For both uint8 and bool masks, use bulk copyIntoBuffer()/copyFromBuffer() on
+  // the underlying data store. AbstractDataStore<bool> exposes the same bulk I/O
+  // contract as AbstractDataStore<uint8>, so a per-slice memcpy-style conversion
+  // between bool[] and uint8[] (in-memory, fast) avoids per-element OOC chunk
+  // thrashing for bool masks. The maskCompare per-element fallback is reserved
+  // for unexpected mask data types.
   auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
-  const bool maskIsUInt8 = (maskArray.getDataType() == DataType::uint8);
+  const DataType maskDataType = maskArray.getDataType();
   AbstractDataStore<uint8>* maskStorePtr = nullptr;
-  if(maskIsUInt8)
+  AbstractDataStore<bool>* maskStoreBoolPtr = nullptr;
+  if(maskDataType == DataType::uint8)
   {
     maskStorePtr = &dynamic_cast<UInt8Array&>(maskArray).getDataStoreRef();
+  }
+  else if(maskDataType == DataType::boolean)
+  {
+    maskStoreBoolPtr = &dynamic_cast<BoolArray&>(maskArray).getDataStoreRef();
+  }
+  // Per-slice scratch buffer used to bridge between the algorithm's uint8 slice
+  // buffers and the bool data store's bulk I/O API. Allocated as a raw bool[]
+  // (not std::vector<bool>, which is bit-packed and cannot expose a bool* span).
+  std::unique_ptr<bool[]> boolSliceScratch;
+  if(maskStoreBoolPtr != nullptr)
+  {
+    boolSliceScratch = std::make_unique<bool[]>(sliceSize);
   }
 
   // ---- Rolling window buffers ----
@@ -224,18 +240,26 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   std::vector<uint8> curMask(sliceSize);
   std::vector<uint8> nextMask(sliceSize);
 
-  // Helper to load a mask slice from the store. For uint8 masks, uses bulk
-  // copyIntoBuffer() which is efficient for OOC stores. For bool masks, falls
-  // back to per-element access via maskCompare because BoolArray lacks typed
-  // bulk I/O support. The bool path is slower but only used in rare cases.
+  // Helper to load a mask slice from the store. Both uint8 and bool masks use
+  // bulk copyIntoBuffer() on their respective typed stores. The bool path
+  // additionally widens bool -> uint8 in an in-memory loop after the bulk read
+  // (cache-friendly, O(sliceSize), no OOC traffic). Per-element maskCompare
+  // access is reserved as a defensive fallback for unexpected mask types.
   auto loadMaskSlice = [&](usize offset, std::vector<uint8>& dest) {
     if(maskStorePtr != nullptr)
     {
       maskStorePtr->copyIntoBuffer(offset, nonstd::span<uint8>(dest.data(), sliceSize));
     }
+    else if(maskStoreBoolPtr != nullptr)
+    {
+      maskStoreBoolPtr->copyIntoBuffer(offset, nonstd::span<bool>(boolSliceScratch.get(), sliceSize));
+      for(usize i = 0; i < sliceSize; i++)
+      {
+        dest[i] = boolSliceScratch[i] ? 1 : 0;
+      }
+    }
     else
     {
-      // Bool mask: read per-element via maskCompare
       for(usize i = 0; i < sliceSize; i++)
       {
         dest[i] = maskCompare->isTrue(offset + i) ? 1 : 0;
@@ -322,6 +346,14 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
           if(maskStorePtr != nullptr)
           {
             maskStorePtr->copyFromBuffer(sliceOffset, nonstd::span<const uint8>(curMask.data(), sliceSize));
+          }
+          else if(maskStoreBoolPtr != nullptr)
+          {
+            for(usize i = 0; i < sliceSize; i++)
+            {
+              boolSliceScratch[i] = curMask[i] != 0;
+            }
+            maskStoreBoolPtr->copyFromBuffer(sliceOffset, nonstd::span<const bool>(boolSliceScratch.get(), sliceSize));
           }
           else
           {

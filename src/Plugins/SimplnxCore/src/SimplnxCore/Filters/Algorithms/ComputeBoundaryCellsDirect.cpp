@@ -77,8 +77,9 @@ Result<> ComputeBoundaryCellsDirect::operator()()
   // Pre-compute the flat-index offsets for the 6 face neighbors. For a voxel
   // at flat index i, the -Z neighbor is at i - (dimX*dimY), the -Y neighbor
   // is at i - dimX, etc. This avoids recomputing these offsets per voxel.
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   int32 feature = 0;
   int8 onSurf = 0;
@@ -147,7 +148,7 @@ Result<> ComputeBoundaryCellsDirect::operator()()
           // neighbors are inside the volume (boundary voxels have fewer
           // valid neighbors). For each valid neighbor, compare its feature
           // ID to the current voxel's feature ID.
-          std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
           for(const auto& faceIndex : faceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])

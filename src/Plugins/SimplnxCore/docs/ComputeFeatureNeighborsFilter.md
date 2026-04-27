@@ -15,6 +15,8 @@ This **Filter** determines, for each **Feature**, the number of other **Features
 
 While performing the above steps, the number of neighboring **Cells** with a different **Feature** owner than a given **Cell** is stored, which identifies whether a **Cell** lies on the surface/edge/corner of a **Feature** (i.e. the **Feature** boundary). Additionally, the surface area shared between each set of contiguous **Features** is calculated by tracking the number of times two neighboring **Cells** correspond to a contiguous **Feature** pair. The **Filter** also notes which **Features** touch the outer surface of the sample (this is obtained for "free" while performing the above algorithm). The **Filter** gives the user the option whether or not they want to store this additional information.
 
+This filter handles Image Geometries of all dimensions (0D/1D/2D/3D). Thus, it is up to the user to ensure spacing is set inline with intended behavior, specifically for Shared Surface Area List calculation. For more details see the Image Geometry section of the Geometry documentation (currently in the python docs).
+
 ## Algorithm
 
 This filter has two algorithm implementations that are automatically selected at runtime based on how the input data is stored. The user does not need to choose between them.

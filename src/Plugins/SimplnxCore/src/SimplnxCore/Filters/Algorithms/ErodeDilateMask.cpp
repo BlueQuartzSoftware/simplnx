@@ -40,7 +40,6 @@
 #include "ErodeDilateMask.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
@@ -82,8 +81,9 @@ Result<> ErodeDilateMask::operator()()
   };
 
   // Precompute face-neighbor index offsets and iteration order
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   // ---- Z-slice buffering setup ----
   // Maintain a rolling window of 3 adjacent Z-slices in memory to avoid
@@ -171,21 +171,21 @@ Result<> ErodeDilateMask::operator()()
           if(maskSlices[1][inSlice] == 0)
           {
             // Determine valid face neighbors and mask off user-disabled directions
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             if(!m_InputValues->XDirOn)
             {
-              isValidFaceNeighbor[k_NegativeXNeighbor] = false;
-              isValidFaceNeighbor[k_PositiveXNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] = false;
             }
             if(!m_InputValues->YDirOn)
             {
-              isValidFaceNeighbor[k_NegativeYNeighbor] = false;
-              isValidFaceNeighbor[k_PositiveYNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] = false;
             }
             if(!m_InputValues->ZDirOn)
             {
-              isValidFaceNeighbor[k_NegativeZNeighbor] = false;
-              isValidFaceNeighbor[k_PositiveZNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] = false;
             }
 
             // Map each face neighbor to its in-slice offset within the

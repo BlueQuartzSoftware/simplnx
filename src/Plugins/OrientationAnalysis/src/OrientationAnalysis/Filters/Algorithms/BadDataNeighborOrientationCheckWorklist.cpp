@@ -95,10 +95,11 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
   // Precompute the 6 face-neighbor index offsets (-X, +X, -Y, +Y, -Z, +Z) relative
   // to a voxel's linear index in the flat array. These are constant for any given
   // volume geometry.
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   // Per-voxel count of good face-neighbors with matching orientation. This O(N) array
   // is the trade-off: the Worklist variant uses O(N) memory to achieve O(flipped)
@@ -122,7 +123,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       const int64 yIdx = (static_cast<int64>(voxelIndex) / dims[0]) % dims[1];
       const int64 zIdx = static_cast<int64>(voxelIndex) / xyStride;
 
-      std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
       for(const auto& faceIndex : faceNeighborInternalIdx)
       {
         if(!isValidFaceNeighbor[faceIndex])
@@ -196,7 +197,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       const int64 yIdx = (static_cast<int64>(voxelIndex) / dims[0]) % dims[1];
       const int64 zIdx = static_cast<int64>(voxelIndex) / xyStride;
 
-      std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
       for(const auto& faceIndex : faceNeighborInternalIdx)
       {
         if(!isValidFaceNeighbor[faceIndex])

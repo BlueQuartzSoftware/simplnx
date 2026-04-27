@@ -37,7 +37,6 @@
 #include "ErodeDilateBadData.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
@@ -74,8 +73,9 @@ Result<> ErodeDilateBadData::operator()()
 
   // Precompute face-neighbor offsets: given a flat voxel index, adding one of
   // these offsets yields the flat index of the corresponding face neighbor.
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   const usize sliceSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
@@ -196,21 +196,21 @@ Result<> ErodeDilateBadData::operator()()
 
             // Determine which face neighbors are within the volume bounds,
             // then mask off directions the user has disabled.
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             if(!m_InputValues->XDirOn)
             {
-              isValidFaceNeighbor[k_NegativeXNeighbor] = false;
-              isValidFaceNeighbor[k_PositiveXNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] = false;
             }
             if(!m_InputValues->YDirOn)
             {
-              isValidFaceNeighbor[k_NegativeYNeighbor] = false;
-              isValidFaceNeighbor[k_PositiveYNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] = false;
             }
             if(!m_InputValues->ZDirOn)
             {
-              isValidFaceNeighbor[k_NegativeZNeighbor] = false;
-              isValidFaceNeighbor[k_PositiveZNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] = false;
+              isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] = false;
             }
 
             // Global flat index of this voxel (used as source index in marks)

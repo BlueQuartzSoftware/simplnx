@@ -111,7 +111,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
   // Per-face areas indexed by FaceNeighborType:
   // [0] = -Z face (XY plane), [1] = -Y face (XZ plane), [2] = -X face (YZ plane),
   // [3] = +X face (YZ plane), [4] = +Y face (XZ plane), [5] = +Z face (XY plane)
-  const std::array<float64, 6> precomputedFaceAreas = computeFaceSurfaceAreas(spacing64);
+  const std::array<float64, VoxelNeighbors<Image3D>::k_FaceNeighborCount> precomputedFaceAreas = computeFaceSurfaceAreas<Image3D>(spacing64);
 
   // Map-based accumulation: neighborSurfaceAreas[featureId][neighborFeatureId] = total shared area
   // This replaces the old vector-based counting + deduplication approach and fixes the
@@ -209,7 +209,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[k_NegativeZNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_NegativeZNeighbor];
             }
           }
 
@@ -220,7 +220,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[k_NegativeYNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_NegativeYNeighbor];
             }
           }
 
@@ -231,7 +231,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[k_NegativeXNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_NegativeXNeighbor];
             }
           }
 
@@ -242,7 +242,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[k_PositiveXNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_PositiveXNeighbor];
             }
           }
 
@@ -253,7 +253,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[k_PositiveYNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_PositiveYNeighbor];
             }
           }
 
@@ -264,7 +264,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[k_PositiveZNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_PositiveZNeighbor];
             }
           }
         }

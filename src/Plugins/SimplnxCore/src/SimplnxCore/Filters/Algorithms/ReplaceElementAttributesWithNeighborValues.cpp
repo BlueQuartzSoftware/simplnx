@@ -213,8 +213,9 @@ struct ExecuteTemplate
     };
 
     // Precompute face-neighbor index offsets and iteration order
-    std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-    std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+    constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+    const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+    constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
     usize count = 0;
     bool keepGoing = true;
@@ -307,7 +308,7 @@ struct ExecuteTemplate
               count++;
               float32 best = inputSlices[1][inSlice];
 
-              std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+              const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
               // Map each face neighbor to its in-slice offset
               const std::array<usize, 6> neighborInSlice = {

@@ -2,7 +2,6 @@
 
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
@@ -29,7 +28,7 @@ NeighborOrientationCorrelation::~NeighborOrientationCorrelation() noexcept = def
 // -----------------------------------------------------------------------------
 Result<> NeighborOrientationCorrelation::operator()()
 {
-  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ConfidenceIndexArrayPath);
   auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
@@ -59,7 +58,8 @@ Result<> NeighborOrientationCorrelation::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
 
   std::array<int32, 6> neighborSimCount = {};
   const int32 startLevel = 6;
@@ -156,7 +156,7 @@ Result<> NeighborOrientationCorrelation::operator()()
 
           if(ciSlice[inSlice] < m_InputValues->MinConfidence)
           {
-            std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
             // Pre-read all valid neighbor quats and phases into local arrays.
             // Neighbor buffer slots: 0=-Z, 1=-Y(same z), 2=-X(same z), 3=+X(same z), 4=+Y(same z), 5=+Z
@@ -168,7 +168,7 @@ Result<> NeighborOrientationCorrelation::operator()()
             std::array<ebsdlib::QuatD, 6> nQuats;
             std::array<int32, 6> nPhases = {};
 
-            for(usize f = 0; f < k_FaceNeighborCount; f++)
+            for(usize f = 0; f < VoxelNeighbors<Image3D>::k_FaceNeighborCount; f++)
             {
               if(isValidFaceNeighbor[f])
               {
@@ -183,14 +183,14 @@ Result<> NeighborOrientationCorrelation::operator()()
             // Compute neighbor-neighbor similarity counts
             neighborSimCount.fill(0);
 
-            for(usize faceIndexJ = 0; faceIndexJ < k_FaceNeighborCount; faceIndexJ++)
+            for(usize faceIndexJ = 0; faceIndexJ < VoxelNeighbors<Image3D>::k_FaceNeighborCount; faceIndexJ++)
             {
               if(!isValidFaceNeighbor[faceIndexJ])
               {
                 continue;
               }
 
-              for(usize faceIndexK = faceIndexJ + 1; faceIndexK < k_FaceNeighborCount; faceIndexK++)
+              for(usize faceIndexK = faceIndexJ + 1; faceIndexK < VoxelNeighbors<Image3D>::k_FaceNeighborCount; faceIndexK++)
               {
                 if(!isValidFaceNeighbor[faceIndexK])
                 {
@@ -211,7 +211,7 @@ Result<> NeighborOrientationCorrelation::operator()()
             }
 
             // Find the best neighbor (last valid face with positive similarity count)
-            for(usize faceIndex = 0; faceIndex < k_FaceNeighborCount; faceIndex++)
+            for(usize faceIndex = 0; faceIndex < VoxelNeighbors<Image3D>::k_FaceNeighborCount; faceIndex++)
             {
               if(!isValidFaceNeighbor[faceIndex])
               {

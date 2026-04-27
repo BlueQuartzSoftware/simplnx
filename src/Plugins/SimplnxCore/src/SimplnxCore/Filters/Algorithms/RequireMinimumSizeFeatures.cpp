@@ -267,8 +267,9 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
       static_cast<int64>(dimensions[2]),
   };
 
-  const std::array<int64, 6> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  const std::array<FaceNeighborType, 6> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   // voteCounter is indexed by FEATURE ID, not by cell — its size tracks feature count (~thousands)
   // and is independent of volume size. Safe for OOC.
@@ -327,7 +328,7 @@ void RequireMinimumSizeFeatures::assignBadVoxels(SizeVec3 dimensions, const Int3
             counter++;
             uint8 maxVoteCount = 0;
             int64 chosenNeighborIdx = -1;
-            const std::array<bool, 6> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
             for(const auto& faceIndex : faceNeighborInternalIdx)
             {
               if(!isValidFaceNeighbor[faceIndex])
