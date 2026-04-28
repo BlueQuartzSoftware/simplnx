@@ -62,15 +62,15 @@ const ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 template <class T>
 void FlipAboutYAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
 {
-  AbstractDataStore<T>& tempDataStore = dataArray.getDataStoreRef();
+  AbstractDataStore<T>& dataStoreRef = dataArray.getDataStoreRef();
 
-  usize numComp = tempDataStore.getNumberOfComponents();
+  usize numComp = dataStoreRef.getNumberOfComponents();
   std::vector<T> currentRowBuffer(dims[0] * dataArray.getNumberOfComponents());
 
   for(usize row = 0; row < dims[1]; row++)
   {
     // Copy the current row into a temp buffer
-    typename AbstractDataStore<T>::Iterator startIter = tempDataStore.begin() + (dims[0] * numComp * row);
+    typename AbstractDataStore<T>::Iterator startIter = dataStoreRef.begin() + (dims[0] * numComp * row);
     typename AbstractDataStore<T>::Iterator endIter = startIter + dims[0] * numComp;
     std::copy(startIter, endIter, currentRowBuffer.begin());
 
@@ -82,7 +82,7 @@ void FlipAboutYAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
     {
       for(usize cIdx = 0; cIdx < numComp; cIdx++)
       {
-        tempDataStore.setValue(dataStoreIndex, currentRowBuffer[bufferIndex + cIdx]);
+        dataStoreRef.setValue(dataStoreIndex, currentRowBuffer[bufferIndex + cIdx]);
         dataStoreIndex++;
       }
       bufferIndex = bufferIndex - numComp;
@@ -93,8 +93,8 @@ void FlipAboutYAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
 template <class T>
 void FlipAboutXAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
 {
-  AbstractDataStore<T>& tempDataStore = dataArray.getDataStoreRef();
-  usize numComp = tempDataStore.getNumberOfComponents();
+  AbstractDataStore<T>& dataStoreRef = dataArray.getDataStoreRef();
+  usize numComp = dataStoreRef.getNumberOfComponents();
   // Only iterate half the rows; the inner swap pairs each top row with its bottom mirror.
   // Odd height leaves the middle row untouched.
   const usize rowSwapCount = dims[1] / 2;
@@ -110,9 +110,9 @@ void FlipAboutXAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
     // Copy from bottom to top and then temp to bottom
     for(usize eleIndex = topStartIter; eleIndex < topEndIter; eleIndex++)
     {
-      T value = tempDataStore.getValue(eleIndex);
-      tempDataStore[eleIndex] = tempDataStore[bottomStartIter];
-      tempDataStore[bottomStartIter] = value;
+      T value = dataStoreRef.getValue(eleIndex);
+      dataStoreRef[eleIndex] = dataStoreRef[bottomStartIter];
+      dataStoreRef[bottomStartIter] = value;
       bottomStartIter++;
     }
     bottomRow--;
@@ -163,16 +163,27 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
     SizeVec3 destDims = initialImageGeom.getDimensions();
     FloatVec3 destOrigin = initialImageGeom.getOrigin();
 
+    // ImageGeom::getIndex returns nullopt if the physical coordinates fall outside the geometry.
+    // Treat that as a hard error rather than silently falling back to the full slice range —
+    // the prior behavior produced the wrong volume without warning.
     std::optional<usize> result = initialImageGeom.getIndex(destOrigin[0], destOrigin[1], croppingOptions.zBoundPhysical[0]);
-    if(result.has_value())
+    if(!result.has_value())
     {
-      startSlice = result.value() / (destDims[0] * destDims[1]);
+      return MakeErrorResult(-64512, fmt::format("Physical Z crop minimum {} is outside the destination image-geometry Z extent", croppingOptions.zBoundPhysical[0]));
     }
+    startSlice = result.value() / (destDims[0] * destDims[1]);
+
     result = initialImageGeom.getIndex(destOrigin[0], destOrigin[1], croppingOptions.zBoundPhysical[1]);
-    if(result.has_value())
+    if(!result.has_value())
     {
-      endSlice = result.value() / (destDims[0] * destDims[1]);
+      return MakeErrorResult(-64513, fmt::format("Physical Z crop maximum {} is outside the destination image-geometry Z extent", croppingOptions.zBoundPhysical[1]));
     }
+    endSlice = result.value() / (destDims[0] * destDims[1]);
+  }
+
+  if(startSlice > endSlice || endSlice >= files.size())
+  {
+    return MakeErrorResult(-64514, fmt::format("Computed slice range [{}, {}] is invalid for {} input files", startSlice, endSlice, files.size()));
   }
 
   usize slice = 0;

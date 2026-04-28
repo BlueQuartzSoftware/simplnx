@@ -189,8 +189,7 @@ Result<> WriteImage::operator()()
 
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Writing slice {}/{}", slice + 1, sliceCount));
 
-    std::fill(sliceBuffer.begin(), sliceBuffer.end(), static_cast<uint8>(0));
-
+    // No need to zero sliceBuffer — ExtractSliceFunctor writes every byte of the slice plane.
     auto extractResult = ExecuteDataFunction(ExtractSliceFunctor{}, dataType, imageArray, sliceBuffer, slice, m_InputValues.planeIndex, dimX, dimY, dimZ, nComp);
     if(extractResult.invalid())
     {

@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cstring>
 
 using namespace nx::core;
@@ -139,7 +140,8 @@ Result<> StbImageIO::writePixelData(const std::filesystem::path& filePath, std::
 
   std::string pathStr = filePath.string();
   std::string ext = filePath.extension().string();
-  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  // Pass through unsigned char — std::tolower(int) is UB on negative input.
+  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
   int w = static_cast<int>(metadata.width);
   int h = static_cast<int>(metadata.height);

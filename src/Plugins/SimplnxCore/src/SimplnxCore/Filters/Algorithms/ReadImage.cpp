@@ -1,9 +1,9 @@
 #include "ReadImage.hpp"
 
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/IImageIO.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
@@ -11,8 +11,10 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <cstring>
 #include <limits>
+#include <type_traits>
 
 using namespace nx::core;
 
@@ -81,8 +83,12 @@ struct ConvertPixelDataFunctor
     auto& dataStore = dataArray.template getIDataStoreRefAs<AbstractDataStore<DestT>>();
     const uint8* bufferData = buffer.data();
 
-    constexpr double srcMax = static_cast<double>(std::numeric_limits<SrcT>::max());
-    constexpr double destMax = static_cast<double>(std::numeric_limits<DestT>::max());
+    // For integer source/dest types the saturation value is the type's max. For floating-point
+    // we follow stb's HDR convention that pixel values lie in [0, 1] and saturate outside that
+    // range. Without this the integer-max divisor produced near-zero output for any HDR float
+    // input (e.g. 0.5 / float32::max() ≈ 0) and rendered every converted pixel black.
+    constexpr double srcMax = std::is_floating_point_v<SrcT> ? 1.0 : static_cast<double>(std::numeric_limits<SrcT>::max());
+    constexpr double destMax = std::is_floating_point_v<DestT> ? 1.0 : static_cast<double>(std::numeric_limits<DestT>::max());
 
     const usize nComps = window.numComponents;
     const usize srcWidth = window.srcWidth;
@@ -101,7 +107,10 @@ struct ConvertPixelDataFunctor
         for(usize c = 0; c < nComps; c++)
         {
           const SrcT srcValue = ReadElementAs<SrcT>(bufferData, (srcIndex + c) * sizeof(SrcT));
-          const double normalized = static_cast<double>(srcValue) / srcMax;
+          // Clamp into the source's saturation range before normalizing so HDR floats > 1.0 or
+          // negative values do not wrap around through the destination's representable range.
+          const double clampedSrc = std::clamp(static_cast<double>(srcValue), 0.0, srcMax);
+          const double normalized = clampedSrc / srcMax;
           dataStore[dstIndex + c] = static_cast<DestT>(normalized * destMax);
         }
       }
@@ -226,13 +235,23 @@ Result<> ReadImage::operator()()
       {
         const float64 xMin = static_cast<float64>(croppingOptions.xBoundPhysical[0]);
         const int64 voxelX = static_cast<int64>((xMin - static_cast<float64>(srcOrigin[0])) / static_cast<float64>(srcSpacing[0]));
-        window.xStart = voxelX < 0 ? 0 : static_cast<usize>(voxelX);
+        if(voxelX < 0 || static_cast<usize>(voxelX) >= window.srcWidth)
+        {
+          return MakeErrorResult(-2002, fmt::format("Physical crop X minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", xMin, srcOrigin[0],
+                                                    srcOrigin[0] + srcSpacing[0] * static_cast<float32>(window.srcWidth), srcOrigin[0], srcSpacing[0]));
+        }
+        window.xStart = static_cast<usize>(voxelX);
       }
       if(croppingOptions.cropY)
       {
         const float64 yMin = static_cast<float64>(croppingOptions.yBoundPhysical[0]);
         const int64 voxelY = static_cast<int64>((yMin - static_cast<float64>(srcOrigin[1])) / static_cast<float64>(srcSpacing[1]));
-        window.yStart = voxelY < 0 ? 0 : static_cast<usize>(voxelY);
+        if(voxelY < 0 || static_cast<usize>(voxelY) >= window.srcHeight)
+        {
+          return MakeErrorResult(-2003, fmt::format("Physical crop Y minimum {} is outside the source image extent [{}, {}) given file origin {} and spacing {}", yMin, srcOrigin[1],
+                                                    srcOrigin[1] + srcSpacing[1] * static_cast<float32>(window.srcHeight), srcOrigin[1], srcSpacing[1]));
+        }
+        window.yStart = static_cast<usize>(voxelY);
       }
     }
   }

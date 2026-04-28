@@ -14,12 +14,12 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32_t k_ErrorOpenFailed = -20100;
-constexpr int32_t k_ErrorReadMetadataFailed = -20101;
-constexpr int32_t k_ErrorReadPixelFailed = -20102;
-constexpr int32_t k_ErrorWriteFailed = -20103;
-constexpr int32_t k_ErrorUnsupportedFormat = -20104;
-constexpr int32_t k_ErrorBufferSizeMismatch = -20105;
+constexpr int32 k_ErrorOpenFailed = -20100;
+constexpr int32 k_ErrorReadMetadataFailed = -20101;
+constexpr int32 k_ErrorReadPixelFailed = -20102;
+constexpr int32 k_ErrorWriteFailed = -20103;
+constexpr int32 k_ErrorUnsupportedFormat = -20104;
+constexpr int32 k_ErrorBufferSizeMismatch = -20105;
 
 /**
  * @brief Owns a TIFFOpenOptions* and the std::string buffer that the per-handle
@@ -333,8 +333,14 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
     return {};
   }
 
-  // Scanline-based reading
+  // Scanline-based reading. TIFFScanlineSize returns tsize_t (signed); libtiff returns 0 or -1
+  // on failure. Without an explicit guard, the cast to usize below would treat -1 as ~16 EiB
+  // and std::vector::vector would throw std::bad_alloc.
   tsize_t scanlineSize = TIFFScanlineSize(tiff);
+  if(scanlineSize <= 0)
+  {
+    return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("TIFFScanlineSize returned {} for '{}': {}", scanlineSize, pathStr, opts.errorMessage()));
+  }
   usize rowBytes = static_cast<usize>(width) * static_cast<usize>(samplesPerPixel) * bpe;
 
   // Use the larger of TIFFScanlineSize and our computed row size

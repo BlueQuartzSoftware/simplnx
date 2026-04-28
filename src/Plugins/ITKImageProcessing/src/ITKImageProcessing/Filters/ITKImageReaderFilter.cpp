@@ -61,7 +61,7 @@ std::string ITKImageReaderFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImageReaderFilter::defaultTags() const
 {
-  return {className(), "io", "input", "read", "import", "image", "jpg", "tiff", "bmp", "png"};
+  return {className(), "io", "input", "read", "import", "image"};
 }
 
 //------------------------------------------------------------------------------

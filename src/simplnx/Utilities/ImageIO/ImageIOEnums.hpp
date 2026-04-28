@@ -9,8 +9,9 @@ namespace nx::core
  * @brief Controls when origin/spacing overrides are applied relative to cropping operations.
  *
  * The integer values match the index order of the "Origin & Spacing Processing" ChoicesParameter
- * used by the image-reading filters, so reinterpret_cast<> or static_cast<> from the raw
- * ChoicesParameter::ValueType is valid.
+ * used by the image-reading filters, so a static_cast<> from the raw ChoicesParameter::ValueType
+ * is valid. (reinterpret_cast<> is *not* valid for an enum class — only static_cast<> from the
+ * underlying integral type is well-defined.)
  */
 enum class OriginSpacingProcessing : uint64
 {

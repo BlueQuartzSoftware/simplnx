@@ -6,13 +6,16 @@
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cctype>
 
 using namespace nx::core;
 
 Result<std::unique_ptr<IImageIO>> nx::core::CreateImageIO(const std::filesystem::path& filePath)
 {
   std::string ext = filePath.extension().string();
-  std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+  // Pass through unsigned char — std::tolower(int) is UB on negative input, which a signed
+  // char with the high bit set produces.
+  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 
   if(ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".bmp")
   {

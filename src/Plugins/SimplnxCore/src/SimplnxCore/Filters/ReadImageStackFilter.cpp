@@ -42,6 +42,23 @@ const nx::core::ChoicesParameter::Choices k_ResamplingChoices = {k_NoResamplingM
 const nx::core::ChoicesParameter::ValueType k_NoResampleModeIndex = 0;
 const nx::core::ChoicesParameter::ValueType k_ScalingModeIndex = 1;
 const nx::core::ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
+
+// Walks the action list returned by a sub-filter's preflight and returns the first action of
+// the requested concrete type, or nullptr if none match. Replaces brittle index-based lookups
+// like actions.at(0) that silently break if the sub-filter starts emitting actions in a
+// different order or interleaves new ones.
+template <typename ActionT>
+const ActionT* FindFirstActionOfType(const std::vector<nx::core::AnyDataAction>& actions)
+{
+  for(const auto& action : actions)
+  {
+    if(const auto* typed = dynamic_cast<const ActionT*>(action.get()); typed != nullptr)
+    {
+      return typed;
+    }
+  }
+  return nullptr;
+}
 } // namespace
 
 namespace nx::core
@@ -216,11 +233,10 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     return imageReaderResult;
   }
 
-  const IDataAction* action0Ptr = imageReaderResult.outputActions.value().actions.at(0).get();
-  const auto* createImageGeomActionPtr = dynamic_cast<const CreateImageGeometryAction*>(action0Ptr);
+  const auto* createImageGeomActionPtr = FindFirstActionOfType<CreateImageGeometryAction>(imageReaderResult.outputActions.value().actions);
   if(createImageGeomActionPtr == nullptr)
   {
-    return MakePreflightErrorResult(-23530, "Internal error: expected ReadImageFilter preflight to produce a CreateImageGeometryAction as its first output action.");
+    return MakePreflightErrorResult(-23530, "Internal error: ReadImageFilter preflight did not produce a CreateImageGeometryAction.");
   }
   {
     outputDims = createImageGeomActionPtr->dims();
@@ -297,11 +313,10 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(createImageGeomActionPtr->path(), outputDims, createImageGeomActionPtr->origin(),
                                                                                          createImageGeomActionPtr->spacing(), createImageGeomActionPtr->cellAttributeMatrixName(),
                                                                                          createImageGeomActionPtr->units()));
-    const IDataAction* action1Ptr = imageReaderResult.outputActions.value().actions.at(1).get();
-    const auto* createArrayActionPtr = dynamic_cast<const CreateArrayAction*>(action1Ptr);
+    const auto* createArrayActionPtr = FindFirstActionOfType<CreateArrayAction>(imageReaderResult.outputActions.value().actions);
     if(createArrayActionPtr == nullptr)
     {
-      return MakePreflightErrorResult(-23531, "Internal error: expected ReadImageFilter preflight to produce a CreateArrayAction as its second output action.");
+      return MakePreflightErrorResult(-23531, "Internal error: ReadImageFilter preflight did not produce a CreateArrayAction.");
     }
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(createArrayActionPtr->type(), std::vector<usize>(outputDims.rbegin(), outputDims.rend()),
                                                                                  createArrayActionPtr->componentDims(), createArrayActionPtr->path(), createArrayActionPtr->dataFormat(),
@@ -340,11 +355,10 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
       return resampleImageResult;
     }
 
-    action0Ptr = resampleImageResult.outputActions.value().actions.at(0).get();
-    createImageGeomActionPtr = dynamic_cast<const CreateImageGeometryAction*>(action0Ptr);
+    createImageGeomActionPtr = FindFirstActionOfType<CreateImageGeometryAction>(resampleImageResult.outputActions.value().actions);
     if(createImageGeomActionPtr == nullptr)
     {
-      return MakePreflightErrorResult(-23532, "Internal error: expected ResampleImageGeomFilter preflight to produce a CreateImageGeometryAction as its first output action.");
+      return MakePreflightErrorResult(-23532, "Internal error: ResampleImageGeomFilter preflight did not produce a CreateImageGeometryAction.");
     }
 
     std::vector<usize> dims = createImageGeomActionPtr->dims();
@@ -357,11 +371,10 @@ IFilter::PreflightResult ReadImageStackFilter::preflightImpl(const DataStructure
                                                                                          createImageGeomActionPtr->spacing(), createImageGeomActionPtr->cellAttributeMatrixName(),
                                                                                          createImageGeomActionPtr->units()));
 
-    const IDataAction* action1Ptr = resampleImageResult.outputActions.value().actions.at(1).get();
-    const auto* createArrayActionPtr = dynamic_cast<const CreateArrayAction*>(action1Ptr);
+    const auto* createArrayActionPtr = FindFirstActionOfType<CreateArrayAction>(resampleImageResult.outputActions.value().actions);
     if(createArrayActionPtr == nullptr)
     {
-      return MakePreflightErrorResult(-23533, "Internal error: expected ResampleImageGeomFilter preflight to produce a CreateArrayAction as its second output action.");
+      return MakePreflightErrorResult(-23533, "Internal error: ResampleImageGeomFilter preflight did not produce a CreateArrayAction.");
     }
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(createArrayActionPtr->type(), std::vector<usize>(outputDims.rbegin(), outputDims.rend()),
                                                                                  createArrayActionPtr->componentDims(), createArrayActionPtr->path(), createArrayActionPtr->dataFormat(),
