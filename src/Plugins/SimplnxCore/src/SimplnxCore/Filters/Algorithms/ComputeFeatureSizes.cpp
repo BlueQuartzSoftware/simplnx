@@ -9,6 +9,8 @@
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <tbb/combinable.h>
+
 #include <cmath>
 
 using namespace nx::core;
@@ -27,74 +29,46 @@ constexpr uint64 k_MaxVoxelCount = std::numeric_limits<int32>::max();
 constexpr float64 k_ESDVolumeDenominator = (4.0 * nx::core::numbers::pi_v<float64>) / 3.0;
 constexpr float64 k_ECDAreaDenominator = nx::core::numbers::pi_v<float64>;
 
-class ParallelImageManager
+using FeatureVoxelCountsT = tbb::combinable<std::vector<uint64>>;
+using FeatureVolumesT = tbb::combinable<std::vector<float64>>;
+
+class ImageSummationImpl
 {
 public:
-  explicit ParallelImageManager(std::vector<uint64>& featureVoxelCounts)
-  : m_FeatureVoxelCounts(featureVoxelCounts)
+  ImageSummationImpl(FeatureVoxelCountsT& voxelCounts, const SizeVec3& dims, const Int32AbstractDataStore& featureIds)
+  : m_VoxelCounts(voxelCounts)
+  , m_Dims(dims)
+  , m_FeatureIds(featureIds)
   {
   }
-  ~ParallelImageManager() noexcept = default;
 
-  void execute(const SizeVec3& dims, const Int32AbstractDataStore& featureIds)
+  void convert(usize start, usize end) const
   {
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0, dims[2]);
-    dataAlg.execute(ImageSummationImpl(this, m_FeatureVoxelCounts.size(), dims, featureIds));
+    std::vector<uint64>& threadLocalVoxelCounts = m_VoxelCounts.local();
+    for(usize zIndex = start; zIndex < end; zIndex++)
+    {
+      const int64 zStride = m_Dims[0] * m_Dims[1] * zIndex;
+      for(usize yIndex = 0; yIndex < m_Dims[1]; yIndex++)
+      {
+        const int64 yStride = m_Dims[0] * yIndex;
+        for(usize xIndex = 0; xIndex < m_Dims[0]; xIndex++)
+        {
+          int64 voxelIdx = zStride + yStride + xIndex;
+          threadLocalVoxelCounts[m_FeatureIds.getValue(voxelIdx)]++;
+        }
+      }
+    }
   }
 
-  void updateStore(const std::vector<uint64>& featureVoxelCounts) const
+  void operator()(const Range& range) const
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    std::transform(featureVoxelCounts.cbegin(), featureVoxelCounts.cend(), m_FeatureVoxelCounts.cbegin(), m_FeatureVoxelCounts.begin(), std::plus<>{});
+    convert(range.min(), range.max());
   }
 
 private:
-  mutable std::mutex m_Mutex;
-  std::vector<uint64>& m_FeatureVoxelCounts;
-
-  class ImageSummationImpl
-  {
-  public:
-    ImageSummationImpl(ParallelImageManager* manager, const usize numFeatures, const SizeVec3& dims, const Int32AbstractDataStore& featureIds)
-    : m_Manager(manager)
-    , m_NumFeatures(numFeatures)
-    , m_Dims(dims)
-    , m_FeatureIds(featureIds)
-    {
-    }
-    ~ImageSummationImpl() noexcept = default;
-
-    void convert(usize start, usize end) const
-    {
-      std::vector<uint64> featureVoxelCounts(m_NumFeatures);
-      for(usize zIndex = start; zIndex < end; zIndex++)
-      {
-        const int64 zStride = m_Dims[0] * m_Dims[1] * zIndex;
-        for(usize yIndex = 0; yIndex < m_Dims[1]; yIndex++)
-        {
-          const int64 yStride = m_Dims[0] * yIndex;
-          for(usize xIndex = 0; xIndex < m_Dims[0]; xIndex++)
-          {
-            int64 voxelIdx = zStride + yStride + xIndex;
-            featureVoxelCounts[m_FeatureIds.getValue(voxelIdx)]++;
-          }
-        }
-      }
-      m_Manager->updateStore(featureVoxelCounts);
-    }
-
-    void operator()(const Range& range) const
-    {
-      convert(range.min(), range.max());
-    }
-
-  private:
-    ParallelImageManager* m_Manager;
-    const usize m_NumFeatures;
-    const SizeVec3& m_Dims;
-    const Int32AbstractDataStore& m_FeatureIds;
-  };
+  FeatureVoxelCountsT& m_VoxelCounts;
+  const SizeVec3& m_Dims;
+  const Int32AbstractDataStore& m_FeatureIds;
 };
 
 Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
@@ -103,13 +77,20 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
 
   const usize numFeatures = volumes.getNumberOfTuples();
+  SizeVec3 dims = imageGeom.getDimensions();
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
 
   msgHelper.sendMessage("Finding Voxel Counts...");
   // Count and store the number of voxels in each feature
-  ParallelImageManager manager(featureVoxelCounts);
-  manager.execute(imageGeom.getDimensions(), featureIds);
+  FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0, dims[2]);
+  dataAlg.execute(ImageSummationImpl(threadLocalVoxelCounts, dims, featureIds));
+
+  // Reduce thread local feature voxel counts
+  threadLocalVoxelCounts.combine_each(
+      [&](const std::vector<uint64>& localCounts) { std::transform(localCounts.cbegin(), localCounts.cend(), featureVoxelCounts.cbegin(), featureVoxelCounts.begin(), std::plus{}); });
 
   if(shouldCancel)
   {
@@ -238,97 +219,66 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   return {};
 }
 
-class ParallelRectGridManager
+class RectGridSummationImpl
 {
 public:
-  explicit ParallelRectGridManager(std::vector<uint64>& featureVoxelCounts, std::vector<float64>& featureVolumes)
-  : m_FeatureVoxelCounts(featureVoxelCounts)
-  , m_FeatureVolumes(featureVolumes)
+  RectGridSummationImpl(FeatureVoxelCountsT& voxelCounts, FeatureVolumesT& volumes, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const Float32AbstractDataStore& elemSizes)
+  : m_VoxelCounts(voxelCounts)
+  , m_Volumes(volumes)
+  , m_Dims(dims)
+  , m_FeatureIds(featureIds)
+  , m_ElemSizes(elemSizes)
   {
   }
-  ~ParallelRectGridManager() noexcept = default;
 
-  void execute(const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const Float32AbstractDataStore& elemSizes)
+  void convert(const usize start, const usize end) const
   {
-    ParallelDataAlgorithm dataAlg;
-    dataAlg.setRange(0, dims[2]);
-    dataAlg.execute(RectGridSummationImpl(this, m_FeatureVoxelCounts.size(), dims, featureIds, elemSizes));
+    std::vector<uint64>& threadLocalVoxelCounts = m_VoxelCounts.local();
+    std::vector<float64>& threadLocalVolumes = m_Volumes.local();
+
+    // Needed for Kahan summation of volumes
+    std::vector<float64> featureCompensators(threadLocalVolumes.size(), 0.0);
+    for(usize zIndex = start; zIndex < end; zIndex++)
+    {
+      const int64 zStride = m_Dims[0] * m_Dims[1] * zIndex;
+      for(usize yIndex = 0; yIndex < m_Dims[1]; yIndex++)
+      {
+        const int64 yStride = m_Dims[0] * yIndex;
+        for(usize xIndex = 0; xIndex < m_Dims[0]; xIndex++)
+        {
+          int64 voxelIdx = zStride + yStride + xIndex;
+          const int32 voxelFeatureId = m_FeatureIds.getValue(voxelIdx);
+          threadLocalVoxelCounts[voxelFeatureId]++;
+
+          // Use Kahan summation to determine overall volume
+
+          // Attempt to recover low order into the value. The first instance is 0
+          const float64 value = static_cast<float64>(m_ElemSizes.getValue(voxelIdx)) - featureCompensators[voxelFeatureId];
+
+          // low order may be lost
+          const float64 volSum = threadLocalVolumes[voxelFeatureId] + value;
+
+          // recover and cache low order
+          featureCompensators[voxelFeatureId] = (volSum - threadLocalVolumes[voxelFeatureId]) - value;
+
+          // store volumes
+          threadLocalVolumes[voxelFeatureId] = volSum;
+        }
+      }
+    }
   }
 
-  void updateStore(const std::vector<uint64>& featureVoxelCounts, const std::vector<float64>& featureVolumes) const
+  void operator()(const Range& range) const
   {
-    std::lock_guard<std::mutex> lock(m_Mutex);
-    std::transform(featureVoxelCounts.cbegin(), featureVoxelCounts.cend(), m_FeatureVoxelCounts.cbegin(), m_FeatureVoxelCounts.begin(), std::plus<>{});
-    std::transform(featureVolumes.cbegin(), featureVolumes.cend(), m_FeatureVolumes.cbegin(), m_FeatureVolumes.begin(), std::plus<>{});
+    convert(range.min(), range.max());
   }
 
 private:
-  mutable std::mutex m_Mutex;
-  std::vector<uint64>& m_FeatureVoxelCounts;
-  std::vector<float64>& m_FeatureVolumes;
-
-  class RectGridSummationImpl
-  {
-  public:
-    RectGridSummationImpl(ParallelRectGridManager* manager, const usize numFeatures, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const Float32AbstractDataStore& elemSizes)
-    : m_Manager(manager)
-    , m_NumFeatures(numFeatures)
-    , m_Dims(dims)
-    , m_FeatureIds(featureIds)
-    , m_ElemSizes(elemSizes)
-    {
-    }
-    ~RectGridSummationImpl() noexcept = default;
-
-    void convert(const usize start, const usize end) const
-    {
-      std::vector<uint64> featureVoxelCounts(m_NumFeatures, 0);
-      std::vector<float64> featureVolumes(m_NumFeatures, 0.0);
-      // Needed for Kahan summation of volumes
-      std::vector<float64> featureCompensators(m_NumFeatures, 0.0);
-      for(usize zIndex = start; zIndex < end; zIndex++)
-      {
-        const int64 zStride = m_Dims[0] * m_Dims[1] * zIndex;
-        for(usize yIndex = 0; yIndex < m_Dims[1]; yIndex++)
-        {
-          const int64 yStride = m_Dims[0] * yIndex;
-          for(usize xIndex = 0; xIndex < m_Dims[0]; xIndex++)
-          {
-            int64 voxelIdx = zStride + yStride + xIndex;
-            const int32 voxelFeatureId = m_FeatureIds.getValue(voxelIdx);
-            featureVoxelCounts[voxelFeatureId]++;
-
-            // Use Kahan summation to determine overall volume
-
-            // Attempt to recover low order into the value. The first instance is 0
-            const float64 value = static_cast<float64>(m_ElemSizes.getValue(voxelIdx)) - featureCompensators[voxelFeatureId];
-
-            // low order may be lost
-            const float64 volSum = featureVolumes[voxelFeatureId] + value;
-
-            // recover and cache low order
-            featureCompensators[voxelFeatureId] = (volSum - featureVolumes[voxelFeatureId]) - value;
-
-            // store volumes
-            featureVolumes[voxelFeatureId] = volSum;
-          }
-        }
-      }
-      m_Manager->updateStore(featureVoxelCounts, featureVolumes);
-    }
-
-    void operator()(const Range& range) const
-    {
-      convert(range.min(), range.max());
-    }
-
-  private:
-    ParallelRectGridManager* m_Manager;
-    const usize m_NumFeatures;
-    const SizeVec3& m_Dims;
-    const Int32AbstractDataStore& m_FeatureIds;
-    const Float32AbstractDataStore& m_ElemSizes;
-  };
+  FeatureVoxelCountsT& m_VoxelCounts;
+  FeatureVolumesT& m_Volumes;
+  const SizeVec3& m_Dims;
+  const Int32AbstractDataStore& m_FeatureIds;
+  const Float32AbstractDataStore& m_ElemSizes;
 };
 
 Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
@@ -337,6 +287,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   ThrottledMessenger throttledMessenger = msgHelper.createThrottledMessenger();
 
   const usize numFeatures = volumes.getNumberOfTuples();
+  SizeVec3 dims = rectGridGeom.getDimensions();
 
   msgHelper.sendMessage("Finding Element Sizes...");
   Result<> result = rectGridGeom.findElementSizes(false);
@@ -351,8 +302,18 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   std::vector<float64> featureVolumes(numFeatures, 0.0);
 
   msgHelper.sendMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
-  ParallelRectGridManager manager(featureVoxelCounts, featureVolumes);
-  manager.execute(rectGridGeom.getDimensions(), featureIds, elemSizes);
+  // Count and store the number of voxels in each feature
+  FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
+  FeatureVolumesT threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
+  ParallelDataAlgorithm dataAlg;
+  dataAlg.setRange(0, dims[2]);
+  dataAlg.execute(RectGridSummationImpl(threadLocalVoxelCounts, threadLocalVolumes, dims, featureIds, elemSizes));
+
+  // Reduce thread local feature voxel counts
+  threadLocalVoxelCounts.combine_each(
+      [&](const std::vector<uint64>& localCounts) { std::transform(localCounts.cbegin(), localCounts.cend(), featureVoxelCounts.cbegin(), featureVoxelCounts.begin(), std::plus{}); });
+  threadLocalVolumes.combine_each(
+      [&](const std::vector<float64>& localCounts) { std::transform(localCounts.cbegin(), localCounts.cend(), featureVolumes.cbegin(), featureVolumes.begin(), std::plus{}); });
 
   if(shouldCancel)
   {
