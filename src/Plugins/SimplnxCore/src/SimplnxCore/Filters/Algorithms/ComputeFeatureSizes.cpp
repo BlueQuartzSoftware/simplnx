@@ -35,10 +35,11 @@ using FeatureVolumesT = tbb::combinable<std::vector<float64>>;
 class ImageSummationImpl
 {
 public:
-  ImageSummationImpl(FeatureVoxelCountsT& voxelCounts, const SizeVec3& dims, const Int32AbstractDataStore& featureIds)
+  ImageSummationImpl(FeatureVoxelCountsT& voxelCounts, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const std::atomic_bool& shouldCancel)
   : m_VoxelCounts(voxelCounts)
   , m_Dims(dims)
   , m_FeatureIds(featureIds)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -47,6 +48,10 @@ public:
     std::vector<uint64>& threadLocalVoxelCounts = m_VoxelCounts.local();
     for(usize zIndex = start; zIndex < end; zIndex++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       const int64 zStride = m_Dims[0] * m_Dims[1] * zIndex;
       for(usize yIndex = 0; yIndex < m_Dims[1]; yIndex++)
       {
@@ -69,6 +74,7 @@ private:
   FeatureVoxelCountsT& m_VoxelCounts;
   const SizeVec3& m_Dims;
   const Int32AbstractDataStore& m_FeatureIds;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
@@ -86,7 +92,12 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
-  dataAlg.execute(ImageSummationImpl(threadLocalVoxelCounts, dims, featureIds));
+  dataAlg.execute(ImageSummationImpl(threadLocalVoxelCounts, dims, featureIds, shouldCancel));
+
+  if(shouldCancel)
+  {
+    return {};
+  }
 
   // Reduce thread local feature voxel counts
   threadLocalVoxelCounts.combine_each(
@@ -222,12 +233,14 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
 class RectGridSummationImpl
 {
 public:
-  RectGridSummationImpl(FeatureVoxelCountsT& voxelCounts, FeatureVolumesT& volumes, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const Float32AbstractDataStore& elemSizes)
+  RectGridSummationImpl(FeatureVoxelCountsT& voxelCounts, FeatureVolumesT& volumes, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const Float32AbstractDataStore& elemSizes,
+                        const std::atomic_bool& shouldCancel)
   : m_VoxelCounts(voxelCounts)
   , m_Volumes(volumes)
   , m_Dims(dims)
   , m_FeatureIds(featureIds)
   , m_ElemSizes(elemSizes)
+  , m_ShouldCancel(shouldCancel)
   {
   }
 
@@ -240,6 +253,10 @@ public:
     std::vector<float64> featureCompensators(threadLocalVolumes.size(), 0.0);
     for(usize zIndex = start; zIndex < end; zIndex++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       const int64 zStride = m_Dims[0] * m_Dims[1] * zIndex;
       for(usize yIndex = 0; yIndex < m_Dims[1]; yIndex++)
       {
@@ -279,6 +296,7 @@ private:
   const SizeVec3& m_Dims;
   const Int32AbstractDataStore& m_FeatureIds;
   const Float32AbstractDataStore& m_ElemSizes;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
@@ -307,13 +325,36 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   FeatureVolumesT threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
-  dataAlg.execute(RectGridSummationImpl(threadLocalVoxelCounts, threadLocalVolumes, dims, featureIds, elemSizes));
+  dataAlg.execute(RectGridSummationImpl(threadLocalVoxelCounts, threadLocalVolumes, dims, featureIds, elemSizes, shouldCancel));
 
-  // Reduce thread local feature voxel counts
+  if(shouldCancel)
+  {
+    return {};
+  }
+
+  // Reduce thread local voxel counts
   threadLocalVoxelCounts.combine_each(
       [&](const std::vector<uint64>& localCounts) { std::transform(localCounts.cbegin(), localCounts.cend(), featureVoxelCounts.cbegin(), featureVoxelCounts.begin(), std::plus{}); });
-  threadLocalVolumes.combine_each(
-      [&](const std::vector<float64>& localCounts) { std::transform(localCounts.cbegin(), localCounts.cend(), featureVolumes.cbegin(), featureVolumes.begin(), std::plus{}); });
+  // Reduce thread local volumes via kahan summation
+  std::vector<float64> featureCompensators(numFeatures, 0.0);
+  threadLocalVolumes.combine_each([&](const std::vector<float64>& localVolumes) {
+    for(usize featureIdx = 0; featureIdx < localVolumes.size(); featureIdx++)
+    {
+      // Use Kahan summation to determine overall volume
+
+      // Attempt to recover low order into the value. The first instance is 0
+      const float64 value = featureVolumes[featureIdx] - featureCompensators[featureIdx];
+
+      // low order may be lost
+      const float64 volSum = localVolumes[featureIdx] + value;
+
+      // recover and cache low order
+      featureCompensators[featureIdx] = (volSum - localVolumes[featureIdx]) - value;
+
+      // store volumes
+      featureVolumes[featureIdx] = volSum;
+    }
+  });
 
   if(shouldCancel)
   {
