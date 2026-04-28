@@ -14,51 +14,64 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32 k_ErrorOpenFailed = -20100;
-constexpr int32 k_ErrorReadMetadataFailed = -20101;
-constexpr int32 k_ErrorReadPixelFailed = -20102;
-constexpr int32 k_ErrorWriteFailed = -20103;
-constexpr int32 k_ErrorUnsupportedFormat = -20104;
-constexpr int32 k_ErrorBufferSizeMismatch = -20105;
+constexpr int32_t k_ErrorOpenFailed = -20100;
+constexpr int32_t k_ErrorReadMetadataFailed = -20101;
+constexpr int32_t k_ErrorReadPixelFailed = -20102;
+constexpr int32_t k_ErrorWriteFailed = -20103;
+constexpr int32_t k_ErrorUnsupportedFormat = -20104;
+constexpr int32_t k_ErrorBufferSizeMismatch = -20105;
 
 /**
- * @brief Owns a TIFFOpenOptions* and the std::string buffer that the per-handle
- * libtiff error handler writes into. The handlers are registered at construction
- * and kept private — every call site that opens a TIFF needs both the options
- * and a place to capture errors, so they are bundled into a single RAII type.
+ * @brief Single RAII wrapper that opens a TIFF file with a per-handle error handler,
+ * owns the TIFF* until destruction, and exposes the captured error string.
  *
- * Non-copyable and non-movable so that the address of m_ErrorMessage stays
- * stable (libtiff stores it as opaque user_data).
+ * The constructor handles the full sequence (allocate TIFFOpenOptions, register the
+ * per-handle error/warning handlers, call TIFFOpenExt, free the options) so each
+ * call site reduces to one local. The TIFFOpenOptions* is freed inside the
+ * constructor — libtiff copies its contents into the TIFF* on open, so the options
+ * object only needs to live across the open call.
+ *
+ * Non-copyable AND non-movable: libtiff stores &m_ErrorMessage as opaque
+ * user_data, so the address must stay stable for the lifetime of the TIFF*.
  */
-class TiffOpenOptions
+class TiffFile
 {
 public:
-  TiffOpenOptions()
-  : m_Opts(TIFFOpenOptionsAlloc())
+  TiffFile(const std::string& pathStr, const char* mode)
   {
-    if(m_Opts != nullptr)
+    TIFFOpenOptions* opts = TIFFOpenOptionsAlloc();
+    if(opts == nullptr)
     {
-      TIFFOpenOptionsSetErrorHandlerExtR(m_Opts, errorHandler, &m_ErrorMessage);
-      TIFFOpenOptionsSetWarningHandlerExtR(m_Opts, warningHandler, nullptr);
+      m_ErrorMessage = "TIFFOpenOptionsAlloc failed";
+      return;
+    }
+    TIFFOpenOptionsSetErrorHandlerExtR(opts, errorHandler, &m_ErrorMessage);
+    TIFFOpenOptionsSetWarningHandlerExtR(opts, warningHandler, nullptr);
+    m_Tiff = TIFFOpenExt(pathStr.c_str(), mode, opts);
+    TIFFOpenOptionsFree(opts);
+  }
+
+  ~TiffFile() noexcept
+  {
+    if(m_Tiff != nullptr)
+    {
+      TIFFClose(m_Tiff);
     }
   }
 
-  ~TiffOpenOptions() noexcept
+  TiffFile(const TiffFile&) = delete;
+  TiffFile& operator=(const TiffFile&) = delete;
+  TiffFile(TiffFile&&) = delete;
+  TiffFile& operator=(TiffFile&&) = delete;
+
+  TIFF* get() const
   {
-    if(m_Opts != nullptr)
-    {
-      TIFFOpenOptionsFree(m_Opts);
-    }
+    return m_Tiff;
   }
 
-  TiffOpenOptions(const TiffOpenOptions&) = delete;
-  TiffOpenOptions& operator=(const TiffOpenOptions&) = delete;
-  TiffOpenOptions(TiffOpenOptions&&) = delete;
-  TiffOpenOptions& operator=(TiffOpenOptions&&) = delete;
-
-  TIFFOpenOptions* get() const
+  bool valid() const
   {
-    return m_Opts;
+    return m_Tiff != nullptr;
   }
 
   // Returns the most recent libtiff error captured by the handler, or
@@ -90,41 +103,8 @@ private:
     return 1;
   }
 
-  TIFFOpenOptions* m_Opts = nullptr;
-  std::string m_ErrorMessage;
-};
-
-/**
- * @brief RAII wrapper for TIFF* that calls TIFFClose on destruction.
- */
-class TiffHandleGuard
-{
-public:
-  explicit TiffHandleGuard(TIFF* tiff)
-  : m_Tiff(tiff)
-  {
-  }
-
-  ~TiffHandleGuard() noexcept
-  {
-    if(m_Tiff != nullptr)
-    {
-      TIFFClose(m_Tiff);
-    }
-  }
-
-  TiffHandleGuard(const TiffHandleGuard&) = delete;
-  TiffHandleGuard& operator=(const TiffHandleGuard&) = delete;
-  TiffHandleGuard(TiffHandleGuard&&) = delete;
-  TiffHandleGuard& operator=(TiffHandleGuard&&) = delete;
-
-  TIFF* get() const
-  {
-    return m_Tiff;
-  }
-
-private:
   TIFF* m_Tiff = nullptr;
+  std::string m_ErrorMessage;
 };
 
 // Maps the TIFF (bits-per-sample, sample-format) pair to the DataTypes the
@@ -165,20 +145,19 @@ Result<DataType> DetermineTiffDataType(TIFF* tiff)
 Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& filePath) const
 {
   std::string pathStr = filePath.string();
-  TiffOpenOptions opts;
-  TiffHandleGuard tiffGuard(opts.get() != nullptr ? TIFFOpenExt(pathStr.c_str(), "r", opts.get()) : nullptr);
-  if(tiffGuard.get() == nullptr)
+  TiffFile tiffFile(pathStr, "r");
+  if(!tiffFile.valid())
   {
-    return MakeErrorResult<ImageMetadata>(k_ErrorOpenFailed, fmt::format("Failed to open TIFF file '{}': {}", pathStr, opts.errorMessage()));
+    return MakeErrorResult<ImageMetadata>(k_ErrorOpenFailed, fmt::format("Failed to open TIFF file '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
-  TIFF* tiff = tiffGuard.get();
+  TIFF* tiff = tiffFile.get();
 
   uint32_t width = 0;
   uint32_t height = 0;
   if(TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width) == 0 || TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height) == 0)
   {
-    return MakeErrorResult<ImageMetadata>(k_ErrorReadMetadataFailed, fmt::format("Failed to read TIFF dimensions from '{}': {}", pathStr, opts.errorMessage()));
+    return MakeErrorResult<ImageMetadata>(k_ErrorReadMetadataFailed, fmt::format("Failed to read TIFF dimensions from '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
   // SamplesPerPixel is required by the TIFF 6.0 spec (Section 7). Treat absence as an error
@@ -247,20 +226,19 @@ Result<ImageMetadata> TiffImageIO::readMetadata(const std::filesystem::path& fil
 Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const
 {
   std::string pathStr = filePath.string();
-  TiffOpenOptions opts;
-  TiffHandleGuard tiffGuard(opts.get() != nullptr ? TIFFOpenExt(pathStr.c_str(), "r", opts.get()) : nullptr);
-  if(tiffGuard.get() == nullptr)
+  TiffFile tiffFile(pathStr, "r");
+  if(!tiffFile.valid())
   {
-    return MakeErrorResult(k_ErrorOpenFailed, fmt::format("Failed to open TIFF file '{}': {}", pathStr, opts.errorMessage()));
+    return MakeErrorResult(k_ErrorOpenFailed, fmt::format("Failed to open TIFF file '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
-  TIFF* tiff = tiffGuard.get();
+  TIFF* tiff = tiffFile.get();
 
   uint32_t width = 0;
   uint32_t height = 0;
   if(TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width) == 0 || TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height) == 0)
   {
-    return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("Failed to read TIFF dimensions from '{}': {}", pathStr, opts.errorMessage()));
+    return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("Failed to read TIFF dimensions from '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
   // SamplesPerPixel is required by the TIFF 6.0 spec (Section 7). See readMetadata().
@@ -297,7 +275,7 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
     std::vector<uint32_t> raster(static_cast<usize>(width) * static_cast<usize>(height));
     if(TIFFReadRGBAImageOriented(tiff, width, height, raster.data(), ORIENTATION_TOPLEFT, 0) == 0)
     {
-      return MakeErrorResult(k_ErrorReadPixelFailed, fmt::format("Failed to read tiled TIFF pixel data from '{}': {}", pathStr, opts.errorMessage()));
+      return MakeErrorResult(k_ErrorReadPixelFailed, fmt::format("Failed to read tiled TIFF pixel data from '{}': {}", pathStr, tiffFile.errorMessage()));
     }
 
     // TIFFReadRGBAImageOriented produces ABGR uint32 packed pixels.
@@ -339,7 +317,7 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
   tsize_t scanlineSize = TIFFScanlineSize(tiff);
   if(scanlineSize <= 0)
   {
-    return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("TIFFScanlineSize returned {} for '{}': {}", scanlineSize, pathStr, opts.errorMessage()));
+    return MakeErrorResult(k_ErrorReadMetadataFailed, fmt::format("TIFFScanlineSize returned {} for '{}': {}", scanlineSize, pathStr, tiffFile.errorMessage()));
   }
   usize rowBytes = static_cast<usize>(width) * static_cast<usize>(samplesPerPixel) * bpe;
 
@@ -351,7 +329,7 @@ Result<> TiffImageIO::readPixelData(const std::filesystem::path& filePath, std::
   {
     if(TIFFReadScanline(tiff, scanlineBuf.data(), row) < 0)
     {
-      return MakeErrorResult(k_ErrorReadPixelFailed, fmt::format("Failed to read scanline {} from TIFF '{}': {}", row, pathStr, opts.errorMessage()));
+      return MakeErrorResult(k_ErrorReadPixelFailed, fmt::format("Failed to read scanline {} from TIFF '{}': {}", row, pathStr, tiffFile.errorMessage()));
     }
     std::memcpy(buffer.data() + (static_cast<usize>(row) * rowBytes), scanlineBuf.data(), rowBytes);
   }
@@ -375,14 +353,13 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
   }
 
   std::string pathStr = filePath.string();
-  TiffOpenOptions opts;
-  TiffHandleGuard tiffGuard(opts.get() != nullptr ? TIFFOpenExt(pathStr.c_str(), "w", opts.get()) : nullptr);
-  if(tiffGuard.get() == nullptr)
+  TiffFile tiffFile(pathStr, "w");
+  if(!tiffFile.valid())
   {
-    return MakeErrorResult(k_ErrorOpenFailed, fmt::format("Failed to open TIFF file for writing '{}': {}", pathStr, opts.errorMessage()));
+    return MakeErrorResult(k_ErrorOpenFailed, fmt::format("Failed to open TIFF file for writing '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
-  TIFF* tiff = tiffGuard.get();
+  TIFF* tiff = tiffFile.get();
 
   uint32_t w = static_cast<uint32_t>(metadata.width);
   uint32_t h = static_cast<uint32_t>(metadata.height);
@@ -393,7 +370,7 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
      TIFFSetField(tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) == 0 || TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 0 ||
      TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_LZW) == 0 || TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tiff, 0)) == 0)
   {
-    return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set required TIFF tags for '{}': {}", pathStr, opts.errorMessage()));
+    return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set required TIFF tags for '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
   // Set bits per sample and sample format based on data type
@@ -415,14 +392,14 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
   }
   if(!fieldsSet)
   {
-    return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set TIFF sample format tags for '{}': {}", pathStr, opts.errorMessage()));
+    return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set TIFF sample format tags for '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
   // Set photometric interpretation
   uint16_t photometric = (comp == 1) ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB;
   if(TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, photometric) == 0)
   {
-    return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set TIFF photometric tag for '{}': {}", pathStr, opts.errorMessage()));
+    return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set TIFF photometric tag for '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
   // Write optional origin
@@ -453,7 +430,7 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
     // TIFFWriteScanline takes a non-const void* but does not modify the data
     if(TIFFWriteScanline(tiff, const_cast<uint8*>(rowData), row) < 0)
     {
-      return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to write scanline {} to TIFF '{}': {}", row, pathStr, opts.errorMessage()));
+      return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to write scanline {} to TIFF '{}': {}", row, pathStr, tiffFile.errorMessage()));
     }
   }
 
