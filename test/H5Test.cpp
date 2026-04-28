@@ -24,6 +24,7 @@
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 
 #include "simplnx/UnitTest/DataObjectComparison.hpp"
+#include "simplnx/UnitTest/HDF5DatasetProbe.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "GeometryTestUtilities.hpp"
@@ -1103,59 +1104,6 @@ TEST_CASE("DataStructureAppend")
   SIMPLNX_RESULT_REQUIRE_INVALID(appendFailureResult3);
 }
 
-namespace
-{
-// Probes an HDF5 file for a dataset's storage layout and deflate filter settings.
-// Does all its own handle cleanup, so test code can REQUIRE on the return struct
-// without risking HDF5 handle leaks on assertion failure.
-struct DatasetProbeInfo
-{
-  H5D_layout_t layout = H5D_LAYOUT_ERROR;
-  bool hasDeflate = false;
-  int32 deflateLevel = -1;
-};
-
-DatasetProbeInfo ProbeDataset(const std::filesystem::path& filePath, const std::string& datasetPath)
-{
-  DatasetProbeInfo info;
-  hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-  if(fileId < 0)
-  {
-    return info;
-  }
-  hid_t dsetId = H5Dopen2(fileId, datasetPath.c_str(), H5P_DEFAULT);
-  if(dsetId < 0)
-  {
-    H5Fclose(fileId);
-    return info;
-  }
-  hid_t dcplId = H5Dget_create_plist(dsetId);
-  if(dcplId >= 0)
-  {
-    info.layout = H5Pget_layout(dcplId);
-    const int32 nFilters = H5Pget_nfilters(dcplId);
-    for(int32 i = 0; i < nFilters; ++i)
-    {
-      unsigned int flags = 0;
-      size_t cdCapacity = 8;
-      unsigned int cdValues[8] = {0};
-      char filterName[32] = {0};
-      unsigned int filterConfig = 0;
-      if(H5Pget_filter2(dcplId, i, &flags, &cdCapacity, cdValues, sizeof(filterName), filterName, &filterConfig) == H5Z_FILTER_DEFLATE)
-      {
-        info.hasDeflate = true;
-        info.deflateLevel = static_cast<int32>(cdValues[0]);
-        break;
-      }
-    }
-    H5Pclose(dcplId);
-  }
-  H5Dclose(dsetId);
-  H5Fclose(fileId);
-  return info;
-}
-} // namespace
-
 TEST_CASE("DatasetIO: writeSpan uses chunked+deflate when compression level > 0", "[DatasetIO][Compression]")
 {
   const fs::path outPath = fs::path(nx::core::unit_test::k_BinaryTestOutputDir.view()) / "dataset_compression.h5";
@@ -1175,8 +1123,8 @@ TEST_CASE("DatasetIO: writeSpan uses chunked+deflate when compression level > 0"
     SIMPLNX_RESULT_REQUIRE_VALID(wr);
   }
 
-  auto info = ProbeDataset(outPath, "g/" + datasetName);
-  REQUIRE(info.layout == H5D_CHUNKED);
+  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/" + datasetName);
+  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Chunked);
   REQUIRE(info.hasDeflate);
   REQUIRE(info.deflateLevel == 5);
 }
@@ -1198,8 +1146,8 @@ TEST_CASE("DatasetIO: writeSpan stays contiguous when compression level is 0", "
     SIMPLNX_RESULT_REQUIRE_VALID(wr);
   }
 
-  auto info = ProbeDataset(outPath, "g/d");
-  REQUIRE(info.layout == H5D_CONTIGUOUS);
+  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/d");
+  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Contiguous);
   REQUIRE(info.hasDeflate == false);
 }
 
@@ -1221,7 +1169,7 @@ TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with com
     SIMPLNX_RESULT_REQUIRE_VALID(wr);
   }
 
-  auto info = ProbeDataset(outPath, "g/d");
-  REQUIRE(info.layout == H5D_CONTIGUOUS);
+  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/d");
+  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Contiguous);
   REQUIRE(info.hasDeflate == false);
 }

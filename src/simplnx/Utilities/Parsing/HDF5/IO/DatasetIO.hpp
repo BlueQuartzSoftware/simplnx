@@ -194,8 +194,7 @@ public:
   /**
    * @brief Sets the gzip compression level used by the next writeSpan call.
    *        0 = no compression (contiguous); 1-9 = chunked + deflate at that level.
-   * @param level Gzip level in [0, 9]. Out-of-range values cause writeSpan's DCPL helper
-   *        to return H5P_DEFAULT, effectively disabling compression.
+   * @param level Gzip level in [0, 9]. Out-of-range values are ignored.
    */
   void setCompressionLevel(int32 level) noexcept;
 
@@ -509,28 +508,6 @@ protected:
 #endif
 
   static hid_t CreateH5DatasetChunkProperties(const DimsType& chunkDims);
-
-  /**
-   * @brief Builds an HDF5 Dataset Creation Property List with chunking + gzip filter applied.
-   *        Returns H5P_DEFAULT (no chunking, no filter) when compression is disabled or the
-   *        array is small enough that chunk-index overhead would exceed any compression win.
-   *
-   * Caller owns the returned DCPL and must close it with H5Pclose unless the return value
-   * is H5P_DEFAULT (which must not be closed). Falls through to H5P_DEFAULT on:
-   *   - compressionLevel outside [1, 9]
-   *   - empty dims
-   *   - total byte count < 16 KiB
-   *   - overflow of the totalBytes product
-   *   - any underlying H5Pcreate / H5Pset_chunk / H5Pset_deflate failure
-   *
-   * Chunk shape targets ~1 MiB per chunk along the outermost dimension of dims.
-   *
-   * @param dims             Dataspace dimensions (rank and extents of the dataset to be written).
-   * @param elementByteSize  Size in bytes of a single array element (e.g. sizeof(float)).
-   * @param compressionLevel Gzip/deflate level. 0 disables compression; 1-9 maps to gzip levels.
-   * @return hid_t           A DCPL the caller owns, or H5P_DEFAULT (do not close).
-   */
-  static hid_t CreateDatasetCreationPropertyList(const DimsType& dims, usize elementByteSize, int32 compressionLevel);
 
   /**
    * @brief Opens and returns the target HDF5 DataSet.

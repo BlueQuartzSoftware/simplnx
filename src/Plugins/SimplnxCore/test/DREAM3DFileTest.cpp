@@ -17,13 +17,13 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
+#include "simplnx/UnitTest/HDF5DatasetProbe.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
-#include <hdf5.h>
 
 #include <filesystem>
 #include <mutex>
@@ -265,55 +265,6 @@ Pipeline CreateMultiImportPipeline()
 DREAM3D::FileData CreateFileData()
 {
   return {CreateExportPipeline(), CreateTestDataStructure()};
-}
-
-struct DatasetLayoutInfo
-{
-  H5D_layout_t layout = H5D_LAYOUT_ERROR;
-  bool hasDeflate = false;
-  int deflateLevel = -1;
-};
-
-DatasetLayoutInfo InspectDatasetLayout(const fs::path& filePath, const std::string& hdfDatasetPath)
-{
-  DatasetLayoutInfo info;
-  hid_t f = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
-  if(f < 0)
-  {
-    return info;
-  }
-  hid_t d = H5Dopen2(f, hdfDatasetPath.c_str(), H5P_DEFAULT);
-  if(d < 0)
-  {
-    H5Fclose(f);
-    return info;
-  }
-  hid_t dcpl = H5Dget_create_plist(d);
-  if(dcpl >= 0)
-  {
-    info.layout = H5Pget_layout(dcpl);
-    const int32 nFilters = H5Pget_nfilters(dcpl);
-    for(int32 i = 0; i < nFilters; ++i)
-    {
-      unsigned int flags = 0;
-      // Match the capacity of cdValues so H5Pget_filter2 can return all client-data values
-      // (DEFLATE uses 1, but overestimating is harmless and avoids a subtle API misuse).
-      size_t cdCapacity = 8;
-      unsigned int cdValues[8] = {0};
-      char filterName[32] = {0};
-      unsigned int filterConfig = 0;
-      if(H5Pget_filter2(dcpl, i, &flags, &cdCapacity, cdValues, sizeof(filterName), filterName, &filterConfig) == H5Z_FILTER_DEFLATE)
-      {
-        info.hasDeflate = true;
-        info.deflateLevel = static_cast<int32>(cdValues[0]);
-        break;
-      }
-    }
-    H5Pclose(dcpl);
-  }
-  H5Dclose(d);
-  H5Fclose(f);
-  return info;
 }
 
 } // End Namespace
@@ -711,8 +662,8 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
 
   // Inspect on-disk encoding via the RAII-safe helper (never leaks handles on REQUIRE failure).
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/LargeArray";
-  auto info = InspectDatasetLayout(outPath, hdfPath);
-  REQUIRE(info.layout == H5D_CHUNKED);
+  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
+  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Chunked);
   REQUIRE(info.hasDeflate);
   REQUIRE(info.deflateLevel == 5);
 
@@ -752,8 +703,8 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilt
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
-  auto info = InspectDatasetLayout(outPath, hdfPath);
-  REQUIRE(info.layout == H5D_CONTIGUOUS);
+  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
+  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Contiguous);
   REQUIRE(info.hasDeflate == false);
 }
 
@@ -787,8 +738,8 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
-  auto info = InspectDatasetLayout(outPath, hdfPath);
-  REQUIRE(info.layout == H5D_CHUNKED);
+  auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
+  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Chunked);
   REQUIRE(info.hasDeflate);
   REQUIRE(info.deflateLevel == 5);
 
@@ -828,11 +779,11 @@ TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DF
   SIMPLNX_RESULT_REQUIRE_VALID(r);
 
   const std::string dsRoot = std::string("/") + nx::core::Constants::k_DataStructureTag;
-  auto smallInfo = InspectDatasetLayout(outPath, dsRoot + "/Small");
-  auto bigInfo = InspectDatasetLayout(outPath, dsRoot + "/Big");
-  REQUIRE(smallInfo.layout == H5D_CONTIGUOUS);
+  auto smallInfo = nx::core::UnitTest::ProbeHdf5Dataset(outPath, dsRoot + "/Small");
+  auto bigInfo = nx::core::UnitTest::ProbeHdf5Dataset(outPath, dsRoot + "/Big");
+  REQUIRE(smallInfo.layout == nx::core::UnitTest::DatasetLayout::Contiguous);
   REQUIRE(smallInfo.hasDeflate == false);
-  REQUIRE(bigInfo.layout == H5D_CHUNKED);
+  REQUIRE(bigInfo.layout == nx::core::UnitTest::DatasetLayout::Chunked);
   REQUIRE(bigInfo.hasDeflate);
 }
 
