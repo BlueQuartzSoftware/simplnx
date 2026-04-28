@@ -18,6 +18,31 @@ cp -r "simplnx/src/Plugins/ITKImageProcessing/pipelines" "$PREFIX/share/simplnx/
 
 # *****************************************************************************
 echo "#-------------------------------------------------------------------------------"
+echo " BUILDING STB"
+echo "#-------------------------------------------------------------------------------"
+
+# mkdir stb_build
+# cd stb_build
+cd stb
+
+cp *.h "$PREFIX/include/"
+
+mkdir -p "$PREFIX/share/stb"
+export FindStbFilePath="$PREFIX/share/stb/FindStb.cmake"
+echo "include(\${CMAKE_ROOT}/Modules/FindPackageHandleStandardArgs.cmake)" > $FindStbFilePath
+echo "include(\${CMAKE_ROOT}/Modules/SelectLibraryConfigurations.cmake)" >> $FindStbFilePath
+echo "if(NOT Stb_INCLUDE_DIR)" >> $FindStbFilePath
+echo "  find_path(Stb_INCLUDE_DIR NAMES stb_image.h PATHS \${Stb_DIR} PATH_SUFFIXES include)" >> $FindStbFilePath
+echo "endif()" >> $FindStbFilePath
+echo "find_package_handle_standard_args(Stb DEFAULT_MSG Stb_INCLUDE_DIR)" >> $FindStbFilePath
+echo "mark_as_advanced(Stb_INCLUDE_DIR)" >> $FindStbFilePath
+
+echo "# This is a blank file to make CMake Happy" > "$PREFIX/share/stb/stb-config.cmake"
+cd ..
+
+
+# *****************************************************************************
+echo "#-------------------------------------------------------------------------------"
 echo " BUILDING H5Support"
 echo "#-------------------------------------------------------------------------------"
 

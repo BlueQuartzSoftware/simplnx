@@ -9,6 +9,33 @@ mkdir sdk
 set lib_prefix=%LIBRARY_PREFIX:\=/%
 echo lib_prefix = %lib_prefix%
 
+:: **************************************************************************** 
+:: Build the stb library (header-only)  
+:: **************************************************************************** 
+echo *************************** stb ****************************************** 
+cd %SRC_DIR%
+cd stb
+
+if not exist "%LIBRARY_PREFIX%\include" mkdir "%LIBRARY_PREFIX%\include"
+copy /Y *.h "%LIBRARY_PREFIX%\include\" > nul
+if errorlevel 1 exit 1  
+  
+if not exist "%LIBRARY_PREFIX%\share\stb" mkdir "%LIBRARY_PREFIX%\share\stb"
+  
+set "FindStbFilePath=%LIBRARY_PREFIX%\share\stb\FindStb.cmake"  
+echo include(${CMAKE_ROOT}/Modules/FindPackageHandleStandardArgs.cmake)> "%FindStbFilePath%" 
+echo include(${CMAKE_ROOT}/Modules/SelectLibraryConfigurations.cmake)>> "%FindStbFilePath%" 
+echo if(NOT Stb_INCLUDE_DIR)>> "%FindStbFilePath%"  
+echo   find_path(Stb_INCLUDE_DIR NAMES stb_image.h PATHS ${Stb_DIR} PATH_SUFFIXES include)>> "%FindStbFilePath%"
+echo endif()>> "%FindStbFilePath%"  
+echo find_package_handle_standard_args(Stb DEFAULT_MSG Stb_INCLUDE_DIR)>> "%FindStbFilePath%"
+echo mark_as_advanced(Stb_INCLUDE_DIR)>> "%FindStbFilePath%"
+
+echo # This is a blank file to make CMake Happy> "%LIBRARY_PREFIX%\share\stb\stb-config.cmake"  
+cd ..
+
+
+
 :: ****************************************************************************
 :: Build the H5Support library
 :: ****************************************************************************

@@ -271,6 +271,10 @@
           "type": "PATH",
           "value": "$env{PREFIX}/lib/cmake/span-lite"
         },
+        "Stb_INCLUDE_DIR": {
+          "type": "PATH",
+          "value": "$env{PREFIX}/include"
+        },
         "expected-lite_DIR": {
           "type": "PATH",
           "value": "$env{PREFIX}/lib/cmake/expected-lite"
