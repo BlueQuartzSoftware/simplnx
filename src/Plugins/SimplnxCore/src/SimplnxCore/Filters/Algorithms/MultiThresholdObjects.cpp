@@ -3,6 +3,7 @@
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/Utilities/ArrayThreshold.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <algorithm>
@@ -20,9 +21,9 @@ namespace
  * @param inverse
  */
 template <typename T>
-void InsertThreshold(std::vector<T>& currentVector, nx::core::IArrayThreshold::UnionOperator unionOperator, std::vector<T>& newVector, bool inverse, T trueValue, T falseValue)
+void InsertThreshold(AbstractDataStore<T>& currentVector, nx::core::IArrayThreshold::UnionOperator unionOperator, AbstractDataStore<T>& newVector, bool inverse, T trueValue, T falseValue)
 {
-  usize numItems = currentVector.size();
+  usize numItems = currentVector.getNumberOfTuples();
 
   for(usize i = 0; i < numItems; i++)
   {
@@ -46,14 +47,14 @@ void InsertThreshold(std::vector<T>& currentVector, nx::core::IArrayThreshold::U
 /**
  * @brief Consolidate all assignment calls to a single method to prevent unintended diverging behavior.
  * @param arrayThreshold Current threshold to pull settings from.
- * @param outputResultVector Output vector for the current ThresholdSet.
- * @param inputThresholdVector Resulting output for the target array threshold.
+ * @param outputResultStore Output DataStore for the current ThresholdSet.
+ * @param inputThresholdStore Resulting output for the target array threshold.
  * @param replaceInput The first threshould in every set has its output applied to the output regardless of union operator.
  * @param trueValue Output mask value when the threshold is satisfied.
  * @param falseValue Output mask value when the threshold is not satisfied.
  */
 template <typename T>
-void ApplyThresholdValues(const IArrayThreshold& arrayThreshold, std::vector<T>& outputResultVector, std::vector<T>& inputThresholdVector, bool replaceInput, T trueValue, T falseValue)
+void ApplyThresholdValues(const IArrayThreshold& arrayThreshold, AbstractDataStore<T>& outputResultStore, AbstractDataStore<T>& inputThresholdStore, bool replaceInput, T trueValue, T falseValue)
 {
   auto unionOperator = arrayThreshold.getUnionOperator();
   bool inverse = arrayThreshold.isInverted();
@@ -64,14 +65,14 @@ void ApplyThresholdValues(const IArrayThreshold& arrayThreshold, std::vector<T>&
   }
 
   // insert into current threshold
-  InsertThreshold<T>(outputResultVector, unionOperator, inputThresholdVector, inverse, trueValue, falseValue);
+  InsertThreshold<T>(outputResultStore, unionOperator, inputThresholdStore, inverse, trueValue, falseValue);
 }
 
 template <class U>
 class ThresholdFilterHelper
 {
 public:
-  ThresholdFilterHelper(ArrayThreshold::ComparisonType compType, ArrayThreshold::ComparisonValue compValue, usize componentIndex, std::vector<U>& output)
+  ThresholdFilterHelper(ArrayThreshold::ComparisonType compType, ArrayThreshold::ComparisonValue compValue, usize componentIndex, AbstractDataStore<U>& output)
   : m_ComparisonOperator(compType)
   , m_ComparisonValue(compValue)
   , m_ComponentIndex(componentIndex)
@@ -123,7 +124,7 @@ private:
   ArrayThreshold::ComparisonType m_ComparisonOperator;
   ArrayThreshold::ComparisonValue m_ComparisonValue;
   usize m_ComponentIndex = 0;
-  std::vector<U>& m_Output;
+  AbstractDataStore<U>& m_Output;
 };
 
 struct ExecuteThresholdHelper
@@ -137,11 +138,13 @@ struct ExecuteThresholdHelper
 };
 
 template <typename T>
-void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, std::vector<T>& outputResultVector, int32_t& err, bool replaceInput, T trueValue, T falseValue)
+void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultVector, int32_t& err, bool replaceInput, T trueValue, T falseValue)
 {
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
-  size_t totalTuples = outputResultVector.size();
-  std::vector<T> tempResultVector(totalTuples, falseValue);
+  size_t totalTuples = outputResultVector.getNumberOfTuples();
+  auto tempResultStorePtr = DataStoreUtilities::CreateDataStore<T>({totalTuples}, {1}, IDataAction::Mode::Execute);
+  AbstractDataStore<T>& tempResultStore = *tempResultStorePtr.get();
+  std::fill(tempResultStore.begin(), tempResultStore.end(), falseValue);
 
   nx::core::ArrayThreshold::ComparisonType compOperator = comparisonValue.getComparisonType();
   nx::core::ArrayThreshold::ComparisonValue compValue = comparisonValue.getComparisonValue();
@@ -151,21 +154,23 @@ void ThresholdValue(const ArrayThreshold& comparisonValue, const DataStructure& 
 
   usize componentIndex = comparisonValue.getComponentIndex();
 
-  ThresholdFilterHelper<T> helper(compOperator, compValue, componentIndex, tempResultVector);
+  ThresholdFilterHelper<T> helper(compOperator, compValue, componentIndex, tempResultStore);
 
   const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataArrayPath);
 
   ExecuteDataFunction(ExecuteThresholdHelper{}, iDataArray.getDataType(), helper, iDataArray, trueValue, falseValue);
 
-  ApplyThresholdValues<T>(comparisonValue, outputResultVector, tempResultVector, replaceInput, trueValue, falseValue);
+  ApplyThresholdValues<T>(comparisonValue, outputResultVector, tempResultStore, replaceInput, trueValue, falseValue);
 }
 
 template <typename T>
-void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, std::vector<T>& outputResultVector, int32_t& err, bool replaceInput, T trueValue, T falseValue)
+void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructure& dataStructure, AbstractDataStore<T>& outputResultVector, int32_t& err, bool replaceInput, T trueValue, T falseValue)
 {
   // Get the total number of tuples, create and initialize an array with FALSE to use for these results
-  size_t totalTuples = outputResultVector.size();
-  std::vector<T> tempResultVector(totalTuples, falseValue);
+  size_t totalTuples = outputResultVector.getNumberOfTuples();
+  auto tempResultStorePtr = DataStoreUtilities::CreateDataStore<T>({totalTuples}, {1}, IDataAction::Mode::Execute);
+  AbstractDataStore<T>& tempResultStore = *tempResultStorePtr.get();
+  std::fill(tempResultStore.begin(), tempResultStore.end(), falseValue);
 
   bool firstValueFound = false;
 
@@ -175,18 +180,18 @@ void ThresholdSet(const ArrayThresholdSet& inputComparisonSet, const DataStructu
     const IArrayThreshold* thresholdPtr = threshold.get();
     if(const auto* comparisonSet = dynamic_cast<const ArrayThresholdSet*>(thresholdPtr); comparisonSet != nullptr)
     {
-      ThresholdSet<T>(*comparisonSet, dataStructure, tempResultVector, err, !firstValueFound, trueValue, falseValue);
+      ThresholdSet<T>(*comparisonSet, dataStructure, tempResultStore, err, !firstValueFound, trueValue, falseValue);
       firstValueFound = true;
     }
     else if(const auto* comparisonValue = dynamic_cast<const ArrayThreshold*>(thresholdPtr); comparisonValue != nullptr)
     {
-      ThresholdValue<T>(*comparisonValue, dataStructure, tempResultVector, err, !firstValueFound, trueValue, falseValue);
+      ThresholdValue<T>(*comparisonValue, dataStructure, tempResultStore, err, !firstValueFound, trueValue, falseValue);
       firstValueFound = true;
     }
   }
 
   // Apply resulting values to output
-  ApplyThresholdValues<T>(inputComparisonSet, outputResultVector, tempResultVector, replaceInput, trueValue, falseValue);
+  ApplyThresholdValues<T>(inputComparisonSet, outputResultVector, tempResultStore, replaceInput, trueValue, falseValue);
 }
 
 struct ThresholdSetFunctor
@@ -198,12 +203,14 @@ struct ThresholdSetFunctor
     // was essentially done in the preflight part.
     auto& outputDataStore = outputResultArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     usize totalTuples = outputDataStore.getNumberOfTuples();
-    std::vector<T> tmpVector(totalTuples, falseValue);
-    ThresholdSet<T>(inputComparisonSet, dataStructure, tmpVector, err, replaceInput, trueValue, falseValue);
+    auto tempResultStorePtr = DataStoreUtilities::CreateDataStore<T>({totalTuples}, {1}, IDataAction::Mode::Execute);
+    AbstractDataStore<T>& tempResultStore = *tempResultStorePtr.get();
+    std::fill(tempResultStore.begin(), tempResultStore.end(), falseValue);
+    ThresholdSet<T>(inputComparisonSet, dataStructure, tempResultStore, err, replaceInput, trueValue, falseValue);
 
     for(size_t i = 0; i < totalTuples; i++)
     {
-      outputDataStore[i] = tmpVector[i];
+      outputDataStore[i] = tempResultStore[i];
     }
   }
 };
