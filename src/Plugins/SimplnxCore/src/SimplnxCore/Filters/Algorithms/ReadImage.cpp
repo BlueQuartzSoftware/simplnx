@@ -3,6 +3,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/IImageIO.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
@@ -152,11 +153,7 @@ Result<> ReadImage::operator()()
   }
   const auto& metadata = metadataResult.value();
 
-  usize bytesPerComp = BytesPerImageElement(metadata.dataType);
-  if(bytesPerComp == 0)
-  {
-    return MakeErrorResult(-2000, fmt::format("Unsupported source data type in image file: {}", inputFilePath.string()));
-  }
+  usize bytesPerComp = GetDataTypeSize(metadata.dataType);
   usize bufferSize = metadata.width * metadata.height * metadata.numComponents * bytesPerComp;
 
   std::vector<uint8> tempBuffer(bufferSize);

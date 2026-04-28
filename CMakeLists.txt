@@ -808,7 +808,6 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOFactory.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/StbImageIO.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/TiffImageIO.cpp
 )

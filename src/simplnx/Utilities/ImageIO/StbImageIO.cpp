@@ -1,6 +1,7 @@
 #include "StbImageIO.hpp"
 
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -83,7 +84,7 @@ Result<> StbImageIO::readPixelData(const std::filesystem::path& filePath, std::s
   int height = 0;
   int comp = 0;
 
-  usize bpe = BytesPerImageElement(metadata.dataType);
+  usize bpe = GetDataTypeSize(metadata.dataType);
   usize expectedSize = metadata.width * metadata.height * metadata.numComponents * bpe;
 
   if(buffer.size() != expectedSize)

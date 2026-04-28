@@ -6,6 +6,7 @@
 
 #include <fmt/format.h>
 
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -24,23 +25,43 @@ std::string CreateIndexString(T index, usize totalDigits, std::string_view fillC
 }
 
 /**
- * @brief Returns the size in bytes of a single scalar element for the DataTypes that
- * the image-IO backends (stb, libtiff) actually support: uint8, uint16, float32.
- * Returns 0 for any other DataType so callers can detect unsupported types.
- */
-SIMPLNX_EXPORT usize BytesPerImageElement(DataType type);
-
-/**
  * @brief Converts the index from the image-reader filters' "Output Data Type"
  * ChoicesParameter into a concrete DataType. Choices are (0=uint8, 1=uint16, 2=uint32).
- * Out-of-range inputs are coerced to uint8.
+ * Throws std::runtime_error for any other value rather than silently coercing to uint8.
  */
-SIMPLNX_EXPORT DataType ChoiceToImageDataType(usize choice);
+inline DataType ChoiceToImageDataType(usize choice)
+{
+  switch(choice)
+  {
+  case 0:
+    return DataType::uint8;
+  case 1:
+    return DataType::uint16;
+  case 2:
+    return DataType::uint32;
+  default:
+    throw std::runtime_error(fmt::format("nx::core::ChoiceToImageDataType: invalid choice {}", choice));
+  }
+}
 
 /**
  * @brief Reverse of ChoiceToImageDataType — maps a DataType back to its index in the
- * "Output Data Type" ChoicesParameter. Any unsupported DataType is mapped to 0 (uint8).
+ * "Output Data Type" ChoicesParameter. Throws std::runtime_error for any DataType
+ * outside the supported set (uint8/uint16/uint32).
  */
-SIMPLNX_EXPORT usize ImageDataTypeToChoice(DataType type);
+inline usize ImageDataTypeToChoice(DataType type)
+{
+  switch(type)
+  {
+  case DataType::uint8:
+    return 0;
+  case DataType::uint16:
+    return 1;
+  case DataType::uint32:
+    return 2;
+  default:
+    throw std::runtime_error(fmt::format("nx::core::ImageDataTypeToChoice: unsupported DataType {}", static_cast<int>(type)));
+  }
+}
 
 } // namespace nx::core
