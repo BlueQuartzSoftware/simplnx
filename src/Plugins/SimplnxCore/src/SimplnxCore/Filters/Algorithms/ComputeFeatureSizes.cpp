@@ -1,6 +1,7 @@
 #include "ComputeFeatureSizes.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
+#include "simplnx/Common/Range.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -43,7 +44,7 @@ public:
   {
   }
 
-  void convert(usize start, usize end) const
+  void convert(const usize start, const usize end) const
   {
     std::vector<uint64>& threadLocalVoxelCounts = m_VoxelCounts.local();
     for(usize zIndex = start; zIndex < end; zIndex++)
@@ -58,7 +59,7 @@ public:
         const int64 yStride = m_Dims[0] * yIndex;
         for(usize xIndex = 0; xIndex < m_Dims[0]; xIndex++)
         {
-          int64 voxelIdx = zStride + yStride + xIndex;
+          const int64 voxelIdx = zStride + yStride + xIndex;
           threadLocalVoxelCounts[m_FeatureIds.getValue(voxelIdx)]++;
         }
       }
@@ -263,7 +264,7 @@ public:
         const int64 yStride = m_Dims[0] * yIndex;
         for(usize xIndex = 0; xIndex < m_Dims[0]; xIndex++)
         {
-          int64 voxelIdx = zStride + yStride + xIndex;
+          const int64 voxelIdx = zStride + yStride + xIndex;
           const int32 voxelFeatureId = m_FeatureIds.getValue(voxelIdx);
           threadLocalVoxelCounts[voxelFeatureId]++;
 
