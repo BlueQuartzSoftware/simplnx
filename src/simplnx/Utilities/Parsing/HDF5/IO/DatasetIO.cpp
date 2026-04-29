@@ -1,6 +1,6 @@
 #include "DatasetIO.hpp"
 
-#include "simplnx/Utilities/DataStoreUtilities.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
@@ -597,7 +597,9 @@ std::shared_ptr<AbstractDataStore<T>> DatasetIO::readAsDataStore() const
   ShapeType tupleShape{numElements};
   ShapeType componentShape{1};
 
-  std::shared_ptr<AbstractDataStore<T>> dataStorePtr = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  // In-core branch: allocate a plain in-memory DataStore directly. The OOC
+  // branch is intercepted upstream by the data store import handler.
+  std::shared_ptr<AbstractDataStore<T>> dataStorePtr = std::make_shared<DataStore<T>>(tupleShape, componentShape, T{});
   dataStorePtr->readHdf5(*this);
   return dataStorePtr;
 }
@@ -615,7 +617,9 @@ std::shared_ptr<AbstractDataStore<T>> DatasetIO::readAsDataStore(const ShapeType
     return nullptr;
   }
 
-  std::shared_ptr<AbstractDataStore<T>> dataStorePtr = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  // In-core branch: allocate a plain in-memory DataStore directly. The OOC
+  // branch is intercepted upstream by the data store import handler.
+  std::shared_ptr<AbstractDataStore<T>> dataStorePtr = std::make_shared<DataStore<T>>(tupleShape, componentShape, T{});
   dataStorePtr->readHdf5(*this);
   return dataStorePtr;
 }

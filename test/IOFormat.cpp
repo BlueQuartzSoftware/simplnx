@@ -51,8 +51,12 @@ TEST_CASE("Data Format: Not configured defaults to InMemory store", "[IOTest][Da
   REQUIRE(prefs->largeDataFormat() == Preferences::k_InMemoryFormat);
   REQUIRE_FALSE(prefs->useOocData());
 
-  // CreateDataStore should produce an InMemory store regardless of size
-  auto store = DataStoreUtilities::CreateDataStore<float32>({100, 100, 100}, {1}, IDataAction::Mode::Execute);
+  // The resolver-aware CreateDataStore should produce an InMemory store under
+  // these conditions because the registered resolver (none in the in-core build)
+  // returns "" → default in-memory.
+  DataStructure ds;
+  DataPath dp({"TestArray"});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, dp, {100, 100, 100}, {1}, IDataAction::Mode::Execute);
   REQUIRE(store != nullptr);
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
 
@@ -71,8 +75,12 @@ TEST_CASE("Data Format: Explicit InMemory format prevents OOC", "[IOTest][DataFo
   REQUIRE(prefs->largeDataFormat() == Preferences::k_InMemoryFormat);
   REQUIRE_FALSE(prefs->useOocData());
 
-  // CreateDataStore should produce InMemory even for large arrays
-  auto store = DataStoreUtilities::CreateDataStore<float32>({100, 100, 100}, {1}, IDataAction::Mode::Execute);
+  // The resolver-aware CreateDataStore should still produce InMemory even for
+  // large arrays: the resolver either returns "" or k_InMemoryFormat, both of
+  // which route to the built-in in-memory factory.
+  DataStructure ds;
+  DataPath dp({"TestArray"});
+  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, dp, {100, 100, 100}, {1}, IDataAction::Mode::Execute);
   REQUIRE(store != nullptr);
   REQUIRE(store->getStoreType() == IDataStore::StoreType::InMemory);
 

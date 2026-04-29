@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
@@ -182,9 +183,11 @@ Result<> ComputeFeatureCentroids::operator()()
 
     ShapeType tupleShape{totalFeatures};
     ShapeType componentShape{2};
-    auto rangeXStorePtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
-    auto rangeYStorePtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
-    auto rangeZStorePtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+    // These are scratch buffers passed by reference to AdjustCentroidsForPeriodicFaces;
+    // they never live in a DataStructure, so they're allocated as plain in-memory stores.
+    auto rangeXStorePtr = std::make_shared<DataStore<uint64>>(tupleShape, componentShape, uint64{0});
+    auto rangeYStorePtr = std::make_shared<DataStore<uint64>>(tupleShape, componentShape, uint64{0});
+    auto rangeZStorePtr = std::make_shared<DataStore<uint64>>(tupleShape, componentShape, uint64{0});
     auto& rangeXStoreRef = *rangeXStorePtr;
     auto& rangeYStoreRef = *rangeYStorePtr;
     auto& rangeZStoreRef = *rangeZStorePtr;

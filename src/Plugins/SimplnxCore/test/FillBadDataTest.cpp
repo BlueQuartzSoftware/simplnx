@@ -37,12 +37,12 @@ void BuildFillBadDataTestData(DataStructure& ds, usize dimX, usize dimY, usize d
   imageGeom->setCellData(*cellAM);
 
   const DataPath featureIdsPath = DataPath({"DataContainer", "CellData", "FeatureIds"});
-  auto featureIdsDataStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, featureIdsPath, cellShape, {1});
+  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellShape, {1}, IDataAction::Mode::Execute);
   auto* featureIdsArray = DataArray<int32>::Create(ds, "FeatureIds", featureIdsDataStore, cellAM->getId());
   auto& featureIdsStore = featureIdsArray->getDataStoreRef();
 
   const DataPath phasesPath = DataPath({"DataContainer", "CellData", "Phases"});
-  auto phasesDataStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, phasesPath, cellShape, {1});
+  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, phasesPath, cellShape, {1}, IDataAction::Mode::Execute);
   auto* phasesArray = DataArray<int32>::Create(ds, "Phases", phasesDataStore, cellAM->getId());
   auto& phasesStore = phasesArray->getDataStoreRef();
 
@@ -526,7 +526,7 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   // Add an extra "IgnoredArray" filled with a sentinel value
   auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"DataContainer", "CellData"}));
   const DataPath ignoredArrayPath = DataPath({"DataContainer", "CellData", "IgnoredArray"});
-  auto ignoredDataStore = DataStoreUtilities::CreateResolvedDataStore<int32>(dataStructure, ignoredArrayPath, cellAM.getShape(), {1});
+  auto ignoredDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, ignoredArrayPath, cellAM.getShape(), {1}, IDataAction::Mode::Execute);
   auto* ignoredArray = DataArray<int32>::Create(dataStructure, "IgnoredArray", ignoredDataStore, cellAM.getId());
   auto& ignoredStore = ignoredArray->getDataStoreRef();
   ignoredStore.fill(k_Sentinel);

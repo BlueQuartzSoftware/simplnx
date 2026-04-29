@@ -129,7 +129,7 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: FaceEdgeVertex Connectivity", "[S
     const ShapeType cellShape = {3, 3, 3};
     auto& am = ds.getDataRefAs<AttributeMatrix>(cellDataPath);
     const DataPath scalarPath = cellDataPath.createChildPath("ScalarData");
-    auto scalarDS = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, scalarPath, cellShape, {1});
+    auto scalarDS = DataStoreUtilities::CreateDataStore<int32>(ds, scalarPath, cellShape, {1}, IDataAction::Mode::Execute);
     auto* scalarArr = DataArray<int32>::Create(ds, "ScalarData", scalarDS, am.getId());
     auto& store = scalarArr->getDataStoreRef();
     store.fill(0);

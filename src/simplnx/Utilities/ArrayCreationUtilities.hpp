@@ -4,7 +4,8 @@
 
 #include "simplnx/Common/SimplnxConfig.hpp"
 #ifdef SIMPLNX_USE_OOC
-#include "SimplnxOoc/OocDataIOManager.hpp"
+#include "SimplnxOoc/OocDataIOManager.hpp" // SimplnxOoc::resolveFormat
+#include "SimplnxOoc/StoreFactory.hpp"     // SimplnxOoc::createChunkedStore, k_OocFormatName
 #endif
 
 #include "simplnx/Common/Result.hpp"
@@ -12,6 +13,7 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -136,7 +138,41 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     }
   }
 
-  auto store = DataStoreUtilities::CreateDataStore<T>(tupleShape, compShape, mode, resolvedFormat);
+  // Preflight: never allocate; emit an EmptyDataStore that carries shape metadata only.
+  // Execute: hand the resolved format directly to the IO collection's typed factory.
+  // The action layer is the canonical "I've already resolved" caller, so we dispatch
+  // to createDataStoreWithType ourselves rather than going through any helper that
+  // would re-resolve.
+  std::shared_ptr<AbstractDataStore<T>> store;
+  switch(mode)
+  {
+  case IDataAction::Mode::Preflight: {
+    store = std::make_unique<EmptyDataStore<T>>(tupleShape, compShape, resolvedFormat);
+    break;
+  }
+  case IDataAction::Mode::Execute: {
+#ifdef SIMPLNX_USE_OOC
+    // OOC compiled in: the OOC store factory is NOT registered with the
+    // IOCollection (the compile-time switch replaced the runtime-hook
+    // registration), so the OOC format must be intercepted and constructed
+    // directly here. Any other format falls through to the core factory.
+    if(resolvedFormat == SimplnxOoc::k_OocFormatName)
+    {
+      store = SimplnxOoc::createChunkedStore<T>(tupleShape, compShape);
+    }
+    else
+    {
+      store = DataStoreUtilities::GetIOCollection().createDataStoreWithType<T>(resolvedFormat, tupleShape, compShape);
+    }
+#else
+    store = DataStoreUtilities::GetIOCollection().createDataStoreWithType<T>(resolvedFormat, tupleShape, compShape);
+#endif
+    break;
+  }
+  default: {
+    throw std::runtime_error("Invalid mode");
+  }
+  }
   if(nullptr == store)
   {
     // No registered IO manager could produce a DataStore<T> for this format.

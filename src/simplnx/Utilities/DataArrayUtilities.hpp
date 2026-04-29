@@ -170,16 +170,11 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
   const usize last = path.getLength() - 1;
 
   std::string name = path[last];
-  NeighborList<T>* neighborList = nullptr;
-  if(mode == IDataAction::Mode::Preflight)
-  {
-    auto listStore = std::make_shared<EmptyListStore<T>>(tupleShape);
-    neighborList = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);
-  }
-  if(mode == IDataAction::Mode::Execute)
-  {
-    neighborList = NeighborList<T>::Create(dataStructure, name, tupleShape, dataObjectId);
-  }
+  // Route through the format resolver so NeighborLists get OOC-backed storage
+  // when the OOC plugin is loaded and the array is eligible (the geometry walk
+  // in the resolver still forces in-core for unstructured/poly geometries).
+  auto listStore = DataStoreUtilities::CreateListStore<T>(dataStructure, path, tupleShape, mode);
+  NeighborList<T>* neighborList = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);
 
   if(neighborList == nullptr)
   {

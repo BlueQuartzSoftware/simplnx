@@ -8,8 +8,8 @@
 #include "simplnx/DataStructure/IO/HDF5/DataArrayIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
+#include "simplnx/DataStructure/ListStore.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
-#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <vector>
 
@@ -99,7 +99,10 @@ public:
 
       usize offset = 0;
       const auto numTuples = numNeighborsStore.getNumberOfTuples();
-      auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numNeighborsStore.getTupleShape());
+      // In-core branch of the import pipeline: allocate a plain in-memory
+      // ListStore. The OOC branch is intercepted upstream by the data store
+      // import handler.
+      auto listStorePtr = std::make_shared<ListStore<T>>(numNeighborsStore.getTupleShape());
       AbstractListStore<T>& listStore = *listStorePtr.get();
       for(usize i = 0; i < numTuples; i++)
       {
@@ -227,7 +230,8 @@ public:
     }
 
     usize offset = 0;
-    auto listStorePtr = DataStoreUtilities::CreateListStore<T>(tupleShape);
+    // In-core branch of the import pipeline: allocate a plain in-memory ListStore.
+    auto listStorePtr = std::make_shared<ListStore<T>>(tupleShape);
     AbstractListStore<T>& listStore = *listStorePtr.get();
     for(usize i = 0; i < numTuples; i++)
     {

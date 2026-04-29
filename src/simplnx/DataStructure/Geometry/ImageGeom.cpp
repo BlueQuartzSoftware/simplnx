@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
@@ -166,7 +167,12 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   // if true first instance, else recalculate
   if(voxelSizes == nullptr)
   {
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, singleVoxelSize);
+    // Route through the format resolver so that very large structured grids
+    // (multi-billion-voxel ImageGeoms) get an OOC-backed store when the OOC
+    // plugin is loaded and the array exceeds the configured threshold.
+    std::vector<DataPath> geomPaths = getDataPaths();
+    DataPath voxelSizesPath = geomPaths.empty() ? DataPath({getName(), k_VoxelSizes}) : geomPaths.front().createChildPath(k_VoxelSizes);
+    auto dataStore = DataStoreUtilities::CreateDataStore<float32>(*getDataStructure(), voxelSizesPath, std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, IDataAction::Mode::Execute);
     voxelSizes = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
     if(voxelSizes == nullptr)
     {
@@ -176,10 +182,7 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
     }
     m_ElementSizesId = voxelSizes->getId();
   }
-  else
-  {
-    voxelSizes->fill(singleVoxelSize);
-  }
+  voxelSizes->fill(singleVoxelSize);
 
   // Used to be error code `1`
   return {};

@@ -287,7 +287,7 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivit
 
     // Quaternions: background = 60° X-rotation, pairs = identity and 30° (EBSDlib order: x,y,z,w)
     const float32 bgHalf = 60.0f * k_DegToRad * 0.5f;
-    auto quatsDS = DataStoreUtilities::CreateResolvedDataStore<float32>(ds, cellDataPath.createChildPath("Quats"), cellShape, {4});
+    auto quatsDS = DataStoreUtilities::CreateDataStore<float32>(ds, cellDataPath.createChildPath("Quats"), cellShape, {4}, IDataAction::Mode::Execute);
     auto* quatsArr = DataArray<float32>::Create(ds, "Quats", quatsDS, am.getId());
     auto& quatsStore = quatsArr->getDataStoreRef();
     for(usize i = 0; i < 27; i++)
@@ -313,14 +313,14 @@ TEST_CASE("OrientationAnalysis::CAxisSegmentFeatures: FaceEdgeVertex Connectivit
       quatsStore[idx * 4 + 3] = std::cos(pairHalf);
     }
 
-    auto phasesDS = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, cellDataPath.createChildPath("Phases"), cellShape, {1});
+    auto phasesDS = DataStoreUtilities::CreateDataStore<int32>(ds, cellDataPath.createChildPath("Phases"), cellShape, {1}, IDataAction::Mode::Execute);
     auto* phasesArr = DataArray<int32>::Create(ds, "Phases", phasesDS, am.getId());
     phasesArr->fill(1);
 
     const ShapeType ensShape = {2};
     auto* ensAM = AttributeMatrix::Create(ds, "CellEnsembleData", ensShape, geom.getId());
     const DataPath crystStructsPath = geomPath.createChildPath("CellEnsembleData").createChildPath("CrystalStructures");
-    auto crystDS = DataStoreUtilities::CreateResolvedDataStore<uint32>(ds, crystStructsPath, ensShape, {1});
+    auto crystDS = DataStoreUtilities::CreateDataStore<uint32>(ds, crystStructsPath, ensShape, {1}, IDataAction::Mode::Execute);
     auto* crystArr = DataArray<uint32>::Create(ds, "CrystalStructures", crystDS, ensAM->getId());
     auto& crystStore = crystArr->getDataStoreRef();
     crystStore[0] = 999;

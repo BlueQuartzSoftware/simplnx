@@ -59,7 +59,7 @@ void BuildIdentifySampleTestData(DataStructure& ds, usize dimX, usize dimY, usiz
   imageGeom->setCellData(*cellAM);
 
   const DataPath maskPath = DataPath({geomName, "CellData", "Mask"});
-  auto maskDataStore = DataStoreUtilities::CreateResolvedDataStore<uint8>(ds, maskPath, cellShape, {1});
+  auto maskDataStore = DataStoreUtilities::CreateDataStore<uint8>(ds, maskPath, cellShape, {1}, IDataAction::Mode::Execute);
   auto* maskArray = DataArray<uint8>::Create(ds, "Mask", maskDataStore, cellAM->getId());
   auto& maskStore = maskArray->getDataStoreRef();
 

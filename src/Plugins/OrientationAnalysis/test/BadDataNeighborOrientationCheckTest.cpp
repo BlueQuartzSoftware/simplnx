@@ -59,14 +59,14 @@ void BuildOrientationOctantDataset(DataStructure& ds)
   AttributeMatrix* ensembleAM = AttributeMatrix::Create(ds, Constants::k_Cell_Ensemble_Data, {2}, imageGeom->getId());
 
   // Crystal Structures: [999 (Unknown), 1 (Cubic_High)]
-  auto csStore = DataStoreUtilities::CreateResolvedDataStore<uint32>(ds, VerificationConstants::k_CStuctsArrayPath, {2}, {1});
+  auto csStore = DataStoreUtilities::CreateDataStore<uint32>(ds, VerificationConstants::k_CStuctsArrayPath, {2}, {1}, IDataAction::Mode::Execute);
   auto* crystalStructures = DataArray<uint32>::Create(ds, VerificationConstants::k_CStuctsName, csStore, ensembleAM->getId());
   auto& csRef = crystalStructures->getDataStoreRef();
   csRef.setValue(0, 999);
   csRef.setValue(1, 1);
 
   // Phases: all phase 1 — bulk-write per Z-slice to avoid per-element OOC overhead
-  auto phasesStore = DataStoreUtilities::CreateResolvedDataStore<int32>(ds, VerificationConstants::k_PhasesArrayPath, cellTupleShape, {1});
+  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(ds, VerificationConstants::k_PhasesArrayPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
   auto* phases = DataArray<int32>::Create(ds, VerificationConstants::k_PhasesName, phasesStore, cellAM->getId());
   auto& phasesRef = phases->getDataStoreRef();
   {
@@ -79,7 +79,7 @@ void BuildOrientationOctantDataset(DataStructure& ds)
   }
 
   // Mask: ~40% bad voxels (mask=0) — bulk-write per Z-slice
-  auto maskStore = DataStoreUtilities::CreateResolvedDataStore<uint8>(ds, VerificationConstants::k_MaskArrayPath, cellTupleShape, {1});
+  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(ds, VerificationConstants::k_MaskArrayPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
   auto* mask = DataArray<uint8>::Create(ds, VerificationConstants::k_MaskName, maskStore, cellAM->getId());
   auto& maskRef = mask->getDataStoreRef();
   {
@@ -101,7 +101,7 @@ void BuildOrientationOctantDataset(DataStructure& ds)
   }
 
   // Quats: 8 octants with distinct base quaternions (15 deg apart about Z axis) — bulk-write per Z-slice
-  auto quatsStore = DataStoreUtilities::CreateResolvedDataStore<float32>(ds, VerificationConstants::k_QuatsArrayPath, cellTupleShape, {4});
+  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(ds, VerificationConstants::k_QuatsArrayPath, cellTupleShape, {4}, IDataAction::Mode::Execute);
   auto* quats = DataArray<float32>::Create(ds, VerificationConstants::k_QuatsName, quatsStore, cellAM->getId());
   auto& quatsRef = quats->getDataStoreRef();
   {

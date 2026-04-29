@@ -41,11 +41,11 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 
-  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
   auto* featureIdsArray = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAM->getId());
   auto& featureIdsStore = featureIdsArray->getDataStoreRef();
 
-  auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(cellTupleShape, {3}, IDataAction::Mode::Execute);
+  auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3}, IDataAction::Mode::Execute);
   auto* eulerArray = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAM->getId());
   auto& eulerStore = eulerArray->getDataStoreRef();
 

@@ -39,15 +39,15 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 
-  auto confDataStore = DataStoreUtilities::CreateDataStore<float32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto confDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_ConfidencePath, cellTupleShape, {1}, IDataAction::Mode::Execute);
   auto* confArray = DataArray<float32>::Create(dataStructure, "Confidence Index", confDataStore, cellAM->getId());
   auto& confStore = confArray->getDataStoreRef();
 
-  auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(cellTupleShape, {3}, IDataAction::Mode::Execute);
+  auto eulerDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CellDataPath.createChildPath("EulerAngles"), cellTupleShape, {3}, IDataAction::Mode::Execute);
   auto* eulerArray = DataArray<float32>::Create(dataStructure, "EulerAngles", eulerDataStore, cellAM->getId());
   auto& eulerStore = eulerArray->getDataStoreRef();
 
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_CellDataPath.createChildPath("Phases"), cellTupleShape, {1}, IDataAction::Mode::Execute);
   auto* phasesArray = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAM->getId());
   auto& phasesStore = phasesArray->getDataStoreRef();
 

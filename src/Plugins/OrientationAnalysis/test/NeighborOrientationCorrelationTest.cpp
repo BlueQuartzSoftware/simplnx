@@ -231,15 +231,15 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 
-  auto quatsDataStore = DataStoreUtilities::CreateDataStore<float32>(cellTupleShape, {4}, IDataAction::Mode::Execute);
+  auto quatsDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_QuatsPath, cellTupleShape, {4}, IDataAction::Mode::Execute);
   auto* quatsArray = DataArray<float32>::Create(dataStructure, "Quats", quatsDataStore, cellAM->getId());
   auto& quatsStore = quatsArray->getDataStoreRef();
 
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_PhasesPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
   auto* phasesArray = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAM->getId());
   auto& phasesStore = phasesArray->getDataStoreRef();
 
-  auto ciDataStore = DataStoreUtilities::CreateDataStore<float32>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto ciDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CIPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
   auto* ciArray = DataArray<float32>::Create(dataStructure, "Confidence Index", ciDataStore, cellAM->getId());
   auto& ciStore = ciArray->getDataStoreRef();
 
@@ -285,7 +285,7 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
 
   // Ensemble data — small enough for per-element writes
   auto* ensembleAM = AttributeMatrix::Create(dataStructure, "Ensemble Data", {2}, imageGeom->getId());
-  auto crystalStructuresDataStore = DataStoreUtilities::CreateDataStore<uint32>({2}, {1}, IDataAction::Mode::Execute);
+  auto crystalStructuresDataStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, k_CrystalStructuresPath, {2}, {1}, IDataAction::Mode::Execute);
   auto* crystalStructuresArray = DataArray<uint32>::Create(dataStructure, "CrystalStructures", crystalStructuresDataStore, ensembleAM->getId());
   std::array<uint32, 2> csData = {999, 1}; // Unknown, Cubic-High (m-3m)
   crystalStructuresArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(csData.data(), 2));

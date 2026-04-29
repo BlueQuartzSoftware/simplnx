@@ -45,7 +45,7 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
   auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
   imageGeom->setCellData(*cellAM);
 
-  auto maskDataStore = DataStoreUtilities::CreateDataStore<bool>(cellTupleShape, {1}, IDataAction::Mode::Execute);
+  auto maskDataStore = DataStoreUtilities::CreateDataStore<bool>(dataStructure, k_MaskPath, cellTupleShape, {1}, IDataAction::Mode::Execute);
   auto* maskArray = DataArray<bool>::Create(dataStructure, "Mask", maskDataStore, cellAM->getId());
   auto& maskStore = maskArray->getDataStoreRef();
 

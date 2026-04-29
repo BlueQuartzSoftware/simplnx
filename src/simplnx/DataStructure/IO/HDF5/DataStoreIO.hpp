@@ -3,7 +3,6 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataStoreIO.hpp"
-#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/DatasetIO.hpp"
 
 #include <fmt/format.h>
@@ -87,7 +86,11 @@ inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(con
     return result;
   }
 
-  auto dataStore = DataStoreUtilities::CreateDataStore<T>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  // In-core branch of the import pipeline: always allocate a plain in-memory
+  // DataStore and load from disk. The OOC branch is handled by the higher-level
+  // data store import handler before this is reached, so the resolver should
+  // not be consulted here.
+  auto dataStore = std::make_shared<DataStore<T>>(tupleShape, componentShape, T{});
   dataStore->readHdf5(datasetReader);
   return {std::move(dataStore)};
 }

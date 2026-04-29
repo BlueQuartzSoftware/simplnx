@@ -3,10 +3,14 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Utilities/DataObjectUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/GeometryHelpers.hpp"
+
+#include <nonstd/span.hpp>
 
 #include <iterator>
 #include <stdexcept>
+#include <vector>
 
 using namespace nx::core;
 
@@ -314,8 +318,11 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
 
   if(sizeArray == nullptr)
   {
-    // If we are here we are not recalculating so create array
-    auto dataStore = std::make_unique<DataStore<float32>>(std::vector{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
+    // Route through the format resolver so very large RectGrids get an OOC
+    // store when the OOC plugin is loaded and the array exceeds the threshold.
+    std::vector<DataPath> geomPaths = getDataPaths();
+    DataPath sizesPath = geomPaths.empty() ? DataPath({getName(), k_VoxelSizes}) : geomPaths.front().createChildPath(k_VoxelSizes);
+    auto dataStore = DataStoreUtilities::CreateDataStore<float32>(*getDataStructure(), sizesPath, std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, IDataAction::Mode::Execute);
     sizeArray = DataArray<float32>::Create(*getDataStructure(), k_VoxelSizes, std::move(dataStore), getId());
     if(sizeArray == nullptr)
     {
@@ -343,30 +350,68 @@ Result<> RectGridGeom::findElementSizes(bool recalculate)
     // Used to be error code `-1`
     return MakeErrorResult(-1832, "RectGridGeom Error: No valid Z Bounds Array");
   }
-  float32 xRes = 0.0f;
-  float32 yRes = 0.0f;
-  float32 zRes = 0.0f;
 
-  for(usize z = 0; z < m_Dimensions[2]; z++)
+  // Bulk-load each per-axis bounds array once (small: O(dim+1) floats per axis)
+  // and precompute per-axis spacings. This avoids per-voxel virtual dispatch
+  // through xBnds->at(), which would be catastrophic for OOC stores.
+  const usize dimX = m_Dimensions[0];
+  const usize dimY = m_Dimensions[1];
+  const usize dimZ = m_Dimensions[2];
+
+  std::vector<float32> xBndsBuf(dimX + 1);
+  std::vector<float32> yBndsBuf(dimY + 1);
+  std::vector<float32> zBndsBuf(dimZ + 1);
+  xBnds->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(xBndsBuf.data(), xBndsBuf.size()));
+  yBnds->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(yBndsBuf.data(), yBndsBuf.size()));
+  zBnds->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(zBndsBuf.data(), zBndsBuf.size()));
+
+  std::vector<float32> xRes(dimX);
+  std::vector<float32> yRes(dimY);
+  std::vector<float32> zRes(dimZ);
+  for(usize x = 0; x < dimX; x++)
   {
-    for(usize y = 0; y < m_Dimensions[1]; y++)
+    xRes[x] = xBndsBuf[x + 1] - xBndsBuf[x];
+    if(xRes[x] <= 0.0f)
     {
-      for(usize x = 0; x < m_Dimensions[0]; x++)
+      m_ElementSizesId.reset();
+      return MakeErrorResult(-1833, fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less along X.\nX-Index: {} | X-Spacing: {}", x, xRes[x]));
+    }
+  }
+  for(usize y = 0; y < dimY; y++)
+  {
+    yRes[y] = yBndsBuf[y + 1] - yBndsBuf[y];
+    if(yRes[y] <= 0.0f)
+    {
+      m_ElementSizesId.reset();
+      return MakeErrorResult(-1833, fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less along Y.\nY-Index: {} | Y-Spacing: {}", y, yRes[y]));
+    }
+  }
+  for(usize z = 0; z < dimZ; z++)
+  {
+    zRes[z] = zBndsBuf[z + 1] - zBndsBuf[z];
+    if(zRes[z] <= 0.0f)
+    {
+      m_ElementSizesId.reset();
+      return MakeErrorResult(-1833, fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less along Z.\nZ-Index: {} | Z-Spacing: {}", z, zRes[z]));
+    }
+  }
+
+  // Fill the size array Z-slice at a time using bulk I/O. For OOC backends
+  // this collapses N per-voxel chunk ops into dimZ slice-sized writes.
+  auto& sizeStoreRef = sizeArray->getDataStoreRef();
+  const usize sliceSize = dimX * dimY;
+  std::vector<float32> sliceBuf(sliceSize);
+  for(usize z = 0; z < dimZ; z++)
+  {
+    for(usize y = 0; y < dimY; y++)
+    {
+      const float32 yzRes = yRes[y] * zRes[z];
+      for(usize x = 0; x < dimX; x++)
       {
-        xRes = xBnds->at(x + 1) - xBnds->at(x);
-        yRes = yBnds->at(y + 1) - yBnds->at(y);
-        zRes = zBnds->at(z + 1) - zBnds->at(z);
-        if(xRes <= 0.0f || yRes <= 0.0f || zRes <= 0.0f)
-        {
-          m_ElementSizesId.reset();
-          // Used to be error code `-1`
-          return MakeErrorResult(-1833,
-                                 fmt::format("RectGridGeom Error: Found voxel with a spacing of zero or less.\nX-Index: {} | X-Spacing: {}\nY-Index: {} | Y-Spacing: {}\nZ-Index: {} | Z-Spacing: {}",
-                                             x, xRes, y, yRes, z, zRes));
-        }
-        sizeArray->setValue((m_Dimensions[0] * m_Dimensions[1] * z) + (m_Dimensions[0] * y) + x, zRes * yRes * xRes);
+        sliceBuf[y * dimX + x] = xRes[x] * yzRes;
       }
     }
+    sizeStoreRef.copyFromBuffer(z * sliceSize, nonstd::span<const float32>(sliceBuf.data(), sliceSize));
   }
 
   m_ElementSizesId = sizeArray->getId();
