@@ -31,6 +31,10 @@ public:
   static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static constexpr StringLiteral k_SurfaceMeshFaceMisorientationColorsArrayName_Key = "surface_mesh_face_misorientation_colors_array_name";
 
+  // Parameter Keys V2
+  static constexpr StringLiteral k_StoreAxisAngle_Key = "store_axis_angle";
+  static constexpr StringLiteral k_AxisAngleArrayName_Key = "axis_angle_array_name";
+
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
