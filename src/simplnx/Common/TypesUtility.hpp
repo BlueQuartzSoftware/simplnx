@@ -196,6 +196,42 @@ inline constexpr usize GetNumericTypeSize(NumericType numericType)
 }
 
 /**
+ * @brief Returns sizeof(T) for the T associated with the given DataType.
+ * @param dataType
+ * @return
+ */
+inline constexpr usize GetDataTypeSize(DataType dataType)
+{
+  switch(dataType)
+  {
+  case DataType::int8:
+    return sizeof(int8);
+  case DataType::uint8:
+    return sizeof(uint8);
+  case DataType::int16:
+    return sizeof(int16);
+  case DataType::uint16:
+    return sizeof(uint16);
+  case DataType::int32:
+    return sizeof(int32);
+  case DataType::uint32:
+    return sizeof(uint32);
+  case DataType::int64:
+    return sizeof(int64);
+  case DataType::uint64:
+    return sizeof(uint64);
+  case DataType::float32:
+    return sizeof(float32);
+  case DataType::float64:
+    return sizeof(float64);
+  case DataType::boolean:
+    return sizeof(bool);
+  default:
+    throw std::runtime_error("nx::core::GetDataTypeSize: Unsupported type");
+  }
+}
+
+/**
  * @brief Returns a string representation of the passed in NumericType
  * @param numericType
  * @return

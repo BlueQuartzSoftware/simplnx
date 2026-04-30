@@ -18,6 +18,24 @@ cp -r "simplnx/src/Plugins/ITKImageProcessing/pipelines" "$PREFIX/share/simplnx/
 
 # *****************************************************************************
 echo "#-------------------------------------------------------------------------------"
+echo " BUILDING STB"
+echo "#-------------------------------------------------------------------------------"
+
+# mkdir stb_build
+# cd stb_build
+cd stb
+
+cp *.h "$PREFIX/include/"
+
+mkdir -p "$PREFIX/share/stb"
+cp "$SRC_DIR/simplnx/conda/FindStb.cmake" "$PREFIX/share/stb/FindStb.cmake"
+
+echo "# This is a blank file to make CMake Happy" > "$PREFIX/share/stb/stb-config.cmake"
+cd ..
+
+
+# *****************************************************************************
+echo "#-------------------------------------------------------------------------------"
 echo " BUILDING H5Support"
 echo "#-------------------------------------------------------------------------------"
 

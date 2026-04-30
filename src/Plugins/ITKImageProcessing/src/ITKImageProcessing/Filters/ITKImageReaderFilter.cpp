@@ -61,7 +61,7 @@ std::string ITKImageReaderFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ITKImageReaderFilter::defaultTags() const
 {
-  return {className(), "io", "input", "read", "import"};
+  return {className(), "io", "input", "read", "import", "image"};
 }
 
 //------------------------------------------------------------------------------
@@ -144,7 +144,7 @@ IFilter::PreflightResult ITKImageReaderFilter::preflightImpl(const DataStructure
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
-  auto originSpacingProcessing = static_cast<cxItkImageReaderFilter::OriginSpacingProcessingTiming>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
+  auto originSpacingProcessing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
   auto pChoiceType = filterArgs.value<ChoicesParameter::ValueType>(k_ImageDataType_Key);
   auto croppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
@@ -179,7 +179,7 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
   auto shouldChangeOrigin = filterArgs.value<bool>(k_ChangeOrigin_Key);
   //  auto shouldCenterOrigin = filterArgs.value<bool>(k_CenterOrigin_Key);
   auto shouldChangeSpacing = filterArgs.value<bool>(k_ChangeSpacing_Key);
-  auto originSpacingProcessing = static_cast<cxItkImageReaderFilter::OriginSpacingProcessingTiming>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
+  auto originSpacingProcessing = static_cast<OriginSpacingProcessing>(filterArgs.value<ChoicesParameter::ValueType>(k_OriginSpacingProcessing_Key));
   auto origin = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Origin_Key);
   auto spacing = filterArgs.value<VectorFloat64Parameter::ValueType>(k_Spacing_Key);
   auto pChangeDataType = filterArgs.value<bool>(k_ChangeDataType_Key);
@@ -196,11 +196,9 @@ Result<> ITKImageReaderFilter::executeImpl(DataStructure& dataStructure, const A
 
   std::string fileNameString = fileName.string();
 
-  std::optional<std::vector<float64>> spacingOpt =
-      shouldChangeSpacing && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed ? std::make_optional(spacing) : std::nullopt;
+  std::optional<std::vector<float64>> spacingOpt = shouldChangeSpacing && originSpacingProcessing == OriginSpacingProcessing::Preprocessed ? std::make_optional(spacing) : std::nullopt;
 
-  std::optional<std::vector<float64>> originOpt =
-      shouldChangeOrigin && originSpacingProcessing == cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed ? std::make_optional(origin) : std::nullopt;
+  std::optional<std::vector<float64>> originOpt = shouldChangeOrigin && originSpacingProcessing == OriginSpacingProcessing::Preprocessed ? std::make_optional(origin) : std::nullopt;
 
   Result<> result = {};
   if(pChangeDataType)

@@ -9,6 +9,27 @@ mkdir sdk
 set lib_prefix=%LIBRARY_PREFIX:\=/%
 echo lib_prefix = %lib_prefix%
 
+:: **************************************************************************** 
+:: Build the stb library (header-only)  
+:: **************************************************************************** 
+echo *************************** stb ****************************************** 
+cd %SRC_DIR%
+cd stb
+
+if not exist "%LIBRARY_PREFIX%\include" mkdir "%LIBRARY_PREFIX%\include"
+copy /Y *.h "%LIBRARY_PREFIX%\include\" > nul
+if errorlevel 1 exit 1  
+  
+if not exist "%LIBRARY_PREFIX%\share\stb" mkdir "%LIBRARY_PREFIX%\share\stb"
+
+copy /Y "%SRC_DIR%\simplnx\conda\FindStb.cmake" "%LIBRARY_PREFIX%\share\stb\FindStb.cmake" > nul
+if errorlevel 1 exit 1
+
+echo # This is a blank file to make CMake Happy> "%LIBRARY_PREFIX%\share\stb\stb-config.cmake"
+cd ..
+
+
+
 :: ****************************************************************************
 :: Build the H5Support library
 :: ****************************************************************************

@@ -16,6 +16,12 @@
       "name": "eigen3"
     },
     {
+      "name": "tiff"
+    },
+    {
+      "name": "stb"
+    },
+    {
       "name": "hdf5",
       "features": [
         "cpp",

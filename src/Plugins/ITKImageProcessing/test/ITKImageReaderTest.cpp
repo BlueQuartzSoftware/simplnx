@@ -20,16 +20,16 @@ using namespace nx::core;
 
 namespace
 {
-const std::string k_TestDataDirName = "itk_image_reader_test";
+const std::string k_TestDataDirName = "itk_image_reader_test_v3";
 const fs::path k_TestDataDir = fs::path(unit_test::k_TestFilesDir.view()) / k_TestDataDirName;
-const fs::path k_ExemplarFile = k_TestDataDir / "itk_image_reader_test.dream3d";
+const fs::path k_ExemplarFile = k_TestDataDir / "itk_image_reader_test_v3.dream3d";
 const fs::path k_InputImageFile = k_TestDataDir / "200x200_0.tif";
 const std::string k_ImageDataName = "ImageData";
 } // namespace
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Read_Basic", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -72,7 +72,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Read_Basic", "[ITKImageProc
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Origin", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -118,7 +118,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Origin", "[ITKImag
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Centering_Origin", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -162,7 +162,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Centering_Origin", "[ITKIma
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Cropping", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   // This block generates every combination of croppingOptions, changeOrigin, and changeSpacing and then the entire test executes for each combination
   std::vector<float64> spacing = {2.0, 2.0, 1.0};
@@ -200,7 +200,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Cropping", "[ITKImageProces
     args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, true);
     args.insertOrAssign(ITKImageReaderFilter::k_Spacing_Key, spacing);
     args.insertOrAssign(ITKImageReaderFilter::k_CroppingOptions_Key, croppingOptions);
-    args.insertOrAssign(ITKImageReaderFilter::k_OriginSpacingProcessing_Key, to_underlying(cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed));
+    args.insertOrAssign(ITKImageReaderFilter::k_OriginSpacingProcessing_Key, to_underlying(OriginSpacingProcessing::Preprocessed));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -239,7 +239,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Cropping", "[ITKImageProces
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Spacing", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -285,7 +285,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Override_Spacing", "[ITKIma
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Preprocessed", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -313,7 +313,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Preprocessed"
   args.insertOrAssign(ITKImageReaderFilter::k_Origin_Key, k_Origin);
   args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, true);
   args.insertOrAssign(ITKImageReaderFilter::k_Spacing_Key, k_Spacing);
-  args.insertOrAssign(ITKImageReaderFilter::k_OriginSpacingProcessing_Key, to_underlying(cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed));
+  args.insertOrAssign(ITKImageReaderFilter::k_OriginSpacingProcessing_Key, to_underlying(OriginSpacingProcessing::Preprocessed));
   args.insertOrAssign(ITKImageReaderFilter::k_CroppingOptions_Key, cropOptions);
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -343,7 +343,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Preprocessed"
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Postprocessed", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -402,7 +402,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: OriginSpacing_Postprocessed
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: DataType_Conversion", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -449,7 +449,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: DataType_Conversion", "[ITK
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_Crop_DataType", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -505,7 +505,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_Crop_DataType",
 
 TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_All", "[ITKImageProcessing][ITKImageReaderFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test.tar.gz", k_TestDataDirName);
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
   UnitTest::LoadPlugins();
   ITKImageReaderFilter filter;
@@ -530,7 +530,7 @@ TEST_CASE("ITKImageProcessing::ITKImageReaderFilter: Interaction_All", "[ITKImag
   args.insertOrAssign(ITKImageReaderFilter::k_Origin_Key, k_Origin);
   args.insertOrAssign(ITKImageReaderFilter::k_ChangeSpacing_Key, true);
   args.insertOrAssign(ITKImageReaderFilter::k_Spacing_Key, k_Spacing);
-  args.insertOrAssign(ITKImageReaderFilter::k_OriginSpacingProcessing_Key, to_underlying(cxItkImageReaderFilter::OriginSpacingProcessingTiming::Preprocessed));
+  args.insertOrAssign(ITKImageReaderFilter::k_OriginSpacingProcessing_Key, to_underlying(OriginSpacingProcessing::Preprocessed));
   args.insertOrAssign(ITKImageReaderFilter::k_CroppingOptions_Key, cropOptions);
   args.insertOrAssign(ITKImageReaderFilter::k_ChangeDataType_Key, true);
   args.insertOrAssign(ITKImageReaderFilter::k_ImageDataType_Key, k_DataTypeUInt16);
