@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <optional>
 #include <string>
 
 namespace nx::core::UnitTest
@@ -14,7 +15,6 @@ namespace nx::core::UnitTest
  */
 enum class DatasetLayout : std::int8_t
 {
-  Unknown = -1, ///< Layout could not be determined (e.g. dataset open failed).
   Compact = 0,
   Contiguous = 1,
   Chunked = 2,
@@ -26,7 +26,7 @@ enum class DatasetLayout : std::int8_t
  */
 struct DatasetProbeInfo
 {
-  DatasetLayout layout = DatasetLayout::Unknown;
+  DatasetLayout layout = DatasetLayout::Contiguous;
   bool hasDeflate = false;
   std::int32_t deflateLevel = -1;
 };
@@ -34,17 +34,15 @@ struct DatasetProbeInfo
 /**
  * @brief Opens an HDF5 file read-only, inspects the named dataset's creation
  *        property list, and returns its storage layout and gzip/deflate filter
- *        configuration. Performs all HDF5 handle cleanup internally so callers
- *        may REQUIRE on the returned struct without leaking handles on assertion
- *        failure.
+ *        configuration.
  *
- * On any failure (file open, dataset open, property-list query) the returned
- * info has its default values (DatasetLayout::Unknown, hasDeflate == false).
+ * Returns std::nullopt on any failure (file open, dataset open, property-list
+ * query, or unrecognized layout).
  *
  * @param filePath    Path to the .h5 / .dream3d file to open.
  * @param datasetPath Absolute HDF5 path to the target dataset (e.g. "/g/array").
- * @return DatasetProbeInfo populated with layout and filter info.
+ * @return DatasetProbeInfo populated with layout and filter info, or std::nullopt on failure.
  */
-DatasetProbeInfo ProbeHdf5Dataset(const std::filesystem::path& filePath, const std::string& datasetPath);
+std::optional<DatasetProbeInfo> ProbeHdf5Dataset(const std::filesystem::path& filePath, const std::string& datasetPath);
 
 } // namespace nx::core::UnitTest

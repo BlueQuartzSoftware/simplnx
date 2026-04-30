@@ -1124,9 +1124,10 @@ TEST_CASE("DatasetIO: writeSpan uses chunked+deflate when compression level > 0"
   }
 
   auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/" + datasetName);
-  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Chunked);
-  REQUIRE(info.hasDeflate);
-  REQUIRE(info.deflateLevel == 5);
+  REQUIRE(info.has_value());
+  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Chunked);
+  REQUIRE(info->hasDeflate);
+  REQUIRE(info->deflateLevel == 5);
 }
 
 TEST_CASE("DatasetIO: writeSpan stays contiguous when compression level is 0", "[DatasetIO][Compression]")
@@ -1147,8 +1148,9 @@ TEST_CASE("DatasetIO: writeSpan stays contiguous when compression level is 0", "
   }
 
   auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/d");
-  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Contiguous);
-  REQUIRE(info.hasDeflate == false);
+  REQUIRE(info.has_value());
+  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
+  REQUIRE(info->hasDeflate == false);
 }
 
 TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with compression on", "[DatasetIO][Compression]")
@@ -1170,6 +1172,7 @@ TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with com
   }
 
   auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, "g/d");
-  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Contiguous);
-  REQUIRE(info.hasDeflate == false);
+  REQUIRE(info.has_value());
+  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
+  REQUIRE(info->hasDeflate == false);
 }

@@ -660,12 +660,12 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
   auto writeResult = DREAM3D::WriteFile(outPath, dataStructure, Pipeline{}, false, options);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
-  // Inspect on-disk encoding via the RAII-safe helper (never leaks handles on REQUIRE failure).
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/LargeArray";
   auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
-  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Chunked);
-  REQUIRE(info.hasDeflate);
-  REQUIRE(info.deflateLevel == 5);
+  REQUIRE(info.has_value());
+  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Chunked);
+  REQUIRE(info->hasDeflate);
+  REQUIRE(info->deflateLevel == 5);
 
   auto fileReader = HDF5::FileIO::ReadFile(outPath);
   REQUIRE(fileReader.isValid());
@@ -704,8 +704,9 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilt
 
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
   auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
-  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Contiguous);
-  REQUIRE(info.hasDeflate == false);
+  REQUIRE(info.has_value());
+  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
+  REQUIRE(info->hasDeflate == false);
 }
 
 TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREAM3DFilter][Compression]")
@@ -739,9 +740,10 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
 
   const std::string hdfPath = std::string("/") + nx::core::Constants::k_DataStructureTag + "/A";
   auto info = nx::core::UnitTest::ProbeHdf5Dataset(outPath, hdfPath);
-  REQUIRE(info.layout == nx::core::UnitTest::DatasetLayout::Chunked);
-  REQUIRE(info.hasDeflate);
-  REQUIRE(info.deflateLevel == 5);
+  REQUIRE(info.has_value());
+  REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Chunked);
+  REQUIRE(info->hasDeflate);
+  REQUIRE(info->deflateLevel == 5);
 
   auto fr = nx::core::HDF5::FileIO::ReadFile(outPath);
   auto fileResult = nx::core::DREAM3D::ReadFile(fr);
@@ -781,10 +783,12 @@ TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DF
   const std::string dsRoot = std::string("/") + nx::core::Constants::k_DataStructureTag;
   auto smallInfo = nx::core::UnitTest::ProbeHdf5Dataset(outPath, dsRoot + "/Small");
   auto bigInfo = nx::core::UnitTest::ProbeHdf5Dataset(outPath, dsRoot + "/Big");
-  REQUIRE(smallInfo.layout == nx::core::UnitTest::DatasetLayout::Contiguous);
-  REQUIRE(smallInfo.hasDeflate == false);
-  REQUIRE(bigInfo.layout == nx::core::UnitTest::DatasetLayout::Chunked);
-  REQUIRE(bigInfo.hasDeflate);
+  REQUIRE(smallInfo.has_value());
+  REQUIRE(bigInfo.has_value());
+  REQUIRE(smallInfo->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
+  REQUIRE(smallInfo->hasDeflate == false);
+  REQUIRE(bigInfo->layout == nx::core::UnitTest::DatasetLayout::Chunked);
+  REQUIRE(bigInfo->hasDeflate);
 }
 
 TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilter][Compression]")

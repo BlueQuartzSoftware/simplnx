@@ -57,12 +57,12 @@ std::string GetNameFromFilterType(H5Z_filter_t id)
  *
  * Intentional fall-through (Result is valid, value == H5P_DEFAULT):
  *   - compressionLevel == 0 (compression disabled)
- *   - empty dims (defensive — writeSpan always passes the dataspace rank)
- *   - elementByteSize * product(dims) overflows usize (defensive)
  *   - totalBytes < k_SmallArrayThresholdBytes (bypass — chunk-index overhead would dominate)
  *
  * Failure outcomes (Result is invalid):
  *   - compressionLevel outside [0, 9]
+ *   - empty dims or zero elementByteSize (caller bug — writeSpan must pass the dataspace rank)
+ *   - elementByteSize * product(dims) overflows usize
  *   - H5Pcreate / H5Pset_chunk / H5Pset_deflate fails — the HDF5 error code is propagated
  *
  * Chunk shape targets ~1 MiB per chunk along the outermost (tuple) dimension of dims.
@@ -80,22 +80,28 @@ nx::core::Result<hid_t> BuildChunkedDeflateDcpl(const std::vector<usize>& dims, 
     return {H5P_DEFAULT};
   }
 
-  // Defensive — writeSpan is the only caller and always passes the dataspace rank.
   if(dims.empty())
   {
-    return {H5P_DEFAULT};
+    return nx::core::MakeErrorResult<hid_t>(-1303, "BuildChunkedDeflateDcpl called with empty dims");
+  }
+  if(elementByteSize == 0)
+  {
+    return nx::core::MakeErrorResult<hid_t>(-1304, "BuildChunkedDeflateDcpl called with zero elementByteSize");
   }
 
-  // Total byte size with saturating-overflow detection. Fall through to contiguous on
-  // either zero-size or unsigned wrap. In practice unreachable (would require >2^64 bytes),
-  // but keeping the arithmetic honest is cheap.
+  // Total byte size with saturating-overflow detection. In practice unreachable
+  // (would require >2^64 bytes), but keeping the arithmetic honest is cheap.
   usize totalBytes = elementByteSize;
   for(auto d : dims)
   {
     const usize castD = static_cast<usize>(d);
-    if(castD == 0 || totalBytes > std::numeric_limits<usize>::max() / castD)
+    if(castD == 0)
     {
-      return {H5P_DEFAULT};
+      return nx::core::MakeErrorResult<hid_t>(-1305, "BuildChunkedDeflateDcpl encountered a zero-valued dimension");
+    }
+    if(totalBytes > std::numeric_limits<usize>::max() / castD)
+    {
+      return nx::core::MakeErrorResult<hid_t>(-1306, "BuildChunkedDeflateDcpl total byte size overflowed usize");
     }
     totalBytes *= castD;
   }
