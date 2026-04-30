@@ -3,6 +3,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -12,8 +13,6 @@
 
 #include <fmt/format.h>
 
-#include <algorithm>
-#include <cctype>
 #include <cstring>
 
 using namespace nx::core;
@@ -139,9 +138,7 @@ Result<> StbImageIO::writePixelData(const std::filesystem::path& filePath, std::
   }
 
   std::string pathStr = filePath.string();
-  std::string ext = filePath.extension().string();
-  // Pass through unsigned char — std::tolower(int) is UB on negative input.
-  std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+  const std::string ext = nx::core::StringUtilities::toLower(filePath.extension().string());
 
   int w = static_cast<int>(metadata.width);
   int h = static_cast<int>(metadata.height);
