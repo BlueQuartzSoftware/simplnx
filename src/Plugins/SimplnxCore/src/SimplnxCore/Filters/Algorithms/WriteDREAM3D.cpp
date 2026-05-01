@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/AtomicFile.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
@@ -55,7 +56,9 @@ Result<> WriteDREAM3D::operator()()
     pipeline = *pipelinePtr;
   }
 
-  auto results = DREAM3D::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf);
+  nx::core::HDF5::DataStructureWriter::WriteOptions writeOptions;
+  writeOptions.compressionLevel = m_InputValues->UseCompression ? m_InputValues->CompressionLevel : 0;
+  auto results = DREAM3D::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
   if(results.valid())
   {
     Result<> commitResult = atomicFile.commit();

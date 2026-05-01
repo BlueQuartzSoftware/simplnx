@@ -1,5 +1,6 @@
 #pragma once
 
+#include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -91,6 +92,17 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const File
 SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure);
 
 /**
+ * @brief Writes a .dream3d file with the specified data and explicit write options.
+ *        Equivalent to the no-options overload when a default-constructed WriteOptions is provided.
+ * @param fileWriter     An open HDF5 file writer to receive the serialized content.
+ * @param pipeline       Pipeline metadata to embed alongside the DataStructure.
+ * @param dataStructure  DataStructure to serialize.
+ * @param options        Write-time options (e.g. gzip compression level for DataArray datasets).
+ * @return Result<>      Success, or an error describing the first failing write step.
+ */
+SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure, const nx::core::HDF5::DataStructureWriter::WriteOptions& options);
+
+/**
  * @brief Writes a .dream3d file with the specified data.
  * @param path
  * @param dataStructure
@@ -98,6 +110,19 @@ SIMPLNX_EXPORT Result<> WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipe
  * @return bool
  */
 SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {}, bool writeXdmf = false);
+
+/**
+ * @brief Writes a .dream3d file with the specified data and explicit write options.
+ *        Equivalent to the no-options overload when a default-constructed WriteOptions is provided.
+ * @param path           Destination filesystem path for the .dream3d file.
+ * @param dataStructure  DataStructure to serialize.
+ * @param pipeline       Pipeline metadata to embed alongside the DataStructure.
+ * @param writeXdmf      If true, also produces a sibling .xdmf file next to the .dream3d file.
+ * @param options        Write-time options (e.g. gzip compression level for DataArray datasets).
+ * @return Result<>      Success, or an error describing the first failing write step.
+ */
+SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf,
+                                  const nx::core::HDF5::DataStructureWriter::WriteOptions& options);
 
 /**
  * @brief Appends the object at the path in the data structure to the dream3d file

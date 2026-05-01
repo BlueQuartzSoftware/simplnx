@@ -2402,9 +2402,9 @@ Result<> WritePipeline(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipel
   return pipelineDatasetWriter.writeString(pipelineString);
 }
 
-Result<> WriteDataStructure(nx::core::HDF5::FileIO& fileWriter, const DataStructure& dataStructure)
+Result<> WriteDataStructure(nx::core::HDF5::FileIO& fileWriter, const DataStructure& dataStructure, const nx::core::HDF5::DataStructureWriter::WriteOptions& options)
 {
-  return HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
+  return HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter, options);
 }
 
 Result<> WriteFileVersion(nx::core::HDF5::FileIO& fileWriter)
@@ -2419,6 +2419,11 @@ Result<> DREAM3D::WriteFile(nx::core::HDF5::FileIO& fileWriter, const FileData& 
 
 Result<> DREAM3D::WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure)
 {
+  return WriteFile(fileWriter, pipeline, dataStructure, nx::core::HDF5::DataStructureWriter::WriteOptions{});
+}
+
+Result<> DREAM3D::WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& pipeline, const DataStructure& dataStructure, const nx::core::HDF5::DataStructureWriter::WriteOptions& options)
+{
   auto result = WriteFileVersion(fileWriter);
   if(result.invalid())
   {
@@ -2430,10 +2435,16 @@ Result<> DREAM3D::WriteFile(nx::core::HDF5::FileIO& fileWriter, const Pipeline& 
   {
     return result;
   }
-  return WriteDataStructure(fileWriter, dataStructure);
+  return WriteDataStructure(fileWriter, dataStructure, options);
 }
 
 Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf)
+{
+  return WriteFile(path, dataStructure, pipeline, writeXdmf, nx::core::HDF5::DataStructureWriter::WriteOptions{});
+}
+
+Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmf,
+                            const nx::core::HDF5::DataStructureWriter::WriteOptions& options)
 {
   auto fileWriter = nx::core::HDF5::FileIO::WriteFile(path);
   if(!fileWriter.isValid())
@@ -2441,7 +2452,7 @@ Result<> DREAM3D::WriteFile(const std::filesystem::path& path, const DataStructu
     return MakeErrorResult(-9045, fmt::format("Failed to create DREAM3D file at path {}", path.string()));
   }
 
-  auto result = WriteFile(fileWriter, pipeline, dataStructure);
+  auto result = WriteFile(fileWriter, pipeline, dataStructure, options);
   if(result.invalid())
   {
     return result;

@@ -4,11 +4,15 @@
 
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
+
+#include <fmt/format.h>
 
 namespace
 {
 constexpr nx::core::int32 k_NoExportPathError = -1;
+constexpr nx::core::int32 k_InvalidCompressionLevelError = -2;
 } // namespace
 
 namespace nx::core
@@ -51,14 +55,21 @@ Parameters WriteDREAM3DFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_ExportFilePath, "Output File Path", "The file path the DataStructure should be written to as an HDF5 file.", "Untitled.dream3d",
                                                           FileSystemPathParameter::ExtensionsType{".dream3d"}, FileSystemPathParameter::PathType::OutputFile, false));
-  params.insert(std::make_unique<BoolParameter>(k_WriteXdmf, "Write Xdmf File", "Whether or not to write the data out an XDMF file", true));
+
+  params.insertSeparator(Parameters::Separator{"Compression"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseCompression, "Use HDF5 Compression", "Apply gzip compression to DataArray datasets when writing the .dream3d file.", true));
+  params.insert(std::make_unique<Int32Parameter>(k_CompressionLevel, "Compression Level (1-9)", "Gzip compression level: 1 = fastest / least compression, 9 = slowest / most compression.", 5));
+  params.insert(std::make_unique<BoolParameter>(k_WriteXdmf, "Write Xdmf File", "Whether or not to write the companion XDMF file", true));
+
+  params.linkParameters(k_UseCompression, k_CompressionLevel, std::make_any<bool>(true));
+
   return params;
 }
 
 //------------------------------------------------------------------------------
 IFilter::VersionType WriteDREAM3DFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -76,6 +87,14 @@ IFilter::PreflightResult WriteDREAM3DFilter::preflightImpl(const DataStructure& 
   {
     return MakePreflightErrorResult(k_NoExportPathError, "Export file path not provided.");
   }
+
+  const auto useCompression = filterArgs.value<BoolParameter::ValueType>(k_UseCompression);
+  const auto compressionLevel = filterArgs.value<Int32Parameter::ValueType>(k_CompressionLevel);
+  if(useCompression && (compressionLevel < 1 || compressionLevel > 9))
+  {
+    return MakePreflightErrorResult(k_InvalidCompressionLevelError, fmt::format("Compression level must be between 1 and 9 (got {}).", compressionLevel));
+  }
+
   return {};
 }
 
@@ -86,6 +105,8 @@ Result<> WriteDREAM3DFilter::executeImpl(DataStructure& dataStructure, const Arg
   WriteDREAM3DInputValues inputValues;
   inputValues.ExportFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ExportFilePath);
   inputValues.WriteXdmfFile = filterArgs.value<BoolParameter::ValueType>(k_WriteXdmf);
+  inputValues.UseCompression = filterArgs.value<BoolParameter::ValueType>(k_UseCompression);
+  inputValues.CompressionLevel = filterArgs.value<Int32Parameter::ValueType>(k_CompressionLevel);
   inputValues.PipelineNode = pipelineNode;
 
   return WriteDREAM3D(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -103,6 +124,10 @@ constexpr StringLiteral k_WriteXdmfFileKey = "WriteXdmfFile";
 Result<Arguments> WriteDREAM3DFilter::FromSIMPLJson(const nlohmann::json& json)
 {
   Arguments args = WriteDREAM3DFilter().getDefaultArguments();
+
+  // SIMPL v6 pipelines did not have a compression parameter and always wrote uncompressed files. Override
+  // the NX defaults so SIMPL-imported pipelines preserve the exact on-disk encoding they were saved with.
+  args.insertOrAssign(k_UseCompression, false);
 
   std::vector<Result<>> results;
 

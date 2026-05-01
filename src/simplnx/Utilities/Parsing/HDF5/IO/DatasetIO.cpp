@@ -12,6 +12,7 @@
 
 #include <array>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <span>
 #include <vector>
@@ -43,6 +44,117 @@ std::string GetNameFromFilterType(H5Z_filter_t id)
     return "UNKNOWN";
   }
 }
+
+/**
+ * @brief Builds an HDF5 Dataset Creation Property List configured for chunked storage
+ *        with the gzip/deflate filter applied at the requested level.
+ *
+ * Two valid success outcomes:
+ *   - The returned hid_t equals H5P_DEFAULT when the helper intentionally falls through
+ *     to the HDF5 default (contiguous, no filter). Caller must NOT close H5P_DEFAULT.
+ *   - Otherwise the returned hid_t is a freshly-created DCPL the caller now owns and
+ *     MUST release with H5Pclose.
+ *
+ * Intentional fall-through (Result is valid, value == H5P_DEFAULT):
+ *   - compressionLevel == 0 (compression disabled)
+ *   - totalBytes < k_SmallArrayThresholdBytes (bypass — chunk-index overhead would dominate)
+ *
+ * Failure outcomes (Result is invalid):
+ *   - compressionLevel outside [0, 9]
+ *   - empty dims or zero elementByteSize (caller bug — writeSpan must pass the dataspace rank)
+ *   - elementByteSize * product(dims) overflows usize
+ *   - H5Pcreate / H5Pset_chunk / H5Pset_deflate fails — the HDF5 error code is propagated
+ *
+ * Chunk shape targets ~1 MiB per chunk along the outermost (tuple) dimension of dims.
+ * HDF5 stores arrays in C-order, so the outermost axis is the coarsest — chunking along
+ * it gives contiguous bytes per chunk and matches how DataArray iterates its tuple dim.
+ */
+nx::core::Result<hid_t> BuildChunkedDeflateDcpl(const std::vector<usize>& dims, usize elementByteSize, int32 compressionLevel)
+{
+  if(compressionLevel < 0 || compressionLevel > 9)
+  {
+    return nx::core::MakeErrorResult<hid_t>(-1300, fmt::format("Invalid gzip level {}; expected [0, 9]", compressionLevel));
+  }
+  if(compressionLevel == 0)
+  {
+    return {H5P_DEFAULT};
+  }
+
+  if(dims.empty())
+  {
+    return nx::core::MakeErrorResult<hid_t>(-1303, "BuildChunkedDeflateDcpl called with empty dims");
+  }
+  if(elementByteSize == 0)
+  {
+    return nx::core::MakeErrorResult<hid_t>(-1304, "BuildChunkedDeflateDcpl called with zero elementByteSize");
+  }
+
+  // Total byte size with saturating-overflow detection. In practice unreachable
+  // (would require >2^64 bytes), but keeping the arithmetic honest is cheap.
+  usize totalBytes = elementByteSize;
+  for(auto d : dims)
+  {
+    const usize castD = static_cast<usize>(d);
+    if(castD == 0)
+    {
+      return nx::core::MakeErrorResult<hid_t>(-1305, "BuildChunkedDeflateDcpl encountered a zero-valued dimension");
+    }
+    if(totalBytes > std::numeric_limits<usize>::max() / castD)
+    {
+      return nx::core::MakeErrorResult<hid_t>(-1306, "BuildChunkedDeflateDcpl total byte size overflowed usize");
+    }
+    totalBytes *= castD;
+  }
+  constexpr usize k_SmallArrayThresholdBytes = 16ull * 1024ull; // 16 KiB
+  if(totalBytes < k_SmallArrayThresholdBytes)
+  {
+    return {H5P_DEFAULT};
+  }
+
+  constexpr usize k_TargetChunkBytes = 1024ull * 1024ull; // 1 MiB
+  std::vector<hsize_t> chunkDims(dims.size());
+  for(usize i = 0; i < dims.size(); ++i)
+  {
+    chunkDims[i] = static_cast<hsize_t>(dims[i]);
+  }
+  usize innerElems = 1;
+  for(usize i = 1; i < dims.size(); ++i)
+  {
+    innerElems *= static_cast<usize>(dims[i]);
+  }
+  const usize rowBytes = (innerElems == 0 ? elementByteSize : innerElems * elementByteSize);
+  usize rowsPerChunk = (rowBytes == 0) ? 1 : (k_TargetChunkBytes / rowBytes);
+  if(rowsPerChunk == 0)
+  {
+    rowsPerChunk = 1;
+  }
+  const usize maxRows = static_cast<usize>(dims[0]);
+  if(rowsPerChunk > maxRows)
+  {
+    rowsPerChunk = maxRows;
+  }
+  chunkDims[0] = static_cast<hsize_t>(rowsPerChunk);
+
+  const hid_t dcpl = H5Pcreate(H5P_DATASET_CREATE);
+  if(dcpl < 0)
+  {
+    return nx::core::MakeErrorResult<hid_t>(static_cast<int64>(dcpl), "H5Pcreate(H5P_DATASET_CREATE) failed");
+  }
+
+  if(H5Pset_chunk(dcpl, static_cast<int>(chunkDims.size()), chunkDims.data()) < 0)
+  {
+    H5Pclose(dcpl);
+    return nx::core::MakeErrorResult<hid_t>(-1301, "H5Pset_chunk failed");
+  }
+
+  if(H5Pset_deflate(dcpl, static_cast<unsigned int>(compressionLevel)) < 0)
+  {
+    H5Pclose(dcpl);
+    return nx::core::MakeErrorResult<hid_t>(-1302, fmt::format("H5Pset_deflate(level={}) failed", compressionLevel));
+  }
+
+  return {dcpl};
+}
 } // namespace
 
 namespace nx::core::HDF5
@@ -64,6 +176,7 @@ DatasetIO::DatasetIO(hid_t parentId, const std::string& dataName)
 
 DatasetIO::DatasetIO(DatasetIO&& other) noexcept
 : ObjectIO(std::move(other))
+, m_CompressionLevel(other.m_CompressionLevel)
 {
 }
 
@@ -112,6 +225,20 @@ hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType p
   return getId();
 }
 
+void DatasetIO::setCompressionLevel(int32 level) noexcept
+{
+  if(level < 0 || level > 9)
+  {
+    return;
+  }
+  m_CompressionLevel = level;
+}
+
+int32 DatasetIO::getCompressionLevel() const noexcept
+{
+  return m_CompressionLevel;
+}
+
 // template <typename T>
 // HighFive::DataSet createOrOpenDataset(DatasetIO& datasetIO, const HighFive::DataSpace& dims, HighFive::DataType& dataType)
 //{
@@ -158,6 +285,7 @@ hid_t DatasetIO::createOrOpenDataset(IdType typeId, IdType dataspaceId, IdType p
 
 DatasetIO& DatasetIO::operator=(DatasetIO&& rhs) noexcept
 {
+  m_CompressionLevel = rhs.m_CompressionLevel;
   moveObj(std::move(rhs));
   return *this;
 }
@@ -914,21 +1042,34 @@ Result<> DatasetIO::writeSpan(const DimsType& dims, nonstd::span<const T> values
     // }
     // else
     {
-      /* Create the attribute. */
-      auto datasetId = createOrOpenDataset<T>(dataspaceId);
-      if(datasetId >= 0)
+      auto dcplResult = BuildChunkedDeflateDcpl(dims, sizeof(T), m_CompressionLevel);
+      if(dcplResult.invalid())
       {
-        /* Write the attribute data. */
-        const void* data = static_cast<const void*>(values.data());
-        error = H5Dwrite(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-        if(error < 0)
-        {
-          returnError = MakeErrorResult(error, fmt::format("Error writing data to dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
-        }
+        returnError = MakeErrorResult(dcplResult.errors().front().code, fmt::format("Error building dataset creation property list for dataset '{}' in file '{}': {}", getNamePath(),
+                                                                                    getFilePath().string(), dcplResult.errors().front().message));
       }
       else
       {
-        returnError = MakeErrorResult(datasetId, fmt::format("Error creating dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
+        const hid_t dcpl = dcplResult.value();
+        auto datasetId = createOrOpenDataset<T>(dataspaceId, dcpl);
+        if(datasetId >= 0)
+        {
+          const void* data = static_cast<const void*>(values.data());
+          error = H5Dwrite(datasetId, dataType, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+          if(error < 0)
+          {
+            returnError = MakeErrorResult(error, fmt::format("Error writing data to dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
+          }
+        }
+        else
+        {
+          returnError = MakeErrorResult(datasetId, fmt::format("Error creating dataset '{}' in file '{}'", getNamePath(), getFilePath().string()));
+        }
+
+        if(dcpl != H5P_DEFAULT)
+        {
+          H5Pclose(dcpl);
+        }
       }
     }
     /* Close the dataspace. */

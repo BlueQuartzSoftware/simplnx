@@ -18,7 +18,9 @@ target_link_libraries(SimplnxUnitTestCommon
 target_sources(SimplnxUnitTestCommon
   PUBLIC
     ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/UnitTestCommon.cpp
+    ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/HDF5DatasetProbe.cpp
   INTERFACE
     ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/UnitTestCommon.hpp
     ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/DataObjectComparison.hpp
+    ${PROJECT_SOURCE_DIR}/test/UnitTestCommon/include/simplnx/UnitTest/HDF5DatasetProbe.hpp
 )

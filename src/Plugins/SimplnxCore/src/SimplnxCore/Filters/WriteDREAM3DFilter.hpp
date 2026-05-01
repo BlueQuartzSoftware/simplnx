@@ -29,6 +29,8 @@ public:
   // Parameter Keys
   static constexpr StringLiteral k_ExportFilePath = "export_file_path";
   static constexpr StringLiteral k_WriteXdmf = "write_xdmf_file";
+  static constexpr StringLiteral k_UseCompression = "use_compression";
+  static constexpr StringLiteral k_CompressionLevel = "compression_level";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

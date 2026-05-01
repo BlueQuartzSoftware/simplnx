@@ -12,10 +12,19 @@ namespace nx::core
 {
 class PipelineFilter;
 
+/**
+ * @struct WriteDREAM3DInputValues
+ * @brief Parameter bag consumed by the WriteDREAM3D algorithm. Populated from the
+ *        filter's Arguments in WriteDREAM3DFilter::executeImpl.
+ */
 struct SIMPLNXCORE_EXPORT WriteDREAM3DInputValues
 {
   FileSystemPathParameter::ValueType ExportFilePath;
   BoolParameter::ValueType WriteXdmfFile;
+  /// Master on/off switch for HDF5 gzip compression of DataArray / NeighborList datasets.
+  bool UseCompression = true;
+  /// Gzip/deflate level in [1, 9]; ignored when UseCompression is false.
+  int32 CompressionLevel = 5;
   const PipelineFilter* PipelineNode = nullptr;
 };
 

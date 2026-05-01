@@ -19,24 +19,50 @@ DataStructureWriter::DataStructureWriter()
 
 DataStructureWriter::~DataStructureWriter() noexcept = default;
 
+const DataStructureWriter::WriteOptions& DataStructureWriter::getWriteOptions() const noexcept
+{
+  return m_WriteOptions;
+}
+
+void DataStructureWriter::setWriteOptions(const WriteOptions& options) noexcept
+{
+  m_WriteOptions = options;
+}
+
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath)
+{
+  return WriteFile(dataStructure, filepath, WriteOptions{});
+}
+
+Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath, const WriteOptions& options)
 {
   auto fileWriter = nx::core::HDF5::FileIO::WriteFile(filepath);
   if(fileWriter.isValid() == false)
   {
     return MakeErrorResult(-8054, fmt::format("Failed to create file at path {}", filepath.string()));
   }
-  return WriteFile(dataStructure, fileWriter);
+  return WriteFile(dataStructure, fileWriter, options);
 }
 
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::HDF5::FileIO& FileIO)
 {
+  return WriteFile(dataStructure, FileIO, WriteOptions{});
+}
+
+Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::HDF5::FileIO& FileIO, const WriteOptions& options)
+{
   HDF5::DataStructureWriter dataStructureWriter;
+  dataStructureWriter.setWriteOptions(options);
   auto groupIO = FileIO.createGroup(Constants::k_DataStructureTag);
   return dataStructureWriter.writeDataStructure(dataStructure, groupIO);
 }
 
 Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath)
+{
+  return AppendFile(file, dataStructure, dataPath, WriteOptions{});
+}
+
+Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath, const WriteOptions& options)
 {
   if(dataPath.empty())
   {
@@ -93,10 +119,16 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
 
   const DataObject& dataObject = dataStructureShallowCopy.getDataRef(dataPath);
   HDF5::DataStructureWriter dataStructureWriter;
+  dataStructureWriter.setWriteOptions(options);
   return dataStructureWriter.writeDataObject(&dataObject, dataStructureGroup);
 }
 
 Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath)
+{
+  return AppendFile(filepath, dataStructure, dataPath, WriteOptions{});
+}
+
+Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath, const WriteOptions& options)
 {
   auto file = FileIO::AppendFile(filepath);
   if(!file.isValid())
@@ -104,7 +136,7 @@ Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, 
     return MakeErrorResult(-4, fmt::format("Unable to open file '{}'", filepath.string()));
   }
 
-  return AppendFile(file, dataStructure, dataPath);
+  return AppendFile(file, dataStructure, dataPath, options);
 }
 
 Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)

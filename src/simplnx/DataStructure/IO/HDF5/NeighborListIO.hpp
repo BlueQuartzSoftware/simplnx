@@ -233,8 +233,10 @@ public:
       offset += numElements;
     }
 
-    // Write flattened array to HDF5 as a separate array
+    // Write flattened array to HDF5 as a separate array. NeighborLists can be very large
+    // (millions of ints across all tuples), so apply the configured compression level here too.
     auto datasetWriter = parentGroupWriter.createDataset(neighborList.getName());
+    datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
     result = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
     if(result.invalid())
     {

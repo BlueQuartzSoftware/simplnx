@@ -192,6 +192,19 @@ public:
   nx::core::Result<> writeVectorOfStrings(const std::vector<std::string>& text);
 
   /**
+   * @brief Sets the gzip compression level used by the next writeSpan call.
+   *        0 = no compression (contiguous); 1-9 = chunked + deflate at that level.
+   * @param level Gzip level in [0, 9]. Out-of-range values are ignored.
+   */
+  void setCompressionLevel(int32 level) noexcept;
+
+  /**
+   * @brief Returns the currently configured compression level.
+   * @return Gzip level in [0, 9]; default is 0 (no compression).
+   */
+  int32 getCompressionLevel() const noexcept;
+
+  /**
    * @brief Writes a span of values to the dataset. Returns the HDF5 error,
    * should one occur.
    *
@@ -505,6 +518,7 @@ protected:
   void close() override;
 
 private:
+  int32 m_CompressionLevel = 0;
 };
 
 extern template std::vector<int8_t> DatasetIO::readAsVector() const;

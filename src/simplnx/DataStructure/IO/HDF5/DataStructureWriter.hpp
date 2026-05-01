@@ -40,6 +40,28 @@ public:
   ~DataStructureWriter() noexcept;
 
   /**
+   * @brief File-write options forwarded from higher layers (e.g. WriteDREAM3DFilter).
+   *        Default-constructed instances produce contiguous, uncompressed datasets.
+   */
+  struct WriteOptions
+  {
+    /// Gzip/deflate level. 0 = off (contiguous). 1-9 = chunked + deflate at the given level.
+    int32 compressionLevel = 0;
+  };
+
+  /**
+   * @brief Returns the current write options (never null; default-constructed on creation).
+   * @return const reference to the options struct.
+   */
+  const WriteOptions& getWriteOptions() const noexcept;
+
+  /**
+   * @brief Stores the given write options for use by the next WriteFile/AppendFile call.
+   * @param options Struct describing how datasets should be encoded on disk.
+   */
+  void setWriteOptions(const WriteOptions& options) noexcept;
+
+  /**
    * @brief Writes a DataStructure to an HDF5 file at the specified path.
    * @param dataStructure The DataStructure to write
    * @param filepath The file path to write to
@@ -48,12 +70,30 @@ public:
   static Result<> WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath);
 
   /**
+   * @brief Writes a DataStructure to an HDF5 file at the specified path with the given options.
+   * @param dataStructure The DataStructure to write
+   * @param filepath The file path to write to
+   * @param options Write options (e.g. compression level)
+   * @return Result<> Result with any errors or warnings
+   */
+  static Result<> WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath, const WriteOptions& options);
+
+  /**
    * @brief Writes a DataStructure to an open HDF5 file.
    * @param dataStructure The DataStructure to write
    * @param fileWriter The HDF5 file writer to write to
    * @return Result<> Result with any errors or warnings
    */
   static Result<> WriteFile(const DataStructure& dataStructure, FileIO& fileWriter);
+
+  /**
+   * @brief Writes a DataStructure to an open HDF5 file with the given options.
+   * @param dataStructure The DataStructure to write
+   * @param fileWriter The HDF5 file writer to write to
+   * @param options Write options (e.g. compression level)
+   * @return Result<> Result with any errors or warnings
+   */
+  static Result<> WriteFile(const DataStructure& dataStructure, FileIO& fileWriter, const WriteOptions& options);
 
   /**
    * @brief Appends a DataObject at the specified path to an existing HDF5 file.
@@ -65,6 +105,16 @@ public:
   static Result<> AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath);
 
   /**
+   * @brief Appends a DataObject at the specified path to an existing HDF5 file with the given options.
+   * @param filepath The file path to append to
+   * @param dataStructure The DataStructure containing the object to append
+   * @param dataPath The path to the object to append
+   * @param options Write options (e.g. compression level)
+   * @return Result<> Result with any errors or warnings
+   */
+  static Result<> AppendFile(const std::filesystem::path& filepath, const DataStructure& dataStructure, const DataPath& dataPath, const WriteOptions& options);
+
+  /**
    * @brief Appends a DataObject at the specified path to an open HDF5 file.
    * @param file The HDF5 file to append to
    * @param dataStructure The DataStructure containing the object to append
@@ -72,6 +122,16 @@ public:
    * @return Result<> Result with any errors or warnings
    */
   static Result<> AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath);
+
+  /**
+   * @brief Appends a DataObject at the specified path to an open HDF5 file with the given options.
+   * @param file The HDF5 file to append to
+   * @param dataStructure The DataStructure containing the object to append
+   * @param dataPath The path to the object to append
+   * @param options Write options (e.g. compression level)
+   * @return Result<> Result with any errors or warnings
+   */
+  static Result<> AppendFile(FileIO& file, const DataStructure& dataStructure, const DataPath& dataPath, const WriteOptions& options);
 
   /**
    * @brief Writes the DataObject under the given GroupIO. If the
@@ -170,6 +230,7 @@ protected:
   void addWriter(ObjectIO& objectWriter, DataObject::IdType objectId);
 
 private:
+  WriteOptions m_WriteOptions;
   DataStructure m_DataStructure;
   DataMapType m_IdMap;
   std::shared_ptr<DataIOManager> m_IOManager;
