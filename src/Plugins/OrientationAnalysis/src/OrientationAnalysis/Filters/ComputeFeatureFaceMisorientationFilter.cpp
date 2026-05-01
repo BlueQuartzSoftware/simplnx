@@ -62,14 +62,9 @@ Parameters ComputeFeatureFaceMisorientationFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_StoreAxisAngle_Key, "Store Full Axis Angle",
-                                                                 "By default normalized misorientation colors is stored, if true this will also store the full Axis Angle in a new array", false));
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshFaceMisorientationColorsArrayName_Key, "Misorientation Colors", "A set of RGB color schemes encoded as floats for each Face",
-                                                          "FaceMisorientationColors"));
-  params.insert(
-      std::make_unique<DataObjectNameParameter>(k_AxisAngleArrayName_Key, "Axis Angle Array Name", "The name of the array to store the full axis-angle misorientation", "AxisAngleMisorientations"));
 
-  params.linkParameters(k_StoreAxisAngle_Key, k_AxisAngleArrayName_Key, true);
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationArrayName_Key, "Misorientation",
+                                                          "The name of the array containing the misorientation angle (in degrees) between the 2 features.", "Face Misorientations"));
 
   return params;
 }
@@ -81,7 +76,6 @@ IFilter::VersionType ComputeFeatureFaceMisorientationFilter::parametersVersion()
 
   // Version 1 -> 2
   // Description:
-  // Added ability to store full axis-angle misorientation
   //
   // Change 1:
   // Added - k_StoreAxisAngle_Key = "store_axis_angle" && k_AxisAngleArrayName_Key = "axis_angle_array_name";
@@ -102,9 +96,7 @@ IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(c
   auto pAvgQuatsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
   auto pFeaturePhasesArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
-  auto pSurfaceMeshFaceMisorientationColorsArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceMeshFaceMisorientationColorsArrayName_Key);
-  auto pStoreAxisAngle = filterArgs.value<BoolParameter::ValueType>(k_StoreAxisAngle_Key);
-  auto pAxisAngleArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisAngleArrayName_Key);
+  auto pSurfaceMeshFaceMisorientationColorsArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_MisorientationArrayName_Key);
 
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -125,14 +117,7 @@ IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(c
 
   {
     DataPath faceMisorientationColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshFaceMisorientationColorsArrayNameValue);
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{3}, faceMisorientationColorsArrayPath);
-    resultOutputActions.value().appendAction(std::move(action));
-  }
-
-  if(pStoreAxisAngle)
-  {
-    DataPath faceAxisAnglesArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pAxisAngleArrayName);
-    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{4}, faceAxisAnglesArrayPath);
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{1}, faceMisorientationColorsArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -149,10 +134,7 @@ Result<> ComputeFeatureFaceMisorientationFilter::executeImpl(DataStructure& data
   inputValues.avgQuatsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
   inputValues.featurePhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
-  inputValues.surfaceMeshFaceMisorientationColorsArrayPath =
-      inputValues.surfaceMeshFaceLabelsArrayPath.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_SurfaceMeshFaceMisorientationColorsArrayName_Key));
-  inputValues.storeAxisAngle = filterArgs.value<BoolParameter::ValueType>(k_StoreAxisAngle_Key);
-  inputValues.axisAngleArrayPath = inputValues.surfaceMeshFaceLabelsArrayPath.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_AxisAngleArrayName_Key));
+  inputValues.misorientationArrayPath = inputValues.surfaceMeshFaceLabelsArrayPath.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_MisorientationArrayName_Key));
 
   return ComputeFeatureFaceMisorientation(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -182,7 +164,7 @@ Result<Arguments> ComputeFeatureFaceMisorientationFilter::FromSIMPLJson(const nl
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceMisorientationColorsArrayNameKey,
-                                                                                                                   k_SurfaceMeshFaceMisorientationColorsArrayName_Key));
+                                                                                                                   k_MisorientationArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

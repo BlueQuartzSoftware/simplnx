@@ -15,9 +15,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureFaceMisorientationInputValues
   DataPath avgQuatsArrayPath;
   DataPath featurePhasesArrayPath;
   DataPath crystalStructuresArrayPath;
-  DataPath surfaceMeshFaceMisorientationColorsArrayPath;
-  bool storeAxisAngle;
-  DataPath axisAngleArrayPath;
+  DataPath misorientationArrayPath;
 };
 
 /**

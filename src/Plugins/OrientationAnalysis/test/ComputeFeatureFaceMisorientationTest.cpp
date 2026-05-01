@@ -75,7 +75,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Valid fi
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructurePath));
-    args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_SurfaceMeshFaceMisorientationColorsArrayName_Key, std::make_any<std::string>(::k_NXFaceMisorientationColors));
+    args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_MisorientationArrayName_Key, std::make_any<std::string>(::k_NXFaceMisorientationColors));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -131,7 +131,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Invalid 
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(faceAreas));
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructurePath));
-    args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_SurfaceMeshFaceMisorientationColorsArrayName_Key, std::make_any<std::string>(::k_NXFaceMisorientationColors));
+    args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_MisorientationArrayName_Key, std::make_any<std::string>(::k_NXFaceMisorientationColors));
   }
 
   SECTION("Missing input data path")
@@ -140,7 +140,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Invalid 
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(faceAreas));
     args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructurePath));
-    args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_SurfaceMeshFaceMisorientationColorsArrayName_Key, std::make_any<std::string>(::k_NXFaceMisorientationColors));
+    args.insertOrAssign(ComputeFeatureFaceMisorientationFilter::k_MisorientationArrayName_Key, std::make_any<std::string>(::k_NXFaceMisorientationColors));
   }
 
   // Preflight the filter and check result
@@ -191,7 +191,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: SIMPL Ba
       CHECK(args.value<DataPath>(ComputeFeatureFaceMisorientationFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeFeatureFaceMisorientationFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeFeatureFaceMisorientationFilter::k_CrystalStructuresArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
-      CHECK(args.value<std::string>(ComputeFeatureFaceMisorientationFilter::k_SurfaceMeshFaceMisorientationColorsArrayName_Key) == "TestName");
+      CHECK(args.value<std::string>(ComputeFeatureFaceMisorientationFilter::k_MisorientationArrayName_Key) == "TestName");
     }
   }
 }
