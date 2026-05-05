@@ -74,25 +74,22 @@ public:
       {
         backPhase = 0;
       }
-      if(frontPhase > 0 && frontPhase == backPhase)
+      // Make sure the crystal structure is a valid laue class
+      uint32 laueIndex = m_CrystalStructures[frontPhase];
+      if(frontPhase > 0 && frontPhase == backPhase && laueIndex < m_LaueOrientationOps.size())
       {
-        uint32_t laueIndex = m_CrystalStructures[frontPhase];
-        // Make sure the crystal structure is a valid laue class
-        if(laueIndex < m_LaueOrientationOps.size())
-        {
-          float32 quat0 = m_FeatureAvgQuats[frontFeature * 4];
-          float32 quat1 = m_FeatureAvgQuats[frontFeature * 4 + 1];
-          float32 quat2 = m_FeatureAvgQuats[frontFeature * 4 + 2];
-          float32 quat3 = m_FeatureAvgQuats[frontFeature * 4 + 3];
-          ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
-          quat0 = m_FeatureAvgQuats[backFeature * 4];
-          quat1 = m_FeatureAvgQuats[backFeature * 4 + 1];
-          quat2 = m_FeatureAvgQuats[backFeature * 4 + 2];
-          quat3 = m_FeatureAvgQuats[backFeature * 4 + 3];
-          ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
-          ebsdlib::AxisAngleDType axisAngle = m_LaueOrientationOps[laueIndex]->calculateMisorientation(q1, q2);
-          m_Misorientations.setValue(i, static_cast<float32>(axisAngle[3] * Constants::k_180OverPiD));
-        }
+        float32 quat0 = m_FeatureAvgQuats[frontFeature * 4];
+        float32 quat1 = m_FeatureAvgQuats[frontFeature * 4 + 1];
+        float32 quat2 = m_FeatureAvgQuats[frontFeature * 4 + 2];
+        float32 quat3 = m_FeatureAvgQuats[frontFeature * 4 + 3];
+        ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
+        quat0 = m_FeatureAvgQuats[backFeature * 4];
+        quat1 = m_FeatureAvgQuats[backFeature * 4 + 1];
+        quat2 = m_FeatureAvgQuats[backFeature * 4 + 2];
+        quat3 = m_FeatureAvgQuats[backFeature * 4 + 3];
+        ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
+        ebsdlib::AxisAngleDType axisAngle = m_LaueOrientationOps[laueIndex]->calculateMisorientation(q1, q2);
+        m_Misorientations.setValue(i, static_cast<float32>(axisAngle[3] * Constants::k_180OverPiD));
       }
       else
       {
