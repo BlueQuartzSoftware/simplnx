@@ -71,7 +71,7 @@ public:
     // Start the Parent Outer Loop
     for(usize currentParentId = 1; currentParentId < numParents; currentParentId++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{}/{} {}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); });
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{}/{} {:.1f}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); });
 
       if(m_ShouldCancel)
       {
