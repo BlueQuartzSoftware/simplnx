@@ -284,11 +284,9 @@ The `check_pipeline_result` method from :ref:`Section 2.7.3 <2.7.3>` and the `mo
 The code above will generate IPF maps for SmallIN100 slices 1-6.
 
 ##################
-2.10 Full Examples
+2.10 Full Example
 ##################
 
-Full examples of the concepts in this tutorial are located at:
+Full example of this tutorial is located at:
 
-https://github.com/BlueQuartzSoftware/NXWorkshop/blob/develop/PythonTutorial/tutorial_2a.py
-https://github.com/BlueQuartzSoftware/NXWorkshop/blob/develop/PythonTutorial/tutorial_2b.py
-https://github.com/BlueQuartzSoftware/NXWorkshop/blob/develop/PythonTutorial/tutorial_2c.py
+https://github.com/BlueQuartzSoftware/NXWorkshop/blob/develop/PythonTutorial/tutorial_2.ipynb
