@@ -31,6 +31,8 @@
 #include <EbsdLib/Utilities/LambertUtilities.h>
 #include <EbsdLib/Utilities/ModifiedLambertProjection.h>
 #include <EbsdLib/Utilities/PoleFigureCompositor.h>
+#include <EbsdLib/Utilities/PngWriter.h>
+
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
@@ -784,8 +786,8 @@ Result<> WritePoleFigure::operator()()
       // Write out the full RGBA data
       if(m_InputValues->WriteImageToDisk)
       {
-        const std::string filename = fmt::format("{}/{}{}.tiff", m_InputValues->OutputPath.string(), m_InputValues->ImagePrefix, phase);
-        auto result = TiffWriter::WriteImage(filename, pageWidth, pageHeight, 4, compositeResult.image->getPointer(0));
+        const std::string filename = fmt::format("{}/{}{}.png", m_InputValues->OutputPath.string(), m_InputValues->ImagePrefix, phase);
+        auto result = PngWriter::WriteColorImage(filename, pageWidth, pageHeight, 4, compositeResult.image->getPointer(0));
         if(result.first < 0)
         {
           return MakeErrorResult(-53900, fmt::format("Error writing pole figure image '{}' to disk.\n    Error Code from Tiff Writer: {}\n    Message: {}", filename, result.first, result.second));
