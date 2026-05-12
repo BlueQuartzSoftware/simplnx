@@ -98,12 +98,13 @@ Parameters WritePoleFigureFilter::parameters() const
                                                                     ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
   params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
   params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
-  params.insert(std::make_unique<ChoicesParameter>(k_HexConvention_Key, "Hex/Trig Cartesian Basis Convention",
-                                                   "Cartesian basis used for hex/trigonal phases. Pole-figure positions and corner labels are rotated 30° about the c-axis between the two:\n"
-                                                   "  X parallel to a: EDAX/TSL/OIM Analysis convention. This is the convention every released DREAM.3D / DREAM3DNX / SIMPL / SIMPLNX file stores hex/trig EulerAngles in.\n"
-                                                   "  X parallel to a*: MTEX / Oxford Channel 5 / AZtec convention. Pick this for apples-to-apples comparison against MTEX-produced pole figures.\n"
-                                                   "Cubic, tetragonal, orthorhombic, monoclinic, and triclinic phases ignore this setting.",
-                                                   0, ChoicesParameter::Choices{"X parallel to a (EDAX/TSL)", "X parallel to a* (MTEX)"}));
+  params.insert(std::make_unique<ChoicesParameter>(
+      k_HexConvention_Key, "Hex/Trig Cartesian Basis Convention",
+      "Cartesian basis used for hex/trigonal phases. Pole-figure positions and corner labels are rotated 30° about the c-axis between the two:\n"
+      "  X parallel to a: EDAX/TSL/OIM Analysis convention. This is the convention every released DREAM.3D / DREAM3DNX / SIMPL / SIMPLNX file stores hex/trig EulerAngles in.\n"
+      "  X parallel to a*: MTEX / Oxford Channel 5 / AZtec convention. Pick this for apples-to-apples comparison against MTEX-produced pole figures.\n"
+      "Cubic, tetragonal, orthorhombic, monoclinic, and triclinic phases ignore this setting.",
+      0, ChoicesParameter::Choices{"X parallel to a (EDAX/TSL)", "X parallel to a* (MTEX)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Orientation Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
