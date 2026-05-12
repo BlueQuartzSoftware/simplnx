@@ -366,6 +366,83 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-Color-Masked", "[Orientati
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+// -----------------------------------------------------------------------------
+// Plumbing test: the k_HexConvention_Key choice index must route through
+// executeImpl's switch into the right `ebsdlib::HexConvention` and reach
+// PoleFigureConfiguration_t::hexConvention. EbsdLib's LaueOpsTest already
+// exercises the per-Laue-class sphere-coord math under both conventions;
+// here we just assert that the simplnx side wiring is intact -- both
+// choices must be accepted, the filter must run cleanly with each, and
+// cubic input (which is convention-invariant) must produce identical
+// output regardless of the choice. That cubic-invariance assertion alone
+// won't catch an off-by-one in the switch (cubic ignores conv), but it
+// does catch parameter-not-declared, parameter-type-mismatch, and any
+// future change that accidentally makes cubic conv-dependent.
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reaches algorithm", "[OrientationAnalysis][WritePoleFigureFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v5.tar.gz", "PoleFigure_Exemplars_v5", true, true);
+
+  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v5/PoleFigure_Exemplars_v5.dream3d", unit_test::k_TestFilesDir));
+
+  auto runWithConv = [&](ChoicesParameter::ValueType convIndex, const std::string& geomName, const std::string& intensityName) {
+    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    WritePoleFigureFilter filter;
+    Arguments args;
+    args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Conv Test"));
+    args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
+    args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
+    args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/HexConvDir", unit_test::k_BinaryTestOutputDir))));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>("conv_test_"));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(256));
+    args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
+    args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({geomName})));
+    args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
+    args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({intensityName})));
+    args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(true));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Phases"})));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "ThresholdArray"})));
+    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "CrystalStructures"})));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "MaterialName"})));
+    args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(convIndex));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    // Snapshot the intensity data array (cubic, conv-invariant, deterministic).
+    const DataPath intensityPath = DataPath({intensityName, "Cell Data", "Phase_1_<001>"});
+    const auto& store = dataStructure.getDataRefAs<Float64Array>(intensityPath).getDataStoreRef();
+    std::vector<float64> snapshot(store.getSize());
+    for(usize i = 0; i < store.getSize(); ++i)
+    {
+      snapshot[i] = store[i];
+    }
+    return snapshot;
+  };
+
+  auto xaIntensity = runWithConv(0, "ConvTest_XA", "ConvIntensity_XA");
+  auto xastarIntensity = runWithConv(1, "ConvTest_XAStar", "ConvIntensity_XAStar");
+
+  // Cubic m-3m: pole figure intensities are convention-invariant. Both runs
+  // must produce identical output. If they don't, something has gone wrong
+  // -- either the filter accidentally applied a hex/trig SymOps path on
+  // cubic data, or the conv enum changed shape between calls.
+  REQUIRE(xaIntensity.size() == xastarIntensity.size());
+  for(usize i = 0; i < xaIntensity.size(); ++i)
+  {
+    INFO("Cubic pole figure intensity should be convention-invariant. Index " << i);
+    REQUIRE(xaIntensity[i] == xastarIntensity[i]);
+  }
+}
+
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][WritePoleFigureFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
