@@ -30,9 +30,8 @@
 #include <EbsdLib/LaueOps/TrigonalOps.h>
 #include <EbsdLib/Utilities/LambertUtilities.h>
 #include <EbsdLib/Utilities/ModifiedLambertProjection.h>
-#include <EbsdLib/Utilities/PoleFigureCompositor.h>
 #include <EbsdLib/Utilities/PngWriter.h>
-
+#include <EbsdLib/Utilities/PoleFigureCompositor.h>
 
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
