@@ -612,6 +612,7 @@ Result<> WritePoleFigure::operator()()
     config.numColors = m_InputValues->NumColors;
     config.discrete = (static_cast<WritePoleFigure::Algorithm>(m_InputValues->GenerationAlgorithm) == WritePoleFigure::Algorithm::Discrete);
     config.discreteHeatMap = k_UseDiscreteHeatMap;
+    config.hexConvention = m_InputValues->HexConvention;
 
     m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Pole Figures for Phase {}", phase)});
 
