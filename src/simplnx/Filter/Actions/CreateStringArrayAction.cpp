@@ -1,11 +1,15 @@
 #include "CreateStringArrayAction.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/EmptyDataStore.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
+
+#include <numeric>
 
 using namespace nx::core;
 
@@ -60,23 +64,44 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
                                                                               path().toString(), StringUtilities::formatDimensions(m_Dims), totalTuples, capacity));
   }
 
+  // Distinguish failure modes BEFORE calling CreateWithValues so the error message
+  // tells the caller exactly what's wrong instead of always blaming dim mismatch.
+  // CreateWithValues -> AttemptToAddObject -> parent->canInsert() returns false for
+  // multiple distinct reasons (name collision, dim mismatch, cycle); the previous
+  // implementation's catch-all "Mismatch of tuple dimensions" message reported
+  // identical dims when the actual problem was a duplicate name.
+  if(auto* parentGroup = dynamic_cast<BaseGroup*>(parentObject); parentGroup != nullptr)
+  {
+    if(parentGroup->contains(name))
+    {
+      return MakeErrorResult(-6005, fmt::format("{}A DataObject named '{}' already exists inside '{}'. Either remove the existing object first or use a different name. "
+                                                "(If you are running a multi-filter pipeline where an upstream filter already created this array, the downstream filter "
+                                                "should reuse it via a selection parameter rather than re-creating it.)",
+                                                prefix, name, parentPath.toString()));
+    }
+  }
+
+  if(auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject); attrMatrix != nullptr)
+  {
+    const auto& amShape = attrMatrix->getShape();
+    const usize amTotalTuples = std::accumulate(amShape.cbegin(), amShape.cend(), static_cast<usize>(1), std::multiplies<>());
+    if(amTotalTuples != totalTuples)
+    {
+      return MakeErrorResult(-6003, fmt::format("{}Unable to create String Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created String Array must have the same tuple "
+                                                "dimensions or the same total number of tuples.\nAttribute Matrix Tuple Dims: {}\nString Array Tuple Shape: {}",
+                                                prefix, name, parentPath.toString(), fmt::join(amShape, " x "), fmt::join(m_Dims, " x ")));
+    }
+  }
+
   std::vector<std::string> values(totalTuples, m_InitializeValue);
   StringArray* array = StringArray::CreateWithValues(dataStructure, name, m_Dims, values, dataObjectId);
   if(array == nullptr)
   {
-    if(parentObject != nullptr && parentObject->getDataObjectType() == DataObject::Type::AttributeMatrix)
-    {
-      auto* attrMatrix = dynamic_cast<AttributeMatrix*>(parentObject);
-      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", fmt::join(attrMatrix->getShape(), " x "));
-      std::string arrayShape = fmt::format("String Array Tuple Shape: {}", fmt::join(m_Dims, " x "));
-      return MakeErrorResult(-6003, fmt::format("{}Unable to create String Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created String Array must have the same tuple "
-                                                "dimensions or the same total number of tuples.\n{}\n{}",
-                                                prefix, name, parentPath.toString(), amShape, arrayShape));
-    }
-    else
-    {
-      return MakeErrorResult(-6004, fmt::format("{}CreateStringArrayAction: Unable to create StringArray at '{}'", prefix, path().toString()));
-    }
+    // The pre-checks above should have caught the common failure modes; if we
+    // get here it's an unexpected condition (e.g. cycle detection or a parent
+    // group type that does not accept arrays).
+    return MakeErrorResult(-6004,
+                           fmt::format("{}Unable to create StringArray at '{}'. The parent '{}' rejected the new object for an unexpected reason.", prefix, path().toString(), parentPath.toString()));
   }
   return {};
 }
