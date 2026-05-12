@@ -8,6 +8,8 @@
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 namespace nx::core
 {
 
@@ -20,6 +22,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeFaceIPFColoringInputValues
   DataPath CrystalStructuresArrayPath;
   std::string FirstFaceIPFColorsArrayName;
   std::string SecondFaceIPFColorsArrayName;
+  ebsdlib::ColorKeyKind ColorKey = ebsdlib::ColorKeyKind::TSL;
 };
 
 /**

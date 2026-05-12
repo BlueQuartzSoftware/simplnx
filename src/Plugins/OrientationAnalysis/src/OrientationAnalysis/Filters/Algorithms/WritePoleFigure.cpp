@@ -447,7 +447,7 @@ std::vector<ebsdlib::DoubleArrayType::Pointer> createIntensityPoleFigures(ebsdli
   config.sphereRadius = 1.0f;
 
   // Generate the coords on the sphere **** Parallelized
-  ops.generateSphereCoordsFromEulers(config.eulers, xyz001.get(), xyz011.get(), xyz111.get());
+  ops.generateSphereCoordsFromEulers(config.eulers, xyz001.get(), xyz011.get(), xyz111.get(), config.hexConvention);
 
   // These arrays hold the "intensity" images which eventually get converted to an actual Color RGB image
   // Generate the modified Lambert projection images (Squares, 2 of them, 1 for northern hemisphere, 1 for southern hemisphere
