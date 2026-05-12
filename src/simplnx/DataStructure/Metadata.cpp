@@ -1,9 +1,9 @@
 #include "Metadata.hpp"
 
+#include "nlohmann/json.hpp"
+
 using namespace nx::core;
 
-namespace nx::core
-{
 Metadata::Metadata() = default;
 
 Metadata::Metadata(const Metadata& rhs) = default;
@@ -21,14 +21,15 @@ bool Metadata::contains(const KeyType& key) const
   return m_Map.find(key) != m_Map.end();
 }
 
-Metadata::ValueType Metadata::getData(const KeyType& key) const
+const Metadata::ValueType& Metadata::getData(const KeyType& key) const
 {
   return m_Map.at(key);
 }
 
 void Metadata::setData(const KeyType& key, const ValueType& value)
 {
-  m_Map[key] = value;
+  //m_Map.insert(key, value);
+  //m_Map[key] = std::move(value);
 }
 
 void Metadata::remove(const KeyType& key)
@@ -65,4 +66,23 @@ Metadata::ConstIterator Metadata::end() const
 {
   return m_Map.end();
 }
-} // namespace nx::core
+
+std::string Metadata::toJson() const
+{
+  nlohmann::json json;
+  for(const auto& [key, value] : m_Map)
+  {
+    json[key] = value.toJson();
+  }
+
+  return json;
+}
+
+void Metadata::fromJson(const std::string& jsonStr)
+{
+  nlohmann::json json(jsonStr);
+  for(auto& [key, value] : json.items())
+  {
+    // m_Map[key] = valueFromJson(value);
+  }
+}

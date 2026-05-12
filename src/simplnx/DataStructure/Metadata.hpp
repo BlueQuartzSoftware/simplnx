@@ -1,5 +1,7 @@
 #pragma once
 
+#include "simplnx/DataStructure/Metadata/BaseMetadataValue.hpp"
+
 #include "simplnx/simplnx_export.hpp"
 
 #include <any>
@@ -21,7 +23,7 @@ class SIMPLNX_EXPORT Metadata
 {
 public:
   using KeyType = std::string;
-  using ValueType = std::any;
+  using ValueType = BaseMetadataValue;
   using Iterator = std::map<KeyType, ValueType>::iterator;
   using ConstIterator = std::map<KeyType, ValueType>::const_iterator;
 
@@ -74,7 +76,7 @@ public:
    * @param key The key to retrieve data for
    * @return ValueType containing the metadata value, or empty std::any if key doesn't exist
    */
-  ValueType getData(const KeyType& key) const;
+  const ValueType& getData(const KeyType& key) const;
 
   /**
    * @brief Adds or assigns the specified value for the target key.
@@ -126,6 +128,10 @@ public:
    * @return ConstIterator to the end
    */
   ConstIterator end() const;
+
+  std::string toJson() const;
+
+  void fromJson(const std::string& json);
 
 private:
   std::map<KeyType, ValueType> m_Map;

@@ -3,6 +3,7 @@
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataObject.hpp"
+#include "simplnx/DataStructure/Metadata/MetaDataList.hpp"
 #include "simplnx/Filter/FilterList.hpp"
 #include "simplnx/Plugin/AbstractPlugin.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -190,6 +191,12 @@ public:
    */
   std::vector<std::string> getDataStoreFormats() const;
 
+  /**
+   * @brief Returns a list of known MetaData formats for reading and writing DataObject metadata.
+   * @return Known metadata formats
+   */
+  nx::core::MetaDataList* getMetaDataList() const;
+
 protected:
   /**
    * @brief Constructs an Application using default values and replaces the
@@ -234,6 +241,7 @@ private:
   ////////////
   // Variables
   std::unique_ptr<nx::core::FilterList> m_FilterList;
+  std::unique_ptr<nx::core::MetaDataList> m_MetaDataList;
   std::filesystem::path m_CurrentPath = "";
   std::vector<Uuid> m_Simpl_Uuids;   // no duplicates; index must match m_Simplnx_Uuids
   std::vector<Uuid> m_Simplnx_Uuids; // duplicate allowed conditionally; index must match m_Simpl_Uuids

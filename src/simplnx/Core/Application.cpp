@@ -120,6 +120,7 @@ Result<> Application::initialize()
   m_CurrentPath = pathResult.value();
 
   initDefaultDataTypes();
+  m_MetaDataList = std::make_unique<MetaDataList>();
   return combinedResult;
 }
 
@@ -413,4 +414,9 @@ DataObject::Type Application::getDataType(const std::string& name) const
 std::vector<std::string> Application::getDataStoreFormats() const
 {
   return m_DataIOCollection->getFormatNames();
+}
+
+nx::core::MetaDataList* Application::getMetaDataList() const
+{
+  return m_MetaDataList.get();
 }

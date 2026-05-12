@@ -439,6 +439,15 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry2D.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/INodeGeometry3D.hpp
 
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BaseMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/AbstractMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BoolMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/DoubleMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/IntMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/MetaDataList.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/StringMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/VectorMetadataValue.hpp
+
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
 
@@ -683,6 +692,13 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TetrahedralGeom.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/TriangleGeom.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Geometry/VertexGeom.cpp
+
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BaseMetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BoolMetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/DoubleMetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/IntMetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/MetaDataList.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/StringMetadataValue.cpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.cpp
