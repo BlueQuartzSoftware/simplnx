@@ -34,10 +34,11 @@ class CalculateFaceIPFColorsImpl
   const UInt32Array& m_CrystalStructures;
   UInt8Array& m_FirstColors;
   UInt8Array& m_SecondColors;
+  ebsdlib::ColorKeyKind m_ColorKey;
 
 public:
   CalculateFaceIPFColorsImpl(const Int32Array& labels, const Int32Array& phases, const Float64Array& normals, const Float32Array& eulers, const UInt32Array& crystalStructures, UInt8Array& firstColors,
-                             UInt8Array& secondColors)
+                             UInt8Array& secondColors, ebsdlib::ColorKeyKind colorKey)
   : m_Labels(labels)
   , m_Phases(phases)
   , m_Normals(normals)
@@ -45,6 +46,7 @@ public:
   , m_CrystalStructures(crystalStructures)
   , m_FirstColors(firstColors)
   , m_SecondColors(secondColors)
+  , m_ColorKey(colorKey)
   {
   }
   virtual ~CalculateFaceIPFColorsImpl() = default;
@@ -92,7 +94,7 @@ public:
           refDir[1] = m_Normals[3 * i + 1];
           refDir[2] = m_Normals[3 * i + 2];
 
-          argb = ops[m_CrystalStructures[phase1]]->generateIPFColor(dEuler, refDir, false);
+          argb = ops[m_CrystalStructures[phase1]]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
           m_FirstColors[3 * i] = RgbColor::dRed(argb);
           m_FirstColors[3 * i + 1] = RgbColor::dGreen(argb);
           m_FirstColors[3 * i + 2] = RgbColor::dBlue(argb);
@@ -118,7 +120,7 @@ public:
           refDir[1] = -m_Normals[3 * i + 1];
           refDir[2] = -m_Normals[3 * i + 2];
 
-          argb = ops[m_CrystalStructures[phase1]]->generateIPFColor(dEuler, refDir, false);
+          argb = ops[m_CrystalStructures[phase1]]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
           m_SecondColors[3 * i + 0] = RgbColor::dRed(argb);
           m_SecondColors[3 * i + 1] = RgbColor::dGreen(argb);
           m_SecondColors[3 * i + 2] = RgbColor::dBlue(argb);
@@ -188,7 +190,7 @@ Result<> ComputeFaceIPFColoring::operator()()
   ParallelDataAlgorithm parallelTask;
   parallelTask.setRange(0, numTriangles);
   parallelTask.requireArraysInMemory(algArrays);
-  parallelTask.execute(CalculateFaceIPFColorsImpl(faceLabels, phases, faceNormals, eulerAngles, crystalStructures, firstIpfColors, secondIpfColors));
+  parallelTask.execute(CalculateFaceIPFColorsImpl(faceLabels, phases, faceNormals, eulerAngles, crystalStructures, firstIpfColors, secondIpfColors, m_InputValues->ColorKey));
 
   return {};
 }

@@ -23,6 +23,7 @@ Compare the data sets. The values should be exactly the same.
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataStructureWriter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -141,6 +142,78 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][Comput
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// -----------------------------------------------------------------------------
+// Plumbing test: the k_ColorKey_Key choice index must route through executeImpl's
+// switch into the right `ebsdlib::ColorKeyKind` and reach generateIPFColor. The
+// per-Laue-class correctness of TSL / PUCM / Nolze-Hielscher is covered by
+// EbsdLib's ColorKeyKindTest; here we only assert that the simplnx side wiring
+// is intact -- non-default choices must produce a different output array than
+// the default (TSL) run on the same input data.
+TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches algorithm", "[OrientationAnalysis][ComputeIPFColorsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "so3_cubic_high_ipf_001.tar.gz", "so3_cubic_high_ipf_001.dream3d");
+
+  auto exemplarFilePath = fs::path(fmt::format("{}/so3_cubic_high_ipf_001.dream3d", unit_test::k_TestFilesDir));
+  REQUIRE(fs::exists(exemplarFilePath));
+  auto importResult = DREAM3D::ImportDataStructureFromFile(exemplarFilePath, false);
+  REQUIRE(importResult.valid());
+  DataStructure dataStructure = importResult.value();
+
+  const DataPath cellEulerAnglesPath({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_EulerAngles});
+  const DataPath cellPhasesArrayPath({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_Phases});
+  const DataPath goodVoxelsPath({Constants::k_ImageDataContainer, Constants::k_CellData, Constants::k_Mask});
+  const DataPath crystalStructuresArrayPath({Constants::k_ImageDataContainer, Constants::k_CellEnsembleData, Constants::k_CrystalStructures});
+
+  // Run the filter once per kind, writing into a uniquely-named output array.
+  auto runWithKind = [&](ChoicesParameter::ValueType kindIndex, const std::string& outputName) {
+    ComputeIPFColorsFilter filter;
+    Arguments args;
+    args.insertOrAssign(ComputeIPFColorsFilter::k_ReferenceDir_Key, std::make_any<VectorFloat32Parameter::ValueType>({0.0F, 0.0F, 1.0F}));
+    args.insertOrAssign(ComputeIPFColorsFilter::k_UseMask_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeIPFColorsFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(cellEulerAnglesPath));
+    args.insertOrAssign(ComputeIPFColorsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(cellPhasesArrayPath));
+    args.insertOrAssign(ComputeIPFColorsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(goodVoxelsPath));
+    args.insertOrAssign(ComputeIPFColorsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresArrayPath));
+    args.insertOrAssign(ComputeIPFColorsFilter::k_CellIPFColorsArrayName_Key, std::make_any<std::string>(outputName));
+    args.insertOrAssign(ComputeIPFColorsFilter::k_ColorKey_Key, std::make_any<ChoicesParameter::ValueType>(kindIndex));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  };
+
+  runWithKind(0, "IPFColors_TSL");
+  runWithKind(1, "IPFColors_PUCM");
+  runWithKind(2, "IPFColors_NH");
+
+  const auto& tslColors = dataStructure.getDataRefAs<UInt8Array>(DataPath({Constants::k_ImageDataContainer, Constants::k_CellData, "IPFColors_TSL"}));
+  const auto& pucmColors = dataStructure.getDataRefAs<UInt8Array>(DataPath({Constants::k_ImageDataContainer, Constants::k_CellData, "IPFColors_PUCM"}));
+  const auto& nhColors = dataStructure.getDataRefAs<UInt8Array>(DataPath({Constants::k_ImageDataContainer, Constants::k_CellData, "IPFColors_NH"}));
+
+  REQUIRE(tslColors.getSize() == pucmColors.getSize());
+  REQUIRE(tslColors.getSize() == nhColors.getSize());
+
+  // Sanity: at least one tuple must differ between TSL and each other kind. If
+  // the switch in executeImpl ever silently collapsed every kind onto TSL,
+  // these arrays would be identical.
+  auto differs = [](const UInt8Array& a, const UInt8Array& b) {
+    const size_t size = a.getSize();
+    for(size_t i = 0; i < size; ++i)
+    {
+      if(a[i] != b[i])
+      {
+        return true;
+      }
+    }
+    return false;
+  };
+  REQUIRE(differs(tslColors, pucmColors));
+  REQUIRE(differs(tslColors, nhColors));
 }
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeIPFColorsFilter][BackwardsCompatibility]")
