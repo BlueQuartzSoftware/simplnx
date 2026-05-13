@@ -10,6 +10,7 @@
 #include "simplnx/Parameters/CreateColorMapParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Parameters/CreateColorMapParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
