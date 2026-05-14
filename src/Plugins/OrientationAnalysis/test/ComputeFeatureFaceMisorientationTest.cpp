@@ -26,6 +26,11 @@ bool CompareFloats(const float32 generated, const float32 expected)
 
 namespace curated
 {
+// Make sure we can instantiate the Align Sections Feature Centroid
+constexpr Uuid k_ChangeAngleRepresentationFilterId = *Uuid::FromString("565e06e2-6fd0-4232-89c4-ee672926d565");
+constexpr Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
+const FilterHandle k_ChangeAngleRepresentationFilterHandle(k_ChangeAngleRepresentationFilterId, k_SimplnxCorePluginId);
+
 constexpr StringLiteral k_TriGeomName = "triangle_geom";
 const DataPath k_TriGeomPath({k_TriGeomName});
 
@@ -396,7 +401,30 @@ DataStructure CreateTestDataStructure()
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated Data", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter]")
 {
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  auto filterList = app->getFilterList();
+
   DataStructure dataStructure = curated::CreateTestDataStructure();
+
+  // Convert the EulerAngles to radians
+  {
+    auto filter = filterList->createFilter(curated::k_ChangeAngleRepresentationFilterHandle);
+    REQUIRE(nullptr != filter);
+
+    Arguments args;
+    // Create default Parameters for the filter.
+    args.insertOrAssign("conversion_type_index", std::make_any<uint64>(0ULL));
+    args.insertOrAssign("angles_array_path", std::make_any<DataPath>(curated::k_AvgEulerAnglesPath));
+
+    // Preflight the filter and check result
+    auto preflightResult = filter->preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+    // Execute the filter and check the result
+    auto executeResult = filter->execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+  }
 
   // Convert the AvgEulerAngles array to AvgQuats for use in ComputeFeatureFaceMisorientationFilter input
   {
