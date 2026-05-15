@@ -20,29 +20,42 @@ StringMetadataValue::operator std::string() const
   return m_Value;
 }
 
+StringMetadataValue::ValueType StringMetadataValue::getValue() const
+{
+  return m_Value;
+}
+
+void StringMetadataValue::setValue(const ValueType& value)
+{
+  m_Value = value;
+}
+
+bool StringMetadataValue::operator==(const ValueType& rhs) const
+{
+  return m_Value == rhs;
+}
+
 StringMetadataValue::ParentType& StringMetadataValue::operator=(const std::string& rhs)
 {
   m_Value = rhs;
   return *this;
 }
 
-std::string StringMetadataValue::getTypeName() const
+std::string StringMetadataValue::getTypeNameImpl() const
 {
   return k_TypeName;
 }
 
-std::string StringMetadataValue::toJsonImpl() const
+nlohmann::json StringMetadataValue::toJsonImpl() const
 {
   nlohmann::json json;
-  json[k_ValueTypeKey] = k_TypeName;
-  json[k_ValueKey] = m_Value;
-
+  json[k_ValueTypeKey.str()] = k_TypeName;
+  json[k_ValueKey.str()] = m_Value;
   return json;
 }
 
-void StringMetadataValue::fromJsonImpl(const std::string& jsonStr)
+void StringMetadataValue::fromJsonImpl(const nlohmann::json& json)
 {
-  nlohmann::json json(jsonStr);
-  m_Value = json[k_ValueKey].get<std::string>();
+  m_Value = json[k_ValueKey.str()].get<std::string>();
 }
 } // namespace nx::core

@@ -10,6 +10,10 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/Metadata/BoolMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/DoubleMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/IntMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/StringMetadataValue.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -80,6 +84,17 @@ fs::path GetIODataPath()
   }
 
   return GetDataDir(*app) / Constants::k_Dream3dFilename;
+}
+
+fs::path GetMetaDataPath()
+{
+  auto app = Application::Instance();
+  if(app == nullptr)
+  {
+    throw std::runtime_error("nx::core::Application instance not found");
+  }
+
+  return GetDataDir(*app) / "MetaDataTest.dream3d";
 }
 
 fs::path GetExportDataPath()
@@ -884,5 +899,90 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     args.insertOrAssign(WriteDREAM3DFilter::k_UseCompression, false);
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(0));
     REQUIRE(filter.preflight(ds, args).outputActions.valid());
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteDREAM3DFilter: MetaData", "[SimplnxCore][WriteDREAM3DFilter][MetaData]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::string groupName = "meta test";
+  const std::string intDataName = "int";
+  const std::string doubleDataName = "double";
+  const std::string stringDataName = "string";
+
+  constexpr int intValue = 5;
+  constexpr double doubleValue = 8.6;
+  const std::string stringValue = "test string";
+
+  DataStructure dataStructure;
+  auto* metaObject = DataGroup::Create(dataStructure, groupName);
+  auto& metadata = metaObject->getMetadata();
+
+  // Int metadata
+  {
+    auto intDataPtr = std::make_shared<IntMetadataValue>();
+    metadata.setDataPtr(intDataName, intDataPtr);
+    *intDataPtr.get() = intValue;
+  }
+
+  // Double metadata
+  {
+    auto doubleDataPtr = std::make_shared<DoubleMetadataValue>();
+    metadata.setDataPtr(doubleDataName, doubleDataPtr);
+    *doubleDataPtr.get() = doubleValue;
+  }
+
+  // String metadata
+  {
+    auto stringDataPtr = std::make_shared<StringMetadataValue>();
+    metadata.setDataPtr(stringDataName, stringDataPtr);
+    *stringDataPtr.get() = stringValue;
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(m_DataMutex);
+    std::filesystem::path metadataPath = GetMetaDataPath();
+    // Write .dream3d file
+    {
+      auto writeResult = DREAM3D::WriteFile(metadataPath, dataStructure);
+      SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+    }
+
+    // Read .dream3d file
+    {
+      auto fileReader = HDF5::FileIO::ReadFile(metadataPath);
+      auto fileResult = DREAM3D::ReadFile(fileReader);
+      SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
+
+      auto [pipeline, dataStructureRead] = fileResult.value();
+
+      // Get MetaData
+      const auto& metaObjectRead = dataStructureRead.getDataRefAs<DataGroup>(DataPath({groupName}));
+      const auto& metaDataRead = metaObjectRead.getMetadata();
+
+      auto intDataReadPtr = metaDataRead.getDataPtr(intDataName);
+      auto doubleDataReadPtr = metaDataRead.getDataPtr(doubleDataName);
+      auto stringDataReadPtr = metaDataRead.getDataPtr(stringDataName);
+
+      // Require metadata exists
+      REQUIRE(intDataReadPtr != nullptr);
+      REQUIRE(doubleDataReadPtr != nullptr);
+      REQUIRE(stringDataReadPtr != nullptr);
+
+      // Require metadata preserves typename
+      REQUIRE(intDataReadPtr->getTypeName() == IntMetadataValue::k_TypeName);
+      REQUIRE(doubleDataReadPtr->getTypeName() == DoubleMetadataValue::k_TypeName);
+      REQUIRE(stringDataReadPtr->getTypeName() == StringMetadataValue::k_TypeName);
+
+      // Require metadata preserves values
+      auto intDataReadRef = metaDataRead.getDataRefAs<IntMetadataValue>(intDataName);
+      auto doubleDataReadRef = metaDataRead.getDataRefAs<DoubleMetadataValue>(doubleDataName);
+      auto stringDataReadRef = metaDataRead.getDataRefAs<StringMetadataValue>(stringDataName);
+
+      REQUIRE(intDataReadRef == intValue);
+      REQUIRE(doubleDataReadRef == doubleValue);
+      REQUIRE(stringDataReadRef == stringValue);
+    }
   }
 }

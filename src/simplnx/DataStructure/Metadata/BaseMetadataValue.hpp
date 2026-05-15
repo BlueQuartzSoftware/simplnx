@@ -1,17 +1,19 @@
 #pragma once
 
-#include "BaseMetadataValue.hpp"
-
 #include "simplnx/Common/StringLiteral.hpp"
+
+#include "simplnx/simplnx_export.hpp"
+
+#include <nlohmann/json.hpp>
 
 #include <string>
 
 namespace nx::core
 {
 /**
-* @brief Base class for meta data values.
-*/
-class BaseMetadataValue
+ * @brief Base class for meta data values.
+ */
+class SIMPLNX_EXPORT BaseMetadataValue
 {
 public:
   static constexpr StringLiteral k_ValueTypeKey = "type";
@@ -21,9 +23,23 @@ public:
   BaseMetadataValue(BaseMetadataValue&& other) = default;
   ~BaseMetadataValue() noexcept = default;
 
-  virtual std::string toJson() const;
+  /**
+   * @brief Returns the metadata type name.
+   * @return std::string
+   */
+  virtual std::string getTypeName() const;
 
-  virtual void fromJson(const std::string& json);
+  /**
+   * @brief Returns the metadata's json representation.
+   * @return json
+   */
+  virtual nlohmann::json toJson() const;
+
+  /**
+   * @brief Updates the metadata from the provided json value.
+   * @param json metadata json representation
+   */
+  virtual void fromJson(const nlohmann::json& json);
 
 protected:
   BaseMetadataValue() = default;

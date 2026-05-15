@@ -1,5 +1,8 @@
 #include "Metadata.hpp"
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/Metadata/MetaDataList.hpp"
+
 #include "nlohmann/json.hpp"
 
 using namespace nx::core;
@@ -16,20 +19,30 @@ Metadata& Metadata::operator=(Metadata&& rhs) noexcept = default;
 
 Metadata::~Metadata() noexcept = default;
 
+bool Metadata::isEmpty() const
+{
+  return m_Map.empty();
+}
+
 bool Metadata::contains(const KeyType& key) const
 {
   return m_Map.find(key) != m_Map.end();
 }
 
-const Metadata::ValueType& Metadata::getData(const KeyType& key) const
+const Metadata::ValuePtr& Metadata::getDataPtr(const KeyType& key) const
 {
+  if(!contains(key))
+  {
+    return nullptr;
+  }
+
   return m_Map.at(key);
 }
 
-void Metadata::setData(const KeyType& key, const ValueType& value)
+void Metadata::setDataPtr(const KeyType& key, const ValuePtr& value)
 {
-  //m_Map.insert(key, value);
-  //m_Map[key] = std::move(value);
+  // m_Map.insert(key, value);
+  m_Map[key] = std::move(value);
 }
 
 void Metadata::remove(const KeyType& key)
@@ -40,11 +53,6 @@ void Metadata::remove(const KeyType& key)
 void Metadata::clear()
 {
   m_Map.clear();
-}
-
-Metadata::ValueType& Metadata::operator[](const KeyType& key)
-{
-  return m_Map[key];
 }
 
 Metadata::Iterator Metadata::begin()
@@ -67,12 +75,12 @@ Metadata::ConstIterator Metadata::end() const
   return m_Map.end();
 }
 
-std::string Metadata::toJson() const
+nlohmann::json Metadata::toJson() const
 {
-  nlohmann::json json;
+  nlohmann::json json = nlohmann::json::object();
   for(const auto& [key, value] : m_Map)
   {
-    json[key] = value.toJson();
+    json[key] = value->toJson();
   }
 
   return json;
@@ -80,9 +88,11 @@ std::string Metadata::toJson() const
 
 void Metadata::fromJson(const std::string& jsonStr)
 {
-  nlohmann::json json(jsonStr);
+  MetaDataList* metaDataList = Application::Instance()->getMetaDataList();
+
+  nlohmann::json json = nlohmann::json::parse(jsonStr);
   for(auto& [key, value] : json.items())
   {
-    // m_Map[key] = valueFromJson(value);
+    m_Map[key] = metaDataList->createValueFromJson(value);
   }
 }

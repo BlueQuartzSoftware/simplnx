@@ -15,29 +15,42 @@ DoubleMetadataValue::operator ValueType() const
   return m_Value;
 }
 
+DoubleMetadataValue::ValueType DoubleMetadataValue::getValue() const
+{
+  return m_Value;
+}
+
+void DoubleMetadataValue::setValue(const ValueType& value)
+{
+  m_Value = value;
+}
+
+bool DoubleMetadataValue::operator==(const ValueType& rhs) const
+{
+  return m_Value == rhs;
+}
+
 DoubleMetadataValue::ParentType& DoubleMetadataValue::operator=(const ValueType& rhs)
 {
   m_Value = rhs;
   return *this;
 }
 
-std::string DoubleMetadataValue::getTypeName() const
+std::string DoubleMetadataValue::getTypeNameImpl() const
 {
   return k_TypeName;
 }
 
-std::string DoubleMetadataValue::toJsonImpl() const
+nlohmann::json DoubleMetadataValue::toJsonImpl() const
 {
   nlohmann::json json;
-  json[k_ValueTypeKey] = k_TypeName;
-  json[k_ValueKey] = m_Value;
-
+  json[k_ValueTypeKey.str()] = k_TypeName;
+  json[k_ValueKey.str()] = m_Value;
   return json;
 }
 
-void DoubleMetadataValue::fromJsonImpl(const std::string& jsonStr)
+void DoubleMetadataValue::fromJsonImpl(const nlohmann::json& json)
 {
-  nlohmann::json json(jsonStr);
-  m_Value = json[k_ValueKey].get<float64>();
+  m_Value = json[k_ValueKey.str()].get<float64>();
 }
 } // namespace nx::core

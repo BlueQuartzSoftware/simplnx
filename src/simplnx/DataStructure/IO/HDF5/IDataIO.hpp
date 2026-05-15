@@ -26,6 +26,8 @@ public:
 
   ~IDataIO() noexcept override;
 
+  static Result<> ReadMetaData(DataStructureReader& dataStructureReader, const group_reader_type& parentReader, const std::string& objectName, const DataObject::IdType& objectId);
+
   /**
    * @brief Attempts to read the DataObject from HDF5.
    * Returns a Result<> with any errors or warnings encountered during the process.
@@ -92,6 +94,8 @@ protected:
    * @return Result<> Result with any errors or warnings
    */
   static Result<> WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, object_writer_type& objectWriter, bool importable);
+
+  static Result<> ReadMetaData(DataStructureReader& dataStructureReader, const DataObject::IdType& objectId, const object_reader_type& objectReader);
 
   /**
    * @brief Protected constructor.

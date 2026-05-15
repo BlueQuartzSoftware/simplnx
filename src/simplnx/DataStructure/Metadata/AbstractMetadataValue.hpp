@@ -4,6 +4,8 @@
 
 #include "simplnx/Common/StringLiteral.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <string>
 
 namespace nx::core
@@ -28,29 +30,51 @@ public:
   virtual operator ValueType() const = 0;
 
   /**
+   * @brief Returns the stored value.
+   * @return metadata value
+   */
+  virtual ValueType getValue() const = 0;
+
+  /**
+   * @brief Sets the stored value.
+   * @param value
+   */
+  virtual void setValue(const ValueType& value) = 0;
+
+  /**
    * @brief Assignment operator
    * @param rhs
    */
   virtual AbstractMetadataValue& operator=(const ValueType& rhs) = 0;
 
-  virtual std::string getTypeName() const = 0;
+  /**
+   * @brief Default equality operator
+   * @param rhs value to compare against
+   * @return is equal
+   */
+  virtual bool operator==(const ValueType& rhs) const = 0;
+
+  std::string getTypeName() const
+  {
+    return getTypeNameImpl();
+  }
 
   /**
    * @brief Returns a json string representation for the meta data.
-   * @return json string
+   * @return json
    */
-  std::string toJson() const override
+  nlohmann::json toJson() const override
   {
     return toJsonImpl();
   }
 
   /**
    * @brief Reads and updates the meta data value based on the provided json string
-   * @param jsonStr json string value
+   * @param json
    */
-  void fromJson(const std::string& jsonStr) override
+  void fromJson(const nlohmann::json& json) override
   {
-    return fromJsonImpl(jsonStr);
+    return fromJsonImpl(json);
   }
 
 protected:
@@ -58,16 +82,18 @@ protected:
   AbstractMetadataValue(const AbstractMetadataValue& other) = default;
   AbstractMetadataValue(AbstractMetadataValue&& other) = default;
 
-  /**
-   * @brief Abstract method for derived classes to specify the appropriate json string.
-   * @return json string
-   */
-  virtual std::string toJsonImpl() const = 0;
+  virtual std::string getTypeNameImpl() const = 0;
 
   /**
-   * @brief Abstract method for reading data from a json string.
-   * @param jsonStr json string
+   * @brief Abstract method for derived classes to specify the appropriate json.
+   * @return json
    */
-  virtual void fromJsonImpl(const std::string& jsonStr) = 0;
+  virtual nlohmann::json toJsonImpl() const = 0;
+
+  /**
+   * @brief Abstract method for reading data from a json.
+   * @param jsonStr json
+   */
+  virtual void fromJsonImpl(const nlohmann::json& json) = 0;
 };
 } // namespace nx::core

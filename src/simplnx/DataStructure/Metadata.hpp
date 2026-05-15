@@ -4,8 +4,12 @@
 
 #include "simplnx/simplnx_export.hpp"
 
+#include <fmt/format.h>
+#include <nlohmann/json.hpp>
+
 #include <any>
 #include <map>
+#include <memory>
 #include <string>
 
 namespace nx::core
@@ -24,8 +28,9 @@ class SIMPLNX_EXPORT Metadata
 public:
   using KeyType = std::string;
   using ValueType = BaseMetadataValue;
-  using Iterator = std::map<KeyType, ValueType>::iterator;
-  using ConstIterator = std::map<KeyType, ValueType>::const_iterator;
+  using ValuePtr = std::shared_ptr<ValueType>;
+  using Iterator = std::map<KeyType, ValuePtr>::iterator;
+  using ConstIterator = std::map<KeyType, ValuePtr>::const_iterator;
 
   /**
    * @brief Default constructor.
@@ -64,6 +69,13 @@ public:
   ~Metadata() noexcept;
 
   /**
+   * @brief Returns true if there are no metadata values stored.
+   * Returns false otherwise
+   * @return bool is empty
+   */
+  bool isEmpty() const;
+
+  /**
    * @brief Checks if metadata exists for the specified key.
    * @param key The key to check for
    * @return True if the key exists in the metadata, false otherwise
@@ -71,19 +83,57 @@ public:
   bool contains(const KeyType& key) const;
 
   /**
-   * @brief Returns the ValueType for the target key. Returns an empty std::any
+   * @brief Returns the ValuePtr for the target key. Returns nullptr
    * if the key does not exist in the Metadata.
    * @param key The key to retrieve data for
-   * @return ValueType containing the metadata value, or empty std::any if key doesn't exist
+   * @return ValuePtr containing the metadata value, or nullptr if key doesn't exist
    */
-  const ValueType& getData(const KeyType& key) const;
+  const ValuePtr& getDataPtr(const KeyType& key) const;
+
+  /**
+   * @brief Returns the metadata value for the target key.
+   * Throws if the key does not exist in the Metadata.
+   * @param key The key to retrieve data for
+   * @return metadata value for key of type T
+   */
+  template <typename T>
+  const T& getDataRefAs(const KeyType& key) const
+  {
+    const auto dataPtr = getDataPtr(key);
+    if(const auto typedDataPtr = std::static_pointer_cast<const T>(dataPtr); typedDataPtr != nullptr)
+    {
+      return *typedDataPtr.get();
+    }
+
+    std::string errorStr = fmt::format("Metadata '{}' does not exist or cannot be cast to type '{}'", key, typeid(T).name());
+    throw std::runtime_error(errorStr);
+  }
+
+  /**
+   * @brief Returns the metadata value for the target key.
+   * Throws if the key does not exist in the Metadata.
+   * @param key The key to retrieve data for
+   * @return metadata value for key of type T
+   */
+  template <typename T>
+  T& getDataRefAs(const KeyType& key)
+  {
+    auto dataPtr = getDataPtr(key);
+    if(auto typedDataPtr = std::static_pointer_cast<T>(dataPtr); typedDataPtr != nullptr)
+    {
+      return *typedDataPtr.get();
+    }
+
+    std::string errorStr = fmt::format("Metadata '{}' does not exist or cannot be cast to type '{}'", key, typeid(T).name());
+    throw std::runtime_error(errorStr);
+  }
 
   /**
    * @brief Adds or assigns the specified value for the target key.
    * @param key The key to set data for
    * @param value The value to associate with the key
    */
-  void setData(const KeyType& key, const ValueType& value);
+  void setDataPtr(const KeyType& key, const ValuePtr& value);
 
   /**
    * @brief Clears the metadata with the specified key. Does nothing if the key
@@ -96,14 +146,6 @@ public:
    * @brief Clears all metadata.
    */
   void clear();
-
-  /**
-   * @brief Returns a reference to the data with the target key.
-   * Returns and adds an empty std::any if no data exists with the key value.
-   * @param key The key to retrieve or create
-   * @return Reference to the ValueType at the specified key
-   */
-  ValueType& operator[](const KeyType& key);
 
   /**
    * @brief Returns an iterator to the beginning of the Metadata collection.
@@ -129,11 +171,11 @@ public:
    */
   ConstIterator end() const;
 
-  std::string toJson() const;
+  nlohmann::json toJson() const;
 
   void fromJson(const std::string& json);
 
 private:
-  std::map<KeyType, ValueType> m_Map;
+  std::map<KeyType, ValuePtr> m_Map;
 };
 } // namespace nx::core

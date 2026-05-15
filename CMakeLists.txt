@@ -446,6 +446,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/IntMetadataValue.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/MetaDataList.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/StringMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/UnknownMetadataValue.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/VectorMetadataValue.hpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
@@ -699,6 +700,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/IntMetadataValue.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/MetaDataList.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/StringMetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/UnknownMetadataValue.cpp
 
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractMontage.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Montage/AbstractTileIndex.cpp

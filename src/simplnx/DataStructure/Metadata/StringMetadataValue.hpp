@@ -2,8 +2,6 @@
 
 #include "AbstractMetadataValue.hpp"
 
-#include "simplnx/simplnx_export.hpp"
-
 namespace nx::core
 {
 /**
@@ -30,21 +28,40 @@ public:
   operator ValueType() const override;
 
   /**
+   * @brief Returns the stored value.
+   * @return metadata value
+   */
+  ValueType getValue() const override;
+
+  /**
+   * @brief Sets the stored value.
+   * @param value
+   */
+  void setValue(const ValueType& value) override;
+
+  /**
+   * @brief Default equality operator
+   * @param rhs value to compare against
+   * @return is equal
+   */
+  bool operator==(const ValueType& rhs) const override;
+
+  /**
    * @brief Assignment operator
    * @param rhs
    */
   ParentType& operator=(const ValueType& rhs) override;
 
+protected:
   /**
    * @brief Returns the typename for the StringMetadata
    * @return typename string
    */
-  std::string getTypeName() const override;
+  std::string getTypeNameImpl() const override;
 
-protected:
-  std::string toJsonImpl() const override;
+  nlohmann::json toJsonImpl() const override;
 
-  void fromJsonImpl(const std::string& json) override;
+  void fromJsonImpl(const nlohmann::json& json) override;
 
 private:
   std::string m_Value;

@@ -15,29 +15,42 @@ IntMetadataValue::operator int32() const
   return m_Value;
 }
 
+IntMetadataValue::ValueType IntMetadataValue::getValue() const
+{
+  return m_Value;
+}
+
+void IntMetadataValue::setValue(const ValueType& value)
+{
+  m_Value = value;
+}
+
+bool IntMetadataValue::operator==(const ValueType& rhs) const
+{
+  return m_Value == rhs;
+}
+
 IntMetadataValue::ParentType& IntMetadataValue::operator=(const int32& rhs)
 {
   m_Value = rhs;
   return *this;
 }
 
-std::string IntMetadataValue::getTypeName() const
+std::string IntMetadataValue::getTypeNameImpl() const
 {
   return k_TypeName;
 }
 
-std::string IntMetadataValue::toJsonImpl() const
+nlohmann::json IntMetadataValue::toJsonImpl() const
 {
   nlohmann::json json;
-  json[k_ValueTypeKey] = k_TypeName;
-  json[k_ValueKey] = m_Value;
-
+  json[k_ValueTypeKey.str()] = k_TypeName;
+  json[k_ValueKey.str()] = m_Value;
   return json;
 }
 
-void IntMetadataValue::fromJsonImpl(const std::string& jsonStr)
+void IntMetadataValue::fromJsonImpl(const nlohmann::json& json)
 {
-  nlohmann::json json(jsonStr);
-  m_Value = json[k_ValueKey].get<int32>();
+  m_Value = json[k_ValueKey.str()].get<int32>();
 }
 } // namespace nx::core

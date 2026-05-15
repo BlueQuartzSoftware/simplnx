@@ -238,6 +238,12 @@ Result<> DataStructureReader::readObjectFromGroup(const nx::core::HDF5::GroupIO&
     {
       return errorCode;
     }
+
+    auto metaDataResult = IDataIO::ReadMetaData(*this, parentGroup, objectName, objectId);
+    if(metaDataResult.invalid())
+    {
+      return metaDataResult;
+    }
   }
 
   return {};

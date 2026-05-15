@@ -4,6 +4,7 @@
 #include "simplnx/DataStructure/Metadata/DoubleMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/IntMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/StringMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/UnknownMetadataValue.hpp"
 
 #include "nlohmann/json.hpp"
 
@@ -17,25 +18,25 @@ MetaDataList::MetaDataList()
 void MetaDataList::addDefaultTypes()
 {
   // Boolean Metadata
-  addMetaDataType(BoolMetadataValue::k_TypeName, [](const std::string& json) {
+  addMetaDataType(BoolMetadataValue::k_TypeName, [](const nlohmann::json& json) {
     auto metaData = std::make_unique<BoolMetadataValue>();
     metaData->fromJson(json);
     return metaData;
   });
   // Double Metadata
-  addMetaDataType(DoubleMetadataValue::k_TypeName, [](const std::string& json) {
+  addMetaDataType(DoubleMetadataValue::k_TypeName, [](const nlohmann::json& json) {
     auto metaData = std::make_unique<DoubleMetadataValue>();
     metaData->fromJson(json);
     return metaData;
   });
   // Integer Metadata
-  addMetaDataType(IntMetadataValue::k_TypeName, [](const std::string& json) {
+  addMetaDataType(IntMetadataValue::k_TypeName, [](const nlohmann::json& json) {
     auto metaData = std::make_unique<IntMetadataValue>();
     metaData->fromJson(json);
     return metaData;
   });
   // String Metadata
-  addMetaDataType(StringMetadataValue::k_TypeName, [](const std::string& json) {
+  addMetaDataType(StringMetadataValue::k_TypeName, [](const nlohmann::json& json) {
     auto metaData = std::make_unique<StringMetadataValue>();
     metaData->fromJson(json);
     return metaData;
@@ -47,10 +48,14 @@ void MetaDataList::addMetaDataType(const KeyType& name, MetaDataCreationFnc cons
   m_CreationMap[name] = constructorFnc;
 }
 
-std::unique_ptr<BaseMetadataValue> MetaDataList::createValueFromJson(const std::string& jsonStr) const
+std::unique_ptr<BaseMetadataValue> MetaDataList::createValueFromJson(const nlohmann::json& json) const
 {
-  nlohmann::json json(jsonStr);
-  std::string type = json[BaseMetadataValue::k_ValueTypeKey].get<std::string>();
+  std::string type = json[BaseMetadataValue::k_ValueTypeKey.str()].get<std::string>();
+
+  if(!m_CreationMap.contains(type))
+  {
+    return std::make_unique<UnknownMetadataValue>(json);
+  }
 
   return m_CreationMap.at(type)(json);
 }
