@@ -11,9 +11,13 @@
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Metadata/BoolMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/BoolVectorMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/DoubleMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/DoubleVectorMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/IntMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/IntVectorMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/StringMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/StringVectorMetadataValue.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -907,23 +911,52 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: MetaData", "[SimplnxCore][WriteDREAM
   UnitTest::LoadPlugins();
 
   const std::string groupName = "meta test";
+  const std::string boolDataName = "bool";
+  const std::string boolVecDataName = "bool-vec";
   const std::string intDataName = "int";
+  const std::string intVecDataName = "int-vec";
   const std::string doubleDataName = "double";
+  const std::string doubleVecDataName = "double-vec";
   const std::string stringDataName = "string";
+  const std::string stringVecDataName = "string-vec";
 
-  constexpr int intValue = 5;
-  constexpr double doubleValue = 8.6;
+  constexpr bool boolValue = true;
+  constexpr int32 intValue = 5;
+  constexpr float64 doubleValue = 8.6;
   const std::string stringValue = "test string";
+  const std::vector<bool> boolVecValue = {true, false, true};
+  const std::vector<int32> intVecValue = {5, 6, 7};
+  const std::vector<float64> doubleVecValue = {8.6, 1.2};
+  const std::vector<std::string> stringVecValue = {"test string"};
 
   DataStructure dataStructure;
   auto* metaObject = DataGroup::Create(dataStructure, groupName);
   auto& metadata = metaObject->getMetadata();
+
+  // Bool metadata
+  {
+    auto boolDataPtr = std::make_shared<BoolMetadataValue>();
+    metadata.setDataPtr(boolDataName, boolDataPtr);
+    *boolDataPtr.get() = boolValue;
+  }
+  {
+    auto dataPtr = std::make_shared<BoolVectorMetadataValue>();
+    metadata.setDataPtr(boolVecDataName, dataPtr);
+    BoolVectorMetadataValue& dataRef = *dataPtr.get();
+    dataRef = boolVecValue;
+  }
 
   // Int metadata
   {
     auto intDataPtr = std::make_shared<IntMetadataValue>();
     metadata.setDataPtr(intDataName, intDataPtr);
     *intDataPtr.get() = intValue;
+  }
+  {
+    auto dataPtr = std::make_shared<Int32VectorMetadataValue>();
+    metadata.setDataPtr(intVecDataName, dataPtr);
+    Int32VectorMetadataValue& dataRef = *dataPtr.get();
+    dataRef = intVecValue;
   }
 
   // Double metadata
@@ -932,12 +965,24 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: MetaData", "[SimplnxCore][WriteDREAM
     metadata.setDataPtr(doubleDataName, doubleDataPtr);
     *doubleDataPtr.get() = doubleValue;
   }
+  {
+    auto dataPtr = std::make_shared<DoubleVectorMetadataValue>();
+    metadata.setDataPtr(doubleVecDataName, dataPtr);
+    DoubleVectorMetadataValue& dataRef = *dataPtr.get();
+    dataRef = doubleVecValue;
+  }
 
   // String metadata
   {
     auto stringDataPtr = std::make_shared<StringMetadataValue>();
     metadata.setDataPtr(stringDataName, stringDataPtr);
     *stringDataPtr.get() = stringValue;
+  }
+  {
+    auto dataPtr = std::make_shared<StringVectorMetadataValue>();
+    metadata.setDataPtr(stringVecDataName, dataPtr);
+    StringVectorMetadataValue& dataRef = *dataPtr.get();
+    dataRef = stringVecValue;
   }
 
   {
@@ -961,28 +1006,53 @@ TEST_CASE("SimplnxCore::WriteDREAM3DFilter: MetaData", "[SimplnxCore][WriteDREAM
       const auto& metaObjectRead = dataStructureRead.getDataRefAs<DataGroup>(DataPath({groupName}));
       const auto& metaDataRead = metaObjectRead.getMetadata();
 
+      auto boolDataReadPtr = metaDataRead.getDataPtr(boolDataName);
+      auto boolVecDataReadPtr = metaDataRead.getDataPtr(boolVecDataName);
       auto intDataReadPtr = metaDataRead.getDataPtr(intDataName);
+      auto intVecDataReadPtr = metaDataRead.getDataPtr(intVecDataName);
       auto doubleDataReadPtr = metaDataRead.getDataPtr(doubleDataName);
+      auto doubleVecDataReadPtr = metaDataRead.getDataPtr(doubleVecDataName);
       auto stringDataReadPtr = metaDataRead.getDataPtr(stringDataName);
+      auto stringVecDataReadPtr = metaDataRead.getDataPtr(stringVecDataName);
 
       // Require metadata exists
+      REQUIRE(boolDataReadPtr != nullptr);
+      REQUIRE(boolVecDataReadPtr != nullptr);
       REQUIRE(intDataReadPtr != nullptr);
+      REQUIRE(intVecDataReadPtr != nullptr);
       REQUIRE(doubleDataReadPtr != nullptr);
+      REQUIRE(doubleVecDataReadPtr != nullptr);
       REQUIRE(stringDataReadPtr != nullptr);
+      REQUIRE(stringVecDataReadPtr != nullptr);
 
       // Require metadata preserves typename
+      REQUIRE(boolDataReadPtr->getTypeName() == BoolMetadataValue::k_TypeName);
+      REQUIRE(boolVecDataReadPtr->getTypeName() == BoolVectorMetadataValue::k_TypeName);
       REQUIRE(intDataReadPtr->getTypeName() == IntMetadataValue::k_TypeName);
+      REQUIRE(intVecDataReadPtr->getTypeName() == Int32VectorMetadataValue::k_TypeName);
       REQUIRE(doubleDataReadPtr->getTypeName() == DoubleMetadataValue::k_TypeName);
+      REQUIRE(doubleVecDataReadPtr->getTypeName() == DoubleVectorMetadataValue::k_TypeName);
       REQUIRE(stringDataReadPtr->getTypeName() == StringMetadataValue::k_TypeName);
+      REQUIRE(stringVecDataReadPtr->getTypeName() == StringVectorMetadataValue::k_TypeName);
 
       // Require metadata preserves values
+      auto boolDataReadRef = metaDataRead.getDataRefAs<BoolMetadataValue>(boolDataName);
+      auto boolVecDataReadRef = metaDataRead.getDataRefAs<BoolVectorMetadataValue>(boolVecDataName);
       auto intDataReadRef = metaDataRead.getDataRefAs<IntMetadataValue>(intDataName);
+      auto intVecDataReadRef = metaDataRead.getDataRefAs<Int32VectorMetadataValue>(intVecDataName);
       auto doubleDataReadRef = metaDataRead.getDataRefAs<DoubleMetadataValue>(doubleDataName);
+      auto doubleVecDataReadRef = metaDataRead.getDataRefAs<DoubleVectorMetadataValue>(doubleVecDataName);
       auto stringDataReadRef = metaDataRead.getDataRefAs<StringMetadataValue>(stringDataName);
+      auto stringVecDataReadRef = metaDataRead.getDataRefAs<StringVectorMetadataValue>(stringVecDataName);
 
+      REQUIRE(boolDataReadRef == boolValue);
+      REQUIRE(boolVecDataReadRef == boolVecValue);
       REQUIRE(intDataReadRef == intValue);
+      REQUIRE(intVecDataReadRef == intVecValue);
       REQUIRE(doubleDataReadRef == doubleValue);
+      REQUIRE(doubleVecDataReadRef == doubleVecValue);
       REQUIRE(stringDataReadRef == stringValue);
+      REQUIRE(stringVecDataReadRef == stringVecValue);
     }
   }
 }

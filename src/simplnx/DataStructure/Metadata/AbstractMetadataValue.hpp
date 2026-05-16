@@ -80,7 +80,7 @@ public:
 protected:
   AbstractMetadataValue() = default;
   AbstractMetadataValue(const AbstractMetadataValue& other) = default;
-  AbstractMetadataValue(AbstractMetadataValue&& other) = default;
+  AbstractMetadataValue(AbstractMetadataValue&& other) noexcept = default;
 
   virtual std::string getTypeNameImpl() const = 0;
 

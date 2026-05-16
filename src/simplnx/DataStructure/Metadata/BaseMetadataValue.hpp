@@ -20,7 +20,7 @@ public:
   static constexpr StringLiteral k_ValueKey = "value";
 
   BaseMetadataValue(const BaseMetadataValue& other) = default;
-  BaseMetadataValue(BaseMetadataValue&& other) = default;
+  BaseMetadataValue(BaseMetadataValue&& other) noexcept = default;
   ~BaseMetadataValue() noexcept = default;
 
   /**

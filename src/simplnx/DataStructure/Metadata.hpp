@@ -135,6 +135,14 @@ public:
    */
   void setDataPtr(const KeyType& key, const ValuePtr& value);
 
+  template <typename T>
+  void setData(const KeyType& key, const T::ValueType& value)
+  {
+    auto dataPtr = std::make_shared<T>();
+    *dataPtr.get() = value;
+    setDataPtr(key, dataPtr);
+  }
+
   /**
    * @brief Clears the metadata with the specified key. Does nothing if the key
    * has no data assigned to it.
