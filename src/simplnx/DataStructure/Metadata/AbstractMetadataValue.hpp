@@ -21,6 +21,8 @@ class AbstractMetadataValue : public BaseMetadataValue
 public:
   using ValueType = T;
 
+  AbstractMetadataValue(const AbstractMetadataValue& other) = default;
+  AbstractMetadataValue(AbstractMetadataValue&& other) noexcept = default;
   ~AbstractMetadataValue() noexcept = default;
 
   /**
@@ -79,9 +81,7 @@ public:
 
 protected:
   AbstractMetadataValue() = default;
-  AbstractMetadataValue(const AbstractMetadataValue& other) = default;
-  AbstractMetadataValue(AbstractMetadataValue&& other) noexcept = default;
-
+  
   virtual std::string getTypeNameImpl() const = 0;
 
   /**

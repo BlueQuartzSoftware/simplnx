@@ -29,7 +29,7 @@ bool Metadata::contains(const KeyType& key) const
   return m_Map.find(key) != m_Map.end();
 }
 
-const Metadata::ValuePtr& Metadata::getDataPtr(const KeyType& key) const
+const Metadata::ValuePtr& Metadata::getDataValuePtr(const KeyType& key) const
 {
   if(!contains(key))
   {
@@ -39,7 +39,7 @@ const Metadata::ValuePtr& Metadata::getDataPtr(const KeyType& key) const
   return m_Map.at(key);
 }
 
-void Metadata::setDataPtr(const KeyType& key, const ValuePtr& value)
+void Metadata::setDataValuePtr(const KeyType& key, const ValuePtr& value)
 {
   // m_Map.insert(key, value);
   m_Map[key] = std::move(value);

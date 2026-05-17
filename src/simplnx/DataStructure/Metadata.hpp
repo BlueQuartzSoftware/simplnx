@@ -1,6 +1,6 @@
 #pragma once
 
-#include "simplnx/DataStructure/Metadata/BaseMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/AbstractMetadataValue.hpp"
 
 #include "simplnx/simplnx_export.hpp"
 
@@ -88,7 +88,7 @@ public:
    * @param key The key to retrieve data for
    * @return ValuePtr containing the metadata value, or nullptr if key doesn't exist
    */
-  const ValuePtr& getDataPtr(const KeyType& key) const;
+  const ValuePtr& getDataValuePtr(const KeyType& key) const;
 
   /**
    * @brief Returns the metadata value for the target key.
@@ -97,31 +97,12 @@ public:
    * @return metadata value for key of type T
    */
   template <typename T>
-  const T& getDataRefAs(const KeyType& key) const
+  std::shared_ptr<T> getDataValuePtrAs(const KeyType& key) const
   {
-    const auto dataPtr = getDataPtr(key);
-    if(const auto typedDataPtr = std::static_pointer_cast<const T>(dataPtr); typedDataPtr != nullptr)
+    ValuePtr dataPtr = getDataValuePtr(key);
+    if(const auto typedDataPtr = std::static_pointer_cast<T>(dataPtr); typedDataPtr != nullptr)
     {
-      return *typedDataPtr.get();
-    }
-
-    std::string errorStr = fmt::format("Metadata '{}' does not exist or cannot be cast to type '{}'", key, typeid(T).name());
-    throw std::runtime_error(errorStr);
-  }
-
-  /**
-   * @brief Returns the metadata value for the target key.
-   * Throws if the key does not exist in the Metadata.
-   * @param key The key to retrieve data for
-   * @return metadata value for key of type T
-   */
-  template <typename T>
-  T& getDataRefAs(const KeyType& key)
-  {
-    auto dataPtr = getDataPtr(key);
-    if(auto typedDataPtr = std::static_pointer_cast<T>(dataPtr); typedDataPtr != nullptr)
-    {
-      return *typedDataPtr.get();
+      return typedDataPtr;
     }
 
     std::string errorStr = fmt::format("Metadata '{}' does not exist or cannot be cast to type '{}'", key, typeid(T).name());
@@ -133,14 +114,31 @@ public:
    * @param key The key to set data for
    * @param value The value to associate with the key
    */
-  void setDataPtr(const KeyType& key, const ValuePtr& value);
+  void setDataValuePtr(const KeyType& key, const ValuePtr& value);
 
+  /**
+   * @brief Sets or creates a value with the specified key.
+   * @param key Name of the stored value.
+   * @param value Value to store
+   */
   template <typename T>
   void setData(const KeyType& key, const T::ValueType& value)
   {
     auto dataPtr = std::make_shared<T>();
     *dataPtr.get() = value;
-    setDataPtr(key, dataPtr);
+    setDataValuePtr(key, dataPtr);
+  }
+
+  /**
+   * @brief Returns the value stored in the metadata value specified by the given key.
+   * @param key Name of the stored value to lookup.
+   * @return T Stored value
+   */
+  template <typename T>
+  T getDataAs(const KeyType& key) const
+  {
+    const auto& dataValue = getDataValuePtrAs<AbstractMetadataValue<T>>(key);
+    return dataValue->getValue();
   }
 
   /**
