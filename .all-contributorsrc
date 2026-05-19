@@ -109,6 +109,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "jess-garnett",
+      "name": "Jessica Garnett",
+      "avatar_url": "https://avatars.githubusercontent.com/u/71046223?v=4",
+      "profile": "https://github.com/jess-garnett",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "contributorsPerLine": 7,
