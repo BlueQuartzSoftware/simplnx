@@ -109,6 +109,15 @@
       "contributions": [
         "code"
       ]
+    },
+    {
+      "login": "nikprabhu",
+      "name": "Nikhil Prabhu",
+      "avatar_url": "https://avatars.githubusercontent.com/u/146640536?v=4",
+      "profile": "http://nikprabhu.github.io",
+      "contributions": [
+        "bug"
+      ]
     }
   ],
   "contributorsPerLine": 7,
