@@ -304,5 +304,5 @@ to do this one would run the :ref:`WriteDREAM3DFilter <WriteDREAM3DFilter>`. App
 
 Full example of this tutorial is located at:
 
-https://github.com/BlueQuartzSoftware/NXWorkshop/blob/develop/PythonTutorial/tutorial_1.py
+https://github.com/BlueQuartzSoftware/NXWorkshop/blob/develop/PythonTutorial/tutorial_1.ipynb
 
