@@ -35,6 +35,7 @@ namespace GM3DConstants
 const std::string k_CrystalStructures("CrystalStructures");
 const std::string k_LatticeConstants("LatticeConstants");
 const std::string k_MaterialName("MaterialName");
+const std::string k_UniversalHermannMauguin("UniversalHermannMauguin");
 } // namespace GM3DConstants
 /**
  * @class ReadGrainMapper3D
