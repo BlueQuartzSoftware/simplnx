@@ -1660,6 +1660,13 @@ PYBIND11_MODULE(simplnx, mod)
       },
       "Returns the human facing name of the filter");
   pipelineFilter.def_property("comments", &PipelineFilter::getComments, &PipelineFilter::setComments);
+  pipelineFilter.def("update_arg", [internals](PipelineFilter& self, const std::string& key, py::handle value) {
+    Uuid paramUuid = self.getParameters().at(key)->uuid();
+    std::any convertedValue = internals->at(paramUuid).fromPyObjectFunc(value);
+    Arguments args = self.getArguments();
+    args.insertOrAssign(key, std::move(convertedValue));
+    self.setArguments(args);
+  });
 
   py::class_<PyFilter, IFilter> pyFilter(mod, "PyFilter");
   pyFilter.def(py::init<>([](py::object object) { return std::make_unique<PyFilter>(std::move(object)); }));
