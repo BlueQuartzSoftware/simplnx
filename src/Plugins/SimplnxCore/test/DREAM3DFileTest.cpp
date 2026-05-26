@@ -58,6 +58,15 @@ std::mutex m_DataMutex;
 
 namespace DataNames
 {
+constexpr StringLiteral k_EdgeGeomName = "EdgeGeom";
+constexpr StringLiteral k_QuadGeomName = "QuadGeom";
+constexpr StringLiteral k_RectGridGeomName = "RectGridGeom";
+constexpr StringLiteral k_TetrahedralGeomName = "TetrahedralGeom";
+constexpr StringLiteral k_TriangleGeomName = "TriangleGeom";
+constexpr StringLiteral k_VertexGeomName = "VertexGeom";
+
+constexpr StringLiteral k_VertexListName = "Vertex List";
+
 constexpr StringLiteral k_Group1Name = "Top-Level";
 constexpr StringLiteral k_Group2Name = "Second-Level";
 constexpr StringLiteral k_Group3Name = "Third-Level";
@@ -156,9 +165,85 @@ fs::path GetReMultiExportDataPath()
   return GetDataDir(*app) / Constants::k_MultiExportFilename3;
 }
 
+void SetupNodeGeom0D(DataStructure& dataStructure, INodeGeometry0D* geom, const ShapeType& tupleShape)
+{
+  auto vertexStore = DataStoreUtilities::CreateDataStore<float32>(tupleShape, {3}, IDataAction::Mode::Execute);
+  auto* vertexList = DataArray<float32>::Create(dataStructure, DataNames::k_VertexListName, vertexStore, geom->getId());
+  geom->setVertices(*vertexList);
+}
+
+void SetupNodeGeom1D(DataStructure& dataStructure, INodeGeometry1D* geom, const ShapeType& tupleShape)
+{
+  auto edgeStore = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, {3}, IDataAction::Mode::Execute);
+  auto* edgeList = DataArray<uint64>::Create(dataStructure, DataNames::k_VertexListName, edgeStore, geom->getId());
+  geom->setEdgeList(*edgeList);
+}
+
+void SetupNodeGeom2D(DataStructure& dataStructure, INodeGeometry2D* geom, const ShapeType& tupleShape)
+{
+  auto faceStore = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, {3}, IDataAction::Mode::Execute);
+  auto* faceList = DataArray<uint64>::Create(dataStructure, DataNames::k_VertexListName, faceStore, geom->getId());
+  geom->setFaceList(*faceList);
+}
+
+void SetupNodeGeom3D(DataStructure& dataStructure, INodeGeometry3D* geom, const ShapeType& tupleShape)
+{
+  auto polyhedraStore = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, {3}, IDataAction::Mode::Execute);
+  auto* polyhedraList = DataArray<uint64>::Create(dataStructure, DataNames::k_VertexListName, polyhedraStore, geom->getId());
+  geom->setPolyhedraList(*polyhedraList);
+}
+
+void CreateEdgeGeom(DataStructure& dataStructure)
+{
+  auto* geom = EdgeGeom::Create(dataStructure, DataNames::k_EdgeGeomName);
+  SetupNodeGeom1D(dataStructure, geom);  
+}
+
+void CreateQuadGeom(DataStructure& dataStructure)
+{
+  auto* geom = QuadGeom::Create(dataStructure, DataNames::k_QuadGeomName);
+  SetupNodeGeom3D(dataStructure, geom);
+}
+
+void CreateRectGridGeom(DataStructure& dataStructure)
+{
+  auto* geom = RectGridGeom::Create(dataStructure, DataNames::k_RectGridGeomName);
+}
+
+void CreateTetrahedralGeom(DataStructure& dataStructure)
+{
+  auto* geom = TetrahedralGeom::Create(dataStructure, DataNames::k_TetrahedralGeomName);
+  SetupNodeGeom3D(dataStructure, geom);
+}
+
+void CreateTriangleGeom(DataStructure& dataStructure)
+{
+  auto* geom = TriangleGeom::Create(dataStructure, DataNames::k_TriangleGeomName);
+  SetupNodeGeom2D(dataStructure, geom);
+}
+
+void CreateVertexGeom(DataStructure& dataStructure)
+{
+  auto* geom = VertexGeom::Create(dataStructure, DataNames::k_VertexGeomName);
+  SetupNodeGeom0D(dataStructure, geom);
+}
+
+void CreateGeometries(DataStructure& dataStructure)
+{
+  CreateEdgeGeom(dataStructure);
+  CreateQuadGeom(dataStructure);
+  CreateRectGridGeom(dataStructure);
+  CreateTetrahedralGeom(dataStructure);
+  CreateTriangleGeom(dataStructure);
+  CreateVertexGeom(dataStructure);
+}
+
 DataStructure CreateTestDataStructure()
 {
   DataStructure dataStructure;
+
+  CreateGeometries(dataStructure);
+
   auto group1 = DataGroup::Create(dataStructure, DataNames::k_Group1Name);
   auto group2 = DataGroup::Create(dataStructure, DataNames::k_Group2Name, group1->getId());
   auto group3 = DataGroup::Create(dataStructure, DataNames::k_Group3Name, group2->getId());
