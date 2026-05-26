@@ -52,6 +52,8 @@ const fs::path k_ExportFilename2 = "export2.dream3d";
 const fs::path k_MultiExportFilename1 = "multi_export1.dream3d";
 const fs::path k_MultiExportFilename2 = "multi_export2.dream3d";
 const fs::path k_MultiExportFilename3 = "multi_export3.dream3d";
+
+const ShapeType k_TestDataShape = {2, 3};
 } // namespace Constants
 
 std::mutex m_DataMutex;
@@ -196,13 +198,13 @@ void SetupNodeGeom3D(DataStructure& dataStructure, INodeGeometry3D* geom, const 
 void CreateEdgeGeom(DataStructure& dataStructure)
 {
   auto* geom = EdgeGeom::Create(dataStructure, DataNames::k_EdgeGeomName);
-  SetupNodeGeom1D(dataStructure, geom);  
+  SetupNodeGeom1D(dataStructure, geom, Constants::k_TestDataShape);
 }
 
 void CreateQuadGeom(DataStructure& dataStructure)
 {
   auto* geom = QuadGeom::Create(dataStructure, DataNames::k_QuadGeomName);
-  SetupNodeGeom3D(dataStructure, geom);
+  SetupNodeGeom2D(dataStructure, geom, Constants::k_TestDataShape);
 }
 
 void CreateRectGridGeom(DataStructure& dataStructure)
@@ -213,19 +215,19 @@ void CreateRectGridGeom(DataStructure& dataStructure)
 void CreateTetrahedralGeom(DataStructure& dataStructure)
 {
   auto* geom = TetrahedralGeom::Create(dataStructure, DataNames::k_TetrahedralGeomName);
-  SetupNodeGeom3D(dataStructure, geom);
+  SetupNodeGeom3D(dataStructure, geom, Constants::k_TestDataShape);
 }
 
 void CreateTriangleGeom(DataStructure& dataStructure)
 {
   auto* geom = TriangleGeom::Create(dataStructure, DataNames::k_TriangleGeomName);
-  SetupNodeGeom2D(dataStructure, geom);
+  SetupNodeGeom2D(dataStructure, geom, Constants::k_TestDataShape);
 }
 
 void CreateVertexGeom(DataStructure& dataStructure)
 {
   auto* geom = VertexGeom::Create(dataStructure, DataNames::k_VertexGeomName);
-  SetupNodeGeom0D(dataStructure, geom);
+  SetupNodeGeom0D(dataStructure, geom, Constants::k_TestDataShape);
 }
 
 void CreateGeometries(DataStructure& dataStructure)
@@ -825,6 +827,33 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
 
     UnitTest::CheckArraysInheritTupleDims(importDataStructure);
   }
+}
+
+TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test: Expanded DataStructure", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  fs::path path = GetDataDir(*app) / "ExpandedDataStructureTestData.dream3d";
+
+  DataStructure exportDataStructure = CreateTestDataStructure();
+
+  WriteDREAM3DFilter writeDream3dFilter;
+  Arguments writeArgs;
+  writeArgs.insertOrAssign(WriteDREAM3DFilter::k_ExportFilePath, path);
+  writeArgs.insertOrAssign(WriteDREAM3DFilter::k_WriteXdmf, false);
+  Result<> writeResult = writeDream3dFilter.execute(exportDataStructure, writeArgs).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  DataStructure importDataStructure;
+
+  ReadDREAM3DFilter readDream3dFilter;
+  Arguments readArgs;
+  Dream3dImportParameter::ImportData importData(path);
+  readArgs.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, importData);
+  Result<> readResult = readDream3dFilter.execute(importDataStructure, readArgs).result;
+  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+
+  CompareDataStructures(exportDataStructure, importDataStructure);
 }
 
 TEST_CASE("DREAM3DFileTest:Import/Export Multi-DREAM3D Filter Test", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
