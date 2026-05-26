@@ -286,6 +286,348 @@ DREAM3D::FileData CreateFileData()
   return {CreateExportPipeline(), CreateTestDataStructure()};
 }
 
+void CompareBaseGroups(const BaseGroup* group1, const BaseGroup* group2)
+{
+  REQUIRE(group1 != nullptr);
+  REQUIRE(group2 != nullptr);
+
+  REQUIRE(group1->getSize() == group2->getSize());
+}
+
+void CompareStringArrays(const DataObject* object1, const DataObject* object2)
+{
+  const auto* array1 = dynamic_cast<const StringArray*>(object1);
+  const auto* array2 = dynamic_cast<const StringArray*>(object2);
+
+  REQUIRE(array1 != nullptr);
+  REQUIRE(array2 != nullptr);
+
+  REQUIRE(array1->getSize() == array2->getSize());
+  REQUIRE(array1->values() == array2->values());
+}
+
+template <typename T>
+void CompareNeighborLists(const DataObject* object1, const DataObject* object2)
+{
+  const auto* array1 = dynamic_cast<const NeighborList<T>*>(object1);
+  const auto* array2 = dynamic_cast<const NeighborList<T>*>(object2);
+
+  const auto numLists = array1->getNumberOfLists();
+  for (usize i = 0; i < numLists; i++)
+  {
+    REQUIRE(array1->getList(i) == array2->getList(i));
+  }
+}
+
+void CompareINeighborLists(const DataObject* object1, const DataObject* object2)
+{
+  const auto* array1 = dynamic_cast<const INeighborList*>(object1);
+  const auto* array2 = dynamic_cast<const INeighborList*>(object2);
+
+  REQUIRE(array1 != nullptr);
+  REQUIRE(array2 != nullptr);
+
+  REQUIRE(array1->getDataType() == array2->getDataType());
+  switch (array1->getDataType())
+  {
+  case DataType::int8:
+    CompareNeighborLists<int8>(object1, object2);
+    break;
+  case DataType::int16:
+    CompareNeighborLists<int16>(object1, object2);
+    break;
+  case DataType::int32:
+    CompareNeighborLists<int32>(object1, object2);
+    break;
+  case DataType::int64:
+    CompareNeighborLists<int64>(object1, object2);
+    break;
+  case DataType::uint8:
+    CompareNeighborLists<uint8>(object1, object2);
+    break;
+  case DataType::uint16:
+    CompareNeighborLists<uint16>(object1, object2);
+    break;
+  case DataType::uint32:
+    CompareNeighborLists<uint32>(object1, object2);
+    break;
+  case DataType::uint64:
+    CompareNeighborLists<uint64>(object1, object2);
+    break;
+  case DataType::float32:
+    CompareNeighborLists<float32>(object1, object2);
+    break;
+  case DataType::float64:
+    CompareNeighborLists<float64>(object1, object2);
+    break;
+  }
+}
+
+template <typename T>
+void CompareDataArrays(const IDataArray* object1, const IDataArray* object2)
+{
+  const auto* array1 = dynamic_cast<const DataArray<T>*>(object1);
+  const auto* array2 = dynamic_cast<const DataArray<T>*>(object2);
+
+  REQUIRE(array1->getTupleShape() == array2->getTupleShape());
+  REQUIRE(array1->getComponentShape() == array2->getComponentShape());
+
+  auto& store1 = array1->getDataStoreRef();
+  auto& store2 = array2->getDataStoreRef();
+
+  const auto size = store1.getSize();
+  for(usize i = 0; i < size; i++)
+  {
+    REQUIRE(store1[i] == store2[i]);
+  }
+}
+
+void CompareIDataArrays(const DataObject* object1, const DataObject* object2)
+{
+  const auto* array1 = dynamic_cast<const IDataArray*>(object1);
+  const auto* array2 = dynamic_cast<const IDataArray*>(object2);
+
+  REQUIRE(array1 != nullptr);
+  REQUIRE(array2 != nullptr);
+
+  REQUIRE(array1->getArrayType() == array2->getArrayType());
+  REQUIRE(array1->getDataType() == array2->getDataType());
+
+  switch(array1->getDataType())
+  {
+  case DataType::int8:
+    CompareDataArrays<int8>(array1, array2);
+    return;
+  case DataType::int16:
+    CompareDataArrays<int16>(array1, array2);
+    return;
+  case DataType::int32:
+    CompareDataArrays<int32>(array1, array2);
+    return;
+  case DataType::int64:
+    CompareDataArrays<int64>(array1, array2);
+    return;
+  case DataType::uint8:
+    CompareDataArrays<uint8>(array1, array2);
+    return;
+  case DataType::uint16:
+    CompareDataArrays<uint16>(array1, array2);
+    return;
+  case DataType::uint32:
+    CompareDataArrays<uint32>(array1, array2);
+    return;
+  case DataType::uint64:
+    CompareDataArrays<uint64>(array1, array2);
+    return;
+  case DataType::float32:
+    CompareDataArrays<float32>(array1, array2);
+    return;
+  case DataType::float64:
+    CompareDataArrays<float64>(array1, array2);
+    return;
+  case DataType::boolean:
+    CompareDataArrays<bool>(array1, array2);
+    return;
+  }
+}
+
+void CompareNodeGeom0D(const INodeGeometry0D* geom1, const INodeGeometry0D* geom2)
+{
+  REQUIRE(geom1 != nullptr);
+  REQUIRE(geom2 != nullptr);
+
+  CompareIDataArrays(geom1->getVertices(), geom2->getVertices());
+}
+
+void CompareNodeGeom1D(const INodeGeometry1D* geom1, const INodeGeometry1D* geom2)
+{
+  REQUIRE(geom1 != nullptr);
+  REQUIRE(geom2 != nullptr);
+
+  CompareNodeGeom0D(geom1, geom2);
+
+  CompareIDataArrays(geom1->getEdges(), geom2->getEdges());
+}
+
+void CompareNodeGeom2D(const INodeGeometry2D* geom1, const INodeGeometry2D* geom2)
+{
+  REQUIRE(geom1 != nullptr);
+  REQUIRE(geom2 != nullptr);
+
+  CompareNodeGeom1D(geom1, geom2);
+
+  CompareIDataArrays(geom1->getFaces(), geom2->getFaces());
+}
+
+void CompareNodeGeom3D(const INodeGeometry3D* geom1, const INodeGeometry3D* geom2)
+{
+  REQUIRE(geom1 != nullptr);
+  REQUIRE(geom2 != nullptr);
+
+  CompareNodeGeom2D(geom1, geom2);
+
+  CompareIDataArrays(geom1->getPolyhedra(), geom2->getPolyhedra());
+}
+
+void CompareEdgeGeom(const DataObject* object1, const DataObject* object2)
+{
+  const auto* geom1 = dynamic_cast<const EdgeGeom*>(object1);
+  const auto* geom2 = dynamic_cast<const EdgeGeom*>(object2);
+
+  CompareBaseGroups(geom1, geom2);
+  CompareNodeGeom1D(geom1, geom2);
+}
+
+void CompareHexahedralGeom(const DataObject* object1, const DataObject* object2)
+{
+  const auto* geom1 = dynamic_cast<const HexahedralGeom*>(object1);
+  const auto* geom2 = dynamic_cast<const HexahedralGeom*>(object2);
+
+  CompareBaseGroups(geom1, geom2);
+  CompareNodeGeom3D(geom1, geom2);
+}
+
+void CompareImageGeom(const DataObject* object1, const DataObject* object2)
+{
+  const auto* geom1 = dynamic_cast<const ImageGeom*>(object1);
+  const auto* geom2 = dynamic_cast<const ImageGeom*>(object2);
+
+  CompareBaseGroups(geom1, geom2);
+
+  REQUIRE(geom1->getSpacing() == geom2->getSpacing());
+  REQUIRE(geom1->getOrigin() == geom2->getOrigin());
+  REQUIRE(geom1->getDimensions() == geom2->getDimensions());
+}
+
+void CompareQuadGeom(const DataObject* object1, const DataObject* object2)
+{
+  const auto* geom1 = dynamic_cast<const QuadGeom*>(object1);
+  const auto* geom2 = dynamic_cast<const QuadGeom*>(object2);
+
+  CompareBaseGroups(geom1, geom2);
+  CompareNodeGeom2D(geom1, geom2);
+}
+
+void CompareRectGridGeom(const DataObject* object1, const DataObject* object2)
+{
+  const auto* geom1 = dynamic_cast<const RectGridGeom*>(object1);
+  const auto* geom2 = dynamic_cast<const RectGridGeom*>(object2);
+
+  CompareBaseGroups(geom1, geom2);
+  CompareIDataArrays(geom1->getXBounds(), geom2->getXBounds());
+  CompareIDataArrays(geom1->getYBounds(), geom2->getYBounds());
+  CompareIDataArrays(geom1->getZBounds(), geom2->getZBounds());
+}
+
+void CompareTetrahedralGeom(const DataObject* object1, const DataObject* object2)
+{
+  const auto* geom1 = dynamic_cast<const TetrahedralGeom*>(object1);
+  const auto* geom2 = dynamic_cast<const TetrahedralGeom*>(object2);
+
+  CompareBaseGroups(geom1, geom2);
+  CompareNodeGeom3D(geom1, geom2);
+}
+
+void CompareTriangleGeom(const DataObject* object1, const DataObject* object2)
+{
+  const auto* geom1 = dynamic_cast<const TriangleGeom*>(object1);
+  const auto* geom2 = dynamic_cast<const TriangleGeom*>(object2);
+
+  CompareBaseGroups(geom1, geom2);
+  CompareNodeGeom2D(geom1, geom2);
+}
+
+void CompareVertexGeom(const DataObject* object1, const DataObject* object2)
+{
+  const auto* geom1 = dynamic_cast<const VertexGeom*>(object1);
+  const auto* geom2 = dynamic_cast<const VertexGeom*>(object2);
+
+  CompareBaseGroups(geom1, geom2);
+  CompareNodeGeom0D(geom1, geom2);
+}
+
+void CompareAttributeMatrices(const DataObject* object1, const DataObject* object2)
+{
+  const auto* group1 = dynamic_cast<const AttributeMatrix*>(object1);
+  const auto* group2 = dynamic_cast<const AttributeMatrix*>(object2);
+
+  CompareBaseGroups(group1, group2);
+
+  REQUIRE(group1->getNumberOfTuples() == group2->getNumberOfTuples());
+  REQUIRE(group1->getShape() == group2->getShape());
+}
+
+void CompareDataGroups(const DataObject* object1, const DataObject* object2)
+{
+  const auto* group1 = dynamic_cast<const DataGroup*>(object1);
+  const auto* group2 = dynamic_cast<const DataGroup*>(object2);
+
+  CompareBaseGroups(group1, group2);
+}
+
+void CompareMetaData(const Metadata& metaData1, const Metadata& metaData2)
+{
+  for(const auto& [key, valuePtr] : metaData1)
+  {
+    auto& valueRef1 = *valuePtr.get();
+    auto& valueRef2 = *metaData2.getDataValuePtr(key).get();
+
+    REQUIRE(valueRef1.toJson().dump() == valueRef2.toJson().dump());
+  }
+}
+
+void CompareDataObjects(const DataStructure& dataStruct1, const DataStructure& dataStruct2, const DataPath& dataPath)
+{
+  const auto* object1 = dataStruct1.getData(dataPath);
+  const auto* object2 = dataStruct2.getData(dataPath);
+
+  if(object1 == nullptr)
+  {
+    if(object2 == nullptr)
+    {
+      return;
+    }
+    else
+    {
+      FAIL();
+    }
+  }
+
+  // Compare names
+  REQUIRE(object1->getName() == object2->getName());
+
+  // Compare MetaData
+  CompareMetaData(object1->getMetadata(), object2->getMetadata());
+
+  switch(object1->getDataObjectType())
+  {
+  case DataObject::Type::AttributeMatrix:
+    CompareAttributeMatrices(object1, object2);
+    break;
+  case DataObject::Type::DataArray:
+    CompareIDataArrays(object1, object2);
+    break;
+  case DataObject::Type::DataGroup:
+    CompareDataGroups(object1, object2);
+    break;
+  }
+}
+
+void CompareDataStructures(const DataStructure& dataStruct1, const DataStructure& dataStruct2)
+{
+  auto dataPaths1 = dataStruct1.getAllDataPaths();
+  auto dataPaths2 = dataStruct2.getAllDataPaths();
+
+  REQUIRE(dataPaths1.size() == dataPaths2.size());
+  for(const auto& dataPath : dataPaths1)
+  {
+    auto iter = std::find(dataPaths2.begin(), dataPaths2.end(), dataPath);
+    REQUIRE(iter != dataPaths2.end());
+
+    CompareDataObjects(dataStruct1, dataStruct2, dataPath);
+  }
+}
+
 } // End Namespace
 
 TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")

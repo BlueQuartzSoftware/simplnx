@@ -2,6 +2,10 @@
 
 #include "AbstractMetadataValue.hpp"
 
+#include "simplnx/simplnx_export.hpp"
+
+#include <string>
+
 namespace nx::core
 {
 /**

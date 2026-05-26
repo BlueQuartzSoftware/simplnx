@@ -15,7 +15,7 @@ StringMetadataValue::StringMetadataValue(const std::string& value)
 {
 }
 
-StringMetadataValue::operator std::string() const
+StringMetadataValue::operator StringMetadataValue::ValueType() const
 {
   return m_Value;
 }
