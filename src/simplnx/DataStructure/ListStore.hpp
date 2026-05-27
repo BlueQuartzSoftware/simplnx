@@ -156,6 +156,16 @@ public:
   }
 
   /**
+   * @brief Returns the total number of lists in the list store.
+   * Alias for getNumberOfLists().
+   * @return usize The number of lists
+   */
+  usize size() const override
+  {
+    return m_NumTuples;
+  }
+
+  /**
    * @brief Returns the number of elements in the list at the specified grain/tuple index.
    * @param grainId The grain/tuple index to query
    * @return usize The number of elements in the specified list
@@ -210,9 +220,9 @@ public:
 
   /**
    * @brief Returns the total number of lists in the ListStore.
-   * @return uint64 The number of lists (equal to the number of tuples)
+   * @return usize The number of lists (equal to the number of tuples)
    */
-  uint64 getNumberOfLists() const override
+  usize getNumberOfLists() const override
   {
     return m_NumTuples;
   }

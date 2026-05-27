@@ -17,8 +17,16 @@ using namespace nx::core;
 
 namespace
 {
-const DataPath k_ThrowawayCheckedFeatures = DataPath({"HiddenTempCheckedFeatures"});
-const DataPath k_ThrowawayNonContiguous = DataPath({"HiddenNonContiguousNL"});
+// Throwaway DataPaths used when the user opts out of either output. The
+// underlying algorithm always expects a valid Int32Array for CheckedFeatures
+// and a valid Int32NeighborList for NonContiguousNeighbors, even when those
+// outputs are unused. preflightImpl() creates these temporary objects when
+// the user opts out and schedules a deferred delete; the algorithm writes
+// to them (the writes are harmless) and they are cleaned up at the end of
+// execute. This keeps the algorithm interface free of std::optional or
+// nullable references.
+const auto k_ThrowawayCheckedFeatures = DataPath({"HiddenTempCheckedFeatures"});
+const auto k_ThrowawayNonContiguous = DataPath({"HiddenNonContiguousNL"});
 } // namespace
 
 namespace nx::core
@@ -155,13 +163,14 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
     return MakePreflightErrorResult(-15673, fmt::format("Feature Volumes [{}] must be stored in an Attribute Matrix.", pFeatureVolumesPath.toString()));
   }
 
+  // CheckedFeatures output: create the real output when requested; otherwise
+  // create the throwaway placeholder (see the k_ThrowawayCheckedFeatures
+  // comment block at the top of this file) and schedule its deletion.
   if(pFindCheckedFeatures)
   {
-    {
-      DataPath checkedFeaturesPath = pFeatureVolumesPath.replaceName(pCheckedFeaturesName);
-      auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, pFeatureAM->getShape(), ShapeType{1}, checkedFeaturesPath);
-      resultOutputActions.value().appendAction(std::move(createArrayAction));
-    }
+    DataPath checkedFeaturesPath = pFeatureVolumesPath.replaceName(pCheckedFeaturesName);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, pFeatureAM->getShape(), ShapeType{1}, checkedFeaturesPath);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   else
   {
@@ -175,6 +184,9 @@ IFilter::PreflightResult ComputeGroupingDensityFilter::preflightImpl(const DataS
     }
   }
 
+  // Non-contiguous neighbor list: when the user has opted out, create a
+  // throwaway 1-tuple neighbor list and schedule its deletion. See the
+  // k_ThrowawayNonContiguous comment block at the top of this file.
   if(!pUseNonContiguousNeighbors)
   {
     {
