@@ -8,8 +8,8 @@ class SIMPLNX_EXPORT BoolVectorMetadataValue : public AbstractVectorMetadataValu
 {
 public:
   using ParentType = AbstractVectorMetadataValue<bool>;
-  using ValueType = ParentType::ValueType;
-  using AssignmentReturnType = ParentType::AssignmentReturnType;
+  using ValueType = typename ParentType::ValueType;
+  using AssignmentReturnType = typename ParentType::AssignmentReturnType;
 
   static constexpr StringLiteral k_TypeName = "vec<bool>";
 

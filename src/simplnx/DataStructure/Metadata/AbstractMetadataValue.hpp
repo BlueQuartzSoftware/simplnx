@@ -81,7 +81,7 @@ public:
 
 protected:
   AbstractMetadataValue() = default;
-  
+
   virtual std::string getTypeNameImpl() const = 0;
 
   /**

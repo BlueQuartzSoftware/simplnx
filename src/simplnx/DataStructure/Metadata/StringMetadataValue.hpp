@@ -15,7 +15,7 @@ class SIMPLNX_EXPORT StringMetadataValue : public AbstractMetadataValue<std::str
 {
 public:
   using ParentType = AbstractMetadataValue<std::string>;
-  using ValueType = ParentType::ValueType;
+  using ValueType = typename ParentType::ValueType;
 
   static constexpr StringLiteral k_TypeName = "string";
 

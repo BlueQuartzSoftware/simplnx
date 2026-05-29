@@ -8,8 +8,8 @@ class SIMPLNX_EXPORT StringVectorMetadataValue : public AbstractVectorMetadataVa
 {
 public:
   using ParentType = AbstractVectorMetadataValue<std::string>;
-  using ValueType = ParentType::ValueType;
-  using AssignmentReturnType = ParentType::AssignmentReturnType;
+  using ValueType = typename ParentType::ValueType;
+  using AssignmentReturnType = typename ParentType::AssignmentReturnType;
 
   static constexpr StringLiteral k_TypeName = "vec<string>";
 

@@ -2,10 +2,10 @@
 
 #include "simplnx/DataStructure/Metadata/BoolMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/BoolVectorMetadataValue.hpp"
-#include "simplnx/DataStructure/Metadata/DoubleMetadataValue.hpp"
-#include "simplnx/DataStructure/Metadata/DoubleVectorMetadataValue.hpp"
-#include "simplnx/DataStructure/Metadata/IntMetadataValue.hpp"
-#include "simplnx/DataStructure/Metadata/IntVectorMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/Float64MetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/Float64VectorMetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/Int32MetadataValue.hpp"
+#include "simplnx/DataStructure/Metadata/Int32VectorMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/StringMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/StringVectorMetadataValue.hpp"
 #include "simplnx/DataStructure/Metadata/UnknownMetadataValue.hpp"
@@ -34,20 +34,20 @@ void MetaDataList::addDefaultTypes()
     return metaData;
   });
   // Double Metadata
-  addMetaDataType(DoubleMetadataValue::k_TypeName, [](const nlohmann::json& json) {
-    auto metaData = std::make_unique<DoubleMetadataValue>();
+  addMetaDataType(Float64MetadataValue::k_TypeName, [](const nlohmann::json& json) {
+    auto metaData = std::make_unique<Float64MetadataValue>();
     metaData->fromJson(json);
     return metaData;
   });
   // Double Vector Metadata
-  addMetaDataType(DoubleVectorMetadataValue::k_TypeName, [](const nlohmann::json& json) {
-    auto metaData = std::make_unique<DoubleVectorMetadataValue>();
+  addMetaDataType(Float64VectorMetadataValue::k_TypeName, [](const nlohmann::json& json) {
+    auto metaData = std::make_unique<Float64VectorMetadataValue>();
     metaData->fromJson(json);
     return metaData;
   });
   // Integer Metadata
-  addMetaDataType(IntMetadataValue::k_TypeName, [](const nlohmann::json& json) {
-    auto metaData = std::make_unique<IntMetadataValue>();
+  addMetaDataType(Int32MetadataValue::k_TypeName, [](const nlohmann::json& json) {
+    auto metaData = std::make_unique<Int32MetadataValue>();
     metaData->fromJson(json);
     return metaData;
   });

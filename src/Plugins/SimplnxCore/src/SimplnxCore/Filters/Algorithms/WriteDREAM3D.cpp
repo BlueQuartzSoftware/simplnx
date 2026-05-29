@@ -84,67 +84,7 @@ Result<> WriteDREAM3DFile(AtomicFile& atomicFile, const DataStructure& dataStruc
     fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
     std::error_code errorCode;
     fs::rename(xdmfFilePath, fs::path(exportFilePath).replace_extension(".xdmf"), errorCode);
-    
-    // If the XDMF file failed to be renamed, return an invalid Result
-    if(errorCode)
-    {
-      std::string ss = fmt::format("Failed to rename xdmf file with error: '{}'", errorCode.message());
-      return MakeErrorResult(errorCode.value(), ss);
-    }
-  }
 
-  return {};
-}
-
-// -----------------------------------------------------------------------------
-Result<> WriteDREAM3D::operator()()
-{
-  Pipeline pipeline;
-  if(pipelineNode != nullptr)
-  {
-    auto pipelinePtr = pipelineNode->getPrecedingPipeline();
-    if(pipelinePtr == nullptr)
-    {
-      return MakeErrorResult<Pipeline>(k_FailedFindPipelineError, "Failed to retrieve pipeline.");
-    }
-
-    pipeline = *pipelinePtr;
-  }
-  return {pipeline};
-}
-
-/**
- * @brief Writes the DREAM3D file to the temp file, commits changes, and then writes the XDMF file if requested.
- * @param atomicFile Temp file for writing the DREAM3D file
- * @param dataStructure DataStructure to be written to file.
- * @param pipeline Pipeline to write to file.
- * @param writeXdmfFile
- * @return Result<>
- */
-Result<> WriteDREAM3DFile(AtomicFile& atomicFile, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmfFile)
-{
-  auto exportFilePath = atomicFile.tempFilePath();
-
-  auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmfFile);
-  if(results.invalid())
-  {
-    return results;
-  }
-
-  // Commit changes to the temp file. Return an invalid Result if errors occured.
-  if(auto commitResult = atomicFile.commit(); commitResult.invalid())
-  {
-    return commitResult;
-  }
-
-  // Write the XDMF file if specified
-  if(writeXdmfFile)
-  {
-    // TODO: Double check this
-    fs::path xdmfFilePath = exportFilePath.replace_extension(".xdmf");
-    std::error_code errorCode;
-    fs::rename(xdmfFilePath, fs::path(exportFilePath).replace_extension(".xdmf"), errorCode);
-    
     // If the XDMF file failed to be renamed, return an invalid Result
     if(errorCode)
     {
@@ -167,10 +107,9 @@ Result<> WriteDREAM3D::operator()()
   }
   AtomicFile atomicFile = std::move(atomicFileResult.value());
 
-  nx::core::HDF5::DataStructureWriter::WriteOptions writeOptions;
-  writeOptions.compressionLevel = m_InputValues->UseCompression ? m_InputValues->CompressionLevel : 0;
-  auto results = DREAM3D::WriteFile(exportFilePath, m_DataStructure, pipeline, writeXdmf, writeOptions);
-  if(results.valid())
+  // Extract Preceding Pipeline
+  Pipeline pipeline;
+  if(auto result = ExtractPipeline(m_InputValues->PipelineNode); result.invalid())
   {
     return ConvertResult(std::move(result));
   }

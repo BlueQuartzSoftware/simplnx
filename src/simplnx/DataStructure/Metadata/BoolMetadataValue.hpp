@@ -11,7 +11,7 @@ class SIMPLNX_EXPORT BoolMetadataValue : public AbstractMetadataValue<bool>
 {
 public:
   using ParentType = AbstractMetadataValue<bool>;
-  using ValueType = ParentType::ValueType;
+  using ValueType = typename ParentType::ValueType;
 
   static constexpr StringLiteral k_TypeName = "bool";
 

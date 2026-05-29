@@ -8,9 +8,9 @@ template <typename T>
 class AbstractVectorMetadataValue : public AbstractMetadataValue<std::vector<T>>
 {
 public:
-  using ParentType = AbstractMetadataValue<std::vector<T>>;
-  using ValueType = ParentType::ValueType;
-  using AssignmentReturnType = ParentType;
+  using ParentType = typename AbstractMetadataValue<std::vector<T>>;
+  using ValueType = typename ParentType::ValueType;
+  using AssignmentReturnType = typename ParentType;
 
   AbstractVectorMetadataValue(const AbstractVectorMetadataValue& other)
   : ParentType(other)
@@ -85,7 +85,7 @@ protected:
   }
   AbstractVectorMetadataValue& operator=(AbstractVectorMetadataValue&& rhs) noexcept
   {
-      m_Value = std::move(rhs.m_Value);
+    m_Value = std::move(rhs.m_Value);
     return *this;
   }
 
