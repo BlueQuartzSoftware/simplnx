@@ -61,11 +61,11 @@ Result<Pipeline> ExtractPipeline(const PipelineFilter* pipelineNode)
  * @param writeXdmfFile
  * @return Result<>
  */
-Result<> WriteDREAM3DFile(AtomicFile& atomicFile, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmfFile)
+Result<> WriteDREAM3DFile(AtomicFile& atomicFile, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmfFile, const nx::core::HDF5::DataStructureWriter::WriteOptions& writeOptions)
 {
   auto exportFilePath = atomicFile.tempFilePath();
 
-  auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmfFile);
+  auto results = DREAM3D::WriteFile(exportFilePath, dataStructure, pipeline, writeXdmfFile, writeOptions);
   if(results.invalid())
   {
     return results;
@@ -119,5 +119,7 @@ Result<> WriteDREAM3D::operator()()
   }
 
   // Write DREAM.3D file
-  return WriteDREAM3DFile(atomicFile, m_DataStructure, pipeline, m_InputValues->WriteXdmfFile);
+  nx::core::HDF5::DataStructureWriter::WriteOptions writeOptions;
+  writeOptions.compressionLevel = m_InputValues->UseCompression ? m_InputValues->CompressionLevel : 0;
+  return WriteDREAM3DFile(atomicFile, m_DataStructure, pipeline, m_InputValues->WriteXdmfFile, writeOptions);
 }
