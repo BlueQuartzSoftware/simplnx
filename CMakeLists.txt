@@ -444,10 +444,10 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/AbstractVectorMetadataValue.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BoolMetadataValue.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BoolVectorMetadataValue.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/DoubleMetadataValue.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/DoubleVectorMetadataValue.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/IntMetadataValue.hpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/IntVectorMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/Float64MetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/Float64VectorMetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/Int32MetadataValue.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/Int32VectorMetadataValue.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/MetaDataList.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/StringMetadataValue.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/StringVectorMetadataValue.hpp
@@ -701,10 +701,10 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BaseMetadataValue.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BoolMetadataValue.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/BoolVectorMetadataValue.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/DoubleMetadataValue.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/DoubleVectorMetadataValue.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/IntMetadataValue.cpp
-  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/IntVectorMetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/Float64MetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/Float64VectorMetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/Int32MetadataValue.cpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/Int32VectorMetadataValue.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/MetaDataList.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/StringMetadataValue.cpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/Metadata/StringVectorMetadataValue.cpp

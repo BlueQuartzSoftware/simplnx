@@ -7,18 +7,18 @@ namespace nx::core
 /**
  * @brief Metadata class implementation for reading and writing integer metadata.
  */
-class SIMPLNX_EXPORT IntMetadataValue : public AbstractMetadataValue<int32>
+class SIMPLNX_EXPORT Int32MetadataValue : public AbstractMetadataValue<int32>
 {
 public:
-  using ParentType = AbstractMetadataValue<int32>;
-  using ValueType = ParentType::ValueType;
+  using ParentType = typename AbstractMetadataValue<int32>;
+  using ValueType = typename ParentType::ValueType;
 
   static constexpr StringLiteral k_TypeName = "int32";
 
-  IntMetadataValue(ValueType value = 0);
-  IntMetadataValue(const IntMetadataValue& other) = default;
-  IntMetadataValue(IntMetadataValue&& other) = default;
-  ~IntMetadataValue() = default;
+  Int32MetadataValue(ValueType value = 0);
+  Int32MetadataValue(const Int32MetadataValue& other) = default;
+  Int32MetadataValue(Int32MetadataValue&& other) = default;
+  ~Int32MetadataValue() = default;
 
   /**
    * @brief Default cast to the type in question

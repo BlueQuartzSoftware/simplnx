@@ -7,18 +7,18 @@ namespace nx::core
 /**
  * @brief Metadata class implementation for reading and writing floating-point metadata.
  */
-class SIMPLNX_EXPORT DoubleMetadataValue : public AbstractMetadataValue<float64>
+class SIMPLNX_EXPORT Float64MetadataValue : public AbstractMetadataValue<float64>
 {
 public:
   using ParentType = AbstractMetadataValue<float64>;
-  using ValueType = ParentType::ValueType;
+  using ValueType = typename ParentType::ValueType;
 
-  static constexpr StringLiteral k_TypeName = "double";
+  static constexpr StringLiteral k_TypeName = "float64";
 
-  DoubleMetadataValue(ValueType value = 0.0);
-  DoubleMetadataValue(const DoubleMetadataValue& other) = default;
-  DoubleMetadataValue(DoubleMetadataValue&& other) = default;
-  ~DoubleMetadataValue() = default;
+  Float64MetadataValue(ValueType value = 0.0);
+  Float64MetadataValue(const Float64MetadataValue& other) = default;
+  Float64MetadataValue(Float64MetadataValue&& other) = default;
+  ~Float64MetadataValue() = default;
 
   /**
    * @brief Default cast to the type in question

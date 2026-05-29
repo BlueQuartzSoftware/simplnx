@@ -1,4 +1,4 @@
-#include "IntVectorMetadataValue.hpp"
+#include "Int32VectorMetadataValue.hpp"
 
 namespace nx::core
 {
