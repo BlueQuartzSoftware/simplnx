@@ -2,11 +2,11 @@
 
 #include "SimplnxCore/Filters/Algorithms/WriteDREAM3D.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/WriteDREAM3D.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
-#include "SimplnxCore/Filters/Algorithms/WriteDREAM3D.hpp"
 
 #include <fmt/format.h>
 
