@@ -61,7 +61,8 @@ Result<Pipeline> ExtractPipeline(const PipelineFilter* pipelineNode)
  * @param writeXdmfFile
  * @return Result<>
  */
-Result<> WriteDREAM3DFile(AtomicFile& atomicFile, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmfFile, const nx::core::HDF5::DataStructureWriter::WriteOptions& writeOptions)
+Result<> WriteDREAM3DFile(AtomicFile& atomicFile, const DataStructure& dataStructure, const Pipeline& pipeline, bool writeXdmfFile,
+                          const nx::core::HDF5::DataStructureWriter::WriteOptions& writeOptions)
 {
   auto exportFilePath = atomicFile.tempFilePath();
 
