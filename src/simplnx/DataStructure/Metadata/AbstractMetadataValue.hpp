@@ -56,7 +56,7 @@ public:
    */
   virtual bool operator==(const ValueType& rhs) const = 0;
 
-  std::string getTypeName() const
+  std::string getTypeName() const override
   {
     return getTypeNameImpl();
   }
