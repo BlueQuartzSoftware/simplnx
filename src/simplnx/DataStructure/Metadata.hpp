@@ -29,7 +29,7 @@ public:
   using KeyType = std::string;
   using ValueType = BaseMetadataValue;
   using ValuePtr = std::shared_ptr<ValueType>;
-  using Iterator = std::map<KeyType, ValuePtr>::iterator;
+  using Iterator = typename std::map<KeyType, ValuePtr>::iterator;
   using ConstIterator = std::map<KeyType, ValuePtr>::const_iterator;
 
   /**
@@ -122,7 +122,7 @@ public:
    * @param value Value to store
    */
   template <typename T>
-  void setData(const KeyType& key, const T::ValueType& value)
+  void setData(const KeyType& key, const typename T::ValueType& value)
   {
     auto dataPtr = std::make_shared<T>();
     *dataPtr.get() = value;
