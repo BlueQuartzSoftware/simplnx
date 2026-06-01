@@ -50,6 +50,10 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter", "[OrientationAnalysis
   (*exemplarData)[9] = 0.573462F;
   (*exemplarData)[10] = 0.655386F;
   (*exemplarData)[11] = 12.2066F;
+  (*exemplarData)[12] = 0.517892F;
+  (*exemplarData)[13] = 0.575435F;
+  (*exemplarData)[14] = 0.632979F;
+  (*exemplarData)[15] = 17.37815F;
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
     const RodriguesConvertorFilter filter;

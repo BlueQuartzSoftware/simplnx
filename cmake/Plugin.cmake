@@ -383,6 +383,7 @@ function(create_simplnx_plugin_unit_test)
   target_compile_definitions(${UNIT_TEST_TARGET}
     PRIVATE
       SIMPLNX_BUILD_DIR="$<TARGET_FILE_DIR:simplnx_test>"
+      SIMPLNX_TEST_ALGORITHM_PATH=${SIMPLNX_TEST_ALGORITHM_PATH}
   )
 
   target_compile_options(${UNIT_TEST_TARGET}

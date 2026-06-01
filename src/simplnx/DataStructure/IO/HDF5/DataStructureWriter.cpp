@@ -1,7 +1,13 @@
 #include "DataStructureWriter.hpp"
 
+#include "simplnx/Common/SimplnxConfig.hpp"
+#ifdef SIMPLNX_USE_OOC
+#include "SimplnxOoc/OocDataIOManager.hpp"
+#endif
+
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 
@@ -147,21 +153,39 @@ Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::
     // Create an HDF5 link
     return writeDataObjectLink(dataObject, parentGroup);
   }
-  else
-  {
-    // Write new data
-    auto factory = m_IOManager->getFactoryAs<IDataIO>(dataObject->getTypeName());
-    if(factory == nullptr)
-    {
-      std::string ss = fmt::format("Could not find IO factory for datatype: {}", dataObject->getTypeName());
-      return MakeErrorResult(-5, ss);
-    }
 
-    auto result = factory->writeDataObject(*this, dataObject, parentGroup);
-    if(result.invalid())
-    {
-      return result;
-    }
+  // -----------------------------------------------------------------------
+  // OOC recovery-file support
+  // -----------------------------------------------------------------------
+  // During a recovery WriteFile (a SimplnxOoc::RecoveryWriteGuard is on the
+  // stack), OOC-backed arrays are written as a zero-byte placeholder dataset
+  // annotated with OocBackingFilePath / OocBackingDatasetPath / OocChunkShape
+  // attributes, so the recovery file stays small while preserving enough
+  // metadata to reattach to the backing file on reload (see handleImport).
+  //
+  // maybeWriteRecoveryArray returns std::nullopt when not in recovery mode or
+  // the object is in-core, in which case we fall through to the normal write
+  // path below. When OOC is not compiled in, none of this exists.
+#ifdef SIMPLNX_USE_OOC
+  auto overrideResult = SimplnxOoc::maybeWriteRecoveryArray(*this, dataObject, parentGroup);
+  if(overrideResult.has_value())
+  {
+    return overrideResult.value();
+  }
+#endif
+
+  // Normal write path
+  auto factory = m_IOManager->getFactoryAs<IDataIO>(dataObject->getTypeName());
+  if(factory == nullptr)
+  {
+    std::string ss = fmt::format("Could not find IO factory for datatype: {}", dataObject->getTypeName());
+    return MakeErrorResult(-5, ss);
+  }
+
+  auto result = factory->writeDataObject(*this, dataObject, parentGroup);
+  if(result.invalid())
+  {
+    return result;
   }
 
   return {};

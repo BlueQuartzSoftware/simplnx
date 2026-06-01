@@ -118,8 +118,6 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   std::vector<DataPath> dataPaths;
 
   // Input Array
-  const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputDataPath);
-  std::string createdArrayFormat = inputDataArray.getDataFormat();
   dataPaths.push_back(inputDataPath);
 
   // Validate the GoodVoxels/Mask Array combination
@@ -137,11 +135,11 @@ IFilter::PreflightResult ScalarSegmentFeaturesFilter::preflightImpl(const DataSt
   }
 
   // Create the Cell Level FeatureIds array
-  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath, createdArrayFormat, "0");
+  auto createFeatureIdsAction = std::make_unique<CreateArrayAction>(DataType::int32, cellTupleDims, std::vector<usize>{1}, featureIdsPath, "", "0");
 
   // Create the Feature Attribute Matrix
   auto createFeatureGroupAction = std::make_unique<CreateAttributeMatrixAction>(cellFeaturesPath, std::vector<usize>{1});
-  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activeArrayPath, createdArrayFormat, "1");
+  auto createActiveAction = std::make_unique<CreateArrayAction>(DataType::uint8, std::vector<usize>{1}, std::vector<usize>{1}, activeArrayPath, "", "1");
 
   nx::core::Result<OutputActions> resultOutputActions;
 

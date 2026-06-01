@@ -351,7 +351,7 @@ IFilter::PreflightResult MapPointCloudToRegularGridFilter::preflightImpl(const D
   {
     DataPath tempPath = DataPath({k_MaskName});
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, vertexData->getShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, vertexData->getShape(), std::vector<usize>{1}, tempPath, "", "true");
       actions.appendAction(std::move(createAction));
     }
 

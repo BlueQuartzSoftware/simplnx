@@ -1174,8 +1174,8 @@ PYBIND11_MODULE(simplnx, mod)
   copyDataObjectAction.def(py::init<const DataPath&, const DataPath&, const std::vector<DataPath>>(), "path"_a, "new_path"_a, "all_created_paths"_a);
 
   auto createArrayAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateArrayAction, IDataCreationAction);
-  createArrayAction.def(py::init<DataType, const std::vector<usize>&, const std::vector<usize>&, const DataPath&, std::string>(), "type"_a, "t_dims"_a, "c_dims"_a, "path"_a,
-                        "data_format"_a = std::string(""));
+  createArrayAction.def(py::init<DataType, const std::vector<usize>&, const std::vector<usize>&, const DataPath&, std::string, std::string>(), "type"_a, "t_dims"_a, "c_dims"_a, "path"_a,
+                        "data_format"_a = std::string(""), "fill_value"_a = std::string(""));
 
   auto createAttributeMatrixAction = SIMPLNX_PY_BIND_CLASS_VARIADIC(mod, CreateAttributeMatrixAction, IDataCreationAction);
   createAttributeMatrixAction.def(py::init<const DataPath&, const ShapeType&>(), "path"_a, "shape"_a);

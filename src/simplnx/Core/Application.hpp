@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nx::core
@@ -121,9 +122,14 @@ public:
 
   /**
    * @brief Returns the collection of data I/O managers.
-   * @return Shared pointer to the DataIOCollection
+   *
+   * The returned reference is non-owning; the DataIOCollection is owned by
+   * the Application singleton and lives for the entire process lifetime.
+   * Callers should not attempt to extend its lifetime.
+   *
+   * @return Reference to the DataIOCollection owned by the Application.
    */
-  std::shared_ptr<DataIOCollection> getIOCollection() const;
+  DataIOCollection& getIOCollection() const;
 
   /**
    * @brief Returns the I/O manager for the specified format.
@@ -189,6 +195,19 @@ public:
    * @return Vector of strings representing the available data store formats
    */
   std::vector<std::string> getDataStoreFormats() const;
+
+  /**
+   * @brief Returns all known format display names as (formatName, displayName) pairs.
+   *
+   * Delegates to DataIOCollection::getFormatDisplayNames(). The list always
+   * includes ("", "Automatic") and (k_InMemoryFormat, "In Memory"). In an
+   * OOC-enabled build the compiled-in HDF5-OOC entry is also present (seeded
+   * when the DataIOCollection is constructed). Any entries registered by
+   * loaded plugins are appended as well.
+   *
+   * @return Vector of (formatName, displayName) pairs
+   */
+  std::vector<std::pair<std::string, std::string>> getDataStoreFormatDisplayNames() const;
 
 protected:
   /**

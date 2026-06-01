@@ -135,12 +135,24 @@ public:
 
   /**
    * @brief Writes the DataObject under the given GroupIO. If the
-   * DataObject has already been written, a link is create instead.
+   * DataObject has already been written, a link is created instead.
+   *
+   * Before using the normal type-factory write path, this method checks
+   * two conditions in order:
+   *
+   * 1. **Deduplication** -- If the DataObject has already been written to
+   *    this file, an HDF5 hard link is created instead of a duplicate copy.
+   *
+   * 2. **OOC recovery write** -- When built with SIMPLNX_USE_OOC and a
+   *    recovery write is active, SimplnxOoc::maybeWriteRecoveryArray is given
+   *    a chance to write OOC-backed arrays as lightweight placeholder
+   *    datasets. If it declines (the object is not OOC-backed), the normal
+   *    write path is used.
    *
    * If the process encounters an error, the error code is returned. Otherwise,
    * this method returns 0.
-   * @param dataObject
-   * @param parentGroup
+   * @param dataObject The DataObject to write
+   * @param parentGroup The HDF5 group to write the object into
    * @return Result<>
    */
   Result<> writeDataObject(const DataObject* dataObject, GroupIO& parentGroup);

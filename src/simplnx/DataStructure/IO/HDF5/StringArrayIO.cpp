@@ -1,7 +1,7 @@
 #include "StringArrayIO.hpp"
-#include <numeric>
 
 #include "DataStructureReader.hpp"
+#include "simplnx/DataStructure/EmptyStringStore.hpp"
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/DataStructure/StringStore.hpp"
 
@@ -52,10 +52,29 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   {
     tupleShape = std::move(tupleShapeResult.value());
   }
-  usize numValues = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), 1ULL, std::multiplies<>());
 
-  std::vector<std::string> strings = useEmptyDataStore ? std::vector<std::string>(numValues) : datasetReader.readAsVectorOfStrings();
-  const auto* data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);
+  StringArray* data = nullptr;
+  if(useEmptyDataStore)
+  {
+    // During preflight (useEmptyDataStore == true), we create the StringArray
+    // with an empty string vector to avoid allocating potentially millions of
+    // std::string objects that would never be used. We then immediately swap
+    // the underlying store for an EmptyStringStore placeholder that reports
+    // the correct tuple shape/count but holds no data. The actual string
+    // content will be loaded later by finishImportingData() when the
+    // pipeline transitions from preflight to execution.
+    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::vector<std::string>{}, parentId);
+    if(data != nullptr)
+    {
+      auto emptyStore = std::make_shared<EmptyStringStore>(tupleShape);
+      data->setStore(emptyStore);
+    }
+  }
+  else
+  {
+    std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
+    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);
+  }
 
   if(data == nullptr)
   {

@@ -4,8 +4,10 @@
 
 #include <fmt/format.h>
 
+#include <map>
 #include <numeric>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace nx::core
@@ -38,8 +40,8 @@ public:
   EmptyDataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::string dataFormat = "")
   : m_ComponentShape(componentShape)
   , m_TupleShape(tupleShape)
-  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
-  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<size_t>(1), std::multiplies<>()))
+  , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
+  , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   , m_DataFormat(dataFormat)
   {
   }
@@ -85,7 +87,7 @@ public:
    * @brief Returns the target tuple getSize.
    * @return usize
    */
-  size_t getNumberOfComponents() const override
+  usize getNumberOfComponents() const override
   {
     return m_NumComponents;
   }
@@ -109,17 +111,45 @@ public:
   }
 
   /**
-   * @brief Returns the store type e.g. in memory, out of core, etc.
-   * @return StoreType
+   * @brief Returns StoreType::Empty because this store is a metadata-only
+   * placeholder. The dataFormat() string records the intended storage
+   * strategy (e.g., "" for in-memory, or a named OOC format) so the
+   * framework knows what real store to create when execution begins.
+   * @return StoreType::Empty
    */
   IDataStore::StoreType getStoreType() const override
   {
-    return m_DataFormat.empty() ? IDataStore::StoreType::Empty : IDataStore::StoreType::EmptyOutOfCore;
+    return IDataStore::StoreType::Empty;
   }
 
   /**
-   * @brief Checks and returns if the created data store should be in memory or handled out of core.
-   * @return bool
+   * @brief Throws — EmptyDataStore is a metadata-only placeholder.
+   *
+   * EmptyDataStore holds no data and no backing file, so it has no
+   * recovery metadata to report. Calling getRecoveryMetadata() on an
+   * EmptyDataStore is a programming error: the caller is treating a
+   * placeholder as if it were a real store. The real store that
+   * replaces this placeholder during execution is the one responsible
+   * for providing recovery metadata.
+   *
+   * Throws std::runtime_error to fail fast, matching the behavior of
+   * the other data-access methods on this class.
+   */
+  std::map<std::string, std::string> getRecoveryMetadata() const override
+  {
+    throw std::runtime_error("EmptyDataStore::getRecoveryMetadata: cannot query recovery metadata on a placeholder store");
+  }
+
+  /**
+   * @brief Returns the data format string that was specified at construction.
+   *
+   * This string indicates the intended storage strategy for the real data
+   * store that will replace this EmptyDataStore after preflight:
+   * - An empty string ("") means the data will be stored in-memory (DataStore).
+   * - A non-empty string names an out-of-core format (e.g., an OOC store
+   *   implementation) that should be used for execution.
+   *
+   * @return std::string The data format identifier
    */
   std::string dataFormat() const
   {
@@ -156,6 +186,62 @@ public:
   void setValue(usize index, value_type value) override
   {
     throw std::runtime_error("EmptyDataStore::setValue() is not implemented");
+  }
+
+  /**
+   * @brief Always returns an invalid Result because EmptyDataStore holds no
+   * data. EmptyDataStore is a metadata-only placeholder used during preflight;
+   * bulk data access is not supported. The store must be replaced with a real
+   * DataStore or OOC store before any data I/O is attempted.
+   * @param startIndex Unused
+   * @param buffer Unused
+   * @return Invalid Result<> — always.
+   */
+  Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
+  {
+    return MakeErrorResult(-6022, "EmptyDataStore bulk read is not supported: EmptyDataStore is a metadata-only placeholder used during preflight and must be replaced with a real DataStore or "
+                                  "out-of-core store before bulk I/O is attempted.");
+  }
+
+  /**
+   * @brief Always returns an invalid Result because EmptyDataStore holds no
+   * data. EmptyDataStore is a metadata-only placeholder used during preflight;
+   * bulk data access is not supported. The store must be replaced with a real
+   * DataStore or OOC store before any data I/O is attempted.
+   * @param startIndex Unused
+   * @param buffer Unused
+   * @return Invalid Result<> — always.
+   */
+  Result<> copyFromBuffer(usize startIndex, nonstd::span<const T> buffer) override
+  {
+    return MakeErrorResult(-6023, "EmptyDataStore bulk write is not supported: EmptyDataStore is a metadata-only placeholder used during preflight and must be replaced with a real DataStore or "
+                                  "out-of-core store before bulk I/O is attempted.");
+  }
+
+  /**
+   * @brief Returns an empty vector because EmptyDataStore holds no data.
+   * EmptyDataStore is a metadata-only placeholder used during preflight and
+   * bulk data access is not supported — the store must be replaced with a
+   * real DataStore or out-of-core store before extent reads are attempted.
+   * @param extent Unused
+   * @return Empty std::vector<T>
+   */
+  std::vector<T> readExtent(const Extent& extent) const override
+  {
+    return {};
+  }
+
+  /**
+   * @brief No-op because EmptyDataStore holds no data. Extent writes against
+   * an EmptyDataStore are silently dropped; the store must be replaced with
+   * a real DataStore or out-of-core store before meaningful writes are
+   * attempted.
+   * @param extent Unused
+   * @param data Unused
+   */
+  void writeExtent(const Extent& extent, nonstd::span<const T> data) override
+  {
+    // No-op: EmptyDataStore is a metadata-only placeholder.
   }
 
   /**
@@ -347,50 +433,11 @@ public:
     return MakeErrorResult(-42350, "Cannot write data from an EmptyDataStore");
   }
 
-  /**
-   * @brief Creates and returns an in-memory AbstractDataStore from a copy of the data
-   * from the specified chunk.
-   * @param flatChunkIndex
-   */
-  std::unique_ptr<AbstractDataStore<T>> convertChunkToDataStore(uint64 flatChunkIndex) const override
-  {
-    return nullptr;
-  }
-
-  /**
-   * @brief Returns empty bounds because EmptyDataStore has no chunks.
-   * @param flatChunkIndex The chunk index (unused)
-   * @return ShapeType Empty shape vector
-   */
-  ShapeType getChunkLowerBounds(uint64 flatChunkIndex) const override
-  {
-    return {};
-  }
-
-  /**
-   * @brief Returns empty bounds because EmptyDataStore has no chunks.
-   * @param flatChunkIndex The chunk index (unused)
-   * @return ShapeType Empty shape vector
-   */
-  ShapeType getChunkUpperBounds(uint64 flatChunkIndex) const override
-  {
-    return {};
-  }
-
-  /**
-   * @brief Returns the number of chunks in the EmptyDataStore.
-   * @return uint64 Always returns 0 because EmptyDataStore has no data
-   */
-  uint64 getNumberOfChunks() const override
-  {
-    return 0;
-  }
-
 private:
   ShapeType m_ComponentShape;
   ShapeType m_TupleShape;
-  size_t m_NumComponents = {0};
-  size_t m_NumTuples = {0};
+  usize m_NumComponents = {0};
+  usize m_NumTuples = {0};
   std::string m_DataFormat = "";
 };
 } // namespace nx::core

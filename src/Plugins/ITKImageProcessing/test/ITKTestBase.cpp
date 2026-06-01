@@ -30,7 +30,7 @@ std::string ComputeMD5HashTyped(const IDataArray& outputDataArray)
   usize arraySize = dataArray.getSize();
 
   MD5 md5;
-  if(outputDataArray.getDataFormat().empty())
+  if(outputDataArray.getIDataStoreRef().getStoreType() != IDataStore::StoreType::OutOfCore)
   {
     const T* dataPtr = dataArray.template getIDataStoreRefAs<DataStore<T>>().data();
     md5.update(reinterpret_cast<const uint8*>(dataPtr), arraySize * sizeof(T));
@@ -135,47 +135,7 @@ namespace ITKTestBase
 bool IsArrayInMemory(DataStructure& dataStructure, const DataPath& outputDataPath)
 {
   const auto& outputDataArray = dataStructure.getDataRefAs<IDataArray>(outputDataPath);
-  DataType outputDataType = outputDataArray.getDataType();
-
-  switch(outputDataType)
-  {
-  case DataType::float32: {
-    return dynamic_cast<const DataArray<float32>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::float64: {
-    return dynamic_cast<const DataArray<float64>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::int8: {
-    return dynamic_cast<const DataArray<int8>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::uint8: {
-    return dynamic_cast<const DataArray<uint8>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::int16: {
-    return dynamic_cast<const DataArray<int16>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::uint16: {
-    return dynamic_cast<const DataArray<uint16>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::int32: {
-    return dynamic_cast<const DataArray<int32>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::uint32: {
-    return dynamic_cast<const DataArray<uint32>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::int64: {
-    return dynamic_cast<const DataArray<int64>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::uint64: {
-    return dynamic_cast<const DataArray<uint64>&>(outputDataArray).getDataFormat().empty();
-  }
-  case DataType::boolean: {
-    [[fallthrough]];
-  }
-  default: {
-    return {};
-  }
-  }
+  return outputDataArray.getIDataStoreRef().getStoreType() != IDataStore::StoreType::OutOfCore;
 }
 //------------------------------------------------------------------------------
 std::string ComputeMd5Hash(DataStructure& dataStructure, const DataPath& outputDataPath)

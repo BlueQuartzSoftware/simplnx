@@ -1,5 +1,6 @@
 #include "CoreDataIOManager.hpp"
 
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/ListStore.hpp"
 
@@ -17,7 +18,11 @@ CoreDataIOManager::~CoreDataIOManager() noexcept = default;
 
 std::string CoreDataIOManager::formatName() const
 {
-  return "";
+  // The core in-memory manager uses the reserved k_InMemoryFormat constant so
+  // that "in-memory" is distinct from "unset" (empty string). Callers that want
+  // explicit in-memory storage should pass k_InMemoryFormat; callers that pass
+  // "" are signaling "unset/auto — let the resolver decide".
+  return std::string(Preferences::k_InMemoryFormat);
 }
 
 void CoreDataIOManager::addCoreFactories()

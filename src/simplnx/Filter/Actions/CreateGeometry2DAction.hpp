@@ -3,9 +3,11 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -36,7 +38,7 @@ public:
    * @param sharedFacesName The name of the shared face list array to be created
    */
   CreateGeometry2DAction(const DataPath& geometryPath, size_t numFaces, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& faceAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedFacesName, std::string createdDataFormat = "")
+                         const std::string& sharedVerticesName, const std::string& sharedFacesName)
   : IDataCreationAction(geometryPath)
   , m_NumFaces(numFaces)
   , m_NumVertices(numVertices)
@@ -44,7 +46,6 @@ public:
   , m_FaceDataName(faceAttributeMatrixName)
   , m_SharedVerticesName(sharedVerticesName)
   , m_SharedFacesName(sharedFacesName)
-  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -58,7 +59,7 @@ public:
    * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
    */
   CreateGeometry2DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputFacesArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& faceAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
+                         const std::string& faceAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_FaceDataName(faceAttributeMatrixName)
@@ -67,7 +68,6 @@ public:
   , m_InputVertices(inputVerticesArrayPath)
   , m_InputFaces(inputFacesArrayPath)
   , m_ArrayHandlingType(arrayType)
-  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -140,11 +140,42 @@ public:
     DimensionType faceTupleShape = {m_NumFaces};
     DimensionType vertexTupleShape = {m_NumVertices}; // We probably don't know how many Vertices there are but take what ever the developer sends us
 
-    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    // For Copy/Move/Reference, read shapes and materialize OOC stores upfront
+    if(m_ArrayHandlingType != ArrayHandlingType::Create)
     {
       faceTupleShape = faces->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
+      // If the source arrays have OOC-backed stores, materialize them into
+      // in-core stores. These arrays may have been created OOC earlier in
+      // the pipeline when they lived outside any geometry. Unstructured/poly
+      // geometry topology arrays must be in-core for the visualization layer.
+      if(vertices->getIDataStore()->getStoreType() == IDataStore::StoreType::OutOfCore)
+      {
+        auto inCoreStore = std::make_shared<DataStore<float32>>(vertexTupleShape, ShapeType{3}, std::optional<float32>{});
+        auto copyResult = vertices->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(inCoreStore->data(), inCoreStore->getSize()));
+        if(copyResult.invalid())
+        {
+          return MakeErrorResult(-5510, fmt::format("{}Failed to materialize out-of-core vertices array '{}' into in-core store: {}", prefix, m_InputVertices.toString(),
+                                                    copyResult.errors().empty() ? "unknown error" : copyResult.errors()[0].message));
+        }
+        vertices->setDataStore(std::move(inCoreStore));
+      }
+      if(faces->getIDataStore()->getStoreType() == IDataStore::StoreType::OutOfCore)
+      {
+        auto inCoreStore = std::make_shared<DataStore<MeshIndexType>>(faceTupleShape, ShapeType{Geometry2DType::k_NumVerts}, std::optional<MeshIndexType>{});
+        auto copyResult = faces->getDataStoreRef().copyIntoBuffer(0, nonstd::span<MeshIndexType>(inCoreStore->data(), inCoreStore->getSize()));
+        if(copyResult.invalid())
+        {
+          return MakeErrorResult(-5511, fmt::format("{}Failed to materialize out-of-core faces array '{}' into in-core store: {}", prefix, m_InputFaces.toString(),
+                                                    copyResult.errors().empty() ? "unknown error" : copyResult.errors()[0].message));
+        }
+        faces->setDataStore(std::move(inCoreStore));
+      }
+    }
+
+    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    {
       std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
@@ -156,8 +187,6 @@ public:
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Move)
     {
-      faceTupleShape = faces->getTupleShape();
-      vertexTupleShape = vertices->getTupleShape();
       const auto geomId = geometry2d->getId();
 
       const auto verticesId = vertices->getId();
@@ -185,8 +214,6 @@ public:
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Reference)
     {
-      faceTupleShape = faces->getTupleShape();
-      vertexTupleShape = vertices->getTupleShape();
       const auto geomId = geometry2d->getId();
       dataStructure.setAdditionalParent(vertices->getId(), geomId);
       dataStructure.setAdditionalParent(faces->getId(), geomId);
@@ -198,7 +225,7 @@ public:
       DataPath trianglesPath = getCreatedPath().createChildPath(m_SharedFacesName);
       // Create the default DataArray that will hold the FaceList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode, m_CreatedDataStoreFormat);
+      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, faceTupleShape, {Geometry2DType::k_NumVerts}, trianglesPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5509, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedTriList '{}'", prefix, trianglesPath.toString())));
@@ -213,7 +240,7 @@ public:
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5510, fmt::format("{}CreateGeometry2DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
@@ -332,7 +359,6 @@ private:
   DataPath m_InputVertices;
   DataPath m_InputFaces;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
-  std::string m_CreatedDataStoreFormat;
 };
 
 using CreateTriangleGeometryAction = CreateGeometry2DAction<TriangleGeom>;

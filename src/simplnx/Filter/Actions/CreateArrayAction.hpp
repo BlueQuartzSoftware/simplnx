@@ -18,8 +18,6 @@ namespace nx::core
 class SIMPLNX_EXPORT CreateArrayAction : public IDataCreationAction
 {
 public:
-  inline static constexpr StringLiteral k_DefaultDataFormat = "";
-
   CreateArrayAction() = delete;
 
   /**
@@ -28,7 +26,9 @@ public:
    * @param tDims The tuple dimensions
    * @param cDims The component dimensions
    * @param path The path where the DataArray will be created
-   * @param dataFormat The data format (empty string for in-memory)
+   * @param dataFormat The data store format override. Empty string means "Automatic"
+   *                   (let the format resolver decide). A non-empty value bypasses the
+   *                   resolver and uses the specified format directly.
    * @param fillValue The fill value for the array
    */
   CreateArrayAction(DataType type, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, std::string dataFormat = "", std::string fillValue = "");
@@ -86,18 +86,21 @@ public:
   std::vector<DataPath> getAllCreatedPaths() const override;
 
   /**
-   * @brief Returns the data formatting name for use in creating the appropriate data store.
-   * An empty string results in creating an in-memory DataStore.
-   * Other formats must be defined in external plugins.
-   * @return std::string
-   */
-  std::string dataFormat() const;
-
-  /**
    * @brief Returns the fill value of the DataArray to be created.
    * @return std::string
    */
   std::string fillValue() const;
+
+  /**
+   * @brief Returns the data store format override for this action.
+   *
+   * Empty string means "Automatic" -- the format resolver decides. A non-empty
+   * value bypasses the resolver and uses the specified format directly, allowing
+   * individual filters to override the global format policy.
+   *
+   * @return The data format string
+   */
+  std::string dataFormat() const;
 
 private:
   DataType m_Type;

@@ -7,7 +7,20 @@
 
 namespace nx::core
 {
-class StringStore : public AbstractStringStore
+/**
+ * @class StringStore
+ * @brief The concrete in-memory string storage backend for StringArray.
+ *
+ * StringStore owns a `std::vector<std::string>` and provides full
+ * read/write access to its elements. This is the "real" store that holds
+ * loaded string data, as opposed to EmptyStringStore which is a
+ * metadata-only placeholder.
+ *
+ * @see AbstractStringStore The abstract interface this class implements.
+ * @see EmptyStringStore The placeholder counterpart used during preflight
+ *      or OOC skeleton construction.
+ */
+class SIMPLNX_EXPORT StringStore : public AbstractStringStore
 {
 public:
   /**
@@ -26,7 +39,7 @@ public:
   /**
    * @brief Destructor.
    */
-  ~StringStore();
+  ~StringStore() override;
 
   /**
    * @brief Creates a deep copy of this StringStore.
@@ -64,6 +77,21 @@ public:
    * @return bool True if the store has no strings, false otherwise
    */
   bool empty() const override;
+
+  /**
+   * @brief Returns false because StringStore always contains real, accessible
+   * string data (backed by a std::vector<std::string>).
+   *
+   * This distinguishes StringStore from EmptyStringStore, which is a
+   * metadata-only placeholder. Import/backfill code uses isPlaceholder()
+   * to decide which string arrays still need their data loaded from disk.
+   *
+   * @return false Always returns false for StringStore.
+   */
+  bool isPlaceholder() const override
+  {
+    return false;
+  }
 
   /**
    * @brief Array subscript operator to access the string at the specified index.

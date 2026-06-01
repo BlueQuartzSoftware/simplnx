@@ -3,8 +3,10 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/EdgeGeom.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -35,7 +37,7 @@ public:
    * @param sharedEdgesName The name of the shared edge list array to be created
    */
   CreateGeometry1DAction(const DataPath& geometryPath, size_t numEdges, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& edgeAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedEdgesName, std::string createdDataFormat = "")
+                         const std::string& sharedVerticesName, const std::string& sharedEdgesName)
   : IDataCreationAction(geometryPath)
   , m_NumEdges(numEdges)
   , m_NumVertices(numVertices)
@@ -43,7 +45,6 @@ public:
   , m_EdgeDataName(edgeAttributeMatrixName)
   , m_SharedVerticesName(sharedVerticesName)
   , m_SharedEdgesName(sharedEdgesName)
-  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -57,7 +58,7 @@ public:
    * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
    */
   CreateGeometry1DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputEdgesArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& edgeAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
+                         const std::string& edgeAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_EdgeDataName(edgeAttributeMatrixName)
@@ -66,7 +67,6 @@ public:
   , m_InputVertices(inputVerticesArrayPath)
   , m_InputEdges(inputEdgesArrayPath)
   , m_ArrayHandlingType(arrayType)
-  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -140,11 +140,42 @@ public:
     DimensionType edgeTupleShape = {m_NumEdges};
     DimensionType vertexTupleShape = {m_NumVertices}; // We probably don't know how many Vertices there are but take what ever the developer sends us
 
-    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    // For Copy/Move/Reference, read shapes and materialize OOC stores upfront
+    if(m_ArrayHandlingType != ArrayHandlingType::Create)
     {
       edgeTupleShape = edges->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
+      // If the source arrays have OOC-backed stores, materialize them into
+      // in-core stores. These arrays may have been created OOC earlier in
+      // the pipeline when they lived outside any geometry. Unstructured/poly
+      // geometry topology arrays must be in-core for the visualization layer.
+      if(vertices->getIDataStore()->getStoreType() == IDataStore::StoreType::OutOfCore)
+      {
+        auto inCoreStore = std::make_shared<DataStore<float32>>(vertexTupleShape, ShapeType{3}, std::optional<float32>{});
+        auto copyResult = vertices->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(inCoreStore->data(), inCoreStore->getSize()));
+        if(copyResult.invalid())
+        {
+          return MakeErrorResult(-5410, fmt::format("{}Failed to materialize out-of-core vertices array '{}' into in-core store: {}", prefix, m_InputVertices.toString(),
+                                                    copyResult.errors().empty() ? "unknown error" : copyResult.errors()[0].message));
+        }
+        vertices->setDataStore(std::move(inCoreStore));
+      }
+      if(edges->getIDataStore()->getStoreType() == IDataStore::StoreType::OutOfCore)
+      {
+        auto inCoreStore = std::make_shared<DataStore<MeshIndexType>>(edgeTupleShape, ShapeType{2}, std::optional<MeshIndexType>{});
+        auto copyResult = edges->getDataStoreRef().copyIntoBuffer(0, nonstd::span<MeshIndexType>(inCoreStore->data(), inCoreStore->getSize()));
+        if(copyResult.invalid())
+        {
+          return MakeErrorResult(-5411, fmt::format("{}Failed to materialize out-of-core edges array '{}' into in-core store: {}", prefix, m_InputEdges.toString(),
+                                                    copyResult.errors().empty() ? "unknown error" : copyResult.errors()[0].message));
+        }
+        edges->setDataStore(std::move(inCoreStore));
+      }
+    }
+
+    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    {
       std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
@@ -156,8 +187,6 @@ public:
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Move)
     {
-      edgeTupleShape = edges->getTupleShape();
-      vertexTupleShape = vertices->getTupleShape();
       const auto geomId = geometry1d->getId();
 
       const auto verticesId = vertices->getId();
@@ -185,8 +214,6 @@ public:
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Reference)
     {
-      edgeTupleShape = edges->getTupleShape();
-      vertexTupleShape = vertices->getTupleShape();
       const auto geomId = geometry1d->getId();
       dataStructure.setAdditionalParent(vertices->getId(), geomId);
       dataStructure.setAdditionalParent(edges->getId(), geomId);
@@ -198,7 +225,7 @@ public:
       DataPath edgesPath = getCreatedPath().createChildPath(m_SharedEdgesName);
       // Create the default DataArray that will hold the EdgeList and Vertices. We
       // size these to 1 because the Csv parser will resize them to the appropriate number of tuples
-      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode, m_CreatedDataStoreFormat);
+      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, edgeTupleShape, {2}, edgesPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5409, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedEdgeList '{}'", prefix, edgesPath.toString())));
@@ -213,7 +240,7 @@ public:
       // Create the Vertex Array with a component size of 3
       DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5410, fmt::format("{}CreateGeometry1DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
@@ -332,7 +359,6 @@ private:
   DataPath m_InputVertices;
   DataPath m_InputEdges;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
-  std::string m_CreatedDataStoreFormat;
 };
 
 using CreateEdgeGeometryAction = CreateGeometry1DAction<EdgeGeom>;

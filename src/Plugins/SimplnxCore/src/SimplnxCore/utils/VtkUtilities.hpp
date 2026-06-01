@@ -135,13 +135,16 @@ std::string TypeForPrimitive(const IFilter::MessageHandler& messageHandler)
 }
 
 // -----------------------------------------------------------------------------
+// Functor for writing a DataArray to a VTK legacy file via FILE* I/O.
+// Supports both binary (big-endian) and ASCII output modes.
+// -----------------------------------------------------------------------------
 struct WriteVtkDataArrayFunctor
 {
   template <typename T>
-  void operator()(FILE* outputFile, bool binary, DataStructure& dataStructure, const DataPath& arrayPath, const IFilter::MessageHandler& messageHandler)
+  Result<> operator()(FILE* outputFile, bool binary, DataStructure& dataStructure, const DataPath& arrayPath, const IFilter::MessageHandler& messageHandler)
   {
     auto* dataArray = dataStructure.getDataAs<DataArray<T>>(arrayPath);
-    auto& dataStore = dataArray->template getIDataStoreRefAs<DataStore<T>>();
+    auto& dataStore = dataArray->getDataStoreRef();
 
     messageHandler(IFilter::Message::Type::Info, fmt::format("Writing Cell Data {}", arrayPath.getTargetName()));
 
@@ -161,16 +164,62 @@ struct WriteVtkDataArrayFunctor
     fprintf(outputFile, "LOOKUP_TABLE default\n");
     if(binary)
     {
-      if constexpr(endian::little == endian::native)
+      // ---------------------------------------------------------------
+      // Chunked binary write pattern for OOC compatibility
+      // ---------------------------------------------------------------
+      // The original code used dataArray->data() for a single fwrite,
+      // which requires the entire array to be resident in memory. This
+      // fails for OOC stores where data lives on disk and data() is
+      // not available.
+      //
+      // Instead, we read 4096 elements at a time into a local buffer
+      // via copyIntoBuffer (the OOC-compatible bulk read API), perform
+      // an in-place byte swap to big-endian (VTK legacy binary format
+      // requires big-endian), and fwrite the buffer. This keeps memory
+      // usage constant regardless of array size.
+      //
+      // For bool arrays, copyIntoBuffer is not available (bool is not
+      // a supported span type), so we use per-element getValue() and
+      // convert to uint8 (0 or 1).
+      // ---------------------------------------------------------------
+      constexpr usize k_ChunkSize = 4096;
+      for(usize offset = 0; offset < totalElements; offset += k_ChunkSize)
       {
-        dataArray->byteSwapElements();
+        usize count = std::min(k_ChunkSize, totalElements - offset);
+        if constexpr(std::is_same_v<T, bool>)
+        {
+          // Bool special case: convert to uint8 via per-element access.
+          std::vector<uint8> buf(count);
+          for(usize i = 0; i < count; i++)
+          {
+            buf[i] = dataStore.getValue(offset + i) ? 1 : 0;
+          }
+          fwrite(buf.data(), sizeof(uint8), count, outputFile);
+        }
+        else
+        {
+          // General case: bulk read into buffer, byte-swap, then write.
+          std::vector<T> buf(count);
+          auto copyResult = dataStore.copyIntoBuffer(offset, nonstd::span<T>(buf.data(), count));
+          if(copyResult.invalid())
+          {
+            return MakeErrorResult(-2090, fmt::format("Failed to read chunk [{}, {}) from data array '{}' while writing VTK file: {}", offset, offset + count, arrayPath.toString(),
+                                                      copyResult.errors().empty() ? "unknown error" : copyResult.errors()[0].message));
+          }
+          if constexpr(endian::little == endian::native)
+          {
+            // VTK legacy binary requires big-endian. Swap in the local
+            // buffer rather than mutating the DataStore, which would be
+            // slow for OOC stores and would modify shared data.
+            for(usize i = 0; i < count; i++)
+            {
+              buf[i] = nx::core::byteswap(buf[i]);
+            }
+          }
+          fwrite(buf.data(), sizeof(T), count, outputFile);
+        }
       }
-      fwrite(dataStore.data(), sizeof(T), totalElements, outputFile);
       fprintf(outputFile, "\n");
-      if constexpr(endian::little == endian::native)
-      {
-        dataArray->byteSwapElements();
-      }
     }
     else
     {
@@ -184,7 +233,7 @@ struct WriteVtkDataArrayFunctor
         }
         if(useIntCast)
         {
-          buffer.append(fmt::format(" {:d}", static_cast<int>(dataStore[i])));
+          buffer.append(fmt::format(" {:d}", static_cast<int>(dataStore.getValue(i))));
         }
         else if constexpr(std::is_floating_point_v<T>)
         {
@@ -206,6 +255,7 @@ struct WriteVtkDataArrayFunctor
       buffer.append("\n");
       fprintf(outputFile, "%s", buffer.c_str());
     }
+    return {};
   }
 };
 

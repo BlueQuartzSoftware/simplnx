@@ -104,8 +104,8 @@ IFilter::PreflightResult CreateFeatureArrayFromElementArrayFilter::preflightImpl
 
   {
     DataType dataType = selectedCellArray.getDataType();
-    auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, amTupleShape, selectedCellArrayStore.getComponentShape(),
-                                                                 pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue), CreateArrayAction::k_DefaultDataFormat, "0");
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(dataType, amTupleShape, selectedCellArrayStore.getComponentShape(), pCellFeatureAttributeMatrixPathValue.createChildPath(pCreatedArrayNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 

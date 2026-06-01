@@ -161,7 +161,6 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   auto compDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_CompDims_Key);
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
-  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
   auto initFillValue = filterArgs.value<std::string>(k_InitValue_Key);
   auto initIncFillValue = filterArgs.value<std::string>(k_StartingFillValue_Key);
   auto stepValue = filterArgs.value<std::string>(k_StepValue_Key);
@@ -220,6 +219,8 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
 
   usize numTuples = std::accumulate(tupleDims.begin(), tupleDims.end(), static_cast<usize>(1), std::multiplies<>());
+
+  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
   auto arrayDataType = ConvertNumericTypeToDataType(numericType);
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat);

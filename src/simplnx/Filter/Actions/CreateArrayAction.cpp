@@ -10,7 +10,7 @@ namespace
 struct CreateArrayFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& dataStructure, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, IDataAction::Mode mode, std::string dataFormat,
+  Result<> operator()(DataStructure& dataStructure, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat,
                       std::string fillValue)
   {
     return ArrayCreationUtilities::CreateArray<T>(dataStructure, tDims, cDims, path, mode, dataFormat, fillValue);
@@ -25,8 +25,8 @@ CreateArrayAction::CreateArrayAction(DataType type, const std::vector<usize>& tD
 , m_Type(type)
 , m_Dims(tDims)
 , m_CDims(cDims)
-, m_DataFormat(dataFormat)
-, m_FillValue(fillValue)
+, m_DataFormat(std::move(dataFormat))
+, m_FillValue(std::move(fillValue))
 {
 }
 
@@ -39,7 +39,7 @@ Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
 
 IDataAction::UniquePointer CreateArrayAction::clone() const
 {
-  return std::make_unique<CreateArrayAction>(m_Type, m_Dims, m_CDims, getCreatedPath());
+  return std::make_unique<CreateArrayAction>(m_Type, m_Dims, m_CDims, getCreatedPath(), m_DataFormat, m_FillValue);
 }
 
 DataType CreateArrayAction::type() const
@@ -67,13 +67,13 @@ std::vector<DataPath> CreateArrayAction::getAllCreatedPaths() const
   return {getCreatedPath()};
 }
 
-std::string CreateArrayAction::dataFormat() const
-{
-  return m_DataFormat;
-}
-
 std::string CreateArrayAction::fillValue() const
 {
   return m_FillValue;
+}
+
+std::string CreateArrayAction::dataFormat() const
+{
+  return m_DataFormat;
 }
 } // namespace nx::core

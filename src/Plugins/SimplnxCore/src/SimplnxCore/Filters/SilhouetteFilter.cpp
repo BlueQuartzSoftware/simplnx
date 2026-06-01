@@ -120,7 +120,7 @@ IFilter::PreflightResult SilhouetteFilter::preflightImpl(const DataStructure& da
   {
     DataPath tempPath = DataPath({k_MaskName});
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath, "", "true");
       resultOutputActions.value().appendAction(std::move(createAction));
     }
 

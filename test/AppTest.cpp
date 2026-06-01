@@ -276,12 +276,6 @@ TEST_CASE("Application::getIOCollection", "[Application]")
 {
   auto app = Application::GetOrCreateInstance();
 
-  SECTION("IOCollection is never null")
-  {
-    auto collection = app->getIOCollection();
-    REQUIRE(collection != nullptr);
-  }
-
   SECTION("getDataStoreFormats returns format names")
   {
     auto formats = app->getDataStoreFormats();
@@ -392,5 +386,38 @@ TEST_CASE("Application::Singleton Lifecycle", "[Application]")
     REQUIRE(prefs1 == prefs2);
 
     Application::DeleteInstance();
+  }
+}
+
+TEST_CASE("Preferences::removeValue", "[Preferences]")
+{
+  Preferences prefs;
+
+  SECTION("Remove an existing key erases it")
+  {
+    prefs.setValue("test_remove_key", 42);
+    REQUIRE(prefs.contains("test_remove_key"));
+
+    prefs.removeValue("test_remove_key");
+
+    REQUIRE_FALSE(prefs.contains("test_remove_key"));
+  }
+
+  SECTION("Remove a non-existent key is a no-op")
+  {
+    REQUIRE_FALSE(prefs.contains("never_set_key"));
+    REQUIRE_NOTHROW(prefs.removeValue("never_set_key"));
+    REQUIRE_FALSE(prefs.contains("never_set_key"));
+  }
+
+  SECTION("Remove does not affect other keys")
+  {
+    prefs.setValue("keep_me", 1);
+    prefs.setValue("remove_me", 2);
+
+    prefs.removeValue("remove_me");
+
+    REQUIRE(prefs.contains("keep_me"));
+    REQUIRE_FALSE(prefs.contains("remove_me"));
   }
 }

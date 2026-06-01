@@ -855,7 +855,7 @@ Result<OutputActions> DataCheck(const DataStructure& dataStructure, const DataPa
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const auto& inputDataStore = inputArray.getIDataStoreRef();
 
-  if(!inputArray.getDataFormat().empty())
+  if(inputArray.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
     return MakeErrorResult<OutputActions>(Constants::k_OutOfCoreDataNotSupported,
                                           fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
@@ -877,7 +877,7 @@ Result<detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>> Execute(DataStr
 
   using ResultT = detail::ITKFilterFunctorResult_t<FilterCreationFunctorT>;
 
-  if(!inputArray.getDataFormat().empty())
+  if(inputArray.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
     return MakeErrorResult(Constants::k_OutOfCoreDataNotSupported, fmt::format("Input Array '{}' utilizes out-of-core data. This is not supported within ITK filters.", inputArrayPath.toString()));
   }

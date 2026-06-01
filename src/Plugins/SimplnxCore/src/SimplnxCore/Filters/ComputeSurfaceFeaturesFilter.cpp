@@ -109,8 +109,8 @@ IFilter::PreflightResult ComputeSurfaceFeaturesFilter::preflightImpl(const DataS
     tupleDims = surfaceFeaturesParent->getShape();
   }
 
-  auto createSurfaceFeaturesAction = std::make_unique<CreateArrayAction>(
-      DataType::uint8, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue), CreateArrayAction::k_DefaultDataFormat, "0");
+  auto createSurfaceFeaturesAction =
+      std::make_unique<CreateArrayAction>(DataType::uint8, tupleDims, std::vector<usize>{1}, pCellFeaturesAttributeMatrixPathValue.createChildPath(pSurfaceFeaturesArrayNameValue), "", "0");
   resultOutputActions.value().appendAction(std::move(createSurfaceFeaturesAction));
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};

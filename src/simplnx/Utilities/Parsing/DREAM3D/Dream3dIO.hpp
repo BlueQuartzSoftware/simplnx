@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -53,27 +54,59 @@ SIMPLNX_EXPORT FileVersionType GetFileVersion(const nx::core::HDF5::FileIO& file
 SIMPLNX_EXPORT PipelineVersionType GetPipelineVersion(const nx::core::HDF5::FileIO& fileReader);
 
 /**
- * @brief Imports and returns the Pipeline / DataStructure pair from the target
- * .dream3d file.
+ * @brief Loads a complete DataStructure from a .dream3d file with all arrays
+ * receiving real data stores (in-core or OOC).
  *
- * This method imports both current and legacy DataStructures but will return
- * an empty Pipeline when given a legacy file.
- * @param fileReader
- * @param preflight = false
- * @return FileData
+ * Supports both v8.0 and legacy v7.0 file formats. In an OOC-enabled build
+ * (compiled in under SIMPLNX_USE_OOC) the OOC import path decides whether each
+ * array becomes an in-core DataStore or a lazy OOC store backed by the HDF5
+ * file; in a non-OOC build every array is eager-loaded in-core.
+ *
+ * @param path Filesystem path to the .dream3d file
+ * @return Result containing the fully loaded DataStructure, or errors on failure
  */
-SIMPLNX_EXPORT Result<FileData> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool preflight = false);
+SIMPLNX_EXPORT Result<DataStructure> LoadDataStructure(const std::filesystem::path& path);
 
 /**
- * @brief Imports and returns the Pipeline / DataStructure pair from the target
- * .dream3d file.
+ * @brief Loads specific arrays from a .dream3d file with real data stores,
+ * pruning all unrequested objects from the result.
  *
- * This method imports both current and legacy DataStructures but will return
- * an empty Pipeline and warning when given a legacy file.
- * @param path
- * @return Result<FileData>
+ * Only the requested arrays (and their ancestor containers) are present in
+ * the returned DataStructure. No Empty placeholder stores remain — every
+ * array in the result has been fully loaded or attached to an OOC store.
+ *
+ * @param path Filesystem path to the .dream3d file
+ * @param dataPaths The specific DataPaths to load from the file
+ * @return Result containing the pruned DataStructure with only requested arrays
  */
-SIMPLNX_EXPORT Result<FileData> ReadFile(const std::filesystem::path& path);
+SIMPLNX_EXPORT Result<DataStructure> LoadDataStructureArrays(const std::filesystem::path& path, const std::vector<DataPath>& dataPaths);
+
+/**
+ * @brief Loads the topology (metadata skeleton) of a .dream3d file without
+ * loading any array data. All DataArrays receive Empty placeholder stores.
+ *
+ * This is the preflight/metadata-only path: the returned DataStructure has
+ * the complete hierarchy (geometries, attribute matrices, arrays) but none
+ * of the arrays contain real data.
+ *
+ * @param path Filesystem path to the .dream3d file
+ * @return Result containing the metadata-only DataStructure with Empty stores
+ */
+SIMPLNX_EXPORT Result<DataStructure> LoadDataStructureMetadata(const std::filesystem::path& path);
+
+/**
+ * @brief Loads the topology (metadata skeleton) for specific arrays from a
+ * .dream3d file. All arrays receive Empty placeholder stores, and unrequested
+ * objects are pruned from the result.
+ *
+ * Combines the metadata-only behavior of LoadDataStructureMetadata with the
+ * path-based pruning of LoadDataStructureArrays.
+ *
+ * @param path Filesystem path to the .dream3d file
+ * @param dataPaths The specific DataPaths whose metadata to load
+ * @return Result containing the pruned metadata-only DataStructure
+ */
+SIMPLNX_EXPORT Result<DataStructure> LoadDataStructureArraysMetadata(const std::filesystem::path& path, const std::vector<DataPath>& dataPaths);
 
 /**
  * @brief Writes a .dream3d file with the specified data.
@@ -125,6 +158,53 @@ SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
                                   const nx::core::HDF5::DataStructureWriter::WriteOptions& options);
 
 /**
+ * @brief Writes a recovery snapshot of @p dataStructure to @p path.
+ *
+ * When @p userDataFilePath is unset (default), the full recovery file is
+ * written: in-core arrays get their data payload, OOC-backed arrays get a
+ * placeholder plus their getRecoveryMetadata() key/value attributes so the
+ * recovery loader can reconstruct the backing store on load.
+ *
+ * When @p userDataFilePath is set, @p dataStructure and @p pipeline are
+ * ignored and a minimal HDF5 file is written containing only the file-
+ * version attribute and a root-level string attribute named
+ * "UserDataFilePath" whose value is the absolute path of the user's
+ * authoritative `.dream3d` output. The recovery scanner uses that attribute
+ * at relaunch time to redirect the load at the user's file.
+ *
+ * @param path Target path of the recovery file ("{uuid}.dream3d").
+ * @param dataStructure Pipeline's final DataStructure (ignored when
+ *                      @p userDataFilePath is set).
+ * @param pipeline      Pipeline JSON to embed (ignored when
+ *                      @p userDataFilePath is set).
+ * @param userDataFilePath Optional absolute path to the user's own
+ *                         `.dream3d` file. When set, switches the writer
+ *                         to minimal redirect mode.
+ * @return Result<> ok on success; error payload on HDF5-level failure
+ *         (file open or version-tag write).
+ */
+SIMPLNX_EXPORT Result<> WriteRecoveryFile(const std::filesystem::path& path, const DataStructure& dataStructure, const Pipeline& pipeline = {},
+                                          std::optional<std::filesystem::path> userDataFilePath = std::nullopt);
+
+/**
+ * @brief Reads the "UserDataFilePath" root-level HDF5 string attribute
+ *        from a recovery file.
+ *
+ * The recovery scanner calls this on every `{uuid}.dream3d` it finds at
+ * startup; when a value comes back it means the pipeline ended with a
+ * WriteDREAM3DFilter and the returned path is the user's authoritative
+ * output. Absent attribute is NOT an error — it just means this recovery
+ * file carries its own data (the standard case).
+ *
+ * @param recoveryFilePath Path to the `{uuid}.dream3d` to inspect.
+ * @return Result<std::optional<std::filesystem::path>>
+ *         - ok + nullopt: attribute absent, this is a standard recovery file
+ *         - ok + path: attribute set, caller should redirect to that path
+ *         - error: HDF5 open/read failure (corrupt file, missing, etc.)
+ */
+SIMPLNX_EXPORT Result<std::optional<std::filesystem::path>> ReadUserDataFilePathAttribute(const std::filesystem::path& recoveryFilePath);
+
+/**
  * @brief Appends the object at the path in the data structure to the dream3d file
  * @param path
  * @param dataStructure
@@ -132,30 +212,6 @@ SIMPLNX_EXPORT Result<> WriteFile(const std::filesystem::path& path, const DataS
  * @return Result<>
  */
 SIMPLNX_EXPORT Result<> AppendFile(const std::filesystem::path& path, const DataStructure& dataStructure, const DataPath& dataPath);
-
-/**
- * @brief Imports and returns the DataStructure from the target .dream3d file.
- *
- * This method imports both current and legacy DataStructures.
- * @param fileReader
- * @param preflight = false
- * @return DataStructure
- */
-SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const nx::core::HDF5::FileIO& fileReader, bool preflight);
-
-SIMPLNX_EXPORT Result<std::shared_ptr<DataObject>> ImportDataObjectFromFile(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
-
-SIMPLNX_EXPORT Result<std::vector<std::shared_ptr<DataObject>>> ImportSelectDataObjectsFromFile(const nx::core::HDF5::FileIO& fileReader, const std::vector<DataPath>& dataPaths);
-
-SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, bool preflight);
-
-/**
- * @brief Imports and returns the DataStructure from the target .dream3d file.
- * This method imports both current and legacy DataStructures.
- * @param filePath
- * @return DataStructure
- */
-SIMPLNX_EXPORT Result<DataStructure> ImportDataStructureFromFile(const std::filesystem::path& filePath, bool preflight);
 
 /**
  * @brief Imports and returns a Pipeline from the target .dream3d file.

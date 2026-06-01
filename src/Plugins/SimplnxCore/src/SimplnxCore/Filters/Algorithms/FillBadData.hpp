@@ -103,13 +103,14 @@ public:
 
 private:
   /**
-   * @brief Phase 1: Chunk-sequential connected component labeling
+   * @brief Phase 1: Slab-sequential connected component labeling
    * @param featureIdsStore Feature IDs data store
    * @param unionFind Union-find structure for tracking equivalences
    * @param provisionalLabels Map from voxel index to provisional label
    * @param dims Image geometry dimensions
+   * @return Result<> invalid if a bulk read from the feature IDs store fails.
    */
-  static void phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64_t, 3>& dims);
+  static Result<> phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64_t, 3>& dims);
 
   /**
    * @brief Phase 2: Global resolution of equivalences and region classification
@@ -126,9 +127,10 @@ private:
    * @param smallRegions Set of labels for small regions
    * @param unionFind Union-find for looking up equivalences
    * @param maxPhase Maximum phase value (for new phase assignment)
+   * @return Result<> invalid if a bulk read or write against the feature IDs store fails.
    */
-  void phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
-                            const std::unordered_set<int64>& smallRegions, ChunkAwareUnionFind& unionFind, size_t maxPhase) const;
+  Result<> phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
+                                const std::unordered_set<int64>& smallRegions, ChunkAwareUnionFind& unionFind, size_t maxPhase) const;
 
   /**
    * @brief Phase 4: Iterative morphological fill

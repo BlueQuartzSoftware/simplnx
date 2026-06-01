@@ -218,6 +218,45 @@ public:
   template <typename T>
   nx::core::Result<> writeSpan(const DimsType& dims, nonstd::span<const T> values);
 
+  /**
+   * @brief Creates an HDF5 dataset with the correct type and dimensions but does
+   * not write any data. This is used by out-of-core (OOC) stores that cannot
+   * call writeSpan() because the entire array is not resident in memory. Instead,
+   * OOC stores first create the empty dataset, then fill it region-by-region using
+   * writeSpanHyperslab() as they stream data from the backing file.
+   *
+   * In-core stores do not need this method — they use writeSpan(), which creates
+   * the dataset and writes all data in a single call.
+   *
+   * @tparam T The element type of the dataset
+   * @param dims The N-D dimensions of the dataset to create
+   * @return Result indicating success or failure
+   */
+  template <typename T>
+  nx::core::Result<> createEmptyDataset(const DimsType& dims);
+
+  /**
+   * @brief Writes a contiguous span of values into a sub-region (hyperslab) of an
+   * existing HDF5 dataset. The dataset must already exist, created either by
+   * createEmptyDataset() or writeSpan().
+   *
+   * This method exists for out-of-core (OOC) stores that materialize their data
+   * in chunks: the store reads a region from its backing file into a temporary
+   * buffer, then writes that buffer into the corresponding hyperslab of the output
+   * dataset. This is repeated for each region until the entire dataset is filled.
+   *
+   * In-core stores do not need this method — they use writeSpan(), which writes
+   * the full array in one call.
+   *
+   * @tparam T The element type of the dataset
+   * @param values The data to write into the hyperslab
+   * @param start N-D start offset for the hyperslab selection
+   * @param count N-D extent of the hyperslab in each dimension
+   * @return Result indicating success or failure
+   */
+  template <typename T>
+  nx::core::Result<> writeSpanHyperslab(nonstd::span<const T> values, const std::vector<uint64>& start, const std::vector<uint64>& count);
+
   template <typename T>
   Result<ChunkedDataInfo> initChunkedDataset(const DimsType& dims, const DimsType& chunkDims) const;
   nx::core::Result<> closeChunkedDataset(const ChunkedDataInfo& datasetInfo) const;

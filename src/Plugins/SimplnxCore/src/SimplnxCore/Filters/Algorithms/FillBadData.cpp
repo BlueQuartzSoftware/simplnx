@@ -18,11 +18,12 @@ using namespace nx::core;
 //
 // This file implements an optimized algorithm for filling bad data (voxels with
 // FeatureId == 0) in image geometries. The algorithm handles out-of-core datasets
-// efficiently by processing data in chunks and uses a four-phase approach:
+// efficiently by streaming the data one Z-slab at a time via bulk I/O
+// (copyIntoBuffer/copyFromBuffer) and uses a four-phase approach:
 //
-// Phase 1: Chunk-Sequential Connected Component Labeling (CCL)
-//   - Process chunks sequentially, assigning provisional labels to bad data regions
-//   - Use Union-Find to track equivalences between labels across chunk boundaries
+// Phase 1: Slab-Sequential Connected Component Labeling (CCL)
+//   - Read one Z-slab at a time, assigning provisional labels to bad data regions
+//   - Use Union-Find to track equivalences between labels across slab boundaries
 //   - Track size of each connected component
 //
 // Phase 2: Global Resolution
@@ -104,9 +105,10 @@ struct FillBadDataUpdateTuplesFunctor
 // =============================================================================
 //
 // A Union-Find (Disjoint Set) data structure optimized for tracking connected
-// component equivalences during chunk-sequential processing. Uses union-by-rank
-// for efficient merging and defers path compression to a single flatten() pass
-// to avoid redundant updates during construction.
+// component equivalences during slab-sequential processing, where labels are
+// produced one Z-slab at a time and equivalences can span slab boundaries. Uses
+// union-by-rank for efficient merging and defers path compression to a single
+// flatten() pass to avoid redundant updates during construction.
 //
 // Key features:
 // - Lazily creates entries as labels are encountered
@@ -277,15 +279,17 @@ const std::atomic_bool& FillBadData::getCancel() const
 }
 
 // =============================================================================
-// PHASE 1: Chunk-Sequential Connected Component Labeling (CCL)
+// PHASE 1: Slab-Sequential Connected Component Labeling (CCL)
 // =============================================================================
 //
 // Performs connected component labeling on bad data voxels (FeatureId == 0)
-// using a chunk-sequential scanline algorithm. This approach is optimized for
-// out-of-core datasets where data is stored in chunks on the disk.
+// using a slab-sequential scanline algorithm. This approach is optimized for
+// out-of-core datasets: it streams one Z-slab at a time into a buffer via
+// copyIntoBuffer instead of touching the store element-by-element.
 //
 // Algorithm:
-// 1. Process chunks sequentially, loading one chunk at a time
+// 1. Read each Z-slab sequentially into a buffer (keeping the previous slab
+//    available for -Z neighbor lookups)
 // 2. For each bad data voxel, check already-processed neighbors (-X, -Y, -Z)
 // 3. If neighbors exist, reuse their label; otherwise assign new label
 // 4. Track label equivalences in Union-Find structure
@@ -299,116 +303,95 @@ const std::atomic_bool& FillBadData::getCancel() const
 // @param unionFind Union-Find structure for tracking label equivalences
 // @param provisionalLabels Map from voxel index to assigned provisional label
 // @param dims Image dimensions [X, Y, Z]
+// @return Result indicating success or a slab-read failure
 // =============================================================================
-void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64, 3>& dims)
+Result<> FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwareUnionFind& unionFind, std::unordered_map<usize, int64>& provisionalLabels, const std::array<int64, 3>& dims)
 {
-  // Use negative labels for bad data regions to distinguish from positive feature IDs
   int64 nextLabel = -1;
+  const usize slabSize = static_cast<usize>(dims[0]) * static_cast<usize>(dims[1]);
 
-  const uint64 numChunks = featureIdsStore.getNumberOfChunks();
+  // Two slab buffers: current Z-slab and previous Z-slab for -Z neighbor checks
+  std::vector<int32> curSlab(slabSize);
+  std::vector<int32> prevSlab(slabSize);
 
-  // Process each chunk sequentially (load, process, unload)
-  for(uint64 chunkIdx = 0; chunkIdx < numChunks; chunkIdx++)
+  for(int64 z = 0; z < dims[2]; z++)
   {
-    // Load the current chunk into memory
-    featureIdsStore.loadChunk(chunkIdx);
-
-    // Get chunk bounds (INCLUSIVE ranges in [Z, Y, X] order)
-    const auto chunkLowerBounds = featureIdsStore.getChunkLowerBounds(chunkIdx);
-    const auto chunkUpperBounds = featureIdsStore.getChunkUpperBounds(chunkIdx);
-
-    // Process voxels in this chunk using scanline algorithm
-    // Iterate in Z-Y-X order (slowest to fastest) to maintain scanline consistency
-    // Note: chunk bounds are INCLUSIVE and in [Z, Y, X] order (slowest to fastest)
-    for(usize z = chunkLowerBounds[0]; z <= chunkUpperBounds[0]; z++)
+    const usize slabStart = static_cast<usize>(z) * slabSize;
+    auto readResult = featureIdsStore.copyIntoBuffer(slabStart, nonstd::span<int32>(curSlab.data(), slabSize));
+    if(readResult.invalid())
     {
-      for(usize y = chunkLowerBounds[1]; y <= chunkUpperBounds[1]; y++)
+      return MergeResults(readResult,
+                          MakeErrorResult(-71500, fmt::format("FillBadData phase 1 (connected component labeling): failed to read Z-slab {} (start index {}, size {}) from feature IDs store.", z,
+                                                              slabStart, slabSize)));
+    }
+
+    for(int64 y = 0; y < dims[1]; y++)
+    {
+      for(int64 x = 0; x < dims[0]; x++)
       {
-        for(usize x = chunkLowerBounds[2]; x <= chunkUpperBounds[2]; x++)
+        const usize localIdx = static_cast<usize>(y) * static_cast<usize>(dims[0]) + static_cast<usize>(x);
+        if(curSlab[localIdx] != 0)
         {
-          // Calculate linear index for current voxel
-          const usize index = z * dims[0] * dims[1] + y * dims[0] + x;
-
-          // Only process bad data voxels (FeatureId == 0)
-          // Skip valid feature voxels (FeatureId > 0)
-          if(featureIdsStore[index] != 0)
-          {
-            continue;
-          }
-
-          // Check already-processed neighbors (scanline order: -Z, -Y, -X)
-          // We only check "backward" neighbors because "forward" neighbors
-          // haven't been processed yet in the scanline order
-          std::vector<int64> neighborLabels;
-
-          // Check -X neighbor
-          if(x > 0)
-          {
-            const usize neighborIdx = index - 1;
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
-            {
-              neighborLabels.push_back(provisionalLabels[neighborIdx]);
-            }
-          }
-
-          // Check -Y neighbor
-          if(y > 0)
-          {
-            const usize neighborIdx = index - dims[0];
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
-            {
-              neighborLabels.push_back(provisionalLabels[neighborIdx]);
-            }
-          }
-
-          // Check -Z neighbor
-          if(z > 0)
-          {
-            const usize neighborIdx = index - dims[0] * dims[1];
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
-            {
-              neighborLabels.push_back(provisionalLabels[neighborIdx]);
-            }
-          }
-
-          // Assign label based on neighbors
-          int64 assignedLabel;
-          if(neighborLabels.empty())
-          {
-            // No labeled neighbors found - this is a new connected component
-            // Assign a new negative label and initialize in union-find
-            assignedLabel = nextLabel--;
-            unionFind.find(assignedLabel); // Initialize in union-find (creates entry)
-          }
-          else
-          {
-            // One or more labeled neighbors found - join their equivalence class
-            // Use the first neighbor's label as the representative
-            assignedLabel = neighborLabels[0];
-
-            // If multiple neighbors have different labels, unite them
-            // This handles the case where different regions merge at this voxel
-            for(usize i = 1; i < neighborLabels.size(); i++)
-            {
-              if(neighborLabels[i] != assignedLabel)
-              {
-                unionFind.unite(assignedLabel, neighborLabels[i]);
-              }
-            }
-          }
-
-          // Store the assigned label for this voxel
-          provisionalLabels[index] = assignedLabel;
-
-          // Increment the size count for this label (will be accumulated to root in flatten())
-          unionFind.addSize(assignedLabel, 1);
+          continue;
         }
+
+        const usize globalIdx = slabStart + localIdx;
+        std::vector<int64> neighborLabels;
+
+        // Check -X neighbor (same slab)
+        if(x > 0 && curSlab[localIdx - 1] == 0)
+        {
+          const usize nIdx = globalIdx - 1;
+          if(provisionalLabels.contains(nIdx))
+          {
+            neighborLabels.push_back(provisionalLabels[nIdx]);
+          }
+        }
+        // Check -Y neighbor (same slab)
+        if(y > 0 && curSlab[localIdx - dims[0]] == 0)
+        {
+          const usize nIdx = globalIdx - dims[0];
+          if(provisionalLabels.contains(nIdx))
+          {
+            neighborLabels.push_back(provisionalLabels[nIdx]);
+          }
+        }
+        // Check -Z neighbor (previous slab)
+        if(z > 0 && prevSlab[localIdx] == 0)
+        {
+          const usize nIdx = globalIdx - slabSize;
+          if(provisionalLabels.contains(nIdx))
+          {
+            neighborLabels.push_back(provisionalLabels[nIdx]);
+          }
+        }
+
+        int64 assignedLabel = 0;
+        if(neighborLabels.empty())
+        {
+          assignedLabel = nextLabel--;
+          unionFind.find(assignedLabel);
+        }
+        else
+        {
+          assignedLabel = neighborLabels[0];
+          for(usize i = 1; i < neighborLabels.size(); i++)
+          {
+            if(neighborLabels[i] != assignedLabel)
+            {
+              unionFind.unite(assignedLabel, neighborLabels[i]);
+            }
+          }
+        }
+
+        provisionalLabels[globalIdx] = assignedLabel;
+        unionFind.addSize(assignedLabel, 1);
       }
     }
-  }
 
-  // Flush to ensure all chunks are written back to storage
-  featureIdsStore.flush();
+    std::swap(prevSlab, curSlab);
+  }
+  return {};
 }
 
 // =============================================================================
@@ -440,8 +423,10 @@ void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::
 // - Small regions (< minAllowedDefectSize): marked with -1 for filling in Phase 4
 // - Large regions (>= minAllowedDefectSize): kept as 0 (or assigned new phase)
 //
-// This phase processes chunks to relabel voxels based on their region classification.
-// Large regions may optionally be assigned to a new phase (if storeAsNewPhase is true).
+// This phase streams the feature IDs one Z-slab at a time (reading and writing
+// each slab back via bulk I/O) to relabel voxels based on their region
+// classification. Large regions may optionally be assigned to a new phase (if
+// storeAsNewPhase is true).
 //
 // @param featureIdsStore The feature IDs data store
 // @param cellPhasesPtr Cell phases array (maybe null)
@@ -449,16 +434,12 @@ void FillBadData::phaseTwoGlobalResolution(ChunkAwareUnionFind& unionFind, std::
 // @param smallRegions Unused in current implementation (kept for interface compatibility)
 // @param unionFind Union-Find structure with resolved equivalences (from Phase 2)
 // @param maxPhase Maximum existing phase value (for new phase assignment)
+// @return Result indicating success or a slab read/write failure
 // =============================================================================
-void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
-                                       const std::unordered_set<int64>& smallRegions, ChunkAwareUnionFind& unionFind, usize maxPhase) const
+Result<> FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, Int32Array* cellPhasesPtr, const std::unordered_map<usize, int64>& provisionalLabels,
+                                           const std::unordered_set<int64>& /*smallRegions*/, ChunkAwareUnionFind& unionFind, usize maxPhase) const
 {
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
-  const SizeVec3 udims = selectedImageGeom.getDimensions();
-  const uint64 numChunks = featureIdsStore.getNumberOfChunks();
-
-  // Collect all unique root labels and their sizes
-  // After flatten(), all labels point to roots and sizes are accumulated
+  // Collect the total size of each unique root label's connected component
   std::unordered_map<int64, uint64> rootSizes;
   for(const auto& [index, label] : provisionalLabels)
   {
@@ -469,7 +450,7 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
     }
   }
 
-  // Classify regions as small (need filling) or large (keep or assign to a new phase)
+  // Classify regions as small (need filling) based on the size threshold
   std::unordered_set<int64> localSmallRegions;
   for(const auto& [root, size] : rootSizes)
   {
@@ -479,57 +460,60 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
     }
   }
 
-  // Process each chunk to relabel voxels based on region classification
-  for(uint64 chunkIdx = 0; chunkIdx < numChunks; chunkIdx++)
+  // Process slab-by-slab, reading and writing back via bulk I/O
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
+  const SizeVec3 udims = selectedImageGeom.getDimensions();
+  const usize slabSize = udims[0] * udims[1];
+  std::vector<int32> slab(slabSize);
+
+  for(usize z = 0; z < udims[2]; z++)
   {
-    // Load chunk into memory
-    featureIdsStore.loadChunk(chunkIdx);
-
-    // Get chunk bounds (INCLUSIVE ranges in [Z, Y, X] order)
-    const auto chunkLowerBounds = featureIdsStore.getChunkLowerBounds(chunkIdx);
-    const auto chunkUpperBounds = featureIdsStore.getChunkUpperBounds(chunkIdx);
-
-    // Iterate through all voxels in this chunk
-    // Note: chunk bounds are INCLUSIVE and in [Z, Y, X] order (slowest to fastest)
-    for(usize z = chunkLowerBounds[0]; z <= chunkUpperBounds[0]; z++)
+    const usize slabStart = z * slabSize;
+    auto readResult = featureIdsStore.copyIntoBuffer(slabStart, nonstd::span<int32>(slab.data(), slabSize));
+    if(readResult.invalid())
     {
-      for(usize y = chunkLowerBounds[1]; y <= chunkUpperBounds[1]; y++)
+      return MergeResults(readResult, MakeErrorResult(-71501, fmt::format("FillBadData phase 3 (region classification): failed to read Z-slab {} (start index {}, size {}) from feature IDs store.", z,
+                                                                          slabStart, slabSize)));
+    }
+
+    bool slabModified = false;
+    for(usize localIdx = 0; localIdx < slabSize; localIdx++)
+    {
+      const usize globalIdx = slabStart + localIdx;
+      auto labelIter = provisionalLabels.find(globalIdx);
+      if(labelIter == provisionalLabels.end())
       {
-        for(usize x = chunkLowerBounds[2]; x <= chunkUpperBounds[2]; x++)
+        continue;
+      }
+
+      int64 root = unionFind.find(labelIter->second);
+      if(localSmallRegions.contains(root))
+      {
+        slab[localIdx] = -1;
+      }
+      else
+      {
+        slab[localIdx] = 0;
+        if(m_InputValues->storeAsNewPhase && cellPhasesPtr != nullptr)
         {
-          const usize index = z * udims[0] * udims[1] + y * udims[0] + x;
-
-          // Check if this voxel was labeled as bad data in Phase 1
-          auto labelIter = provisionalLabels.find(index);
-          if(labelIter != provisionalLabels.end())
-          {
-            // Find the root label for this voxel's connected component
-            int64 root = unionFind.find(labelIter->second);
-
-            if(localSmallRegions.contains(root))
-            {
-              // Small region - mark with -1 for filling in Phase 4
-              featureIdsStore[index] = -1;
-            }
-            else
-            {
-              // Large region - keep as bad data (0) or assign to a new phase
-              featureIdsStore[index] = 0;
-
-              // Optionally assign large bad data regions to a new phase
-              if(m_InputValues->storeAsNewPhase && cellPhasesPtr != nullptr)
-              {
-                (*cellPhasesPtr)[index] = static_cast<int32>(maxPhase) + 1;
-              }
-            }
-          }
+          (*cellPhasesPtr)[globalIdx] = static_cast<int32>(maxPhase) + 1;
         }
+      }
+      slabModified = true;
+    }
+
+    if(slabModified)
+    {
+      auto writeResult = featureIdsStore.copyFromBuffer(slabStart, nonstd::span<const int32>(slab.data(), slabSize));
+      if(writeResult.invalid())
+      {
+        return MergeResults(writeResult,
+                            MakeErrorResult(-71502, fmt::format("FillBadData phase 3 (region classification): failed to write Z-slab {} (start index {}, size {}) back to feature IDs store.", z,
+                                                                slabStart, slabSize)));
       }
     }
   }
-
-  // Write all chunks back to storage
-  featureIdsStore.flush();
+  return {};
 }
 
 // =============================================================================
@@ -687,7 +671,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 // =============================================================================
 //
 // Executes the four-phase bad data filling algorithm:
-// 1. Chunk-Sequential CCL: Label connected components of bad data
+// 1. Slab-Sequential CCL: Label connected components of bad data
 // 2. Global Resolution: Resolve equivalences and accumulate sizes
 // 3. Region Classification: Classify regions as small or large
 // 4. Iterative Fill: Fill small regions using morphological dilation
@@ -696,12 +680,10 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 // =============================================================================
 Result<> FillBadData::operator()() const
 {
-  // Get feature IDs array and image geometry
   auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath)->getDataStoreRef();
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
   const SizeVec3 udims = selectedImageGeom.getDimensions();
 
-  // Convert dimensions to signed integers for offset calculations
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
       static_cast<int64>(udims[1]),
@@ -710,15 +692,11 @@ Result<> FillBadData::operator()() const
 
   const usize totalPoints = featureIdsStore.getNumberOfTuples();
 
-  // Get cell phases array if we need to assign large regions to a new phase
   Int32Array* cellPhasesPtr = nullptr;
   usize maxPhase = 0;
-
   if(m_InputValues->storeAsNewPhase)
   {
     cellPhasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-
-    // Find the maximum existing phase value
     for(usize i = 0; i < totalPoints; i++)
     {
       if((*cellPhasesPtr)[i] > maxPhase)
@@ -728,35 +706,50 @@ Result<> FillBadData::operator()() const
     }
   }
 
-  // Count the number of existing features for array sizing
   usize numFeatures = 0;
-  for(usize i = 0; i < totalPoints; i++)
   {
-    int32 featureName = featureIdsStore[i];
-    if(featureName > numFeatures)
+    const usize bufSize = 65536;
+    std::vector<int32> buf(bufSize);
+    for(usize offset = 0; offset < totalPoints; offset += bufSize)
     {
-      numFeatures = featureName;
+      const usize count = std::min(bufSize, totalPoints - offset);
+      auto readResult = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(buf.data(), count));
+      if(readResult.invalid())
+      {
+        return MergeResults(readResult, MakeErrorResult(-71503, fmt::format("FillBadData: failed to scan feature IDs store for maximum feature id (buffer range [{}, {}) of {}).", offset,
+                                                                            offset + count, totalPoints)));
+      }
+      for(usize i = 0; i < count; i++)
+      {
+        if(buf[i] > static_cast<int32>(numFeatures))
+        {
+          numFeatures = buf[i];
+        }
+      }
     }
   }
 
-  // Initialize data structures for chunk-aware connected component labeling
-  ChunkAwareUnionFind unionFind;                      // Tracks label equivalences and sizes
-  std::unordered_map<usize, int64> provisionalLabels; // Maps voxel index to provisional label
-  std::unordered_set<int64> smallRegions;             // Set of small region roots (unused currently)
+  ChunkAwareUnionFind unionFind;
+  std::unordered_map<usize, int64> provisionalLabels;
+  std::unordered_set<int64> smallRegions;
 
-  // Phase 1: Chunk-Sequential Connected Component Labeling
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 1/4: Labeling connected components..."});
-  phaseOneCCL(featureIdsStore, unionFind, provisionalLabels, dims);
+  auto phaseOneResult = phaseOneCCL(featureIdsStore, unionFind, provisionalLabels, dims);
+  if(phaseOneResult.invalid())
+  {
+    return phaseOneResult;
+  }
 
-  // Phase 2: Global Resolution of equivalences
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 2/4: Resolving region equivalences..."});
   phaseTwoGlobalResolution(unionFind, smallRegions);
 
-  // Phase 3: Relabeling based on region size classification
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 3/4: Classifying region sizes..."});
-  phaseThreeRelabeling(featureIdsStore, cellPhasesPtr, provisionalLabels, smallRegions, unionFind, maxPhase);
+  auto phaseThreeResult = phaseThreeRelabeling(featureIdsStore, cellPhasesPtr, provisionalLabels, smallRegions, unionFind, maxPhase);
+  if(phaseThreeResult.invalid())
+  {
+    return phaseThreeResult;
+  }
 
-  // Phase 4: Iterative morphological fill
   m_MessageHandler({IFilter::Message::Type::Info, "Phase 4/4: Filling small defects..."});
   phaseFourIterativeFill(featureIdsStore, dims, numFeatures);
 

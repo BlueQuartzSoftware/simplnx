@@ -69,8 +69,13 @@ Result<> WriteVtkRectilinearGrid::operator()()
 
   for(const DataPath& arrayPath : m_InputValues->SelectedDataArrayPaths)
   {
-    ExecuteDataFunction(WriteVtkDataArrayFunctor{}, m_DataStructure.getDataAs<IDataArray>(arrayPath)->getDataType(), outputFile, m_InputValues->WriteBinaryFile, m_DataStructure, arrayPath,
-                        m_MessageHandler);
+    auto writeArrayResult = ExecuteDataFunction(WriteVtkDataArrayFunctor{}, m_DataStructure.getDataAs<IDataArray>(arrayPath)->getDataType(), outputFile, m_InputValues->WriteBinaryFile,
+                                                m_DataStructure, arrayPath, m_MessageHandler);
+    if(writeArrayResult.invalid())
+    {
+      fclose(outputFile);
+      return MergeResults(writeArrayResult, MakeErrorResult(-2091, fmt::format("Error writing data array '{}' to VTK file '{}'", arrayPath.toString(), m_InputValues->OutputFile.string())));
+    }
   }
 
   fclose(outputFile);

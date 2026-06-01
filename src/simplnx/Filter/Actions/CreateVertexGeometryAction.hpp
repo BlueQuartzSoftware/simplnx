@@ -3,8 +3,10 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -29,13 +31,11 @@ public:
    * @param vertexAttributeMatrixName The name of the vertex AttributeMatrix to be created
    * @param sharedVertexListName The name of the shared vertex list array to be created
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName,
-                             std::string createdDataFormat = "")
+  CreateVertexGeometryAction(const DataPath& geometryPath, IGeometry::MeshIndexType numVertices, const std::string& vertexAttributeMatrixName, const std::string& sharedVertexListName)
   : IDataCreationAction(geometryPath)
   , m_NumVertices(numVertices)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_SharedVertexListName(sharedVertexListName)
-  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -46,14 +46,12 @@ public:
    * @param vertexAttributeMatrixName The name of the vertex AttributeMatrix to be created
    * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
    */
-  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType,
-                             std::string createdDataFormat = "")
+  CreateVertexGeometryAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const std::string& vertexAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_SharedVertexListName(inputVerticesArrayPath.getTargetName())
   , m_InputVertices(inputVerticesArrayPath)
   , m_ArrayHandlingType(arrayType)
-  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -114,11 +112,31 @@ public:
 
     ShapeType tupleShape = {m_NumVertices}; // We don't probably know how many Vertices there are but take what ever the developer sends us
 
-    // Create the Vertex Array with a component size of 3
-    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    // For Copy/Move/Reference, read shapes and materialize OOC stores upfront
+    if(m_ArrayHandlingType != ArrayHandlingType::Create)
     {
       tupleShape = vertices->getTupleShape();
 
+      // If the source array has an OOC-backed store, materialize it into
+      // an in-core store. The array may have been created OOC earlier in
+      // the pipeline when it lived outside any geometry. Unstructured/poly
+      // geometry topology arrays must be in-core for the visualization layer.
+      if(vertices->getIDataStore()->getStoreType() == IDataStore::StoreType::OutOfCore)
+      {
+        auto inCoreStore = std::make_shared<DataStore<float32>>(tupleShape, ShapeType{3}, std::optional<float32>{});
+        auto copyResult = vertices->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(inCoreStore->data(), inCoreStore->getSize()));
+        if(copyResult.invalid())
+        {
+          return MakeErrorResult(-6107, fmt::format("{}Failed to materialize OOC vertices array '{}' into in-core store: {}", prefix, m_InputVertices.toString(),
+                                                    copyResult.errors().empty() ? "unknown error" : copyResult.errors()[0].message));
+        }
+        vertices->setDataStore(std::move(inCoreStore));
+      }
+    }
+
+    // Create the Vertex Array with a component size of 3
+    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    {
       std::shared_ptr<DataObject> copy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVertexListName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(copy);
 
@@ -126,7 +144,6 @@ public:
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Move)
     {
-      tupleShape = vertices->getTupleShape();
       const auto geomId = vertexGeom->getId();
       const auto verticesId = vertices->getId();
       dataStructure.setAdditionalParent(verticesId, geomId);
@@ -141,7 +158,6 @@ public:
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Reference)
     {
-      tupleShape = vertices->getTupleShape();
       dataStructure.setAdditionalParent(vertices->getId(), vertexGeom->getId());
       vertexGeom->setVertices(*vertices);
     }
@@ -150,7 +166,7 @@ public:
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVertexListName);
       const ShapeType componentShape = {3};
 
-      Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, componentShape, vertexPath, mode, m_CreatedDataStoreFormat);
+      Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, tupleShape, componentShape, vertexPath, mode);
       if(result.invalid())
       {
         return result;
@@ -246,7 +262,6 @@ private:
   std::string m_SharedVertexListName;
   DataPath m_InputVertices;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
-  std::string m_CreatedDataStoreFormat;
 };
 
 } // namespace nx::core

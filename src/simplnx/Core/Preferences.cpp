@@ -1,7 +1,12 @@
 #include "Preferences.hpp"
 
+#include "simplnx/Common/SimplnxConfig.hpp"
+#ifdef SIMPLNX_USE_OOC
+#include "SimplnxOoc/OocDataIOManager.hpp"
+#endif
+
 #include "simplnx/Core/Application.hpp"
-#include "simplnx/Plugin/AbstractPlugin.hpp"
+#include "simplnx/Utilities/MemoryBudgetManager.hpp"
 #include "simplnx/Utilities/MemoryUtilities.hpp"
 
 #include <fstream>
@@ -22,10 +27,10 @@ namespace nx::core
 namespace
 {
 constexpr int64 k_LargeDataSize = 1073741824; // 1 GB
-constexpr StringLiteral k_LargeDataFormat = "";
 constexpr StringLiteral k_Plugin_Key = "plugins";
 constexpr StringLiteral k_DefaultFileName = "preferences.json";
 constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
+constexpr bool k_AutoRangeComputationDefault = false;
 
 constexpr int32 k_FailedToCreateDirectory_Code = -585;
 constexpr int32 k_FileDoesNotExist_Code = -586;
@@ -77,7 +82,6 @@ void Preferences::setDefaultValues()
   m_DefaultValues[k_Plugin_Key] = nlohmann::json::object();
 
   m_DefaultValues[k_LargeDataSize_Key] = k_LargeDataSize;
-  m_DefaultValues[k_PreferredLargeDataFormat_Key] = k_LargeDataFormat;
 
   {
     // Set a default value for out-of-core temp directory.
@@ -92,6 +96,18 @@ void Preferences::setDefaultValues()
 #else
   m_DefaultValues[k_ForceOocData_Key] = false;
 #endif
+
+  // Seed the default large-data format. When OOC is compiled in (SIMPLNX_USE_OOC),
+  // default to the HDF5 out-of-core backend so large arrays spill to disk
+  // automatically. When OOC is not compiled in, default to explicit in-memory
+  // storage.
+#ifdef SIMPLNX_USE_OOC
+  m_DefaultValues[k_PreferredLargeDataFormat_Key] = "HDF5-OOC";
+#else
+  m_DefaultValues[k_PreferredLargeDataFormat_Key] = k_InMemoryFormat.str();
+#endif
+
+  m_DefaultValues[k_AutoRangeComputation_Key] = k_AutoRangeComputationDefault;
 }
 
 std::string Preferences::defaultLargeDataFormat() const
@@ -107,11 +123,30 @@ void Preferences::setDefaultLargeDataFormat(std::string dataFormat)
 
 std::string Preferences::largeDataFormat() const
 {
-  return valueAs<std::string>(k_PreferredLargeDataFormat_Key);
+  auto formatJson = value(k_PreferredLargeDataFormat_Key);
+  if(formatJson.is_null() || !formatJson.is_string())
+  {
+    return {};
+  }
+  return formatJson.get<std::string>();
 }
 void Preferences::setLargeDataFormat(std::string dataFormat)
 {
-  m_Values[k_PreferredLargeDataFormat_Key] = dataFormat;
+  if(dataFormat.empty())
+  {
+    // Remove the key so the compiled-in default can take effect.
+    // An empty string means "not configured", not "in-core". To explicitly
+    // request in-core storage, pass k_InMemoryFormat instead. This distinction
+    // matters because an OOC-enabled build seeds a default OOC format
+    // (see setDefaultValues), and erasing the user value lets that default
+    // take effect.
+    m_Values.erase(k_PreferredLargeDataFormat_Key);
+  }
+  else
+  {
+    m_Values[k_PreferredLargeDataFormat_Key] = dataFormat;
+  }
+  // Recompute the cached m_UseOoc flag after any format change
   checkUseOoc();
 }
 
@@ -136,6 +171,12 @@ bool Preferences::contains(const std::string& name) const
 {
   return m_Values.contains(name);
 }
+
+void Preferences::removeValue(std::string_view name)
+{
+  m_Values.erase(std::string(name));
+}
+
 bool Preferences::pluginContains(const std::string& pluginName, const std::string& name) const
 {
   if(!m_Values[k_Plugin_Key].contains(pluginName))
@@ -255,6 +296,24 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 
   m_Values = parsedResult;
 
+  // Migrate legacy format strings from saved preferences files that were
+  // written before the OOC architecture was finalized. Two legacy values
+  // need cleanup:
+  //   - Empty string (""):   Old "not configured" state. Removing the key
+  //     lets the compiled-in default (e.g., "HDF5-OOC") take effect.
+  //   - "In-Memory":         Old explicit in-core sentinel. Replaced by
+  //     k_InMemoryFormat ("Simplnx-Default-In-Memory"). Removing the key
+  //     avoids confusion with the new sentinel value.
+  if(m_Values.contains(k_PreferredLargeDataFormat_Key) && m_Values[k_PreferredLargeDataFormat_Key].is_string())
+  {
+    const std::string savedFormat = m_Values[k_PreferredLargeDataFormat_Key].get<std::string>();
+    if(savedFormat.empty() || savedFormat == "In-Memory")
+    {
+      m_Values.erase(k_PreferredLargeDataFormat_Key);
+    }
+  }
+
+  // Recompute derived state from the loaded (and possibly migrated) values
   checkUseOoc();
   updateMemoryDefaults();
   return {};
@@ -262,7 +321,21 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 
 void Preferences::checkUseOoc()
 {
-  m_UseOoc = !value(k_PreferredLargeDataFormat_Key).get<std::string>().empty();
+  // Resolve the format from user values first, then default values (via value())
+  auto formatJson = value(k_PreferredLargeDataFormat_Key);
+
+  // If no format is configured (null/non-string), OOC is not active
+  if(formatJson.is_null() || !formatJson.is_string())
+  {
+    m_UseOoc = false;
+    return;
+  }
+
+  // OOC is active when the format is a non-empty string that is NOT the
+  // explicit in-memory sentinel. This means an OOC-enabled build has
+  // seeded a real OOC format like "HDF5-OOC".
+  const std::string format = formatJson.get<std::string>();
+  m_UseOoc = !format.empty() && format != k_InMemoryFormat;
 }
 
 bool Preferences::useOocData() const
@@ -272,27 +345,36 @@ bool Preferences::useOocData() const
 
 bool Preferences::forceOocData() const
 {
-  if(!m_UseOoc)
-  {
-    return false;
-  }
+  // The force_ooc_data flag is an independent user preference. It must not
+  // be gated on m_UseOoc — the whole point of force_ooc_data is to override
+  // the "in-memory format" choice when the user wants every eligible array
+  // routed to OOC anyway. The OocDataIOManager format resolver explicitly
+  // handles the (forceOoc=true, userChoseInMemory=true) case by returning
+  // "HDF5-OOC". Gating here defeats that design and silently makes the
+  // preference checkbox useless whenever the large-data format is set to
+  // in-memory.
   return valueAs<bool>(k_ForceOocData_Key);
 }
 
 void Preferences::setForceOocData(bool forceOoc)
 {
-  if(!m_UseOoc)
-  {
-    return;
-  }
+  // See forceOocData() — the m_UseOoc gate is intentionally absent so a
+  // user toggling the Force OOC checkbox in the Preferences dialog always
+  // persists, regardless of the currently-selected large-data format.
   setValue(k_ForceOocData_Key, forceOoc);
 }
 
 void Preferences::updateMemoryDefaults()
 {
+  // Reserve headroom equal to 2x the single-array large-data threshold.
+  // This leaves room for the OS, the application, and at least one large
+  // array being constructed while the DataStructure holds existing data.
   const uint64 minimumRemaining = 2 * defaultValueAs<uint64>(k_LargeDataSize_Key);
   const uint64 totalMemory = Memory::GetTotalMemory();
   uint64 targetValue = totalMemory - minimumRemaining;
+
+  // On low-memory systems where the reservation exceeds total RAM,
+  // fall back to using half of total RAM as the threshold
   if(minimumRemaining >= totalMemory)
   {
     targetValue = totalMemory / 2;
@@ -314,10 +396,37 @@ std::string Preferences::oocTempDirectory() const
 void Preferences::setOocTempDirectory(const std::string& path)
 {
   setValue(k_OoCTempDirectory_ID, path);
-  auto plugins = Application::Instance()->getPluginList();
-  for(AbstractPlugin* plugin : plugins)
-  {
-    plugin->setOocTempDirectory(path);
-  }
+#ifdef SIMPLNX_USE_OOC
+  // Route the temp directory straight to the OOC subsystem so session working
+  // files are created there. When OOC is not compiled in, the preference is
+  // simply persisted.
+  SimplnxOoc::setBaseDirectory(std::filesystem::path(path));
+#endif
+}
+
+bool Preferences::autoRangeComputation() const
+{
+  return value(k_AutoRangeComputation_Key).get<bool>();
+}
+
+void Preferences::setAutoRangeComputation(bool enabled)
+{
+  setValue(k_AutoRangeComputation_Key, enabled);
+}
+
+uint64 Preferences::memoryBudgetBytes() const
+{
+  // When the user has never saved an explicit budget preference, fall back
+  // to MemoryBudgetManager's system-aware default (50% of system RAM,
+  // clamped to a minimum of 1 GB). Computing this here means every caller
+  // gets a system-aware value, rather than a stale hard-coded constant.
+  // Using m_Values.value() (not the value() member) reads directly from
+  // user-set values with the fallback, bypassing the default-value layer.
+  return m_Values.value(k_MemoryBudgetBytes_Key, MemoryBudgetManager::defaultBudgetBytes());
+}
+
+void Preferences::setMemoryBudgetBytes(uint64 bytes)
+{
+  m_Values[k_MemoryBudgetBytes_Key] = bytes;
 }
 } // namespace nx::core

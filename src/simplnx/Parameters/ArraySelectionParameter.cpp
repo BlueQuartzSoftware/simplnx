@@ -201,11 +201,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
     {
       IDataStore::StoreType storeType = dataArray->getStoreType();
 
-      if(allowsInMemory() && (storeType == IDataStore::StoreType::Empty))
-      {
-        return {};
-      }
-      else if(allowsOutOfCore() && (storeType == IDataStore::StoreType::EmptyOutOfCore))
+      if(storeType == IDataStore::StoreType::Empty)
       {
         return {};
       }

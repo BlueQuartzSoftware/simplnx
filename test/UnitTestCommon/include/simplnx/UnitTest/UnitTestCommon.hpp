@@ -25,6 +25,7 @@
 #include "simplnx/Parameters/DataTypeParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/MD5.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
@@ -456,44 +457,100 @@ inline void CompareMontage(const AbstractMontage& exemplar, const AbstractMontag
 }
 
 /**
- * @brief Compares IDataArray
- * @tparam T
- * @param left
- * @param right
+ * @brief Compares two IDataArrays element-by-element using bulk copyIntoBuffer
+ *        for OOC-safe, high-performance comparison.
+ *
+ * Why copyIntoBuffer instead of operator[]:
+ *   When arrays are backed by an out-of-core (chunked) DataStore, each call
+ *   to operator[] may trigger a chunk load from disk. Comparing millions of
+ *   elements one at a time would cause catastrophic chunk thrashing. Instead,
+ *   this function reads both arrays in 40,000-element chunks via copyIntoBuffer,
+ *   which batches HDF5 I/O and keeps access sequential. This is also safe for
+ *   in-memory stores, where copyIntoBuffer is a simple memcpy.
+ *
+ * Floating-point comparison semantics:
+ *   - NaN == NaN is treated as equal. Many filter outputs legitimately produce
+ *     NaN values (e.g., division by zero in optional statistics), and both the
+ *     exemplar and generated arrays should agree on which elements are NaN.
+ *   - Values within UnitTest::EPSILON of each other are treated as equal,
+ *     accommodating floating-point rounding differences across platforms.
+ *
+ * Error reporting:
+ *   On the first mismatched element, the function records the index and both
+ *   values, then breaks out of the comparison loop. The mismatch details are
+ *   reported via Catch2's UNSCOPED_INFO before the final REQUIRE(!failed).
+ *
+ * @tparam T The element type (must match the actual DataStore element type)
+ * @param left First array (typically the exemplar / golden reference)
+ * @param right Second array (typically the generated / computed result)
+ * @param start Element index to start comparison from (default 0). Useful when
+ *              the first N elements are known to differ (e.g., header/padding).
  */
 template <typename T>
 void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize start = 0)
 {
   const auto& oldDataStore = left.template getIDataStoreRefAs<AbstractDataStore<T>>();
   const auto& newDataStore = right.template getIDataStoreRefAs<AbstractDataStore<T>>();
-  usize end = oldDataStore.getSize();
+  const usize totalSize = oldDataStore.getSize();
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", left.getName(), right.getName()));
-  T oldVal;
-  T newVal;
-  bool failed = false;
-  for(usize i = start; i < end; i++)
-  {
-    oldVal = oldDataStore[i];
-    newVal = newDataStore[i];
-    if(oldVal != newVal)
-    {
-      UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", i, oldVal, newVal));
+  REQUIRE(totalSize == newDataStore.getSize());
 
-      if constexpr(std::is_floating_point_v<T>)
+  // Use 40K-element chunks to balance memory usage against I/O efficiency.
+  // Each chunk is ~160 KB for float32 or ~320 KB for float64, which fits
+  // comfortably in L2 cache and aligns well with typical HDF5 chunk sizes.
+  constexpr usize k_ChunkSize = 40000;
+  auto oldBuf = std::make_unique<T[]>(k_ChunkSize);
+  auto newBuf = std::make_unique<T[]>(k_ChunkSize);
+
+  bool failed = false;
+  usize failIndex = 0;
+  T failOld = {};
+  T failNew = {};
+
+  // Iterate through the arrays in fixed-size chunks, reading both arrays
+  // into local buffers for fast element-wise comparison
+  for(usize offset = start; offset < totalSize && !failed; offset += k_ChunkSize)
+  {
+    // Handle the last chunk which may be smaller than k_ChunkSize
+    const usize count = std::min(k_ChunkSize, totalSize - offset);
+    oldDataStore.copyIntoBuffer(offset, nonstd::span<T>(oldBuf.get(), count));
+    newDataStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
+
+    // Compare each element in the current chunk
+    for(usize i = 0; i < count; i++)
+    {
+      const T oldVal = oldBuf[i];
+      const T newVal = newBuf[i];
+      if(oldVal != newVal)
       {
-        float diff = std::fabs(static_cast<float>(oldVal - newVal));
-        if(diff > EPSILON)
+        if constexpr(std::is_floating_point_v<T>)
         {
-          failed = true;
-          break;
+          // Special case: NaN == NaN is treated as equal because many filters
+          // produce NaN for undefined results, and both arrays should agree
+          if(std::isnan(oldVal) && std::isnan(newVal))
+          {
+            continue;
+          }
+          // Allow small floating-point differences within EPSILON tolerance
+          float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
+          if(diff <= EPSILON)
+          {
+            continue;
+          }
         }
-      }
-      else
-      {
+        // Record the first failure for diagnostic output, then stop
         failed = true;
+        failIndex = offset + i;
+        failOld = oldVal;
+        failNew = newVal;
+        break;
       }
-      break;
     }
+  }
+
+  if(failed)
+  {
+    UNSCOPED_INFO(fmt::format("index=: {}  oldValue != newValue. {} != {}", failIndex, failOld, failNew));
   }
   REQUIRE(!failed);
 }

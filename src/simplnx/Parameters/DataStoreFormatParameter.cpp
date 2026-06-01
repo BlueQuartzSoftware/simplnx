@@ -66,13 +66,30 @@ typename DataStoreFormatParameter::ValueType DataStoreFormatParameter::defaultSt
 
 typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues() const
 {
-  return Application::GetOrCreateInstance()->getDataStoreFormats();
+  const auto displayNames = Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
+  AvailableValuesType result;
+  result.reserve(displayNames.size());
+  for(const auto& [formatName, displayName] : displayNames)
+  {
+    result.push_back(formatName);
+  }
+  return result;
+}
+
+std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames() const
+{
+  return Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
 }
 
 Result<> DataStoreFormatParameter::validate(const std::any& value) const
 {
   [[maybe_unused]] const auto& stringValue = GetAnyRef<ValueType>(value);
-  const auto formats = Application::GetOrCreateInstance()->getDataStoreFormats();
+  // Empty string is always valid — it means "Automatic" (let the resolver decide)
+  if(stringValue.empty())
+  {
+    return {};
+  }
+  const auto formats = availableValues();
   if(std::find(formats.begin(), formats.end(), stringValue) == formats.end())
   {
     std::string ss = fmt::format("DataStore format not known: '{}'", stringValue);

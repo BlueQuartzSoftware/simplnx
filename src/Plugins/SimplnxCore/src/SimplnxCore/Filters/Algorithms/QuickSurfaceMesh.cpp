@@ -1608,11 +1608,6 @@ void QuickSurfaceMesh::generateTripleLines()
   // Cycle through again assigning coordinates to each node and assigning node numbers and feature labels to each triangle
   ParallelData3DAlgorithm algorithm;
   algorithm.setRange(Range3D(xP - 1, yP - 1, zP - 1));
-  if(featureIds.getChunkShape().has_value())
-  {
-    const auto chunkShape = featureIds.getChunkShape().value();
-    algorithm.setChunkSize(Range3D(chunkShape[0], chunkShape[1], chunkShape[2]));
-  }
   algorithm.setParallelizationEnabled(false);
   algorithm.execute(GenerateTripleLinesImpl(imageGeom, featureIds, vertexMap, edgeMap));
 

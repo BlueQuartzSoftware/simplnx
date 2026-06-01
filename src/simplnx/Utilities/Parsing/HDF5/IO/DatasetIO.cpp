@@ -1102,6 +1102,133 @@ Result<> DatasetIO::writeSpan<bool>(const DimsType& dims, nonstd::span<const boo
   return {};
 }
 
+// -----------------------------------------------------------------------------
+// createEmptyDataset
+// -----------------------------------------------------------------------------
+// Creates an HDF5 dataset with the correct type and N-D dimensions but writes
+// no data. This is the first step of the two-step OOC write pattern:
+//
+//   1. createEmptyDataset() -- allocate the dataset on disk
+//   2. writeSpanHyperslab() -- fill it region-by-region as chunks are read
+//      from the OOC backing file
+//
+// In-core stores do not use this; they call writeSpan() which creates the
+// dataset and writes all data in a single HDF5 call.
+// -----------------------------------------------------------------------------
+template <typename T>
+Result<> DatasetIO::createEmptyDataset(const DimsType& dims)
+{
+  // Resolve the HDF5 native type ID for the template parameter.
+  hid_t dataType = HdfTypeForPrimitive<T>();
+  if(dataType == -1)
+  {
+    return MakeErrorResult(-1020, "createEmptyDataset error: Unsupported data type.");
+  }
+
+  // Convert the DimsType vector to HDF5's hsize_t vector and create a
+  // simple N-D dataspace matching the full array dimensions.
+  std::vector<hsize_t> hDims(dims.size());
+  std::transform(dims.begin(), dims.end(), hDims.begin(), [](DimsType::value_type x) { return static_cast<hsize_t>(x); });
+  hid_t dataspaceId = H5Screate_simple(static_cast<int>(hDims.size()), hDims.data(), nullptr);
+  if(dataspaceId < 0)
+  {
+    return MakeErrorResult(-1021, "createEmptyDataset error: Unable to create dataspace.");
+  }
+
+  // Create (or reopen) the dataset. The dataset is left empty; data will
+  // be written later via writeSpanHyperslab().
+  auto datasetId = createOrOpenDataset<T>(dataspaceId);
+  H5Sclose(dataspaceId);
+  if(datasetId < 0)
+  {
+    return MakeErrorResult(-1022, "createEmptyDataset error: Unable to create dataset.");
+  }
+
+  return {};
+}
+
+// -----------------------------------------------------------------------------
+// writeSpanHyperslab
+// -----------------------------------------------------------------------------
+// Writes a contiguous buffer of values into a rectangular sub-region (hyperslab)
+// of an existing HDF5 dataset. The dataset must already exist on disk, created
+// either by createEmptyDataset() or writeSpan().
+//
+// This is the second step of the two-step OOC write pattern. An OOC store
+// iterates over its backing file chunk-by-chunk, reads each chunk into a
+// temporary buffer, and calls this method to write that buffer into the
+// corresponding region of the output dataset. The pattern avoids ever
+// materializing the entire array in memory.
+//
+// The method works by:
+//   1. Opening the dataset's file dataspace
+//   2. Selecting a hyperslab defined by start[] and count[]
+//   3. Creating a compact memory dataspace matching count[]
+//   4. Writing from the caller's span into the selected hyperslab
+// -----------------------------------------------------------------------------
+template <typename T>
+Result<> DatasetIO::writeSpanHyperslab(nonstd::span<const T> values, const std::vector<uint64>& start, const std::vector<uint64>& count)
+{
+  if(!isValid())
+  {
+    return MakeErrorResult(-506, fmt::format("Cannot open HDF5 data at {} / {}", getFilePath().string(), getNamePath()));
+  }
+
+  // Resolve the HDF5 native type for T.
+  hid_t dataType = HdfTypeForPrimitive<T>();
+  if(dataType == -1)
+  {
+    return MakeErrorResult(-1010, "writeSpanHyperslab error: Unsupported data type.");
+  }
+
+  // Open the existing dataset and retrieve its file-side dataspace.
+  hid_t datasetId = open();
+  hid_t fileSpaceId = H5Dget_space(datasetId);
+  if(fileSpaceId < 0)
+  {
+    return MakeErrorResult(-1011, "writeSpanHyperslab error: Unable to open the dataspace.");
+  }
+
+  // Select the hyperslab region [start, start+count) in the file dataspace.
+  // On macOS, hsize_t (unsigned long long) differs from uint64 (unsigned long),
+  // so we must copy into vectors of the correct type to avoid mismatched
+  // pointer casts.
+#if defined(__APPLE__)
+  std::vector<unsigned long long> startVec(start.begin(), start.end());
+  std::vector<unsigned long long> countVec(count.begin(), count.end());
+  if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, startVec.data(), NULL, countVec.data(), NULL) < 0)
+#else
+  if(H5Sselect_hyperslab(fileSpaceId, H5S_SELECT_SET, start.data(), NULL, count.data(), NULL) < 0)
+#endif
+  {
+    H5Sclose(fileSpaceId);
+    return MakeErrorResult(-1012, "writeSpanHyperslab error: Unable to select hyperslab.");
+  }
+
+  // Create a memory-side dataspace that matches the hyperslab extent. The
+  // caller's span must contain exactly product(count) elements.
+  std::vector<hsize_t> memDims(count.begin(), count.end());
+  hid_t memSpaceId = H5Screate_simple(static_cast<int>(memDims.size()), memDims.data(), nullptr);
+  if(memSpaceId < 0)
+  {
+    H5Sclose(fileSpaceId);
+    return MakeErrorResult(-1013, "writeSpanHyperslab error: Unable to create memory dataspace.");
+  }
+
+  // Write from the in-memory buffer into the selected hyperslab on disk.
+  herr_t error = H5Dwrite(datasetId, dataType, memSpaceId, fileSpaceId, H5P_DEFAULT, values.data());
+
+  H5Sclose(memSpaceId);
+  H5Sclose(fileSpaceId);
+
+  if(error < 0)
+  {
+    return MakeErrorResult(-1014, fmt::format("writeSpanHyperslab error: H5Dwrite failed with error {}", error));
+  }
+
+  return {};
+}
+
 template <typename T>
 nx::core::Result<ChunkedDataInfo> DatasetIO::initChunkedDataset(const DimsType& h5Dims, const DimsType& chunkDims) const
 {
@@ -1733,4 +1860,29 @@ template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<char>(const ChunkedDataIn
 #ifdef _WIN32
 template SIMPLNX_EXPORT Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const bool>, const DimsType&, const DimsType&, nonstd::span<const usize>);
 #endif
+
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<int8>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<int16>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<int32>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<int64>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<uint8>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<uint16>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<uint32>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<uint64>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<float32>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<float64>(const DimsType&);
+template SIMPLNX_EXPORT Result<> DatasetIO::createEmptyDataset<bool>(const DimsType&);
+
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<int8>(nonstd::span<const int8>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<int16>(nonstd::span<const int16>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<int32>(nonstd::span<const int32>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<int64>(nonstd::span<const int64>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<uint8>(nonstd::span<const uint8>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<uint16>(nonstd::span<const uint16>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<uint32>(nonstd::span<const uint32>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<uint64>(nonstd::span<const uint64>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<float32>(nonstd::span<const float32>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<float64>(nonstd::span<const float64>, const std::vector<uint64>&, const std::vector<uint64>&);
+template SIMPLNX_EXPORT Result<> DatasetIO::writeSpanHyperslab<bool>(nonstd::span<const bool>, const std::vector<uint64>&, const std::vector<uint64>&);
+
 } // namespace nx::core::HDF5

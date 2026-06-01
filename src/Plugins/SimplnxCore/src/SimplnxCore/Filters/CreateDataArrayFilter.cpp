@@ -110,8 +110,6 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
   auto dataArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
   auto initValue = filterArgs.value<std::string>(k_InitializationValue_Key);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
-  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
-
   nx::core::Result<OutputActions> resultOutputActions;
 
   if(initValue.empty())
@@ -155,6 +153,8 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
                           "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
+
+  auto dataFormat = filterArgs.value<std::string>(k_DataFormat_Key);
 
   // Sanity check that init value can be converted safely to the final numeric type integrated into action
   auto action = std::make_unique<CreateArrayAction>(ConvertNumericTypeToDataType(numericType), tupleDims, compDims, dataArrayPath, dataFormat, initValue);

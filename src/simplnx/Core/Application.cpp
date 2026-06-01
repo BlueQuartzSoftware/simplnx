@@ -338,9 +338,9 @@ JsonPipelineBuilder* Application::getPipelineBuilder() const
   return nullptr;
 }
 
-std::shared_ptr<DataIOCollection> Application::getIOCollection() const
+DataIOCollection& Application::getIOCollection() const
 {
-  return m_DataIOCollection;
+  return *m_DataIOCollection;
 }
 
 std::shared_ptr<IDataIOManager> Application::getIOManager(const std::string& formatName) const
@@ -390,7 +390,12 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
 
   for(const auto& pluginIO : plugin->getDataIOManagers())
   {
-    m_DataIOCollection->addIOManager(pluginIO);
+    auto addManagerResult = m_DataIOCollection->addIOManager(pluginIO);
+    if(addManagerResult.invalid())
+    {
+      return MakeErrorResult(
+          -34, fmt::format("Failed to register data I/O manager from plugin '{}': {}", plugin->getName(), addManagerResult.errors().empty() ? "unknown error" : addManagerResult.errors()[0].message));
+    }
   }
 
   return {};
@@ -413,4 +418,9 @@ DataObject::Type Application::getDataType(const std::string& name) const
 std::vector<std::string> Application::getDataStoreFormats() const
 {
   return m_DataIOCollection->getFormatNames();
+}
+
+std::vector<std::pair<std::string, std::string>> Application::getDataStoreFormatDisplayNames() const
+{
+  return m_DataIOCollection->getFormatDisplayNames();
 }

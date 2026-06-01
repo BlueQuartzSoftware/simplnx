@@ -132,8 +132,8 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   }
 
   {
-    auto createAction = std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue),
-                                                            CreateArrayAction::k_DefaultDataFormat, "0");
+    auto createAction =
+        std::make_unique<CreateArrayAction>(DataType::int32, clusterArray->getTupleShape(), std::vector<usize>{1}, pSelectedArrayPathValue.replaceName(pFeatureIdsArrayNameValue), "", "0");
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 
@@ -141,7 +141,7 @@ IFilter::PreflightResult ComputeKMedoidsFilter::preflightImpl(const DataStructur
   {
     DataPath tempPath = DataPath({k_MaskName});
     {
-      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath, CreateArrayAction::k_DefaultDataFormat, "true");
+      auto createAction = std::make_unique<CreateArrayAction>(DataType::boolean, clusterArray->getTupleShape(), std::vector<usize>{1}, tempPath, "", "true");
       resultOutputActions.value().appendAction(std::move(createAction));
     }
 

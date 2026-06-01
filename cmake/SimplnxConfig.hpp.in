@@ -1,0 +1,11 @@
+#pragma once
+
+// This header is generated from cmake/SimplnxConfig.hpp.in by configure_file().
+// It carries compile-time configuration into every translation unit that links
+// simplnx, including MOC, via simplnx's PUBLIC generated include directory.
+// Delivering the macro through a header (not per-target compile definitions)
+// keeps the value identical across all consumers, which is required for ODR
+// safety when the macro gates inline code in public headers.
+
+// Defined (to 1) when out-of-core support is compiled into libsimplnx.
+#cmakedefine SIMPLNX_USE_OOC

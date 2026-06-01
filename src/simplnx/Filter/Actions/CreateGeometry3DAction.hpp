@@ -3,9 +3,11 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/HexahedralGeom.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TetrahedralGeom.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Filter/Output.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/simplnx_export.hpp"
@@ -36,7 +38,7 @@ public:
    * @param sharedCellsName The name of the shared cell list array to be created
    */
   CreateGeometry3DAction(const DataPath& geometryPath, size_t numCells, size_t numVertices, const std::string& vertexAttributeMatrixName, const std::string& cellAttributeMatrixName,
-                         const std::string& sharedVerticesName, const std::string& sharedCellsName, std::string createdDataFormat = "")
+                         const std::string& sharedVerticesName, const std::string& sharedCellsName)
   : IDataCreationAction(geometryPath)
   , m_NumCells(numCells)
   , m_NumVertices(numVertices)
@@ -44,7 +46,6 @@ public:
   , m_CellDataName(cellAttributeMatrixName)
   , m_SharedVerticesName(sharedVerticesName)
   , m_SharedCellsName(sharedCellsName)
-  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -58,7 +59,7 @@ public:
    * @param arrayType Tells whether to copy, move, or reference the existing input vertices array
    */
   CreateGeometry3DAction(const DataPath& geometryPath, const DataPath& inputVerticesArrayPath, const DataPath& inputCellsArrayPath, const std::string& vertexAttributeMatrixName,
-                         const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat = "")
+                         const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType)
   : IDataCreationAction(geometryPath)
   , m_VertexDataName(vertexAttributeMatrixName)
   , m_CellDataName(cellAttributeMatrixName)
@@ -67,7 +68,6 @@ public:
   , m_InputVertices(inputVerticesArrayPath)
   , m_InputCells(inputCellsArrayPath)
   , m_ArrayHandlingType(arrayType)
-  , m_CreatedDataStoreFormat(createdDataFormat)
   {
   }
 
@@ -140,11 +140,42 @@ public:
     DimensionType cellTupleShape = {m_NumCells};
     DimensionType vertexTupleShape = {m_NumVertices}; // We probably don't know how many Vertices there are but take what ever the developer sends us
 
-    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    // For Copy/Move/Reference, read shapes and materialize OOC stores upfront
+    if(m_ArrayHandlingType != ArrayHandlingType::Create)
     {
       cellTupleShape = cells->getTupleShape();
       vertexTupleShape = vertices->getTupleShape();
 
+      // If the source arrays have OOC-backed stores, materialize them into
+      // in-core stores. These arrays may have been created OOC earlier in
+      // the pipeline when they lived outside any geometry. Unstructured/poly
+      // geometry topology arrays must be in-core for the visualization layer.
+      if(vertices->getIDataStore()->getStoreType() == IDataStore::StoreType::OutOfCore)
+      {
+        auto inCoreStore = std::make_shared<DataStore<float32>>(vertexTupleShape, ShapeType{3}, std::optional<float32>{});
+        auto copyResult = vertices->getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(inCoreStore->data(), inCoreStore->getSize()));
+        if(copyResult.invalid())
+        {
+          return MakeErrorResult(-5610, fmt::format("{}Failed to materialize out-of-core vertices array '{}' into in-core store: {}", prefix, m_InputVertices.toString(),
+                                                    copyResult.errors().empty() ? "unknown error" : copyResult.errors()[0].message));
+        }
+        vertices->setDataStore(std::move(inCoreStore));
+      }
+      if(cells->getIDataStore()->getStoreType() == IDataStore::StoreType::OutOfCore)
+      {
+        auto inCoreStore = std::make_shared<DataStore<MeshIndexType>>(cellTupleShape, ShapeType{Geometry3DType::k_NumVerts}, std::optional<MeshIndexType>{});
+        auto copyResult = cells->getDataStoreRef().copyIntoBuffer(0, nonstd::span<MeshIndexType>(inCoreStore->data(), inCoreStore->getSize()));
+        if(copyResult.invalid())
+        {
+          return MakeErrorResult(-5611, fmt::format("{}Failed to materialize out-of-core cells array '{}' into in-core store: {}", prefix, m_InputCells.toString(),
+                                                    copyResult.errors().empty() ? "unknown error" : copyResult.errors()[0].message));
+        }
+        cells->setDataStore(std::move(inCoreStore));
+      }
+    }
+
+    if(m_ArrayHandlingType == ArrayHandlingType::Copy)
+    {
       std::shared_ptr<DataObject> vertexCopy = vertices->deepCopy(getCreatedPath().createChildPath(m_SharedVerticesName));
       const auto vertexArray = std::dynamic_pointer_cast<Float32Array>(vertexCopy);
 
@@ -156,8 +187,6 @@ public:
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Move)
     {
-      cellTupleShape = cells->getTupleShape();
-      vertexTupleShape = vertices->getTupleShape();
       const auto geomId = geometry3d->getId();
 
       const auto verticesId = vertices->getId();
@@ -185,8 +214,6 @@ public:
     }
     else if(m_ArrayHandlingType == ArrayHandlingType::Reference)
     {
-      cellTupleShape = cells->getTupleShape();
-      vertexTupleShape = vertices->getTupleShape();
       const auto geomId = geometry3d->getId();
       dataStructure.setAdditionalParent(vertices->getId(), geomId);
       dataStructure.setAdditionalParent(cells->getId(), geomId);
@@ -197,7 +224,7 @@ public:
     {
       const DataPath cellsPath = getCreatedPath().createChildPath(m_SharedCellsName);
       // Create the default DataArray that will hold the CellList and Vertices.
-      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode, m_CreatedDataStoreFormat);
+      Result result = ArrayCreationUtilities::CreateArray<MeshIndexType>(dataStructure, cellTupleShape, {Geometry3DType::k_NumVerts}, cellsPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5609, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedCellList '{}'", prefix, cellsPath.toString())));
@@ -212,7 +239,7 @@ public:
       // Create the Vertex Array with a component size of 3
       const DataPath vertexPath = getCreatedPath().createChildPath(m_SharedVerticesName);
 
-      result = ArrayCreationUtilities::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode, m_CreatedDataStoreFormat);
+      result = ArrayCreationUtilities::CreateArray<float>(dataStructure, vertexTupleShape, {3}, vertexPath, mode);
       if(result.invalid())
       {
         return MergeResults(result, MakeErrorResult(-5610, fmt::format("{}CreateGeometry3DAction: Could not allocate SharedVertList '{}'", prefix, vertexPath.toString())));
@@ -331,7 +358,6 @@ private:
   DataPath m_InputVertices;
   DataPath m_InputCells;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
-  std::string m_CreatedDataStoreFormat;
 };
 
 using CreateTetrahedralGeometryAction = CreateGeometry3DAction<TetrahedralGeom>;

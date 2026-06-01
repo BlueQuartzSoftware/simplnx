@@ -68,7 +68,7 @@ const FilterHandle k_ImportD3DHandle(Uuid::FromString("0dbd31c7-19e0-4077-83ef-f
 
 fs::path GetDataDir(const Application& app)
 {
-  return std::filesystem::path(unit_test::k_BinaryTestOutputDir.view());
+  return fs::path(unit_test::k_BinaryTestOutputDir.view());
 }
 
 fs::path GetIODataPath()
@@ -147,9 +147,8 @@ DataStructure CreateTestDataStructure()
   ShapeType tupleShape = {10};
   auto* attributeMatrix = AttributeMatrix::Create(dataStructure, DataNames::k_AttributeMatrixName, tupleShape, group1->getId());
 
-  Result<> arrayCreationResults =
-      ArrayCreationUtilities::CreateArray<int8>(dataStructure, tupleShape, std::vector<usize>{1}, DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}),
-                                                IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "1");
+  Result<> arrayCreationResults = ArrayCreationUtilities::CreateArray<int8>(
+      dataStructure, tupleShape, std::vector<usize>{1}, DataPath({DataNames::k_Group1Name, DataNames::k_AttributeMatrixName, DataNames::k_Array2Name}), IDataAction::Mode::Execute, "1");
   return dataStructure;
 }
 
@@ -286,10 +285,13 @@ TEST_CASE("DREAM3DFileTest:DREAM3D File IO Test", "[WriteDREAM3DFilter]")
   // Read .dream3d file
   {
     auto fileReader = HDF5::FileIO::ReadFile(GetIODataPath());
-    auto fileResult = DREAM3D::ReadFile(fileReader);
-    SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
+    auto pipelineResult = DREAM3D::ImportPipelineFromFile(fileReader);
+    SIMPLNX_RESULT_REQUIRE_VALID(pipelineResult);
+    auto pipeline = std::move(pipelineResult.value());
 
-    auto [pipeline, dataStructure] = fileResult.value();
+    auto dsResult = DREAM3D::LoadDataStructure(GetIODataPath());
+    SIMPLNX_RESULT_REQUIRE_VALID(dsResult);
+    DataStructure dataStructure = std::move(dsResult.value());
 
     // Test reading the DataStructure
     REQUIRE(dataStructure.getData(DataPath({DataNames::k_Group1Name})) != nullptr);
@@ -643,8 +645,7 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
   DataStructure dataStructure;
   const DataPath arrayPath({"LargeArray"});
   constexpr usize k_Tuples = 500'000; // 2 MB, above the 16 KiB small-array bypass
-  auto createRes = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{k_Tuples}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute,
-                                                                ArrayCreationUtilities::k_DefaultDataFormat, "0");
+  auto createRes = ArrayCreationUtilities::CreateArray<float32>(dataStructure, std::vector<usize>{k_Tuples}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
   SIMPLNX_RESULT_REQUIRE_VALID(createRes);
   {
     auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -667,12 +668,7 @@ TEST_CASE("DREAM3DFileTest: DataArray datasets are chunked+deflated when WriteOp
   REQUIRE(info->hasDeflate);
   REQUIRE(info->deflateLevel == 5);
 
-  auto fileReader = HDF5::FileIO::ReadFile(outPath);
-  REQUIRE(fileReader.isValid());
-  auto fileResult = DREAM3D::ReadFile(fileReader);
-  SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
-  auto [pipeline, importedDs] = std::move(fileResult.value());
-  (void)pipeline;
+  DataStructure importedDs = UnitTest::LoadDataStructure(outPath);
   REQUIRE_NOTHROW(importedDs.getDataRefAs<DataArray<float32>>(arrayPath));
   const auto& imported = importedDs.getDataRefAs<DataArray<float32>>(arrayPath);
   const auto& original = dataStructure.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -689,8 +685,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Off_IsContiguous", "[WriteDREAM3DFilt
 
   DataStructure ds;
   const DataPath arrayPath({"A"});
-  auto cr =
-      ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "1.5");
+  auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{200'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "1.5");
   SIMPLNX_RESULT_REQUIRE_VALID(cr);
 
   WriteDREAM3DFilter filter;
@@ -717,8 +712,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
 
   DataStructure ds;
   const DataPath arrayPath({"A"});
-  auto cr =
-      ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "0");
+  auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
   SIMPLNX_RESULT_REQUIRE_VALID(cr);
   {
     auto& arr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -745,11 +739,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_On_IsChunkedAndDeflated", "[WriteDREA
   REQUIRE(info->hasDeflate);
   REQUIRE(info->deflateLevel == 5);
 
-  auto fr = nx::core::HDF5::FileIO::ReadFile(outPath);
-  auto fileResult = nx::core::DREAM3D::ReadFile(fr);
-  SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
-  auto [unusedPipeline, imported] = std::move(fileResult.value());
-  (void)unusedPipeline;
+  DataStructure imported = UnitTest::LoadDataStructure(outPath);
   REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
   const auto& importedArr = imported.getDataRefAs<DataArray<float32>>(arrayPath);
   const auto& originalArr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -764,11 +754,9 @@ TEST_CASE("WriteDREAM3DFilter: Compression_SmallArray_Bypasses", "[WriteDREAM3DF
   fs::remove(outPath);
 
   DataStructure ds;
-  auto crSmall = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute,
-                                                              ArrayCreationUtilities::k_DefaultDataFormat, "2");
+  auto crSmall = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{100}, std::vector<usize>{1}, DataPath({"Small"}), IDataAction::Mode::Execute, "", "2");
   SIMPLNX_RESULT_REQUIRE_VALID(crSmall);
-  auto crBig = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute,
-                                                            ArrayCreationUtilities::k_DefaultDataFormat, "3");
+  auto crBig = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{500'000}, std::vector<usize>{1}, DataPath({"Big"}), IDataAction::Mode::Execute, "", "3");
   SIMPLNX_RESULT_REQUIRE_VALID(crBig);
 
   WriteDREAM3DFilter filter;
@@ -807,8 +795,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
 
     DataStructure ds;
     const DataPath arrayPath({"A"});
-    auto cr =
-        ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, ArrayCreationUtilities::k_DefaultDataFormat, "0");
+    auto cr = ArrayCreationUtilities::CreateArray<float32>(ds, std::vector<usize>{1'000'000}, std::vector<usize>{1}, arrayPath, IDataAction::Mode::Execute, "", "0");
     SIMPLNX_RESULT_REQUIRE_VALID(cr);
     {
       auto& arr = ds.getDataRefAs<DataArray<float32>>(arrayPath);
@@ -828,12 +815,7 @@ TEST_CASE("WriteDREAM3DFilter: Compression_LevelsRoundTrip", "[WriteDREAM3DFilte
     auto r = filter.execute(ds, args).result;
     SIMPLNX_RESULT_REQUIRE_VALID(r);
 
-    auto fr = HDF5::FileIO::ReadFile(outPath);
-    REQUIRE(fr.isValid());
-    auto fileResult = DREAM3D::ReadFile(fr);
-    SIMPLNX_RESULT_REQUIRE_VALID(fileResult);
-    auto [unusedPipeline, imported] = std::move(fileResult.value());
-    (void)unusedPipeline;
+    DataStructure imported = UnitTest::LoadDataStructure(outPath);
     REQUIRE_NOTHROW(imported.getDataRefAs<DataArray<float32>>(arrayPath));
     UnitTest::CompareDataArrays<float32>(ds.getDataRefAs<DataArray<float32>>(arrayPath), imported.getDataRefAs<DataArray<float32>>(arrayPath));
 

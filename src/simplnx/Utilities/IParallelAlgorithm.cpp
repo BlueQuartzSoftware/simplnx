@@ -1,6 +1,6 @@
 #include "IParallelAlgorithm.hpp"
 
-#include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 
 namespace
 {
@@ -19,7 +19,7 @@ bool CheckStoresInMemory(const nx::core::IParallelAlgorithm::AlgorithmStores& st
       continue;
     }
 
-    if(!storePtr->getDataFormat().empty())
+    if(storePtr->getStoreType() == nx::core::IDataStore::StoreType::OutOfCore)
     {
       return false;
     }
@@ -43,7 +43,7 @@ bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& ar
       continue;
     }
 
-    if(!arrayPtr->getIDataStoreRef().getDataFormat().empty())
+    if(arrayPtr->getIDataStoreRef().getStoreType() == nx::core::IDataStore::StoreType::OutOfCore)
     {
       return false;
     }
@@ -58,10 +58,11 @@ namespace nx::core
 // -----------------------------------------------------------------------------
 IParallelAlgorithm::IParallelAlgorithm()
 {
-#ifdef SIMPLNX_ENABLE_MULTICORE
-  // Do not run OOC data in parallel by default.
-  m_RunParallel = !Application::GetOrCreateInstance()->getPreferences()->useOocData();
-#endif
+  // m_RunParallel defaults to true (ifdef SIMPLNX_ENABLE_MULTICORE) or false.
+  // Individual filters disable via requireArraysInMemory()/requireStoresInMemory()
+  // if they genuinely need in-memory data (e.g., ITK filters).
+  // OOC stores are now thread-safe (ChunkCache + HDF5 global mutex), so
+  // TBB parallelism is safe on OOC data.
 }
 
 // -----------------------------------------------------------------------------

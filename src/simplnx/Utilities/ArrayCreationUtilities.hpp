@@ -2,7 +2,13 @@
 
 #include "simplnx/simplnx_export.hpp"
 
+#include "simplnx/Common/SimplnxConfig.hpp"
+#ifdef SIMPLNX_USE_OOC
+#include "SimplnxOoc/OocDataIOManager.hpp"
+#endif
+
 #include "simplnx/Common/Result.hpp"
+#include "simplnx/Core/Preferences.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
@@ -19,9 +25,13 @@
 
 namespace nx::core::ArrayCreationUtilities
 {
-inline static constexpr StringLiteral k_DefaultDataFormat = "";
-
-SIMPLNX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 requiredMemory, std::string& format);
+/**
+ * @brief Checks whether an in-core allocation of the requested size fits within available system memory.
+ * @param dataStructure The DataStructure whose current memory usage is added to the requirement
+ * @param requiredMemory Size in bytes of the new in-core allocation being considered
+ * @return true if the combined memory requirement fits within available memory, false otherwise
+ */
+SIMPLNX_EXPORT bool CheckMemoryRequirement(const DataStructure& dataStructure, uint64 requiredMemory);
 
 /**
  * @brief Creates a DataArray with the given properties
@@ -34,7 +44,7 @@ SIMPLNX_EXPORT bool CheckMemoryRequirement(DataStructure& dataStructure, uint64 
  * @return
  */
 template <class T>
-Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& compShape, const DataPath& path, IDataAction::Mode mode, std::string dataFormat = "",
+Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& compShape, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat = "",
                      std::string fillValue = "")
 {
   auto parentPath = path.getParent();
@@ -75,18 +85,66 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
 
   const usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   uint64 requiredMemory = numTuples * numComponents * sizeof(T);
-  if(!CheckMemoryRequirement(dataStructure, requiredMemory, dataFormat))
+
+  // Resolve the storage format. When OOC is compiled in (SIMPLNX_USE_OOC), this
+  // is a direct call to SimplnxOoc::resolveFormat, the single decision point for
+  // whether an array uses in-core or OOC storage; it considers parent geometry
+  // type, user preferences, and data size. When OOC is not compiled in, the
+  // call is gated out and all arrays default to in-core.
+  //
+  // SimplnxOoc::resolveFormat always returns in-core for arrays under
+  // unstructured/poly geometries because OOC support for those geometry types
+  // has been deferred. See SimplnxOoc::resolveFormat for the full rationale.
+  std::string resolvedFormat;
+  if(mode == IDataAction::Mode::Execute)
   {
-    uint64 totalMemory = requiredMemory + dataStructure.memoryUsage();
-    uint64 availableMemory = Memory::GetTotalMemory();
-    return MakeErrorResult(-264, fmt::format("CreateArray: Cannot create DataArray '{}'.\n\tTotal memory required for DataStructure: '{}' Bytes.\n\tTotal reported memory: '{}' Bytes", name,
-                                             totalMemory, availableMemory));
+    if(!dataFormat.empty())
+    {
+      // User explicitly chose a format via the filter UI — skip format resolution.
+      // Both k_InMemoryFormat and any other registered format name (e.g., "HDF5-OOC")
+      // pass through unchanged; the DataStore factory in DataIOCollection routes
+      // k_InMemoryFormat to the built-in core manager directly.
+      resolvedFormat = dataFormat;
+    }
+    else
+    {
+      // No per-filter override — call SimplnxOoc::resolveFormat directly (it consults
+      // user preferences, size thresholds, and geometry type). It returns either "" for
+      // "default in-memory" or a format name like "HDF5-OOC". When OOC is not compiled
+      // in, the call is gated out and everything stays in-core.
+#ifdef SIMPLNX_USE_OOC
+      resolvedFormat = SimplnxOoc::resolveFormat(dataStructure, path, GetDataType<T>(), requiredMemory);
+#else
+      resolvedFormat = "";
+#endif
+    }
+
+    // Only check RAM availability for in-core arrays. OOC arrays go to disk
+    // and do not consume RAM for their primary storage. "In-core" means either
+    // the empty/unset sentinel (resolver defaulted) or the explicit k_InMemoryFormat
+    // constant (user forced in-memory).
+    const bool isInCore = resolvedFormat.empty() || resolvedFormat == Preferences::k_InMemoryFormat.str();
+    if(isInCore && !CheckMemoryRequirement(dataStructure, requiredMemory))
+    {
+      uint64 totalMemory = requiredMemory + dataStructure.memoryUsage();
+      uint64 availableMemory = Memory::GetTotalMemory();
+      return MakeErrorResult(-264, fmt::format("Cannot create array '{}': the DataStructure would require {} bytes total, "
+                                               "but only {} bytes of RAM are available. Consider enabling out-of-core "
+                                               "storage or lowering the size thresholds in Preferences so that large "
+                                               "arrays are stored on disk instead of in memory.",
+                                               path.toString(), totalMemory, availableMemory));
+    }
   }
 
-  auto store = DataStoreUtilities::CreateDataStore<T>(tupleShape, compShape, mode, dataFormat);
+  auto store = DataStoreUtilities::CreateDataStore<T>(tupleShape, compShape, mode, resolvedFormat);
   if(nullptr == store)
   {
-    return MakeErrorResult(-265, fmt::format("CreateArray: Unable to create DataStore<T> at '{}' of DataStore format '{}'", path.toString(), dataFormat));
+    // No registered IO manager could produce a DataStore<T> for this format.
+    // Include the full manager capability list so the user can tell whether
+    // the format is a typo, whether the required plugin is missing, or whether
+    // the format simply does not support this store type.
+    return MakeErrorResult(-265, fmt::format("CreateArray: Unable to create DataStore<T> at '{}' of DataStore format '{}'.\n{}", path.toString(), resolvedFormat,
+                                             DataStoreUtilities::GetIOCollection().generateManagerListString()));
   }
   if(!fillValue.empty())
   {

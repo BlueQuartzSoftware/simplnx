@@ -74,11 +74,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilte
 
   const DataPath k_OriginalGeomPath({"Original"});
 
-  Result<DataStructure> dataStructureResult =
-      DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/Rotate_Sample_Ref_Frame_Test_v3/Rotate_Sample_Ref_Frame_Test_v3.dream3d", nx::core::unit_test::k_TestFilesDir)), false);
-  SIMPLNX_RESULT_REQUIRE_VALID(dataStructureResult);
-
-  DataStructure dataStructure = std::move(dataStructureResult.value());
+  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/Rotate_Sample_Ref_Frame_Test_v3/Rotate_Sample_Ref_Frame_Test_v3.dream3d", nx::core::unit_test::k_TestFilesDir)));
 
   const auto* originalImageGeom = dataStructure.getDataAs<ImageGeom>(k_OriginalGeomPath);
   REQUIRE(originalImageGeom != nullptr);

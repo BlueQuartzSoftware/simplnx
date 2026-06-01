@@ -2,6 +2,7 @@
 
 #include "simplnx/Common/Aliases.hpp"
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include <memory>
 #include <string>
@@ -9,7 +10,23 @@
 
 namespace nx::core
 {
-class AbstractStringStore
+/**
+ * @class AbstractStringStore
+ * @brief Abstract base class for string storage backends used by StringArray.
+ *
+ * AbstractStringStore defines the interface for storing and accessing an
+ * ordered collection of strings, organized by tuple shape. Concrete
+ * subclasses include:
+ *
+ * - **StringStore** -- The real, in-memory store that owns a
+ *   `std::vector<std::string>` and supports full read/write access.
+ * - **EmptyStringStore** -- A metadata-only placeholder that records
+ *   tuple shape but holds no data. All data access methods throw.
+ *
+ * The isPlaceholder() virtual method allows callers to distinguish
+ * between these two cases without dynamic_cast.
+ */
+class SIMPLNX_EXPORT AbstractStringStore
 {
 public:
   using value_type = std::string;
@@ -323,7 +340,12 @@ public:
   using iterator = Iterator;
   using const_iterator = ConstIterator;
 
-  ~AbstractStringStore() = default;
+  /**
+   * @brief Virtual destructor. Ensures correct cleanup when deleting through
+   * a base class pointer, which is the normal ownership pattern since
+   * StringArray holds an AbstractStringStore via std::unique_ptr.
+   */
+  virtual ~AbstractStringStore() = default;
 
   /**
    * @brief Creates a deep copy of this AbstractStringStore.
@@ -342,6 +364,23 @@ public:
    * @return bool True if the store has no strings, false otherwise
    */
   virtual bool empty() const = 0;
+
+  /**
+   * @brief Checks whether this store is a metadata-only placeholder that
+   * holds no real string data.
+   *
+   * This method exists so that import/backfill logic can identify which
+   * StringArray objects in a DataStructure still need their data loaded
+   * without resorting to dynamic_cast. The two concrete subclasses return
+   * fixed values:
+   *
+   * - **StringStore::isPlaceholder()** returns `false` (data is present).
+   * - **EmptyStringStore::isPlaceholder()** returns `true` (no data;
+   *   accessing elements will throw).
+   *
+   * @return true if this store is a placeholder with no accessible data
+   */
+  virtual bool isPlaceholder() const = 0;
 
   /**
    * @brief Returns the number of tuples in the StringStore.

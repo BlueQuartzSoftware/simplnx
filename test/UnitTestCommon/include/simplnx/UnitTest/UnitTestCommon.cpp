@@ -1,7 +1,5 @@
 #include "UnitTestCommon.hpp"
 
-#include "simplnx/Parameters/Dream3dImportParameter.hpp"
-
 #include <zlib.h>
 
 #include <array>
@@ -12,37 +10,19 @@ namespace nx::core::UnitTest
 {
 DataStructure LoadDataStructure(const fs::path& filepath)
 {
-  // Ensure the plugins a loaded.
   LoadPlugins();
-
-  INFO(fmt::format("Error loading file: '{}'  ", filepath.string()));
   REQUIRE(fs::exists(filepath));
 
-  DataStructure dataStructure;
-
-  // const Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
-  auto* filterList = Application::Instance()->getFilterList();
-  /*************************************************************************
-   * ReadDREAM3DFilter
-   ************************************************************************/
-  constexpr Uuid k_ReadDREAM3DFilterId = *Uuid::FromString("0dbd31c7-19e0-4077-83ef-f4a6459a0e2d");
-  const FilterHandle k_ReadDREAM3DFilterHandle(k_ReadDREAM3DFilterId, k_SimplnxCorePluginId);
-
-  auto filterPtr = filterList->createFilter(k_ReadDREAM3DFilterHandle);
-  REQUIRE(nullptr != filterPtr);
-
-  Arguments args;
-  args.insertOrAssign("import_data_object", std::make_any<Dream3dImportParameter::ImportData>(Dream3dImportParameter::ImportData{filepath, Dream3dImportParameter::PathImportPolicy::All}));
-
-  // Preflight the filter and check result
-  auto preflightResult = filterPtr->preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-  // Execute the filter and check the result
-  auto executeResult = filterPtr->execute(dataStructure, args); //, nullptr, IFilter::MessageHandler{[](const IFilter::Message& message) { fmt::print("{}\n", message.message); }});
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-  return dataStructure;
+  auto result = DREAM3D::LoadDataStructure(filepath);
+  if(result.invalid())
+  {
+    for(const auto& error : result.errors())
+    {
+      UNSCOPED_INFO(fmt::format("[{}] {}", error.code, error.message));
+    }
+    FAIL(fmt::format("Failed to load DataStructure from '{}'", filepath.string()));
+  }
+  return std::move(result.value());
 }
 
 TestFileSentinel::TestFileSentinel(std::string testFilesDir, std::string inputArchiveName, std::string expectedTopLevelOutput, bool decompressFiles, bool removeTemp)
@@ -69,7 +49,7 @@ TestFileSentinel::~TestFileSentinel()
   if(m_RemoveTemp)
   {
     std::error_code errorCode;
-    std::filesystem::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
+    fs::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
     if(errorCode)
     {
       std::cout << "Removing decompressed data failed: " << errorCode.message() << std::endl;
@@ -242,13 +222,13 @@ std::error_code TestFileSentinel::decompress()
     // typeFlag: '5' = directory, '0' or '\0' = regular file, '2' = symlink
     if(typeFlag == '5')
     {
-      std::filesystem::create_directories(fullPath);
+      fs::create_directories(fullPath);
     }
     else if(typeFlag == '0' || typeFlag == '\0')
     {
       // Ensure parent directory exists
-      std::filesystem::path filePath(fullPath);
-      std::filesystem::create_directories(filePath.parent_path());
+      fs::path filePath(fullPath);
+      fs::create_directories(filePath.parent_path());
 
       std::ofstream outFile(fullPath, std::ios::binary);
       if(!outFile)

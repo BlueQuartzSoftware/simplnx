@@ -2,6 +2,8 @@
 
 #include "H5Support.hpp"
 
+#include "simplnx/DataStructure/IDataStore.hpp"
+
 namespace nx::core::HDF5
 {
 namespace Support
@@ -80,7 +82,7 @@ Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
                        const std::optional<std::vector<hsize_t>>& count = std::nullopt)
 {
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
-  if(dataArray.getDataFormat().empty())
+  if(dataArray.getIDataStoreRef().getStoreType() != IDataStore::StoreType::OutOfCore)
   {
     return FillDataStore(dataArray, dataArrayPath, datasetReader, start, count);
   }

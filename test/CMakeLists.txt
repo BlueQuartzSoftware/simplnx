@@ -26,16 +26,21 @@ add_executable(simplnx_test
   BitTest.cpp
   DataArrayTest.cpp
   DataPathTest.cpp
+  Dream3dLoadingApiTest.cpp
   DataStructObserver.hpp
   DataStructObserver.cpp
   DataStructTest.cpp
   DynamicFilterInstantiationTest.cpp
+  EmptyStringStoreTest.cpp
+  ExtentTest.cpp
   FilePathGeneratorTest.cpp
   GeometryTest.cpp
   GeometryTestUtilities.hpp
   H5Test.cpp
   IntersectionUtilitiesTest.cpp
   IOFormat.cpp
+  IParallelAlgorithmTest.cpp
+  MemoryBudgetManagerTest.cpp
   MontageTest.cpp
   NeighborUtilitiesTest.cpp
   PluginTest.cpp

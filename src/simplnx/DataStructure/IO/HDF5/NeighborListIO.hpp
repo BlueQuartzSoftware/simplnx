@@ -9,6 +9,7 @@
 #include "simplnx/DataStructure/IO/HDF5/DataStoreIO.hpp"
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 #include <vector>
 
@@ -28,13 +29,27 @@ public:
   ~NeighborListIO() noexcept override = default;
 
   /**
-   * @brief Attempts to read the NeighborList<T> data from HDF5.
-   * Returns a Result<> with any errors or warnings encountered during the process.
-   * @param parentGroup
-   * @param dataReader
-   * @return Result<>
+   * @brief Reads NeighborList<T> data from an HDF5 dataset.
+   *
+   * When useEmptyDataStore is true, only the TupleDimensions attribute from
+   * the linked NumNeighbors dataset is read, and an EmptyListStore placeholder
+   * is returned. The actual data is loaded later by finishImportingData().
+   *
+   * When useEmptyDataStore is false, the full flat data array is read from
+   * HDF5, split into per-tuple vectors using the NumNeighbors companion
+   * array, and packed into an in-memory ListStore.
+   *
+   * If the NumNeighbors companion array is a placeholder (element count
+   * mismatch), warnings are accumulated and nullptr is returned. The caller
+   * should treat this as a skip, not an error.
+   *
+   * @param parentGroup The HDF5 group containing the dataset and its companion
+   * @param dataReader The HDF5 dataset containing the flat packed neighbor data
+   * @param useEmptyDataStore If true, return an EmptyListStore placeholder
+   * @param warnings Output vector to accumulate any warnings encountered
+   * @return std::shared_ptr<store_type> The created list store, or nullptr on error/placeholder
    */
-  static std::shared_ptr<store_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader, bool useEmptyDataStore = false)
+  static std::shared_ptr<store_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader, bool useEmptyDataStore, std::vector<Warning>& warnings)
   {
     try
     {
@@ -58,8 +73,17 @@ public:
         return std::make_shared<EmptyListStore<T>>(tupleDimsResult.value());
       }
 
-      auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
-      auto& numNeighborsStore = *numNeighborsPtr.get();
+      auto numNeighborsResult = DataStoreIO::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
+      for(auto&& warning : numNeighborsResult.warnings())
+      {
+        warnings.push_back(std::move(warning));
+      }
+      if(numNeighborsResult.value() == nullptr)
+      {
+        // NumNeighbors is a placeholder — cannot populate NeighborList
+        return nullptr;
+      }
+      auto& numNeighborsStore = *numNeighborsResult.value();
 
       auto flatDataStorePtr = dataReader.template readAsDataStore<T>();
       if(flatDataStorePtr == nullptr)
@@ -112,21 +136,39 @@ public:
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(objectName);
-    auto listStorePtr = ReadHdf5Data(parentGroup, datasetReader, useEmptyDataStore);
+    std::vector<Warning> warnings;
+    auto listStorePtr = ReadHdf5Data(parentGroup, datasetReader, useEmptyDataStore, warnings);
+
+    Result<> result;
+    result.m_Warnings = std::move(warnings);
+
+    if(listStorePtr == nullptr && !result.m_Warnings.empty())
+    {
+      // Placeholder detected — skip this NeighborList, propagate warnings
+      return result;
+    }
+
     auto* dataObject = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, listStorePtr, parentId);
     if(dataObject == nullptr)
     {
       std::string ss = "Failed to import NeighborList from HDF5";
       return MakeErrorResult(-505, ss);
     }
-    return {};
+    return result;
   }
 
   /**
-   * @brief Replaces the AbstractListStore using data from the HDF5 dataset.
-   * @param dataStructure
-   * @param dataPath
-   * @param dataStructureReader
+   * @brief Replaces the placeholder AbstractListStore with real data from the
+   * HDF5 dataset. This is the "backfill" step called after preflight when the
+   * DataStructure was initially loaded with empty stores.
+   *
+   * Reads the flat data array from HDF5 and scatters it into per-tuple vectors
+   * in an in-memory ListStore. OOC format decisions for imported data are
+   * handled at a higher level by the backfill strategy.
+   *
+   * @param dataStructure The DataStructure containing the NeighborList to populate
+   * @param dataPath Path to the NeighborList in the DataStructure
+   * @param parentGroup The HDF5 group containing the dataset
    * @return Result<>
    */
   Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroup) const override
@@ -147,10 +189,32 @@ public:
     }
     numNeighborsName = std::move(numNeighborsNameResult.value());
 
+    // Read the "NumNeighbors" companion array, which stores the per-tuple
+    // neighbor count used to interpret the flat packed data array.
     auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
-    auto numNeighborsPtr = DataStoreIO::ReadDataStore<int32>(numNeighborsReader);
-    auto& numNeighborsStore = *numNeighborsPtr.get();
+    auto numNeighborsResult = DataStoreIO::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
 
+    Result<> result;
+    for(auto&& warning : numNeighborsResult.warnings())
+    {
+      result.m_Warnings.push_back(std::move(warning));
+    }
+    if(numNeighborsResult.value() == nullptr)
+    {
+      // NumNeighbors is a placeholder — cannot populate NeighborList, propagate warnings
+      return result;
+    }
+    auto& numNeighborsStore = *numNeighborsResult.value();
+
+    const auto numTuples = numNeighborsStore.getNumberOfTuples();
+    const auto tupleShape = numNeighborsStore.getTupleShape();
+
+    // Format resolution for imported data is handled by the backfill strategy
+    // at a higher level (CreateNeighborListAction / ImportH5ObjectPathsAction).
+    // During the eager HDF5 read path, we always load in-core.
+    //
+    // Read the entire flat data array from HDF5 and scatter it into
+    // per-tuple vectors in an in-memory ListStore.
     auto flatDataStorePtr = dataReader.template readAsDataStore<T>();
     if(flatDataStorePtr == nullptr)
     {
@@ -163,8 +227,7 @@ public:
     }
 
     usize offset = 0;
-    const auto numTuples = numNeighborsStore.getNumberOfTuples();
-    auto listStorePtr = DataStoreUtilities::CreateListStore<T>(numNeighborsStore.getTupleShape());
+    auto listStorePtr = DataStoreUtilities::CreateListStore<T>(tupleShape);
     AbstractListStore<T>& listStore = *listStorePtr.get();
     for(usize i = 0; i < numTuples; i++)
     {
@@ -179,7 +242,7 @@ public:
     }
 
     neighborList.setStore(listStorePtr);
-    return {};
+    return result;
   }
 
   /**

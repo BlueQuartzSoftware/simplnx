@@ -79,9 +79,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][Comput
     // This test file was produced by SIMPL/DREAM3D. our results should match theirs
     auto exemplarFilePath = fs::path(fmt::format("{}/so3_cubic_high_ipf_001.dream3d", unit_test::k_TestFilesDir));
     REQUIRE(fs::exists(exemplarFilePath));
-    auto result = DREAM3D::ImportDataStructureFromFile(exemplarFilePath, false);
-    REQUIRE(result.valid());
-    dataStructure = result.value();
+    dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
   }
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -117,7 +115,7 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColors", "[OrientationAnalysis][Comput
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     {
       // Write out the DataStructure for later viewing/debugging
-      auto fileWriter = nx::core::HDF5::FileIO::WriteFile(std::filesystem::path(fmt::format("{}/ComputeIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir)));
+      auto fileWriter = nx::core::HDF5::FileIO::WriteFile(fs::path(fmt::format("{}/ComputeIPFColors_Test.dream3d", unit_test::k_BinaryTestOutputDir)));
       auto resultH5 = HDF5::DataStructureWriter::WriteFile(dataStructure, fileWriter);
       SIMPLNX_RESULT_REQUIRE_VALID(resultH5);
     }

@@ -5,6 +5,7 @@
 #include "simplnx/simplnx_export.hpp"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace nx::core
@@ -64,10 +65,21 @@ public:
   ValueType defaultString() const;
 
   /**
-   * @brief
-   * @retrurn
+   * @brief Returns the list of available format name strings.
+   * @return Vector of format name strings (keys only, no display names)
    */
   AvailableValuesType availableValues() const;
+
+  /**
+   * @brief Returns all available formats as (formatName, displayName) pairs.
+   *
+   * The list always includes ("", "Automatic") and (k_InMemoryFormat, "In Memory"),
+   * plus any plugin-registered formats. This is intended for UI widgets that need
+   * to display human-readable labels alongside the internal format identifiers.
+   *
+   * @return Vector of (formatName, displayName) pairs
+   */
+  std::vector<std::pair<std::string, std::string>> availableFormatsWithDisplayNames() const;
 
   /**
    * @brief

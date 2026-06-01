@@ -61,13 +61,13 @@ const fs::path k_ComplexH5File = "new.h5";
 
 fs::path GetDataDir()
 {
-  return std::filesystem::path(unit_test::k_BinaryTestOutputDir.view());
+  return fs::path(unit_test::k_BinaryTestOutputDir.view());
 }
 
 fs::path GetLegacyFilepath()
 {
   std::string path = fmt::format("{}/test/Data/{}", unit_test::k_SourceDir.view(), Constants::k_LegacyFilepath);
-  return std::filesystem::path(path);
+  return fs::path(path);
 }
 
 fs::path GetComplexH5File()
@@ -629,10 +629,10 @@ H5ClassT TestH5ImplicitCopy(H5ClassT&& originalObject, std::string_view testedCl
 TEST_CASE("Read Legacy DREAM3D-NX Data")
 {
   auto app = Application::GetOrCreateInstance();
-  std::filesystem::path filepath = GetLegacyFilepath();
+  fs::path filepath = GetLegacyFilepath();
   REQUIRE(exists(filepath));
   {
-    Result<DataStructure> result = DREAM3D::ImportDataStructureFromFile(filepath, true);
+    Result<DataStructure> result = DREAM3D::LoadDataStructureMetadata(filepath);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     DataStructure dataStructure = result.value();
 
@@ -1040,8 +1040,8 @@ TEST_CASE("DataStructureWriter: WriteOptions round-trip", "[DataStructureWriter]
 
 TEST_CASE("DataStructureAppend")
 {
-  const std::filesystem::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/Data/geoms.dream3d";
-  const std::filesystem::path outputFilePath = GetDataDir() / "DataStructureAppend.dream3d";
+  const fs::path inputFilePath = fs::path(unit_test::k_SourceDir.view()) / "test/Data/geoms.dream3d";
+  const fs::path outputFilePath = GetDataDir() / "DataStructureAppend.dream3d";
   const DataPath originalArrayPath({"foo"});
 
   DataStructure baseDataStructure;
@@ -1054,9 +1054,7 @@ TEST_CASE("DataStructureAppend")
   Result<> writeResult = DREAM3D::WriteFile(outputFilePath, baseDataStructure);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
 
-  auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, false);
-  SIMPLNX_RESULT_REQUIRE_VALID(readResult);
-  DataStructure exemplarDataStructure = std::move(readResult.value());
+  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(inputFilePath);
 
   usize currentTopLevelSize = baseDataStructure.getTopLevelData().size();
   for(const DataObject* object : exemplarDataStructure.getTopLevelData())
@@ -1066,10 +1064,7 @@ TEST_CASE("DataStructureAppend")
     auto appendResult = DREAM3D::AppendFile(outputFilePath, exemplarDataStructure, path);
     SIMPLNX_RESULT_REQUIRE_VALID(appendResult);
 
-    auto appendedFileReadResult = DREAM3D::ImportDataStructureFromFile(outputFilePath, false);
-    SIMPLNX_RESULT_REQUIRE_VALID(appendedFileReadResult);
-
-    DataStructure appendedDataStructure = std::move(appendedFileReadResult.value());
+    DataStructure appendedDataStructure = UnitTest::LoadDataStructure(outputFilePath);
 
     currentTopLevelSize++;
 

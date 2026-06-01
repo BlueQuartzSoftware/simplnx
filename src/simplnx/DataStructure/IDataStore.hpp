@@ -6,8 +6,8 @@
 
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -23,12 +23,35 @@ namespace nx::core
 class SIMPLNX_EXPORT IDataStore
 {
 public:
+  /**
+   * @brief Identifies how a data store manages its backing storage.
+   *
+   * Algorithms and I/O routines use this enum to determine whether data is
+   * immediately accessible in RAM or must be fetched from disk, and to
+   * distinguish real stores from preflight-only placeholders.
+   *
+   * - **InMemory** -- The store's data lives in a heap-allocated array that is
+   *   always resident in RAM (DataStore<T>). Element access via getValue/setValue
+   *   and the bulk copyIntoBuffer/copyFromBuffer API are both cheap memory
+   *   copies.
+   *
+   * - **OutOfCore** -- The store's data lives on disk in a chunked HDF5 dataset.
+   *   Element access goes through chunk caching; the bulk copyIntoBuffer/
+   *   copyFromBuffer API translates flat ranges into efficient multi-chunk I/O.
+   *   An earlier "EmptyOutOfCore" value was removed because the Empty type
+   *   already covers placeholder semantics regardless of the eventual storage
+   *   strategy.
+   *
+   * - **Empty** -- A metadata-only placeholder used during preflight
+   *   (EmptyDataStore<T>). Records tuple/component shape but holds no data.
+   *   All data access methods throw. After preflight the Empty store is
+   *   replaced with an InMemory or OutOfCore store before execution begins.
+   */
   enum class StoreType : int32
   {
-    InMemory = 0,
-    OutOfCore,
-    Empty,
-    EmptyOutOfCore
+    InMemory = 0, ///< Data is fully resident in a heap-allocated array (DataStore<T>)
+    OutOfCore,    ///< Data lives on disk in a chunked HDF5 dataset
+    Empty         ///< Metadata-only placeholder used during preflight (EmptyDataStore<T>)
   };
 
   virtual ~IDataStore() = default;
@@ -55,13 +78,6 @@ public:
    * @return
    */
   virtual const ShapeType& getComponentShape() const = 0;
-
-  /**
-   * @brief Returns the chunk shape if the DataStore is separated into chunks.
-   * If the DataStore does not have chunks, this method returns a null optional.
-   * @return optional Shapetype
-   */
-  virtual std::optional<ShapeType> getChunkShape() const = 0;
 
   /**
    * @brief Returns the number of values stored within the DataStore.
@@ -116,6 +132,33 @@ public:
   {
     return "";
   }
+
+  /**
+   * @brief Returns store-specific metadata needed for crash recovery.
+   *
+   * When the pipeline runner writes a recovery (.dream3d) file at
+   * the end of pipeline execution, it calls this method on every
+   * data store to capture whatever information is needed to reconnect
+   * the store to its data after a crash or unexpected termination.
+   *
+   * **In-memory stores (DataStore)** return an empty map because their
+   * data is written directly into the recovery file's HDF5 datasets;
+   * no extra metadata is required.
+   *
+   * **Out-of-core stores** return key-value pairs describing their
+   * backing file path, HDF5 dataset path, chunk shape, and any other
+   * parameters needed to reconstruct the OOC store from the file on
+   * disk.
+   *
+   * Each key-value pair is written as an HDF5 string attribute on the
+   * array's dataset inside the recovery file. The recovery loader
+   * reads these attributes to reconstruct the appropriate store
+   * subclass without loading the data into RAM.
+   *
+   * @return std::map<std::string, std::string> Key-value pairs of
+   *         recovery metadata. Empty for in-memory stores.
+   */
+  virtual std::map<std::string, std::string> getRecoveryMetadata() const = 0;
 
   /**
    * @brief Returns the size of the stored type of the data store.

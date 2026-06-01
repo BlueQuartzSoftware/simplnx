@@ -54,6 +54,36 @@ option(SIMPLNX_DOWNLOAD_TEST_FILES "Download the test files" ON)
 option(SIMPLNX_WRITE_TEST_OUTPUT "Write unit test output files" OFF)
 
 # ------------------------------------------------------------------------------
+# Controls which algorithm paths are exercised by dual-dispatch unit tests.
+#   0 (Both)       - tests run with forceOoc=false AND forceOoc=true (default)
+#   1 (OocOnly)    - tests run with forceOoc=true only (use for OOC builds)
+#   2 (InCoreOnly) - tests run with forceOoc=false only (quick validation)
+# ------------------------------------------------------------------------------
+set(SIMPLNX_TEST_ALGORITHM_PATH "0" CACHE STRING "Algorithm paths to test: 0=Both, 1=OocOnly, 2=InCoreOnly")
+
+# ------------------------------------------------------------------------------
+# Out-of-core support compile-time switch
+# ------------------------------------------------------------------------------
+option(SIMPLNX_USE_OOC "Compile out-of-core support into simplnx (requires SIMPLNX_OOC_SOURCE_DIR)" OFF)
+set(SIMPLNX_OOC_SOURCE_DIR "" CACHE PATH "Path to the private SimplnxOoc source directory (required when SIMPLNX_USE_OOC=ON)")
+
+if(SIMPLNX_USE_OOC)
+  if(NOT SIMPLNX_OOC_SOURCE_DIR OR NOT EXISTS "${SIMPLNX_OOC_SOURCE_DIR}")
+    message(FATAL_ERROR
+      "SIMPLNX_USE_OOC=ON requires SIMPLNX_OOC_SOURCE_DIR to point at the private SimplnxOoc repo. "
+      "Set -DSIMPLNX_OOC_SOURCE_DIR=/path/to/SimplnxOoc/SimplnxOoc")
+  endif()
+else()
+  # With OOC compiled out there are no out-of-core algorithm paths to exercise,
+  # so pin the test path to InCoreOnly. Forcing it avoids a stale cached 0/1
+  # (Both/OocOnly) producing tests that can never run.
+  if(NOT SIMPLNX_TEST_ALGORITHM_PATH STREQUAL "2")
+    message(STATUS "SIMPLNX_USE_OOC=OFF: forcing SIMPLNX_TEST_ALGORITHM_PATH=2 (InCoreOnly).")
+    set(SIMPLNX_TEST_ALGORITHM_PATH "2" CACHE STRING "Algorithm paths to test: 0=Both, 1=OocOnly, 2=InCoreOnly" FORCE)
+  endif()
+endif()
+
+# ------------------------------------------------------------------------------
 # Is the SimplnxCore Plugin enabled [DEFAULT=ON]
 # ------------------------------------------------------------------------------
 option(SIMPLNX_ENABLE_SimplnxCore "Enable the SimplnxCore Plugin" ON)
@@ -261,6 +291,7 @@ if(SIMPLNX_ENABLE_MULTICORE)
   target_link_libraries(simplnx PUBLIC TBB::tbb)
 endif()
 
+
 target_link_libraries(simplnx
   PUBLIC
     fmt::fmt
@@ -293,6 +324,11 @@ if(SIMPLNX_ENABLE_LINK_FILESYSTEM)
 endif()
 
 set(SIMPLNX_GENERATED_DIR ${simplnx_BINARY_DIR}/generated)
+
+configure_file(
+  ${simplnx_SOURCE_DIR}/cmake/SimplnxConfig.hpp.in
+  ${SIMPLNX_GENERATED_DIR}/simplnx/Common/SimplnxConfig.hpp
+  @ONLY)
 set(SIMPLNX_GENERATED_HEADER_DIR ${simplnx_BINARY_DIR}/generated/simplnx)
 set(SIMPLNX_EXPORT_HEADER ${SIMPLNX_GENERATED_HEADER_DIR}/simplnx_export.hpp)
 
@@ -351,6 +387,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Constants.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataTypeUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/DataVector.hpp
+  ${SIMPLNX_SOURCE_DIR}/Common/Extent.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/EulerAngle.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/Filesystem.hpp
   ${SIMPLNX_SOURCE_DIR}/Common/IteratorUtility.hpp
@@ -465,6 +502,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/DataStructure/DynamicListArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyDataStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyListStore.hpp
+  ${SIMPLNX_SOURCE_DIR}/DataStructure/EmptyStringStore.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataArray.hpp
   ${SIMPLNX_SOURCE_DIR}/DataStructure/IDataStore.hpp
@@ -546,6 +584,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataGroupUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataObjectUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/AlgorithmDispatch.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.hpp
@@ -556,6 +595,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/HistogramUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryBudgetManager.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/StringInterpretationUtilities.hpp
@@ -770,6 +810,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MaskCompareUtilities.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryUtilities.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/MemoryBudgetManager.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/MessageHelper.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/IParallelAlgorithm.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelDataAlgorithm.cpp
@@ -892,6 +933,53 @@ target_include_directories(simplnx
     $<BUILD_INTERFACE:${SIMPLNX_GENERATED_DIR}>
     $<INSTALL_INTERFACE:include>
 )
+
+# ------------------------------------------------------------------------------
+# Out-of-core sources (SIMPLNX_USE_OOC=ON)
+#
+# Compile the private SimplnxOoc sources directly into libsimplnx, IN PLACE from
+# their own repo — no copy into the build tree. This keeps the public simplnx
+# source repo free of OOC code while letting simplnx core call SimplnxOoc::
+# functions directly with no separate library and no simplnx->SimplnxOoc->simplnx
+# link cycle. The parent of SIMPLNX_OOC_SOURCE_DIR is placed on simplnx's PUBLIC
+# include path so `#include "SimplnxOoc/X.hpp"` resolves for every consumer.
+#
+# Compiling the originals (rather than configure_file copies) means editing an
+# OOC source recompiles only that translation unit and its dependents, with NO
+# CMake re-configure: configure_file registers every input as a configure-time
+# dependency, so the old copy step forced a full re-configure on each edit.
+# ------------------------------------------------------------------------------
+if(SIMPLNX_USE_OOC)
+  file(GLOB SIMPLNX_OOC_SRCS CONFIGURE_DEPENDS "${SIMPLNX_OOC_SOURCE_DIR}/*.cpp")
+
+  # The partitioned store (unstructured/poly OOC) is deferred — exclude it from
+  # the compiled set so the deferred, #if 0'd code never reaches the compiler.
+  list(FILTER SIMPLNX_OOC_SRCS EXCLUDE REGEX "HDF5PartitionedStore")
+
+  # Compile the OOC sources straight from the private repo.
+  target_sources(simplnx PRIVATE ${SIMPLNX_OOC_SRCS})
+
+  # Put the parent of the SimplnxOoc source dir on simplnx's PUBLIC include path so
+  # `#include "SimplnxOoc/X.hpp"` resolves for simplnx itself and, transitively, for
+  # every consumer (e.g. DREAM3D-NX). Wrapped in BUILD_INTERFACE so the absolute
+  # developer path is never baked into an installed/exported simplnx.
+  get_filename_component(SIMPLNX_OOC_INCLUDE_ROOT "${SIMPLNX_OOC_SOURCE_DIR}" DIRECTORY)
+  target_include_directories(simplnx PUBLIC "$<BUILD_INTERFACE:${SIMPLNX_OOC_INCLUDE_ROOT}>")
+
+  # Export shim: the OOC code compiles into libsimplnx, so SIMPLNXOOC_EXPORT maps onto
+  # simplnx's own export macro. It lives under SIMPLNX_GENERATED_DIR (already on the
+  # PUBLIC include path), so `#include "SimplnxOoc/SimplnxOoc_export.hpp"` resolves from
+  # that root. The real OOC headers resolve from SIMPLNX_OOC_INCLUDE_ROOT — keep this
+  # generated SimplnxOoc dir limited to the shim so it can't shadow an in-place header.
+  file(WRITE "${SIMPLNX_GENERATED_DIR}/SimplnxOoc/SimplnxOoc_export.hpp"
+    "#pragma once\n#include \"simplnx/simplnx_export.hpp\"\n#define SIMPLNXOOC_EXPORT SIMPLNX_EXPORT\n")
+
+  # The chunked-store .cpp files explicitly instantiate many template classes,
+  # exceeding the default COFF section limit on MSVC.
+  if(MSVC)
+    set_source_files_properties(${SIMPLNX_OOC_SRCS} PROPERTIES COMPILE_OPTIONS "/bigobj")
+  endif()
+endif()
 
 cmake_dependent_option(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST "Forces test files to download before simplnx builds" OFF "SIMPLNX_DOWNLOAD_TEST_FILES" OFF)
 if(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST)
@@ -1063,6 +1151,13 @@ if(SIMPLNX_BUILD_TESTS)
   find_package(ZLIB REQUIRED)
   include(CTest)
   add_subdirectory(test)
+
+  # Build the private SimplnxOoc test suite against libsimplnx (which carries
+  # the OOC symbols when SIMPLNX_USE_OOC=ON). This single rule serves both ON
+  # contexts: standalone simplnx and the simplnx subdirectory inside DREAM3D-NX.
+  if(SIMPLNX_USE_OOC)
+    add_subdirectory("${SIMPLNX_OOC_SOURCE_DIR}/test" ${simplnx_BINARY_DIR}/SimplnxOoc_test)
+  endif()
 endif()
 
 if(SIMPLNX_BUILD_PYTHON)

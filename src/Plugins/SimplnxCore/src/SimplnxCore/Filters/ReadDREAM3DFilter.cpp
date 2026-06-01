@@ -6,7 +6,6 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -16,7 +15,6 @@
 namespace
 {
 constexpr nx::core::int32 k_NoImportPathError = -1;
-constexpr nx::core::int32 k_FailedOpenFileIOError = -25;
 constexpr nx::core::int32 k_UnsupportedPathImportPolicyError = -51;
 } // namespace
 
@@ -82,16 +80,10 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   {
     return {MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
   }
-  auto fileReader = nx::core::HDF5::FileIO::ReadFile(importData.FilePath);
-  if(!fileReader.isValid())
-  {
-    return {MakeErrorResult<OutputActions>(k_FailedOpenFileIOError, fmt::format("Failed to open the HDF5 file at the specified path: '{}'", importData.FilePath.string()))};
-  }
-
   Result<OutputActions> result;
   OutputActions& actions = result.value();
 
-  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, true);
+  Result<DataStructure> dataStructureResult = DREAM3D::LoadDataStructureMetadata(importData.FilePath);
   if(dataStructureResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(dataStructureResult)), {})};

@@ -10,7 +10,7 @@
 namespace nx::core
 {
 CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, usize xBoundTuples, usize yBoundTuples, usize zBoundTuples, const std::string& cellAttributeMatrixName,
-                                                           const std::string& xBoundsName, const std::string& yBoundsName, const std::string& zBoundsName, std::string createdDataFormat)
+                                                           const std::string& xBoundsName, const std::string& yBoundsName, const std::string& zBoundsName)
 : IDataCreationAction(path)
 , m_NumXBoundTuples(xBoundTuples)
 , m_NumYBoundTuples(yBoundTuples)
@@ -19,12 +19,11 @@ CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path,
 , m_XBoundsArrayName(xBoundsName)
 , m_YBoundsArrayName(yBoundsName)
 , m_ZBoundsArrayName(zBoundsName)
-, m_CreatedDataStoreFormat(createdDataFormat)
 {
 }
 
 CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path, const DataPath& inputXBoundsPath, const DataPath& inputYBoundsPath, const DataPath& inputZBoundsPath,
-                                                           const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType, std::string createdDataFormat)
+                                                           const std::string& cellAttributeMatrixName, const ArrayHandlingType& arrayType)
 : IDataCreationAction(path)
 , m_CellDataName(cellAttributeMatrixName)
 , m_XBoundsArrayName(inputXBoundsPath.getTargetName())
@@ -34,7 +33,6 @@ CreateRectGridGeometryAction::CreateRectGridGeometryAction(const DataPath& path,
 , m_InputYBounds(inputYBoundsPath)
 , m_InputZBounds(inputZBoundsPath)
 , m_ArrayHandlingType(arrayType)
-, m_CreatedDataStoreFormat(createdDataFormat)
 {
 }
 
@@ -185,7 +183,7 @@ Float32Array* CreateRectGridGeometryAction::createBoundArray(DataStructure& data
 {
   const DimensionType componentShape = {1};
   const DataPath boundsPath = getCreatedPath().createChildPath(arrayName);
-  if(Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {numTuples}, componentShape, boundsPath, mode, m_CreatedDataStoreFormat); result.invalid())
+  if(Result<> result = ArrayCreationUtilities::CreateArray<float32>(dataStructure, {numTuples}, componentShape, boundsPath, mode); result.invalid())
   {
     errors.insert(errors.end(), result.errors().begin(), result.errors().end());
     return nullptr;

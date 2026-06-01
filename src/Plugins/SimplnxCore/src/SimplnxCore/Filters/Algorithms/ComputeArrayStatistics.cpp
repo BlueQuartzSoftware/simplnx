@@ -1,6 +1,7 @@
 #include "ComputeArrayStatistics.hpp"
 
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/HistogramUtilities.hpp"
@@ -31,7 +32,7 @@ bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& ar
       continue;
     }
 
-    if(!arrayPtr->getIDataStoreRef().getDataFormat().empty())
+    if(arrayPtr->getIDataStoreRef().getStoreType() == nx::core::IDataStore::StoreType::OutOfCore)
     {
       return false;
     }

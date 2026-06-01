@@ -36,14 +36,32 @@ public:
    * @param err
    * @param parentId
    * @param preflight
+   * @param warnings Output vector to accumulate any warnings encountered (e.g. placeholder datasets)
    */
   template <typename K>
   static void importDataArray(DataStructure& dataStructure, const nx::core::HDF5::DatasetIO& datasetReader, const std::string dataArrayName, DataObject::IdType importId,
-                              nx::core::HDF5::ErrorType& err, const std::optional<DataObject::IdType>& parentId, bool preflight)
+                              nx::core::HDF5::ErrorType& err, const std::optional<DataObject::IdType>& parentId, bool preflight, std::vector<Warning>& warnings)
   {
-    std::shared_ptr<AbstractDataStore<K>> dataStore =
-        preflight ? std::shared_ptr<AbstractDataStore<K>>(EmptyDataStoreIO::ReadDataStore<K>(datasetReader)) : (DataStoreIO::ReadDataStore<K>(datasetReader));
-    DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
+    if(preflight)
+    {
+      std::shared_ptr<AbstractDataStore<K>> dataStore(EmptyDataStoreIO::ReadDataStore<K>(datasetReader));
+      DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(dataStore), parentId);
+      err = (data == nullptr) ? -400 : 0;
+      return;
+    }
+
+    auto storeResult = DataStoreIO::ReadDataStoreIntoMemory<K>(datasetReader);
+    for(auto&& warning : storeResult.warnings())
+    {
+      warnings.push_back(std::move(warning));
+    }
+    if(storeResult.value() == nullptr)
+    {
+      // Placeholder detected — skip this array without error
+      err = 0;
+      return;
+    }
+    DataArray<K>* data = DataArray<K>::Import(dataStructure, dataArrayName, importId, std::move(storeResult.value()), parentId);
     err = (data == nullptr) ? -400 : 0;
   }
 
@@ -58,13 +76,16 @@ public:
   template <typename K>
   static Result<> importDataStore(data_type* dataArray, const DataPath& dataPath, const nx::core::HDF5::DatasetIO& datasetReader)
   {
-    std::shared_ptr<AbstractDataStore<T>> dataStore = DataStoreIO::ReadDataStore<T>(datasetReader);
-    if(dataStore == nullptr)
+    auto storeResult = DataStoreIO::ReadDataStoreIntoMemory<T>(datasetReader);
+    Result<> result;
+    result.m_Warnings = std::move(storeResult.warnings());
+    if(storeResult.value() == nullptr)
     {
-      return MakeErrorResult(-150202, fmt::format("Failed to import DataArray data at path '{}'.", dataPath.toString()));
+      // Placeholder detected — propagate warnings, skip without error
+      return result;
     }
-    dataArray->setDataStore(dataStore);
-    return {};
+    dataArray->setDataStore(std::move(storeResult.value()));
+    return result;
   }
 
   /**
@@ -167,45 +188,46 @@ public:
     }
 
     int32 err = 0;
+    std::vector<Warning> warnings;
     switch(type)
     {
     case DataType::float32:
-      importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<float32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     case DataType::float64:
-      importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<float64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     case DataType::int8:
-      importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<int8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     case DataType::int16:
-      importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<int16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     case DataType::int32:
-      importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<int32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     case DataType::int64:
-      importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<int64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     case DataType::uint8: {
       if(isBoolArray)
       {
-        importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+        importDataArray<bool>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       }
       else
       {
-        importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+        importDataArray<uint8>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       }
     }
     break;
     case DataType::uint16:
-      importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<uint16>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     case DataType::uint32:
-      importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<uint32>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     case DataType::uint64:
-      importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore);
+      importDataArray<uint64>(dataStructureReader.getDataStructure(), datasetReader, dataArrayName, importId, err, parentId, useEmptyDataStore, warnings);
       break;
     default: {
       err = -777;
@@ -215,10 +237,14 @@ public:
 
     if(err < 0)
     {
-      return MakeErrorResult(err, fmt::format("Error importing dataset from HDF5 file. DataArray name '{}' that is a child of '{}'", dataArrayName, parentGroup.getName()));
+      auto result = MakeErrorResult(err, fmt::format("Error importing dataset from HDF5 file. DataArray name '{}' that is a child of '{}'", dataArrayName, parentGroup.getName()));
+      result.m_Warnings = std::move(warnings);
+      return result;
     }
 
-    return {};
+    Result<> result;
+    result.m_Warnings = std::move(warnings);
+    return result;
   }
 
   /**
