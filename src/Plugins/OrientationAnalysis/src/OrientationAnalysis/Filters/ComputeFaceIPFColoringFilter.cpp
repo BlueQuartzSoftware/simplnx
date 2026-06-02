@@ -42,7 +42,7 @@ std::string ComputeFaceIPFColoringFilter::humanName() const
 //------------------------------------------------------------------------------
 std::vector<std::string> ComputeFaceIPFColoringFilter::defaultTags() const
 {
-  return {className(), "Processing", "Crystallography", "Generate"};
+  return {className(), "Processing", "Crystallography", "Generate", "IPF Colors", "Surface Mesh", "Triangles"};
 }
 
 //------------------------------------------------------------------------------
