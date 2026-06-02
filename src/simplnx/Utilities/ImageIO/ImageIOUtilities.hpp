@@ -1,8 +1,9 @@
 #pragma once
 
-#include "simplnx/simplnx_export.hpp"
-
 #include "simplnx/Common/Types.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/simplnx_export.hpp"
 
 #include <fmt/format.h>
 
@@ -12,6 +13,49 @@
 
 namespace nx::core
 {
+
+/**
+ * @brief Compares the total number of cells of the image geometry and the total number of tuples from the data store
+ * @param dataStore
+ * @param imageGeom
+ * @return True if the Image Geometry's numCells() == the DataStore's numberOfTuples()
+ */
+inline bool DoTuplesMatch(const IDataStore& dataStore, const ImageGeom& imageGeom)
+{
+  return imageGeom.getNumberOfCells() == dataStore.getNumberOfTuples();
+}
+
+/**
+ * @brief Checks to see if the dimensions of the Image Geometry and the DataStore are the same.
+ * @param dataStore
+ * @param imageGeom
+ * @return
+ */
+inline bool DoDimensionsMatch(const IDataStore& dataStore, const ImageGeom& imageGeom)
+{
+  // Stored fastest to slowest i.e. X Y Z
+  SizeVec3 geomDims = imageGeom.getDimensions();
+
+  // Stored slowest to fastest i.e. Z Y X
+  auto imageArrayDims = dataStore.getTupleShape();
+
+  SizeVec3 orderedArrayDims;
+
+  if(imageArrayDims.size() == 3)
+  {
+    orderedArrayDims = SizeVec3(imageArrayDims[2], imageArrayDims[1], imageArrayDims[0]);
+  }
+  else if(imageArrayDims.size() == 2 && geomDims.getZ() == 1)
+  {
+    orderedArrayDims = SizeVec3(imageArrayDims[1], imageArrayDims[0], 1);
+  }
+  else
+  {
+    return false;
+  }
+
+  return orderedArrayDims == geomDims;
+}
 
 /**
  * @brief Formats an integer as a fill-padded string with the requested total digit count.

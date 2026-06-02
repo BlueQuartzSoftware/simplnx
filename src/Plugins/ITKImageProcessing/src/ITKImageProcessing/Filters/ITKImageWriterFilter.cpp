@@ -15,6 +15,7 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <itkImageFileWriter.h>
@@ -347,7 +348,7 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
 
   const IDataStore& imageArrayStore = imageArray.getIDataStoreRef();
 
-  if(!ITK::DoDimensionsMatch(imageArrayStore, imageGeom))
+  if(!nx::core::DoDimensionsMatch(imageArrayStore, imageGeom))
   {
     return {MakeErrorResult<OutputActions>(-25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
                                                                StringUtilities::formatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
@@ -379,11 +380,12 @@ IFilter::PreflightResult ITKImageWriterFilter::preflightImpl(const DataStructure
     break;
   }
 
-  std::stringstream ss;
-  ss << fs::absolute(filePath).parent_path().string() << "/" << filePath.stem().string();
-  ss << "_" << std::setw(totalDigits) << std::setfill(fillChar[0]) << maxSlice;
-  ss << filePath.extension().string();
-  preflightUpdatedValues.push_back({"Example Output File", ss.str()});
+  // Generate example filename for PreflightValues
+  const std::string indexStr = CreateIndexString(maxSlice, static_cast<usize>(totalDigits), fillChar);
+  const std::string exampleFileName = fmt::format("{}/{}_{}{}", fs::absolute(filePath).parent_path().string(), filePath.stem().string(), indexStr, filePath.extension().string());
+
+  preflightUpdatedValues.push_back({"Example Output File", exampleFileName});
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
