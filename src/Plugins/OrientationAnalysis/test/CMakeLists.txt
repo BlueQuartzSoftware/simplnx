@@ -157,7 +157,11 @@ if(EXISTS "${DREAM3D_DATA_DIR}" AND SIMPLNX_DOWNLOAD_TEST_FILES)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME so3_cubic_high_ipf_001.tar.gz SHA512 dfe4598cd4406e8b83f244302dc4fe0d4367527835c5ddd6567fe8d8ab3484d5b10ba24a8bb31db269256ec0b5272daa4340eedb5a8b397755541b32dd616b85)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME write_stats_gen_odf_angle_file.tar.gz SHA512 be3f663aae1f78e5b789200421534ed9fe293187ec3514796ac8177128b34ded18bb9a98b8e838bb283f9818ac30dc4b19ec379bdd581b1a98eb36d967cdd319)
   download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME 6_5_MergeTwins.tar.gz SHA512 756da6b9a2fdc6c7f1cf611243b889b8da0bdc172c1cd184f81672c3cdf651f1f450aecff2e2e0c9b1fa367735ca1df26436d88fa342cea1825b4e5665aa7dfd)
-  download_test_data(DREAM3D_DATA_DIR ${DREAM3D_DATA_DIR} ARCHIVE_NAME compute_feature_reference_misorientation.tar.gz SHA512 6ea9c04ca5b0c0439573b5a14bda63592181c6badb4dd325b542fb97ff2a5d492e83d2bac1bf5999612cbdb7697ec48e321549427470f1f23ccd37921c6a95f1)
+  # `compute_feature_reference_misorientation.tar.gz` retired 2026-06-01 (V&V cycle for
+  # ComputeFeatureReferenceMisorientationsFilter). The exemplar arrays in that archive were a
+  # circular oracle (regenerated from pre-EbsdLib-2.4.1 SIMPLNX output). Replaced by inline
+  # Class 1 + Class 4 toy fixtures in ComputeFeatureReferenceMisorientationsTest.cpp. See
+  # src/Plugins/OrientationAnalysis/vv/provenance/ComputeFeatureReferenceMisorientationsFilter.md.
 
 endif()
 
