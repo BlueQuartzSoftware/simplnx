@@ -70,16 +70,20 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
 {
   static constexpr StringLiteral prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
 
-  if(!json.is_array())
+  if(!json.is_array() && !json.is_null())
   {
     return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data entry for key '{}' is not an array.", prefix.view(), name()));
   }
 
-  usize numRows = json.size();
+  usize numRows = 0;
+  if(!json.is_null())
+  {
+    numRows = json.size();
+  }
 
   ValueType table;
   table.reserve(numRows);
-  for(usize i = 0; i < json.size(); i++)
+  for(usize i = 0; i < numRows; i++)
   {
     const auto& rowJson = json[i];
     if(!rowJson.is_array())
@@ -133,7 +137,7 @@ Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
   usize numRows = table.size();
   if(numRows == 0)
   {
-    return MakeErrorResult<>(FilterParameter::Constants::k_Validate_TupleShapeValue, "{}You must add at least one row (ensemble phase)");
+    return MakeErrorResult<>(FilterParameter::Constants::k_Validate_TupleShapeValue, "You must add at least one row (ensemble phase)");
   }
   usize lastNumCols = table.front().size();
   for(usize i = 1; i < numRows; i++)
