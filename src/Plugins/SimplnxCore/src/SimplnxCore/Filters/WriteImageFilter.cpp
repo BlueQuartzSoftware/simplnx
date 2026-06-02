@@ -17,6 +17,7 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
+#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -138,6 +139,15 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   {
     return {MakeErrorResult<OutputActions>(
         -27011, fmt::format("Unsupported data type '{}' for image writing. Supported types: int8, uint8, int16, uint16, int32, uint32, float32.", DataTypeToString(arrayDataType)))};
+  }
+
+  const IDataStore& imageArrayStore = imageArray.getIDataStoreRef();
+
+  if(!nx::core::DoDimensionsMatch(imageArrayStore, imageGeom))
+  {
+    return {MakeErrorResult<OutputActions>(-25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
+                                                               StringUtilities::formatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
+                                                               StringUtilities::formatDimensions3D(imageGeom.getDimensions())))};
   }
 
   // Compute slice count based on plane and geometry dims

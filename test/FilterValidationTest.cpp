@@ -94,7 +94,7 @@ void GenerateParameterList()
   ADD_PARAMETER_TRAIT(simplnx.VectorFloat64Parameter, "57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96")
 }
 
-TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
+TEST_CASE("nx::core::FilterValidation::Filter Parameter Keys", "[simplnx][Filter]")
 {
   UnitTest::LoadPlugins();
 
@@ -182,7 +182,7 @@ TEST_CASE("nx::core::Test Filter Parameter Keys", "[simplnx][Filter]")
   REQUIRE(output.str().empty() == true);
 }
 
-TEST_CASE("nx::core::Test Filter Parameter Help Text", "[simplnx][Filter]")
+TEST_CASE("nx::core::FilterValidation::Filter Parameter Help Text", "[simplnx][Filter]")
 {
   UnitTest::LoadPlugins();
 
@@ -229,7 +229,7 @@ TEST_CASE("nx::core::Test Filter Parameter Help Text", "[simplnx][Filter]")
   REQUIRE(output.str().empty() == true);
 }
 
-TEST_CASE("nx::core::Test Filter Name", "[simplnx][Filter]")
+TEST_CASE("nx::core::FilterValidation::Filter Name", "[simplnx][Filter]")
 {
   UnitTest::LoadPlugins();
 
@@ -269,7 +269,7 @@ TEST_CASE("nx::core::Test Filter Name", "[simplnx][Filter]")
   REQUIRE(output.str().empty() == true);
 }
 
-TEST_CASE("nx::core::Test Filter Version", "[simplnx][Filter]")
+TEST_CASE("nx::core::FilterValidation::Filter Version", "[simplnx][Filter]")
 {
   UnitTest::LoadPlugins();
 
@@ -297,7 +297,7 @@ TEST_CASE("nx::core::Test Filter Version", "[simplnx][Filter]")
   REQUIRE(Application::Instance() == nullptr);
 }
 
-TEST_CASE("nx::core::Test Filter Clone", "[simplnx][Filter]")
+TEST_CASE("nx::core::FilterValidation::Test Filter Clone", "[simplnx][Filter]")
 {
   UnitTest::LoadPlugins();
 
