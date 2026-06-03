@@ -33,6 +33,10 @@ const std::atomic_bool& ComputeFeatureReferenceMisorientations::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureReferenceMisorientations::operator()()
 {
+  // The ImageGeom owning this filter's cell data lives two parents above the Cell Phases array
+  // (geometry -> CellData attribute matrix -> Phases array). This derivation matches the standard
+  // ImageGeom layout produced by the SIMPLNX data structure; if the user has restructured the data
+  // tree, this preflight-validated path may not hold.
   DataPath imageGeomPath = m_InputValues->CellPhasesArrayPath.getParent().getParent();
   const ImageGeom& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
@@ -59,11 +63,13 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
     return validateNumFeatResult;
   }
 
-  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   const size_t totalVoxels = featureIds.getNumberOfTuples();
 
-  // Get the total features from the appropriate source..
+  // Get the total features from the appropriate source.. Mode 0 prefers the avgQuats array's tuple
+  // count; Mode 1 falls back to the feature attribute matrix's shape. Either resolves the same total
+  // for any consistent input data; the dual-source check tolerates either parameter set being unset.
   size_t totalFeatures = 0;
   if(featureAttrMatPtr != nullptr)
   {
@@ -78,14 +84,14 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
     return MakeErrorResult(-34900, "Total features was zero. The filter cannot proceed. Check either the feature attribute matrix or the average quaternions for proper size");
   }
 
-  // Create local storage for the centers and center distances
-  std::vector<size_t> m_Centers(totalFeatures, 0);
-  std::vector<float> m_CenterDistances(totalFeatures, 0.0f);
+  // Create local storage for the centers and center distances (sized to feature count, not voxel count).
+  std::vector<size_t> centers(totalFeatures, 0);
+  std::vector<float> centerDistances(totalFeatures, 0.0f);
 
   // If the user selected "Misorientation from Feature Centers"
   if(m_InputValues->ReferenceOrientation == 1)
   {
-    const auto& m_GBEuclideanDistances = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
+    const auto& gbEuclideanDistances = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
     for(size_t voxelIdx = 0; voxelIdx < totalVoxels; voxelIdx++)
     {
       if(m_ShouldCancel)
@@ -94,11 +100,15 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
       }
 
       int32_t featureId = featureIds[voxelIdx];
-      float32 distance = m_GBEuclideanDistances[voxelIdx];
-      if(distance >= m_CenterDistances[featureId])
+      float32 distance = gbEuclideanDistances[voxelIdx];
+      // Tie-break: '>=' means later voxels with the same distance overwrite earlier ones. The
+      // selection is therefore raster-order dependent — different DataStructure layouts that
+      // expose the same logical voxels in a different iteration order would yield different
+      // centers[]. This matches the legacy DREAM3D 6.5.171 behavior intentionally.
+      if(distance >= centerDistances[featureId])
       {
-        m_CenterDistances[featureId] = distance; // Save the GB Distance value
-        m_Centers[featureId] = voxelIdx;         // Save the voxel index for that value
+        centerDistances[featureId] = distance; // Save the GB Distance value
+        centers[featureId] = voxelIdx;         // Save the voxel index for that value
       }
     }
 
@@ -106,7 +116,7 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
 
     for(size_t i = 1; i < totalFeatures; i++)
     {
-      usize voxelIdx = m_Centers[i];
+      usize voxelIdx = centers[i];
       auto cellCenter = imageGeom.getCoordsf(voxelIdx);
       euclideanCellCenters->setTuple(i, cellCenter.data());
     }
@@ -136,12 +146,12 @@ Result<> ComputeFeatureReferenceMisorientations::operator()()
       else if(m_InputValues->ReferenceOrientation == 1) // Use the voxel's orientation that is the farthest from the grain boundary
       {
         auto featureId = static_cast<size_t>(featureIds[voxelIdx]);
-        size_t centerVoxelIdx = m_Centers[featureId];
+        size_t centerVoxelIdx = centers[featureId];
         q2 = ebsdlib::QuatD(quats[centerVoxelIdx * 4 + 0], quats[centerVoxelIdx * 4 + 1], quats[centerVoxelIdx * 4 + 2], quats[centerVoxelIdx * 4 + 3]);
       }
 
       uint32 laueClass1 = crystalStructures[cellPhases[voxelIdx]];
-      ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[laueClass1]->calculateMisorientation(q1, q2);
+      ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(q1, q2);
 
       // Extract the misorientation, convert it to degrees, and store if for this voxel
       featureReferenceMisorientations[voxelIdx] = static_cast<float>(Constants::k_RadToDegD * axisAngle[3]); // convert to degrees

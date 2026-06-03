@@ -22,7 +22,15 @@ not have rotated and thus serve as a better *reference orientation*.
 The *Reference Orientation* parameter provides the following choices:
 
 - **Average Feature Orientation [0]**: Uses the average orientation of the **Feature** as the reference orientation for misorientation calculations.
-- **Orientation Farthest from Feature Boundary [1]**: Uses the orientation of the **Cell** that is furthest from the boundary of the **Feature** (nearest to its Euclidean center) as the reference orientation.
+- **Orientation Farthest from Feature Boundary [1]**: Uses the orientation of the **Cell** that is furthest from the boundary of the **Feature** (nearest to its Euclidean center) as the reference orientation. Requires a `Boundary Euclidean Distances` array as input; that array is typically produced by the [Compute Euclidean Distance Map](../SimplnxCore/ComputeEuclideanDistMapFilter.md) filter upstream of this one.
+
+### Output Units
+
+The misorientation values in both output arrays (`Cell Reference Misorientations` and `Feature Average Misorientations`) are expressed in **degrees**, not radians.
+
+### Mode 1 — Raster-order tie-break for the "farthest from boundary" voxel
+
+When two or more voxels within a single feature share the same maximum `Boundary Euclidean Distances` value, the algorithm selects the voxel with the **latest linear (raster) index** as the feature's reference. This matches the legacy DREAM3D 6.5.171 behavior. In practice, ties are rare on real EBSD data and the choice between tied voxels has no qualitative impact on the resulting misorientation field; for synthetic inputs that deliberately tie distances, the reader should be aware that re-ordering the voxel layout would change which voxel is selected as the reference.
 
 ## IPF Colors <001> Direction
 
@@ -49,7 +57,14 @@ feature boundary, and use that voxel's orientation as the **reference orientatio
 
 ## Example Pipelines
 
-+ (05) SmallIN100 Crystallographic Statistics
++ (04) Small IN100 Crystallographic Statistics
+
+## Related Filters
+
+- [Compute Feature Reference C-Axis Misorientations](ComputeFeatureReferenceCAxisMisorientationsFilter.md) — the C-axis variant of this filter, used for hexagonal-phase reconstructions.
+- [Compute Kernel Average Misorientations](ComputeKernelAvgMisorientationsFilter.md) — computes a per-voxel kernel average misorientation; complementary to this filter for grain-boundary characterization.
+- [Compute Feature Neighbor Misorientations](ComputeFeatureNeighborMisorientationsFilter.md) — computes pairwise feature-to-neighbor misorientations.
+- [Compute Euclidean Distance Map](../SimplnxCore/ComputeEuclideanDistMapFilter.md) — typical upstream filter that produces the `Boundary Euclidean Distances` array required by Mode 1.
 
 ## License & Copyright
 
