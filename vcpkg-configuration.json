@@ -7,8 +7,8 @@
   "registries": [
     {
       "kind": "git",
-      "repository": "https://github.com/bluequartzsoftware/simplnx-registry",
-      "baseline": "ca7046ad28b4885b018e4ab5fcf43333460d82b2",
+      "repository": "https://github.com/imikejackson/simplnx-registry",
+      "baseline": "d3ac8529410c5df88239ac2e5cee5188004a4f04",
       "packages": [
         "benchmark",
         "blosc",
