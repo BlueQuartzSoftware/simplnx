@@ -35,6 +35,12 @@ using namespace nx::core::UnitTest;
 // Reference: src/Plugins/OrientationAnalysis/vv/ComputeFeatureNeighborMisorientationsFilter.md
 // =============================================================================
 
+// Wrapped in an anonymous namespace so every symbol below has internal linkage. Sibling
+// OrientationAnalysis test TUs declare their own `DataFixtures` namespace with same-named
+// (and same-signature) entities such as `CreateScaffold`; without internal linkage the linker
+// merges those duplicate definitions into one, silently giving this TU another file's scaffold.
+namespace
+{
 namespace DataFixtures
 {
 const std::string k_GeomName = "ImageGeometry";
@@ -135,7 +141,8 @@ inline const Float32Array& GetOutputAvgMisorientations(const DataStructure& ds)
 {
   return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName));
 }
-} // namespace ToyFixtures
+} // namespace DataFixtures
+} // namespace
 
 // Retired 2026-06-02 (V&V cycle): the main exemplar-comparison TEST_CASE that consumed
 // `6_6_stats_test_v2.tar.gz` and the `[.][UNIMPLEMENTED][!mayfail]` stub TEST_CASE for
@@ -200,8 +207,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: SIM
 // Closed-form: pure phi1 rotations about z, cubic 4-fold doesn't reduce phi1 in [0, 45deg], so
 // misorientation between (0deg) and (5deg) is 5.0deg; between (0deg) and (10deg) is 10.0deg.
 // Expected avg = (5 + 10) / 2 = 7.5deg.
-TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Single Phase Two Neighbors",
-          "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Single Phase Two Neighbors", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
   DataFixtures::ToyData td = DataFixtures::CreateScaffold(/*numFeatures=*/4, /*numCrystalStructures=*/2);
@@ -284,8 +290,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
 // Bug doesn't fire in this ordering because the decrement at algorithm.cpp:90 is the last write
 // to tempMisoList (no subsequent inner-loop iteration to clobber it). Both buggy and fixed code
 // produce avg = (5 + 10) / 2 = 7.5deg.
-TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mismatch Last Order",
-          "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mismatch Last Order", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
   DataFixtures::ToyData td = DataFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
@@ -321,8 +326,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
 // (no specific avg value), so this test catches a future regression that preserves specific values
 // but breaks the invariants. Use a different neighbor order from Fixture B so we sample a different
 // path through the per-feature loop.
-TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 4 - Invariants",
-          "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 4 - Invariants", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
   DataFixtures::ToyData td = DataFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);

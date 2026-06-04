@@ -34,6 +34,12 @@ using namespace nx::core::UnitTest;
 // Reference: src/Plugins/OrientationAnalysis/vv/ComputeFeatureReferenceMisorientationsFilter.md
 // =============================================================================
 
+// Wrapped in an anonymous namespace so every symbol below has internal linkage. Sibling
+// OrientationAnalysis test TUs declare their own `DataFixtures` namespace with same-named
+// (and same-signature) entities such as `CreateScaffold`; without internal linkage the linker
+// merges those duplicate definitions into one, silently giving this TU another file's scaffold.
+namespace
+{
 namespace DataFixtures
 {
 // Test-side default paths (kept consistent with the existing `Small_IN100`-style fixtures).
@@ -232,7 +238,8 @@ inline void AssertClass4Invariants(const DataStructure& ds, bool isMode1)
   }
 }
 
-} // namespace ToyFixtures
+} // namespace DataFixtures
+} // namespace
 
 // Retired 2026-06-01 (V&V cycle): the legacy anonymous namespace of array name constants and
 // the two TEST_CASEs `_AverageMisorientation` and `_EuclideanDistance` that consumed the
