@@ -6,10 +6,9 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -63,8 +62,9 @@ Parameters ComputeFeatureFaceMisorientationFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
-  params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceMeshFaceMisorientationColorsArrayName_Key, "Misorientation Colors", "A set of RGB color schemes encoded as floats for each Face",
-                                                          "FaceMisorientationColors"));
+
+  params.insert(std::make_unique<DataObjectNameParameter>(k_MisorientationArrayName_Key, "Misorientation",
+                                                          "The name of the array containing the misorientation angle (in degrees) between the 2 features.", "Face Misorientations"));
 
   return params;
 }
@@ -72,7 +72,14 @@ Parameters ComputeFeatureFaceMisorientationFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeFeatureFaceMisorientationFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+
+  // Version 1 -> 2
+  // Description:
+  //
+  // Change 1:
+  // Added - k_StoreAxisAngle_Key = "store_axis_angle" && k_AxisAngleArrayName_Key = "axis_angle_array_name";
+  // Solution - None. Default behavior preserves backward compatibility
 }
 
 //------------------------------------------------------------------------------
@@ -85,14 +92,13 @@ IFilter::UniquePointer ComputeFeatureFaceMisorientationFilter::clone() const
 IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
                                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
-  auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  auto pAvgQuatsArrayPathValue = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  auto pSurfaceMeshFaceMisorientationColorsArrayNameValue = filterArgs.value<std::string>(k_SurfaceMeshFaceMisorientationColorsArrayName_Key);
+  auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  auto pAvgQuatsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
+  auto pFeaturePhasesArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
+  auto pCrystalStructuresArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
+  auto pSurfaceMeshFaceMisorientationColorsArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_MisorientationArrayName_Key);
 
-  PreflightResult preflightResult;
-  nx::core::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // make sure all the cell data has same number of tuples (i.e. they should all be coming from the same Image Geometry)
@@ -109,9 +115,11 @@ IFilter::PreflightResult ComputeFeatureFaceMisorientationFilter::preflightImpl(c
     return MakePreflightErrorResult(-98411, fmt::format("Could not find the face labels data array at path '{}'", pSurfaceMeshFaceLabelsArrayPathValue.toString()));
   }
 
-  DataPath faceMisorientationColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshFaceMisorientationColorsArrayNameValue);
-  auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{3}, faceMisorientationColorsArrayPath);
-  resultOutputActions.value().appendAction(std::move(action));
+  {
+    DataPath faceMisorientationColorsArrayPath = pSurfaceMeshFaceLabelsArrayPathValue.replaceName(pSurfaceMeshFaceMisorientationColorsArrayNameValue);
+    auto action = std::make_unique<CreateArrayAction>(DataType::float32, faceLabels->getTupleShape(), std::vector<usize>{1}, faceMisorientationColorsArrayPath);
+    resultOutputActions.value().appendAction(std::move(action));
+  }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
@@ -122,11 +130,11 @@ Result<> ComputeFeatureFaceMisorientationFilter::executeImpl(DataStructure& data
 {
   ComputeFeatureFaceMisorientationInputValues inputValues;
 
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
-  inputValues.AvgQuatsArrayPath = filterArgs.value<DataPath>(k_AvgQuatsArrayPath_Key);
-  inputValues.FeaturePhasesArrayPath = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.SurfaceMeshFaceMisorientationColorsArrayName = filterArgs.value<std::string>(k_SurfaceMeshFaceMisorientationColorsArrayName_Key);
+  inputValues.surfaceMeshFaceLabelsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.avgQuatsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_AvgQuatsArrayPath_Key);
+  inputValues.featurePhasesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesArrayPath_Key);
+  inputValues.crystalStructuresArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CrystalStructuresArrayPath_Key);
+  inputValues.misorientationArrayPath = inputValues.surfaceMeshFaceLabelsArrayPath.replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_MisorientationArrayName_Key));
 
   return ComputeFeatureFaceMisorientation(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -156,7 +164,7 @@ Result<Arguments> ComputeFeatureFaceMisorientationFilter::FromSIMPLJson(const nl
   results.push_back(
       SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceMisorientationColorsArrayNameKey,
-                                                                                                                   k_SurfaceMeshFaceMisorientationColorsArrayName_Key));
+                                                                                                                   k_MisorientationArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

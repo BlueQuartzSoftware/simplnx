@@ -78,7 +78,7 @@ result = nx_filter.execute(
     crystal_structures_array_path=nx.DataPath("DataContainer/Cell Ensemble Data/CrystalStructures"),
     feature_phases_array_path=nx.DataPath("DataContainer/Cell Feature Data/Phases"),
     surface_mesh_face_labels_array_path=nx.DataPath("TriangleDataContainer/Face Data/FaceLabels"),
-    surface_mesh_face_misorientation_colors_array_name="FaceMisorientationColors"
+    misorientation_array_name="FaceMisorientationColors"
 )
 nxtest.check_filter_result(nx_filter, result)
 

@@ -2,7 +2,6 @@
 
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
@@ -17,77 +16,84 @@ using namespace nx::core;
  * @brief The CalculateFaceMisorientationColorsImpl class implements a threaded algorithm that computes the misorientation
  * colors for the given list of surface mesh labels
  */
-class CalculateFaceMisorientationColorsImpl
+
+class ComputeFeatureMisorientationPerTriangleImpl
 {
-  const Int32Array& m_Labels;
-  const Int32Array& m_Phases;
-  const Float32Array& m_Quats;
+  const Int32Array& m_FaceLabels;
+  const Int32Array& m_FeaturePhases;
+  const Float32Array& m_FeatureAvgQuats;
   const UInt32Array& m_CrystalStructures;
-  Float32Array& m_Colors;
-  LaueOpsContainer m_OrientationOps;
+  const std::atomic_bool& m_ShouldCancel;
+  Float32Array& m_Misorientations;
+  LaueOpsContainer m_LaueOrientationOps;
 
 public:
-  CalculateFaceMisorientationColorsImpl(const Int32Array& labels, const Int32Array& phases, const Float32Array& quats, const UInt32Array& crystalStructures, Float32Array& colors)
-  : m_Labels(labels)
-  , m_Phases(phases)
-  , m_Quats(quats)
+  ComputeFeatureMisorientationPerTriangleImpl(const Int32Array& labels, const Int32Array& phases, const Float32Array& quats, const UInt32Array& crystalStructures, const std::atomic_bool& shouldCancel,
+                                              Float32Array& output)
+  : m_FaceLabels(labels)
+  , m_FeaturePhases(phases)
+  , m_FeatureAvgQuats(quats)
   , m_CrystalStructures(crystalStructures)
-  , m_Colors(colors)
+  , m_ShouldCancel(shouldCancel)
+  , m_Misorientations(output)
   {
-    m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+    m_LaueOrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   }
-  virtual ~CalculateFaceMisorientationColorsImpl() = default;
+  virtual ~ComputeFeatureMisorientationPerTriangleImpl() = default;
 
-  void generate(usize start, usize end) const
+  void generate(const usize start, const usize end) const
   {
-    int32 feature1 = 0, feature2 = 0, phase1 = 0, phase2 = 0;
+    // Since our meshes use unified triangles, there are two triangles
+    // per entry. These are distinguished via the face labels array,
+    // which contains the feature id of each respective face. Here, the
+    // first entry in face labels is denoted as "front" and the second "back"
+    int32 frontFeature = 0, backFeature = 0, frontPhase = 0, backPhase = 0;
 
     for(usize i = start; i < end; i++)
     {
-      feature1 = m_Labels[2 * i];
-      feature2 = m_Labels[2 * i + 1];
-      if(feature1 > 0)
+      if(m_ShouldCancel)
       {
-        phase1 = m_Phases[feature1];
+        return;
       }
-      else
-      {
-        phase1 = 0;
-      }
-      if(feature2 > 0)
-      {
-        phase2 = m_Phases[feature2];
-      }
-      else
-      {
-        phase2 = 0;
-      }
-      if(phase1 > 0 && phase1 == phase2)
-      {
-        if((m_CrystalStructures[phase1] == ebsdlib::CrystalStructure::Hexagonal_High) || (m_CrystalStructures[phase1] == ebsdlib::CrystalStructure::Cubic_High))
-        {
-          float32 quat0 = m_Quats[feature1 * 4];
-          float32 quat1 = m_Quats[feature1 * 4 + 1];
-          float32 quat2 = m_Quats[feature1 * 4 + 2];
-          float32 quat3 = m_Quats[feature1 * 4 + 3];
-          ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
-          quat0 = m_Quats[feature2 * 4];
-          quat1 = m_Quats[feature2 * 4 + 1];
-          quat2 = m_Quats[feature2 * 4 + 2];
-          quat3 = m_Quats[feature2 * 4 + 3];
-          ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
-          ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[m_CrystalStructures[phase1]]->calculateMisorientation(q1, q2);
 
-          m_Colors[3 * i + 0] = axisAngle[0] * (axisAngle[3] * nx::core::Constants::k_180OverPiD);
-          m_Colors[3 * i + 1] = axisAngle[1] * (axisAngle[3] * nx::core::Constants::k_180OverPiD);
-          m_Colors[3 * i + 2] = axisAngle[2] * (axisAngle[3] * nx::core::Constants::k_180OverPiD);
-        }
+      frontFeature = m_FaceLabels[2 * i];
+      backFeature = m_FaceLabels[2 * i + 1];
+      if(frontFeature > 0)
+      {
+        frontPhase = m_FeaturePhases[frontFeature];
       }
       else
       {
-        m_Colors[3 * i + 0] = 0;
-        m_Colors[3 * i + 1] = 0;
-        m_Colors[3 * i + 2] = 0;
+        frontPhase = 0;
+      }
+      if(backFeature > 0)
+      {
+        backPhase = m_FeaturePhases[backFeature];
+      }
+      else
+      {
+        backPhase = 0;
+      }
+      // Make sure the crystal structure is a valid laue class
+      uint32 laueIndex = m_CrystalStructures[frontPhase];
+      if(frontPhase > 0 && frontPhase == backPhase && laueIndex < m_LaueOrientationOps.size())
+      {
+        float32 quat0 = m_FeatureAvgQuats[frontFeature * 4];
+        float32 quat1 = m_FeatureAvgQuats[frontFeature * 4 + 1];
+        float32 quat2 = m_FeatureAvgQuats[frontFeature * 4 + 2];
+        float32 quat3 = m_FeatureAvgQuats[frontFeature * 4 + 3];
+        ebsdlib::QuatD q1(quat0, quat1, quat2, quat3);
+        quat0 = m_FeatureAvgQuats[backFeature * 4];
+        quat1 = m_FeatureAvgQuats[backFeature * 4 + 1];
+        quat2 = m_FeatureAvgQuats[backFeature * 4 + 2];
+        quat3 = m_FeatureAvgQuats[backFeature * 4 + 3];
+        ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
+        ebsdlib::AxisAngleDType axisAngle = m_LaueOrientationOps[laueIndex]->calculateMisorientation(q1, q2);
+        m_Misorientations.setValue(i, static_cast<float32>(axisAngle[3] * Constants::k_180OverPiD));
+      }
+      else
+      {
+        m_Misorientations.setValue(i, static_cast<float>(std::nan("0")));
       }
     }
   }
@@ -124,17 +130,16 @@ const std::atomic_bool& ComputeFeatureFaceMisorientation::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureFaceMisorientation::operator()()
 {
-  auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
-  auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  DataPath faceMisorientationColorsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath.replaceName(m_InputValues->SurfaceMeshFaceMisorientationColorsArrayName);
-  auto& faceMisorientationColors = m_DataStructure.getDataRefAs<Float32Array>(faceMisorientationColorsArrayPath);
-  int64 numTriangles = faceLabels.getNumberOfTuples();
+  const auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->surfaceMeshFaceLabelsArrayPath);
+  const auto& avgQuats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgQuatsArrayPath);
+  const auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->featurePhasesArrayPath);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  auto& misorientations = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->misorientationArrayPath);
+  const usize numTriangles = faceLabels.getNumberOfTuples();
 
   ParallelDataAlgorithm parallelTask;
   parallelTask.setRange(0, numTriangles);
-  parallelTask.execute(CalculateFaceMisorientationColorsImpl(faceLabels, phases, avgQuats, crystalStructures, faceMisorientationColors));
-
+  parallelTask.setParallelizationEnabled(false);
+  parallelTask.execute(ComputeFeatureMisorientationPerTriangleImpl(faceLabels, phases, avgQuats, crystalStructures, m_ShouldCancel, misorientations));
   return {};
 }

@@ -29,7 +29,9 @@ public:
   static constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
   static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
   static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_SurfaceMeshFaceMisorientationColorsArrayName_Key = "surface_mesh_face_misorientation_colors_array_name";
+
+  // Parameter Keys V2
+  static constexpr StringLiteral k_MisorientationArrayName_Key = "misorientation_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
