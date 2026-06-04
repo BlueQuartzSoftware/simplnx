@@ -18,7 +18,7 @@ The user can also calculate the average misorientation between the feature and a
 
 ## Example Pipelines
 
-+ (05) SmallIN100 Crystallographic Statistics
++ (04) Small IN100 Crystallographic Statistics
 
 ## License & Copyright
 
