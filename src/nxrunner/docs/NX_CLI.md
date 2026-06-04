@@ -43,13 +43,10 @@ For example, ```--preflight D:/Directory/pipeline.d3pipeline -l D:/Logs/pipeline
 ```bash
 --convert <pipeline filepath> [--logfile | -l]
 -c <pipeline filepath> [--logfile | -l]
-
---convert-output <pipeline filepath> [--logfile | -l]
--co <pipeline filepath> [--logfile | -l]
 ```
 
-Converts a SIMPL pipeline at the target filepath to a simplnx pipeline. If any errors are encountered during the process, they are printed to the console. Otherwise, the converted pipeline is printed to the console. Optionally, a log file is created at the specified filepath where the output is saved.
+Converts a SIMPL pipeline at the target filepath to a simplnx pipeline. If any errors are encountered during the process, they are printed to the console. Optionally, a log file is created at the specified filepath where the output is saved.
 
-The second option (convert-output / co) also saves the converted pipeline to file based on the name of the converted pipeline using the simplnx pipeline extension (`.d3pipeline`).
+The converted pipeline is saved to a file based on the name of the input pipeline using the simplnx pipeline extension (`.d3pipeline`).
 
-For example, ```--convert-output D:/Directory/SIMPL.json``` will attempt to convert the SIMPL pipeline at `D:/Directory/SIMPL.json` and save the converted pipeline to `D:/Directory/SIMPL.d3pipeline`
+For example, ```--convert D:/Directory/SIMPL.json``` will attempt to convert the SIMPL pipeline at `D:/Directory/SIMPL.json` and save the converted pipeline to `D:/Directory/SIMPL.d3pipeline`
