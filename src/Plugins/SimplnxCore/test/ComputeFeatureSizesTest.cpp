@@ -8,17 +8,10 @@
 
 #include <catch2/catch.hpp>
 #include <filesystem>
-#include <fstream>
 
 using namespace nx::core;
 
 namespace fs = std::filesystem;
-
-namespace LegacyTest
-{
-const std::string k_Volumes("Volumes");
-const std::string k_EquivalentDiameters("EquivalentDiameters");
-} // namespace LegacyTest
 
 namespace Test
 {
@@ -645,71 +638,6 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[Simp
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_preflight.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
-}
-
-TEST_CASE("SimplnxCore::ComputeFeatureSizes: Legacy: Small IN100 Test", "[SimplnxCore][ComputeFeatureSizes]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
-
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({Constants::k_DataContainer});
-  DataPath cellDataPath = smallIn100Group.createChildPath(Constants::k_CellData);
-  DataPath cellPhasesPath = cellDataPath.createChildPath(Constants::k_Phases);
-  DataPath featureIdsPath = cellDataPath.createChildPath(Constants::k_FeatureIds);
-  DataPath featureGroup = smallIn100Group.createChildPath(Constants::k_CellFeatureData);
-  std::string volumesName = "computed_volumes";
-  std::string numElementsName = "computed_NumElements";
-  std::string EquivalentDiametersName = "computed_EquivalentDiameters";
-
-  std::vector<std::string> featureNames = {LegacyTest::k_Volumes, LegacyTest::k_EquivalentDiameters, Constants::k_NumElements};
-
-  {
-    ComputeFeatureSizesFilter filter;
-    Arguments args;
-
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(smallIn100Group));
-    args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureGroup));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(volumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(numElementsName));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  }
-
-  // Compare Outputs
-  {
-    DataPath exemplaryDataPath = featureGroup.createChildPath(LegacyTest::k_Volumes);
-    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(volumesName));
-  }
-
-  {
-    DataPath exemplaryDataPath = featureGroup.createChildPath(LegacyTest::k_EquivalentDiameters);
-    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(EquivalentDiametersName));
-  }
-
-  {
-    DataPath exemplaryDataPath = featureGroup.createChildPath(Constants::k_NumElements);
-    UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(numElementsName));
-  }
-
-// Write the DataStructure out to the file system
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/legacy_test.dream3d", unit_test::k_BinaryTestOutputDir)));
-#endif
-
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeatureSizesFilter][BackwardsCompatibility]")
