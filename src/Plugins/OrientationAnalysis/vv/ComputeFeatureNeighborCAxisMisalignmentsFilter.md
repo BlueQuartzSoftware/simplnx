@@ -7,7 +7,7 @@
 | SIMPLNX Human Name         | Compute Feature Neighbor C-Axis Misalignments                                                                                                    |
 | DREAM3D 6.5.171 equivalent | `FindFeatureNeighborCAxisMisalignments` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindFeatureNeighborCAxisMisalignments.{h,cpp}` (UUID `cdd50b83-ea09-5499-b008-4b253cf4c246`) |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                                          |
-| Status                     | READY FOR REVIEW                                                                                                                                 |
+| Status                     | COMPLETE                                                                                                                                 |
 | Sign-off                   | *Michael Jackson <mike.jackson@bluequartz.net> (V&V cycle completion + divisor bug fix, 2026-06-04)*                                             |
 
 ## At a glance

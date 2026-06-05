@@ -7,7 +7,7 @@
 | SIMPLNX Human Name         | Compute Kernel Average Misorientations                                                                                                       |
 | DREAM3D 6.5.171 equivalent | `FindKernelAvgMisorientations` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindKernelAvgMisorientations.{h,cpp}` (UUID `88d332c1-cf6c-52d3-a38d-22f6eae19fa6`) |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                                      |
-| Status                     | READY FOR REVIEW                                                                                                                             |
+| Status                     | COMPLETE                                                                                                                             |
 | Sign-off                   | *Michael Jackson <mike.jackson@bluequartz.net> (V&V cycle completion, 2026-06-03)*                                                           |
 
 ## At a glance

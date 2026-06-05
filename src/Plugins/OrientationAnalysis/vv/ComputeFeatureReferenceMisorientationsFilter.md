@@ -7,7 +7,7 @@
 | SIMPLNX Human Name         | Compute Feature Reference Misorientations                                                                                                                      |
 | DREAM3D 6.5.171 equivalent | `FindFeatureReferenceMisorientations` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindFeatureReferenceMisorientations.{h,cpp}` (UUID `428e1f5b-e6d8-5e8b-ad68-56ff14ee0e8c`) |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                                                        |
-| Status                     | READY FOR REVIEW                                                                                                                                               |
+| Status                     | COMPLETE                                                                                                                                               |
 | Sign-off                   | *Michael Jackson <mike.jackson@bluequartz.net> (V&V cycle completion, 2026-06-01) — algorithm originally translated to SIMPLNX by Nathan Young (PR history)*   |
 
 ## At a glance

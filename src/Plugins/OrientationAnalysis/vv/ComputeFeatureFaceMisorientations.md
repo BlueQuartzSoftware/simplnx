@@ -7,7 +7,7 @@
 | SIMPLNX Human Name         | Compute Feature Face Misorientation (Face)                                                                                                                                                                                       |
 | DREAM3D 6.5.171 equivalent | `GenerateFaceMisorientationColoring` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/GenerateFaceMisorientationColoring.{h,cpp}`                                                                                |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                                                                                                                          |
-| Status                     | DRAFT                                                                                                                                                                                                                            |
+| Status                     | COMPLETE                                                                                                                                                                                                                            |
 | Sign-off                   | *Nathan Young (algorithm rewrite + initial dataset, 2026-05-19) — Michael Jackson <mike.jackson@bluequartz.net> (hand-built test data, V&V completion, 2026-05-28)*                                                              |
 
 ## At a glance

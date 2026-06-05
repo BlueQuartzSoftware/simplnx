@@ -7,7 +7,7 @@
 | SIMPLNX Human Name         | Compute Feature Neighbor Misorientations                                                                                                         |
 | DREAM3D 6.5.171 equivalent | `FindMisorientations` — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindMisorientations.{h,cpp}` (UUID `286dd493-4fea-54f4-b59e-459dd13bbe57`) |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                                          |
-| Status                     | READY FOR REVIEW                                                                                                                                 |
+| Status                     | COMPLETE                                                                                                                                 |
 | Sign-off                   | *Michael Jackson <mike.jackson@bluequartz.net> (V&V cycle completion + divisor bug fix, 2026-06-02)*                                             |
 
 ## At a glance
