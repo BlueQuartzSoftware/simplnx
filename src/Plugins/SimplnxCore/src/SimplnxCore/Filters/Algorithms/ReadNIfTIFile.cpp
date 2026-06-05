@@ -378,6 +378,12 @@ Result<> ReadNIfTIFile::operator()()
     return MakeErrorResult(-34720, fmt::format("Could not open NIfTI file for reading: '{}'", m_InputValues->InputFilePath.string()));
   }
 
+  // Enlarge zlib's internal buffer before the first read/seek so the file is
+  // refilled in large chunks instead of zlib's 8 KB default. This drastically
+  // reduces the number of latency-bound network round-trips when the input
+  // lives on a NAS. See nifti::k_GzReadBufferSize for the rationale.
+  gzbuffer(gz, static_cast<unsigned int>(nx::core::nifti::k_GzReadBufferSize));
+
   const z_off_t targetOffset = static_cast<z_off_t>(md.voxOffset);
   if(gzseek(gz, targetOffset, SEEK_SET) != targetOffset)
   {
