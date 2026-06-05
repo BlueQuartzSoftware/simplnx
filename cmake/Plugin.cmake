@@ -372,7 +372,13 @@ function(create_simplnx_plugin_unit_test)
   #------------------------------------------------------------------------------
   # Require that the test plugins are built before tests because some tests
   # require loading from those plugins but don't want to link to them.
+  #------------------------------------------------------------------------------
   add_dependencies(${UNIT_TEST_TARGET} ${ARGS_PLUGIN_NAME})
+
+  #------------------------------------------------------------------------------
+  # Require all test files be downloaded first before running tests
+  #------------------------------------------------------------------------------
+  add_dependencies(${UNIT_TEST_TARGET} Fetch_Remote_Data_Files)
 
   set_target_properties(${UNIT_TEST_TARGET}
     PROPERTIES

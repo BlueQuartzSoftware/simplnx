@@ -97,13 +97,13 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
                                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pQuatsArrayPathValue = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<DataPath> dataArrayPaths;
-  dataArrayPaths.push_back(pGoodVoxelsArrayPathValue);
+  dataArrayPaths.push_back(pMaskArrayPathValue);
   dataArrayPaths.push_back(pCellPhasesArrayPathValue);
   dataArrayPaths.push_back(pQuatsArrayPathValue);
 
@@ -115,7 +115,7 @@ IFilter::PreflightResult BadDataNeighborOrientationCheckFilter::preflightImpl(co
   }
 
   resultOutputActions.value().modifiedActions.emplace_back(
-      DataObjectModification{pGoodVoxelsArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pGoodVoxelsArrayPathValue)->getDataObjectType()});
+      DataObjectModification{pMaskArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pMaskArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {std::move(resultOutputActions)};

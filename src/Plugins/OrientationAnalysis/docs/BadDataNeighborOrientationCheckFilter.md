@@ -35,11 +35,17 @@ changing voxels.
 ### 2D Versus 3D Note
 
 If the user is processing a 2D data set, **none** of the voxels can have 6 neighbors
-since there are no neighbors is the +-Z directions.
+since there are no neighbors in the +/-Z directions.
 
 ### Warning - Data Modification
 
 Only the *Mask* value defining the cell as *good* or *bad* is changed. No other cell level array is modified.
+
+### Memory Considerations
+
+The filter allocates a temporary `int32` neighbor-count array sized to the total voxel count
+(4 bytes per voxel). For a 1-billion-voxel dataset, that is approximately 4 GB of additional
+working memory during execution. This memory is released when the filter finishes.
 
 ## Example Data
 
@@ -55,8 +61,12 @@ From the above before and after images you can see that this filter can help mod
 ## Example Pipelines
 
 + (02) Small IN100 Full Reconstruction
-+ INL Export
-+ 04_Steiner Compact
+
+## Related Filters
+
+- [Fill Bad Data](../SimplnxCore/FillBadDataFilter.md) — fills voxels still marked bad after this filter runs (or as a standalone alternative when no orientation data is available).
+- [Multi-Threshold Objects](../SimplnxCore/MultiThresholdObjectsFilter.md) — typical upstream filter that generates the initial *Mask* array (e.g., from `Confidence Index` and `Image Quality`).
+- [Replace Element Attributes with Neighbor Values](../SimplnxCore/ReplaceElementAttributesWithNeighborValuesFilter.md) — alternative cleanup approach that copies attribute values from neighboring cells rather than flipping a mask.
 
 ## License & Copyright
 
