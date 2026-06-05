@@ -104,11 +104,16 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     const NeighborList<int>::VectorType& currentNeighborList = neighborList[featureIdx];
     auto& currentMisalignmentList = misalignmentLists[featureIdx];
     currentMisalignmentList.resize(currentNeighborList.size(), -1.0);
+    // Initialize the divisor once per outer-loop iteration (per feature). Previously this was
+    // assigned inside the inner j-loop, which clobbered the per-mismatch decrement below — the
+    // resulting divisor only reflected the LAST neighbor's match/mismatch state, producing wrong
+    // per-feature averages whenever neighbors had mixed phases. Fixed 2026-06-04 during V&V cycle
+    // (sibling of the same divisor bug fixed in ComputeFeatureNeighborMisorientations on 2026-06-02).
+    hexNeighborListSize = currentNeighborList.size();
     for(usize j = 0; j < currentNeighborList.size(); j++)
     {
       int neighborFeatureId = currentNeighborList[j];
       xtalPhase2 = crystalStructures[featurePhases[neighborFeatureId]];
-      hexNeighborListSize = currentNeighborList.size();
 
       // If both the feature and the neighbor are both Hexagonal Phases
       if(xtalPhase1 == xtalPhase2 && (xtalPhase1 == ebsdlib::CrystalStructure::Hexagonal_High || xtalPhase1 == ebsdlib::CrystalStructure::Hexagonal_Low))
