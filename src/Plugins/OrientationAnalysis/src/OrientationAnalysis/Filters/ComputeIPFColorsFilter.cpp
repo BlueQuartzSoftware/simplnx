@@ -7,11 +7,12 @@
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
-
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include "simplnx/Parameters/VectorParameter.hpp"
+#include <EbsdLib/Core/EbsdLibConstants.h>
 
 using namespace nx::core;
 
@@ -55,6 +56,12 @@ Parameters ComputeIPFColorsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat32Parameter>(k_ReferenceDir_Key, "Reference Direction", "The reference axis with respect to compute the IPF colors", std::vector<float32>{0.0F, 0.0F, 1.0F},
                                                          std::vector<std::string>(3)));
+  params.insert(std::make_unique<ChoicesParameter>(k_ColorKey_Key, "Color Key",
+                                                   "Which IPF color scheme to use:\n"
+                                                   "  TSL: Legacy primary-corner SST coloring (EDAX/OIM Analysis default).\n"
+                                                   "  PUCM: Perceptually-uniform color map (Patala / MTEX-style).\n"
+                                                   "  Nolze-Hielscher: MTEX HSV-style coloring.",
+                                                   0, ChoicesParameter::Choices{"TSL", "PUCM", "Nolze-Hielscher"}));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign a black color to 'bad' Elements", false));
@@ -83,7 +90,7 @@ Parameters ComputeIPFColorsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeIPFColorsFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -146,6 +153,19 @@ Result<> ComputeIPFColorsFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   inputValues.cellIpfColorsArrayPath = inputValues.cellEulerAnglesArrayPath.replaceName(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
+
+  switch(filterArgs.value<ChoicesParameter::ValueType>(k_ColorKey_Key))
+  {
+  case 1:
+    inputValues.colorKey = ebsdlib::ColorKeyKind::PUCM;
+    break;
+  case 2:
+    inputValues.colorKey = ebsdlib::ColorKeyKind::NolzeHielscher;
+    break;
+  default:
+    inputValues.colorKey = ebsdlib::ColorKeyKind::TSL;
+    break;
+  }
 
   // Let the Algorithm instance do the work
   return ComputeIPFColors(dataStructure, messageHandler, shouldCancel, &inputValues)();

@@ -31,6 +31,7 @@ public:
   static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
   static constexpr StringLiteral k_CellIPFColorsArrayName_Key = "cell_ipf_colors_array_name";
+  static constexpr StringLiteral k_ColorKey_Key = "color_key_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

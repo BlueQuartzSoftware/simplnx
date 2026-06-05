@@ -6,10 +6,13 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
+
+#include <EbsdLib/Core/EbsdLibConstants.h>
 
 using namespace nx::core;
 
@@ -51,6 +54,14 @@ Parameters ComputeFaceIPFColoringFilter::parameters() const
   Parameters params;
 
   // Create the parameter descriptors that are needed for this filter
+  params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
+  params.insert(std::make_unique<ChoicesParameter>(k_ColorKey_Key, "Color Key",
+                                                   "Which IPF color scheme to use:\n"
+                                                   "  TSL: Primary-corner SST coloring (EDAX/OIM Analysis default).\n"
+                                                   "  PUCM: Perceptually-uniform color map (Patala / MTEX-style).\n"
+                                                   "  Nolze-Hielscher: MTEX HSV-style coloring.",
+                                                   0, ChoicesParameter::Choices{"TSL", "PUCM", "Nolze-Hielscher"}));
+
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Specifies which Features are on either side of each Face", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
@@ -64,6 +75,7 @@ Parameters ComputeFaceIPFColoringFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble", DataPath{},
                                                           ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FirstFaceIPFColorsArrayName_Key, "First Set of IPF Colors", "The first set of RGB color schemes encoded as unsigned chars for each Face",
                                                           "Face IPF Colors (0)"));
@@ -76,7 +88,7 @@ Parameters ComputeFaceIPFColoringFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeFaceIPFColoringFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -146,6 +158,19 @@ Result<> ComputeFaceIPFColoringFilter::executeImpl(DataStructure& dataStructure,
   inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   inputValues.FirstFaceIPFColorsArrayName = filterArgs.value<std::string>(k_FirstFaceIPFColorsArrayName_Key);
   inputValues.SecondFaceIPFColorsArrayName = filterArgs.value<std::string>(k_SecondFaceIPFColorsArrayName_Key);
+
+  switch(filterArgs.value<ChoicesParameter::ValueType>(k_ColorKey_Key))
+  {
+  case 1:
+    inputValues.ColorKey = ebsdlib::ColorKeyKind::PUCM;
+    break;
+  case 2:
+    inputValues.ColorKey = ebsdlib::ColorKeyKind::NolzeHielscher;
+    break;
+  default:
+    inputValues.ColorKey = ebsdlib::ColorKeyKind::TSL;
+    break;
+  }
 
   return ComputeFaceIPFColoring(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
