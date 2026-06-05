@@ -610,14 +610,14 @@ public:
   virtual vector_type operator[](usize grainId) const = 0;
 
   /**
-   * @brief Returns a const reference to the vector_type value found at the specified index. This cannot be used to edit the vector_type value found at the specified index.
+   * @brief Returns a copy of the vector_type value found at the specified index.
    * @param grainId
    * @return vector_type
    */
   virtual vector_type at(int32 grainId) const = 0;
 
   /**
-   * @brief Returns a const reference to the vector_type value found at the specified index. This cannot be used to edit the vector_type value found at the specified index.
+   * @brief Returns a copy of the vector_type value found at the specified index.
    * @param grainId
    * @return vector_type
    */

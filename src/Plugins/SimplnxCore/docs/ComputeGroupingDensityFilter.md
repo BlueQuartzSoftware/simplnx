@@ -23,17 +23,26 @@ For each **Parent Feature**, the filter:
 Grouping Density = Parent Volume / Total Checked Volume
 ```
 
-If a **Parent Feature** has no child **Features** (total checked volume is zero), the **Grouping Density** is set to **-1.0** to indicate an invalid or empty parent.
+If a **Parent Feature** has no child **Features** (total checked volume is zero), the **Grouping Density** is set to the sentinel value *-1.0* to indicate an invalid or empty parent.
+
+The **Feature Volumes** and **Parent Volumes** are typically expressed as a count of cells (the integer voxel count per feature, the default output of [Compute Feature Sizes](ComputeFeatureSizesFilter.md)). Equivalent-diameter or physical-unit volumes also work — the only requirement is that both *Feature Volumes* and *Parent Volumes* are in the **same** unit, since the **Grouping Density** is a dimensionless ratio of the two.
+
+
+### Algorithm Description
+
+![ComputeGroupingDensity Algorithm Description](Images/ComputeGroupingDensity_Infographic.png)
 
 ### Optional Parameters
 
 #### Use Non-Contiguous Neighbors
 
-When enabled, the filter also queries the **Non-Contiguous Neighbor List** for each child **Feature** in addition to the standard **Contiguous Neighbor List**. This expands the set of checked **Features** to include neighbors that are nearby but do not share a direct face/edge/vertex with the child **Feature**. Enable this option if non-contiguous neighbors were used during the original grouping step. Typically the filter "Compute Feature NeighborHoods" is used to generate the Non-contiguous Neighbors lists. That filter's parameter for the "Multiples of Average Diameter can have a large effect on the final Grouping Density value that is computed.
+When enabled, the filter also queries the **Non-Contiguous Neighbor List** for each child **Feature** in addition to the standard **Contiguous Neighbor List**. This expands the set of checked **Features** to include neighbors that are nearby but do not share a direct face/edge/vertex with the child **Feature**. Enable this option if non-contiguous neighbors were used during the original grouping step. Typically the [Compute Feature Neighborhoods](ComputeNeighborhoodsFilter.md) filter is used to generate the **Non-Contiguous Neighbor List**. The *Multiples of Average Diameter* parameter on that filter has a large effect on the final **Grouping Density** value that is computed.
 
 #### Find Checked Features
 
 When enabled, the filter produces an additional output array (**Checked Features**) at the **Feature** level. For each **Feature** that was checked during the density computation, this array records which **Parent Feature** checked it. Since a **Feature** may be checked by multiple **Parent Features** (as a neighbor of children belonging to different parents), the assignment goes to the **Parent Feature** with the **largest Parent Volume**. This provides a way to see which parent had the strongest influence over each region of the microstructure.
+
+**Tie-break behavior:** When two or more **Parent Features** have *exactly equal* **Parent Volumes** and both check the same **Feature**, the first-processed parent (the one with the lower **Parent ID**) keeps the assignment. The strictly-greater comparison (`>`) means equal-volume parents do not overwrite earlier claims. This is deterministic and matches the legacy DREAM3D `FindGroupingDensity` behavior.
 
 
 ### Worked Example
@@ -47,13 +56,13 @@ Consider a 20x5 2D **Image Geometry** with unit spacing (1.0 x 1.0 x 1.0), conta
 - Features 1, 2, 3 belong to Parent 1 (Parent Volume = 45, i.e. 10 + 20 + 15 cells)
 - Features 4, 5 belong to Parent 2 (Parent Volume = 55, i.e. 25 + 30 cells)
 
-| Feature | Cells | Volume | Parent | Contiguous Neighbors |
-|---------|-------|--------|--------|----------------------|
-| 1       | 10    | 10.0   | 1      | {2}                  |
-| 2       | 20    | 20.0   | 1      | {1, 3}               |
-| 3       | 15    | 15.0   | 1      | {2, 4}               |
-| 4       | 25    | 25.0   | 2      | {3, 5}               |
-| 5       | 30    | 30.0   | 2      | {4}                  |
+| Feature | Cells | Volume (cells) | Parent | Contiguous Neighbors |
+|---------|-------|----------------|--------|----------------------|
+| 1       | 10    | 10.0           | 1      | {2}                  |
+| 2       | 20    | 20.0           | 1      | {1, 3}               |
+| 3       | 15    | 15.0           | 1      | {2, 4}               |
+| 4       | 25    | 25.0           | 2      | {3, 5}               |
+| 5       | 30    | 30.0           | 2      | {4}                  |
 
 **Parent 1:** Child features {1, 2, 3} plus their contiguous neighbors include feature 4 (neighbor of feature 3). Total checked volume = 10 + 20 + 15 + 25 = 70. Density = 45 / 70 = **0.6429**.
 
@@ -68,14 +77,20 @@ Note that both densities are less than 1.0 because each parent's children have n
 | > 1.0         | Parent volume exceeds the total checked region; the grouping is compact and dense |
 | = 1.0         | Parent volume equals the total checked region |
 | 0.0 < d < 1.0 | Parent volume is smaller than the total checked region; the grouping is dispersed |
-| -1.0          | No child features found for this parent (invalid/empty parent) |
+| *-1.0*        | No child features found for this parent (invalid/empty parent) |
+
+### Required Input Sources
+
+| Parameter | Source |
+|---------------|----------------|
+| Feature Volumes   |  produced by [Compute Feature Sizes](ComputeFeatureSizesFilter.md). Cell-count volumes (integer count of voxels per feature) are the typical usage. Equivalent-diameter or physical-unit volumes also work as long as both *Feature Volumes* and *Parent Volumes* use the **same** unit.  |
+| Parent Volumes | produced by running [Compute Feature Sizes](ComputeFeatureSizesFilter.md) on the parent **Attribute Matrix** (after the upstream parent-grouping step has assigned each cell to a **Parent Feature**). |
+| Feature Parent Ids | produced by a parent-grouping filter such as [Group MicroTexture Regions](../SimplnxReview/GroupMicroTextureRegionsFilter.md) or [Merge Colonies](../SimplnxReview/MergeColoniesFilter.md), which assign each child **Feature** to a **Parent Feature**.|
+| Contiguous Neighbor List | produced by [Compute Feature Neighbors](ComputeFeatureNeighborsFilter.md).|
+| Non-Contiguous Neighbor List | (optional, only when "Use Non-Contiguous Neighbors" is enabled)* -- produced by [Compute Feature Neighborhoods](ComputeNeighborhoodsFilter.md). See the "Use Non-Contiguous Neighbors" parameter guidance above for notes on how the upstream *Multiples of Average Diameter* parameter affects results.|
+
 
 % Auto generated parameter table will be inserted here
-
-
-### Algorithm Flowchart
-
-![ComputeGroupingDensity Algorithm Flowchart](Images/ComputeGroupingDensity_Algorithm.png)
 
 ## References
 
