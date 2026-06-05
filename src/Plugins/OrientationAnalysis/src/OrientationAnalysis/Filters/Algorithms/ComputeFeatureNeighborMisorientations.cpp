@@ -65,6 +65,11 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
     const NeighborList<int32_t>::VectorType featureNeighborList = inNeighborList.at(static_cast<int32_t>(i));
 
     tempMisorientationLists[i].assign(featureNeighborList.size(), -1.0);
+    // Initialize the divisor once per outer-loop iteration (per feature). Previously this was
+    // assigned inside the inner j-loop, which clobbered the per-mismatch decrement below — the
+    // resulting divisor only reflected the LAST neighbor's match/mismatch state, producing wrong
+    // per-feature averages whenever neighbors had mixed phases. Fixed 2026-06-02 during V&V cycle.
+    tempMisoList = featureNeighborList.size();
 
     for(size_t j = 0; j < featureNeighborList.size(); j++)
     {
@@ -72,7 +77,6 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       quatIndex = neighborFeatureId * 4;
       ebsdlib::QuatD q2(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
       uint32_t xtalType2 = inXtalStruct[inFeaturePhases[neighborFeatureId]];
-      tempMisoList = featureNeighborList.size();
       if(laueClass1 == xtalType2 && static_cast<int64_t>(laueClass1) < static_cast<int64_t>(orientationOps.size()))
       {
         ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(q1, q2);

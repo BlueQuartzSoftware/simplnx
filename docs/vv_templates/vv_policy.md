@@ -56,6 +56,7 @@ The verified state is pinned by **(commit hash, archive SHA512)**. The commit ca
 | [`report_gates.md`](./report_gates.md) | Per-section "Done when:" checklists — reference while filling in the report |
 | [`deviation_template.md`](./deviation_template.md) | Empty deviation file — copy into `src/Plugins/<P>/vv/deviations/<FilterName>.md` |
 | [`provenance_template.md`](./provenance_template.md) | Empty exemplar-provenance sidecar — copy per exemplar archive |
+| [`commit_template.md`](./commit_template.md) | Standard commit message format for landing a completed V&V cycle — use at step 6 of the engineer workflow below |
 
 ## Engineer workflow
 
@@ -64,7 +65,7 @@ The verified state is pinned by **(commit hash, archive SHA512)**. The commit ca
 3. Run `python scripts/vv_init.py <FilterName>` to scaffold the report and deviation files in the plugin tree.
 4. Open `report_gates.md` in a second tab.
 5. Work each section in any order. A section is "done" when all its gates pass.
-6. When all gates green, set `Status: READY FOR REVIEW`, push a `vv/<FilterName>` branch.
+6. When all gates green, set `Status: READY FOR REVIEW`, push a `vv/<FilterName>` branch with a commit following [`commit_template.md`](./commit_template.md).
 7. After sign-off, set `Status: COMPLETE`. Verified commit hash is filled in at SBIR deliverable assembly.
 
 ## Status tracking across filters
