@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="760" viewBox="0 0 800 760" font-family="Helvetica, Arial, sans-serif">
 <rect width="100%" height="100%" fill="#FAFAFA"/>
 <text x="400.0" y="32" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="bold" fill="#2C3E50">Compute Grouping Densities — How the Algorithm Works</text>
-<text x="400.0" y="52" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#6B7785">20×5 toy dataset: 5 features grouped into 2 parents</text>
+<text x="400.0" y="52" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#6B7785">20×5 hand-built fixture: 5 features grouped into 2 parents</text>
 <text x="20" y="90" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" fill="#2C3E50">1. Input data</text>
 <text x="301.0" y="108" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#1F77B4">Parent 1 (volume = 45)</text>
 <text x="481.0" y="108" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#D62728">Parent 2 (volume = 55)</text>

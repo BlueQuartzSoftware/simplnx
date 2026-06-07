@@ -37,7 +37,7 @@ using namespace nx::core::UnitTest;
 
 namespace
 {
-namespace DataFixtures
+namespace AnalyticalFixtures
 {
 const std::string k_GeomName = "ImageGeometry";
 const DataPath k_ImageGeomPath = DataPath({k_GeomName});
@@ -58,7 +58,7 @@ std::array<float32, 4> QuatFromPhi1Deg(float32 phi1Deg)
   return {0.0f, 0.0f, std::sin(halfAngleRad), std::cos(halfAngleRad)};
 }
 
-struct ToyData
+struct FixtureData
 {
   DataStructure ds;
   ImageGeom* geom = nullptr;
@@ -72,9 +72,9 @@ struct ToyData
 
 // Build a scaffold with a tiny ImageGeom + a feature AM (size numFeatures) + ensemble AM
 // (size numCrystalStructures). All input arrays are initialized; caller populates per-feature values.
-ToyData CreateScaffold(usize numFeatures, usize numCrystalStructures)
+FixtureData CreateScaffold(usize numFeatures, usize numCrystalStructures)
 {
-  ToyData td;
+  FixtureData td;
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
   td.geom->setSpacing({1.0f, 1.0f, 1.0f});
   td.geom->setOrigin({0.0f, 0.0f, 0.0f});
@@ -107,7 +107,7 @@ ToyData CreateScaffold(usize numFeatures, usize numCrystalStructures)
   return td;
 }
 
-void SetAvgQuat(ToyData& td, usize featureIdx, const std::array<float32, 4>& q)
+void SetAvgQuat(FixtureData& td, usize featureIdx, const std::array<float32, 4>& q)
 {
   (*td.avgQuats)[featureIdx * 4 + 0] = q[0];
   (*td.avgQuats)[featureIdx * 4 + 1] = q[1];
@@ -137,7 +137,7 @@ const Float32Array& GetOutputAvgMisorientations(const DataStructure& ds)
 {
   return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName));
 }
-} // namespace DataFixtures
+} // namespace AnalyticalFixtures
 } // namespace
 
 // Retired 2026-06-02 (V&V cycle): the main exemplar-comparison TEST_CASE that consumed
@@ -147,7 +147,7 @@ const Float32Array& GetOutputAvgMisorientations(const DataStructure& ds)
 // failing `ComputeFeatureNeighborMisorientationsFilter` ctest (test 1602 in the prior numbering).
 // The UNIMPLEMENTED stub left `ComputeAvgMisors=true` with zero CI coverage, which is why the
 // `tempMisoList` divisor bug at algorithm.cpp:75 (reassigning the divisor inside the inner j-loop)
-// went undetected for so long. The Class 1 + Class 4 toy fixtures below replace both retirements.
+// went undetected for so long. The Class 1 + Class 4 data fixtures below replace both retirements.
 // See `vv/provenance/ComputeFeatureNeighborMisorientationsFilter.md` for retirement details.
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: SIMPL Backwards Compatibility",
           "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter][BackwardsCompatibility]")
@@ -195,7 +195,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: SIM
 }
 
 // =============================================================================
-// V&V Class 1 + Class 4 toy fixtures (added 2026-06-02 during V&V cycle).
+// V&V Class 1 + Class 4 data fixtures (added 2026-06-02 during V&V cycle).
 // =============================================================================
 
 // Fixture A: single-phase, single-feature with 2 neighbors. Verifies the per-neighbor
@@ -206,25 +206,25 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: SIM
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Single Phase Two Neighbors", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  DataFixtures::ToyData td = DataFixtures::CreateScaffold(/*numFeatures=*/4, /*numCrystalStructures=*/2);
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*numFeatures=*/4, /*numCrystalStructures=*/2);
 
   (*td.featurePhases)[1] = 1;
   (*td.featurePhases)[2] = 1;
   (*td.featurePhases)[3] = 1;
-  DataFixtures::SetAvgQuat(td, 1, DataFixtures::QuatFromPhi1Deg(0.0f));
-  DataFixtures::SetAvgQuat(td, 2, DataFixtures::QuatFromPhi1Deg(5.0f));
-  DataFixtures::SetAvgQuat(td, 3, DataFixtures::QuatFromPhi1Deg(10.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 1, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(5.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 3, AnalyticalFixtures::QuatFromPhi1Deg(10.0f));
   td.neighborList->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{2, 3}));
 
   ComputeFeatureNeighborMisorientationsFilter filter;
-  Arguments args = DataFixtures::BuildArgs(/*computeAvgMisors=*/true);
+  Arguments args = AnalyticalFixtures::BuildArgs(/*computeAvgMisors=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& misoList = DataFixtures::GetOutputMisorientationList(td.ds);
-  const auto& avg = DataFixtures::GetOutputAvgMisorientations(td.ds);
+  const auto& misoList = AnalyticalFixtures::GetOutputMisorientationList(td.ds);
+  const auto& avg = AnalyticalFixtures::GetOutputAvgMisorientations(td.ds);
   const auto& feature1List = misoList.at(1);
   REQUIRE(feature1List.size() == 2);
   REQUIRE(feature1List[0] == Approx(5.0f).margin(1e-3f));
@@ -243,36 +243,36 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
           "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  DataFixtures::ToyData td = DataFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
   // Crystal structures: index 0 sentinel (set by scaffold); index 1 Cubic_High (set by scaffold);
   // index 2 Hex_High (different Laue class -> filter treats as a phase mismatch).
   (*td.crystalStructures)[2] = 0u; // Hex_High
 
   // Feature 1 (phase 1, identity) - the focal feature with neighbors [2, 4, 3]
   (*td.featurePhases)[1] = 1;
-  DataFixtures::SetAvgQuat(td, 1, DataFixtures::QuatFromPhi1Deg(0.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 1, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
   // Feature 2 (phase 1, 5deg) - phase MATCH -> misorientation = 5.0deg
   (*td.featurePhases)[2] = 1;
-  DataFixtures::SetAvgQuat(td, 2, DataFixtures::QuatFromPhi1Deg(5.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(5.0f));
   // Feature 4 (phase 2, Hex_High) - phase MISMATCH -> NaN; should NOT count toward avg divisor
   (*td.featurePhases)[4] = 2;
-  DataFixtures::SetAvgQuat(td, 4, DataFixtures::QuatFromPhi1Deg(99.0f)); // value irrelevant; quat will be skipped
+  AnalyticalFixtures::SetAvgQuat(td, 4, AnalyticalFixtures::QuatFromPhi1Deg(99.0f)); // value irrelevant; quat will be skipped
   // Feature 3 (phase 1, 10deg) - phase MATCH -> misorientation = 10.0deg
   (*td.featurePhases)[3] = 1;
-  DataFixtures::SetAvgQuat(td, 3, DataFixtures::QuatFromPhi1Deg(10.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 3, AnalyticalFixtures::QuatFromPhi1Deg(10.0f));
 
   // Neighbor order: [2 (match), 4 (mismatch), 3 (match)] -> LAST neighbor is a match -> bug fires.
   td.neighborList->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{2, 4, 3}));
 
   ComputeFeatureNeighborMisorientationsFilter filter;
-  Arguments args = DataFixtures::BuildArgs(/*computeAvgMisors=*/true);
+  Arguments args = AnalyticalFixtures::BuildArgs(/*computeAvgMisors=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& misoList = DataFixtures::GetOutputMisorientationList(td.ds);
-  const auto& avg = DataFixtures::GetOutputAvgMisorientations(td.ds);
+  const auto& misoList = AnalyticalFixtures::GetOutputMisorientationList(td.ds);
+  const auto& avg = AnalyticalFixtures::GetOutputAvgMisorientations(td.ds);
   const auto& feature1List = misoList.at(1);
   REQUIRE(feature1List.size() == 3);
   REQUIRE(feature1List[0] == Approx(5.0f).margin(1e-3f));
@@ -289,27 +289,27 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 1 - Mismatch Last Order", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  DataFixtures::ToyData td = DataFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
   (*td.crystalStructures)[2] = 0u; // Hex_High
   (*td.featurePhases)[1] = 1;
-  DataFixtures::SetAvgQuat(td, 1, DataFixtures::QuatFromPhi1Deg(0.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 1, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
   (*td.featurePhases)[2] = 1;
-  DataFixtures::SetAvgQuat(td, 2, DataFixtures::QuatFromPhi1Deg(5.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(5.0f));
   (*td.featurePhases)[3] = 1;
-  DataFixtures::SetAvgQuat(td, 3, DataFixtures::QuatFromPhi1Deg(10.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 3, AnalyticalFixtures::QuatFromPhi1Deg(10.0f));
   (*td.featurePhases)[4] = 2;
-  DataFixtures::SetAvgQuat(td, 4, DataFixtures::QuatFromPhi1Deg(99.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 4, AnalyticalFixtures::QuatFromPhi1Deg(99.0f));
   td.neighborList->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{2, 3, 4}));
 
   ComputeFeatureNeighborMisorientationsFilter filter;
-  Arguments args = DataFixtures::BuildArgs(/*computeAvgMisors=*/true);
+  Arguments args = AnalyticalFixtures::BuildArgs(/*computeAvgMisors=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& misoList = DataFixtures::GetOutputMisorientationList(td.ds);
-  const auto& avg = DataFixtures::GetOutputAvgMisorientations(td.ds);
+  const auto& misoList = AnalyticalFixtures::GetOutputMisorientationList(td.ds);
+  const auto& avg = AnalyticalFixtures::GetOutputAvgMisorientations(td.ds);
   REQUIRE(avg[1] == Approx(7.5f).margin(1e-3f));
   const auto& feature1List = misoList.at(1);
   REQUIRE(feature1List.size() == 3);
@@ -325,27 +325,27 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Cla
 TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Class 4 - Invariants", "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter]")
 {
   UnitTest::LoadPlugins();
-  DataFixtures::ToyData td = DataFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*numFeatures=*/5, /*numCrystalStructures=*/3);
   (*td.crystalStructures)[2] = 0u; // Hex_High
   (*td.featurePhases)[1] = 1;
-  DataFixtures::SetAvgQuat(td, 1, DataFixtures::QuatFromPhi1Deg(0.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 1, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
   (*td.featurePhases)[2] = 1;
-  DataFixtures::SetAvgQuat(td, 2, DataFixtures::QuatFromPhi1Deg(7.5f));
+  AnalyticalFixtures::SetAvgQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(7.5f));
   (*td.featurePhases)[3] = 1;
-  DataFixtures::SetAvgQuat(td, 3, DataFixtures::QuatFromPhi1Deg(12.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 3, AnalyticalFixtures::QuatFromPhi1Deg(12.0f));
   (*td.featurePhases)[4] = 2;
-  DataFixtures::SetAvgQuat(td, 4, DataFixtures::QuatFromPhi1Deg(99.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 4, AnalyticalFixtures::QuatFromPhi1Deg(99.0f));
   td.neighborList->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{4, 2, 3}));
 
   ComputeFeatureNeighborMisorientationsFilter filter;
-  Arguments args = DataFixtures::BuildArgs(/*computeAvgMisors=*/true);
+  Arguments args = AnalyticalFixtures::BuildArgs(/*computeAvgMisors=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& misoList = DataFixtures::GetOutputMisorientationList(td.ds);
-  const auto& avg = DataFixtures::GetOutputAvgMisorientations(td.ds);
+  const auto& misoList = AnalyticalFixtures::GetOutputMisorientationList(td.ds);
+  const auto& avg = AnalyticalFixtures::GetOutputAvgMisorientations(td.ds);
   const auto& feature1List = misoList.at(1);
   REQUIRE(feature1List.size() == 3);
 

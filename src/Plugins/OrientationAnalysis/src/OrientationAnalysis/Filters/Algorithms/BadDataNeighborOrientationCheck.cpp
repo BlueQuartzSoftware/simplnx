@@ -25,12 +25,6 @@ BadDataNeighborOrientationCheck::BadDataNeighborOrientationCheck(DataStructure& 
 BadDataNeighborOrientationCheck::~BadDataNeighborOrientationCheck() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& BadDataNeighborOrientationCheck::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheck::operator()()
 {
   // Compute the tolerance in double precision: numbers::pi_v<float> is the closest float to true pi, which is
@@ -53,9 +47,10 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
   } catch(const std::out_of_range& exception)
   {
-    // This really should NOT be happening as the path was verified during preflight, BUT we may be calling this from
-    // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    return MakeErrorResult(-54900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
+    // Defensive: the path was verified during preflight, but this algorithm may be called outside the standard
+    // IFilter Preflight/Execute path.
+    return MakeErrorResult(-54900,
+                           fmt::format("Mask Array at '{}' could not be loaded; expected Bool or UInt8 backing. Underlying error: {}", m_InputValues->MaskArrayPath.toString(), exception.what()));
   }
 
   std::array<int64, 3> dims = {
@@ -106,7 +101,9 @@ Result<> BadDataNeighborOrientationCheck::operator()()
     }
     throttledMessenger.sendThrottledMessage([&] { return fmt::format("Processing Data {:.2f}% completed", CalculatePercentComplete(voxelIndex, totalPoints)); });
     // If the mask was set to false, then we check this voxel
-    if(!maskCompare->isTrue(voxelIndex))
+    // "Bad" voxels are those whose mask value is false; only these get processed.
+    const bool voxelIsBad = !maskCompare->isTrue(voxelIndex);
+    if(voxelIsBad)
     {
       // We precalculate the positive voxel quaternion and laue class here to prevent reading and recalculating it for each face below
       ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);
@@ -196,7 +193,8 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 
         // If the current voxel's neighbor count is >= the current level and the mask is FALSE,
         // we flip the voxel to TRUE and recompute its (still-bad) neighbors' counts below.
-        if(neighborCount[voxelIndex] >= currentLevel && !maskCompare->isTrue(voxelIndex))
+        const bool voxelIsBad = !maskCompare->isTrue(voxelIndex);
+        if(neighborCount[voxelIndex] >= currentLevel && voxelIsBad)
         {
           maskCompare->setValue(voxelIndex, true);
           counter++; // Increment the `counter` to force the loop to iterate again
@@ -232,7 +230,8 @@ Result<> BadDataNeighborOrientationCheck::operator()()
             const int64 neighborPoint = voxelIndexI64 + neighborVoxelIndexOffsets[faceIndex];
 
             // If the neighbor voxel's mask is false, then compute misorientation angle
-            if(!maskCompare->isTrue(neighborPoint))
+            const bool neighborIsBad = !maskCompare->isTrue(neighborPoint);
+            if(neighborIsBad)
             {
               // Make sure both cells phase values are identical and valid
               if(cellPhases[voxelIndex] == cellPhases[neighborPoint] && cellPhases[voxelIndex] > 0)

@@ -503,12 +503,6 @@ WritePoleFigure::WritePoleFigure(DataStructure& dataStructure, const IFilter::Me
 WritePoleFigure::~WritePoleFigure() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& WritePoleFigure::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> WritePoleFigure::operator()()
 {
   // Make sure any directory path is also available as the user may have just typed

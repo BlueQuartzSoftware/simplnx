@@ -12,11 +12,6 @@ using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
 
 using namespace nx::core;
 
-/**
- * @brief The CalculateFaceMisorientationColorsImpl class implements a threaded algorithm that computes the misorientation
- * colors for the given list of surface mesh labels
- */
-
 class ComputeFeatureMisorientationPerTriangleImpl
 {
   const Int32Array& m_FaceLabels;
@@ -120,12 +115,6 @@ ComputeFeatureFaceMisorientation::ComputeFeatureFaceMisorientation(DataStructure
 
 // -----------------------------------------------------------------------------
 ComputeFeatureFaceMisorientation::~ComputeFeatureFaceMisorientation() noexcept = default;
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeFeatureFaceMisorientation::getCancel()
-{
-  return m_ShouldCancel;
-}
 
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureFaceMisorientation::operator()()

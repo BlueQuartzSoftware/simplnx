@@ -131,7 +131,7 @@ Class 1 (Analytical) primary, Class 4 (Invariant) companion. No reference-librar
 
 ## Second-engineer oracle review
 
-- **Reviewer:** *Skipped — recorded reason:* Class 1 derivation is set-arithmetic on quaternion-rotated c-axes for an 11-cell, 8-feature toy dataset.
+- **Reviewer:** *Skipped — recorded reason:* Class 1 derivation is set-arithmetic on quaternion-rotated c-axes for an 11-cell, 8-feature hand-built fixture.
 - **Date:** JUNE 5, 2026
 
 ## Regenerated to fix a circular-oracle situation?

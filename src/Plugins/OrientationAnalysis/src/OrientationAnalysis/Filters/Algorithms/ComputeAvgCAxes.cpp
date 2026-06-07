@@ -121,16 +121,10 @@ Result<> ComputeAvgCAxes::operator()()
         cellCAxis *= -1.0f;
       }
 
-      // Continue summing up the rotations
-      // Eigen math is double; output array is float32
-      float temp = avgCAxes[cAxesIndex] + cellCAxis[0];
-      avgCAxes[cAxesIndex] = temp;
-
-      temp = avgCAxes[cAxesIndex + 1] + cellCAxis[1];
-      avgCAxes[cAxesIndex + 1] = temp;
-
-      temp = avgCAxes[cAxesIndex + 2] + cellCAxis[2];
-      avgCAxes[cAxesIndex + 2] = temp;
+      // Accumulate per-component into the float32 output (Eigen math is double; narrow on store).
+      avgCAxes[cAxesIndex] = static_cast<float32>(avgCAxes[cAxesIndex] + cellCAxis[0]);
+      avgCAxes[cAxesIndex + 1] = static_cast<float32>(avgCAxes[cAxesIndex + 1] + cellCAxis[1]);
+      avgCAxes[cAxesIndex + 2] = static_cast<float32>(avgCAxes[cAxesIndex + 2] + cellCAxis[2]);
     }
   }
 
@@ -144,16 +138,10 @@ Result<> ComputeAvgCAxes::operator()()
       return result;
     }
 
-    // If the value of this feature's counter == 0, then there are 2 possibilities
-    // that could have happened:
-    // [1] The feature's phase was not hexagonal and therefore in the "totalPoints" loop above the counter never got incremented.
-    // [2] There is a featureId that does not have any voxels assigned to it. We need more information here to determine what to do.
-    //     - If we had the "Feature-Phases array then we could look up the phase and then we would know. This would require another input from the user
-    //     - If the featureId does not have any voxels assigned, then how would you generate an average anyway, so applying NaN to the value is the right move here
-
     const usize cAxesIndex = 3 * currentFeatureId;
     if(cellCount[currentFeatureId] == 0)
     {
+      // Feature is either non-hexagonal or has no assigned voxels; either way, no meaningful average exists.
       avgCAxes[cAxesIndex] = NAN;
       avgCAxes[cAxesIndex + 1] = NAN;
       avgCAxes[cAxesIndex + 2] = NAN;

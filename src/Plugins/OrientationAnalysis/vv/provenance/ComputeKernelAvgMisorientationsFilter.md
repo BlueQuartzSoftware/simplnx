@@ -34,7 +34,7 @@ The 6th algorithmic path (`numVoxel == 0` fallback at line 131) is dead code in 
 
 ### Scaffold structure
 
-The `DataFixtures` namespace at the top of `ComputeKernelAvgMisorientationsTest.cpp` provides a `CreateScaffold(nX, nY, nZ, numCrystalStructures)` helper that constructs:
+The `AnalyticalFixtures` namespace at the top of `ComputeKernelAvgMisorientationsTest.cpp` provides a `CreateScaffold(nX, nY, nZ, numCrystalStructures)` helper that constructs:
 
 - A single `ImageGeom` named `ImageGeometry` with the requested dimensions, spacing `{1, 1, 1}`, and origin `{0, 0, 0}`.
 - A `CellData` `AttributeMatrix` with tuple shape `{nZ, nY, nX}` (the SIMPLNX storage convention for 3D cell-level arrays).

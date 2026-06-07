@@ -24,7 +24,7 @@ Every filter must be verified against at least one of the following. Classes 1�
 
 | # | Class | What it is | Drift risk |
 |---|---|---|---|
-| 1 | Analytical | Closed-form expected output on toy input (threshold, crop, rotate, color conversion, array arithmetic) | None |
+| 1 | Analytical | Closed-form expected output on hand-built input (threshold, crop, rotate, color conversion, array arithmetic) | None |
 | 2 | Reference implementation | Trusted external library produces the expected output (NumPy / SciPy / MTEX / EbsdLib upstream / Eigen) | **High** — library version drift |
 | 3 | Paper-based | Filter reproduces a published figure, table, or equation from a named reference | Low–Medium |
 | 4 | Invariant | Derivable properties the output must satisfy (FeatureIds start at 1 and contiguous; sum of phase fractions = 1; mass conservation) | None |

@@ -23,12 +23,6 @@ ComputeFeatureNeighborMisorientations::ComputeFeatureNeighborMisorientations(Dat
 ComputeFeatureNeighborMisorientations::~ComputeFeatureNeighborMisorientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeFeatureNeighborMisorientations::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighborMisorientations::operator()()
 {
 

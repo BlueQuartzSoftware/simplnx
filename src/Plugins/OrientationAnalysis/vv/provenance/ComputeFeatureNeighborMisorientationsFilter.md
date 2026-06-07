@@ -41,7 +41,7 @@ A separate `CellEnsembleData` `AttributeMatrix` with `numTuples = P+1` (P = numb
 
 - `CrystalStructures` (`UInt32Array`) — per-phase Laue-class index (`0` = Hex_High, `1` = Cubic_High, etc., per EbsdLib `LaueOps::GetAllOrientationOps()` ordering)
 
-The scaffold helpers are in `ComputeFeatureNeighborMisorientationsTest.cpp` namespace `ToyFixtures`:
+The scaffold helpers are in `ComputeFeatureNeighborMisorientationsTest.cpp` namespace `AnalyticalFixtures`:
 
 - `CreateScaffold(numFeatures, numPhases)` — builds the geometry and AttributeMatrices.
 - `BuildArgs(dataStructure, computeAvgMisors)` — wires the standard input/output paths into an `Arguments` object.
@@ -125,6 +125,6 @@ N/A — Class 1 and Class 4 oracles only. No reference-library invocation, no pa
 
 ## Regenerated to fix a circular-oracle situation?
 
-N/A — the inlined toy dataset is brand-new for this V&V cycle. The pre-V&V test (now retired) consumed the shared `6_6_stats_test_v2.tar.gz` archive as a regression-against-reference exemplar. That archive was a circular oracle (its `AvgMisorientations` values were produced by the same pre-fix algorithm with the same divisor bug, so the exemplar would only have validated reproduction of the buggy output). The retired test additionally had an `[.][UNIMPLEMENTED][!mayfail]` stub for the `ComputeAvgMisors=true` path that prevented any CI coverage of the buggy code path.
+N/A — the inlined hand-built fixture is brand-new for this V&V cycle. The pre-V&V test (now retired) consumed the shared `6_6_stats_test_v2.tar.gz` archive as a regression-against-reference exemplar. That archive was a circular oracle (its `AvgMisorientations` values were produced by the same pre-fix algorithm with the same divisor bug, so the exemplar would only have validated reproduction of the buggy output). The retired test additionally had an `[.][UNIMPLEMENTED][!mayfail]` stub for the `ComputeAvgMisors=true` path that prevented any CI coverage of the buggy code path.
 
 The inlined Class 1 + Class 4 fixtures replace the circular-oracle exemplar with derived-truth oracles. The shared archive remains referenced in `CMakeLists.txt` only for `ComputeKernelAvgMisorientationsFilter` (F#5 in the EbsdLib-precision V&V cycle); it will be removed entirely once F#5's V&V cycle retires its exemplar consumption.

@@ -79,7 +79,7 @@ Expected `AvgCAxes` values are derived by hand from input definitions without re
 
 **The output is a unit C-axis direction per feature** — magnitude is exactly 1.0 (within float32 epsilon) for every feature with at least one hex-phase contributing voxel.
 
-Hand-derivation on the 11-cell toy dataset (`FeatureIds = [1,2,3,3,3,4,4,6,7,7,7]`, `CellPhases = [1,1,1,1,1,1,1,2,1,1,1]`, hand-picked quaternions detailed in `vv/comparisons/ComputeAvgCAxesFilter/README.md`). **Class 1 fully covers F0-F6**; F7 is handled by the Class 4 unit-vector invariant below because the F7 cells were deliberately designed to land on the *antipodal-flip cancellation boundary* — the algorithm's choice between two genuinely distinct c-axis directions at this boundary is precision-sensitive (see Deviation D2).
+Hand-derivation on the 11-cell hand-built fixture (`FeatureIds = [1,2,3,3,3,4,4,6,7,7,7]`, `CellPhases = [1,1,1,1,1,1,1,2,1,1,1]`, hand-picked quaternions detailed in `vv/comparisons/ComputeAvgCAxesFilter/README.md`). **Class 1 fully covers F0-F6**; F7 is handled by the Class 4 unit-vector invariant below because the F7 cells were deliberately designed to land on the *antipodal-flip cancellation boundary* — the algorithm's choice between two genuinely distinct c-axis directions at this boundary is precision-sensitive (see Deviation D2).
 
 | Feature | Expected `AvgCAxes`        | Magnitude | Path                                                                               |
 |---------|----------------------------|-----------|------------------------------------------------------------------------------------|
@@ -157,7 +157,7 @@ The algorithm has three logical phases: (a) phase-validity preflight scan, (b) p
 
 ## Deviations from DREAM3D 6.5.171
 
-**Two documented deviation classes (four feature-level differences total), all fully isolated** to *precision + matrix-math style + counter==0 NaN at finalize* by the custom DREAM3D 6.5.172 backport branch (`v6_5_172` at `/Users/mjackson/DREAM3D-Dev/DREAM3D`). The 6.5.172 backport applies the SIMPLNX-era design changes (float→double accumulation, Eigen-style math, counter==0 → NaN at feature loop) back into the legacy DREAM3D 6.5 codebase and produces output **bit-identical** to SIMPLNX on the V&V toy dataset — conclusively isolating these design changes as the sole sources of the SIMPLNX-vs.-6.5.171 differences.
+**Two documented deviation classes (four feature-level differences total), all fully isolated** to *precision + matrix-math style + counter==0 NaN at finalize* by the custom DREAM3D 6.5.172 backport branch (`v6_5_172` at `/Users/mjackson/DREAM3D-Dev/DREAM3D`). The 6.5.172 backport applies the SIMPLNX-era design changes (float→double accumulation, Eigen-style math, counter==0 → NaN at feature loop) back into the legacy DREAM3D 6.5 codebase and produces output **bit-identical** to SIMPLNX on the V&V hand-built fixture — conclusively isolating these design changes as the sole sources of the SIMPLNX-vs.-6.5.171 differences.
 
 Comparison fixtures:
 - `/Users/mjackson/Workspace9/DREAM3D_Data/TestFiles/compute_avg_c_axis/output_legacy/6_5_171_compute_avg_c_axis.dream3d` (official DREAM3D 6.5.171 release output)

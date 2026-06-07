@@ -4,7 +4,7 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`ComputeAvgCAxesFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-**Headline result of the three-way comparison** (all values float32, 11-cell toy dataset; expected once the 6.5.172 normalize-backport is re-run):
+**Headline result of the three-way comparison** (all values float32, 11-cell hand-built fixture; expected once the 6.5.172 normalize-backport is re-run):
 
 | Feature | 6.5.171 (official) | 6.5.172 (backport, post-normalize) | SIMPLNX (post-normalize) | Notes |
 |---|---|---|---|---|
@@ -88,7 +88,7 @@ The legacy DREAM3D 6.5.171 `FindAvgCAxes` instead writes `(0, 0, 1)` at the coun
 
 **Symptom:** For features whose cell c-axes lie on the *antipodal-flip cancellation boundary* — where the running-average dot product evaluates to exactly zero in math but is precision-dependent in float32 — SIMPLNX and 6.5.171 produce different per-feature `AvgCAxes` outputs. After the Phase-7 normalize-at-finalize step, both implementations yield unit vectors, but with different magnitudes vs 6.5.171 (1.0 in SIMPLNX, 2/3 in 6.5.171) AND different directions.
 
-In the V&V toy dataset this fires at F7: three cells with c-axes `(0, 0, 1)`, `(0, +√3/2, 0.5)`, `(0, -√3/2, 0.5)`. The legacy 6.5.171 float-precision path takes the "no flip" branch and produces `(0, 0, 0.667)`. The SIMPLNX double-precision-Eigen path takes the "flip fires" branch and produces `(0, 0.866, 0.500)` (post-normalize). These are genuinely different c-axis directions (60° apart in 3D), NOT hex c≡-c equivalents — both are valid "average c-axes" of the same cell set under different sign-assignment choices.
+In the V&V hand-built fixture this fires at F7: three cells with c-axes `(0, 0, 1)`, `(0, +√3/2, 0.5)`, `(0, -√3/2, 0.5)`. The legacy 6.5.171 float-precision path takes the "no flip" branch and produces `(0, 0, 0.667)`. The SIMPLNX double-precision-Eigen path takes the "flip fires" branch and produces `(0, 0.866, 0.500)` (post-normalize). These are genuinely different c-axis directions (60° apart in 3D), NOT hex c≡-c equivalents — both are valid "average c-axes" of the same cell set under different sign-assignment choices.
 
 **Root cause:** **Precision + matrix-math style**.
 

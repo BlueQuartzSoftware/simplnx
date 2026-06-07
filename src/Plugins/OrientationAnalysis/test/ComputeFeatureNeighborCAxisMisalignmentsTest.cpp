@@ -23,8 +23,9 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
-
-namespace ToyFixtures
+namespace
+{
+namespace AnalyticalFixtures
 {
 const std::string k_GeomName = "ImageGeometry";
 const DataPath k_ImageGeomPath = DataPath({k_GeomName});
@@ -53,7 +54,7 @@ std::array<float32, 4> QuatFromPhiDeg(float32 phiDeg)
   return {std::sin(halfAngleRad), 0.0f, 0.0f, std::cos(halfAngleRad)};
 }
 
-struct ToyData
+struct FixtureData
 {
   DataStructure ds;
   ImageGeom* geom = nullptr;
@@ -75,9 +76,9 @@ struct ToyData
 // {numFeatures}; ensemble-level arrays (CrystalStructures) are sized {numCrystalStructures}.
 // Defaults: every cell assigned to feature 1 / phase 1; every feature phase 0 (caller to set);
 // identity quats; empty neighbor lists; CrystalStructures[0] = sentinel 999.
-ToyData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usize numCrystalStructures)
+FixtureData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usize numCrystalStructures)
 {
-  ToyData td;
+  FixtureData td;
   td.totalCells = nX * nY * nZ;
   td.totalFeatures = numFeatures;
 
@@ -115,7 +116,7 @@ ToyData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usize nu
   return td;
 }
 
-void SetAvgQuat(ToyData& td, usize featureIdx, const std::array<float32, 4>& q)
+void SetAvgQuat(FixtureData& td, usize featureIdx, const std::array<float32, 4>& q)
 {
   (*td.avgQuats)[featureIdx * 4 + 0] = q[0];
   (*td.avgQuats)[featureIdx * 4 + 1] = q[1];
@@ -149,10 +150,10 @@ const Float32Array& GetOutputAvgMisalignments(const DataStructure& ds)
 // Helper to construct the 10x10x1 realistic-microstructure scaffold used by Fixtures B and D.
 // See `vv/provenance/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for the cell-by-feature
 // layout diagram and the per-feature hand-derived expected values.
-ToyData BuildRealisticMicrostructure()
+FixtureData BuildRealisticMicrostructure()
 {
   // 6 real features (1-6) + 1 sentinel (0). 2 phases: 1 = Hexagonal_High, 2 = Cubic_High.
-  ToyData td = CreateScaffold(/*nX=*/10, /*nY=*/10, /*nZ=*/1, /*numFeatures=*/7, /*numCrystalStructures=*/3);
+  FixtureData td = CreateScaffold(/*nX=*/10, /*nY=*/10, /*nZ=*/1, /*numFeatures=*/7, /*numCrystalStructures=*/3);
 
   // CrystalStructures: [0]=sentinel 999, [1]=Hex_High (0), [2]=Cubic_High (1) — EbsdLib LaueOps indices.
   (*td.crystalStructures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
@@ -230,14 +231,15 @@ ToyData BuildRealisticMicrostructure()
 
   return td;
 }
-} // namespace ToyFixtures
+} // namespace AnalyticalFixtures
+} // namespace
 
 // Retired 2026-06-04 (V&V cycle): the main exemplar-comparison TEST_CASE that consumed
 // `compute_feature_neighbor_caxis_misalignments.tar.gz` was removed. The exemplar arrays (suffixed
 // `(7_5)`) were generated from a pre-fix SIMPL 6.5.171 pipeline run on a HEX-ONLY dataset — the
 // divisor bug at algorithm.cpp:111 (`hexNeighborListSize` reassigned inside the inner j-loop) is
 // therefore not exercised by the exemplar (no mismatch decrements ever fire), and the exemplar
-// would have happily passed even on the buggy code. The 4 hand-derived toy fixtures below cover
+// would have happily passed even on the buggy code. The 4 hand-derived data fixtures below cover
 // the 6 algorithmic paths and include 3 bug-exposing per-feature configurations.
 // See `vv/provenance/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for retirement details.
 
@@ -287,7 +289,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 }
 
 // =====================================================================================
-// Class 1 (Analytical) toy fixtures + Class 4 (Invariant) companion.
+// Class 1 (Analytical) data fixtures + Class 4 (Invariant) companion.
 //
 // All Class 1 fixtures use pure Bunge ZXZ Euler rotations (0, Phi, 0) about the x-axis, which tilt
 // the crystal c-axis (originally along z) by Phi degrees from the global z-axis. For two cells with
@@ -303,24 +305,24 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   // 3 features total: 0=sentinel, 1=Hex Phi=0deg, 2=Hex Phi=10deg.
   // Neighbor lists: F1 <-> F2 (single hex-hex pair, no mismatches).
   // Expected misalignmentList: F1=[10deg], F2=[10deg]. Expected avg: F1=10, F2=10.
-  ToyFixtures::ToyData td = ToyFixtures::CreateScaffold(/*nX=*/1, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/3, /*numCrystalStructures=*/2);
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*nX=*/1, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/3, /*numCrystalStructures=*/2);
   (*td.crystalStructures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
   (*td.featurePhases)[1] = 1;
   (*td.featurePhases)[2] = 1;
-  ToyFixtures::SetAvgQuat(td, 1, ToyFixtures::QuatFromPhiDeg(0.0f));
-  ToyFixtures::SetAvgQuat(td, 2, ToyFixtures::QuatFromPhiDeg(10.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 1, AnalyticalFixtures::QuatFromPhiDeg(0.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 2, AnalyticalFixtures::QuatFromPhiDeg(10.0f));
   td.neighborList->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{2}));
   td.neighborList->setList(2, std::make_shared<std::vector<int32>>(std::vector<int32>{1}));
 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
-  Arguments args = ToyFixtures::BuildArgs(/*findAvgMisals=*/true);
+  Arguments args = AnalyticalFixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& misoList = ToyFixtures::GetOutputMisalignmentList(td.ds);
-  const auto& avg = ToyFixtures::GetOutputAvgMisalignments(td.ds);
+  const auto& misoList = AnalyticalFixtures::GetOutputMisalignmentList(td.ds);
+  const auto& avg = AnalyticalFixtures::GetOutputAvgMisalignments(td.ds);
   REQUIRE(misoList.at(1).size() == 1);
   REQUIRE(misoList.at(1)[0] == Approx(10.0f).margin(1e-3f));
   REQUIRE(misoList.at(2).size() == 1);
@@ -336,7 +338,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
 
   // 10x10x1 image, 6 features arranged in 2 rows of 3 grains each. F3 is Cubic (non-hex); the rest
   // are Hex with pure-Phi tilts [0, 5, _, 15, 20, 25] degrees. Neighbor lists are derived from the
-  // cell-by-cell layout (see ToyFixtures::BuildRealisticMicrostructure for the diagram).
+  // cell-by-cell layout (see AnalyticalFixtures::BuildRealisticMicrostructure for the diagram).
   //
   // Expected per-feature misalignmentList + avg:
   //   F1 ([F2, F4]):                  [5, 15]                     divisor=2 sum=20 avg=10.000
@@ -351,17 +353,17 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   // every j-iteration, clobbering the per-mismatch decrement. Under the bug, F2 avg would be
   // 30/4=7.5, F5 avg would be 25/4=6.25, F6 avg would be 5/2=2.5. Post-fix produces the correct
   // hex-only divisor.
-  ToyFixtures::ToyData td = ToyFixtures::BuildRealisticMicrostructure();
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::BuildRealisticMicrostructure();
 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
-  Arguments args = ToyFixtures::BuildArgs(/*findAvgMisals=*/true);
+  Arguments args = AnalyticalFixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& misoList = ToyFixtures::GetOutputMisalignmentList(td.ds);
-  const auto& avg = ToyFixtures::GetOutputAvgMisalignments(td.ds);
+  const auto& misoList = AnalyticalFixtures::GetOutputMisalignmentList(td.ds);
+  const auto& avg = AnalyticalFixtures::GetOutputAvgMisalignments(td.ds);
 
   // F1 ([F2, F4])
   REQUIRE(misoList.at(1).size() == 2);
@@ -417,28 +419,28 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   // Expected misalignmentList[F1] = [5, 10, NaN], divisor = 2, sum = 15, avg = 7.500.
   // Pre-fix code produces the SAME 7.500 result on this ordering — this is the "control" fixture
   // showing that the fix does not regress the case where the bug happened to give the right answer.
-  ToyFixtures::ToyData td = ToyFixtures::CreateScaffold(/*nX=*/1, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/5, /*numCrystalStructures=*/3);
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(/*nX=*/1, /*nY=*/1, /*nZ=*/1, /*numFeatures=*/5, /*numCrystalStructures=*/3);
   (*td.crystalStructures)[1] = static_cast<uint32>(ebsdlib::CrystalStructure::Hexagonal_High);
   (*td.crystalStructures)[2] = static_cast<uint32>(ebsdlib::CrystalStructure::Cubic_High);
   (*td.featurePhases)[1] = 1;
   (*td.featurePhases)[2] = 1;
   (*td.featurePhases)[3] = 1;
   (*td.featurePhases)[4] = 2; // Cubic
-  ToyFixtures::SetAvgQuat(td, 1, ToyFixtures::QuatFromPhiDeg(0.0f));
-  ToyFixtures::SetAvgQuat(td, 2, ToyFixtures::QuatFromPhiDeg(5.0f));
-  ToyFixtures::SetAvgQuat(td, 3, ToyFixtures::QuatFromPhiDeg(10.0f));
-  ToyFixtures::SetAvgQuat(td, 4, ToyFixtures::QuatFromPhiDeg(20.0f)); // ignored — F4 is non-hex
+  AnalyticalFixtures::SetAvgQuat(td, 1, AnalyticalFixtures::QuatFromPhiDeg(0.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 2, AnalyticalFixtures::QuatFromPhiDeg(5.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 3, AnalyticalFixtures::QuatFromPhiDeg(10.0f));
+  AnalyticalFixtures::SetAvgQuat(td, 4, AnalyticalFixtures::QuatFromPhiDeg(20.0f)); // ignored — F4 is non-hex
   td.neighborList->setList(1, std::make_shared<std::vector<int32>>(std::vector<int32>{2, 3, 4}));
 
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
-  Arguments args = ToyFixtures::BuildArgs(/*findAvgMisals=*/true);
+  Arguments args = AnalyticalFixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& misoList = ToyFixtures::GetOutputMisalignmentList(td.ds);
-  const auto& avg = ToyFixtures::GetOutputAvgMisalignments(td.ds);
+  const auto& misoList = AnalyticalFixtures::GetOutputMisalignmentList(td.ds);
+  const auto& avg = AnalyticalFixtures::GetOutputAvgMisalignments(td.ds);
   REQUIRE(misoList.at(1).size() == 3);
   REQUIRE(misoList.at(1)[0] == Approx(5.0f).margin(1e-3f));
   REQUIRE(misoList.at(1)[1] == Approx(10.0f).margin(1e-3f));
@@ -459,16 +461,16 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
   //   (iii) Non-hex focal feature: every entry in misalignmentList[F] is NaN, and avg[F] is NaN.
   constexpr float32 k_CAxisUpperBoundDeg = 90.0f;
 
-  ToyFixtures::ToyData td = ToyFixtures::BuildRealisticMicrostructure();
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::BuildRealisticMicrostructure();
   ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
-  Arguments args = ToyFixtures::BuildArgs(/*findAvgMisals=*/true);
+  Arguments args = AnalyticalFixtures::BuildArgs(/*findAvgMisals=*/true);
   auto preflightResult = filter.preflight(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = filter.execute(td.ds, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& misoList = ToyFixtures::GetOutputMisalignmentList(td.ds);
-  const auto& avg = ToyFixtures::GetOutputAvgMisalignments(td.ds);
+  const auto& misoList = AnalyticalFixtures::GetOutputMisalignmentList(td.ds);
+  const auto& avg = AnalyticalFixtures::GetOutputAvgMisalignments(td.ds);
 
   SECTION("(i) Range: 0 <= entry <= 90 degrees, or NaN")
   {

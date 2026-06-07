@@ -48,7 +48,7 @@ The dataset is a hand-rolled in-memory `DataStructure` designed as a **Class 1 (
 
 ### Scaffold structure
 
-The `ToyFixtures` namespace at the top of `ComputeFeatureNeighborCAxisMisalignmentsTest.cpp` provides a `CreateScaffold(nX, nY, nZ, numFeatures, numCrystalStructures)` helper that constructs:
+The `AnalyticalFixtures` namespace at the top of `ComputeFeatureNeighborCAxisMisalignmentsTest.cpp` provides a `CreateScaffold(nX, nY, nZ, numFeatures, numCrystalStructures)` helper that constructs:
 
 - A single `ImageGeom` named `ImageGeometry` with the requested cell dimensions, spacing `{1, 1, 1}`, origin `{0, 0, 0}`.
 - A `CellData` `AttributeMatrix` with tuple shape `{nZ, nY, nX}` for cell-level arrays: `FeatureIds` (int32, default 1), `Phases` (int32, default 1). **These cell-level arrays are NOT consumed by the algorithm** — they exist purely as a visualization aid so engineers reviewing the fixture can see which voxels belong to which feature. The algorithm's inputs are feature-level (`FeaturePhases`, `AvgQuats`, `NeighborList`) and ensemble-level (`CrystalStructures`).

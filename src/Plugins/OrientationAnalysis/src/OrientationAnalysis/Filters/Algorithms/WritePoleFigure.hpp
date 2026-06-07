@@ -96,8 +96,6 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
-
 private:
   DataStructure& m_DataStructure;
   const WritePoleFigureInputValues* m_InputValues = nullptr;

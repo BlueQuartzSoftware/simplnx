@@ -128,6 +128,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
         // dividing by the magnitudes (they would be 1)
         c2.normalize();
 
+        // w holds cos(angle) here; converted to the angle (radians) on the next assignment.
         float64 w = ImageRotationUtilities::CosBetweenVectors(c1, c2);
         w = std::clamp(w, -1.0, 1.0);
         w = std::acos(w);

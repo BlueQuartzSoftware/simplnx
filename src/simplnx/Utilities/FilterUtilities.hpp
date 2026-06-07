@@ -196,7 +196,7 @@ auto ExecuteDataFunctionNoBool(FuncT&& func, DataType dataType, ArgsT&&... args)
     return func.template operator()<float64>(std::forward<ArgsT>(args)...);
   }
   default: {
-    throw std::runtime_error("nx::core::ExecuteDataFunction<...>(FuncT&& func, DataType dataType, ArgsT&&... args). Error: Invalid DataType");
+    throw std::runtime_error("nx::core::ExecuteDataFunctionNoBool<...>(FuncT&& func, DataType dataType, ArgsT&&... args). Error: Invalid DataType");
   }
   }
 }
@@ -240,7 +240,7 @@ auto ExecuteDataFunctionIntType(FuncT&& func, DataType dataType, ArgsT&&... args
     return func.template operator()<uint64>(std::forward<ArgsT>(args)...);
   }
   default: {
-    throw std::runtime_error("nx::core::ExecuteDataFunction<...>(FuncT&& func, DataType dataType, ArgsT&&... args). Error: Invalid DataType");
+    throw std::runtime_error("nx::core::ExecuteDataFunctionIntType<...>(FuncT&& func, DataType dataType, ArgsT&&... args). Error: Invalid DataType");
   }
   }
 }

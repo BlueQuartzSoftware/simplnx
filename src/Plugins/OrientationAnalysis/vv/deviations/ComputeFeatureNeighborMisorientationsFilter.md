@@ -20,7 +20,7 @@ The legacy A/B comparison was performed by **source inspection** rather than emp
 
 **Symptom:** Per-feature `AvgMisorientations` (output of `ComputeAvgMisors=true` / legacy `FindAvgMisors=true`) differ between SIMPLNX (post-2026-06-02 fix) and DREAM3D 6.5.171 on any dataset where features have mixed-phase neighbor lists. The legacy result depends on the *order* in which neighbors appear in the per-feature `NeighborList`: if the last-iterated neighbor is a phase match, the divisor used is the full neighbor-list length (incorrect); if the last neighbor is a phase mismatch, the divisor is decremented by 1 from the full length (the per-mismatch decrement at line 90 happens to be the last write to `tempMisoList`). The legacy result is therefore correct in some cases by accident and wrong by up to `(N-K) / N` of the true value in others, where N is the neighbor count and K is the number of phase-matched neighbors.
 
-The bug is **non-observable on the V&V toy fixtures' single-phase configurations** (no phase mismatches → no decrements → divisor matches list length, which equals the number of matches, which is correct). The bug **IS observable** on the bug-exposing fixture `Mixed Phase Neighbors (exposes divisor bug)`, which constructs a neighbor list `[match, mismatch, match]` for which the expected average is `(5 + 10) / 2 = 7.5°` but the buggy code produces `(5 + 10) / 3 = 5.0°`.
+The bug is **non-observable on the V&V data fixtures' single-phase configurations** (no phase mismatches → no decrements → divisor matches list length, which equals the number of matches, which is correct). The bug **IS observable** on the bug-exposing fixture `Mixed Phase Neighbors (exposes divisor bug)`, which constructs a neighbor list `[match, mismatch, match]` for which the expected average is `(5 + 10) / 2 = 7.5°` but the buggy code produces `(5 + 10) / 3 = 5.0°`.
 
 **Root cause:** **Bug** in both legacy DREAM3D 6.5.171 and SIMPLNX pre-fix.
 
@@ -49,7 +49,7 @@ A legacy backport branch of `FindMisorientations.cpp` with the same fix (move th
 | **Filter UUID**  | `0b68fe25-b5ef-4805-ae32-20acb8d4e823`                      |
 | **Status**       | active (precision-class; non-deviation in algorithmic sense) |
 
-**Symptom:** Per-neighbor `MisorientationList` values and per-feature `AvgMisorientations` values differ between SIMPLNX (EbsdLib 2.4.1+, post-D1 fix) and DREAM3D 6.5.171 on real EBSD datasets containing cubic-phase features with grain-pair boundaries near cubic symmetry operators (e.g., 4-fold about c-axis, 3-fold about [111], 2-fold about face-diagonal). Per-neighbor values shift by sub-`0.0001°` (within float precision), but the magnitude amplifies when averaged across many neighbors at the per-feature level. On the V&V toy fixtures (pure φ1 rotations about z, no sym-op-aligned neighbor pairs), no observable deviation.
+**Symptom:** Per-neighbor `MisorientationList` values and per-feature `AvgMisorientations` values differ between SIMPLNX (EbsdLib 2.4.1+, post-D1 fix) and DREAM3D 6.5.171 on real EBSD datasets containing cubic-phase features with grain-pair boundaries near cubic symmetry operators (e.g., 4-fold about c-axis, 3-fold about [111], 2-fold about face-diagonal). Per-neighbor values shift by sub-`0.0001°` (within float precision), but the magnitude amplifies when averaged across many neighbors at the per-feature level. On the V&V data fixtures (pure φ1 rotations about z, no sym-op-aligned neighbor pairs), no observable deviation.
 
 **Root cause:** **Precision** — not an algorithm change in either implementation.
 
