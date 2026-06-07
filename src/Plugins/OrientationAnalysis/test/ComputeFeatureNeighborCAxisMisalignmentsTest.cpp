@@ -47,7 +47,7 @@ const std::string k_AvgCAxisMisalignmentsOutName = "AvgCAxisMisalignments";
 // by phiDeg degrees from the global z-axis. For two cells with pure-Phi tilts of phiA and phiB
 // degrees, the c-axis misalignment is exactly |phiA - phiB| degrees (folded into [0, 90]) — see
 // the V&V provenance doc for the closed-form derivation.
-inline std::array<float32, 4> QuatFromPhiDeg(float32 phiDeg)
+std::array<float32, 4> QuatFromPhiDeg(float32 phiDeg)
 {
   const float32 halfAngleRad = (phiDeg * 0.5f) * 3.14159265358979323846f / 180.0f;
   return {std::sin(halfAngleRad), 0.0f, 0.0f, std::cos(halfAngleRad)};
@@ -75,7 +75,7 @@ struct ToyData
 // {numFeatures}; ensemble-level arrays (CrystalStructures) are sized {numCrystalStructures}.
 // Defaults: every cell assigned to feature 1 / phase 1; every feature phase 0 (caller to set);
 // identity quats; empty neighbor lists; CrystalStructures[0] = sentinel 999.
-inline ToyData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usize numCrystalStructures)
+ToyData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, usize numCrystalStructures)
 {
   ToyData td;
   td.totalCells = nX * nY * nZ;
@@ -115,7 +115,7 @@ inline ToyData CreateScaffold(usize nX, usize nY, usize nZ, usize numFeatures, u
   return td;
 }
 
-inline void SetAvgQuat(ToyData& td, usize featureIdx, const std::array<float32, 4>& q)
+void SetAvgQuat(ToyData& td, usize featureIdx, const std::array<float32, 4>& q)
 {
   (*td.avgQuats)[featureIdx * 4 + 0] = q[0];
   (*td.avgQuats)[featureIdx * 4 + 1] = q[1];
@@ -123,7 +123,7 @@ inline void SetAvgQuat(ToyData& td, usize featureIdx, const std::array<float32, 
   (*td.avgQuats)[featureIdx * 4 + 3] = q[3];
 }
 
-inline Arguments BuildArgs(bool findAvgMisals)
+Arguments BuildArgs(bool findAvgMisals)
 {
   Arguments args;
   args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FindAvgMisals_Key, std::make_any<bool>(findAvgMisals));
@@ -136,12 +136,12 @@ inline Arguments BuildArgs(bool findAvgMisals)
   return args;
 }
 
-inline const NeighborList<float32>& GetOutputMisalignmentList(const DataStructure& ds)
+const NeighborList<float32>& GetOutputMisalignmentList(const DataStructure& ds)
 {
   return ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_CAxisMisalignmentListOutName));
 }
 
-inline const Float32Array& GetOutputAvgMisalignments(const DataStructure& ds)
+const Float32Array& GetOutputAvgMisalignments(const DataStructure& ds)
 {
   return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgCAxisMisalignmentsOutName));
 }
@@ -149,7 +149,7 @@ inline const Float32Array& GetOutputAvgMisalignments(const DataStructure& ds)
 // Helper to construct the 10x10x1 realistic-microstructure scaffold used by Fixtures B and D.
 // See `vv/provenance/ComputeFeatureNeighborCAxisMisalignmentsFilter.md` for the cell-by-feature
 // layout diagram and the per-feature hand-derived expected values.
-inline ToyData BuildRealisticMicrostructure()
+ToyData BuildRealisticMicrostructure()
 {
   // 6 real features (1-6) + 1 sentinel (0). 2 phases: 1 = Hexagonal_High, 2 = Cubic_High.
   ToyData td = CreateScaffold(/*nX=*/10, /*nY=*/10, /*nZ=*/1, /*numFeatures=*/7, /*numCrystalStructures=*/3);

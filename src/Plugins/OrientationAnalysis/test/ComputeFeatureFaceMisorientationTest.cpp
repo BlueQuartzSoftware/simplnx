@@ -24,9 +24,6 @@ bool CompareFloats(const float32 generated, const float32 expected)
 }
 } // namespace
 
-// Wrapped in an anonymous namespace so every symbol below has internal linkage. Test TUs that share
-// the OrientationAnalysisUnitTest binary must not expose same-named external symbols, or the linker
-// silently merges duplicate definitions across files (see PR #1630 for that failure mode).
 namespace
 {
 namespace curated

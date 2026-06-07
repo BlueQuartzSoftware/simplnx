@@ -74,7 +74,6 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   std::vector<std::vector<float32>> misalignmentLists(totalFeatures);
 
   const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
-  usize hexNeighborListSize = 0;
   uint32 xtalPhase1 = 0;
   uint32 xtalPhase2 = 0;
 
@@ -104,12 +103,11 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     const NeighborList<int>::VectorType& currentNeighborList = neighborList[featureIdx];
     auto& currentMisalignmentList = misalignmentLists[featureIdx];
     currentMisalignmentList.resize(currentNeighborList.size(), -1.0);
-    // Initialize the divisor once per outer-loop iteration (per feature). Previously this was
-    // assigned inside the inner j-loop, which clobbered the per-mismatch decrement below — the
-    // resulting divisor only reflected the LAST neighbor's match/mismatch state, producing wrong
-    // per-feature averages whenever neighbors had mixed phases. Fixed 2026-06-04 during V&V cycle
-    // (sibling of the same divisor bug fixed in ComputeFeatureNeighborMisorientations on 2026-06-02).
-    hexNeighborListSize = currentNeighborList.size();
+    // Divisor is the count of hex-hex neighbor pairs, decremented per mismatch below. Declared
+    // inside the outer loop so each feature gets a fresh starting count; an earlier function-scope
+    // declaration combined with an inner-loop re-assignment caused the per-mismatch decrements to
+    // be clobbered (V&V cycle 2026-06-04, sibling of the same bug in ComputeFeatureNeighborMisorientations).
+    usize hexNeighborListSize = currentNeighborList.size();
     for(usize j = 0; j < currentNeighborList.size(); j++)
     {
       int neighborFeatureId = currentNeighborList[j];
@@ -171,7 +169,6 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
       {
         avgCAxisMisalignmentPtr->setValue(featureIdx, std::nan(""));
       }
-      hexNeighborListSize = 0;
     }
 
     cAxisMisalignmentList.setList(featureIdx, {currentMisalignmentList.begin(), currentMisalignmentList.end()});

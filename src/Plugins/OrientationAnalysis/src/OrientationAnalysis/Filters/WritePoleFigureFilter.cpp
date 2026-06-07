@@ -316,7 +316,18 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.IntensityPlot1Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot1Name);
   inputValues.IntensityPlot2Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot2Name);
   inputValues.IntensityPlot3Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot3Name);
-  inputValues.HexConvention = static_cast<ebsdlib::HexConvention>(filterArgs.value<ChoicesParameter::ValueType>(k_HexConvention_Key));
+  const auto hexConventionChoice = filterArgs.value<ChoicesParameter::ValueType>(k_HexConvention_Key);
+  switch(hexConventionChoice)
+  {
+  case 0:
+    inputValues.HexConvention = ebsdlib::HexConvention::XParallelA;
+    break;
+  case 1:
+    inputValues.HexConvention = ebsdlib::HexConvention::XParallelAStar;
+    break;
+  default:
+    return MakeErrorResult(-680010, fmt::format("Invalid Hex Convention choice: {}. Valid range is [0, 1].", hexConventionChoice));
+  }
 
   return WritePoleFigure(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

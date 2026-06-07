@@ -159,8 +159,12 @@ Result<> ComputeFaceIPFColoringFilter::executeImpl(DataStructure& dataStructure,
   inputValues.FirstFaceIPFColorsArrayName = filterArgs.value<std::string>(k_FirstFaceIPFColorsArrayName_Key);
   inputValues.SecondFaceIPFColorsArrayName = filterArgs.value<std::string>(k_SecondFaceIPFColorsArrayName_Key);
 
-  switch(filterArgs.value<ChoicesParameter::ValueType>(k_ColorKey_Key))
+  const auto colorKeyChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ColorKey_Key);
+  switch(colorKeyChoice)
   {
+  case 0:
+    inputValues.ColorKey = ebsdlib::ColorKeyKind::TSL;
+    break;
   case 1:
     inputValues.ColorKey = ebsdlib::ColorKeyKind::PUCM;
     break;
@@ -168,8 +172,7 @@ Result<> ComputeFaceIPFColoringFilter::executeImpl(DataStructure& dataStructure,
     inputValues.ColorKey = ebsdlib::ColorKeyKind::NolzeHielscher;
     break;
   default:
-    inputValues.ColorKey = ebsdlib::ColorKeyKind::TSL;
-    break;
+    return MakeErrorResult(-24340, fmt::format("Invalid Color Key choice: {}. Valid range is [0, 2].", colorKeyChoice));
   }
 
   return ComputeFaceIPFColoring(dataStructure, messageHandler, shouldCancel, &inputValues)();

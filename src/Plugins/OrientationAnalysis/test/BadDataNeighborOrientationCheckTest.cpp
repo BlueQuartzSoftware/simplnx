@@ -15,9 +15,6 @@
 namespace fs = std::filesystem;
 using namespace nx::core;
 
-// Wrapped in an anonymous namespace so every symbol below has internal linkage. Test TUs that share
-// the OrientationAnalysisUnitTest binary must not expose same-named external symbols, or the linker
-// silently merges duplicate definitions across files (see PR #1630 for that failure mode).
 namespace
 {
 namespace VerificationConstants
@@ -43,7 +40,7 @@ const DataPath k_CStuctsArrayPath = k_CellEnsembleDataPath.createChildPath(k_CSt
 namespace ClassFourInvariants
 {
 // Capture the current mask array contents into a std::vector for before/after invariant checks.
-inline std::vector<uint8> CaptureMask(const DataStructure& dataStructure)
+std::vector<uint8> CaptureMask(const DataStructure& dataStructure)
 {
   const auto& maskArray = dataStructure.getDataRefAs<UInt8Array>(VerificationConstants::k_MaskArrayPath);
   const auto& store = maskArray.getDataStoreRef();
@@ -59,7 +56,7 @@ inline std::vector<uint8> CaptureMask(const DataStructure& dataStructure)
 //   - Monotonicity: count of true mask values is non-decreasing across one filter run.
 //   - No-degrade: no voxel goes from true (good) to false (bad).
 // The filter is specified to only ever flip false -> true, never the reverse.
-inline void AssertInvariants(const std::vector<uint8>& originalMask, const DataStructure& dataStructure)
+void AssertInvariants(const std::vector<uint8>& originalMask, const DataStructure& dataStructure)
 {
   const auto& maskArray = dataStructure.getDataRefAs<UInt8Array>(VerificationConstants::k_MaskArrayPath);
   const auto& store = maskArray.getDataStoreRef();
@@ -1815,12 +1812,8 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Class 4 I
   REQUIRE(maskAfterRun1.size() == store.getSize());
   for(usize i = 0; i < store.getSize(); ++i)
   {
-    if(store.getValue(i) != maskAfterRun1[i])
-    {
-      const std::string errorMsg = fmt::format("Idempotence violated at index {}. Run1: {} | Run2: {}", i, maskAfterRun1[i], store.getValue(i));
-      CAPTURE(errorMsg);
-      REQUIRE(false);
-    }
+    INFO("Idempotence violated at index " << i);
+    REQUIRE(store.getValue(i) == maskAfterRun1[i]);
   }
 }
 
@@ -1896,11 +1889,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 2D Image 
   const auto& maskStore = dataStructure.getDataAs<UInt8Array>(VerificationConstants::k_MaskArrayPath)->getDataStoreRef();
   for(usize i = 0; i < 9; ++i)
   {
-    if(maskStore.getValue(i) != expectedMask[i])
-    {
-      const std::string errorMsg = fmt::format("2D fixture: values diverged at index {}. Expected: {} | Actual: {}", i, expectedMask[i], maskStore.getValue(i));
-      CAPTURE(errorMsg);
-      REQUIRE(false);
-    }
+    INFO("2D fixture: index " << i);
+    REQUIRE(maskStore.getValue(i) == expectedMask[i]);
   }
 }

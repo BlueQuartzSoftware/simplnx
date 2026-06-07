@@ -154,8 +154,12 @@ Result<> ComputeIPFColorsFilter::executeImpl(DataStructure& dataStructure, const
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   inputValues.cellIpfColorsArrayPath = inputValues.cellEulerAnglesArrayPath.replaceName(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
 
-  switch(filterArgs.value<ChoicesParameter::ValueType>(k_ColorKey_Key))
+  const auto colorKeyChoice = filterArgs.value<ChoicesParameter::ValueType>(k_ColorKey_Key);
+  switch(colorKeyChoice)
   {
+  case 0:
+    inputValues.colorKey = ebsdlib::ColorKeyKind::TSL;
+    break;
   case 1:
     inputValues.colorKey = ebsdlib::ColorKeyKind::PUCM;
     break;
@@ -163,8 +167,7 @@ Result<> ComputeIPFColorsFilter::executeImpl(DataStructure& dataStructure, const
     inputValues.colorKey = ebsdlib::ColorKeyKind::NolzeHielscher;
     break;
   default:
-    inputValues.colorKey = ebsdlib::ColorKeyKind::TSL;
-    break;
+    return MakeErrorResult(-23510, fmt::format("Invalid Color Key choice: {}. Valid range is [0, 2].", colorKeyChoice));
   }
 
   // Let the Algorithm instance do the work

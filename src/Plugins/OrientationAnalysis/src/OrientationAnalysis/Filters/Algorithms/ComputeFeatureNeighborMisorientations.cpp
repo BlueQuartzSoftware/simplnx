@@ -44,8 +44,6 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
   // not exist in the DataStructure. We cannot get it by reference.
   auto* avgMisorientations = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgMisorientationsArrayName);
 
-  size_t tempMisoList = 0;
-
   size_t totalFeatures = inFeaturePhases.getNumberOfTuples();
 
   std::vector<std::vector<float>> tempMisorientationLists(totalFeatures);
@@ -65,11 +63,11 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
     const NeighborList<int32_t>::VectorType featureNeighborList = inNeighborList.at(static_cast<int32_t>(i));
 
     tempMisorientationLists[i].assign(featureNeighborList.size(), -1.0);
-    // Initialize the divisor once per outer-loop iteration (per feature). Previously this was
-    // assigned inside the inner j-loop, which clobbered the per-mismatch decrement below — the
-    // resulting divisor only reflected the LAST neighbor's match/mismatch state, producing wrong
-    // per-feature averages whenever neighbors had mixed phases. Fixed 2026-06-02 during V&V cycle.
-    tempMisoList = featureNeighborList.size();
+    // Divisor is the count of hex-hex neighbor pairs, decremented per mismatch below. Declared
+    // inside the outer loop so each feature gets a fresh starting count; an earlier function-scope
+    // declaration combined with an inner-loop re-assignment caused the per-mismatch decrements to
+    // be clobbered (V&V cycle 2026-06-02).
+    size_t tempMisoList = featureNeighborList.size();
 
     for(size_t j = 0; j < featureNeighborList.size(); j++)
     {
@@ -106,7 +104,6 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       {
         (*avgMisorientations)[i] = NAN;
       }
-      tempMisoList = 0;
     }
   }
 

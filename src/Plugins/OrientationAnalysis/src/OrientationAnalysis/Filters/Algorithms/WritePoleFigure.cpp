@@ -655,6 +655,8 @@ Result<> WritePoleFigure::operator()()
         intensityImages = createIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->NormalizeToMRD);
         break;
       default:
+        m_MessageHandler({IFilter::Message::Type::Warning,
+                          fmt::format("Phase {} has unknown crystal structure value {}; no pole figures will be generated for this phase.", phase, static_cast<uint32>(crystalStructures[phase]))});
         break;
       }
 

@@ -34,10 +34,6 @@ using namespace nx::core::UnitTest;
 // Reference: src/Plugins/OrientationAnalysis/vv/ComputeFeatureReferenceMisorientationsFilter.md
 // =============================================================================
 
-// Wrapped in an anonymous namespace so every symbol below has internal linkage. Sibling
-// OrientationAnalysis test TUs declare their own `DataFixtures` namespace with same-named
-// (and same-signature) entities such as `CreateScaffold`; without internal linkage the linker
-// merges those duplicate definitions into one, silently giving this TU another file's scaffold.
 namespace
 {
 namespace DataFixtures

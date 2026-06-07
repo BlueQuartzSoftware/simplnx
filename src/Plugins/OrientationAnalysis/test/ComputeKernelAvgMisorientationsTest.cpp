@@ -24,10 +24,6 @@ using namespace nx::core;
 using namespace nx::core::Constants;
 using namespace nx::core::UnitTest;
 
-// Wrapped in an anonymous namespace so every symbol below has internal linkage. Sibling
-// OrientationAnalysis test TUs declare their own `DataFixtures` namespace with same-named
-// (and same-signature) entities such as `CreateScaffold`; without internal linkage the linker
-// merges those duplicate definitions into one, silently giving this TU another file's scaffold.
 namespace
 {
 namespace DataFixtures
@@ -44,7 +40,7 @@ const std::string k_CrystalStructuresName = "CrystalStructures";
 
 const std::string k_KAMOutName = "KernelAverageMisorientationsOut";
 
-inline std::array<float32, 4> QuatFromPhi1Deg(float32 phi1Deg)
+std::array<float32, 4> QuatFromPhi1Deg(float32 phi1Deg)
 {
   const float32 halfAngleRad = (phi1Deg * 0.5f) * 3.14159265358979323846f / 180.0f;
   return {0.0f, 0.0f, std::sin(halfAngleRad), std::cos(halfAngleRad)};
@@ -66,7 +62,7 @@ struct ToyData
 // Build a scaffold with an ImageGeom of the given (nX, nY, nZ) dimensions, a cell-level AM, and an
 // ensemble AM. Cell arrays are sized as totalCells = nX*nY*nZ and initialized to: FeatureIds=1,
 // CellPhases=1, Quats=identity. CrystalStructures index 0 = sentinel, index 1 = Cubic_High.
-inline ToyData CreateScaffold(usize nX, usize nY, usize nZ, usize numCrystalStructures = 2)
+ToyData CreateScaffold(usize nX, usize nY, usize nZ, usize numCrystalStructures = 2)
 {
   ToyData td;
   td.totalCells = nX * nY * nZ;
@@ -101,7 +97,7 @@ inline ToyData CreateScaffold(usize nX, usize nY, usize nZ, usize numCrystalStru
   return td;
 }
 
-inline void SetCellQuat(ToyData& td, usize cellIdx, const std::array<float32, 4>& q)
+void SetCellQuat(ToyData& td, usize cellIdx, const std::array<float32, 4>& q)
 {
   (*td.quats)[cellIdx * 4 + 0] = q[0];
   (*td.quats)[cellIdx * 4 + 1] = q[1];
@@ -109,7 +105,7 @@ inline void SetCellQuat(ToyData& td, usize cellIdx, const std::array<float32, 4>
   (*td.quats)[cellIdx * 4 + 3] = q[3];
 }
 
-inline Arguments BuildArgs(const std::vector<int32>& kernelRadius)
+Arguments BuildArgs(const std::vector<int32>& kernelRadius)
 {
   Arguments args;
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(kernelRadius));
@@ -122,7 +118,7 @@ inline Arguments BuildArgs(const std::vector<int32>& kernelRadius)
   return args;
 }
 
-inline const Float32Array& GetOutputKAM(const DataStructure& ds)
+const Float32Array& GetOutputKAM(const DataStructure& ds)
 {
   return ds.getDataRefAs<Float32Array>(k_CellDataPath.createChildPath(k_KAMOutName));
 }

@@ -82,7 +82,7 @@ Result<> BadDataNeighborOrientationCheck::operator()()
   const usize numOrientationOps = orientationOps.size();
   for(usize i = 0; i < crystalStructures.getSize(); ++i)
   {
-    if(crystalStructures[i] >= numOrientationOps && crystalStructures[i] != static_cast<uint32>(ebsdlib::CrystalStructure::UnknownCrystalStructure))
+    if(crystalStructures[i] >= numOrientationOps && crystalStructures[i] != ebsdlib::CrystalStructure::UnknownCrystalStructure)
     {
       return MakeErrorResult(
           -54901, fmt::format("Crystal structure at ensemble index {} has value {}, which is not a valid Laue-group index. Valid range is [0, {}).", i, crystalStructures[i], numOrientationOps));

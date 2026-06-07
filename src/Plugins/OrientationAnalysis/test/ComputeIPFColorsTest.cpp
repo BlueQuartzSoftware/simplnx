@@ -40,6 +40,7 @@ Compare the data sets. The values should be exactly the same.
 
 using namespace ebsdlib;
 
+#include <algorithm>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
@@ -201,19 +202,8 @@ TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: ColorKey choice reaches 
   // Sanity: at least one tuple must differ between TSL and each other kind. If
   // the switch in executeImpl ever silently collapsed every kind onto TSL,
   // these arrays would be identical.
-  auto differs = [](const UInt8Array& a, const UInt8Array& b) {
-    const size_t size = a.getSize();
-    for(size_t i = 0; i < size; ++i)
-    {
-      if(a[i] != b[i])
-      {
-        return true;
-      }
-    }
-    return false;
-  };
-  REQUIRE(differs(tslColors, pucmColors));
-  REQUIRE(differs(tslColors, nhColors));
+  REQUIRE(!std::equal(tslColors.cbegin(), tslColors.cend(), pucmColors.cbegin()));
+  REQUIRE(!std::equal(tslColors.cbegin(), tslColors.cend(), nhColors.cbegin()));
 }
 
 TEST_CASE("OrientationAnalysis::ComputeIPFColorsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeIPFColorsFilter][BackwardsCompatibility]")

@@ -35,10 +35,6 @@ using namespace nx::core::UnitTest;
 // Reference: src/Plugins/OrientationAnalysis/vv/ComputeFeatureNeighborMisorientationsFilter.md
 // =============================================================================
 
-// Wrapped in an anonymous namespace so every symbol below has internal linkage. Sibling
-// OrientationAnalysis test TUs declare their own `DataFixtures` namespace with same-named
-// (and same-signature) entities such as `CreateScaffold`; without internal linkage the linker
-// merges those duplicate definitions into one, silently giving this TU another file's scaffold.
 namespace
 {
 namespace DataFixtures
@@ -56,7 +52,7 @@ const std::string k_CrystalStructuresName = "CrystalStructures";
 const std::string k_MisorientationListOutName = "MisorientationListOut";
 const std::string k_AvgMisorientationsOutName = "AvgMisorientationsOut";
 
-inline std::array<float32, 4> QuatFromPhi1Deg(float32 phi1Deg)
+std::array<float32, 4> QuatFromPhi1Deg(float32 phi1Deg)
 {
   const float32 halfAngleRad = (phi1Deg * 0.5f) * 3.14159265358979323846f / 180.0f;
   return {0.0f, 0.0f, std::sin(halfAngleRad), std::cos(halfAngleRad)};
@@ -76,7 +72,7 @@ struct ToyData
 
 // Build a scaffold with a tiny ImageGeom + a feature AM (size numFeatures) + ensemble AM
 // (size numCrystalStructures). All input arrays are initialized; caller populates per-feature values.
-inline ToyData CreateScaffold(usize numFeatures, usize numCrystalStructures)
+ToyData CreateScaffold(usize numFeatures, usize numCrystalStructures)
 {
   ToyData td;
   td.geom = ImageGeom::Create(td.ds, k_GeomName);
@@ -111,7 +107,7 @@ inline ToyData CreateScaffold(usize numFeatures, usize numCrystalStructures)
   return td;
 }
 
-inline void SetAvgQuat(ToyData& td, usize featureIdx, const std::array<float32, 4>& q)
+void SetAvgQuat(ToyData& td, usize featureIdx, const std::array<float32, 4>& q)
 {
   (*td.avgQuats)[featureIdx * 4 + 0] = q[0];
   (*td.avgQuats)[featureIdx * 4 + 1] = q[1];
@@ -119,7 +115,7 @@ inline void SetAvgQuat(ToyData& td, usize featureIdx, const std::array<float32, 
   (*td.avgQuats)[featureIdx * 4 + 3] = q[3];
 }
 
-inline Arguments BuildArgs(bool computeAvgMisors)
+Arguments BuildArgs(bool computeAvgMisors)
 {
   Arguments args;
   args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_ComputeAvgMisors_Key, std::make_any<bool>(computeAvgMisors));
@@ -132,12 +128,12 @@ inline Arguments BuildArgs(bool computeAvgMisors)
   return args;
 }
 
-inline const NeighborList<float32>& GetOutputMisorientationList(const DataStructure& ds)
+const NeighborList<float32>& GetOutputMisorientationList(const DataStructure& ds)
 {
   return ds.getDataRefAs<NeighborList<float32>>(k_FeatureDataPath.createChildPath(k_MisorientationListOutName));
 }
 
-inline const Float32Array& GetOutputAvgMisorientations(const DataStructure& ds)
+const Float32Array& GetOutputAvgMisorientations(const DataStructure& ds)
 {
   return ds.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgMisorientationsOutName));
 }
