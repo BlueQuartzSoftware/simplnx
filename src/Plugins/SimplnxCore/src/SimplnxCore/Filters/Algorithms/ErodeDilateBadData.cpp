@@ -18,7 +18,7 @@ public:
   ErodeDilateBadDataTransferDataImpl(const ErodeDilateBadDataTransferDataImpl&) = default;
 
   ErodeDilateBadDataTransferDataImpl(ErodeDilateBadData* filterAlg, usize totalPoints, ChoicesParameter::ValueType operation, const Int32AbstractDataStore& featureIds,
-                                     const Int64AbstractDataStore& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
+                                     const std::vector<int64>& neighbors, const std::shared_ptr<IDataArray>& dataArrayPtr, MessageHelper& messageHelper)
   : m_FilterAlg(filterAlg)
   , m_TotalPoints(totalPoints)
   , m_Operation(operation)
@@ -58,7 +58,7 @@ private:
   ErodeDilateBadData* m_FilterAlg = nullptr;
   usize m_TotalPoints = 0;
   ChoicesParameter::ValueType m_Operation = 0;
-  const Int64AbstractDataStore& m_Neighbors;
+  const std::vector<int64>& m_Neighbors;
   const std::shared_ptr<IDataArray> m_DataArrayPtr;
   const Int32AbstractDataStore& m_FeatureIds;
   MessageHelper& m_MessageHelper;
@@ -174,7 +174,7 @@ void ErodeBadDataPostOp(const Int32AbstractDataStore& featureIds, std::vector<in
  * @param yIndex Y index in the geometry position used for determing neighbor validity.
  * @param zIndes Z index in the geometry position used for determing neighbor validity.
  */
-void erodeDilateBadDataVoxel(const ErodeDilateBadDataInputValues* inputValues, const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, Int64AbstractDataStore& neighbors,
+void erodeDilateBadDataVoxel(const ErodeDilateBadDataInputValues* inputValues, const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, std::vector<int64>& neighbors,
                              const std::array<int64, 6>& neighpoints, const std::array<int64, 3>& dims, int64 voxelIndex, int64 xIndex, int64 yIndex, int64 zIndex)
 {
   const int32 featureName = featureIds[voxelIndex];
@@ -220,9 +220,7 @@ Result<> ErodeDilateBadData::operator()()
   const usize totalPoints = featureIds.getNumberOfTuples();
 
   // Update for OOC data sizes
-  std::shared_ptr<Int64AbstractDataStore> neighborsPtr = DataStoreUtilities::CreateDataStore<int64>({totalPoints}, {1});
-  auto& neighbors = *neighborsPtr.get();
-  neighbors.fill(-1);
+  std::vector<int64> neighbors(totalPoints, -1);
 
   const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
 
