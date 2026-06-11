@@ -344,13 +344,13 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
       // Use Kahan summation to determine overall volume
 
       // Attempt to recover low order into the value. The first instance is 0
-      const float64 value = featureVolumes[featureIdx] - featureCompensators[featureIdx];
+      const float64 value = localVolumes[featureIdx] - featureCompensators[featureIdx];
 
       // low order may be lost
-      const float64 volSum = localVolumes[featureIdx] + value;
+      const float64 volSum = featureVolumes[featureIdx] + value;
 
       // recover and cache low order
-      featureCompensators[featureIdx] = (volSum - localVolumes[featureIdx]) - value;
+      featureCompensators[featureIdx] = (volSum - featureVolumes[featureIdx]) - value;
 
       // store volumes
       featureVolumes[featureIdx] = volSum;
