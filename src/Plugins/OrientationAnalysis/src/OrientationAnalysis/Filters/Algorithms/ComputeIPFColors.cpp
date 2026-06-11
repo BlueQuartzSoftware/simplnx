@@ -22,7 +22,7 @@ class ComputeIPFColorsImpl
 {
 public:
   ComputeIPFColorsImpl(ComputeIPFColors* filter, nx::core::FloatVec3 referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures,
-                       int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors)
+                       int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors, ebsdlib::ColorKeyKind colorKey)
   : m_Filter(filter)
   , m_ReferenceDir(referenceDir)
   , m_CellEulerAngles(eulers.getDataStoreRef())
@@ -31,6 +31,7 @@ public:
   , m_NumPhases(numPhases)
   , m_GoodVoxels(goodVoxels)
   , m_CellIPFColors(colors.getDataStoreRef())
+  , m_ColorKey(colorKey)
   {
   }
 
@@ -82,7 +83,7 @@ public:
 
       if(phase < m_NumPhases && calcIPF && m_CrystalStructures[phase] < ebsdlib::CrystalStructure::LaueGroupEnd)
       {
-        argb = ops[m_CrystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false);
+        argb = ops[m_CrystalStructures[phase]]->generateIPFColor(dEuler.data(), refDir.data(), false, m_ColorKey);
         m_CellIPFColors.setValue(index, static_cast<uint8_t>(nx::core::RgbColor::dRed(argb)));
         m_CellIPFColors.setValue(index + 1, static_cast<uint8_t>(nx::core::RgbColor::dGreen(argb)));
         m_CellIPFColors.setValue(index + 2, static_cast<uint8_t>(nx::core::RgbColor::dBlue(argb)));
@@ -123,6 +124,7 @@ private:
   int32_t m_NumPhases = 0;
   const nx::core::IDataArray* m_GoodVoxels = nullptr;
   nx::core::UInt8AbstractDataStore& m_CellIPFColors;
+  ebsdlib::ColorKeyKind m_ColorKey = ebsdlib::ColorKeyKind::TSL;
 };
 } // namespace
 
@@ -178,7 +180,7 @@ Result<> ComputeIPFColors::operator()()
   dataAlg.setRange(0, totalPoints);
   dataAlg.requireArraysInMemory(algArrays);
 
-  dataAlg.execute(ComputeIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, goodVoxelsArray, ipfColors));
+  dataAlg.execute(ComputeIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, goodVoxelsArray, ipfColors, m_InputValues->colorKey));
 
   if(m_PhaseWarningCount > 0)
   {

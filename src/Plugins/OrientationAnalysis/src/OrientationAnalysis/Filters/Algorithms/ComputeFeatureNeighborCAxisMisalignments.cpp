@@ -74,7 +74,6 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
   std::vector<std::vector<float32>> misalignmentLists(totalFeatures);
 
   const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
-  usize hexNeighborListSize = 0;
   uint32 xtalPhase1 = 0;
   uint32 xtalPhase2 = 0;
 
@@ -104,11 +103,15 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
     const NeighborList<int>::VectorType& currentNeighborList = neighborList[featureIdx];
     auto& currentMisalignmentList = misalignmentLists[featureIdx];
     currentMisalignmentList.resize(currentNeighborList.size(), -1.0);
+    // Divisor is the count of hex-hex neighbor pairs, decremented per mismatch below. Declared
+    // inside the outer loop so each feature gets a fresh starting count; an earlier function-scope
+    // declaration combined with an inner-loop re-assignment caused the per-mismatch decrements to
+    // be clobbered (V&V cycle 2026-06-04, sibling of the same bug in ComputeFeatureNeighborMisorientations).
+    usize hexNeighborListSize = currentNeighborList.size();
     for(usize j = 0; j < currentNeighborList.size(); j++)
     {
       int neighborFeatureId = currentNeighborList[j];
       xtalPhase2 = crystalStructures[featurePhases[neighborFeatureId]];
-      hexNeighborListSize = currentNeighborList.size();
 
       // If both the feature and the neighbor are both Hexagonal Phases
       if(xtalPhase1 == xtalPhase2 && (xtalPhase1 == ebsdlib::CrystalStructure::Hexagonal_High || xtalPhase1 == ebsdlib::CrystalStructure::Hexagonal_Low))
@@ -125,6 +128,7 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
         // dividing by the magnitudes (they would be 1)
         c2.normalize();
 
+        // w holds cos(angle) here; converted to the angle (radians) on the next assignment.
         float64 w = ImageRotationUtilities::CosBetweenVectors(c1, c2);
         w = std::clamp(w, -1.0, 1.0);
         w = std::acos(w);
@@ -166,7 +170,6 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
       {
         avgCAxisMisalignmentPtr->setValue(featureIdx, std::nan(""));
       }
-      hexNeighborListSize = 0;
     }
 
     cAxisMisalignmentList.setList(featureIdx, {currentMisalignmentList.begin(), currentMisalignmentList.end()});

@@ -30,6 +30,7 @@
 #include <EbsdLib/LaueOps/TrigonalOps.h>
 #include <EbsdLib/Utilities/LambertUtilities.h>
 #include <EbsdLib/Utilities/ModifiedLambertProjection.h>
+#include <EbsdLib/Utilities/PngWriter.h>
 #include <EbsdLib/Utilities/PoleFigureCompositor.h>
 
 #include "H5Support/H5Lite.h"
@@ -447,7 +448,7 @@ std::vector<ebsdlib::DoubleArrayType::Pointer> createIntensityPoleFigures(ebsdli
   config.sphereRadius = 1.0f;
 
   // Generate the coords on the sphere **** Parallelized
-  ops.generateSphereCoordsFromEulers(config.eulers, xyz001.get(), xyz011.get(), xyz111.get());
+  ops.generateSphereCoordsFromEulers(config.eulers, xyz001.get(), xyz011.get(), xyz111.get(), config.hexConvention);
 
   // These arrays hold the "intensity" images which eventually get converted to an actual Color RGB image
   // Generate the modified Lambert projection images (Squares, 2 of them, 1 for northern hemisphere, 1 for southern hemisphere
@@ -500,12 +501,6 @@ WritePoleFigure::WritePoleFigure(DataStructure& dataStructure, const IFilter::Me
 
 // -----------------------------------------------------------------------------
 WritePoleFigure::~WritePoleFigure() noexcept = default;
-
-// -----------------------------------------------------------------------------
-const std::atomic_bool& WritePoleFigure::getCancel()
-{
-  return m_ShouldCancel;
-}
 
 // -----------------------------------------------------------------------------
 Result<> WritePoleFigure::operator()()
@@ -602,8 +597,7 @@ Result<> WritePoleFigure::operator()()
       continue;
     } // Skip because we have no Pole Figure data
 
-    std::vector<ebsdlib::UInt8ArrayType::Pointer> figures;
-    std::vector<ebsdlib::DoubleArrayType::Pointer> intensityImages;
+    // std::vector<ebsdlib::UInt8ArrayType::Pointer> figures;
 
     ebsdlib::PoleFigureConfiguration_t config;
     config.eulers = subEulerAnglesPtr.get();
@@ -612,110 +606,102 @@ Result<> WritePoleFigure::operator()()
     config.numColors = m_InputValues->NumColors;
     config.discrete = (static_cast<WritePoleFigure::Algorithm>(m_InputValues->GenerationAlgorithm) == WritePoleFigure::Algorithm::Discrete);
     config.discreteHeatMap = k_UseDiscreteHeatMap;
+    config.hexConvention = m_InputValues->HexConvention;
 
     m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Pole Figures for Phase {}", phase)});
-
-    switch(crystalStructures[phase])
+    if(m_InputValues->SaveIntensityData)
     {
-    case ebsdlib::CrystalStructure::Cubic_High:
-      figures = makePoleFigures<ebsdlib::CubicOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::CubicOps>(config, m_InputValues->NormalizeToMRD);
-      break;
-    case ebsdlib::CrystalStructure::Cubic_Low:
-      figures = makePoleFigures<ebsdlib::CubicLowOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::CubicLowOps>(config, m_InputValues->NormalizeToMRD);
-      break;
-    case ebsdlib::CrystalStructure::Hexagonal_High:
-      figures = makePoleFigures<ebsdlib::HexagonalOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::HexagonalOps>(config, m_InputValues->NormalizeToMRD);
-      break;
-    case ebsdlib::CrystalStructure::Hexagonal_Low:
-      figures = makePoleFigures<ebsdlib::HexagonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::HexagonalLowOps>(config, m_InputValues->NormalizeToMRD);
-      break;
-    case ebsdlib::CrystalStructure::Trigonal_High:
-      figures = makePoleFigures<ebsdlib::TrigonalOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::TrigonalOps>(config, m_InputValues->NormalizeToMRD);
-      //   setWarningCondition(-1010, "Trigonal High Symmetry is not supported for Pole figures. This phase will be omitted from results");
-      break;
-    case ebsdlib::CrystalStructure::Trigonal_Low:
-      figures = makePoleFigures<ebsdlib::TrigonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::TrigonalLowOps>(config, m_InputValues->NormalizeToMRD);
-      //  setWarningCondition(-1010, "Trigonal Low Symmetry is not supported for Pole figures. This phase will be omitted from results");
-      break;
-    case ebsdlib::CrystalStructure::Tetragonal_High:
-      figures = makePoleFigures<ebsdlib::TetragonalOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::TetragonalOps>(config, m_InputValues->NormalizeToMRD);
-      //  setWarningCondition(-1010, "Tetragonal High Symmetry is not supported for Pole figures. This phase will be omitted from results");
-      break;
-    case ebsdlib::CrystalStructure::Tetragonal_Low:
-      figures = makePoleFigures<ebsdlib::TetragonalLowOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::TetragonalLowOps>(config, m_InputValues->NormalizeToMRD);
-      // setWarningCondition(-1010, "Tetragonal Low Symmetry is not supported for Pole figures. This phase will be omitted from results");
-      break;
-    case ebsdlib::CrystalStructure::OrthoRhombic:
-      figures = makePoleFigures<ebsdlib::OrthoRhombicOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::OrthoRhombicOps>(config, m_InputValues->NormalizeToMRD);
-      break;
-    case ebsdlib::CrystalStructure::Monoclinic:
-      figures = makePoleFigures<ebsdlib::MonoclinicOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::MonoclinicOps>(config, m_InputValues->NormalizeToMRD);
-      break;
-    case ebsdlib::CrystalStructure::Triclinic:
-      figures = makePoleFigures<ebsdlib::TriclinicOps>(config);
-      intensityImages = createIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->NormalizeToMRD);
-      break;
-    default:
-      break;
+      std::vector<ebsdlib::DoubleArrayType::Pointer> intensityImages;
+
+      switch(crystalStructures[phase])
+      {
+      case ebsdlib::CrystalStructure::Cubic_High:
+        intensityImages = createIntensityPoleFigures<ebsdlib::CubicOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Cubic_Low:
+        intensityImages = createIntensityPoleFigures<ebsdlib::CubicLowOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Hexagonal_High:
+        intensityImages = createIntensityPoleFigures<ebsdlib::HexagonalOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Hexagonal_Low:
+        intensityImages = createIntensityPoleFigures<ebsdlib::HexagonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Trigonal_High:
+        intensityImages = createIntensityPoleFigures<ebsdlib::TrigonalOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Trigonal_Low:
+        intensityImages = createIntensityPoleFigures<ebsdlib::TrigonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Tetragonal_High:
+        intensityImages = createIntensityPoleFigures<ebsdlib::TetragonalOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Tetragonal_Low:
+        intensityImages = createIntensityPoleFigures<ebsdlib::TetragonalLowOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::OrthoRhombic:
+        intensityImages = createIntensityPoleFigures<ebsdlib::OrthoRhombicOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Monoclinic:
+        intensityImages = createIntensityPoleFigures<ebsdlib::MonoclinicOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      case ebsdlib::CrystalStructure::Triclinic:
+        intensityImages = createIntensityPoleFigures<ebsdlib::TriclinicOps>(config, m_InputValues->NormalizeToMRD);
+        break;
+      default:
+        m_MessageHandler({IFilter::Message::Type::Warning,
+                          fmt::format("Phase {} has unknown crystal structure value {}; no pole figures will be generated for this phase.", phase, static_cast<uint32>(crystalStructures[phase]))});
+        break;
+      }
+
+      if(intensityImages.size() == 3)
+      {
+        DataPath amPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_ImageAttrMatName);
+        // If there is more than a single phase we will need to add more arrays to the DataStructure
+        if(phase > 1)
+        {
+          const std::vector<size_t> intensityImageDims = {static_cast<usize>(config.imageDim), static_cast<usize>(config.imageDim), 1ULL};
+          DataPath arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name));
+          Result<> result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+
+          arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name));
+          result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+
+          arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name));
+          result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
+        }
+
+        auto intensityPlot1Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name)));
+        auto intensityPlot2Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name)));
+        auto intensityPlot3Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name)));
+
+        std::vector<size_t> compDims = {1ULL};
+        for(int imageIndex = 0; imageIndex < intensityImages.size(); imageIndex++)
+        {
+          intensityImages[imageIndex] = flipAndMirrorPoleFigure<double>(intensityImages[imageIndex].get(), config);
+        }
+
+        std::copy(intensityImages[0]->begin(), intensityImages[0]->end(), intensityPlot1Array.begin());
+        std::copy(intensityImages[1]->begin(), intensityImages[1]->end(), intensityPlot2Array.begin());
+        std::copy(intensityImages[2]->begin(), intensityImages[2]->end(), intensityPlot3Array.begin());
+
+        DataPath metaDataPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_MetaDataName);
+        auto metaDataArrayRef = m_DataStructure.getDataRefAs<StringArray>(metaDataPath);
+        if(metaDataArrayRef.getNumberOfTuples() != numPhases)
+        {
+          metaDataArrayRef.resizeTuples(std::vector<usize>{numPhases});
+        }
+
+        std::vector<std::string> laueNames = ebsdlib::LaueOps::GetLaueNames();
+        const uint32_t laueIndex = crystalStructures[phase];
+        const std::string materialName = materialNames[phase];
+
+        metaDataArrayRef[phase] = fmt::format("Phase Num: {}\nMaterial Name: {}\nLaue Group: {}\nHemisphere: Northern\nSamples: {}\nLambert Square Dim: {}", phase, materialName, laueNames[laueIndex],
+                                              config.eulers->getNumberOfTuples(), config.lambertDim);
+      }
     }
 
-    if(m_InputValues->SaveIntensityData && intensityImages.size() == 3)
-    {
-      DataPath amPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_ImageAttrMatName);
-      // If there is more than a single phase we will need to add more arrays to the DataStructure
-      if(phase > 1)
-      {
-        const std::vector<size_t> intensityImageDims = {static_cast<usize>(config.imageDim), static_cast<usize>(config.imageDim), 1ULL};
-        DataPath arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name));
-        Result<> result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
-
-        arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name));
-        result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
-
-        arrayDataPath = amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name));
-        result = ArrayCreationUtilities::CreateArray<float64>(m_DataStructure, intensityImageDims, {1ULL}, arrayDataPath, IDataAction::Mode::Execute);
-      }
-
-      auto intensityPlot1Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot1Name)));
-      auto intensityPlot2Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot2Name)));
-      auto intensityPlot3Array = m_DataStructure.getDataRefAs<Float64Array>(amPath.createChildPath(fmt::format("Phase_{}_{}", phase, m_InputValues->IntensityPlot3Name)));
-
-      std::vector<size_t> compDims = {1ULL};
-      for(int imageIndex = 0; imageIndex < figures.size(); imageIndex++)
-      {
-        intensityImages[imageIndex] = flipAndMirrorPoleFigure<double>(intensityImages[imageIndex].get(), config);
-      }
-
-      std::copy(intensityImages[0]->begin(), intensityImages[0]->end(), intensityPlot1Array.begin());
-      std::copy(intensityImages[1]->begin(), intensityImages[1]->end(), intensityPlot2Array.begin());
-      std::copy(intensityImages[2]->begin(), intensityImages[2]->end(), intensityPlot3Array.begin());
-
-      DataPath metaDataPath = m_InputValues->IntensityGeometryDataPath.createChildPath(write_pole_figure::k_MetaDataName);
-      auto metaDataArrayRef = m_DataStructure.getDataRefAs<StringArray>(metaDataPath);
-      if(metaDataArrayRef.getNumberOfTuples() != numPhases)
-      {
-        metaDataArrayRef.resizeTuples(std::vector<usize>{numPhases});
-      }
-
-      std::vector<std::string> laueNames = ebsdlib::LaueOps::GetLaueNames();
-      const uint32_t laueIndex = crystalStructures[phase];
-      const std::string materialName = materialNames[phase];
-
-      metaDataArrayRef[phase] = fmt::format("Phase Num: {}\nMaterial Name: {}\nLaue Group: {}\nHemisphere: Northern\nSamples: {}\nLambert Square Dim: {}", phase, materialName, laueNames[laueIndex],
-                                            config.eulers->getNumberOfTuples(), config.lambertDim);
-    }
-
-    if(figures.size() == 3)
+    if(m_InputValues->SaveAsImageGeometry || m_InputValues->WriteImageToDisk)
     {
       // Build the composite configuration
       ebsdlib::CompositePoleFigureConfiguration_t compositeConfig;
@@ -738,6 +724,7 @@ Result<> WritePoleFigure::operator()()
       compositeConfig.phaseName = materialNames[phase];
       compositeConfig.phaseNumber = static_cast<int32_t>(phase);
       compositeConfig.title = m_InputValues->Title;
+      compositeConfig.hexConvention = m_InputValues->HexConvention;
 
       // Generate the composite pole figure image
       ebsdlib::PoleFigureCompositor compositor;
@@ -783,8 +770,8 @@ Result<> WritePoleFigure::operator()()
       // Write out the full RGBA data
       if(m_InputValues->WriteImageToDisk)
       {
-        const std::string filename = fmt::format("{}/{}{}.tiff", m_InputValues->OutputPath.string(), m_InputValues->ImagePrefix, phase);
-        auto result = TiffWriter::WriteImage(filename, pageWidth, pageHeight, 4, compositeResult.image->getPointer(0));
+        const std::string filename = fmt::format("{}/{}{}.png", m_InputValues->OutputPath.string(), m_InputValues->ImagePrefix, phase);
+        auto result = PngWriter::WriteColorImage(filename, pageWidth, pageHeight, 4, compositeResult.image->getPointer(0));
         if(result.first < 0)
         {
           return MakeErrorResult(-53900, fmt::format("Error writing pole figure image '{}' to disk.\n    Error Code from Tiff Writer: {}\n    Message: {}", filename, result.first, result.second));

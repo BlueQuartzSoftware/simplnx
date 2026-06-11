@@ -78,8 +78,14 @@ IFilter::VersionType ComputeFeatureFaceMisorientationFilter::parametersVersion()
   // Description:
   //
   // Change 1:
-  // Added - k_StoreAxisAngle_Key = "store_axis_angle" && k_AxisAngleArrayName_Key = "axis_angle_array_name";
-  // Solution - None. Default behavior preserves backward compatibility
+  // Renamed parameter key
+  //   k_SurfaceMeshFaceMisorientationColorsArrayName_Key ("surface_mesh_face_misorientation_colors_array_name")
+  //   -> k_MisorientationArrayName_Key ("misorientation_array_name")
+  //
+  // Change 2:
+  // Output array component shape changed from {3} ("axis * angle" colors) to {1} (misorientation angle in degrees).
+  //
+  // Solution: Pipelines using the old key must be updated to the new key. No automatic migration is provided.
 }
 
 //------------------------------------------------------------------------------

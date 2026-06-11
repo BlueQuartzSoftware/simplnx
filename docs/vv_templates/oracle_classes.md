@@ -10,7 +10,7 @@ The five classes differ in **what they trust** (math, a library, a paper, proper
 
 ## Class 1 — Analytical
 
-**What it is:** You can write down, on paper, the *exact* expected output as a closed-form function of the input. The math is small enough to do by hand or in a spreadsheet on a toy dataset.
+**What it is:** You can write down, on paper, the *exact* expected output as a closed-form function of the input. The math is small enough to do by hand or in a spreadsheet on a hand-built fixture.
 
 **Where the trust comes from:** Mathematics itself. Arithmetic doesn't drift. `2 + 2 == 4` today, tomorrow, and forever.
 
@@ -32,9 +32,19 @@ The five classes differ in **what they trust** (math, a library, a paper, proper
 **Weaknesses:**
 
 - Only works when the algorithm has a tractable closed form on small inputs. Many real algorithms don't (e.g., segmentation, optimization, iterative convergence).
-- Toy datasets may not exercise all code paths in a complex filter.
+- Hand-built fixtures may not exercise all code paths in a complex filter.
 
 **How it's encoded in tests:** Usually inline `REQUIRE(result == 0.6428571)` with a comment showing the hand derivation. Or a tiny exemplar `.dream3d` whose values were hand-computed and the `.dream3d` is just a cache of the computation.
+
+### Naming convention: `AnalyticalFixtures`
+
+The C++ namespace used to hold Class 1 test scaffolding (helpers, struct, fixture builders) is `AnalyticalFixtures` — e.g., `AnalyticalFixtures::CreateScaffold`, `AnalyticalFixtures::FixtureData`.
+
+**Why not `ToyFixtures`?** In CS / ML / testing terminology, "toy example" is the established term for a minimal hand-crafted dataset with a closed-form expected output. It is a precise technical signal — not dismissive — meaning *"this is an analytical oracle, not a regression-on-real-data circular oracle."* The original V&V scaffolding used `ToyFixtures` on those grounds.
+
+**Why `AnalyticalFixtures` then?** SIMPLNX V&V deliverables read to a non-CS-academic audience (SBIR program managers, MTR reviewers, materials engineers). To that audience, "toy" can read as informal or unrigorous — the exact perception V&V is meant to dispel. `AnalyticalFixtures` preserves the load-bearing signal that "Toy" was carrying (*Class 1 closed-form oracle data*) without the dismissive connotation.
+
+The rename was applied 2026-06-10 across all test files, V&V reports, deviations, provenance docs, and templates. The decision is documented here so it doesn't get re-litigated.
 
 ## Class 2 — Reference implementation
 
@@ -50,7 +60,7 @@ The five classes differ in **what they trust** (math, a library, a paper, proper
 - Eigen for linear algebra in C++ tests.
 - A reference Python implementation of an algorithm published as a research paper companion.
 
-**Workflow:** Write a small Python (or other) script that takes the toy input, runs the reference library, and saves the expected output. That script + the library version + any random seed used become part of the V&V archive. Future tests load the saved expected output and compare bit-for-bit (or with appropriate float tolerance).
+**Workflow:** Write a small Python (or other) script that takes the hand-built input, runs the reference library, and saves the expected output. That script + the library version + any random seed used become part of the V&V archive. Future tests load the saved expected output and compare bit-for-bit (or with appropriate float tolerance).
 
 **Strengths:**
 
@@ -216,7 +226,7 @@ If the existing exemplar in the data archive was generated from one of the above
 
 | Class | Name | Best for | Default choice when |
 |---|---|---|---|
-| 1 | Analytical | Tight algorithms with closed-form output, hand-pickable toy inputs, small outputs | The math is short enough to do on paper |
+| 1 | Analytical | Tight algorithms with closed-form output, hand-pickable hand-built inputs, small outputs | The math is short enough to do on paper |
 | 2 | Reference impl | Algorithms where a trusted library exists and you trust it more than your own implementation | You're porting an algorithm that has a well-known library implementation elsewhere |
 | 3 | Paper-based | Implementations of published algorithms (orientation math, classical algorithms with named authors) | The filter's header cites a paper |
 | 4 | Invariant | Anything with conservation laws, range bounds, or structural constraints | Always — add Class 4 alongside whatever other class you pick |

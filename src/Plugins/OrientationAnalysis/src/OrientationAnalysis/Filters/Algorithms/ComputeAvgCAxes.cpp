@@ -27,12 +27,6 @@ ComputeAvgCAxes::ComputeAvgCAxes(DataStructure& dataStructure, const IFilter::Me
 ComputeAvgCAxes::~ComputeAvgCAxes() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeAvgCAxes::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> ComputeAvgCAxes::operator()()
 {
 
@@ -66,41 +60,40 @@ Result<> ComputeAvgCAxes::operator()()
   const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
   const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
   auto& avgCAxes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath);
+  avgCAxes.fill(0.0f); // Initialize all output values to ZERO defensively.
 
   const usize totalPoints = featureIds.getNumberOfTuples();
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
 
-  const Eigen::Vector3d cAxis{0.0f, 0.0f, 1.0f};
-  Eigen::Vector3d c1{0.0f, 0.0f, 0.0f};
+  const Eigen::Vector3d cAxis{0.0, 0.0, 1.0};
 
-  std::vector<int32> counter(totalFeatures, 0);
+  std::vector<int32> cellCount(totalFeatures, 0);
+
+  m_MessageHandler({IFilter::Message::Type::Info, "Computing cell contributions"});
 
   // Loop over each cell
   for(usize i = 0; i < totalPoints; i++)
   {
     if(m_ShouldCancel)
     {
-      return {};
+      return result;
     }
 
     int32 currentFeatureId = featureIds[i];
     // If the featureId for a given cell is valid ( > 0) then analyze that value
     if(currentFeatureId > 0)
     {
-      const int32 currentCellPhase = cellPhases[i];                          // Get the current cell phase
-      const auto crystalStructureType = crystalStructures[currentCellPhase]; // Get the CrystalStructure, i.e., Laue class of the cell
+      const int32 currentCellPhase = cellPhases[i];                             // Get the current cell phase
+      const auto currentCrystalStructure = crystalStructures[currentCellPhase]; // Get the CrystalStructure, i.e., Laue class of the cell
       const usize cAxesIndex = 3 * currentFeatureId;
 
-      // Ensure the Laue class is correct, otherwise mark the values with a NaN and continue
-      if(crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_High && crystalStructureType != ebsdlib::CrystalStructure::Hexagonal_Low)
+      // If the Laue class is not Hexagonal, then continue to the next cell
+      if(currentCrystalStructure != ebsdlib::CrystalStructure::Hexagonal_High && currentCrystalStructure != ebsdlib::CrystalStructure::Hexagonal_Low)
       {
-        avgCAxes[cAxesIndex] = NAN;
-        avgCAxes[cAxesIndex + 1] = NAN;
-        avgCAxes[cAxesIndex + 2] = NAN;
         continue;
       }
 
-      counter[currentFeatureId]++; // Increment the count
+      cellCount[currentFeatureId]++; // Increment the counter if we are the appropriate Laue class.
       const usize quatIndex = i * 4;
 
       // Create the 3x3 Orientation Matrix from the Quaternion. This represents a passive rotation matrix
@@ -110,73 +103,61 @@ Result<> ComputeAvgCAxes::operator()()
       // Multiply the active transformation matrix by the C-Axis (as Miller Index). This actively rotates
       // the crystallographic C-Axis (which is along the <0,0,1> direction) into the physical sample
       // reference frame
-      c1 = oMatrix.transpose() * cAxis;
+      Eigen::Vector3d cellCAxis = oMatrix.transpose() * cAxis;
 
       // normalize so that the magnitude is 1
-      c1.normalize();
+      cellCAxis.normalize();
 
       // Compute the running average c-axis and normalize the result
-      Eigen::Vector3d curCAxis{0.0f, 0.0f, 0.0f};
-      curCAxis[0] = avgCAxes[cAxesIndex] / static_cast<float32>(counter[currentFeatureId]);
-      curCAxis[1] = avgCAxes[cAxesIndex + 1] / static_cast<float32>(counter[currentFeatureId]);
-      curCAxis[2] = avgCAxes[cAxesIndex + 2] / static_cast<float32>(counter[currentFeatureId]);
-      curCAxis.normalize();
+      Eigen::Vector3d runningCAxisAvg{avgCAxes[cAxesIndex] / static_cast<float32>(cellCount[currentFeatureId]), avgCAxes[cAxesIndex + 1] / static_cast<float32>(cellCount[currentFeatureId]),
+                                      avgCAxes[cAxesIndex + 2] / static_cast<float32>(cellCount[currentFeatureId])};
+      runningCAxisAvg.normalize();
 
       // Ensure that angle between the current point's sample reference frame C-Axis
       // and the running average sample C-Axis is positive
-      float64 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
-      if(w < 0.0)
+      float64 cosAngle = ImageRotationUtilities::CosBetweenVectors(cellCAxis, runningCAxisAvg);
+      if(cosAngle < 0.0)
       {
-        c1 *= -1.0f;
+        cellCAxis *= -1.0f;
       }
 
-      // Continue summing up the rotations
-      float value = avgCAxes[cAxesIndex] + c1[0];
-      avgCAxes[cAxesIndex] = value;
-
-      value = avgCAxes[cAxesIndex + 1] + c1[1];
-      avgCAxes[cAxesIndex + 1] = value;
-
-      value = avgCAxes[cAxesIndex + 2] + c1[2];
-      avgCAxes[cAxesIndex + 2] = value;
+      // Accumulate per-component into the float32 output (Eigen math is double; narrow on store).
+      avgCAxes[cAxesIndex] = static_cast<float32>(avgCAxes[cAxesIndex] + cellCAxis[0]);
+      avgCAxes[cAxesIndex + 1] = static_cast<float32>(avgCAxes[cAxesIndex + 1] + cellCAxis[1]);
+      avgCAxes[cAxesIndex + 2] = static_cast<float32>(avgCAxes[cAxesIndex + 2] + cellCAxis[2]);
     }
   }
 
-  for(size_t i = 1; i < totalFeatures; i++)
+  // Now that each feature's Axis is summed up, compute the final average C-Axis
+  m_MessageHandler({IFilter::Message::Type::Info, "Computing final feature average C-Axis values"});
+
+  for(usize currentFeatureId = 0; currentFeatureId < totalFeatures; currentFeatureId++)
   {
     if(m_ShouldCancel)
     {
-      return {};
+      return result;
     }
 
-    const usize tupleIndex = i * 3;
-    float32 avgCAxesValue = avgCAxes[tupleIndex];
-    if(std::isnan(avgCAxesValue))
+    const usize cAxesIndex = 3 * currentFeatureId;
+    if(cellCount[currentFeatureId] == 0)
     {
-      continue;
-    }
-    // If we got passed the last check this could happen if the cell points were
-    // masked out? Maybe?
-    if(counter[i] == 0)
-    {
-      avgCAxes[tupleIndex] = 0;
-      avgCAxes[tupleIndex + 1] = 0;
-      avgCAxes[tupleIndex + 2] = 1;
+      // Feature is either non-hexagonal or has no assigned voxels; either way, no meaningful average exists.
+      avgCAxes[cAxesIndex] = NAN;
+      avgCAxes[cAxesIndex + 1] = NAN;
+      avgCAxes[cAxesIndex + 2] = NAN;
     }
     else
     {
-      // Compute the final average c-axis value
-      float value = avgCAxes[3 * i];
-      value /= static_cast<float>(counter[i]);
-      avgCAxes[3 * i] = value;
-
-      value = avgCAxes[3 * i + 1];
-      value /= static_cast<float>(counter[i]);
-      avgCAxes[3 * i + 1] = value;
-
-      value = avgCAxes[3 * i + 2];
-      value /= static_cast<float>(counter[i]);
-      avgCAxes[3 * i + 2] = value;
+      // Divide the accumulated sum by the cell count, then normalize so the
+      // output is a unit-magnitude C-axis direction. The antipodal-flip rule
+      // guarantees |sum| >= sqrt(cellCount), so the divided vector's magnitude
+      // is >= 1/sqrt(cellCount) > 0 -- no near-zero guard needed.
+      Eigen::Vector3d finalAvg{avgCAxes[cAxesIndex] / static_cast<float64>(cellCount[currentFeatureId]), avgCAxes[cAxesIndex + 1] / static_cast<float64>(cellCount[currentFeatureId]),
+                               avgCAxes[cAxesIndex + 2] / static_cast<float64>(cellCount[currentFeatureId])};
+      finalAvg.normalize();
+      avgCAxes[cAxesIndex] = static_cast<float32>(finalAvg[0]);
+      avgCAxes[cAxesIndex + 1] = static_cast<float32>(finalAvg[1]);
+      avgCAxes[cAxesIndex + 2] = static_cast<float32>(finalAvg[2]);
     }
   }
   return result;

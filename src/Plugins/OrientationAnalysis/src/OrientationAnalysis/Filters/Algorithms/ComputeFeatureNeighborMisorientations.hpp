@@ -37,8 +37,6 @@ public:
 
   Result<> operator()();
 
-  const std::atomic_bool& getCancel();
-
 private:
   DataStructure& m_DataStructure;
   const ComputeFeatureNeighborMisorientationsInputValues* m_InputValues = nullptr;

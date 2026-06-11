@@ -8,7 +8,7 @@ Entries are referenced by stable ID (`ComputeFeatureReferenceMisorientationsFilt
 
 The legacy A/B comparison was performed by **source inspection** rather than empirical run. Justification: SIMPLNX `ComputeFeatureReferenceMisorientationsFilter::operator()()` is a clean Port of legacy `FindFeatureReferenceMisorientations::execute()` (same two-mode dispatch, same per-voxel main loop, same per-feature averaging finalization, same `LaueOps`-delegated misorientation math, same `m_Centers` selection with `>=` tie-break). The only port-time deltas are API modernization (`getMisoQuat` → `calculateMisorientation`), type widening (`QuatF` → `QuatD` for the internal math, narrowed back to `float` for storage), cleaner auxiliary storage (interleaved `avgMisoPtr` → separate `avgMisorientationSums` + `avgMisorientationCounts`), added cancel checks, and a new optional `EuclideanCenters` output array in Mode 1 (no pre-existing output is affected).
 
-For the toy fixtures used in this V&V cycle (pure φ1 rotations about z, no cubic-symmetry-op-aligned grain boundaries), both implementations are expected to produce bit-identical outputs modulo `float` precision (< 1 ULP differences possible due to `QuatF` → `QuatD` promotion).
+For the data fixtures used in this V&V cycle (pure φ1 rotations about z, no cubic-symmetry-op-aligned grain boundaries), both implementations are expected to produce bit-identical outputs modulo `float` precision (< 1 ULP differences possible due to `QuatF` → `QuatD` promotion).
 
 For real EBSD data (e.g., the Small-IN100 dataset that the retired exemplar archive came from), the EbsdLib 2.4.1 `CubicOps::calculateMisorientationInternal` precision improvement (`2·atan2(|v|, w)` form replacing the precision-fragile `acos(w)` near 1) propagates through SIMPLNX's misorientation math and yields per-voxel `FRM` values that differ from legacy by ~ULP-scale (sub-`0.0001°`) for sym-op-aligned voxel pairs. When those per-voxel values are averaged into per-feature `avgRefMis` quantities, the small per-voxel shifts can accumulate to 2×–10× the `1e-4` epsilon used by the retired exemplar tests.
 
@@ -24,7 +24,7 @@ For real EBSD data (e.g., the Small-IN100 dataset that the retired exemplar arch
 
 **Symptom:** Per-feature average misorientations (`Feature Avg Misorientations`) differ between SIMPLNX and DREAM3D 6.5.171 on real EBSD datasets containing cubic-phase grains with grain boundaries near cubic-symmetry operators. On the Small-IN100 dataset (the basis for the retired `compute_feature_reference_misorientation.tar.gz` exemplar archive), Mode 0 (`AverageMisorientation`) averages drifted by ~`2e-4` (2× the `1e-4` epsilon used by `CompareDataArrays`); Mode 1 (`EuclideanDistance`) averages drifted by ~`1e-3` (10×). Per-voxel `FRM` values shift by sub-`0.0001°` (within float precision), but the magnitude amplifies when summed over a feature's voxels and divided by count.
 
-On the V&V toy fixtures (pure φ1 rotations about z, no cubic-sym-op-aligned voxel pairs), no observable deviation. All 6 Class 1 fixtures produce SIMPLNX values within `1e-3°` of the analytical expected value.
+On the V&V data fixtures (pure φ1 rotations about z, no cubic-sym-op-aligned voxel pairs), no observable deviation. All 6 Class 1 fixtures produce SIMPLNX values within `1e-3°` of the analytical expected value.
 
 **Root cause:** **Precision** — not an algorithm change in either implementation.
 
@@ -60,11 +60,11 @@ Both implementations leave `avgRefMis[0]` at its initialized `0.0f` value (since
 
 ## Comparison artifacts
 
-For this filter's V&V cycle, the legacy A/B comparison was performed by **source inspection** rather than empirical run. Justification: both algorithms have been independently V&V'd at the source-code level (this filter via the V&V report; the EbsdLib precision math via BadDataNeighborOrientationCheckFilter's V&V cycle), and the toy fixtures used here do not include sym-op-aligned boundaries that would surface the precision-class deviation. Running an empirical A/B on the toy fixtures would confirm bit-identical (or sub-ULP) output, which is the expected outcome from source inspection.
+For this filter's V&V cycle, the legacy A/B comparison was performed by **source inspection** rather than empirical run. Justification: both algorithms have been independently V&V'd at the source-code level (this filter via the V&V report; the EbsdLib precision math via BadDataNeighborOrientationCheckFilter's V&V cycle), and the data fixtures used here do not include sym-op-aligned boundaries that would surface the precision-class deviation. Running an empirical A/B on the data fixtures would confirm bit-identical (or sub-ULP) output, which is the expected outcome from source inspection.
 
 If a future engineer wants to run an empirical A/B for confirmation:
 
 - **6.5.171 binary**: `/Users/mjackson/Applications/DREAM3D.app/Contents/bin/PipelineRunner`
-- **Suggested input fixture**: convert any V&V toy fixture to legacy `.dream3d` format via the same h5py-based script pattern used in `BadDataNeighborOrientationCheckFilter`'s `bad_data_neighbor_orientation_check_v2/case_1/.../6_5_*_input.json` series. A draft Python script for Fixture B (Mode 0, 2×2×2 single grain, all 5° about z) lives at `/tmp/build_cfrm_fixtureB_legacy.py` from this V&V cycle.
-- **Suggested legacy pipeline**: `DataContainerReader` → `FindFeatureReferenceMisorientations` → `DataContainerWriter`. The `DataContainerReader` requires a `DataContainerArrayProxy` enumerating the input file's paths; that adds ~150 lines of JSON for a 6-toy-fixture sweep.
-- **Expected outcome**: bit-identical or sub-ULP-difference output between SIMPLNX and 6.5.171 on the toy fixtures (no sym-op-aligned boundaries → precision improvement not observable).
+- **Suggested input fixture**: convert any V&V data fixture to legacy `.dream3d` format via the same h5py-based script pattern used in `BadDataNeighborOrientationCheckFilter`'s `bad_data_neighbor_orientation_check_v2/case_1/.../6_5_*_input.json` series. A draft Python script for Fixture B (Mode 0, 2×2×2 single grain, all 5° about z) lives at `/tmp/build_cfrm_fixtureB_legacy.py` from this V&V cycle.
+- **Suggested legacy pipeline**: `DataContainerReader` → `FindFeatureReferenceMisorientations` → `DataContainerWriter`. The `DataContainerReader` requires a `DataContainerArrayProxy` enumerating the input file's paths; that adds ~150 lines of JSON for a 6-data-fixture sweep.
+- **Expected outcome**: bit-identical or sub-ULP-difference output between SIMPLNX and 6.5.171 on the data fixtures (no sym-op-aligned boundaries → precision improvement not observable).

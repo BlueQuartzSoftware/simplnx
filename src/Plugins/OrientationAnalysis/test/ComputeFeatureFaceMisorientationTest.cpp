@@ -24,6 +24,8 @@ bool CompareFloats(const float32 generated, const float32 expected)
 }
 } // namespace
 
+namespace
+{
 namespace curated
 {
 // Make sure we can instantiate the Align Sections Feature Centroid
@@ -159,13 +161,23 @@ DataStructure CreateTestDataStructure()
       4.0f,21.0f,0.0f,
       0.0f,22.0f,0.0f,
       1.0f,22.0f,0.0f,
-      0.0f,23.0f,0.0f
+      0.0f,23.0f,0.0f,
+      // Trigonal_High (-3m, Laue index 10) -- appended after edge-case block
+      0.0f,24.0f,0.0f,
+      1.0f,24.0f,0.0f,
+      0.0f,25.0f,0.0f,
+      2.0f,24.0f,0.0f,
+      3.0f,24.0f,0.0f,
+      2.0f,25.0f,0.0f,
+      4.0f,24.0f,0.0f,
+      5.0f,24.0f,0.0f,
+      4.0f,25.0f,0.0f
     });
     // clang-format on
 
     const TriangleGeom::SharedVertexList* sharedVerts =
         TriangleGeom::SharedVertexList::Create(dataStructure, TriangleGeom::k_SharedVertexListName,
-                                               std::make_shared<DataStore<TriangleGeom::SharedVertexList::value_type>>(std::move(sharedVertexListBuffer), ShapeType{102}, ShapeType{3}), geom->getId());
+                                               std::make_shared<DataStore<TriangleGeom::SharedVertexList::value_type>>(std::move(sharedVertexListBuffer), ShapeType{111}, ShapeType{3}), geom->getId());
 
     geom->setVertexListId(sharedVerts->getId());
   }
@@ -207,18 +219,22 @@ DataStructure CreateTestDataStructure()
       90,91,92,
       93,94,95,
       96,97,98,
-      99,100,101
+      99,100,101,
+      // Trigonal_High triangles -- vertices 102-110 (appended block)
+      102,103,104,
+      105,106,107,
+      108,109,110
     });
     // clang-format on
 
     const TriangleGeom::SharedFaceList* sharedFaces =
         TriangleGeom::SharedFaceList::Create(dataStructure, TriangleGeom::k_SharedFacesListName,
-                                             std::make_shared<DataStore<TriangleGeom::SharedFaceList::value_type>>(std::move(sharedFaceListBuffer), ShapeType{34}, ShapeType{3}), geom->getId());
+                                             std::make_shared<DataStore<TriangleGeom::SharedFaceList::value_type>>(std::move(sharedFaceListBuffer), ShapeType{37}, ShapeType{3}), geom->getId());
 
     geom->setFaceListId(sharedFaces->getId());
   }
 
-  AttributeMatrix* faceDataAM = AttributeMatrix::Create(dataStructure, k_FaceDataPath.getTargetName(), ShapeType{34}, geom->getId());
+  AttributeMatrix* faceDataAM = AttributeMatrix::Create(dataStructure, k_FaceDataPath.getTargetName(), ShapeType{37}, geom->getId());
 
   // Make Face Labels
   {
@@ -257,14 +273,18 @@ DataStructure CreateTestDataStructure()
       0,1,
       1,0,
       1,5,
-      5,1
+      5,1,
+      // Trigonal_High boundaries (F41-F44; appended after edge-case block)
+      41,42,
+      41,43,
+      41,44
     });
     // clang-format on
 
     DataArray<int32>::Create(dataStructure, k_FaceLabelsPath.getTargetName(), std::make_shared<Int32DataStore>(std::move(faceLabelsBuffer), faceDataAM->getShape(), ShapeType{2}), faceDataAM->getId());
   }
 
-  AttributeMatrix* featureDataAM = AttributeMatrix::Create(dataStructure, k_FeatureDataPath.getTargetName(), ShapeType{41}, geom->getId());
+  AttributeMatrix* featureDataAM = AttributeMatrix::Create(dataStructure, k_FeatureDataPath.getTargetName(), ShapeType{45}, geom->getId());
 
   // Create AvgEulers
   {
@@ -307,6 +327,11 @@ DataStructure CreateTestDataStructure()
       45.00f,0.00f,0.00f,
       90.00f,0.00f,0.00f,
       180.00f,0.00f,0.00f,
+      0.00f,0.00f,0.00f,
+      45.00f,0.00f,0.00f,
+      90.00f,0.00f,0.00f,
+      180.00f,0.00f,0.00f,
+      // Trigonal_High features F41-F44 (appended)
       0.00f,0.00f,0.00f,
       45.00f,0.00f,0.00f,
       90.00f,0.00f,0.00f,
@@ -362,7 +387,12 @@ DataStructure CreateTestDataStructure()
       10,
       10,
       10,
-      10
+      10,
+      // Trigonal_High features F41-F44 all reference phase 11
+      11,
+      11,
+      11,
+      11
     });
     // clang-format on
 
@@ -370,7 +400,7 @@ DataStructure CreateTestDataStructure()
                              featureDataAM->getId());
   }
 
-  AttributeMatrix* phaseDataAM = AttributeMatrix::Create(dataStructure, k_PhaseDataPath.getTargetName(), ShapeType{12}, geom->getId());
+  AttributeMatrix* phaseDataAM = AttributeMatrix::Create(dataStructure, k_PhaseDataPath.getTargetName(), ShapeType{13}, geom->getId());
 
   // Create CrystalStructures
   {
@@ -387,6 +417,8 @@ DataStructure CreateTestDataStructure()
       7,
       8,
       9,
+      10,
+      // Phase 11 -> Trigonal_High (Laue index 10)
       10
     });
     // clang-format on
@@ -398,6 +430,7 @@ DataStructure CreateTestDataStructure()
   return dataStructure;
 }
 } // namespace curated
+} // namespace
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated Data", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter]")
 {
@@ -474,8 +507,14 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
   REQUIRE(::CompareFloats(faceMisorientations[2], 0.0f));
   REQUIRE(::CompareFloats(faceMisorientations[3], 45.0f));
 
-  // Special case (expected 0 but value was validated via MTEX, not for sure correct, but not incorrect)
-  REQUIRE(::CompareFloats(faceMisorientations[4], 0.021200536f));
+  // F5<->F7 (Cubic_High features F5,F7 with phi1 = 0deg and 90deg about c-axis): a 90deg
+  // rotation about c is a 4-fold cubic symmetry op, so the symmetry-reduced misorientation
+  // is exactly 0deg. Previously this returned ~0.0212deg due to a precision-fragile
+  // (qco.z()+qco.w())/sqrt(2) followed by acos near 1 in CubicOps::calculateMisorientationInternal.
+  // EbsdLib was patched to compute the reduced-quaternion's |v| from explicit components
+  // (so cancellations like qco.z()-qco.w() preserve precision in IEEE 754); the misorientation
+  // is now extracted as 2*atan2(|v|, w), which gives exactly 0 in this case.
+  REQUIRE(::CompareFloats(faceMisorientations[4], 0.0f));
 
   REQUIRE(::CompareFloats(faceMisorientations[5], 0.0f));
   REQUIRE(::CompareFloats(faceMisorientations[6], 15.0f));
@@ -508,6 +547,13 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
   REQUIRE(std::isnan(faceMisorientations[31]));
   REQUIRE(std::isnan(faceMisorientations[32]));
   REQUIRE(std::isnan(faceMisorientations[33]));
+
+  // Trigonal_High (-3m, Laue index 10) -- appended after the edge-case block.
+  // 3-fold about c gives 120 deg equivalence; the mirror planes containing c do
+  // not further reduce z-rotation magnitudes. Expected values match Trigonal_Low.
+  REQUIRE(::CompareFloats(faceMisorientations[34], 45.0f)); // F41 (phi1=0) <-> F42 (phi1=45)
+  REQUIRE(::CompareFloats(faceMisorientations[35], 30.0f)); // F41 (phi1=0) <-> F43 (phi1=90)
+  REQUIRE(::CompareFloats(faceMisorientations[36], 60.0f)); // F41 (phi1=0) <-> F44 (phi1=180)
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

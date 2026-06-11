@@ -11,6 +11,8 @@
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 namespace nx::core
 {
 namespace write_pole_figure
@@ -49,6 +51,8 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
   std::string IntensityPlot1Name;
   std::string IntensityPlot2Name;
   std::string IntensityPlot3Name;
+
+  ebsdlib::HexConvention HexConvention = ebsdlib::HexConvention::XParallelA;
 };
 
 /**
@@ -91,8 +95,6 @@ public:
   };
 
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;
