@@ -26,7 +26,7 @@
  * `byteSwapRequired` from the metadata to do its own stream reads.
  *
  * The helpers here are deliberately independent of the simplnx filter
- * framework so they can be reused from unit tests, a future writer,
+ * framework, so they can be reused from unit tests, a future writer,
  * or a command-line tool.
  */
 
@@ -36,7 +36,7 @@ namespace nx::core::nifti
  * @brief Size of the NIfTI-1 header in bytes. Always 348 for a valid
  *        NIfTI-1 file regardless of byte order.
  */
-inline constexpr usize k_HeaderSize = 348;
+inline constexpr unsigned int k_HeaderSize = 348;
 
 /**
  * @brief Minimum legal value of the `vox_offset` field in a single-file
@@ -45,6 +45,23 @@ inline constexpr usize k_HeaderSize = 348;
  *        byte 352.
  */
 inline constexpr usize k_MinVoxOffset = 352;
+
+/**
+ * @brief Size (in bytes) of zlib's internal input/output buffer, set via
+ *        `gzbuffer()` immediately after every `gzopen()`.
+ *
+ * zlib defaults to an 8 KB internal buffer, which means it refills from
+ * the underlying file in 8 KB chunks of compressed data — one `read()`
+ * syscall each. On a local disk that is negligible, but on network
+ * attached storage (NAS) every refill is a separate network round-trip,
+ * so a multi-GB `.nii.gz` triggers hundreds of thousands of small,
+ * latency-bound reads. Raising the buffer to 4 MiB cuts the number of
+ * round-trips by ~512x while costing only a few × this size in working
+ * memory (negligible next to the voxel volume). Larger values yield
+ * diminishing returns once the buffer exceeds the link's
+ * bandwidth-delay product and the client's own read-ahead.
+ */
+inline constexpr unsigned int k_GzReadBufferSize = 4194304;
 
 /**
  * @brief Magic bytes that identify the single-file `.nii` / `.nii.gz`

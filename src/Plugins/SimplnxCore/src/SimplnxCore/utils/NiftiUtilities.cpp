@@ -119,8 +119,10 @@ Result<NiftiMetadata> ReadNiftiHeader(const std::filesystem::path& filePath, boo
     return MakeErrorResult<NiftiMetadata>(-34700, fmt::format("Could not open NIfTI file for reading: '{}'", pathStr));
   }
 
+  gzbuffer(gz, k_GzReadBufferSize);
+
   nifti_1_header hdr{};
-  int bytesRead = gzread(gz, &hdr, static_cast<unsigned int>(k_HeaderSize));
+  int bytesRead = gzread(gz, &hdr, k_HeaderSize);
   gzclose(gz);
 
   if(bytesRead != static_cast<int>(k_HeaderSize))
