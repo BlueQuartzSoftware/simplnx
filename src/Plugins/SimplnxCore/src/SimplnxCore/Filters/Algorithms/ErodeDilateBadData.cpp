@@ -3,10 +3,10 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
-#include "simplnx/Utilities/DataStoreUtilities.hpp"
 
 using namespace nx::core;
 namespace
@@ -128,12 +128,12 @@ bool shouldSkipData(const ErodeDilateBadDataInputValues* inputValues, int32 neig
  * @param zIndex Z index in the geometry position used for determing neighbor validity.
  */
 inline void ErodeBadDataPostOp(const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, const std::array<int64, k_NumFaceNeighbors>& neighpoints,
-                               const std::array<FaceNeighborType, k_NumFaceNeighbors>& faceNeighborInternalIndex, const std::array<int64, 3>& dims, const int64 voxelIndex,
-                        int64 xIndex, int64 yIndex, int64 zIndex)
+                               const std::array<FaceNeighborType, k_NumFaceNeighbors>& faceNeighborInternalIndex, const std::array<int64, 3>& dims, const int64 voxelIndex, int64 xIndex, int64 yIndex,
+                               int64 zIndex)
 {
   // Loop over the 6 face neighbors of the voxel
   const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
-  for (const auto& faceIndex : faceNeighborInternalIndex)
+  for(const auto& faceIndex : faceNeighborInternalIndex)
   {
     if(!isValidFaceNeighbor[faceIndex])
     {
@@ -146,7 +146,8 @@ inline void ErodeBadDataPostOp(const Int32AbstractDataStore& featureIds, std::ve
 }
 
 /**
- * @brief
+ * @brief Processes a single voxel for erode/dilate bad data operations. For bad data voxels (featureId == 0),
+ * identifies the best neighboring good voxel and records it in the neighbors array for later data transfer.
  * @param inputValues Algorithm input values
  * @param featureIds Feature ID data store.
  * @param featureCount Running total of the number of features it neighbors.
@@ -156,12 +157,11 @@ inline void ErodeBadDataPostOp(const Int32AbstractDataStore& featureIds, std::ve
  * @param voxelIndex Array index of the 3D geometry position.
  * @param xIndex X index in the geometry position used for determing neighbor validity.
  * @param yIndex Y index in the geometry position used for determing neighbor validity.
- * @param zIndes Z index in the geometry position used for determing neighbor validity.
+ * @param zIndex Z index in the geometry position used for determing neighbor validity.
  */
 inline void erodeDilateBadDataVoxel(const ErodeDilateBadDataInputValues* inputValues, const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, std::vector<int64>& neighbors,
                                     const std::array<int64, k_NumFaceNeighbors>& neighpoints, const std::array<FaceNeighborType, k_NumFaceNeighbors>& faceNeighborInternalIndex,
-                                    const std::array<int64, 3>& dims, int64 voxelIndex, int64 xIndex,
-                                    int64 yIndex, int64 zIndex)
+                                    const std::array<int64, 3>& dims, int64 voxelIndex, int64 xIndex, int64 yIndex, int64 zIndex)
 {
   const int32 featureName = featureIds[voxelIndex];
   if(featureName == 0)
@@ -169,7 +169,7 @@ inline void erodeDilateBadDataVoxel(const ErodeDilateBadDataInputValues* inputVa
     int32 most = 0;
     // Loop over the 6 face neighbors of the voxel
     const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
-    for (const auto& faceIndex : faceNeighborInternalIndex)
+    for(const auto& faceIndex : faceNeighborInternalIndex)
     {
       if(!isValidFaceNeighbor[faceIndex])
       {
