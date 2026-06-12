@@ -11,6 +11,8 @@
 using namespace nx::core;
 namespace
 {
+constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
+
 class ErodeDilateBadDataTransferDataImpl
 {
 public:
@@ -125,37 +127,19 @@ bool shouldSkipData(const ErodeDilateBadDataInputValues* inputValues, int32 neig
  * @param yIndex Y index in the geometry position used for determing neighbor validity.
  * @param zIndex Z index in the geometry position used for determing neighbor validity.
  */
-void ErodeBadDataPostOp(const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, const std::array<int64, 6>& neighpoints, const std::array<int64, 3>& dims, const int64 voxelIndex,
+inline void ErodeBadDataPostOp(const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, const std::array<int64, k_NumFaceNeighbors>& neighpoints,
+                               const std::array<FaceNeighborType, k_NumFaceNeighbors>& faceNeighborInternalIndex, const std::array<int64, 3>& dims, const int64 voxelIndex,
                         int64 xIndex, int64 yIndex, int64 zIndex)
 {
-  for(int32 neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
+  // Loop over the 6 face neighbors of the voxel
+  const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+  for (const auto& faceIndex : faceNeighborInternalIndex)
   {
-    const int64 neighborPoint = voxelIndex + neighpoints[neighPointIdx];
-    if(neighPointIdx == 0 && zIndex == 0)
+    if(!isValidFaceNeighbor[faceIndex])
     {
       continue;
     }
-    if(neighPointIdx == 5 && zIndex == (dims[2] - 1))
-    {
-      continue;
-    }
-    if(neighPointIdx == 1 && yIndex == 0)
-    {
-      continue;
-    }
-    if(neighPointIdx == 4 && yIndex == (dims[1] - 1))
-    {
-      continue;
-    }
-    if(neighPointIdx == 2 && xIndex == 0)
-    {
-      continue;
-    }
-    if(neighPointIdx == 3 && xIndex == (dims[0] - 1))
-    {
-      continue;
-    }
-
+    const int64 neighborPoint = voxelIndex + neighpoints[faceIndex];
     const int32 feature = featureIds[neighborPoint];
     featureCount[feature] = 0;
   }
@@ -174,21 +158,24 @@ void ErodeBadDataPostOp(const Int32AbstractDataStore& featureIds, std::vector<in
  * @param yIndex Y index in the geometry position used for determing neighbor validity.
  * @param zIndes Z index in the geometry position used for determing neighbor validity.
  */
-void erodeDilateBadDataVoxel(const ErodeDilateBadDataInputValues* inputValues, const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, std::vector<int64>& neighbors,
-                             const std::array<int64, 6>& neighpoints, const std::array<int64, 3>& dims, int64 voxelIndex, int64 xIndex, int64 yIndex, int64 zIndex)
+inline void erodeDilateBadDataVoxel(const ErodeDilateBadDataInputValues* inputValues, const Int32AbstractDataStore& featureIds, std::vector<int32>& featureCount, std::vector<int64>& neighbors,
+                                    const std::array<int64, k_NumFaceNeighbors>& neighpoints, const std::array<FaceNeighborType, k_NumFaceNeighbors>& faceNeighborInternalIndex,
+                                    const std::array<int64, 3>& dims, int64 voxelIndex, int64 xIndex,
+                                    int64 yIndex, int64 zIndex)
 {
   const int32 featureName = featureIds[voxelIndex];
   if(featureName == 0)
   {
     int32 most = 0;
-    for(int32 neighPointIdx = 0; neighPointIdx < 6; neighPointIdx++)
+    // Loop over the 6 face neighbors of the voxel
+    const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIndex, yIndex, zIndex, dims);
+    for (const auto& faceIndex : faceNeighborInternalIndex)
     {
-      const int64 neighborPoint = voxelIndex + neighpoints[neighPointIdx];
-      if(shouldSkipData(inputValues, neighPointIdx, dims, xIndex, yIndex, zIndex))
+      if(!isValidFaceNeighbor[faceIndex])
       {
         continue;
       }
-
+      const int64 neighborPoint = voxelIndex + neighpoints[faceIndex];
       const int32 feature = featureIds[neighborPoint];
       if(inputValues->Operation == detail::k_DilateIndex && feature > 0)
       {
@@ -205,10 +192,11 @@ void erodeDilateBadDataVoxel(const ErodeDilateBadDataInputValues* inputValues, c
         }
       }
     }
+
     // Erode operation
     if(inputValues->Operation == detail::k_ErodeIndex)
     {
-      ErodeBadDataPostOp(featureIds, featureCount, neighpoints, dims, voxelIndex, xIndex, yIndex, zIndex);
+      ErodeBadDataPostOp(featureIds, featureCount, neighpoints, faceNeighborInternalIndex, dims, voxelIndex, xIndex, yIndex, zIndex);
     }
   }
 }
@@ -234,7 +222,6 @@ Result<> ErodeDilateBadData::operator()()
 
   usize numFeatures = std::max(0, *(std::max_element(featureIds.begin(), featureIds.end())));
 
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
@@ -252,56 +239,7 @@ Result<> ErodeDilateBadData::operator()()
         for(int64 xIndex = 0; xIndex < dims[0]; xIndex++)
         {
           const int64 voxelIndex = zStride + yStride + xIndex;
-          erodeDilateBadDataVoxel(m_InputValues, featureIds, featureCount, neighbors, neighborVoxelIndexOffsets, dims, voxelIndex, xIndex, yIndex, zIndex);
-          #if 0
-          const int64 voxelIndex = zStride + yStride + xIdx;
-          const int32 featureName = featureIds[voxelIndex];
-          if(featureName == 0)
-          {
-            int32 most = 0;
-            // Loop over the 6 face neighbors of the voxel
-            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-            for(const auto& faceIndex : faceNeighborInternalIdx)
-            {
-              if(!isValidFaceNeighbor[faceIndex])
-              {
-                continue;
-              }
-              const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-
-              const int32 feature = featureIds[neighborPoint];
-              if(m_InputValues->Operation == detail::k_DilateIndex && feature > 0)
-              {
-                neighbors[neighborPoint] = voxelIndex;
-              }
-              if(feature > 0 && m_InputValues->Operation == detail::k_ErodeIndex)
-              {
-                featureCount[feature]++;
-                const int32 current = featureCount[feature];
-                if(current > most)
-                {
-                  most = current;
-                  neighbors[voxelIndex] = neighborPoint;
-                }
-              }
-            }
-            if(m_InputValues->Operation == detail::k_ErodeIndex)
-            {
-              // Loop over the 6 face neighbors of the voxel
-              for(const auto& faceIndex : faceNeighborInternalIdx)
-              {
-                if(!isValidFaceNeighbor[faceIndex])
-                {
-                  continue;
-                }
-                const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
-
-                const int32 feature = featureIds[neighborPoint];
-                featureCount[feature] = 0;
-              }
-            }
-          }
-          #endif
+          erodeDilateBadDataVoxel(m_InputValues, featureIds, featureCount, neighbors, neighborVoxelIndexOffsets, faceNeighborInternalIdx, dims, voxelIndex, xIndex, yIndex, zIndex);
         }
       }
     }
