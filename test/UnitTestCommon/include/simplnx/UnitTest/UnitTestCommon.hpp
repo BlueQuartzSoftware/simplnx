@@ -611,7 +611,8 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
   REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
 
   INFO(fmt::format("Input Data Array:'{}'  Output DataArray: '{}' bad comparison", exemplaryDataPath.toString(), computedPath.toString()));
-
+  T maxDiff = 0;
+  usize maxDiffIndex = 0;
   usize start = 0;
   usize end = exemplaryDataArray.getSize();
   for(usize i = start; i < end; i++)
@@ -629,10 +630,16 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
     }
     if(oldVal != newVal)
     {
-      float diff = std::fabs(static_cast<float>(oldVal - newVal));
-      REQUIRE(diff < epsilon);
+      T diff = std::fabs(static_cast<T>(oldVal - newVal));
+      if(diff > maxDiff)
+      {
+        maxDiff = diff;
+        maxDiffIndex = i;
+      }
     }
   }
+  INFO(fmt::format("Maximum difference of {} occurs at index {} (epsilon = {})", maxDiff, maxDiffIndex, epsilon));
+  REQUIRE(maxDiff < epsilon);
 }
 
 /**
