@@ -286,7 +286,7 @@ struct IdentifySampleSliceBySliceFunctor
               count++;
             }
 
-            if(static_cast<int64>(currentVList.size()) > biggestBlock)
+            if(static_cast<int64>(currentVList.size()) >= biggestBlock)
             {
               biggestBlock = currentVList.size();
               sample.assign(planeDim1 * planeDim2, false);
