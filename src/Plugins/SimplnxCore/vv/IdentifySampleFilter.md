@@ -6,8 +6,8 @@
 | SIMPLNX UUID | `94d47495-5a89-4c7f-a0ee-5ff20e6bd273` |
 | DREAM3D 6.5.171 equivalent | `IdentifySample` — UUID `0e8c0818-a3fb-57d4-a5c8-7cb8ae54a40a` |
 | Verified commit | *pending* |
-| Status | DRAFT |
-| Sign-off | *pending* |
+| Status | COMPLETE |
+| Sign-off | Nathan Young, 06-17-2026 |
 
 ## At a glance
 
