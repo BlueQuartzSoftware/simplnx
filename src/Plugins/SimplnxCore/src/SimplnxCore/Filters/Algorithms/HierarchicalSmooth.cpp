@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <functional>
 #include <map>
 #include <unordered_map>
 #include <utility>
@@ -39,22 +38,10 @@ using SpMat = Eigen::SparseMatrix<double>;
 using Triplet = Eigen::Triplet<double>;
 using Smoother = Eigen::ConjugateGradient<SpMat, Eigen::Upper | Eigen::Lower>;
 
-constexpr std::size_t k_CircShift = sizeof(std::size_t) * 4;
-
-struct EdgePairHash
-{
-  std::size_t operator()(const EdgePair& ep) const
-  {
-    return std::hash<std::size_t>{}(static_cast<std::size_t>(ep.first) << k_CircShift | static_cast<std::size_t>(ep.second));
-  }
-};
-
-template <typename T>
-using EdgeDict = std::unordered_map<EdgePair, T, EdgePairHash>;
-
-// Use std::map for the boundary dictionary to ensure deterministic iteration order.
-// The algorithm is hierarchical: earlier boundary results affect later ones,
-// so deterministic ordering is required for reproducible results.
+// Use std::map for the edge/boundary dictionaries to ensure deterministic iteration
+// order across platforms and STL implementations (libc++ vs libstdc++). The algorithm
+// is hierarchical and its boundary/free-boundary traversal order is result-affecting,
+// so a hash-ordered container would produce non-reproducible cross-platform output.
 template <typename T>
 using OrderedEdgeDict = std::map<EdgePair, T>;
 
@@ -300,7 +287,10 @@ private:
   EdgeList m_FreeBoundary;
   EdgeList m_FreeBoundarySegments;
   std::vector<int> m_Unique;
-  EdgeDict<EdgeCount> m_Dict;
+  // Ordered (std::map) so freeBoundary iteration order is identical across platforms/STL
+  // implementations. m_Dict order feeds the freeBoundary sequence -> chain-link/segment
+  // assignment, so a hash-ordered map (libc++ vs libstdc++) caused cross-platform divergence.
+  OrderedEdgeDict<EdgeCount> m_Dict;
   std::vector<double> m_DiagCount;
 
   void differentiateFaces()
@@ -545,9 +535,14 @@ meshnode smooth(const meshnode& nodesIn, const matindex& nFixed, SpMat& gl, doub
   double fobj2 = getObjFn(smth, fEps + fThresh, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
   double fslope = (fobj2 - fobj1) / fThresh;
 
-  while(std::fabs(fslope) < fThresh && nCount < nIter)
+  // Adaptive bisection over the smoothing parameter fEps, matching the reference
+  // MATLAB/Python implementation (Smooth.m / HierarchicalSmooth.py):
+  //   - iterate while the objective slope is still steep (|fslope| > fThresh)
+  //   - step fEps in the direction given by the sign of the slope
+  //   - halve the step each iteration (true bisection)
+  while(std::fabs(fslope) > fThresh && nCount < nIter)
   {
-    if(fStep > 0.0)
+    if(fslope > 0.0)
     {
       fEps -= fStep;
     }
@@ -556,7 +551,7 @@ meshnode smooth(const meshnode& nodesIn, const matindex& nFixed, SpMat& gl, doub
       fEps += fStep;
     }
 
-    fEps /= 2.0;
+    fStep /= 2.0;
     fobj1 = getObjFn(smth, fEps, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
     fobj2 = getObjFn(smth, fEps + fThresh, fSmallEye, ltl, ltk, nMobile, yMobile, d, ayIn, yOut);
     fslope = (fobj2 - fobj1) / fThresh;
