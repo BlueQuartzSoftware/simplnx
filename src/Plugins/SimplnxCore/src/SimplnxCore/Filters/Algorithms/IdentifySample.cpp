@@ -133,7 +133,10 @@ struct IdentifySampleFunctor
 
             if(!checked[voxelIndex] && !goodVoxels.getValue(voxelIndex))
             {
-              bool touchesBoundary = false;
+              // The following is only initialized as true for SingleVoxelImage,
+              // the intention being to flag the voxel as a boundary for proper handling
+              // since the loop that would flag it will not execute with empty lists
+              bool touchesBoundary = k_NeighborCount == 0;
               currentVList.push_back(voxelIndex);
               usize count = 0;
               while(count < currentVList.size())
