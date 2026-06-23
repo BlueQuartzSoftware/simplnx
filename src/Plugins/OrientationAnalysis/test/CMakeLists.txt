@@ -41,6 +41,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   CreateEnsembleInfoTest.cpp
   EBSDSegmentFeaturesFilterTest.cpp
   EbsdToH5EbsdTest.cpp
+  GroupMicroTextureRegionsTest.cpp
   MergeTwinsTest.cpp
   NeighborOrientationCorrelationTest.cpp
   ReadAngDataTest.cpp
