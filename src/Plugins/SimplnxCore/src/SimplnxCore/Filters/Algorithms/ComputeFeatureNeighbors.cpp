@@ -37,8 +37,6 @@ struct ComputeFeatureNeighborsFunctor
     }
     const std::array<int64, k_NeighborCount> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimensionStateT>(dims);
 
-    const usize totalPoints = featureIds.getNumberOfTuples();
-
     const std::array<float64, k_NeighborCount> precomputedFaceAreas = computeFaceSurfaceAreas<ImageDimensionStateT>(spacing);
     std::vector<std::map<usize, float64>> neighborSurfaceAreas(totalFeatures);
 
@@ -199,6 +197,8 @@ struct ComputeFeatureNeighborsFunctor
      */
     if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
     {
+      const usize totalPoints = featureIds.getNumberOfTuples();
+
       // Loop over all internal cells to generate the neighbor lists
       for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
       {
