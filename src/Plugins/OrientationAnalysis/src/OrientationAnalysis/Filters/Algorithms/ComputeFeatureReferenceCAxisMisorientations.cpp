@@ -6,6 +6,9 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/ImageRotationUtilities.hpp"
+#include "simplnx/Utilities/MessageHelper.hpp"
+
+#include <limits>
 
 #include <EbsdLib/Core/EbsdDataArray.hpp>
 #include <EbsdLib/Core/Orientation.hpp>
@@ -34,29 +37,28 @@ ComputeFeatureReferenceCAxisMisorientations::~ComputeFeatureReferenceCAxisMisori
 Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 {
 
-  /* **************************************************************************
-   * This section performs a sanity check to ensure that at least 1 phase is
-   * hexagonal.
-   */
+  // Preflight: every ensemble index must resolve to a Hex Laue class for the filter to do anything.
+  // We need to know both whether any phase is hex (else hard error) and whether all phases are hex
+  // (else warn the user that non-hex phases will be skipped).
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  bool allPhasesHexagonal = true;
-  bool noPhasesHexagonal = true;
+  bool anyPhaseIsHex = false;
+  bool allPhasesAreHex = true;
   for(usize i = 1; i < crystalStructures.size(); ++i)
   {
     const auto crystalStructureType = crystalStructures[i];
     const bool isHex = crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low;
-    allPhasesHexagonal = allPhasesHexagonal && isHex;
-    noPhasesHexagonal = noPhasesHexagonal && !isHex;
+    anyPhaseIsHex = anyPhaseIsHex || isHex;
+    allPhasesAreHex = allPhasesAreHex && isHex;
   }
 
-  if(noPhasesHexagonal)
+  if(!anyPhaseIsHex)
   {
     return MakeErrorResult(
         -9802, "Finding the feature reference c-axis misorientation requires at least one phase to be Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures but none were found.");
   }
 
   Result<> result;
-  if(!allPhasesHexagonal)
+  if(!allPhasesAreHex)
   {
     result.warnings().push_back(
         {-9803,
@@ -86,7 +88,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 
   const usize numQuatComps = quats.getNumberOfComponents();
 
-  std::vector<usize> counts(totalFeatures, 0ULL);
+  std::vector<usize> counts(totalFeatures, 0);
   std::vector<float32> avgMisorientations(totalFeatures, 0.0f);
 
   SizeVec3 uDims = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath).getDimensions();
@@ -158,26 +160,30 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     }
   }
 
-  // Loop over all the features from the feature attribute matrix and compute the
-  // average C Axis Misorientation for each feature
+  // Per-feature average. Explicit NaN when no hex cells contributed (counts == 0); without this
+  // guard, the division below would rely on IEEE 754 0/0 -> NaN, which is correct on every
+  // platform we ship but fragile to FP-environment changes.
+  MessageHelper messageHelper(m_MessageHandler);
+  ThrottledMessenger throttledMessenger = messageHelper.createThrottledMessenger();
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
-    if(featureId % 1000 == 0)
-    {
-      m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Working On Feature {} of {}", featureId, totalFeatures));
-    }
     if(m_ShouldCancel)
     {
       return {};
     }
+    throttledMessenger.sendThrottledMessage([&] { return fmt::format("Computing per-feature average {:.2f}% completed", CalculatePercentComplete(featureId, totalFeatures)); });
 
-    // Compute the average value of the misorientations between each feature's cell
-    // and the average C-Axis for that feature
-    featAvgCAxisMis[featureId] = avgMisorientations[featureId] / static_cast<float32>(counts[featureId]);
+    if(counts[featureId] == 0)
+    {
+      featAvgCAxisMis[featureId] = std::numeric_limits<float32>::quiet_NaN();
+    }
+    else
+    {
+      featAvgCAxisMis[featureId] = avgMisorientations[featureId] / static_cast<float32>(counts[featureId]);
+    }
   }
 
-  // These 2 loops compute the population standard deviation of those misorientations for
-  // each feature.
+  // Population standard deviation. Per-cell accumulate (diff^2) then per-feature sqrt(sum/count).
   std::vector<double> stdevs(totalFeatures, 0.0);
   for(usize cellIdx = 0; cellIdx < totalPoints; cellIdx++)
   {
@@ -191,7 +197,6 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     stdevs[featureId] += (diff * diff);
   }
 
-  // Finish computing the standard deviation in this loop
   for(usize featureId = 1; featureId < totalFeatures; featureId++)
   {
     if(m_ShouldCancel)
@@ -199,8 +204,15 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
       return {};
     }
 
-    featStdevCAxisMis[featureId] = std::sqrt(stdevs[featureId] / static_cast<double>(counts[featureId]));
+    if(counts[featureId] == 0)
+    {
+      featStdevCAxisMis[featureId] = std::numeric_limits<float32>::quiet_NaN();
+    }
+    else
+    {
+      featStdevCAxisMis[featureId] = static_cast<float32>(std::sqrt(stdevs[featureId] / static_cast<double>(counts[featureId])));
+    }
   }
 
-  return {};
+  return result;
 }
