@@ -7,8 +7,8 @@
 | SIMPLNX Human Name         | Compute Feature Neighbors                                                                                                |
 | DREAM3D 6.5.171 equivalent | `FindNeighbors` (SIMPL UUID `97cf66f8-7a9b-5ec2-83eb-f8c4c8a17bac`) — `Source/Plugins/Statistics/StatisticsFilters/FindNeighbors.{h,cpp}` |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                  |
-| Status                     | DRAFT                                                                                                                    |
-| Sign-off                   | *<engineer(s), date>*                                                                                                    |
+| Status                     | COMPLETE                                                                                                                    |
+| Sign-off                   | Nathan Young, 06-23-2026                                                                                                    |
 
 ## At a glance
 
