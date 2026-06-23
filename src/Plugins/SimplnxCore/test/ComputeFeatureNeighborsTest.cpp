@@ -8,7 +8,6 @@
 
 #include <catch2/catch.hpp>
 #include <filesystem>
-#include <fstream>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
@@ -600,6 +599,8 @@ void ExecuteFilter(DataStructure& dataStructure, bool testBoundaryCells, bool te
   UnitTest::CompareNeighborLists<int32>(dataStructure, k_ExemplarNeighborsListPath, k_NeighborsListPath);
 
   UnitTest::CompareNeighborLists<float32>(dataStructure, k_ExemplarSSAListPath, k_SSAListPath);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
