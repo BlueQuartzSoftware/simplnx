@@ -91,7 +91,10 @@ usize INodeGeometry0D::getNumberOfCells() const
 BoundingBox3Df INodeGeometry0D::getBoundingBox() const
 {
   FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
-  FloatVec3 ur = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
+  // Upper corner must start at the most-negative float (lowest()), NOT min()
+  // (which is the smallest POSITIVE normal ~1.18e-38). Using min() left the max
+  // corner wrong for any geometry whose coordinates are <= ~0 on an axis.
+  FloatVec3 ur = {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
 
   const IGeometry::SharedVertexList& vertexList = getVerticesRef();
   if(vertexList.getDataType() != DataType::float32)
