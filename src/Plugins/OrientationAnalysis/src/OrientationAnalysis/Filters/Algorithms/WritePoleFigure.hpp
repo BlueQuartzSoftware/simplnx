@@ -29,6 +29,7 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
   ChoicesParameter::ValueType GenerationAlgorithm;
   int32 LambertSize;
   int32 NumColors;
+  float32 DiscreteMarkerRadius;
   ChoicesParameter::ValueType ImageFormat;
   ChoicesParameter::ValueType ImageLayout;
   FileSystemPathParameter::ValueType OutputPath;
@@ -47,6 +48,8 @@ struct ORIENTATIONANALYSIS_EXPORT WritePoleFigureInputValues
 
   bool SaveIntensityData;
   bool NormalizeToMRD;
+
+  bool FlipFinalImage;
   DataPath IntensityGeometryDataPath;
   std::string IntensityPlot1Name;
   std::string IntensityPlot2Name;

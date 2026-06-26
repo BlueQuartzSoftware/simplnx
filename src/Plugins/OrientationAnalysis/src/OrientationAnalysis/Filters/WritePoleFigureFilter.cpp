@@ -92,13 +92,17 @@ Parameters WritePoleFigureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<StringParameter>(k_Title_Key, "Figure Title", "The title to place at the top of the Pole Figure", "Figure Title"));
   params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "The number of pixels that define the height and width of **each** output pole figure", 512));
+  // params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FlipFinalImage_Key, "Y Axis Points Up", "", true));
+
   params.insert(std::make_unique<ChoicesParameter>(k_ImageLayout_Key, "Image Layout", "How to layout the 3 pole figures. 0=Horizontal, 1=Vertical, 2=Square", 0,
                                                    ChoicesParameter::Choices{"Horizontal", "Vertical", "Square"}));
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "The type of pole figure generated. 0=Color, 1=Discrete", 0,
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "The type of pole figure generated. 0=Color, 1=Discrete", 1,
                                                                     ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
   params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
   params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
+  params.insert(
+      std::make_unique<Int32Parameter>(k_DiscreteMarkerRadius_Key, "Discrete Marker Radius (Pixels)", "Radius of each discrete pole marker. Only used for the Discrete pole figure type.", 3));
   params.insert(std::make_unique<ChoicesParameter>(
       k_HexConvention_Key, "Hex/Trig Cartesian Basis Convention",
       "Cartesian basis used for hex/trigonal phases. Pole-figure positions and corner labels are rotated 30° about the c-axis between the two:\n"
@@ -148,6 +152,7 @@ Parameters WritePoleFigureFilter::parameters() const
 
   params.linkParameters(k_GenerationAlgorithm_Key, k_LambertSize_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_GenerationAlgorithm_Key, k_NumColors_Key, std::make_any<ChoicesParameter::ValueType>(0));
+  params.linkParameters(k_GenerationAlgorithm_Key, k_DiscreteMarkerRadius_Key, std::make_any<ChoicesParameter::ValueType>(1));
 
   params.linkParameters(k_WriteImageToDisk, k_OutputPath_Key, true);
   params.linkParameters(k_WriteImageToDisk, k_ImagePrefix_Key, true);
@@ -296,10 +301,12 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.GenerationAlgorithm = filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key);
   inputValues.LambertSize = filterArgs.value<int32>(k_LambertSize_Key);
   inputValues.NumColors = filterArgs.value<int32>(k_NumColors_Key);
+  inputValues.ImageSize = filterArgs.value<int32>(k_ImageSize_Key);
+  inputValues.DiscreteMarkerRadius = static_cast<float32>(filterArgs.value<int32>(k_DiscreteMarkerRadius_Key)) / static_cast<float32>(inputValues.ImageSize);
   inputValues.ImageLayout = filterArgs.value<ChoicesParameter::ValueType>(k_ImageLayout_Key);
   inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
   inputValues.ImagePrefix = filterArgs.value<StringParameter::ValueType>(k_ImagePrefix_Key);
-  inputValues.ImageSize = filterArgs.value<int32>(k_ImageSize_Key);
+
   inputValues.UseMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
@@ -309,6 +316,7 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.SaveAsImageGeometry = filterArgs.value<bool>(k_SaveAsImageGeometry_Key);
   inputValues.WriteImageToDisk = filterArgs.value<bool>(k_WriteImageToDisk);
   inputValues.OutputImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.FlipFinalImage = true; // filterArgs.value<bool>(k_FlipFinalImage_Key);
 
   inputValues.SaveIntensityData = filterArgs.value<bool>(k_SaveIntensityDataArrays);
   inputValues.NormalizeToMRD = filterArgs.value<bool>(k_NormalizeToMRD);

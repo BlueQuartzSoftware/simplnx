@@ -26,6 +26,18 @@ IPF Legends for most all of the Laue classes can be found in the Data/Orientatio
 
 ![Example Data Set](Images/IPFColor_1.png)
 
+### Crystallographic Convention (Hexagonal & Trigonal)
+
+For hexagonal and trigonal phases the **IPF color itself is convention-independent**: the X‖a (TSL/EDAX) and X‖a\* (MTEX/Oxford) bases differ only by a 30° rotation about the c-axis, which does not change the computed RGB. What depends on the convention is only how the inverse-pole-figure triangle's corners are *labeled*. The IPF legends shipped with DREAM3D-NX are drawn in the **X‖a (TSL/EDAX)** convention, where the Cartesian +X axis is the a-axis [2-1-10]:
+
+| Triangle corner | Crystal direction (X‖a) | Color |
+|---|---|---|
+| apex | [0001] (c-axis) | red |
+| η = 0° edge | [2-1-10] (a-axis) | green |
+| η = 30° edge | [10-10] (m-axis) | blue |
+
+The 6/m, -3m, and -3 Laue classes use wider/shifted triangle wedges (so their green/blue corners are different crystal directions), but the apex is always [0001] = red. Each legend image prints the convention it was generated with as a footnote along its bottom edge.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
