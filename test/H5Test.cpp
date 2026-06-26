@@ -20,6 +20,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 
@@ -28,6 +29,9 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include "GeometryTestUtilities.hpp"
+
+#include <thread>
+#include <vector>
 
 #include "simplnx/unit_test/simplnx_test_dirs.hpp"
 
@@ -1175,4 +1179,37 @@ TEST_CASE("DatasetIO: writeSpan bypasses chunking for small arrays even with com
   REQUIRE(info.has_value());
   REQUIRE(info->layout == nx::core::UnitTest::DatasetLayout::Contiguous);
   REQUIRE(info->hasDeflate == false);
+}
+
+TEST_CASE("HDF5 ApiLock serializes access via H5SUPPORT_MUTEX_LOCK", "[simplnx][HDF5]")
+{
+#ifdef H5Support_USE_MUTEX
+  // Regression guard for the original H5SUPPORT_MUTEX_LOCK() bug: the macro used to
+  // declare a fresh per-call local std::mutex (serializing nothing). Hammer a shared
+  // counter from many threads under the macro — a real lock on the one shared ApiLock
+  // yields exactly threads*iters with no lost updates; the old no-op macro would lose
+  // updates (and the unsynchronized increments would be a data race).
+  constexpr int k_Threads = 8;
+  constexpr int k_Iters = 20000;
+  int counter = 0;
+  std::vector<std::thread> workers;
+  workers.reserve(k_Threads);
+  for(int t = 0; t < k_Threads; ++t)
+  {
+    workers.emplace_back([&counter]() {
+      for(int i = 0; i < k_Iters; ++i)
+      {
+        H5SUPPORT_MUTEX_LOCK();
+        ++counter;
+      }
+    });
+  }
+  for(auto& worker : workers)
+  {
+    worker.join();
+  }
+  REQUIRE(counter == k_Threads * k_Iters);
+#else
+  SUCCEED("H5Support_USE_MUTEX disabled; H5SUPPORT_MUTEX_LOCK is intentionally a no-op");
+#endif
 }

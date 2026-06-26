@@ -228,6 +228,19 @@ std::string nx::core::HDF5::Support::GetNameFromFilterType(H5Z_filter_t id)
   }
 }
 
+std::mutex& nx::core::HDF5::Support::ApiLock()
+{
+  // "Leaky" (immortal) Meyers singleton: a process-wide lock must stay valid even if
+  // an HDF5 call runs during static destruction (e.g. a file or dataset handle closed
+  // from a static object's destructor at process exit) — by then a function-local
+  // static would already be destroyed, and locking a destroyed mutex is undefined
+  // behavior. Heap-allocating and intentionally never deleting the mutex sidesteps the
+  // static destruction order fiasco; the one-time leak is harmless and reclaimed by the
+  // OS at process exit.
+  static std::mutex* s_ApiLock = new std::mutex();
+  return *s_ApiLock;
+}
+
 #if 0
 hid_t Support::getDatasetType(hid_t locationID, const std::string& datasetName)
 {
