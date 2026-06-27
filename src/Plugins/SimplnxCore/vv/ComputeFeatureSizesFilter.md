@@ -18,12 +18,12 @@
 | Code paths | **14 of 19** exercised; 5 gaps (cancel ×2, INT32_MAX overflow ×2, other-geom no-op ×1) |
 | Tests | **9 TEST_CASEs** — all pass |
 | External archive | None |
-| Deviations | **1 active** (`ComputeFeatureSizes-D1`): Kahan vs naive summation in RectGridGeom — see deviations file |
+| Deviations | **2 active**, both A/B-verified 2026-06-27: `ComputeFeatureSizes-D1` (float64+Kahan vs naive summation → `Volumes`), `ComputeFeatureSizes-D2` (float64 `std::cbrt` vs float32 `powf` → `EquivalentDiameters`) — see deviations file |
 | Open bugs | **1 open** (`Bug-1`): 2D area formula uses all 3 spacings (= volume) instead of the 2 non-flat spacings |
 
 ## Summary
 
-`ComputeFeatureSizesFilter` produces three arrays per feature: `NumElements` (voxel count, `int32`), `Volumes`/`Areas` (float32), and `EquivalentDiameters` (ESD or ECD, float32). For ImageGeom it uses voxel count × voxel size; for RectGridGeom it sums per-cell element sizes per feature. Both paths are parallelized via `ParallelDataAlgorithm` + TBB `tbb::combinable`. All tests use Class 1 oracles (hand-constructed fixtures with first-principles expected values). Source-inspection confirms both geometry paths are ports of legacy `FindSizes`. One precision deviation (`D1`) and one open bug (`Bug-1`) are documented below.
+`ComputeFeatureSizesFilter` produces three arrays per feature: `NumElements` (voxel count, `int32`), `Volumes`/`Areas` (float32), and `EquivalentDiameters` (ESD or ECD, float32). For ImageGeom it uses voxel count × voxel size; for RectGridGeom it sums per-cell element sizes per feature. Both paths are parallelized via `ParallelDataAlgorithm` + TBB `tbb::combinable`. All tests use Class 1 oracles (hand-constructed fixtures with first-principles expected values). Source-inspection confirms both geometry paths are ports of legacy `FindSizes`. Two precision deviations (`D1`, `D2`) — both confirmed by a direct A/B run against DREAM3D 6.5.171 — and one open bug (`Bug-1`) are documented below.
 
 ## Algorithm Relationship
 
@@ -99,8 +99,10 @@ None — all fixtures constructed in C++ at test time. Provenance in `vv/provena
 
 ## Deviations from DREAM3D 6.5.171
 
-**ImageGeom path:** No deviations. Formulas and logic identical to `FindSizes::execute()`. The float64 intermediate in the ESD/ECD computation differs from likely float32 in legacy by ≤1 ULP for typical EBSD spacings; non-material.
+Both deviations below were confirmed by a direct A/B run (2026-06-27), not source inspection alone: the exact RectGrid fixture was authored as a shared legacy `.dream3d` and run through stock DREAM3D 6.5.171, DREAM3D-NX, and a 6.5.172 proof-patch build. Applying **both** the D1 (summation) and D2 (ESD-evaluation) changes to legacy `findSizesUnstructured` made `Volumes` and `EquivalentDiameters` **bit-identical** to SIMPLNX; each change alone closed only its corresponding array.
 
-**RectGridGeom path — `ComputeFeatureSizes-D1`:** Per-feature volumes differ from `FindSizes::findSizesUnstructured()` output due to two precision improvements in SIMPLNX: (1) element sizes promoted from float32 to float64 before accumulation; (2) Kahan compensated summation applied per-thread and during TBB post-reduction, reducing accumulated error from O(N·ε_float32) to O(ε_float64). SIMPLNX is more accurate. Users migrating from DREAM3D 6.5.171 should expect small shifts in per-feature volumes for RectGridGeom; largest for features with many cells on grids with high cell-volume variation.
+**`ComputeFeatureSizes-D1` (RectGridGeom → `Volumes`):** Per-feature volumes differ from `FindSizes::findSizesUnstructured()` output due to two precision improvements in SIMPLNX: (1) element sizes promoted from float32 to float64 before accumulation; (2) Kahan compensated summation applied per-thread and during TBB post-reduction, reducing accumulated error from O(N·ε_float32) to O(ε_float64). SIMPLNX is more accurate. Users migrating from DREAM3D 6.5.171 should expect small shifts in per-feature volumes for RectGridGeom; largest for features with many cells on grids with high cell-volume variation.
+
+**`ComputeFeatureSizes-D2` (RectGridGeom → `EquivalentDiameters`):** Even with identical `Volumes`, the equivalent spherical diameter differs because legacy evaluates the cube root with `powf` (float32) on the float32-rounded volume, while SIMPLNX uses `std::cbrt` (float64) on the float64 volume. SIMPLNX is more accurate. The same `powf`/`sqrtf`-on-float32 pattern exists on the ImageGeom path; it was previously noted only as a non-flagged precision difference and is now captured by D2.
 
 Full entry in `vv/deviations/ComputeFeatureSizesFilter.md`.
