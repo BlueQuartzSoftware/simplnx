@@ -13,25 +13,25 @@
 
 | Aspect | State |
 |---|---|
-| Algorithm relationship | **Port** (3D mode) + **1 deviation** (dimensionality dispatch) + new features (`SliceBySlice`, cancel checks) |
+| Algorithm relationship | **Port** (3D mode + connectivity) + **1 deviation** (hole-fill on 2D/1D, A/B-proven) + 1 SIMPLNX bug fixed to match legacy (single-voxel hole-fill) + new features (`SliceBySlice`, cancel checks) |
 | Oracle | **Class 1 (Analytical)** for 3 non-square 2D tests; **Validated-circular** for 12 archive tests (not legacy-equivalent) |
 | Code paths | **14 of 17** exercised; 3 gaps (1D dispatch, single-voxel, cancel-check) |
 | Tests | **5 TEST_CASEs** (16 functional scenarios) — all pass |
 | External archive | `identify_sample_v2.tar.gz` (active) + `identify_sample.tar.gz` (v1, orphaned) |
-| Deviations | **1 active** (`IdentifySample-D1`): dimensionality dispatch — legacy correctness on degenerate geometries unverified/suspected wrong |
-| Confirmed parity | `checked`-reset between BFS phases verified identical and correct in both versions (source-compared against legacy tag `v6.5.171`) |
-| Open bugs | None |
+| Deviations | **1 active** (`IdentifySample-D1`), **A/B-proven 2026-06-29**: legacy never fills holes on 2D/1D geometry (hole-fill boundary test counts the flat dimension); SIMPLNX is correct |
+| Confirmed parity | Connectivity / largest-component (Phase 1) **byte-identical** to legacy on 2D/1D/3D + tie-break (A/B 2026-06-29); `checked`-reset between BFS phases verified identical in both versions |
+| Open bugs | None (the single-voxel hole-fill bug was a SIMPLNX bug, fixed in this PR to match legacy — see deviations file) |
 
 ## Summary
 
-`IdentifySampleFilter` isolates the largest connected component of "good" voxels in an `ImageGeom`, clearing all smaller components. An optional `FillHoles` pass then closes interior holes — bad-voxel components that don't touch the volume boundary are flipped to good. `SliceBySlice` mode (new in SIMPLNX) applies the same two-pass logic independently per 2D slice. The algorithm is purely boolean/integer, so no floating-point precision drift is possible. The genuinely-3D path is a confirmed port of legacy `IdentifySample::execute()`, including an exact-match BFS `checked`-reset behavior between phases. One deviation is open: SIMPLNX's dimensionality-aware dispatch for degenerate (2D/1D/single-voxel) geometries has no verified legacy counterpart — legacy used a single fixed 3D-stride formula whose correctness on such inputs was never established and is suspected wrong.
+`IdentifySampleFilter` isolates the largest connected component of "good" voxels in an `ImageGeom`, clearing all smaller components. An optional `FillHoles` pass then closes interior holes — bad-voxel components that don't touch the volume boundary are flipped to good. `SliceBySlice` mode (new in SIMPLNX) applies the same two-pass logic independently per 2D slice. The algorithm is purely boolean/integer, so no floating-point precision drift is possible. The genuinely-3D path is a confirmed port of legacy `IdentifySample::execute()`, including an exact-match BFS `checked`-reset behavior between phases. A 2026-06-29 A/B run (stock 6.5.171 vs SIMPLNX vs a 6.5.172 proof-patch build) established the full degenerate-geometry story: **connectivity / largest-component selection is byte-identical** to legacy on 2D, 1D, and 3D inputs (including tie-breaks), so the one active deviation (`IdentifySample-D1`) is **not** in neighbor dispatch as originally hypothesized — it is that **legacy never fills holes on a 2D/1D geometry** (its hole-fill boundary test treats the flat dimension as always-boundary). The single-voxel hole-fill behavior, also originally suspected to be a legacy issue, turned out to be the reverse: a SIMPLNX bug that this PR's one-line change fixes to match legacy.
 
 ## Algorithm Relationship
 
-**Port** of the 3D BFS two-pass algorithm; **deviation** in dimensionality handling; **new** SliceBySlice mode.
+**Port** of the 3D BFS two-pass algorithm and of connectivity on all geometries; **deviation** in hole-fill on degenerate (2D/1D) geometry; **new** SliceBySlice mode.
 
-- **3D mode**: identical two-pass structure (largest-component isolation, then optional hole fill) to legacy. The `checked`-tracker reset between phases — a historically fragile point (see Deviations) — is confirmed correct and identical in both versions.
-- **Dimensionality dispatch** (`ProcessVoxels<>`): routes to `Image3D`, `EmptyZ/Y/XImage2D`, `Z/Y/XImage1D`, or `SingleVoxelImage` neighbor templates based on which dims equal 1. Legacy always used the fixed 3D-stride formula regardless of shape. Classified as deviation `IdentifySample-D1` (not a plain new feature) because degenerate inputs were always legal in legacy — its behavior on them just was never validated. See deviations file.
+- **3D mode**: identical two-pass structure (largest-component isolation, then optional hole fill) to legacy. The `checked`-tracker reset between phases — a historically fragile point — is confirmed correct and identical in both versions.
+- **Dimensionality dispatch** (`ProcessVoxels<>`): routes to `Image3D`, `EmptyZ/Y/XImage2D`, `Z/Y/XImage1D`, or `SingleVoxelImage` neighbor templates based on which dims equal 1. Legacy used a single fixed 3D-stride formula with coordinate-based guards. The A/B run (2026-06-29) confirmed these produce **byte-identical connectivity** on 2D/1D/3D — so the dispatch is a faithful re-implementation, **not** the source of the deviation. The actual deviation (`IdentifySample-D1`) is in the **hole-fill boundary test**, where legacy fails on 2D/1D; see deviations file.
 - **New, no legacy path to compare against**: `SliceBySlice` mode (gated behind a parameter absent from DREAM3D 6.5.171 and unmapped by `FromSIMPLJson`); cancel checks (`m_ShouldCancel`); rate-limited progress messages.
 
 ## Oracle
@@ -80,8 +80,10 @@ Full provenance detail, including the feature-layout table and the resolved "che
 
 ## Deviations from DREAM3D 6.5.171
 
-**3D mode:** No deviations — confirmed identical two-pass BFS structure, including the `checked`-reset between phases (source-compared against legacy tag `v6.5.171`, line 254; matches SIMPLNX `IdentifySample.cpp:112` and `:325`).
+**3D mode + connectivity:** No deviations — confirmed identical two-pass BFS structure (including the `checked`-reset between phases), and A/B-verified (2026-06-29) byte-identical largest-component output on 2D/1D/3D inputs and tie-breaks.
 
-**`IdentifySample-D1` (active):** Dimensionality dispatch for degenerate geometries. Legacy's fixed 3D-stride neighbor formula was never validated against 2D/1D/single-voxel inputs and is suspected incorrect; SIMPLNX's dispatch is explicit and Class 1 tested. Recommend trusting SIMPLNX. Full entry in `vv/deviations/IdentifySampleFilter.md`.
+**`IdentifySample-D1` (active, A/B-proven):** Hole fill (`FillHoles=true`) on 2D/1D geometry. Legacy's hole-fill boundary test includes `plane==0 || plane==(zp-1)`, which is always true when `zp==1`, so legacy flags every voxel as boundary-touching and **never fills holes in a 2D/1D geometry**. SIMPLNX fills enclosed holes correctly. Proven by A/B (legacy left a 2D enclosed hole unfilled; SIMPLNX filled it) and by a 6.5.172 dimensionality-aware boundary-test proof patch that reproduces SIMPLNX. Recommend trusting SIMPLNX. Full entry in `vv/deviations/IdentifySampleFilter.md`.
+
+**Single-voxel hole fill (SIMPLNX bug, fixed in this PR):** Not a legacy deviation. Legacy correctly leaves a lone bad voxel unfilled; pre-fix SIMPLNX wrongly filled it (empty neighbor loop left `touchesBoundary=false`). This PR's `touchesBoundary = k_NeighborCount == 0` (`IdentifySample.cpp:139`) fixes SIMPLNX to match legacy; verified by A/B. Full entry in `vv/deviations/IdentifySampleFilter.md`.
 
 **`SliceBySlice` and cancel checks:** Genuinely new, no legacy path to deviate from.
