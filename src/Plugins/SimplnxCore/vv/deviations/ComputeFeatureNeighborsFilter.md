@@ -14,7 +14,7 @@ Comparison run on the `6_6_stats_test_v2.tar.gz` SmallIn100 fixture (SHA512 `e84
 |---|---|
 | **Deviation ID** | `ComputeFeatureNeighborsFilter-D1` |
 | **Filter UUID** | `7177e88c-c3ab-4169-abe9-1fdaff20e598` |
-| **Status** | active |
+| **Status** | active — **A/B-proven (2026-06-29)** |
 
 **Symptom:** `SharedSurfaceAreaList` values produced by SIMPLNX differ from DREAM3D 6.5.171 for any dataset with anisotropic spacing. The test at `test/ComputeFeatureNeighborsTest.cpp:910` records this explicitly: *"The exemplar Shared Surface Area is not valid after a bug fix, and the input file is used in other test cases."*
 
@@ -32,6 +32,8 @@ SIMPLNX corrects this via `computeFaceSurfaceAreas<ImageDimensionStateT>()` (`Ne
 
 **Recommendation:** Trust SIMPLNX. The 6.5.171 formula is geometrically incorrect for any non-Z-normal face when spacing is anisotropic. The SIMPLNX values are verified against the geometric definition of face area by 37 independent Class 1 analytical test cases.
 
+**A/B verification (2026-06-29):** A 2×2×2 image with anisotropic spacing (1,2,3) split along X into two features (shared faces are X-normal, area = sy·sz = 6, four contacts) was run through stock 6.5.171, SIMPLNX, and a 6.5.172 proof-patch build. Stock 6.5.171 produced `SharedSurfaceAreaList = [8, 8]` (4 · sx·sy = 8 — the buggy formula); SIMPLNX produced `[24, 24]` (4 · 6). A 6.5.172 patch that accumulates the correct per-face-direction area during the scan (`faceArea = {sx·sy, sx·sz, sy·sz, sy·sz, sx·sz, sx·sy}`, k = 0..5) reproduced SIMPLNX's `[24, 24]` exactly, while leaving NumNeighbors, NeighborList, SurfaceFeatures, and BoundaryCells byte-identical. On isotropic spacing all three agree, confirming the deviation is spacing-dependent as stated.
+
 ---
 
 ## ComputeFeatureNeighborsFilter-D2
@@ -40,7 +42,7 @@ SIMPLNX corrects this via `computeFaceSurfaceAreas<ImageDimensionStateT>()` (`Ne
 |---|---|
 | **Deviation ID** | `ComputeFeatureNeighborsFilter-D2` |
 | **Filter UUID** | `7177e88c-c3ab-4169-abe9-1fdaff20e598` |
-| **Status** | active |
+| **Status** | active — **A/B-proven (2026-06-29)** |
 
 **Symptom:** `SurfaceFeatures` in DREAM3D 6.5.171 marks every feature as a surface feature for any image whose X or Y dimension is 1 (i.e., 1D images and 2D EmptyY/EmptyX images). SIMPLNX correctly identifies only features that touch the actual image boundary in the active dimensions.
 
@@ -73,6 +75,8 @@ SIMPLNX's correction: explicit dimensionality dispatch to `ImageDimensionStateT`
 **Affected users:** Any pipeline that runs `ComputeFeatureNeighbors` / `FindNeighbors` on a 2D or 1D image geometry (`XPoints==1` or `YPoints==1`) and uses the `SurfaceFeatures` output. For full 3D datasets (all three dimensions > 1), the two implementations produce identical `SurfaceFeatures` output. This deviation is **not observable** on the SmallIn100 dataset (all three dimensions ≫ 1), which is why the SmallIn100 legacy comparison test passes for SurfaceFeatures.
 
 **Recommendation:** Trust SIMPLNX. The 6.5.171 result is geometrically incorrect for degenerate image dimensions — it flags internal features as surface features when a dimension-1 axis makes `column==0` or `row==0` trivially true for every voxel.
+
+**A/B verification (2026-06-29):** A 5×1×5 EmptyY image (Y=1, Z>1) with an interior single-voxel feature (feature 2 at the center, surrounded by feature 1) was run through stock 6.5.171, SIMPLNX, and a 6.5.172 proof-patch build. Stock 6.5.171 produced `SurfaceFeatures = [0, 1, 1]` — wrongly marking the interior feature 2 as surface (Branch 1 fires because `row==0` is trivially true for every voxel when Y=1); SIMPLNX produced `[0, 1, 0]`. A 6.5.172 dimensionality-aware boundary check (only the extremes of non-degenerate dims count; an all-degenerate image is treated as boundary) reproduced SIMPLNX's `[0, 1, 0]` exactly, while leaving all other arrays byte-identical. On a full 3D image all three agree, confirming the deviation is confined to degenerate (X=1 or Y=1) geometry as stated.
 
 ---
 
