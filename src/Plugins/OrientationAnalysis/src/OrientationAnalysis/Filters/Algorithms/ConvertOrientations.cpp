@@ -1,159 +1,38 @@
 #include "ConvertOrientations.hpp"
 
 #include "simplnx/DataStructure/DataArray.hpp"
-#include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <EbsdLib/Core/Orientation.hpp>
-#include <EbsdLib/Math/EbsdLibMath.h>
 #include <EbsdLib/Orientation/AxisAngle.hpp>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <EbsdLib/Orientation/Quaternion.hpp>
-#include <EbsdLib/Utilities/EbsdStringUtils.hpp>
 
-#include <iostream>
+#include <fmt/format.h>
+
+#include <array>
 #include <string>
-
-#ifndef _MSC_VER
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "UnusedValue"
-#endif
 
 using namespace nx::core;
 
 namespace
 {
+// Human-readable representation names, indexed by ebsdlib::orientations::Type.
+constexpr std::array<std::string_view, 8> k_TypeNames = {"Euler", "Orientation Matrix", "Quaternion", "Axis Angle", "Rodrigues", "Homochoric", "Cubochoric", "Stereographic"};
 
-template <typename T>
-struct EulerCheck
-{
-
-  void operator()(T* euler) const
-  {
-    euler[0] = static_cast<T>(std::fmod(euler[0], ebsdlib::constants::k_2PiD));
-    euler[1] = static_cast<T>(std::fmod(euler[1], ebsdlib::constants::k_PiD));
-    euler[2] = static_cast<T>(std::fmod(euler[2], ebsdlib::constants::k_2PiD));
-
-    if(euler[0] < 0.0)
-    {
-      euler[0] *= static_cast<T>(-1.0);
-    }
-    if(euler[1] < 0.0)
-    {
-      euler[1] *= static_cast<T>(-1.0);
-    }
-    if(euler[2] < 0.0)
-    {
-      euler[2] *= static_cast<T>(-1.0);
-    }
-  }
-};
-
-template <typename T>
-struct OrientationMatrixCheck
-{
-  using OrientationType = ebsdlib::OrientationMatrix<T>;
-  using ResultType = ebsdlib::ResultType;
-
-  void operator()(T* inPtr) const
-  {
-    OrientationType oaType(inPtr);
-
-    ResultType res = oaType.isValid();
-    if(res.result <= 0)
-    {
-      std::cout << res.msg << std::endl;
-      printRepresentation(std::cout, inPtr, std::string("Bad OM"));
-    }
-  }
-  void printRepresentation(std::ostream& out, T* om, const std::string& label = std::string("Om")) const
-  {
-    out.precision(16);
-    out << label << om[0] << '\t' << om[1] << '\t' << om[2] << std::endl;
-    out << label << om[3] << '\t' << om[4] << '\t' << om[5] << std::endl;
-    out << label << om[6] << '\t' << om[7] << '\t' << om[8] << std::endl;
-  }
-};
-
-template <typename T>
-struct QuaternionCheck
-{
-  using OrientationType = ebsdlib::Quaternion<T>;
-  using ResultType = ebsdlib::ResultType;
-
-  void operator()(T* inPtr) const
-  {
-    // This is a no-op at this point.
-  }
-};
-
-template <typename T>
-struct AxisAngleCheck
-{
-  using OrientationType = ebsdlib::AxisAngle<T>;
-  using ResultType = ebsdlib::ResultType;
-
-  void operator()(T* inPtr) const
-  {
-    // This is a no-op at this point.
-  }
-};
-
-template <typename T>
-struct RodriguesCheck
-{
-  using OrientationType = ebsdlib::Rodrigues<T>;
-  using ResultType = ebsdlib::ResultType;
-
-  void operator()(T* inPtr) const
-  {
-    // This is a no-op at this point.
-  }
-};
-
-template <typename T>
-struct HomochoricCheck
-{
-  using OrientationType = ebsdlib::Homochoric<T>;
-  using ResultType = ebsdlib::ResultType;
-
-  void operator()(T* inPtr) const
-  {
-    // This is a no-op at this point.
-  }
-};
-
-template <typename T>
-struct CubochoricCheck
-{
-  using OrientationType = ebsdlib::Cubochoric<T>;
-  using ResultType = ebsdlib::ResultType;
-
-  void operator()(T* inPtr) const
-  {
-    // This is a no-op at this point.
-  }
-};
-
-template <typename T>
-struct StereographicCheck
-{
-  using OrientationType = ebsdlib::Stereographic<T>;
-  using ResultType = ebsdlib::ResultType;
-
-  void operator()(T* inPtr) const
-  {
-    // This is a no-op at this point.
-  }
-};
-
+// X-macro that generates one per-tuple convertor functor per output representation. Each functor is
+// handed to ParallelDataAlgorithm, which splits the tuple range across threads; for tuple i it copies
+// the inNumComps input components into an EbsdLib orientation object, calls that object's to<TO_REP>()
+// conversion, and writes the outNumComps result components back. Cancel is checked per tuple so a large
+// conversion can be aborted promptly. The conversion math itself lives in EbsdLib.
 #define OC_TBB_IMPL(TO_REP)                                                                                                                                                                            \
   template <typename T, typename K, class InputType, class OutputType>                                                                                                                                 \
   class TO_REP##Convertor                                                                                                                                                                              \
   {                                                                                                                                                                                                    \
   public:                                                                                                                                                                                              \
     TO_REP##Convertor(ConvertOrientations* filter, nx::core::DataArray<T>& input, nx::core::DataArray<K>& output)                                                                                      \
-    : m_Input(input.getDataStoreRef())                                                                                                                                                                 \
+    : m_Filter(filter)                                                                                                                                                                                 \
+    , m_Input(input.getDataStoreRef())                                                                                                                                                                 \
     , m_Output(output.getDataStoreRef())                                                                                                                                                               \
     {                                                                                                                                                                                                  \
     }                                                                                                                                                                                                  \
@@ -164,6 +43,10 @@ struct StereographicCheck
       size_t outNumComps = m_Output.getNumberOfComponents();                                                                                                                                           \
       for(size_t i = r.min(); i < r.max(); ++i)                                                                                                                                                        \
       {                                                                                                                                                                                                \
+        if(m_Filter->shouldCancel())                                                                                                                                                                   \
+        {                                                                                                                                                                                              \
+          return;                                                                                                                                                                                      \
+        }                                                                                                                                                                                              \
         size_t inOffset = i * inNumComps;                                                                                                                                                              \
         size_t outOffset = i * outNumComps;                                                                                                                                                            \
         for(size_t c = 0; c < inNumComps; c++)                                                                                                                                                         \
@@ -176,9 +59,11 @@ struct StereographicCheck
           m_Output[outOffset + c] = outputInstance[c];                                                                                                                                                 \
         }                                                                                                                                                                                              \
       }                                                                                                                                                                                                \
+      m_Filter->sendThreadSafeProgressMessage(r.max() - r.min());                                                                                                                                      \
     }                                                                                                                                                                                                  \
                                                                                                                                                                                                        \
   private:                                                                                                                                                                                             \
+    ConvertOrientations* m_Filter = nullptr;                                                                                                                                                           \
     AbstractDataStore<T>& m_Input;                                                                                                                                                                     \
     AbstractDataStore<K>& m_Output;                                                                                                                                                                    \
   };
@@ -207,27 +92,47 @@ ConvertOrientations::ConvertOrientations(DataStructure& dataStructure, const IFi
 ConvertOrientations::~ConvertOrientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
+bool ConvertOrientations::shouldCancel() const
+{
+  return m_ShouldCancel;
+}
+
+// -----------------------------------------------------------------------------
+void ConvertOrientations::sendThreadSafeProgressMessage(usize counter)
+{
+  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+
+  m_ProgressCounter += counter;
+  auto now = std::chrono::steady_clock::now();
+  if(std::chrono::duration_cast<std::chrono::milliseconds>(now - m_InitialPoint).count() < 1000)
+  {
+    return;
+  }
+
+  auto progressInt = static_cast<usize>((static_cast<float32>(m_ProgressCounter) / static_cast<float32>(m_TotalPoints)) * 100.0f);
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting Orientations: {}% Complete", progressInt));
+  m_InitialPoint = std::chrono::steady_clock::now();
+}
+
+// -----------------------------------------------------------------------------
 Result<> ConvertOrientations::operator()()
 {
-  using ValidateInputDataFunctionType = std::function<void(float32*)>;
-
   DataPath outputDataPath = m_InputValues->InputOrientationArrayPath.replaceName(m_InputValues->OutputOrientationArrayName);
-  auto inputArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputOrientationArrayPath);
-  auto outputArray = m_DataStructure.getDataRefAs<Float32Array>(outputDataPath);
+  auto& inputArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputOrientationArrayPath);
+  auto& outputArray = m_DataStructure.getDataRefAs<Float32Array>(outputDataPath);
   size_t totalPoints = inputArray.getNumberOfTuples();
+  m_TotalPoints = totalPoints;
 
-  const ValidateInputDataFunctionType euCheck = EulerCheck<float>();
-  const ValidateInputDataFunctionType omCheck = OrientationMatrixCheck<float>();
-  const ValidateInputDataFunctionType quCheck = QuaternionCheck<float>();
-  const ValidateInputDataFunctionType axCheck = AxisAngleCheck<float>();
-  const ValidateInputDataFunctionType roCheck = RodriguesCheck<float>();
-  const ValidateInputDataFunctionType hoCheck = HomochoricCheck<float>();
-  const ValidateInputDataFunctionType cuCheck = CubochoricCheck<float>();
-  const ValidateInputDataFunctionType stCheck = StereographicCheck<float>();
+  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<size_t>(m_InputValues->InputType)],
+                                                             k_TypeNames[static_cast<size_t>(m_InputValues->OutputType)]));
 
-  // Allow data-based parallelization
+  // Allow data-based parallelization; require both arrays resident in memory for out-of-core stores.
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(0, totalPoints);
+  IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&inputArray);
+  algArrays.push_back(&outputArray);
+  parallelAlgorithm.requireArraysInMemory(algArrays);
 
   if(m_InputValues->OutputType == ebsdlib::orientations::Type::Euler)
   {

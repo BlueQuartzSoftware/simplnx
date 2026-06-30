@@ -1,0 +1,129 @@
+{
+    "0": {
+        "FilterVersion": "1.0.0",
+        "Filter_Human_Label": "Create Data Container",
+        "Filter_Name": "CreateDataContainer",
+        "Filter_Uuid": "{816fbe6b-7c38-581b-b149-3f839fb65b93}",
+        "DataContainerName": "DataContainer"
+    },
+    "1": {
+        "AttributeMatrixType": 3,
+        "CreatedAttributeMatrix": { "Attribute Matrix Name": "CellData", "Data Array Name": "", "Data Container Name": "DataContainer" },
+        "FilterVersion": "1.1.572",
+        "Filter_Human_Label": "Create Attribute Matrix",
+        "Filter_Name": "CreateAttributeMatrix",
+        "Filter_Uuid": "{93375ef0-7367-5372-addc-baa019b1b341}",
+        "TupleDimensions": {
+            "Column Headers": ["0"],
+            "DefaultColCount": 0, "DefaultRowCount": 0,
+            "HasDynamicCols": true, "HasDynamicRows": false,
+            "MinColCount": 0, "MinRowCount": 0,
+            "Row Headers": ["0"],
+            "Table Data": [[1]]
+        }
+    },
+    "2": {
+        "FilterVersion": "1.0.359",
+        "Filter_Human_Label": "Create Data Array",
+        "Filter_Name": "CreateDataArray",
+        "Filter_Uuid": "{77f392fb-c1eb-57da-a1b1-e7acf9239fb8}",
+        "InitializationRange": { "Max": 0, "Min": 0 },
+        "InitializationType": 0,
+        "InitializationValue": "0.785398185",
+        "NewArray": { "Attribute Matrix Name": "CellData", "Data Array Name": "eu0", "Data Container Name": "DataContainer" },
+        "NumberOfComponents": 1,
+        "ScalarType": 8
+    },
+    "3": {
+        "FilterVersion": "1.0.359",
+        "Filter_Human_Label": "Create Data Array",
+        "Filter_Name": "CreateDataArray",
+        "Filter_Uuid": "{77f392fb-c1eb-57da-a1b1-e7acf9239fb8}",
+        "InitializationRange": { "Max": 0, "Min": 0 },
+        "InitializationType": 0,
+        "InitializationValue": "0.52359879",
+        "NewArray": { "Attribute Matrix Name": "CellData", "Data Array Name": "eu1", "Data Container Name": "DataContainer" },
+        "NumberOfComponents": 1,
+        "ScalarType": 8
+    },
+    "4": {
+        "FilterVersion": "1.0.359",
+        "Filter_Human_Label": "Create Data Array",
+        "Filter_Name": "CreateDataArray",
+        "Filter_Uuid": "{77f392fb-c1eb-57da-a1b1-e7acf9239fb8}",
+        "InitializationRange": { "Max": 0, "Min": 0 },
+        "InitializationType": 0,
+        "InitializationValue": "1.04719758",
+        "NewArray": { "Attribute Matrix Name": "CellData", "Data Array Name": "eu2", "Data Container Name": "DataContainer" },
+        "NumberOfComponents": 1,
+        "ScalarType": 8
+    },
+    "5": {
+        "FilterVersion": "1.0.132",
+        "Filter_Human_Label": "Combine Attribute Arrays",
+        "Filter_Name": "CombineAttributeArrays",
+        "NormalizeData": 0,
+        "SelectedDataArrayPaths": [
+            { "Attribute Matrix Name": "CellData", "Data Array Name": "eu0", "Data Container Name": "DataContainer" },
+            { "Attribute Matrix Name": "CellData", "Data Array Name": "eu1", "Data Container Name": "DataContainer" },
+            { "Attribute Matrix Name": "CellData", "Data Array Name": "eu2", "Data Container Name": "DataContainer" }
+        ],
+        "StackedDataArrayName": "EulerAngles"
+    },
+    "6": {
+        "FilterVersion": "1.0.0", "Filter_Human_Label": "Convert Orientation Representation", "Filter_Name": "ConvertOrientations",
+        "Filter_Uuid": "{e5629880-98c4-5656-82b8-c9fe2b9744de}",
+        "InputType": 0, "OutputType": 1,
+        "InputOrientationArrayPath": { "Attribute Matrix Name": "CellData", "Data Array Name": "EulerAngles", "Data Container Name": "DataContainer" },
+        "OutputOrientationArrayName": "leg_om"
+    },
+    "7": {
+        "FilterVersion": "1.0.0", "Filter_Human_Label": "Convert Orientation Representation", "Filter_Name": "ConvertOrientations",
+        "Filter_Uuid": "{e5629880-98c4-5656-82b8-c9fe2b9744de}",
+        "InputType": 0, "OutputType": 2,
+        "InputOrientationArrayPath": { "Attribute Matrix Name": "CellData", "Data Array Name": "EulerAngles", "Data Container Name": "DataContainer" },
+        "OutputOrientationArrayName": "leg_qu"
+    },
+    "8": {
+        "FilterVersion": "1.0.0", "Filter_Human_Label": "Convert Orientation Representation", "Filter_Name": "ConvertOrientations",
+        "Filter_Uuid": "{e5629880-98c4-5656-82b8-c9fe2b9744de}",
+        "InputType": 0, "OutputType": 3,
+        "InputOrientationArrayPath": { "Attribute Matrix Name": "CellData", "Data Array Name": "EulerAngles", "Data Container Name": "DataContainer" },
+        "OutputOrientationArrayName": "leg_ax"
+    },
+    "9": {
+        "FilterVersion": "1.0.0", "Filter_Human_Label": "Convert Orientation Representation", "Filter_Name": "ConvertOrientations",
+        "Filter_Uuid": "{e5629880-98c4-5656-82b8-c9fe2b9744de}",
+        "InputType": 0, "OutputType": 4,
+        "InputOrientationArrayPath": { "Attribute Matrix Name": "CellData", "Data Array Name": "EulerAngles", "Data Container Name": "DataContainer" },
+        "OutputOrientationArrayName": "leg_ro"
+    },
+    "10": {
+        "FilterVersion": "1.0.0", "Filter_Human_Label": "Convert Orientation Representation", "Filter_Name": "ConvertOrientations",
+        "Filter_Uuid": "{e5629880-98c4-5656-82b8-c9fe2b9744de}",
+        "InputType": 0, "OutputType": 5,
+        "InputOrientationArrayPath": { "Attribute Matrix Name": "CellData", "Data Array Name": "EulerAngles", "Data Container Name": "DataContainer" },
+        "OutputOrientationArrayName": "leg_ho"
+    },
+    "11": {
+        "FilterVersion": "1.0.0", "Filter_Human_Label": "Convert Orientation Representation", "Filter_Name": "ConvertOrientations",
+        "Filter_Uuid": "{e5629880-98c4-5656-82b8-c9fe2b9744de}",
+        "InputType": 0, "OutputType": 6,
+        "InputOrientationArrayPath": { "Attribute Matrix Name": "CellData", "Data Array Name": "EulerAngles", "Data Container Name": "DataContainer" },
+        "OutputOrientationArrayName": "leg_cu"
+    },
+    "12": {
+        "FilterVersion": "1.2.724",
+        "Filter_Human_Label": "Write DREAM.3D Data File",
+        "Filter_Name": "DataContainerWriter",
+        "Filter_Uuid": "{3fcd4c43-9d75-5b86-aad4-4441bc914f37}",
+        "OutputFile": "/Users/mjackson/Workspace9/simplnx/src/Plugins/OrientationAnalysis/vv/comparisons/ConvertOrientationsFilter/results/legacy_out.dream3d",
+        "WriteTimeSeries": 0,
+        "WriteXdmfFile": 0
+    },
+    "PipelineBuilder": {
+        "Name": "ConvertOrientations Legacy A/B",
+        "Number_Filters": 13,
+        "Version": 6
+    }
+}

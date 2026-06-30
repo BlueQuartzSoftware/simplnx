@@ -34,12 +34,61 @@
 #include <EbsdLib/Core/EbsdDataArray.hpp>
 #include <EbsdLib/OrientationMath/OrientationConverter.hpp>
 
+#include <array>
 #include <catch2/catch.hpp>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 
 using namespace nx::core;
 namespace fs = std::filesystem;
+
+namespace
+{
+// Component counts per representation, indexed by ebsdlib::orientations::Type
+// (Euler, OrientationMatrix, Quaternion, AxisAngle, Rodrigues, Homochoric, Cubochoric, Stereographic).
+constexpr std::array<size_t, 8> k_Comps = {3, 9, 4, 4, 4, 3, 3, 3};
+const std::vector<std::string> k_RepNames = {"Euler", "OrientationMatrix", "Quaternion", "AxisAngle", "Rodrigues", "Homochoric", "Cubochoric", "Stereographic"};
+
+// V&V dispatch landmarks: 3 distinct general orientations, each expressed in all 8 representations.
+// Generated directly from the EbsdLib 3.0.0 float Orientation classes (the reference implementation
+// the filter links), independent of the filter's parallel-convertor plumbing — see
+// src/Plugins/OrientationAnalysis/vv/ConvertOrientationsFilter.md. These are NOT a math oracle (the
+// transform equations are verified by EbsdLib's own Orientation*Test.cpp suite); they are landmarks
+// that prove the filter's (inputType,outputType) switch routes to the correct conversion and strides
+// components correctly. Seed 0 == EbsdLib OrientationConverterTest published orientation
+// (302.84, 51.282, 37.969 deg): its quaternion matches that test's exemplar, and its stereographic
+// matches the closed form st = (qx,qy,qz)/(1+qw). Layouts: eu[phi1,Phi,phi2] rad; om row-major 3x3;
+// qu[x,y,z,w]; ax[x,y,z,angle rad]; ro[x,y,z,tan(angle/2)]; ho[x,y,z]; cu[x,y,z]; st[x,y,z].
+const std::vector<std::vector<std::vector<float>>> k_Ref = {
+    // seed 0 — (302.84, 51.282, 37.969) deg
+    {{5.28555489F, 0.895039737F, 0.662684023F},
+     {0.750837624F, -0.453670323F, 0.480027199F, 0.0806576908F, 0.784318447F, 0.615092576F, -0.655543447F, -0.423116744F, 0.625487804F},
+     {-0.291989446F, 0.31937167F, 0.150276214F, 0.888909996F},
+     {-0.637417495F, 0.697193384F, 0.328055322F, 0.951672375F},
+     {-0.637417495F, 0.697193384F, 0.328055322F, 0.515329897F},
+     {-0.298757643F, 0.326774597F, 0.153759554F},
+     {-0.358878195F, 0.377770394F, 0.199860498F},
+     {-0.154580921F, 0.169077232F, 0.0795571059F}},
+    // seed 1 — (45, 30, 60) deg
+    {{0.785398185F, 0.52359879F, 1.04719758F},
+     {-0.176776767F, 0.883883476F, 0.433012724F, -0.918558598F, -0.306186289F, 0.249999985F, 0.353553385F, -0.353553385F, 0.866025388F},
+     {-0.25660482F, 0.0337826647F, -0.766320527F, 0.588018298F},
+     {-0.317247421F, 0.0417664163F, -0.947422624F, 1.88437927F},
+     {-0.317247421F, 0.0417664163F, -0.947422624F, 1.37554824F},
+     {-0.281666279F, 0.0370820723F, -0.841163695F},
+     {-0.301626205F, 0.0443257056F, -0.715598881F},
+     {-0.161588073F, 0.0212734733F, -0.482564032F}},
+    // seed 2 — (123.4, 88.7, 271.2) deg
+    {{2.15373635F, 1.54810703F, 4.73333311F},
+     {0.00740783196F, 0.0299700946F, -0.999523342F, -0.550756693F, 0.834403157F, 0.0209372081F, 0.834632933F, 0.550339103F, 0.0226873513F},
+     {0.193853885F, -0.671622694F, -0.212647885F, 0.682733178F},
+     {0.265310556F, -0.919190168F, -0.291032225F, 1.63859916F},
+     {0.265310556F, -0.919190168F, -0.291032225F, 1.07020998F},
+     {0.207828149F, -0.720037639F, -0.227976933F},
+     {0.261202067F, -0.63136822F, -0.281791151F},
+     {0.115201794F, -0.399126083F, -0.126370534F}}};
+} // namespace
 
 // This section of code exists solely to generate a source code in case another
 // orientation representation is created. Leave this code here.
@@ -155,90 +204,148 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
 }
 
 /**
- * @brief TEST_CASE This test case will execute all the combinations of the ConvertOrientations filter. This test only
- * tests the execution of the filter and not the final output.
+ * @brief Verifies the filter's value-add (NOT the EbsdLib transform math, which EbsdLib's own
+ * Orientation*Test.cpp suite verifies): that the (inputType, outputType) switch dispatches to the
+ * correct conversion and that components are read/written with the correct per-tuple stride.
+ *
+ * For every (in, out) representation pair (full 8x8 minus the same-type diagonal, including
+ * Stereographic) the filter must transform R[t][in] into R[t][out] within tolerance, where R is a
+ * set of 3 distinct general orientations each expressed in all 8 representations (k_Ref, generated
+ * from EbsdLib 3.0.0 — see vv/ConvertOrientationsFilter.md). Wired to the wrong conversion the
+ * output would be a detectably different number; the 3 distinct tuples additionally pin the striding
+ * (identical tuples would not catch an offset bug). Class 3 (Rowenhorst 2015) dispatch landmarks
+ * plus Class 4 (round-trip consistency) — tolerance 1.0e-3 matches EbsdLib's own consistency test.
  */
-TEST_CASE("OrientationAnalysis::ConvertOrientations: Valid filter execution", "[ConvertOrientationsFilter]")
+TEST_CASE("OrientationAnalysis::ConvertOrientations: Dispatch and striding (8x8 matrix)", "[ConvertOrientationsFilter]")
 {
   UnitTest::LoadPlugins();
 
-  std::vector<std::string> inRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu"};
-  std::vector<std::string> outRep = {"eu", "om", "qu", "ax", "ro", "ho", "cu"};
-  std::vector<std::string> names = {"Euler", "OrientationMatrix", "Quaternion", "AxisAngle", "Rodrigues", "Homochoric", "Cubochoric"};
+  const size_t numTuples = k_Ref.size(); // 3 distinct orientations
 
-  std::vector<size_t> strides = {3, 9, 4, 4, 4, 3, 3};
-  /* clang-format off */
-  const std::vector<std::vector<float>> k_InitValues = { {4.76687F, 1.39683F, 2.46356F}, // Euler
-                                                {0.0660025F, 0.783565F, 0.617794F, -0.168761F, 0.618991F, -0.767053F, -0.983445F, -0.0536321F, 0.17309F}, // OM
-                                                {0.261688F, 0.587345F, -0.34932F, 0.681558F}, // QU
-                                                {0.357612F, 0.802643F, -0.477366F, 1.64181F },// AX
-                                                {0.357612F, 0.802643F, -0.477366F, 1.07366F}, // RO
-                                                {0.280631F, 0.629864F, -0.374607F}, // HO
-                                                {0.359479F, 0.632495F, -0.458758F} // CU;
-    };
-  /* clang-format on */
-
-  for(size_t i = 0; i < 7; i++)
+  for(size_t in = 0; in < 8; in++)
   {
-    std::vector<size_t> tupleShape = {1};
-    std::vector<size_t> componentShape = {strides[i]};
-    std::vector<float> initValues = k_InitValues[i];
-
-    for(size_t o = 0; o < 7; o++)
+    for(size_t out = 0; out < 8; out++)
     {
-      if(inRep[i] == outRep[o])
+      if(in == out)
       {
-        continue;
+        continue; // same-type is rejected at preflight (see "Equal Representations")
       }
-      std::vector<float> outputValues = k_InitValues[o];
 
-      // Instantiate the filter, a DataStructure object and an Arguments Object
-      ConvertOrientationsFilter filter;
-      DataStructure dataStructure;
-      Arguments args;
-
-      DataGroup* topLevelGroup = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
-      DataGroup* scanData = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroup->getId());
-
-      Float32Array* angles = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
-
-      for(size_t t = 0; t < tupleShape[0]; t++)
+      DYNAMIC_SECTION(k_RepNames[in] << " -> " << k_RepNames[out])
       {
-        for(size_t c = 0; c < componentShape[0]; c++)
+        ConvertOrientationsFilter filter;
+        DataStructure dataStructure;
+        Arguments args;
+
+        DataGroup* topLevelGroup = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
+        DataGroup* scanData = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroup->getId());
+
+        std::vector<size_t> tupleShape = {numTuples};
+        std::vector<size_t> componentShape = {k_Comps[in]};
+        Float32Array* input = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+
+        for(size_t t = 0; t < numTuples; t++)
         {
-          (*angles)[t * componentShape[0] + c] = initValues[c];
+          for(size_t c = 0; c < k_Comps[in]; c++)
+          {
+            (*input)[t * k_Comps[in] + c] = k_Ref[t][in][c];
+          }
         }
-      }
 
-      // Create default Parameters for the filter.
-      args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(i));
-      args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(o));
-      args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key,
-                          std::make_any<DataPath>(DataPath({nx::core::Constants::k_SmallIN100, nx::core::Constants::k_EbsdScanData, nx::core::Constants::k_EulerAngles})));
-      args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(nx::core::Constants::k_AxisAngles));
+        args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(in));
+        args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(out));
+        args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key,
+                            std::make_any<DataPath>(DataPath({nx::core::Constants::k_SmallIN100, nx::core::Constants::k_EbsdScanData, nx::core::Constants::k_EulerAngles})));
+        args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(nx::core::Constants::k_AxisAngles));
 
-      // Preflight the filter and check result
-      auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+        auto preflightResult = filter.preflight(dataStructure, args);
+        SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
 
-      // Execute the filter and check the result
-      auto executeResult = filter.execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+        auto executeResult = filter.execute(dataStructure, args);
+        SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-      Float32Array& output = dataStructure.getDataRefAs<Float32Array>(DataPath({nx::core::Constants::k_SmallIN100, nx::core::Constants::k_EbsdScanData, nx::core::Constants::k_AxisAngles}));
-      for(size_t t = 0; t < tupleShape[0]; t++)
-      {
-        for(size_t c = 0; c < strides[o]; c++)
+        Float32Array& output = dataStructure.getDataRefAs<Float32Array>(DataPath({nx::core::Constants::k_SmallIN100, nx::core::Constants::k_EbsdScanData, nx::core::Constants::k_AxisAngles}));
+
+        // Striding: output array must have the output type's component count over all tuples.
+        REQUIRE(output.getNumberOfComponents() == k_Comps[out]);
+        REQUIRE(output.getNumberOfTuples() == numTuples);
+
+        // Dispatch landmark: each tuple's output matches the expected representation of that orientation.
+        for(size_t t = 0; t < numTuples; t++)
         {
-          // std::cout << outputValues[c] << "F, ";
-          float absDif = std::fabs(output[t * strides[o] + c] - outputValues[c]);
-          REQUIRE(absDif < 0.0001);
+          for(size_t c = 0; c < k_Comps[out]; c++)
+          {
+            INFO("tuple " << t << " component " << c);
+            float absDif = std::fabs(output[t * k_Comps[out] + c] - k_Ref[t][out][c]);
+            REQUIRE(absDif < 1.0e-3F);
+          }
         }
-      }
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+        UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      }
     }
   }
+}
+
+/**
+ * @brief Class 1 (Analytical) check for the Stereographic representation, which has no legacy
+ * equivalent. The stereographic projection of a unit quaternion [x,y,z,w] is the closed form
+ * st = (x, y, z) / (1 + w). Expected values are computed in-test from that formula (no EbsdLib call),
+ * so this independently pins the Quaternion -> Stereographic conversion.
+ */
+TEST_CASE("OrientationAnalysis::ConvertOrientations: Stereographic closed form (Class 1)", "[ConvertOrientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const size_t numTuples = k_Ref.size();
+  constexpr size_t k_Qu = 2;
+  constexpr size_t k_St = 7;
+
+  ConvertOrientationsFilter filter;
+  DataStructure dataStructure;
+  Arguments args;
+
+  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, nx::core::Constants::k_SmallIN100);
+  DataGroup* scanData = DataGroup::Create(dataStructure, nx::core::Constants::k_EbsdScanData, topLevelGroup->getId());
+
+  std::vector<size_t> tupleShape = {numTuples};
+  std::vector<size_t> componentShape = {k_Comps[k_Qu]};
+  Float32Array* input = UnitTest::CreateTestDataArray<float>(dataStructure, nx::core::Constants::k_EulerAngles, tupleShape, componentShape, scanData->getId());
+
+  for(size_t t = 0; t < numTuples; t++)
+  {
+    for(size_t c = 0; c < k_Comps[k_Qu]; c++)
+    {
+      (*input)[t * k_Comps[k_Qu] + c] = k_Ref[t][k_Qu][c];
+    }
+  }
+
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(k_Qu));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(k_St));
+  args.insertOrAssign(ConvertOrientationsFilter::k_InputOrientationArrayPath_Key,
+                      std::make_any<DataPath>(DataPath({nx::core::Constants::k_SmallIN100, nx::core::Constants::k_EbsdScanData, nx::core::Constants::k_EulerAngles})));
+  args.insertOrAssign(ConvertOrientationsFilter::k_OutputOrientationArrayName_Key, std::make_any<std::string>(nx::core::Constants::k_AxisAngles));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  Float32Array& output = dataStructure.getDataRefAs<Float32Array>(DataPath({nx::core::Constants::k_SmallIN100, nx::core::Constants::k_EbsdScanData, nx::core::Constants::k_AxisAngles}));
+
+  for(size_t t = 0; t < numTuples; t++)
+  {
+    const std::vector<float>& qu = k_Ref[t][k_Qu]; // [x, y, z, w]
+    const float denom = 1.0F + qu[3];
+    const float expected[3] = {qu[0] / denom, qu[1] / denom, qu[2] / denom};
+    for(size_t c = 0; c < 3; c++)
+    {
+      INFO("tuple " << t << " component " << c);
+      REQUIRE(std::fabs(output[t * 3 + c] - expected[c]) < 1.0e-5F);
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ConvertOrientations: Equal Representations", "[ConvertOrientationsFilter]")
