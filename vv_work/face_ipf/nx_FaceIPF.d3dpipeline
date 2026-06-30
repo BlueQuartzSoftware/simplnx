@@ -1,0 +1,83 @@
+{
+  "name": "FaceIPF NX fixed",
+  "pipeline": [
+    {
+      "args": {
+        "import_data_object": {
+          "value": {
+            "file_path": "/Users/mjackson/Workspace1/DREAM3D_Data/TestFiles/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d",
+            "data_paths": null
+          },
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ReadDREAM3DFilter",
+        "uuid": "0dbd31c7-19e0-4077-83ef-f4a6459a0e2d"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "surface_mesh_face_labels_array_path": {
+          "value": "TriangleDataContainer/FaceData/FaceLabels",
+          "version": 1
+        },
+        "surface_mesh_face_normals_array_path": {
+          "value": "TriangleDataContainer/FaceData/FaceNormals",
+          "version": 1
+        },
+        "feature_euler_angles_array_path": {
+          "value": "Small IN100/Grain Data/AvgEulerAngles",
+          "version": 1
+        },
+        "feature_phases_array_path": {
+          "value": "Small IN100/Grain Data/Phases",
+          "version": 1
+        },
+        "crystal_structures_array_path": {
+          "value": "Small IN100/Phase Data/CrystalStructures",
+          "version": 1
+        },
+        "first_face_ipf_colors_array_name": {
+          "value": "NX_FaceIPF_First",
+          "version": 1
+        },
+        "second_face_ipf_colors_array_name": {
+          "value": "NX_FaceIPF_Second",
+          "version": 1
+        },
+        "color_key_index": {
+          "value": 0,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::ComputeFaceIPFColoringFilter",
+        "uuid": "30759600-7c02-4650-b5ca-e7036d6b568e"
+      },
+      "isDisabled": false
+    },
+    {
+      "args": {
+        "export_file_path": {
+          "value": "/Users/mjackson/Workspace3/simplnx/vv_work/face_ipf/out_nx_fixed.dream3d",
+          "version": 1
+        },
+        "write_xdmf_file": {
+          "value": false,
+          "version": 1
+        }
+      },
+      "comments": "",
+      "filter": {
+        "name": "nx::core::WriteDREAM3DFilter",
+        "uuid": "b3a95784-2ced-41ec-8d3d-0242ac130003"
+      },
+      "isDisabled": false
+    }
+  ],
+  "version": 1
+}

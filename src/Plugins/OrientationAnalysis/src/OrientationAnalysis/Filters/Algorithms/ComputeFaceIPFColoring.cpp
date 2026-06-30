@@ -106,12 +106,8 @@ public:
       // Now compute for Phase 2
       if(phase2 > 0)
       {
-        // KNOWN BUG — tracked at https://github.com/BlueQuartzSoftware/simplnx/issues/1635.
-        // Both the validity guard and the IPF operator lookup below use phase1 instead of phase2,
-        // assigning Phase 1's symmetry operator to Phase 2's Euler angles on mixed-phase faces.
-        // The 2-line fix (phase1→phase2) is held pending a V&V cycle that will regenerate the
-        // test exemplar (which currently encodes the bug — a circular oracle).
-        if(m_CrystalStructures[phase1] < ebsdlib::CrystalStructure::LaueGroupEnd)
+        // Make sure we are using a valid Euler Angles with valid crystal symmetry
+        if(m_CrystalStructures[phase2] < ebsdlib::CrystalStructure::LaueGroupEnd)
         {
           dEuler[0] = m_Eulers[3 * feature2 + 0];
           dEuler[1] = m_Eulers[3 * feature2 + 1];
@@ -120,7 +116,7 @@ public:
           refDir[1] = -m_Normals[3 * i + 1];
           refDir[2] = -m_Normals[3 * i + 2];
 
-          argb = ops[m_CrystalStructures[phase1]]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
+          argb = ops[m_CrystalStructures[phase2]]->generateIPFColor(dEuler, refDir, false, m_ColorKey);
           m_SecondColors[3 * i + 0] = RgbColor::dRed(argb);
           m_SecondColors[3 * i + 1] = RgbColor::dGreen(argb);
           m_SecondColors[3 * i + 2] = RgbColor::dBlue(argb);

@@ -1,0 +1,28 @@
+# Exemplar Provenance: ComputeFaceIPFColoringFilter (no archive — circular-oracle retirement)
+
+This filter's V&V uses a **Class 1 (Analytical)** oracle encoded inline in the test source, so it owns **no exemplar archive**. This sidecar exists only to record the retirement of the prior circular-oracle comparison, per the V&V policy's circular-oracle requirement.
+
+---
+
+## Canonical oracle output
+
+| DataPath | Source of expected values |
+|---|---|
+| `/Data/NXFaceIPFColors 0` (first color) | Class 1 analytical — IPF standard-triangle corner primaries hand-derived in `test/ComputeFaceIPFColoringTest.cpp` ("Class 1 Oracle - mixed-phase analytical"). cubic `<100>`→(255,0,0), cubic `<111>`→(0,0,255). |
+| `/Data/NXFaceIPFColors 1` (second color) | Class 1 analytical — hex c-axis→(255,0,0), hex basal→(0,255,0) (red channel 0); black where the adjacent feature label ≤ 0. |
+
+No Class 2/3/5 provenance block applies (Class 1 oracle lives in the test code).
+
+## Second-engineer oracle review
+
+- **Reviewer:** *pending*
+- **Date:** *pending*
+- **Note:** recommend an OA-domain engineer confirm the hex basal-corner color and the cubic corner-primary derivations.
+
+## Regenerated to fix a circular-oracle situation?
+
+**YES — comparison retired, not regenerated.** Before this V&V cycle the test `OrientationAnalysis::ComputeFaceIPFColoringFilter: Valid filter execution` compared the filter's output against a `SurfaceMeshFaceIPFColors` array baked into the shared archive `6_6_Small_IN100_GBCD.tar.gz`. That baked array was the filter's **own pre-fix output** — a textbook circular oracle: it encoded the issue #1635 bug (notably black Phase-2 colors on `feature1`-invalid boundary faces of the single-phase Small IN100 mesh), so applying the `phase1`→`phase2` fix correctly broke the test.
+
+Rather than regenerate the baked array from post-fix output (which would re-establish a circular oracle, and which is impractical because `6_6_Small_IN100_GBCD.tar.gz` is shared by other GBCD tests), the comparison was **retired** and replaced by the inlined Class 1 analytical oracle. Real-data exercise of the algorithm is retained by `ComputeFaceIPFColoringFilter: ColorKey choice reaches algorithm`, which runs the filter on the full Small IN100 GBCD surface mesh without depending on any baked exemplar.
+
+The shared archive `6_6_Small_IN100_GBCD.tar.gz` itself is **not** modified or retired — only this filter's use of its `SurfaceMeshFaceIPFColors` array as a correctness oracle.
