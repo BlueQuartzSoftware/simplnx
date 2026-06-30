@@ -22,6 +22,7 @@
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/H5Support.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
+#include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 #include "simplnx/Utilities/Parsing/Text/CsvParser.hpp"
 
 #include "simplnx/UnitTest/DataObjectComparison.hpp"
@@ -734,6 +735,30 @@ TEST_CASE("ImageGeometryIO")
 
     UnitTest::CheckArraysInheritTupleDims(newDataStructure);
   }
+}
+
+// Reading an attribute from an invalid HDF5 object must return a recoverable error rather
+// than throwing an uncaught exception. Previously the error-message formatting called
+// GetNameFromBuffer() on an empty name, which threw and aborted the process. See issue #1642.
+TEST_CASE("HDF5 ObjectIO: Invalid object reads recover gracefully")
+{
+  auto app = Application::GetOrCreateInstance();
+
+  nx::core::HDF5::GroupIO invalidGroup;
+  REQUIRE_FALSE(invalidGroup.isValid());
+
+  // getName() must not throw on an empty/invalid object.
+  REQUIRE_NOTHROW(invalidGroup.getName());
+  REQUIRE(invalidGroup.getName().empty());
+
+  // Reading an attribute returns an invalid Result instead of throwing.
+  Result<uint32> scalarResult;
+  REQUIRE_NOTHROW(scalarResult = invalidGroup.readScalarAttribute<uint32>("SomeAttribute"));
+  REQUIRE(scalarResult.invalid());
+
+  Result<std::vector<uint32>> vectorResult;
+  REQUIRE_NOTHROW(vectorResult = invalidGroup.readVectorAttribute<uint32>("SomeAttribute"));
+  REQUIRE(vectorResult.invalid());
 }
 
 TEST_CASE("Node Based Geometry IO")

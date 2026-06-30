@@ -51,6 +51,10 @@ bool ObjectIO::isValid() const
 
 std::string ObjectIO::getName() const
 {
+  if(m_ObjectName.empty())
+  {
+    return {};
+  }
   open();
   return nx::core::HDF5::GetNameFromBuffer(m_ObjectName);
 }
