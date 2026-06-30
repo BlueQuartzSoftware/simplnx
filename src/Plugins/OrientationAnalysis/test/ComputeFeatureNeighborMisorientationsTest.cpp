@@ -140,6 +140,45 @@ const Float32Array& GetOutputAvgMisorientations(const DataStructure& ds)
 } // namespace AnalyticalFixtures
 } // namespace
 
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborMisorientationsFilter: Preflight Error - Feature array tuple count mismatch (-34501)",
+          "[OrientationAnalysis][ComputeFeatureNeighborMisorientationsFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+
+  // Build a minimal synthetic DataStructure where the feature-level objects validated together
+  // (AvgQuats, FeaturePhases, NeighborList) do NOT all share the same tuple count. This drives the
+  // validateNumberOfTuples() guard in preflightImpl that emits error -34501.
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeom->setDimensions({10, 1, 1});
+
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "Feature Data", {10}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "AvgQuats", {10}, {4}, featureAM->getId());
+  NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{10}, featureAM->getId());
+
+  // FeaturePhases lives in a separate AttributeMatrix with a deliberately different tuple count
+  // (9 != 10) so the cross-array tuple-count check fails.
+  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+
+  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "Cell Ensemble Data", {2}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+
+  ComputeFeatureNeighborMisorientationsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_ComputeAvgMisors_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "Feature Data", "NeighborList"})));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "Feature Data", "AvgQuats"})));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "MismatchData", "Phases"})));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "Cell Ensemble Data", "CrystalStructures"})));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_MisorientationListArrayName_Key, std::make_any<std::string>("MisorientationList"));
+  args.insertOrAssign(ComputeFeatureNeighborMisorientationsFilter::k_AvgMisorientationsArrayName_Key, std::make_any<std::string>("AvgMisorientations"));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -34501);
+}
+
 // Retired 2026-06-02 (V&V cycle): the main exemplar-comparison TEST_CASE that consumed
 // `6_6_stats_test_v2.tar.gz` and the `[.][UNIMPLEMENTED][!mayfail]` stub TEST_CASE for
 // `Misorientation Per Feature` were removed. The exemplar arrays in the archive were a circular

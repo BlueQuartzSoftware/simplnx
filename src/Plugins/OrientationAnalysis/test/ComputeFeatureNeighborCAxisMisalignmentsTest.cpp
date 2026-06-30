@@ -525,3 +525,43 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: 
     REQUIRE(std::isnan(avg[3]));
   }
 }
+
+TEST_CASE("OrientationAnalysis::ComputeFeatureNeighborCAxisMisalignmentsFilter: Preflight Error - Feature array tuple count mismatch (-1560)",
+          "[OrientationAnalysis][ComputeFeatureNeighborCAxisMisalignmentsFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+
+  // The filter validates that the NeighborList, AvgQuats, and FeaturePhases feature-level arrays
+  // all share the same number of tuples. Build a synthetic DataStructure where FeaturePhases lives
+  // in a separate AttributeMatrix with a deliberately different tuple count (7 != 8) so the
+  // validateNumberOfTuples() guard in preflightImpl fails and returns error -1560.
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeom->setDimensions({8, 1, 1});
+
+  // NeighborList + AvgQuats are 8 tuples...
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "CellFeatureData", ShapeType{8}, imageGeom->getId());
+  NeighborList<int32>::Create(dataStructure, "NeighborList", ShapeType{8}, featureAM->getId());
+  CreateTestDataArray<float32>(dataStructure, "AvgQuats", {8}, {4}, featureAM->getId());
+
+  // ...but FeaturePhases is 7 tuples in a separate AttributeMatrix (the mismatch).
+  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", ShapeType{7}, imageGeom->getId());
+  CreateTestDataArray<int32>(dataStructure, "FeaturePhases", {7}, {1}, mismatchAM->getId());
+
+  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", ShapeType{2}, imageGeom->getId());
+  CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+
+  ComputeFeatureNeighborCAxisMisalignmentsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FindAvgMisals_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellFeatureData", "NeighborList"})));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellFeatureData", "AvgQuats"})));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "MismatchData", "FeaturePhases"})));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"ImageGeometry", "CellEnsembleData", "CrystalStructures"})));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_CAxisMisalignmentListArrayName_Key, std::make_any<std::string>("CAxisMisalignmentList"));
+  args.insertOrAssign(ComputeFeatureNeighborCAxisMisalignmentsFilter::k_AvgCAxisMisalignmentsArrayName_Key, std::make_any<std::string>("AvgCAxisMisalignments"));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -1560);
+}
