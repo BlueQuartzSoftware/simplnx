@@ -18,11 +18,11 @@ namespace
 class VmfWatsonSamplingImpl
 {
 public:
-  VmfWatsonSamplingImpl(ComputeAvgOrientations* filter, const ComputeAvgOrientationsInputValues* inputPtr, DataStructure& dataStruture, const std::vector<usize>& featureNumVoxels,
+  VmfWatsonSamplingImpl(ComputeAvgOrientations* filter, const ComputeAvgOrientationsInputValues* inputPtr, DataStructure& dataStructure, const std::vector<usize>& featureNumVoxels,
                         const std::map<int32, int32>& featureIdToPhaseMap)
   : m_Filter(filter)
   , m_InputValues(inputPtr)
-  , m_DataStructure(dataStruture)
+  , m_DataStructure(dataStructure)
   , m_FeatureNumVoxels(featureNumVoxels)
   , m_FeatureIdToPhaseMap(featureIdToPhaseMap)
   {
@@ -34,7 +34,6 @@ public:
   {
     // Input FeatureIds + Input Orientations. All these should come from the same Attribute Matrix or have the same number of tuples
     Int32AbstractDataStore& featureIdsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath).getDataStoreRef();
-    // Int32AbstractDataStore& phasesRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath).getDataStoreRef();
     Float32AbstractDataStore& quatsRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath).getDataStoreRef();
     // Ensemble Level Data
     UInt32AbstractDataStore& xtalRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath).getDataStoreRef();
@@ -68,14 +67,25 @@ public:
     std::vector<ebsdlib::QuatD> fzQuats;
     for(usize featureId = range.min(); featureId < range.max(); featureId++)
     {
+      if(m_Filter->getCancel())
+      {
+        return;
+      }
+
       // If the size is 0 then skip to the next feature
       if(m_FeatureNumVoxels[featureId] == 0)
       {
         continue;
       }
 
-      const int32 phaseIdx = m_FeatureIdToPhaseMap.at(static_cast<int32>(featureId));
-      const uint32 laueClass = xtalRef[phaseIdx];
+      const int32 phaseValue = m_FeatureIdToPhaseMap.at(static_cast<int32>(featureId));
+      const uint32 laueClass = xtalRef[phaseValue];
+      // Guard against an out-of-range crystal-structure enum (e.g. 999/Unknown); leave the
+      // feature's outputs as the NaN that was filled before parallel execution.
+      if(laueClass >= ops.size())
+      {
+        continue;
+      }
       ebsdlib::LaueOps::Pointer op = ops[laueClass];
 
       fzQuats.clear();
@@ -225,7 +235,6 @@ void ComputeAvgOrientations::sendThreadSafeProgressMessage(usize counter)
   std::string ss = fmt::format("{}% Complete", progressInt);
   m_MessageHandler(IFilter::Message::Type::Info, ss);
 
-  m_LastProgressInt = progressInt;
   m_InitialPoint = std::chrono::steady_clock::now();
 }
 
@@ -355,8 +364,13 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
     watsonKappaPtr->fill(std::numeric_limits<float>::quiet_NaN());
   }
 
-  // Allow data-based parallelization
+  // NOTE: Parallelization is intentionally DISABLED. The worker reads the shared cell
+  // FeatureIds/Quats/CrystalStructures DataStores and writes the per-feature output
+  // DataStores; per the simplnx thread-safety policy, DataArray/DataStore access is not
+  // safe for concurrent use even at distinct indices. Serial execution is the correct
+  // default (see vv/ComputeAvgOrientationsFilter.md and ComputeFeatureFaceMisorientation).
   ParallelDataAlgorithm dataAlg;
+  dataAlg.setParallelizationEnabled(false);
   dataAlg.setRange(0, m_NumberOfFeatures);
   dataAlg.execute(VmfWatsonSamplingImpl(this, m_InputValues, m_DataStructure, featureNumVoxels, featureIdToPhaseMap));
 
@@ -390,12 +404,17 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
   // Get the Identity Quaternion
   static const ebsdlib::QuatF identityQuat(0.0f, 0.0f, 0.0f, 1.0f);
 
+  MessageHelper messageHelper(m_MessageHandler);
+  ThrottledMessenger messenger = messageHelper.createThrottledMessenger();
+
   for(size_t i = 0; i < totalPoints; i++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
+    messenger.sendThrottledMessage([i, totalPoints]() { return fmt::format("Computing Rodrigues Average: Cell {}/{}", i + 1, totalPoints); });
+
     const int32_t currentFeatureId = featureIds[i];
     const int32_t currentPhase = phases[i];
     // As long as we have a valid `currentPhase` value which is used as an index
@@ -412,6 +431,11 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     if(currentPhase > 0)
     {
       const uint32 xtal = crystalStructures[currentPhase];
+      // Guard against an out-of-range crystal-structure enum (e.g. 999/Unknown).
+      if(xtal >= orientationOps.size())
+      {
+        continue;
+      }
       counts[currentFeatureId] += 1.0f;
       ebsdlib::QuatF voxQuat(quats[i * 4], quats[i * 4 + 1], quats[i * 4 + 2], quats[i * 4 + 3]);
       ebsdlib::QuatF curAvgQuat(avgQuats[currentFeatureId * 4], avgQuats[currentFeatureId * 4 + 1], avgQuats[currentFeatureId * 4 + 2], avgQuats[currentFeatureId * 4 + 3]);

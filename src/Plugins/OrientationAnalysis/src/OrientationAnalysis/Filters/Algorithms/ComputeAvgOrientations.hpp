@@ -60,6 +60,11 @@ public:
 
   void sendThreadSafeProgressMessage(usize counter);
 
+  bool getCancel() const
+  {
+    return m_ShouldCancel;
+  }
+
 protected:
 private:
   DataStructure& m_DataStructure;
@@ -75,7 +80,6 @@ private:
   mutable std::mutex m_ProgressMessage_Mutex;
   size_t m_NumberOfFeatures = 0;
   size_t m_ProgressCounter = 0;
-  size_t m_LastProgressInt = 0;
 };
 
 } // namespace nx::core
