@@ -13,7 +13,6 @@
 
 #include <catch2/catch.hpp>
 #include <filesystem>
-#include <fstream>
 
 using namespace nx::core;
 using namespace nx::core::UnitTest;
