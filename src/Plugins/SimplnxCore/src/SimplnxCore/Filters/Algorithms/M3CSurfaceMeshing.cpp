@@ -154,7 +154,7 @@ constexpr int k_NsTable2d[20][8] = {
 // zeros were remapped to; callers revert it on output). Transcribed from
 // M3CEntireVolume::initialize_micro_from_grainIds.
 // -----------------------------------------------------------------------------
-int initialize_micro(bool addSurfaceLayer, const size_t dims[3], const size_t fileDim[3], const int32_t* grainIds, int32_t* p)
+int initialize_micro(bool addSurfaceLayer, const size_t dims[3], const size_t fileDim[3], const AbstractDataStore<int32_t>& grainIds, int32_t* p)
 {
   int maxGrainId = 0;
 
@@ -2986,16 +2986,11 @@ Result<> M3CSurfaceMeshing::operator()()
   const int NS = static_cast<int>(totalPoints);
   const int NSP = static_cast<int>(fileDim[0] * fileDim[1]);
 
-  // Working copy of FeatureIds (contiguous). Note: FeatureId==0 renumbering happens on this copy.
-  std::vector<int32_t> grainIds(featureIdsStore.getNumberOfTuples());
-  for(size_t i = 0; i < grainIds.size(); ++i)
-  {
-    grainIds[i] = featureIdsStore[i];
-  }
-
+  // Read FeatureIds directly from its DataStore (no full-array copy) into the padded working grid.
+  // The FeatureId==0 renumbering happens on the working grid, never on the input array.
   m_MessageHandler("Initializing working grid and ghost layer...");
   std::vector<int32_t> point(totalPoints + 1, 0);
-  const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, grainIds.data(), point.data());
+  const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, featureIdsStore, point.data());
 
   // On-demand coordinate accessors replace the former full-volume voxCoords and node arrays.
   const SiteCoords siteCoords{fileDim[0], fileDim[1], fileDim[0] * fileDim[1], {res[0], res[1], res[2]}, {origin[0], origin[1], origin[2]}};
