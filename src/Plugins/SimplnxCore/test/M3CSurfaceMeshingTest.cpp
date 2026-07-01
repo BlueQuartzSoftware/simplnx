@@ -360,15 +360,12 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGen
 TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Exemplar Comparison", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
-  if(!fs::exists(k_ExemplarFile))
-  {
-    // TODO: once the exemplar is published to the Data_Archive, replace this guard with a
-    // TestFileSentinel download. Until then, run the "Generate Exemplar" test to create it locally.
-    WARN(fmt::format("Skipping M3C exemplar comparison: exemplar not found at {}", k_ExemplarFile.string()));
-    return;
-  }
-
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  // The exemplar has not been published to the Data_Archive yet, so reference the locally generated
+  // folder: the last two args (decompressFiles=false, removeTemp=false) tell the sentinel not to
+  // decompress an archive and not to delete the folder. Once published, restore the defaults.
+  const nx::core::UnitTest::TestFileSentinel exemplarSentinel(nx::core::unit_test::k_TestFilesDir, "M3CSurfaceMeshingExemplar.tar.gz", "M3CSurfaceMeshingExemplar", false, false);
+
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
 
