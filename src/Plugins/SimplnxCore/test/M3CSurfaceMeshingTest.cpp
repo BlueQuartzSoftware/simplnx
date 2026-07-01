@@ -217,6 +217,19 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, const
     }
   }
 
+  // Coordinate alignment: with unit spacing and origin 0, mesh vertices must lie within the padded
+  // volume envelope [-1, dim] per axis. A one-cell coordinate offset would push the maximum past dim.
+  auto& vertStore = triangleGeom.getVertices()->getDataStoreRef();
+  const float dimF[3] = {static_cast<float>(xDim), static_cast<float>(yDim), static_cast<float>(zDim)};
+  for(usize i = 0; i < numVertices; i++)
+  {
+    for(usize c = 0; c < 3; c++)
+    {
+      REQUIRE(vertStore[i * 3 + c] >= -1.0f);
+      REQUIRE(vertStore[i * 3 + c] <= dimF[c]);
+    }
+  }
+
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, outputName)));
 }
 } // namespace

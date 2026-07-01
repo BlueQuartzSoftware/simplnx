@@ -10,6 +10,7 @@
 
 #include <fmt/format.h>
 
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -90,9 +91,11 @@ struct SiteCoords
   VoxelCoord operator[](int64 site) const
   {
     const size_t linear = static_cast<size_t>(site - 1);
-    const size_t i = linear % fileDim0;
-    const size_t j = (linear / fileDim0) % fileDim1;
-    const size_t k = linear / fileNSP;
+    // Subtract the 1-cell ghost shell so that real cell (0,0,0) at padded index (1,1,1) maps to the
+    // geometry origin, keeping M3C's coordinates aligned with the input volume and the other meshers.
+    const int64 i = static_cast<int64>(linear % fileDim0) - 1;
+    const int64 j = static_cast<int64>((linear / fileDim0) % fileDim1) - 1;
+    const int64 k = static_cast<int64>(linear / fileNSP) - 1;
     return VoxelCoord{{static_cast<float>(i) * res[0] + origin[0], static_cast<float>(j) * res[1] + origin[1], static_cast<float>(k) * res[2] + origin[2]}};
   }
 };
@@ -502,11 +505,15 @@ void get_spins(const int32_t* p1, int cst, int ord, const int pID[2], int* pSpin
 // Count the total number of face edges across all squares (two-pass sizing).
 // Transcribed from M3CEntireVolume::get_number_fEdges.
 // -----------------------------------------------------------------------------
-int get_number_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int ns)
+int get_number_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int ns, const std::atomic_bool& shouldCancel)
 {
   int sumEdge = 0;
   for(int k = 0; k < (3 * ns); k++)
   {
+    if(shouldCancel)
+    {
+      return sumEdge;
+    }
     int tnsite[4] = {static_cast<int>(sq[k].site_id[0]), static_cast<int>(sq[k].site_id[1]), static_cast<int>(sq[k].site_id[2]), static_cast<int>(sq[k].site_id[3])};
     int tnspin[4];
     int atBulk = 0;
@@ -579,11 +586,15 @@ int get_number_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int ns)
 // types (triple/quad on face centers, default elsewhere, unused on pure-surface
 // edges). Transcribed from M3CEntireVolume::get_nodes_fEdges.
 // -----------------------------------------------------------------------------
-void get_nodes_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int8_t* nodeType, Segment* e, int ns, int nsp, int xDim)
+void get_nodes_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int8_t* nodeType, Segment* e, int ns, int nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
   int eid = 0;
   for(int k = 0; k < (3 * ns); k++)
   {
+    if(shouldCancel)
+    {
+      return;
+    }
     int cubeOrigin = k / 3 + 1;
     int sqOrder = k % 3;
 
@@ -1282,7 +1293,7 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
 // Count the total triangles across all cubes and set body-center node types.
 // Transcribed from M3CEntireVolume::get_number_triangles.
 // -----------------------------------------------------------------------------
-int get_number_triangles(const int32_t* p, Face* sq, int8_t* nodeType, Segment* e, int ns, int nsp, int xDim)
+int get_number_triangles(const int32_t* p, Face* sq, int8_t* nodeType, Segment* e, int ns, int nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
   int nTri0 = 0;
   int nTri2 = 0;
@@ -1290,6 +1301,10 @@ int get_number_triangles(const int32_t* p, Face* sq, int8_t* nodeType, Segment* 
 
   for(int i = 1; i <= (ns - nsp); i++)
   {
+    if(shouldCancel)
+    {
+      return 0;
+    }
     int cubeFlag = 0;
     int sqID[6];
     sqID[0] = 3 * (i - 1);
@@ -2443,13 +2458,17 @@ void get_caseM_triangles(Triangle* t1, int* mCubeID, const int* afe, const NodeC
 // Fill the pre-sized triangle array cube-by-cube. Transcribed from
 // M3CEntireVolume::get_triangles.
 // -----------------------------------------------------------------------------
-void get_triangles(const SiteCoords& p, Triangle* t, int* mCubeID, Face* sq, const NodeCoords& v, Segment* e, int ns, int nsp, int xDim)
+void get_triangles(const SiteCoords& p, Triangle* t, int* mCubeID, Face* sq, const NodeCoords& v, Segment* e, int ns, int nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
   int tidIn = 0;
   int tidOut = 0;
 
   for(int i = 1; i <= (ns - nsp); i++)
   {
+    if(shouldCancel)
+    {
+      return;
+    }
     int cubeFlag = 0;
     int sqID[6];
     sqID[0] = 3 * (i - 1);
@@ -2587,7 +2606,7 @@ void update_triangle_sides_with_fedge(Triangle* t, const int* mCubeID, const Seg
 // Count unique inner edges (two-pass sizing). Transcribed from
 // M3CEntireVolume::get_number_unique_inner_edges.
 // -----------------------------------------------------------------------------
-int get_number_unique_inner_edges(const Triangle* t, const int* mCubeID, int nT)
+int get_number_unique_inner_edges(const Triangle* t, const int* mCubeID, int nT, const std::atomic_bool& shouldCancel)
 {
   // Per marching cube. Sized well above the algorithm's maximum of ~36 unique inner edges per cube.
   int arrayIEnode[120][2];
@@ -2605,6 +2624,10 @@ int get_number_unique_inner_edges(const Triangle* t, const int* mCubeID, int nT)
   int i = 0;
   do
   {
+    if(shouldCancel)
+    {
+      return 0;
+    }
     int cmcID = mCubeID[i];
     int nmcID = (i == (nT - 1)) ? -1 : mCubeID[i + 1];
 
@@ -2663,7 +2686,7 @@ int get_number_unique_inner_edges(const Triangle* t, const int* mCubeID, int nT)
 // Build unique inner edges with their spins and stamp triangle e_id. Transcribed
 // from M3CEntireVolume::get_unique_inner_edges.
 // -----------------------------------------------------------------------------
-void get_unique_inner_edges(Triangle* t, const int* mCubeID, ISegment* ie, int nT, int nfedge)
+void get_unique_inner_edges(Triangle* t, const int* mCubeID, ISegment* ie, int nT, int nfedge, const std::atomic_bool& shouldCancel)
 {
   // Per marching cube. Sized well above the algorithm's maximum of ~36 unique inner edges per cube.
   int arrayTri[120];
@@ -2682,6 +2705,10 @@ void get_unique_inner_edges(Triangle* t, const int* mCubeID, ISegment* ie, int n
   int i = 0;
   do
   {
+    if(shouldCancel)
+    {
+      return;
+    }
     int cmcID = mCubeID[i];
     int nmcID = (i == (nT - 1)) ? -1 : mCubeID[i + 1];
 
@@ -2855,10 +2882,14 @@ void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Tr
 // Per-triangle winding: order the two face labels by which region center-of-mass
 // aligns with the triangle normal. Transcribed from M3CEntireVolume::arrange_spins.
 // -----------------------------------------------------------------------------
-void arrange_spins(const int32_t* p, const SiteCoords& pCoord, Triangle* t, const NodeCoords& v, int numT, int xDim, int nsp)
+void arrange_spins(const int32_t* p, const SiteCoords& pCoord, Triangle* t, const NodeCoords& v, int numT, int xDim, int nsp, const std::atomic_bool& shouldCancel)
 {
   for(int i = 0; i < numT; i++)
   {
+    if(shouldCancel)
+    {
+      return;
+    }
     int nspin1 = t[i].nSpin[0];
     int nspin2 = t[i].nSpin[1];
     double xSum = 0.0, ySum = 0.0, zSum = 0.0;
@@ -3122,11 +3153,11 @@ Result<> M3CSurfaceMeshing::operator()()
 
   // --- Stage 2: face edges ---------------------------------------------------
   m_MessageHandler("Counting face edges...");
-  const int nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors.data(), NS);
+  const int nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors.data(), NS, m_ShouldCancel);
 
   m_MessageHandler("Finding nodes and edges on each square...");
   std::vector<Segment> fedges(static_cast<size_t>(nFEdge < 0 ? 0 : nFEdge));
-  get_nodes_fEdges(squares.data(), point.data(), neighbors.data(), nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]));
+  get_nodes_fEdges(squares.data(), point.data(), neighbors.data(), nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
   if(m_ShouldCancel)
   {
@@ -3135,12 +3166,12 @@ Result<> M3CSurfaceMeshing::operator()()
 
   // --- Stage 3: triangles ----------------------------------------------------
   m_MessageHandler("Counting triangles...");
-  const int nTriangle = get_number_triangles(point.data(), squares.data(), nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]));
+  const int nTriangle = get_number_triangles(point.data(), squares.data(), nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
   m_MessageHandler("Generating triangles...");
   std::vector<Triangle> triangles(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle));
   std::vector<int> mCubeID(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle), 0);
-  get_triangles(siteCoords, triangles.data(), mCubeID.data(), squares.data(), nodeCoords, fedges.data(), NS, NSP, static_cast<int>(fileDim[0]));
+  get_triangles(siteCoords, triangles.data(), mCubeID.data(), squares.data(), nodeCoords, fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
   if(m_ShouldCancel)
   {
@@ -3151,14 +3182,14 @@ Result<> M3CSurfaceMeshing::operator()()
   m_MessageHandler("Building triangle/edge connectivity...");
   update_triangle_sides_with_fedge(triangles.data(), mCubeID.data(), fedges.data(), squares.data(), nTriangle, static_cast<int>(fileDim[0]), NSP);
 
-  const int nIEdge = get_number_unique_inner_edges(triangles.data(), mCubeID.data(), nTriangle);
+  const int nIEdge = get_number_unique_inner_edges(triangles.data(), mCubeID.data(), nTriangle, m_ShouldCancel);
   std::vector<ISegment> iedges(static_cast<size_t>(nIEdge < 0 ? 0 : nIEdge));
-  get_unique_inner_edges(triangles.data(), mCubeID.data(), iedges.data(), nTriangle, nFEdge);
+  get_unique_inner_edges(triangles.data(), mCubeID.data(), iedges.data(), nTriangle, nFEdge, m_ShouldCancel);
 
   update_node_edge_kind(nodeType.data(), fedges.data(), iedges.data(), triangles.data(), nTriangle, nFEdge);
 
   m_MessageHandler("Arranging triangle winding...");
-  arrange_spins(point.data(), siteCoords, triangles.data(), nodeCoords, nTriangle, static_cast<int>(fileDim[0]), NSP);
+  arrange_spins(point.data(), siteCoords, triangles.data(), nodeCoords, nTriangle, static_cast<int>(fileDim[0]), NSP, m_ShouldCancel);
 
   if(m_ShouldCancel)
   {
