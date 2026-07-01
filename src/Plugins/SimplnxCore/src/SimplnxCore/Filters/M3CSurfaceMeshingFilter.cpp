@@ -10,9 +10,11 @@
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
+#include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
+#include "simplnx/Utilities/SIMPLConversion.hpp"
 
 using namespace nx::core;
 
@@ -210,11 +212,36 @@ Result<> M3CSurfaceMeshingFilter::executeImpl(DataStructure& dataStructure, cons
   return M3CSurfaceMeshing(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }
 
+namespace
+{
+namespace SIMPL
+{
+constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteral k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
+constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteral k_SurfaceMeshNodeTypesArrayNameKey = "SurfaceMeshNodeTypesArrayName";
+constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
+constexpr StringLiteral k_FaceLabelsArrayNameKey = "FaceLabelsArrayName";
+} // namespace SIMPL
+} // namespace
+
 Result<Arguments> M3CSurfaceMeshingFilter::FromSIMPLJson(const nlohmann::json& json)
 {
-  // TODO: Implement SIMPL->simplnx parameter conversion for the legacy M3CSliceBySlice UUID
-  // (0541c5eb-1976-5797-9468-be50a93d44e2) once the port is validated. Mirror QuickSurfaceMeshFilter::FromSIMPLJson.
   Arguments args = M3CSurfaceMeshingFilter().getDefaultArguments();
-  return {std::move(args)};
+
+  std::vector<Result<>> results;
+
+  // The legacy M3CSliceBySlice took the FeatureIds path; use its container as the input geometry.
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_GridGeometryDataPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_SurfaceDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexDataGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshNodeTypesArrayNameKey, k_NodeTypesArrayName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceDataGroupName_Key));
+  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceLabelsArrayNameKey, k_FaceLabelsArrayName_Key));
+
+  Result<> conversionResult = MergeResults(std::move(results));
+
+  return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));
 }
 } // namespace nx::core
