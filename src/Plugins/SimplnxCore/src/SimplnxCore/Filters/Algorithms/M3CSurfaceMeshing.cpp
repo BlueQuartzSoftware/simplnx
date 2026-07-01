@@ -2595,6 +2595,7 @@ void update_triangle_sides_with_fedge(Triangle* t, const int* mCubeID, const Seg
 // -----------------------------------------------------------------------------
 int get_number_unique_inner_edges(const Triangle* t, const int* mCubeID, int nT)
 {
+  // Per marching cube. Sized well above the algorithm's maximum of ~36 unique inner edges per cube.
   int arrayIEnode[120][2];
   int bFlag[120];
   int nIE = 0;
@@ -2670,6 +2671,7 @@ int get_number_unique_inner_edges(const Triangle* t, const int* mCubeID, int nT)
 // -----------------------------------------------------------------------------
 void get_unique_inner_edges(Triangle* t, const int* mCubeID, ISegment* ie, int nT, int nfedge)
 {
+  // Per marching cube. Sized well above the algorithm's maximum of ~36 unique inner edges per cube.
   int arrayTri[120];
   int arrayIEnode[120][2];
   int bFlag[120];
@@ -2705,7 +2707,8 @@ void get_unique_inner_edges(Triangle* t, const int* mCubeID, ISegment* ie, int n
     if(cmcID != nmcID)
     {
       int nIEDmc = index;
-      for(int m = 0; m <= nIEDmc; m++)
+      // Only bFlag[0..nIEDmc-1] are ever read below; the legacy loop wrote one past the end.
+      for(int m = 0; m < nIEDmc; m++)
       {
         bFlag[m] = 0;
       }
@@ -3087,6 +3090,9 @@ Result<> M3CSurfaceMeshing::operator()()
   constexpr bool k_AddSurfaceLayer = true;
   size_t fileDim[3] = {dims[0] + 2, dims[1] + 2, dims[2] + 2};
   const size_t totalPoints = fileDim[0] * fileDim[1] * fileDim[2];
+  // NOTE: sites are indexed with 32-bit ints (matching the legacy algorithm and its 7*NS / 3*NS
+  // node and square counts), which caps the padded volume at ~300M sites (~675^3). Larger volumes
+  // would require moving this indexing to 64-bit.
   const int NS = static_cast<int>(totalPoints);
   const int NSP = static_cast<int>(fileDim[0] * fileDim[1]);
 
@@ -3106,6 +3112,7 @@ Result<> M3CSurfaceMeshing::operator()()
   std::vector<Neighbor> neighbors(static_cast<size_t>(NS) + 1);
   get_neighbor_list(neighbors.data(), NS, NSP, static_cast<int>(fileDim[0]), static_cast<int>(fileDim[1]), static_cast<int>(fileDim[2]));
 
+  // 3 marching squares (top/back/left) and 7 candidate nodes (edge/face/body) per site.
   m_MessageHandler("Initializing candidate nodes and squares...");
   std::vector<Face> squares(static_cast<size_t>(3) * NS);
   std::vector<Node> nodes(static_cast<size_t>(7) * NS);

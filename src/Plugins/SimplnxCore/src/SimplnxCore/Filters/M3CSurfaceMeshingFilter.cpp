@@ -4,6 +4,7 @@
 
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Actions/CreateGeometry2DAction.hpp"
@@ -122,6 +123,15 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  // M3C assumes uniform cell spacing. Warn if the input is not an Image Geometry (e.g. a RectGrid
+  // with non-uniform spacing), where node coordinates fall back to a spacing of 1.0 per axis.
+  auto pGridGeomPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
+  if(dataStructure.getDataAs<ImageGeom>(pGridGeomPath) == nullptr)
+  {
+    resultOutputActions.warnings().push_back(
+        Warning{-90210, "The selected geometry is not an Image Geometry. M3C assumes uniform cell spacing; non-uniform RectGrid spacing is not honored and the node coordinates will use a spacing of 1.0 along each axis."});
+  }
 
   // The number of vertices and faces is not known until execute; create empty and resize in the algorithm.
   constexpr usize numElements = 0;
