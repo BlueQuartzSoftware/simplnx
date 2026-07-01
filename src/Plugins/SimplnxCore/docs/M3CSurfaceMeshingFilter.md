@@ -19,6 +19,8 @@ and faces where the **Feature Id** changes, and a multi-material case table driv
 are connected into triangles so that every shared interface is represented by a single, coherent set
 of triangles (no cracks and no duplicated surfaces).
 
+![Images/M3C_SurfaceMesh_Comparison.png](Images/M3C_SurfaceMesh_Comparison.png)
+
 The algorithm produces the same output data model as the Create Surface Mesh (QuickMesh) and Surface
 Nets **Filters**:
 
