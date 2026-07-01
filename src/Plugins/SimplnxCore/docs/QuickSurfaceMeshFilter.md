@@ -80,6 +80,23 @@ filter is the "Surface Nets" surface meshing algorithm. This will create the sur
 mesh and smooth in a single filter and give subjectively better results and perform
 much faster at both.
 
+## Comparison of Surface Meshing Filters
+
+DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi-material triangle surface mesh. All three produce the same output data model (a **Triangle Geometry** with **Face Labels** and **Node Types**), so they are interchangeable inputs to downstream mesh **Filters**; they differ in how the triangles are generated and therefore in mesh smoothness, triangle count, and performance.
+
+| Aspect | Create Surface Mesh (QuickMesh) | Create Surface Mesh (Surface Nets) | Create Surface Mesh (M3C) |
+|---|---|---|---|
+| Algorithm | Voxel-face ("staircase") | Dual (SurfaceNets) | Primal multi-material marching cubes |
+| Vertex placement | Voxel corners | One relaxed vertex per boundary **Cell** | On **Cell** edges/faces |
+| Surface quality | Blocky / stair-stepped | Smooth, sharp edges preserved | Faceted (marching-cubes) |
+| Built-in smoothing | No (apply Laplacian Smoothing afterward) | Yes, optional and accuracy-controlled | No (apply Laplacian Smoothing afterward) |
+| Relative triangle count | Highest | Lowest | Moderate to high (configuration dependent) |
+| Multi-material junctions | Yes | Native | Yes (via case table) |
+| Performance | Fastest | Fast (parallelized) | Slower (single-threaded) |
+| Status | Deprecated | Recommended default | Specialized / legacy-compatible |
+
+**Guidance:** Surface Nets is the recommended default for most workflows — it yields the smoothest mesh with the fewest triangles and preserves sharp boundaries. Use M3C when a primal, marching-cubes case-table topology is required for a specific downstream modeling or simulation workflow. QuickMesh is retained for backward compatibility.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
