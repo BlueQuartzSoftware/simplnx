@@ -1,5 +1,7 @@
 #include "M3CSurfaceMeshing.hpp"
 
+#include "SimplnxCore/Filters/Algorithms/TupleTransfer.hpp"
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -10,6 +12,8 @@
 
 #include <cmath>
 #include <cstdint>
+#include <limits>
+#include <memory>
 #include <vector>
 
 using namespace nx::core;
@@ -2998,6 +3002,47 @@ int assign_new_nodeID(const int8_t* nodeType, int32_t* node_ids, int ns)
   }
   return newnid;
 }
+
+// Convert a 1-based padded working-grid site to the 0-based index into the original (unpadded)
+// cell arrays, or SIZE_MAX if the site is in the ghost shell.
+usize paddedSiteToOriginalCell(int64 site, const size_t fileDim[3], const size_t dims[3])
+{
+  const usize linear = static_cast<usize>(site - 1);
+  const usize px = linear % fileDim[0];
+  const usize py = (linear / fileDim[0]) % fileDim[1];
+  const usize pz = linear / (fileDim[0] * fileDim[1]);
+  if(px >= 1 && px <= dims[0] && py >= 1 && py <= dims[1] && pz >= 1 && pz <= dims[2])
+  {
+    return (pz - 1) * dims[0] * dims[1] + (py - 1) * dims[0] + (px - 1);
+  }
+  return std::numeric_limits<usize>::max();
+}
+
+// Find a representative original cell for a working label among the 8 corner sites of a marching
+// cube. Returns SIZE_MAX if no non-ghost corner carries that label (i.e. the label is exterior).
+usize findSourceCell(int workLabel, int64 cubeSite, const Neighbor* n, const int32_t* point, const size_t fileDim[3], const size_t dims[3])
+{
+  const int64 cornerSites[8] = {cubeSite,
+                                n[cubeSite].neigh_id[1],
+                                n[cubeSite].neigh_id[7],
+                                n[cubeSite].neigh_id[8],
+                                n[cubeSite].neigh_id[18],
+                                n[cubeSite].neigh_id[19],
+                                n[cubeSite].neigh_id[25],
+                                n[cubeSite].neigh_id[26]};
+  for(int64 site : cornerSites)
+  {
+    if(point[site] == workLabel)
+    {
+      const usize original = paddedSiteToOriginalCell(site, fileDim, dims);
+      if(original != std::numeric_limits<usize>::max())
+      {
+        return original;
+      }
+    }
+  }
+  return std::numeric_limits<usize>::max();
+}
 } // namespace
 
 namespace nx::core
@@ -3157,18 +3202,40 @@ Result<> M3CSurfaceMeshing::operator()()
     triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[1]]);
     triStore[static_cast<usize>(i) * 3 + 2] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[2]]);
 
-    int label0 = triangles[i].nSpin[0];
-    int label1 = triangles[i].nSpin[1];
-    if(label0 == maxGrainId)
+    // Map to the simplnx FaceLabels convention: negative ghost labels -> -1 (exterior box surface);
+    // the renumbered zero-feature (maxGrainId) -> 0.
+    const auto toFaceLabel = [maxGrainId](int nSpin) -> int32 { return (nSpin < 0) ? -1 : ((nSpin == maxGrainId) ? 0 : nSpin); };
+    faceLabels[static_cast<usize>(i) * 2 + 0] = toFaceLabel(triangles[i].nSpin[0]);
+    faceLabels[static_cast<usize>(i) * 2 + 1] = toFaceLabel(triangles[i].nSpin[1]);
+  }
+
+  // --- Transfer selected Cell/Feature arrays to the two sides of each face -----------------------
+  // Reuses the simplnx TupleTransfer machinery. For each triangle, a representative source cell is
+  // derived per side from the triangle's marching-cube corner cells (matched by working label). The
+  // exterior side (FaceLabel == -1) is skipped by the transfer functions.
+  if(!m_InputValues->SelectedCellDataArrayPaths.empty() || !m_InputValues->SelectedFeatureDataArrayPaths.empty())
+  {
+    m_MessageHandler("Transferring attribute arrays to the mesh faces...");
+    std::vector<std::shared_ptr<AbstractTupleTransfer>> transfers;
+    for(usize i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
     {
-      label0 = 0;
+      AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], transfers);
     }
-    if(label1 == maxGrainId)
+    const usize numCellArrays = m_InputValues->SelectedCellDataArrayPaths.size();
+    for(usize i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
     {
-      label1 = 0;
+      AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[numCellArrays + i], m_InputValues->FeatureIdsArrayPath, transfers);
     }
-    faceLabels[static_cast<usize>(i) * 2 + 0] = label0;
-    faceLabels[static_cast<usize>(i) * 2 + 1] = label1;
+
+    for(int i = 0; i < nTriangle; i++)
+    {
+      const usize cell0 = findSourceCell(triangles[i].nSpin[0], mCubeID[i], neighbors.data(), point.data(), fileDim, dims);
+      const usize cell1 = findSourceCell(triangles[i].nSpin[1], mCubeID[i], neighbors.data(), point.data(), fileDim, dims);
+      for(const auto& transfer : transfers)
+      {
+        transfer->quickSurfaceTransfer(static_cast<usize>(i), cell0, cell1, faceLabels);
+      }
+    }
   }
 
   // Optional winding-consistency repair (arrange_spins is only per-triangle).

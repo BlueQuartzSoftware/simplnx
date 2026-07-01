@@ -12,6 +12,7 @@
 #include "simplnx/Parameters/DataGroupCreationParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
 using namespace nx::core;
 
@@ -63,6 +64,14 @@ Parameters M3CSurfaceMeshingFilter::parameters() const
                                                              DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  params.insert(std::make_unique<MultiArraySelectionParameter>(
+      k_SelectedDataArrayPaths_Key, "Cell Attribute Arrays to Transfer", "The Cell Attribute Arrays to transfer to the created Triangle Geometry (one value per side of each face)",
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+
+  params.insertSeparator(Parameters::Separator{"Input Feature Data"});
+  params.insert(std::make_unique<MultiArraySelectionParameter>(
+      k_SelectedFeatureDataArrayPaths_Key, "Feature Attribute Arrays to Transfer", "The Feature Attribute Arrays to transfer to the created Triangle Geometry (one value per side of each face)",
+      MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Triangle Geometry"});
   params.insert(
@@ -99,11 +108,15 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
 {
   auto pFeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  auto pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  auto pFeatureDataPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureDataArrayPaths_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
   auto pNodeTypesName = filterArgs.value<std::string>(k_NodeTypesArrayName_Key);
   auto pFaceGroupDataName = filterArgs.value<std::string>(k_FaceDataGroupName_Key);
   auto pFaceLabelsName = filterArgs.value<std::string>(k_FaceLabelsArrayName_Key);
+
+  const DataPath pFaceGroupDataPath = pTriangleGeometryPath.createChildPath(pFaceGroupDataName);
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
@@ -134,6 +147,33 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
+  // For each Cell/Feature array to transfer, create a matching face array with the component shape
+  // doubled (a value for each of the two features on either side of every triangle face).
+  const usize featureIdsTupleCount = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPath).getNumberOfTuples();
+  for(const auto& selectedDataPath : pSelectedDataArrayPaths)
+  {
+    const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+    if(iDataArray.getNumberOfTuples() != featureIdsTupleCount)
+    {
+      return {MakeErrorResult<OutputActions>(-90200, fmt::format("Cannot transfer Cell array '{}': its tuple count ({}) does not match the FeatureIds tuple count ({}).", selectedDataPath.toString(),
+                                                                 iDataArray.getNumberOfTuples(), featureIdsTupleCount))};
+    }
+    auto compShape = iDataArray.getComponentShape();
+    compShape.insert(compShape.begin(), 2);
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()), dataStoreFormat);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
+  for(const auto& selectedDataPath : pFeatureDataPaths)
+  {
+    const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
+    auto compShape = iDataArray.getComponentShape();
+    compShape.insert(compShape.begin(), 2);
+    auto createArrayAction =
+        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()), dataStoreFormat);
+    resultOutputActions.value().appendAction(std::move(createArrayAction));
+  }
+
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
 
@@ -146,11 +186,26 @@ Result<> M3CSurfaceMeshingFilter::executeImpl(DataStructure& dataStructure, cons
   inputValues.RepairTriangleWinding = filterArgs.value<bool>(k_RepairTriangleWinding_Key);
   inputValues.GridGeomDataPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.SelectedCellDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.SelectedFeatureDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureDataArrayPaths_Key);
   inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   inputValues.VertexGroupDataPath = inputValues.TriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_VertexDataGroupName_Key));
   inputValues.NodeTypesDataPath = inputValues.VertexGroupDataPath.createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key));
   inputValues.FaceGroupDataPath = inputValues.TriangleGeometryPath.createChildPath(filterArgs.value<std::string>(k_FaceDataGroupName_Key));
   inputValues.FaceLabelsDataPath = inputValues.FaceGroupDataPath.createChildPath(filterArgs.value<std::string>(k_FaceLabelsArrayName_Key));
+
+  // The transferred face arrays are created under the face AttributeMatrix, keyed by source name, in
+  // the same order the algorithm sets up its transfer functions (all cell arrays, then all feature arrays).
+  MultiArraySelectionParameter::ValueType createdDataPaths;
+  for(const auto& selectedDataPath : inputValues.SelectedCellDataArrayPaths)
+  {
+    createdDataPaths.push_back(inputValues.FaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
+  }
+  for(const auto& selectedDataPath : inputValues.SelectedFeatureDataArrayPaths)
+  {
+    createdDataPaths.push_back(inputValues.FaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
+  }
+  inputValues.CreatedDataArrayPaths = createdDataPaths;
 
   return M3CSurfaceMeshing(dataStructure, &inputValues, shouldCancel, messageHandler)();
 }

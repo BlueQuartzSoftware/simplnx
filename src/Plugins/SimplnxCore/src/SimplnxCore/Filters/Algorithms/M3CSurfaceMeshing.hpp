@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 
 namespace nx::core
 {
@@ -15,11 +16,14 @@ struct SIMPLNXCORE_EXPORT M3CSurfaceMeshingInputValues
   bool RepairTriangleWinding;
   DataPath GridGeomDataPath;
   DataPath FeatureIdsArrayPath;
+  MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;
+  MultiArraySelectionParameter::ValueType SelectedFeatureDataArrayPaths;
   DataPath TriangleGeometryPath;
   DataPath VertexGroupDataPath;
   DataPath NodeTypesDataPath;
   DataPath FaceGroupDataPath;
   DataPath FaceLabelsDataPath;
+  MultiArraySelectionParameter::ValueType CreatedDataArrayPaths;
 };
 
 /**

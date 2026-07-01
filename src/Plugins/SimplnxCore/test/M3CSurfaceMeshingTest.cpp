@@ -8,6 +8,7 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/MultiArraySelectionParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
@@ -35,9 +36,24 @@ void RunM3C(bool repairWinding, const std::string& outputName)
   DataPath gridGeomDataPath({k_DataContainer});
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
 
+  DataPath cellDataPath({k_DataContainer, k_CellData});
+  DataPath featureDataPath({k_DataContainer, k_CellFeatureData});
+
   DataPath computedTriangleGeomPath({"Computed M3C Mesh"});
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
+
+  // Transfer every Cell and Feature attribute array (mirrors the QuickSurfaceMesh test).
+  MultiArraySelectionParameter::ValueType selectedCellArrayPaths;
+  for(const auto& [id, child] : dataStructure.getDataRefAs<AttributeMatrix>(cellDataPath))
+  {
+    selectedCellArrayPaths.push_back(cellDataPath.createChildPath(child->getName()));
+  }
+  MultiArraySelectionParameter::ValueType selectedFeatureArrayPaths;
+  for(const auto& [id, child] : dataStructure.getDataRefAs<AttributeMatrix>(featureDataPath))
+  {
+    selectedFeatureArrayPaths.push_back(featureDataPath.createChildPath(child->getName()));
+  }
 
   {
     Arguments args;
@@ -46,6 +62,8 @@ void RunM3C(bool repairWinding, const std::string& outputName)
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(repairWinding));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(gridGeomDataPath));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsDataPath));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_SelectedDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedCellArrayPaths));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_SelectedFeatureDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(selectedFeatureArrayPaths));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(computedTriangleGeomPath));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
@@ -80,6 +98,22 @@ void RunM3C(bool repairWinding, const std::string& outputName)
   REQUIRE(faceLabels.getNumberOfTuples() == numTriangles);
   REQUIRE(faceLabels.getNumberOfComponents() == 2);
   REQUIRE(nodeTypes.getNumberOfTuples() == numVertices);
+
+  // Each transferred Cell/Feature array must exist on the face group with the component shape
+  // doubled (one value per side of the face) and one tuple per triangle.
+  auto checkTransferred = [&](const std::vector<DataPath>& selectedPaths) {
+    for(const auto& sourcePath : selectedPaths)
+    {
+      const auto& source = dataStructure.getDataRefAs<IDataArray>(sourcePath);
+      DataPath transferredPath = faceGroupDataPath.createChildPath(sourcePath.getTargetName());
+      const auto* transferred = dataStructure.getDataAs<IDataArray>(transferredPath);
+      REQUIRE(transferred != nullptr);
+      REQUIRE(transferred->getNumberOfTuples() == numTriangles);
+      REQUIRE(transferred->getNumberOfComponents() == 2 * source.getNumberOfComponents());
+    }
+  };
+  checkTransferred(selectedCellArrayPaths);
+  checkTransferred(selectedFeatureArrayPaths);
 
   for(usize i = 0; i < numTriangles; i++)
   {

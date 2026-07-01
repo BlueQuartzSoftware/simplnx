@@ -36,6 +36,8 @@ public:
   // Parameter Keys
   static constexpr StringLiteral k_GridGeometryDataPath_Key = "input_grid_geometry_path";
   static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteral k_SelectedFeatureDataArrayPaths_Key = "input_feature_data_array_paths";
   static constexpr StringLiteral k_RepairTriangleWinding_Key = "repair_triangle_winding";
 
   static constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
