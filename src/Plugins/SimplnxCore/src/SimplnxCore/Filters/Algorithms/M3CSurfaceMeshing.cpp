@@ -11,7 +11,6 @@
 #include <fmt/format.h>
 
 #include <atomic>
-#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -2879,140 +2878,6 @@ void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Tr
 }
 
 // -----------------------------------------------------------------------------
-// Per-triangle winding: order the two face labels by which region center-of-mass
-// aligns with the triangle normal. Transcribed from M3CEntireVolume::arrange_spins.
-// -----------------------------------------------------------------------------
-void arrange_spins(const int32_t* p, const SiteCoords& pCoord, Triangle* t, const NodeCoords& v, int numT, int xDim, int nsp, const std::atomic_bool& shouldCancel)
-{
-  for(int i = 0; i < numT; i++)
-  {
-    if(shouldCancel)
-    {
-      return;
-    }
-    int nspin1 = t[i].nSpin[0];
-    int nspin2 = t[i].nSpin[1];
-    double xSum = 0.0, ySum = 0.0, zSum = 0.0;
-    double xSum1 = 0.0, ySum1 = 0.0, zSum1 = 0.0;
-    double xSum2 = 0.0, ySum2 = 0.0, zSum2 = 0.0;
-    int nEnode = 0;
-    double vcoord[3][3];
-    int tsite1 = 0, tsite2 = 0;
-
-    for(int j = 0; j < 3; j++)
-    {
-      int cnode = static_cast<int>(t[i].node_id[j]);
-      int csite = cnode / 7 + 1;
-      int kind = cnode % 7;
-
-      xSum += v[cnode].coord[0];
-      ySum += v[cnode].coord[1];
-      zSum += v[cnode].coord[2];
-      vcoord[j][0] = v[cnode].coord[0];
-      vcoord[j][1] = v[cnode].coord[1];
-      vcoord[j][2] = v[cnode].coord[2];
-
-      int tspin1 = -1;
-      int tspin2 = -1;
-      if(kind == 0)
-      {
-        nEnode++;
-        tsite1 = csite;
-        tsite2 = csite + 1;
-        tspin1 = p[tsite1];
-        tspin2 = p[tsite2];
-      }
-      else if(kind == 1)
-      {
-        nEnode++;
-        tsite1 = csite;
-        tsite2 = csite + xDim;
-        tspin1 = p[tsite1];
-        tspin2 = p[tsite2];
-      }
-      else if(kind == 2)
-      {
-        nEnode++;
-        tsite1 = csite;
-        tsite2 = csite + nsp;
-        tspin1 = p[tsite1];
-        tspin2 = p[tsite2];
-      }
-
-      if(tspin1 == nspin1)
-      {
-        xSum1 += pCoord[tsite1].coord[0];
-        ySum1 += pCoord[tsite1].coord[1];
-        zSum1 += pCoord[tsite1].coord[2];
-        xSum2 += pCoord[tsite2].coord[0];
-        ySum2 += pCoord[tsite2].coord[1];
-        zSum2 += pCoord[tsite2].coord[2];
-      }
-      else if(tspin2 == nspin1)
-      {
-        xSum1 += pCoord[tsite2].coord[0];
-        ySum1 += pCoord[tsite2].coord[1];
-        zSum1 += pCoord[tsite2].coord[2];
-        xSum2 += pCoord[tsite1].coord[0];
-        ySum2 += pCoord[tsite1].coord[1];
-        zSum2 += pCoord[tsite1].coord[2];
-      }
-    }
-
-    double cx = xSum / 3.0;
-    double cy = ySum / 3.0;
-    double cz = zSum / 3.0;
-    double ctr1[3] = {xSum1 / static_cast<double>(nEnode), ySum1 / static_cast<double>(nEnode), zSum1 / static_cast<double>(nEnode)};
-    double ctr2[3] = {xSum2 / static_cast<double>(nEnode), ySum2 / static_cast<double>(nEnode), zSum2 / static_cast<double>(nEnode)};
-    double tv1[3] = {ctr1[0] - cx, ctr1[1] - cy, ctr1[2] - cz};
-    double tv2[3] = {ctr2[0] - cx, ctr2[1] - cy, ctr2[2] - cz};
-    double length1 = std::sqrt(tv1[0] * tv1[0] + tv1[1] * tv1[1] + tv1[2] * tv1[2]);
-    double length2 = std::sqrt(tv2[0] * tv2[0] + tv2[1] * tv2[1] + tv2[2] * tv2[2]);
-
-    double u[3] = {vcoord[1][0] - vcoord[0][0], vcoord[1][1] - vcoord[0][1], vcoord[1][2] - vcoord[0][2]};
-    double w[3] = {vcoord[2][0] - vcoord[0][0], vcoord[2][1] - vcoord[0][1], vcoord[2][2] - vcoord[0][2]};
-    double a = u[1] * w[2] - u[2] * w[1];
-    double b = u[2] * w[0] - u[0] * w[2];
-    double c = u[0] * w[1] - u[1] * w[0];
-    double length = std::sqrt(a * a + b * b + c * c);
-    double nv[3] = {a, b, c};
-
-    double dotP1 = tv1[0] * nv[0] + tv1[1] * nv[1] + tv1[2] * nv[2];
-    double dotP2 = tv2[0] * nv[0] + tv2[1] * nv[1] + tv2[2] * nv[2];
-    double cs1 = dotP1 / (length * length1);
-    double cs2 = dotP2 / (length * length2);
-    if(cs1 > 1.0)
-    {
-      cs1 = 1.0;
-    }
-    else if(cs1 < -1.0)
-    {
-      cs1 = -1.0;
-    }
-    if(cs2 > 1.0)
-    {
-      cs2 = 1.0;
-    }
-    else if(cs2 < -1.0)
-    {
-      cs2 = -1.0;
-    }
-    double theta1 = 180.0 / M_PI * std::acos(cs1);
-    double theta2 = 180.0 / M_PI * std::acos(cs2);
-    if(theta1 < theta2)
-    {
-      t[i].nSpin[0] = nspin1;
-      t[i].nSpin[1] = nspin2;
-    }
-    else
-    {
-      t[i].nSpin[0] = nspin2;
-      t[i].nSpin[1] = nspin1;
-    }
-  }
-}
-
-// -----------------------------------------------------------------------------
 // Assign compacted sequential ids to used nodes (nodeType > 0); node_ids must be
 // pre-filled with -1. Returns the used-node count. From assign_new_nodeID.
 // -----------------------------------------------------------------------------
@@ -3188,9 +3053,6 @@ Result<> M3CSurfaceMeshing::operator()()
 
   update_node_edge_kind(nodeType.data(), fedges.data(), iedges.data(), triangles.data(), nTriangle, nFEdge);
 
-  m_MessageHandler("Arranging triangle winding...");
-  arrange_spins(point.data(), siteCoords, triangles.data(), nodeCoords, nTriangle, static_cast<int>(fileDim[0]), NSP, m_ShouldCancel);
-
   if(m_ShouldCancel)
   {
     return {};
@@ -3284,7 +3146,8 @@ Result<> M3CSurfaceMeshing::operator()()
     }
   }
 
-  // Optional winding-consistency repair (arrange_spins is only per-triangle).
+  // Optional winding-consistency repair. M3C does not itself guarantee globally consistent normals,
+  // so this pass (using triangle connectivity) makes the winding consistent with the FaceLabels.
   if(m_InputValues->RepairTriangleWinding)
   {
     m_MessageHandler("Generating connectivity and triangle neighbors...");
