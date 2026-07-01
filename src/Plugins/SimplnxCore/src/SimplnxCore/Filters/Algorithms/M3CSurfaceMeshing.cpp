@@ -231,57 +231,62 @@ int initialize_micro(bool addSurfaceLayer, const size_t dims[3], const size_t fi
 }
 
 // -----------------------------------------------------------------------------
-// Build the 26-neighbor list for every site (toroidal indexing; the ghost shell
-// makes the wrap harmless). Transcribed from M3CEntireVolume::get_neighbor_list.
+// On-demand 26-neighbor accessor (replaces a stored per-site array, ~108 bytes/site). Reproduces the
+// toroidal indexing of the legacy get_neighbor_list; the ghost shell makes the wrap harmless. Because
+// operator[] recomputes all 26 ids, callers that read several neighbors of the same site should cache
+// the returned Neighbor in a local rather than indexing the accessor repeatedly.
 // -----------------------------------------------------------------------------
-void get_neighbor_list(Neighbor* n, int ns, int nsp, int xDim, int /*yDim*/, int /*zDim*/)
+struct NeighborAccessor
 {
-  int i, j, k;
-  int site_id;
+  int ns;
+  int nsp;
+  int xDim;
 
-  for(k = 0; k <= (ns - nsp); k = k + nsp)
+  Neighbor operator[](int site_id) const
   {
-    for(j = 0; j <= (nsp - xDim); j = j + xDim)
-    {
-      for(i = 1; i <= xDim; i++)
-      {
-        site_id = k + j + i;
+    // Recover the (k, j, i) that the legacy triple loop used for this 1-based site.
+    const int within = (site_id - 1) % nsp; // == j + (i - 1)
+    const int i = (within % xDim) + 1;       // 1..xDim
+    const int j = within - (i - 1);          // multiple of xDim, 0..nsp-xDim
+    const int k = ((site_id - 1) / nsp) * nsp;
 
-        // same plane
-        n[site_id].neigh_id[1] = k + j + i % xDim + 1;
-        n[site_id].neigh_id[2] = k + (j - xDim + nsp) % nsp + i % xDim + 1;
-        n[site_id].neigh_id[3] = k + (j - xDim + nsp) % nsp + i;
-        n[site_id].neigh_id[4] = k + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[5] = k + j + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[6] = k + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[7] = k + (j + xDim) % nsp + i;
-        n[site_id].neigh_id[8] = k + (j + xDim) % nsp + i % xDim + 1;
+    Neighbor n;
+    n.neigh_id[0] = 0; // index 0 unused
 
-        // upper plane
-        n[site_id].neigh_id[9] = (k - nsp + ns) % ns + j + i;
-        n[site_id].neigh_id[10] = (k - nsp + ns) % ns + j + i % xDim + 1;
-        n[site_id].neigh_id[11] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + i % xDim + 1;
-        n[site_id].neigh_id[12] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + i;
-        n[site_id].neigh_id[13] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[14] = (k - nsp + ns) % ns + j + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[15] = (k - nsp + ns) % ns + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[16] = (k - nsp + ns) % ns + (j + xDim) % nsp + i;
-        n[site_id].neigh_id[17] = (k - nsp + ns) % ns + (j + xDim) % nsp + i % xDim + 1;
+    // same plane
+    n.neigh_id[1] = k + j + i % xDim + 1;
+    n.neigh_id[2] = k + (j - xDim + nsp) % nsp + i % xDim + 1;
+    n.neigh_id[3] = k + (j - xDim + nsp) % nsp + i;
+    n.neigh_id[4] = k + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[5] = k + j + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[6] = k + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[7] = k + (j + xDim) % nsp + i;
+    n.neigh_id[8] = k + (j + xDim) % nsp + i % xDim + 1;
 
-        // lower plane
-        n[site_id].neigh_id[18] = (k + nsp) % ns + j + i;
-        n[site_id].neigh_id[19] = (k + nsp) % ns + j + i % xDim + 1;
-        n[site_id].neigh_id[20] = (k + nsp) % ns + (j - xDim + nsp) % nsp + i % xDim + 1;
-        n[site_id].neigh_id[21] = (k + nsp) % ns + (j - xDim + nsp) % nsp + i;
-        n[site_id].neigh_id[22] = (k + nsp) % ns + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[23] = (k + nsp) % ns + j + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[24] = (k + nsp) % ns + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
-        n[site_id].neigh_id[25] = (k + nsp) % ns + (j + xDim) % nsp + i;
-        n[site_id].neigh_id[26] = (k + nsp) % ns + (j + xDim) % nsp + i % xDim + 1;
-      }
-    }
+    // upper plane
+    n.neigh_id[9] = (k - nsp + ns) % ns + j + i;
+    n.neigh_id[10] = (k - nsp + ns) % ns + j + i % xDim + 1;
+    n.neigh_id[11] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + i % xDim + 1;
+    n.neigh_id[12] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + i;
+    n.neigh_id[13] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[14] = (k - nsp + ns) % ns + j + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[15] = (k - nsp + ns) % ns + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[16] = (k - nsp + ns) % ns + (j + xDim) % nsp + i;
+    n.neigh_id[17] = (k - nsp + ns) % ns + (j + xDim) % nsp + i % xDim + 1;
+
+    // lower plane
+    n.neigh_id[18] = (k + nsp) % ns + j + i;
+    n.neigh_id[19] = (k + nsp) % ns + j + i % xDim + 1;
+    n.neigh_id[20] = (k + nsp) % ns + (j - xDim + nsp) % nsp + i % xDim + 1;
+    n.neigh_id[21] = (k + nsp) % ns + (j - xDim + nsp) % nsp + i;
+    n.neigh_id[22] = (k + nsp) % ns + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[23] = (k + nsp) % ns + j + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[24] = (k + nsp) % ns + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
+    n.neigh_id[25] = (k + nsp) % ns + (j + xDim) % nsp + i;
+    n.neigh_id[26] = (k + nsp) % ns + (j + xDim) % nsp + i % xDim + 1;
+    return n;
   }
-}
+};
 
 // -----------------------------------------------------------------------------
 // (Candidate node coordinates are computed on demand via NodeCoords; node types are
@@ -292,27 +297,28 @@ void get_neighbor_list(Neighbor* n, int ns, int nsp, int xDim, int /*yDim*/, int
 // Set up the 3 marching squares per site (top/back/left) with their 4 corner
 // sites. Transcribed from M3CEntireVolume::initialize_squares.
 // -----------------------------------------------------------------------------
-void initialize_squares(const Neighbor* n, Face* sq, int ns, int /*nsp*/)
+void initialize_squares(const NeighborAccessor& n, Face* sq, int ns, int /*nsp*/)
 {
   for(int i = 1; i <= ns; i++)
   {
     int id = 3 * (i - 1);
+    const Neighbor nb = n[i]; // cache: several neighbors of site i read below
 
     // top (same z)
     sq[id].site_id[0] = i;
-    sq[id].site_id[1] = n[i].neigh_id[1];
-    sq[id].site_id[2] = n[i].neigh_id[8];
-    sq[id].site_id[3] = n[i].neigh_id[7];
+    sq[id].site_id[1] = nb.neigh_id[1];
+    sq[id].site_id[2] = nb.neigh_id[8];
+    sq[id].site_id[3] = nb.neigh_id[7];
     // back (same y)
     sq[id + 1].site_id[0] = i;
-    sq[id + 1].site_id[1] = n[i].neigh_id[1];
-    sq[id + 1].site_id[2] = n[i].neigh_id[19];
-    sq[id + 1].site_id[3] = n[i].neigh_id[18];
+    sq[id + 1].site_id[1] = nb.neigh_id[1];
+    sq[id + 1].site_id[2] = nb.neigh_id[19];
+    sq[id + 1].site_id[3] = nb.neigh_id[18];
     // left (same x)
-    sq[id + 2].site_id[0] = n[i].neigh_id[7];
+    sq[id + 2].site_id[0] = nb.neigh_id[7];
     sq[id + 2].site_id[1] = i;
-    sq[id + 2].site_id[2] = n[i].neigh_id[18];
-    sq[id + 2].site_id[3] = n[i].neigh_id[25];
+    sq[id + 2].site_id[2] = nb.neigh_id[18];
+    sq[id + 2].site_id[3] = nb.neigh_id[25];
 
     for(int j = 0; j < 4; j++)
     {
@@ -371,7 +377,7 @@ int get_square_index(const int tns[4])
 // Disambiguate the all-corners-differ saddle (case 15) using the 3D same-label
 // neighbor counts. Transcribed from M3CEntireVolume::treat_anomaly.
 // -----------------------------------------------------------------------------
-int treat_anomaly(const int tnst[4], const int32_t* p1, const Neighbor* n1, int /*sqid*/)
+int treat_anomaly(const int tnst[4], const int32_t* p1, const NeighborAccessor& n1, int /*sqid*/)
 {
   int numNeigh[4] = {0, 0, 0, 0};
 
@@ -379,9 +385,10 @@ int treat_anomaly(const int tnst[4], const int32_t* p1, const Neighbor* n1, int 
   {
     int csite = tnst[i];
     int cspin = p1[csite];
+    const Neighbor nb = n1[csite]; // cache: all 26 neighbors read below
     for(int j = 1; j <= num_neigh; j++)
     {
-      int nsite = n1[csite].neigh_id[j];
+      int nsite = nb.neigh_id[j];
       int nspin = p1[nsite];
       if(cspin == nspin && nspin > 0)
       {
@@ -504,7 +511,7 @@ void get_spins(const int32_t* p1, int cst, int ord, const int pID[2], int* pSpin
 // Count the total number of face edges across all squares (two-pass sizing).
 // Transcribed from M3CEntireVolume::get_number_fEdges.
 // -----------------------------------------------------------------------------
-int get_number_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int ns, const std::atomic_bool& shouldCancel)
+int get_number_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, int ns, const std::atomic_bool& shouldCancel)
 {
   int sumEdge = 0;
   for(int k = 0; k < (3 * ns); k++)
@@ -585,7 +592,7 @@ int get_number_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int ns, con
 // types (triple/quad on face centers, default elsewhere, unused on pure-surface
 // edges). Transcribed from M3CEntireVolume::get_nodes_fEdges.
 // -----------------------------------------------------------------------------
-void get_nodes_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int8_t* nodeType, Segment* e, int ns, int nsp, int xDim, const std::atomic_bool& shouldCancel)
+void get_nodes_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, int8_t* nodeType, Segment* e, int ns, int nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
   int eid = 0;
   for(int k = 0; k < (3 * ns); k++)
@@ -2913,16 +2920,17 @@ usize paddedSiteToOriginalCell(int64 site, const size_t fileDim[3], const size_t
 
 // Find a representative original cell for a working label among the 8 corner sites of a marching
 // cube. Returns SIZE_MAX if no non-ghost corner carries that label (i.e. the label is exterior).
-usize findSourceCell(int workLabel, int64 cubeSite, const Neighbor* n, const int32_t* point, const size_t fileDim[3], const size_t dims[3])
+usize findSourceCell(int workLabel, int64 cubeSite, const NeighborAccessor& n, const int32_t* point, const size_t fileDim[3], const size_t dims[3])
 {
+  const Neighbor nb = n[static_cast<int>(cubeSite)]; // cache: 7 neighbors of the cube site read below
   const int64 cornerSites[8] = {cubeSite,
-                                n[cubeSite].neigh_id[1],
-                                n[cubeSite].neigh_id[7],
-                                n[cubeSite].neigh_id[8],
-                                n[cubeSite].neigh_id[18],
-                                n[cubeSite].neigh_id[19],
-                                n[cubeSite].neigh_id[25],
-                                n[cubeSite].neigh_id[26]};
+                                nb.neigh_id[1],
+                                nb.neigh_id[7],
+                                nb.neigh_id[8],
+                                nb.neigh_id[18],
+                                nb.neigh_id[19],
+                                nb.neigh_id[25],
+                                nb.neigh_id[26]};
   for(int64 site : cornerSites)
   {
     if(point[site] == workLabel)
@@ -2992,19 +3000,16 @@ Result<> M3CSurfaceMeshing::operator()()
   std::vector<int32_t> point(totalPoints + 1, 0);
   const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, featureIdsStore, point.data());
 
-  // On-demand coordinate accessors replace the former full-volume voxCoords and node arrays.
+  // On-demand accessors replace the former full-volume voxCoords, node, and neighbor arrays.
   const SiteCoords siteCoords{fileDim[0], fileDim[1], fileDim[0] * fileDim[1], {res[0], res[1], res[2]}, {origin[0], origin[1], origin[2]}};
   const NodeCoords nodeCoords{siteCoords};
-
-  m_MessageHandler("Finding neighbors for each site...");
-  std::vector<Neighbor> neighbors(static_cast<size_t>(NS) + 1);
-  get_neighbor_list(neighbors.data(), NS, NSP, static_cast<int>(fileDim[0]), static_cast<int>(fileDim[1]), static_cast<int>(fileDim[2]));
+  const NeighborAccessor neighbors{NS, NSP, static_cast<int>(fileDim[0])};
 
   // 3 marching squares (top/back/left) per site; node types (7 candidate nodes/site) start Unused (0).
   m_MessageHandler("Initializing candidate nodes and squares...");
   std::vector<Face> squares(static_cast<size_t>(3) * NS);
   std::vector<int8_t> nodeType(static_cast<size_t>(7) * NS, 0);
-  initialize_squares(neighbors.data(), squares.data(), NS, NSP);
+  initialize_squares(neighbors, squares.data(), NS, NSP);
 
   if(m_ShouldCancel)
   {
@@ -3013,11 +3018,11 @@ Result<> M3CSurfaceMeshing::operator()()
 
   // --- Stage 2: face edges ---------------------------------------------------
   m_MessageHandler("Counting face edges...");
-  const int nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors.data(), NS, m_ShouldCancel);
+  const int nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors, NS, m_ShouldCancel);
 
   m_MessageHandler("Finding nodes and edges on each square...");
   std::vector<Segment> fedges(static_cast<size_t>(nFEdge < 0 ? 0 : nFEdge));
-  get_nodes_fEdges(squares.data(), point.data(), neighbors.data(), nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
+  get_nodes_fEdges(squares.data(), point.data(), neighbors, nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
   if(m_ShouldCancel)
   {
@@ -3132,8 +3137,8 @@ Result<> M3CSurfaceMeshing::operator()()
       const bool side0IsComp0 = (labelA <= labelB);
       const int nSpinComp0 = side0IsComp0 ? triangles[i].nSpin[0] : triangles[i].nSpin[1];
       const int nSpinComp1 = side0IsComp0 ? triangles[i].nSpin[1] : triangles[i].nSpin[0];
-      const usize cell0 = findSourceCell(nSpinComp0, mCubeID[i], neighbors.data(), point.data(), fileDim, dims);
-      const usize cell1 = findSourceCell(nSpinComp1, mCubeID[i], neighbors.data(), point.data(), fileDim, dims);
+      const usize cell0 = findSourceCell(nSpinComp0, mCubeID[i], neighbors, point.data(), fileDim, dims);
+      const usize cell1 = findSourceCell(nSpinComp1, mCubeID[i], neighbors, point.data(), fileDim, dims);
       for(const auto& transfer : transfers)
       {
         transfer->quickSurfaceTransfer(static_cast<usize>(i), cell0, cell1, faceLabels);
