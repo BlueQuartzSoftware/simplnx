@@ -99,6 +99,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   IterativeClosestPointTest.cpp
   LabelTriangleGeometryTest.cpp
   LaplacianSmoothingFilterTest.cpp
+  M3CSurfaceMeshingTest.cpp
   MapPointCloudToRegularGridTest.cpp
   MoveDataTest.cpp
   MultiThresholdObjectsTest.cpp

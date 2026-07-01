@@ -1,0 +1,3197 @@
+#include "M3CSurfaceMeshing.hpp"
+
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/IGridGeometry.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
+#include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
+
+#include <fmt/format.h>
+
+#include <cmath>
+#include <cstdint>
+#include <vector>
+
+using namespace nx::core;
+
+// =============================================================================
+// Port of the legacy DREAM3D M3CEntireVolume algorithm (all-in-memory variant).
+// The multi-material marching-cubes core operates on flat, 1-based index arrays;
+// the helpers below are transcribed closely from
+//   DREAM3D/Source/Plugins/SurfaceMeshing/SurfaceMeshingFilters/Unsupported/M3CEntireVolume.cpp
+// Only the thin operator() layer touches simplnx (read ImageGeom+FeatureIds,
+// write TriangleGeom+FaceLabels+NodeTypes).
+// =============================================================================
+namespace
+{
+using int64 = std::int64_t;
+using uint64 = std::uint64_t;
+
+constexpr int num_neigh = 26; // number of 3D neighbors per site (legacy #define)
+
+// --- M3C working structs (mirror SIMPL/Geometry/MeshStructs.h SurfaceMesh::M3C) ---
+struct Node
+{
+  float coord[3];
+};
+struct VoxelCoord
+{
+  float coord[3];
+};
+struct Neighbor
+{
+  int neigh_id[27]; // 1-based; index 0 unused
+};
+struct Face // a marching "square"
+{
+  int64 site_id[4];
+  int64 edge_id[4];
+  int nEdge;
+  int FCnode; // face-center node id, -1 if none
+  int effect; // 0 = useless square, 1 = straddles >=2 labels
+};
+struct Segment // a face edge
+{
+  int64 node_id[2];
+  int edgeKind;
+  int nSpin[2]; // labels on left/right of the arrow
+};
+struct ISegment // an inner edge (connectivity)
+{
+  int64 node_id[2];
+  int edgeKind;
+  int nSpin[4];
+};
+struct Triangle
+{
+  int64 node_id[3];
+  uint64 e_id[3];
+  int nSpin[2];
+  int edgePlace[3];
+};
+
+// The multi-material marching-squares case tables. Byte-identical between the legacy
+// M3CSliceBySlice.cpp and M3CEntireVolume.cpp (verified). 20 cases x up to 4 edges.
+// edgeTable_2d: per case, node-slot pairs (0-3 edge midpoints, 4 = face-center) forming edges.
+// nsTable_2d:   per edge, the pixel-slot pair whose FeatureIds become that edge's two labels.
+// clang-format off
+constexpr int k_EdgeTable2d[20][8] = {
+    {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1}, {0, 1, -1, -1, -1, -1, -1, -1},   {-1, -1, -1, -1, -1, -1, -1, -1},
+    {0, 2, -1, -1, -1, -1, -1, -1},   {1, 2, -1, -1, -1, -1, -1, -1},   {0, 4, 2, 4, 1, 4, -1, -1},       {-1, -1, -1, -1, -1, -1, -1, -1}, {3, 0, -1, -1, -1, -1, -1, -1},
+    {3, 1, -1, -1, -1, -1, -1, -1},   {3, 4, 0, 4, 1, 4, -1, -1},       {2, 3, -1, -1, -1, -1, -1, -1},   {3, 4, 0, 4, 2, 4, -1, -1},       {3, 4, 1, 4, 2, 4, -1, -1},
+    {3, 0, 1, 2, -1, -1, -1, -1},     {0, 1, 2, 3, -1, -1, -1, -1},     {0, 1, 2, 3, -1, -1, -1, -1},     {3, 0, 1, 2, -1, -1, -1, -1},     {3, 4, 1, 4, 0, 4, 2, 4}};
+
+constexpr int k_NsTable2d[20][8] = {
+    {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1}, {1, 0, -1, -1, -1, -1, -1, -1},   {-1, -1, -1, -1, -1, -1, -1, -1},
+    {1, 0, -1, -1, -1, -1, -1, -1},   {2, 1, -1, -1, -1, -1, -1, -1},   {1, 0, 3, 2, 2, 1, -1, -1},       {-1, -1, -1, -1, -1, -1, -1, -1}, {0, 3, -1, -1, -1, -1, -1, -1},
+    {0, 3, -1, -1, -1, -1, -1, -1},   {0, 3, 1, 0, 2, 1, -1, -1},       {3, 2, -1, -1, -1, -1, -1, -1},   {0, 3, 1, 0, 3, 2, -1, -1},       {0, 3, 2, 1, 3, 2, -1, -1},
+    {0, 3, 2, 1, -1, -1, -1, -1},     {1, 0, 3, 2, -1, -1, -1, -1},     {1, 0, 3, 2, -1, -1, -1, -1},     {0, 3, 2, 1, -1, -1, -1, -1},     {0, 3, 2, 1, 1, 0, 3, 2}};
+// clang-format on
+
+// -----------------------------------------------------------------------------
+// Copy FeatureIds into a 1-based working grid, wrapping it in a ghost shell of
+// negative labels (-3..-8) when addSurfaceLayer is true, fill voxel coordinates,
+// and renumber any FeatureId==0 to maxGrainId. Returns maxGrainId (the value that
+// zeros were remapped to; callers revert it on output). Transcribed from
+// M3CEntireVolume::initialize_micro_from_grainIds.
+// -----------------------------------------------------------------------------
+int initialize_micro(bool addSurfaceLayer, const size_t dims[3], const float res[3], const float origin[3], const size_t fileDim[3], const int32_t* grainIds, int32_t* p, VoxelCoord* point)
+{
+  int maxGrainId = 0;
+
+  if(!addSurfaceLayer)
+  {
+    size_t totalPoints = dims[0] * dims[1] * dims[2];
+    for(size_t i = 0; i < totalPoints; ++i)
+    {
+      p[i + 1] = grainIds[i];
+      if(p[i + 1] > maxGrainId)
+      {
+        maxGrainId = p[i + 1];
+      }
+    }
+  }
+  else
+  {
+    size_t index = 0;
+    size_t gIdx = 0;
+
+    // Bottom wrapping slice
+    for(size_t i = 0; i < (fileDim[0] * fileDim[1]); ++i)
+    {
+      p[++index] = -3;
+    }
+    // Bulk of the volume, wrapped per-plane and per-row
+    for(size_t z = 0; z < dims[2]; ++z)
+    {
+      for(size_t i = 0; i < fileDim[0]; ++i)
+      {
+        p[++index] = -4;
+      }
+      for(size_t y = 0; y < dims[1]; ++y)
+      {
+        p[++index] = -5; // leading surface voxel for this row
+        for(size_t x = 0; x < dims[0]; ++x)
+        {
+          p[++index] = grainIds[gIdx++];
+          if(p[index] > maxGrainId)
+          {
+            maxGrainId = p[index];
+          }
+        }
+        p[++index] = -6; // trailing surface voxel for this row
+      }
+      for(size_t i = 0; i < fileDim[0]; ++i)
+      {
+        p[++index] = -7;
+      }
+    }
+    // Top wrapping slice
+    for(size_t i = 0; i < (fileDim[0] * fileDim[1]); ++i)
+    {
+      p[++index] = -8;
+    }
+  }
+
+  // Independent grain id for the (formerly) zero feature
+  maxGrainId = maxGrainId + 1;
+
+  p[0] = 0; // Point 0 is garbage
+
+  // Fill voxel coordinates (x fastest). NOTE: legacy M3CEntireVolume ignored the origin;
+  // we add it here so the mesh lands in the geometry's real coordinate frame.
+  for(size_t k = 0; k < fileDim[2]; k++)
+  {
+    for(size_t j = 0; j < fileDim[1]; j++)
+    {
+      for(size_t i = 0; i < fileDim[0]; i++)
+      {
+        size_t id = (k * fileDim[0] * fileDim[1]) + (j * fileDim[0]) + (i + 1);
+        point[id].coord[0] = static_cast<float>(i) * res[0] + origin[0];
+        point[id].coord[1] = static_cast<float>(j) * res[1] + origin[1];
+        point[id].coord[2] = static_cast<float>(k) * res[2] + origin[2];
+        if(p[id] == 0)
+        {
+          p[id] = maxGrainId;
+        }
+      }
+    }
+  }
+  return maxGrainId;
+}
+
+// -----------------------------------------------------------------------------
+// Build the 26-neighbor list for every site (toroidal indexing; the ghost shell
+// makes the wrap harmless). Transcribed from M3CEntireVolume::get_neighbor_list.
+// -----------------------------------------------------------------------------
+void get_neighbor_list(Neighbor* n, int ns, int nsp, int xDim, int /*yDim*/, int /*zDim*/)
+{
+  int i, j, k;
+  int site_id;
+
+  for(k = 0; k <= (ns - nsp); k = k + nsp)
+  {
+    for(j = 0; j <= (nsp - xDim); j = j + xDim)
+    {
+      for(i = 1; i <= xDim; i++)
+      {
+        site_id = k + j + i;
+
+        // same plane
+        n[site_id].neigh_id[1] = k + j + i % xDim + 1;
+        n[site_id].neigh_id[2] = k + (j - xDim + nsp) % nsp + i % xDim + 1;
+        n[site_id].neigh_id[3] = k + (j - xDim + nsp) % nsp + i;
+        n[site_id].neigh_id[4] = k + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[5] = k + j + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[6] = k + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[7] = k + (j + xDim) % nsp + i;
+        n[site_id].neigh_id[8] = k + (j + xDim) % nsp + i % xDim + 1;
+
+        // upper plane
+        n[site_id].neigh_id[9] = (k - nsp + ns) % ns + j + i;
+        n[site_id].neigh_id[10] = (k - nsp + ns) % ns + j + i % xDim + 1;
+        n[site_id].neigh_id[11] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + i % xDim + 1;
+        n[site_id].neigh_id[12] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + i;
+        n[site_id].neigh_id[13] = (k - nsp + ns) % ns + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[14] = (k - nsp + ns) % ns + j + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[15] = (k - nsp + ns) % ns + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[16] = (k - nsp + ns) % ns + (j + xDim) % nsp + i;
+        n[site_id].neigh_id[17] = (k - nsp + ns) % ns + (j + xDim) % nsp + i % xDim + 1;
+
+        // lower plane
+        n[site_id].neigh_id[18] = (k + nsp) % ns + j + i;
+        n[site_id].neigh_id[19] = (k + nsp) % ns + j + i % xDim + 1;
+        n[site_id].neigh_id[20] = (k + nsp) % ns + (j - xDim + nsp) % nsp + i % xDim + 1;
+        n[site_id].neigh_id[21] = (k + nsp) % ns + (j - xDim + nsp) % nsp + i;
+        n[site_id].neigh_id[22] = (k + nsp) % ns + (j - xDim + nsp) % nsp + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[23] = (k + nsp) % ns + j + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[24] = (k + nsp) % ns + (j + xDim) % nsp + (i - 2 + xDim) % xDim + 1;
+        n[site_id].neigh_id[25] = (k + nsp) % ns + (j + xDim) % nsp + i;
+        n[site_id].neigh_id[26] = (k + nsp) % ns + (j + xDim) % nsp + i % xDim + 1;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Lay down the 7 candidate nodes per site (edge midpoints, face centers, body
+// center). Transcribed from M3CEntireVolume::initialize_nodes (the member
+// m_SurfaceMeshNodeType is passed in as nodeType).
+// -----------------------------------------------------------------------------
+void initialize_nodes(const VoxelCoord* p, Node* v, int8_t* nodeType, int ns, float dx, float dy, float dz)
+{
+  const float halfdx = dx / 2.0f;
+  const float halfdy = dy / 2.0f;
+  const float halfdz = dz / 2.0f;
+
+  for(int i = 1; i <= ns; i++)
+  {
+    int id = 7 * (i - 1);
+    float tx = p[i].coord[0];
+    float ty = p[i].coord[1];
+    float tz = p[i].coord[2];
+
+    v[id].coord[0] = tx + halfdx;
+    v[id].coord[1] = ty;
+    v[id].coord[2] = tz;
+    nodeType[id] = 0;
+
+    v[id + 1].coord[0] = tx;
+    v[id + 1].coord[1] = ty + halfdy;
+    v[id + 1].coord[2] = tz;
+    nodeType[id + 1] = 0;
+
+    v[id + 2].coord[0] = tx;
+    v[id + 2].coord[1] = ty;
+    v[id + 2].coord[2] = tz + halfdz;
+    nodeType[id + 2] = 0;
+
+    v[id + 3].coord[0] = tx + halfdx;
+    v[id + 3].coord[1] = ty + halfdy;
+    v[id + 3].coord[2] = tz;
+    nodeType[id + 3] = 0;
+
+    v[id + 4].coord[0] = tx + halfdx;
+    v[id + 4].coord[1] = ty;
+    v[id + 4].coord[2] = tz + halfdz;
+    nodeType[id + 4] = 0;
+
+    v[id + 5].coord[0] = tx;
+    v[id + 5].coord[1] = ty + halfdy;
+    v[id + 5].coord[2] = tz + halfdz;
+    nodeType[id + 5] = 0;
+
+    v[id + 6].coord[0] = tx + halfdx;
+    v[id + 6].coord[1] = ty + halfdy;
+    v[id + 6].coord[2] = tz + halfdz;
+    nodeType[id + 6] = 0;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Set up the 3 marching squares per site (top/back/left) with their 4 corner
+// sites. Transcribed from M3CEntireVolume::initialize_squares.
+// -----------------------------------------------------------------------------
+void initialize_squares(const Neighbor* n, Face* sq, int ns, int /*nsp*/)
+{
+  for(int i = 1; i <= ns; i++)
+  {
+    int id = 3 * (i - 1);
+
+    // top (same z)
+    sq[id].site_id[0] = i;
+    sq[id].site_id[1] = n[i].neigh_id[1];
+    sq[id].site_id[2] = n[i].neigh_id[8];
+    sq[id].site_id[3] = n[i].neigh_id[7];
+    // back (same y)
+    sq[id + 1].site_id[0] = i;
+    sq[id + 1].site_id[1] = n[i].neigh_id[1];
+    sq[id + 1].site_id[2] = n[i].neigh_id[19];
+    sq[id + 1].site_id[3] = n[i].neigh_id[18];
+    // left (same x)
+    sq[id + 2].site_id[0] = n[i].neigh_id[7];
+    sq[id + 2].site_id[1] = i;
+    sq[id + 2].site_id[2] = n[i].neigh_id[18];
+    sq[id + 2].site_id[3] = n[i].neigh_id[25];
+
+    for(int j = 0; j < 4; j++)
+    {
+      sq[id].edge_id[j] = -1;
+      sq[id + 1].edge_id[j] = -1;
+      sq[id + 2].edge_id[j] = -1;
+    }
+    for(int k = 0; k < 3; k++)
+    {
+      sq[id + k].nEdge = 0;
+      sq[id + k].FCnode = -1;
+      sq[id + k].effect = 0;
+    }
+  }
+}
+
+// Node type values (match SIMPL::SurfaceMesh::NodeType / what simplnx LaplacianSmoothing consumes).
+namespace NodeType
+{
+constexpr int8_t k_Unused = 0;
+constexpr int8_t k_Default = 2;
+constexpr int8_t k_TriplePoint = 3;
+constexpr int8_t k_QuadPoint = 4;
+constexpr int8_t k_SurfaceDefault = 12;
+constexpr int8_t k_SurfaceTriplePoint = 13;
+constexpr int8_t k_SurfaceQuadPoint = 14;
+} // namespace NodeType
+
+// -----------------------------------------------------------------------------
+// Classify a square's 4 corner labels into cases 0..19. Transcribed from
+// M3CEntireVolume::get_square_index.
+// -----------------------------------------------------------------------------
+int get_square_index(const int tns[4])
+{
+  int aBit[6];
+  aBit[0] = (tns[0] == tns[1]) ? 0 : 1;
+  aBit[1] = (tns[1] == tns[2]) ? 0 : 1;
+  aBit[2] = (tns[2] == tns[3]) ? 0 : 1;
+  aBit[3] = (tns[3] == tns[0]) ? 0 : 1;
+  aBit[4] = (tns[0] == tns[2]) ? 0 : 1;
+  aBit[5] = (tns[1] == tns[3]) ? 0 : 1;
+
+  int tempIndex = 8 * aBit[3] + 4 * aBit[2] + 2 * aBit[1] + 1 * aBit[0];
+  if(tempIndex == 15)
+  {
+    int subIndex = 2 * aBit[4] + 1 * aBit[5];
+    if(subIndex != 0)
+    {
+      tempIndex = tempIndex + subIndex + 1;
+    }
+  }
+  return tempIndex;
+}
+
+// -----------------------------------------------------------------------------
+// Disambiguate the all-corners-differ saddle (case 15) using the 3D same-label
+// neighbor counts. Transcribed from M3CEntireVolume::treat_anomaly.
+// -----------------------------------------------------------------------------
+int treat_anomaly(const int tnst[4], const int32_t* p1, const Neighbor* n1, int /*sqid*/)
+{
+  int numNeigh[4] = {0, 0, 0, 0};
+
+  for(int i = 0; i < 4; i++)
+  {
+    int csite = tnst[i];
+    int cspin = p1[csite];
+    for(int j = 1; j <= num_neigh; j++)
+    {
+      int nsite = n1[csite].neigh_id[j];
+      int nspin = p1[nsite];
+      if(cspin == nspin && nspin > 0)
+      {
+        numNeigh[i] = numNeigh[i] + 1;
+      }
+    }
+  }
+
+  int min = 1000;
+  int minid = -1;
+  for(int ii = 0; ii < 4; ii++)
+  {
+    if(numNeigh[ii] < min)
+    {
+      min = numNeigh[ii];
+      minid = ii;
+    }
+  }
+
+  int tempFlag;
+  if(minid == -1 || minid == 1 || minid == 3)
+  {
+    tempFlag = 0;
+  }
+  else
+  {
+    tempFlag = 1;
+  }
+  return tempFlag;
+}
+
+// -----------------------------------------------------------------------------
+// Map an edge-table node slot (0-4) for a given square order to a concrete
+// candidate-node id. Transcribed from M3CEntireVolume::get_nodes.
+// -----------------------------------------------------------------------------
+void get_nodes(int cst, int ord, const int nidx[2], int* nid, int nsp1, int xDim1)
+{
+  for(int ii = 0; ii < 2; ii++)
+  {
+    int tempIndex = nidx[ii];
+    if(ord == 0)
+    {
+      switch(tempIndex)
+      {
+      case 0: nid[ii] = 7 * (cst - 1); break;
+      case 1: nid[ii] = 7 * cst + 1; break;
+      case 2: nid[ii] = 7 * (cst + xDim1 - 1); break;
+      case 3: nid[ii] = 7 * (cst - 1) + 1; break;
+      case 4: nid[ii] = 7 * (cst - 1) + 3; break;
+      }
+    }
+    else if(ord == 1)
+    {
+      switch(tempIndex)
+      {
+      case 0: nid[ii] = 7 * (cst - 1); break;
+      case 1: nid[ii] = 7 * cst + 2; break;
+      case 2: nid[ii] = 7 * (cst + nsp1 - 1); break;
+      case 3: nid[ii] = 7 * (cst - 1) + 2; break;
+      case 4: nid[ii] = 7 * (cst - 1) + 4; break;
+      }
+    }
+    else
+    {
+      switch(tempIndex)
+      {
+      case 0: nid[ii] = 7 * (cst - 1) + 1; break;
+      case 1: nid[ii] = 7 * (cst - 1) + 2; break;
+      case 2: nid[ii] = 7 * (cst + nsp1 - 1) + 1; break;
+      case 3: nid[ii] = 7 * (cst + xDim1 - 1) + 2; break;
+      case 4: nid[ii] = 7 * (cst - 1) + 5; break;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Map a square's two side-pixel slots to the two straddling FeatureIds.
+// Transcribed from M3CEntireVolume::get_spins.
+// -----------------------------------------------------------------------------
+void get_spins(const int32_t* p1, int cst, int ord, const int pID[2], int* pSpin, int nsp1, int xDim1)
+{
+  for(int i = 0; i < 2; i++)
+  {
+    int pixTemp = pID[i];
+    if(ord == 0)
+    {
+      switch(pixTemp)
+      {
+      case 0: pSpin[i] = p1[cst]; break;
+      case 1: pSpin[i] = p1[cst + 1]; break;
+      case 2: pSpin[i] = p1[cst + xDim1 + 1]; break;
+      case 3: pSpin[i] = p1[cst + xDim1]; break;
+      }
+    }
+    else if(ord == 1)
+    {
+      switch(pixTemp)
+      {
+      case 0: pSpin[i] = p1[cst]; break;
+      case 1: pSpin[i] = p1[cst + 1]; break;
+      case 2: pSpin[i] = p1[cst + nsp1 + 1]; break;
+      case 3: pSpin[i] = p1[cst + nsp1]; break;
+      }
+    }
+    else if(ord == 2)
+    {
+      switch(pixTemp)
+      {
+      case 0: pSpin[i] = p1[cst + xDim1]; break;
+      case 1: pSpin[i] = p1[cst]; break;
+      case 2: pSpin[i] = p1[cst + nsp1]; break;
+      case 3: pSpin[i] = p1[cst + nsp1 + xDim1]; break;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Count the total number of face edges across all squares (two-pass sizing).
+// Transcribed from M3CEntireVolume::get_number_fEdges.
+// -----------------------------------------------------------------------------
+int get_number_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int ns)
+{
+  int sumEdge = 0;
+  for(int k = 0; k < (3 * ns); k++)
+  {
+    int tnsite[4] = {static_cast<int>(sq[k].site_id[0]), static_cast<int>(sq[k].site_id[1]), static_cast<int>(sq[k].site_id[2]), static_cast<int>(sq[k].site_id[3])};
+    int tnspin[4];
+    int atBulk = 0;
+    for(int m = 0; m < 4; m++)
+    {
+      tnspin[m] = p[tnsite[m]];
+      if(tnspin[m] < 0)
+      {
+        atBulk++;
+      }
+    }
+    if(atBulk != 4)
+    {
+      sq[k].effect = 1; // mark as effective (can be marching-cubed)
+    }
+
+    if(atBulk != 4)
+    {
+      int sqIndex = get_square_index(tnspin);
+      if(sqIndex == 15)
+      {
+        sqIndex = sqIndex + treat_anomaly(tnsite, p, n, k);
+      }
+
+      int numCEdge = 0;
+      if(sqIndex == 0)
+      {
+        numCEdge = 0;
+      }
+      else if(sqIndex == 19)
+      {
+        numCEdge = 4;
+      }
+      else if(sqIndex == 15 || sqIndex == 16 || sqIndex == 17 || sqIndex == 18)
+      {
+        numCEdge = 2;
+      }
+      else if(sqIndex == 7 || sqIndex == 11 || sqIndex == 13 || sqIndex == 14)
+      {
+        if(atBulk == 3)
+        {
+          numCEdge = 2;
+        }
+        else if(atBulk == 2)
+        {
+          numCEdge = 3;
+        }
+        else if(atBulk == 1)
+        {
+          // "one negative spin" case is not supposed to happen; leave numCEdge = 0.
+          numCEdge = 0;
+        }
+        else
+        {
+          numCEdge = 3;
+        }
+      }
+      else
+      {
+        numCEdge = 1;
+      }
+      sumEdge = sumEdge + numCEdge;
+    }
+  }
+  return sumEdge;
+}
+
+// -----------------------------------------------------------------------------
+// Emit the actual face-edge segments, record them on squares, and set node
+// types (triple/quad on face centers, default elsewhere, unused on pure-surface
+// edges). Transcribed from M3CEntireVolume::get_nodes_fEdges.
+// -----------------------------------------------------------------------------
+void get_nodes_fEdges(Face* sq, const int32_t* p, const Neighbor* n, int8_t* nodeType, Segment* e, int ns, int nsp, int xDim)
+{
+  int eid = 0;
+  for(int k = 0; k < (3 * ns); k++)
+  {
+    int cubeOrigin = k / 3 + 1;
+    int sqOrder = k % 3;
+
+    int tnsite[4] = {static_cast<int>(sq[k].site_id[0]), static_cast<int>(sq[k].site_id[1]), static_cast<int>(sq[k].site_id[2]), static_cast<int>(sq[k].site_id[3])};
+    int tnspin[4];
+    int atBulk = 0;
+    for(int m = 0; m < 4; m++)
+    {
+      tnspin[m] = p[tnsite[m]];
+      if(tnspin[m] < 0)
+      {
+        atBulk++;
+      }
+    }
+
+    int edgeCount = 0;
+    if(atBulk != 4)
+    {
+      int sqIndex = get_square_index(tnspin);
+      if(sqIndex == 15)
+      {
+        sqIndex = sqIndex + treat_anomaly(tnsite, p, n, k);
+      }
+      if(sqIndex != 0)
+      {
+        for(int j = 0; j < 8; j = j + 2)
+        {
+          if(k_EdgeTable2d[sqIndex][j] != -1)
+          {
+            int nodeIndex[2] = {k_EdgeTable2d[sqIndex][j], k_EdgeTable2d[sqIndex][j + 1]};
+            int pixIndex[2] = {k_NsTable2d[sqIndex][j], k_NsTable2d[sqIndex][j + 1]};
+            int nodeID[2];
+            int pixSpin[2];
+            get_nodes(cubeOrigin, sqOrder, nodeIndex, nodeID, nsp, xDim);
+            get_spins(p, cubeOrigin, sqOrder, pixIndex, pixSpin, nsp, xDim);
+
+            if(pixSpin[0] > 0 || pixSpin[1] > 0)
+            {
+              e[eid].node_id[0] = nodeID[0];
+              e[eid].node_id[1] = nodeID[1];
+              e[eid].nSpin[0] = pixSpin[0];
+              e[eid].nSpin[1] = pixSpin[1];
+              sq[k].edge_id[edgeCount] = eid;
+              e[eid].edgeKind = 2;
+              edgeCount++;
+              eid++;
+            }
+            else
+            {
+              // pure box-surface edge: mark its nodes unused
+              nodeType[nodeID[0]] = NodeType::k_Unused;
+              nodeType[nodeID[1]] = NodeType::k_Unused;
+            }
+
+            // Categorize the two nodes of this edge (triple/quad on face-center slot 4).
+            for(int ii = 0; ii < 2; ii++)
+            {
+              if(nodeIndex[ii] == 4)
+              {
+                if(sqIndex == 7 || sqIndex == 11 || sqIndex == 13 || sqIndex == 14)
+                {
+                  int tnode = nodeID[ii];
+                  sq[k].FCnode = tnode;
+                  nodeType[tnode] = NodeType::k_TriplePoint;
+                }
+                else if(sqIndex == 19)
+                {
+                  int tnode = nodeID[ii];
+                  sq[k].FCnode = tnode;
+                  nodeType[tnode] = NodeType::k_QuadPoint;
+                }
+              }
+              else
+              {
+                int tnode = nodeID[ii];
+                if(nodeType[tnode] != -1)
+                {
+                  nodeType[tnode] = NodeType::k_Default;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    sq[k].nEdge = edgeCount;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Classify each triangle edge as face/inner. NOTE: legacy always sets tw[*]=1
+// (both branches); the inner/outer distinction is effectively unused downstream.
+// Transcribed from M3CEntireVolume::find_edgePlace.
+// -----------------------------------------------------------------------------
+void find_edgePlace(const double tvcrd1[3], const double tvcrd2[3], const double tvcrd3[3], int tw[3], double xh, double xl, double yh, double yl, double zh, double zl)
+{
+  const double eps = 1.0e-6;
+  double txc, tyc, tzc;
+
+  txc = (tvcrd1[0] + tvcrd2[0]) / 2.0;
+  tyc = (tvcrd1[1] + tvcrd2[1]) / 2.0;
+  tzc = (tvcrd1[2] + tvcrd2[2]) / 2.0;
+  tw[0] = 1;
+  (void)((txc < (xh - eps) && txc > (xl + eps)) && (tyc < (yh - eps) && tyc > (yl + eps)) && (tzc < (zh - eps) && tzc > (zl + eps)));
+
+  txc = (tvcrd2[0] + tvcrd3[0]) / 2.0;
+  tyc = (tvcrd2[1] + tvcrd3[1]) / 2.0;
+  tzc = (tvcrd2[2] + tvcrd3[2]) / 2.0;
+  tw[1] = 1;
+
+  txc = (tvcrd3[0] + tvcrd1[0]) / 2.0;
+  tyc = (tvcrd3[1] + tvcrd1[1]) / 2.0;
+  tzc = (tvcrd3[2] + tvcrd1[2]) / 2.0;
+  tw[2] = 1;
+  (void)txc;
+  (void)tyc;
+  (void)tzc;
+}
+
+// -----------------------------------------------------------------------------
+// Count triangles for a case-0 cube (no face centers): burn edges into closed
+// loops, fan-triangulate. Transcribed from M3CEntireVolume::get_number_case0_triangles.
+// -----------------------------------------------------------------------------
+int get_number_case0_triangles(const int* afe, Segment* e1, int nfedge)
+{
+  std::vector<int> burnt(nfedge, 0);
+  std::vector<int> burnt_list(nfedge, -1);
+
+  int loopID = 1;
+  int tail = 0;
+  int head = 0;
+
+  for(int i = 0; i < nfedge; i++)
+  {
+    int cedge = afe[i];
+    if(burnt[i] == 0)
+    {
+      burnt[i] = loopID;
+      burnt_list[tail] = cedge;
+      int coin;
+      do
+      {
+        int chaser = burnt_list[tail];
+        int cspin1 = e1[chaser].nSpin[0];
+        int cspin2 = e1[chaser].nSpin[1];
+        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
+        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+
+        for(int j = 0; j < nfedge; j++)
+        {
+          int nedge = afe[j];
+          if(burnt[j] == 0)
+          {
+            int nspin1 = e1[nedge].nSpin[0];
+            int nspin2 = e1[nedge].nSpin[1];
+            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
+            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
+            int nodeFlag;
+            int flip;
+            if((cnode2 == nnode1) && (cnode1 != nnode2))
+            {
+              nodeFlag = 1;
+              flip = 0;
+            }
+            else if((cnode2 == nnode2) && (cnode1 != nnode1))
+            {
+              nodeFlag = 1;
+              flip = 1;
+            }
+            else
+            {
+              nodeFlag = 0;
+              flip = 0;
+            }
+            if(spinFlag == 1 && nodeFlag == 1)
+            {
+              head = head + 1;
+              burnt_list[head] = nedge;
+              burnt[j] = loopID;
+              if(flip == 1)
+              {
+                e1[nedge].nSpin[0] = nspin2;
+                e1[nedge].nSpin[1] = nspin1;
+                e1[nedge].node_id[0] = nnode2;
+                e1[nedge].node_id[1] = nnode1;
+              }
+            }
+          }
+        }
+
+        if(tail == head)
+        {
+          coin = 0;
+          tail = tail + 1;
+          head = tail;
+          loopID++;
+        }
+        else
+        {
+          tail = tail + 1;
+          coin = 1;
+        }
+      } while(coin);
+    }
+  }
+
+  std::vector<int> count(loopID, 0);
+  for(int k = 1; k < loopID; k++)
+  {
+    for(int kk = 0; kk < nfedge; kk++)
+    {
+      if(k == burnt[kk])
+      {
+        count[k] = count[k] + 1;
+      }
+    }
+  }
+
+  int numTri = 0;
+  for(int jj = 1; jj < loopID; jj++)
+  {
+    int numN = count[jj];
+    if(numN == 3)
+    {
+      numTri = numTri + 1;
+    }
+    else if(numN > 3)
+    {
+      numTri = numTri + (numN - 2);
+    }
+  }
+  return numTri;
+}
+
+// -----------------------------------------------------------------------------
+// Count triangles for a case-2 cube (two face centers). Transcribed from
+// M3CEntireVolume::get_number_case2_triangles.
+// -----------------------------------------------------------------------------
+int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const int* afc, int /*nfctr*/)
+{
+  std::vector<int> burnt(nfedge, 0);
+  std::vector<int> burnt_list(nfedge, -1);
+
+  int loopID = 1;
+  int tail = 0;
+  int head = 0;
+
+  for(int i = 0; i < nfedge; i++)
+  {
+    int cedge = afe[i];
+    if(burnt[i] == 0)
+    {
+      burnt[i] = loopID;
+      burnt_list[tail] = cedge;
+      int coin;
+      do
+      {
+        int chaser = burnt_list[tail];
+        int cspin1 = e1[chaser].nSpin[0];
+        int cspin2 = e1[chaser].nSpin[1];
+        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
+        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+
+        for(int j = 0; j < nfedge; j++)
+        {
+          int nedge = afe[j];
+          if(burnt[j] == 0)
+          {
+            int nspin1 = e1[nedge].nSpin[0];
+            int nspin2 = e1[nedge].nSpin[1];
+            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
+            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
+            int nodeFlag = 0;
+            if((cnode1 == nnode1) && (cnode2 != nnode2))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode1 == nnode2) && (cnode2 != nnode1))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode2 == nnode1) && (cnode1 != nnode2))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode2 == nnode2) && (cnode1 != nnode1))
+            {
+              nodeFlag = 1;
+            }
+            if(spinFlag == 1 && nodeFlag == 1)
+            {
+              head = head + 1;
+              burnt_list[head] = nedge;
+              burnt[j] = loopID;
+            }
+          }
+        }
+
+        if(tail == head)
+        {
+          coin = 0;
+          tail = tail + 1;
+          head = tail;
+          loopID++;
+        }
+        else
+        {
+          tail = tail + 1;
+          coin = 1;
+        }
+      } while(coin);
+    }
+  }
+
+  std::vector<int> count(loopID, 0);
+  for(int k = 1; k < loopID; k++)
+  {
+    for(int kk = 0; kk < nfedge; kk++)
+    {
+      if(k == burnt[kk])
+      {
+        count[k] = count[k] + 1;
+      }
+    }
+  }
+
+  int numTri = 0;
+  int start = afc[0];
+  int to = 0;
+  int from = 0;
+
+  for(int j1 = 1; j1 < loopID; j1++)
+  {
+    int openL = 0;
+    int flip = 0;
+    int startEdge = -1;
+    int numN = count[j1];
+    to = to + numN;
+    from = to - numN;
+    std::vector<int> burnt_loop(static_cast<size_t>(numN) + 2, 0);
+
+    for(int i1 = from; i1 < to; i1++)
+    {
+      int cedge = burnt_list[i1];
+      int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+      int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+      if(start == cnode1)
+      {
+        openL = 1;
+        startEdge = cedge;
+        flip = 0;
+      }
+      else if(start == cnode2)
+      {
+        openL = 1;
+        startEdge = cedge;
+        flip = 1;
+      }
+    }
+
+    if(openL == 1)
+    {
+      if(flip == 1)
+      {
+        int tnode = static_cast<int>(e1[startEdge].node_id[0]);
+        int tspin = e1[startEdge].nSpin[0];
+        e1[startEdge].node_id[0] = e1[startEdge].node_id[1];
+        e1[startEdge].node_id[1] = tnode;
+        e1[startEdge].nSpin[0] = e1[startEdge].nSpin[1];
+        e1[startEdge].nSpin[1] = tspin;
+      }
+
+      burnt_loop[0] = startEdge;
+      int index = 1;
+      int endNode = static_cast<int>(e1[startEdge].node_id[1]);
+      int chaser = startEdge;
+      do
+      {
+        for(int n = from; n < to; n++)
+        {
+          int cedge = burnt_list[n];
+          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          if((cedge != chaser) && (endNode == cnode1))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+          }
+          else if((cedge != chaser) && (endNode == cnode2))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            int tspin = e1[cedge].nSpin[0];
+            e1[cedge].node_id[0] = e1[cedge].node_id[1];
+            e1[cedge].node_id[1] = tnode;
+            e1[cedge].nSpin[0] = e1[cedge].nSpin[1];
+            e1[cedge].nSpin[1] = tspin;
+          }
+        }
+        chaser = burnt_loop[index - 1];
+        endNode = static_cast<int>(e1[chaser].node_id[1]);
+      } while(index < numN);
+
+      if((numN + 1) == 3)
+      {
+        numTri = numTri + 1;
+      }
+      else if((numN + 1) > 3)
+      {
+        numTri = numTri + ((numN + 1) - 2);
+      }
+    }
+    else
+    {
+      int startEdge2 = burnt_list[from];
+      burnt_loop[0] = startEdge2;
+      int index = 1;
+      int endNode = static_cast<int>(e1[startEdge2].node_id[1]);
+      int chaser = startEdge2;
+      do
+      {
+        for(int n = from; n < to; n++)
+        {
+          int cedge = burnt_list[n];
+          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          if((cedge != chaser) && (endNode == cnode1))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+          }
+          else if((cedge != chaser) && (endNode == cnode2))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            int tspin = e1[cedge].nSpin[0];
+            e1[cedge].node_id[0] = e1[cedge].node_id[1];
+            e1[cedge].node_id[1] = tnode;
+            e1[cedge].nSpin[0] = e1[cedge].nSpin[1];
+            e1[cedge].nSpin[1] = tspin;
+          }
+        }
+        chaser = burnt_loop[index - 1];
+        endNode = static_cast<int>(e1[chaser].node_id[1]);
+      } while(index < numN);
+
+      if(numN == 3)
+      {
+        numTri = numTri + 1;
+      }
+      else if(numN > 3)
+      {
+        numTri = numTri + (numN - 2);
+      }
+    }
+  }
+  return numTri;
+}
+
+// -----------------------------------------------------------------------------
+// Count triangles for a case-M cube (>=3 face centers). Transcribed from
+// M3CEntireVolume::get_number_caseM_triangles.
+// -----------------------------------------------------------------------------
+int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const int* afc, int nfctr)
+{
+  std::vector<int> burnt(nfedge, 0);
+  std::vector<int> burnt_list(nfedge, -1);
+
+  int loopID = 1;
+  int tail = 0;
+  int head = 0;
+
+  for(int i = 0; i < nfedge; i++)
+  {
+    int cedge = afe[i];
+    if(burnt[i] == 0)
+    {
+      burnt[i] = loopID;
+      burnt_list[tail] = cedge;
+      int coin;
+      do
+      {
+        int chaser = burnt_list[tail];
+        int cspin1 = e1[chaser].nSpin[0];
+        int cspin2 = e1[chaser].nSpin[1];
+        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
+        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+
+        for(int j = 0; j < nfedge; j++)
+        {
+          int nedge = afe[j];
+          if(burnt[j] == 0)
+          {
+            int nspin1 = e1[nedge].nSpin[0];
+            int nspin2 = e1[nedge].nSpin[1];
+            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
+            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
+            int nodeFlag = 0;
+            if((cnode1 == nnode1) && (cnode2 != nnode2))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode1 == nnode2) && (cnode2 != nnode1))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode2 == nnode1) && (cnode1 != nnode2))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode2 == nnode2) && (cnode1 != nnode1))
+            {
+              nodeFlag = 1;
+            }
+            if(spinFlag == 1 && nodeFlag == 1)
+            {
+              head = head + 1;
+              burnt_list[head] = nedge;
+              burnt[j] = loopID;
+            }
+          }
+        }
+
+        if(tail == head)
+        {
+          coin = 0;
+          tail = tail + 1;
+          head = tail;
+          loopID++;
+        }
+        else
+        {
+          tail = tail + 1;
+          coin = 1;
+        }
+      } while(coin);
+    }
+  }
+
+  std::vector<int> count(loopID, 0);
+  for(int k = 1; k < loopID; k++)
+  {
+    for(int kk = 0; kk < nfedge; kk++)
+    {
+      if(k == burnt[kk])
+      {
+        count[k] = count[k] + 1;
+      }
+    }
+  }
+
+  int numTri = 0;
+  int to = 0;
+  int from = 0;
+
+  for(int j1 = 1; j1 < loopID; j1++)
+  {
+    int openL = 0;
+    int flip = 0;
+    int startEdge = -1;
+    int numN = count[j1];
+    to = to + numN;
+    from = to - numN;
+    std::vector<int> burnt_loop(static_cast<size_t>(numN) + 2, 0);
+
+    for(int i1 = from; i1 < to; i1++)
+    {
+      int cedge = burnt_list[i1];
+      int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+      int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+      for(int n1 = 0; n1 < nfctr; n1++)
+      {
+        int start = afc[n1];
+        if(start == cnode1)
+        {
+          openL = 1;
+          startEdge = cedge;
+          flip = 0;
+        }
+        else if(start == cnode2)
+        {
+          openL = 1;
+          startEdge = cedge;
+          flip = 1;
+        }
+      }
+    }
+
+    if(openL == 1)
+    {
+      if(flip == 1)
+      {
+        int tnode = static_cast<int>(e1[startEdge].node_id[0]);
+        int tspin = e1[startEdge].nSpin[0];
+        e1[startEdge].node_id[0] = e1[startEdge].node_id[1];
+        e1[startEdge].node_id[1] = tnode;
+        e1[startEdge].nSpin[0] = e1[startEdge].nSpin[1];
+        e1[startEdge].nSpin[1] = tspin;
+      }
+
+      burnt_loop[0] = startEdge;
+      int index = 1;
+      int endNode = static_cast<int>(e1[startEdge].node_id[1]);
+      int chaser = startEdge;
+      do
+      {
+        for(int n = from; n < to; n++)
+        {
+          int cedge = burnt_list[n];
+          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          if((cedge != chaser) && (endNode == cnode1))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+          }
+          else if((cedge != chaser) && (endNode == cnode2))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            int tspin = e1[cedge].nSpin[0];
+            e1[cedge].node_id[0] = e1[cedge].node_id[1];
+            e1[cedge].node_id[1] = tnode;
+            e1[cedge].nSpin[0] = e1[cedge].nSpin[1];
+            e1[cedge].nSpin[1] = tspin;
+          }
+        }
+        chaser = burnt_loop[index - 1];
+        endNode = static_cast<int>(e1[chaser].node_id[1]);
+      } while(index < numN);
+
+      if((numN + 2) == 3)
+      {
+        numTri = numTri + 1;
+      }
+      else if((numN + 2) > 3)
+      {
+        numTri = numTri + ((numN + 2) - 2);
+      }
+    }
+    else
+    {
+      int startEdge2 = burnt_list[from];
+      burnt_loop[0] = startEdge2;
+      int index = 1;
+      int endNode = static_cast<int>(e1[startEdge2].node_id[1]);
+      int chaser = startEdge2;
+      do
+      {
+        for(int n = from; n < to; n++)
+        {
+          int cedge = burnt_list[n];
+          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          if((cedge != chaser) && (endNode == cnode1))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+          }
+          else if((cedge != chaser) && (endNode == cnode2))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            int tspin = e1[cedge].nSpin[0];
+            e1[cedge].node_id[0] = e1[cedge].node_id[1];
+            e1[cedge].node_id[1] = tnode;
+            e1[cedge].nSpin[0] = e1[cedge].nSpin[1];
+            e1[cedge].nSpin[1] = tspin;
+          }
+        }
+        chaser = burnt_loop[index - 1];
+        endNode = static_cast<int>(e1[chaser].node_id[1]);
+      } while(index < numN);
+
+      if(numN == 3)
+      {
+        numTri = numTri + 1;
+      }
+      else if(numN > 3)
+      {
+        numTri = numTri + (numN - 2);
+      }
+    }
+  }
+  return numTri;
+}
+
+// -----------------------------------------------------------------------------
+// Count the total triangles across all cubes and set body-center node types.
+// Transcribed from M3CEntireVolume::get_number_triangles.
+// -----------------------------------------------------------------------------
+int get_number_triangles(const int32_t* p, Face* sq, int8_t* nodeType, Segment* e, int ns, int nsp, int xDim)
+{
+  int nTri0 = 0;
+  int nTri2 = 0;
+  int nTriM = 0;
+
+  for(int i = 1; i <= (ns - nsp); i++)
+  {
+    int cubeFlag = 0;
+    int sqID[6];
+    sqID[0] = 3 * (i - 1);
+    sqID[1] = 3 * (i - 1) + 1;
+    sqID[2] = 3 * (i - 1) + 2;
+    sqID[3] = 3 * i + 2;
+    sqID[4] = 3 * (i + xDim - 1) + 1;
+    sqID[5] = 3 * (i + nsp - 1);
+    int BCnode = 7 * (i - 1) + 6;
+    int nFC = 0;
+    int nFE = 0;
+    int eff = 0;
+    int arrayFC[6];
+    for(int ii = 0; ii < 6; ii++)
+    {
+      arrayFC[ii] = -1;
+    }
+    int fcid = 0;
+    for(int ii = 0; ii < 6; ii++)
+    {
+      int tsq = sqID[ii];
+      int tFCnode = sq[tsq].FCnode;
+      if(tFCnode != -1)
+      {
+        arrayFC[fcid] = tFCnode;
+        fcid++;
+      }
+      nFE = nFE + sq[tsq].nEdge;
+      eff = eff + sq[tsq].effect;
+    }
+    nFC = fcid;
+    if(eff > 0)
+    {
+      cubeFlag = 1;
+    }
+
+    if(nFC >= 3)
+    {
+      int tsqid1 = sqID[0];
+      int tsqid2 = sqID[5];
+      int arraySpin[8];
+      for(int j = 0; j < 4; j++)
+      {
+        int tsite1 = static_cast<int>(sq[tsqid1].site_id[j]);
+        int tsite2 = static_cast<int>(sq[tsqid2].site_id[j]);
+        arraySpin[j] = p[tsite1];
+        arraySpin[j + 4] = p[tsite2];
+      }
+      int nds = 0;
+      int nburnt = 0;
+      for(int k = 0; k < 8; k++)
+      {
+        int cspin = arraySpin[k];
+        if(cspin != -1)
+        {
+          nds++;
+          arraySpin[k] = -1;
+          nburnt++;
+          for(int kk = 0; kk < 8; kk++)
+          {
+            if(cspin == arraySpin[kk])
+            {
+              arraySpin[kk] = -1;
+              nburnt++;
+            }
+          }
+        }
+      }
+      (void)nburnt;
+      nodeType[BCnode] = static_cast<int8_t>(nds);
+    }
+
+    if(cubeFlag == 1 && nFE > 2)
+    {
+      std::vector<int> arrayFE(nFE);
+      int tindex = 0;
+      for(int i1 = 0; i1 < 6; i1++)
+      {
+        int tsq = sqID[i1];
+        int tnfe = sq[tsq].nEdge;
+        for(int i2 = 0; i2 < tnfe; i2++)
+        {
+          arrayFE[tindex] = static_cast<int>(sq[tsq].edge_id[i2]);
+          tindex++;
+        }
+      }
+
+      if(nFC == 0)
+      {
+        nTri0 = nTri0 + get_number_case0_triangles(arrayFE.data(), e, nFE);
+      }
+      else if(nFC == 2)
+      {
+        nTri2 = nTri2 + get_number_case2_triangles(arrayFE.data(), e, nFE, arrayFC, nFC);
+      }
+      else if(nFC > 2 && nFC <= 6)
+      {
+        nTriM = nTriM + get_number_caseM_triangles(arrayFE.data(), e, nFE, arrayFC, nFC);
+      }
+    }
+  }
+  return nTri0 + nTri2 + nTriM;
+}
+
+// -----------------------------------------------------------------------------
+// Generate triangles for a case-0 cube. Transcribed from M3CEntireVolume::get_case0_triangles.
+// -----------------------------------------------------------------------------
+void get_case0_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node* v1, Segment* e1, int nfedge, int tin, int* tout, const double tcrd1[3], const double tcrd2[3], int mcid)
+{
+  const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
+  const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
+
+  std::vector<int> burnt(nfedge, 0);
+  std::vector<int> burnt_list(nfedge, -1);
+
+  int loopID = 1;
+  int tail = 0;
+  int head = 0;
+
+  for(int i = 0; i < nfedge; i++)
+  {
+    int cedge = afe[i];
+    if(burnt[i] == 0)
+    {
+      burnt[i] = loopID;
+      burnt_list[tail] = cedge;
+      int coin;
+      do
+      {
+        int chaser = burnt_list[tail];
+        int cspin1 = e1[chaser].nSpin[0];
+        int cspin2 = e1[chaser].nSpin[1];
+        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
+        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        for(int j = 0; j < nfedge; j++)
+        {
+          int nedge = afe[j];
+          if(burnt[j] == 0)
+          {
+            int nspin1 = e1[nedge].nSpin[0];
+            int nspin2 = e1[nedge].nSpin[1];
+            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
+            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
+            int nodeFlag;
+            int flip;
+            if((cnode2 == nnode1) && (cnode1 != nnode2))
+            {
+              nodeFlag = 1;
+              flip = 0;
+            }
+            else if((cnode2 == nnode2) && (cnode1 != nnode1))
+            {
+              nodeFlag = 1;
+              flip = 1;
+            }
+            else
+            {
+              nodeFlag = 0;
+              flip = 0;
+            }
+            if(spinFlag == 1 && nodeFlag == 1)
+            {
+              head = head + 1;
+              burnt_list[head] = nedge;
+              burnt[j] = loopID;
+              if(flip == 1)
+              {
+                e1[nedge].nSpin[0] = nspin2;
+                e1[nedge].nSpin[1] = nspin1;
+                e1[nedge].node_id[0] = nnode2;
+                e1[nedge].node_id[1] = nnode1;
+              }
+            }
+          }
+        }
+        if(tail == head)
+        {
+          coin = 0;
+          tail = tail + 1;
+          head = tail;
+          loopID++;
+        }
+        else
+        {
+          tail = tail + 1;
+          coin = 1;
+        }
+      } while(coin);
+    }
+  }
+
+  std::vector<int> count(loopID, 0);
+  for(int k = 1; k < loopID; k++)
+  {
+    for(int kk = 0; kk < nfedge; kk++)
+    {
+      if(k == burnt[kk])
+      {
+        count[k] = count[k] + 1;
+      }
+    }
+  }
+
+  int sumN = 0;
+  int ctid = tin;
+  int where[3];
+  double vcrd1[3], vcrd2[3], vcrd3[3];
+
+  for(int jj = 1; jj < loopID; jj++)
+  {
+    int numN = count[jj];
+    sumN = sumN + numN;
+    int from = sumN - numN;
+    std::vector<int> loop(numN);
+    for(int mm = 0; mm < numN; mm++)
+    {
+      loop[mm] = burnt_list[from + mm];
+    }
+
+    if(numN == 3)
+    {
+      int te0 = loop[0], te1 = loop[1], te2 = loop[2];
+      int tv0 = static_cast<int>(e1[te0].node_id[0]);
+      int tv1 = static_cast<int>(e1[te1].node_id[0]);
+      int tv2 = static_cast<int>(e1[te2].node_id[0]);
+      t1[ctid].node_id[0] = tv0;
+      t1[ctid].node_id[1] = tv1;
+      t1[ctid].node_id[2] = tv2;
+      for(int iii = 0; iii < 3; iii++)
+      {
+        vcrd1[iii] = v1[tv0].coord[iii];
+        vcrd2[iii] = v1[tv1].coord[iii];
+        vcrd3[iii] = v1[tv2].coord[iii];
+      }
+      find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+      for(int jjj = 0; jjj < 3; jjj++)
+      {
+        t1[ctid].edgePlace[jjj] = where[jjj];
+      }
+      t1[ctid].nSpin[0] = e1[te0].nSpin[0];
+      t1[ctid].nSpin[1] = e1[te0].nSpin[1];
+      mCubeID[ctid] = mcid;
+      ctid++;
+    }
+    else if(numN > 3)
+    {
+      int numT = numN - 2;
+      int cnumT = 0;
+      int front = 0;
+      int back = numN - 1;
+
+      int te0 = loop[front];
+      int te1 = loop[back];
+      int tv0 = static_cast<int>(e1[te0].node_id[0]);
+      int tv1 = static_cast<int>(e1[te0].node_id[1]);
+      int tv2 = static_cast<int>(e1[te1].node_id[0]);
+      t1[ctid].node_id[0] = tv0;
+      t1[ctid].node_id[1] = tv1;
+      t1[ctid].node_id[2] = tv2;
+      for(int iii = 0; iii < 3; iii++)
+      {
+        vcrd1[iii] = v1[tv0].coord[iii];
+        vcrd2[iii] = v1[tv1].coord[iii];
+        vcrd3[iii] = v1[tv2].coord[iii];
+      }
+      find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+      for(int jjj = 0; jjj < 3; jjj++)
+      {
+        t1[ctid].edgePlace[jjj] = where[jjj];
+      }
+      t1[ctid].nSpin[0] = e1[te0].nSpin[0];
+      t1[ctid].nSpin[1] = e1[te0].nSpin[1];
+      mCubeID[ctid] = mcid;
+      int new_node0 = tv2;
+      cnumT++;
+      ctid++;
+
+      do
+      {
+        if((cnumT % 2) != 0)
+        {
+          front = front + 1;
+          int ce = loop[front];
+          tv0 = static_cast<int>(e1[ce].node_id[0]);
+          tv1 = static_cast<int>(e1[ce].node_id[1]);
+          tv2 = new_node0;
+          t1[ctid].node_id[0] = tv0;
+          t1[ctid].node_id[1] = tv1;
+          t1[ctid].node_id[2] = tv2;
+          for(int iii = 0; iii < 3; iii++)
+          {
+            vcrd1[iii] = v1[tv0].coord[iii];
+            vcrd2[iii] = v1[tv1].coord[iii];
+            vcrd3[iii] = v1[tv2].coord[iii];
+          }
+          find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+          for(int jjj = 0; jjj < 3; jjj++)
+          {
+            t1[ctid].edgePlace[jjj] = where[jjj];
+          }
+          t1[ctid].nSpin[0] = e1[ce].nSpin[0];
+          t1[ctid].nSpin[1] = e1[ce].nSpin[1];
+          mCubeID[ctid] = mcid;
+          new_node0 = tv1;
+          cnumT++;
+          ctid++;
+        }
+        else
+        {
+          back = back - 1;
+          int ce = loop[back];
+          tv0 = static_cast<int>(e1[ce].node_id[0]);
+          tv1 = static_cast<int>(e1[ce].node_id[1]);
+          tv2 = new_node0;
+          t1[ctid].node_id[0] = tv0;
+          t1[ctid].node_id[1] = tv1;
+          t1[ctid].node_id[2] = tv2;
+          for(int iii = 0; iii < 3; iii++)
+          {
+            vcrd1[iii] = v1[tv0].coord[iii];
+            vcrd2[iii] = v1[tv1].coord[iii];
+            vcrd3[iii] = v1[tv2].coord[iii];
+          }
+          find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+          for(int jjj = 0; jjj < 3; jjj++)
+          {
+            t1[ctid].edgePlace[jjj] = where[jjj];
+          }
+          t1[ctid].nSpin[0] = e1[ce].nSpin[0];
+          t1[ctid].nSpin[1] = e1[ce].nSpin[1];
+          mCubeID[ctid] = mcid;
+          new_node0 = tv0;
+          cnumT++;
+          ctid++;
+        }
+      } while(cnumT < numT);
+    }
+  }
+  *tout = ctid;
+}
+
+// -----------------------------------------------------------------------------
+// Generate triangles for a case-2 cube. Transcribed from M3CEntireVolume::get_case2_triangles.
+// -----------------------------------------------------------------------------
+void get_case2_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node* v1, Segment* e1, int nfedge, const int* afc, int /*nfctr*/, int tin, int* tout, const double tcrd1[3], const double tcrd2[3],
+                         int mcid)
+{
+  const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
+  const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
+
+  std::vector<int> burnt(nfedge, 0);
+  std::vector<int> burnt_list(nfedge, -1);
+
+  int loopID = 1;
+  int tail = 0;
+  int head = 0;
+
+  for(int i = 0; i < nfedge; i++)
+  {
+    int cedge = afe[i];
+    if(burnt[i] == 0)
+    {
+      burnt[i] = loopID;
+      burnt_list[tail] = cedge;
+      int coin;
+      do
+      {
+        int chaser = burnt_list[tail];
+        int cspin1 = e1[chaser].nSpin[0];
+        int cspin2 = e1[chaser].nSpin[1];
+        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
+        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        for(int j = 0; j < nfedge; j++)
+        {
+          int nedge = afe[j];
+          if(burnt[j] == 0)
+          {
+            int nspin1 = e1[nedge].nSpin[0];
+            int nspin2 = e1[nedge].nSpin[1];
+            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
+            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
+            int nodeFlag = 0;
+            if((cnode1 == nnode1) && (cnode2 != nnode2))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode1 == nnode2) && (cnode2 != nnode1))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode2 == nnode1) && (cnode1 != nnode2))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode2 == nnode2) && (cnode1 != nnode1))
+            {
+              nodeFlag = 1;
+            }
+            if(spinFlag == 1 && nodeFlag == 1)
+            {
+              head = head + 1;
+              burnt_list[head] = nedge;
+              burnt[j] = loopID;
+            }
+          }
+        }
+        if(tail == head)
+        {
+          coin = 0;
+          tail = tail + 1;
+          head = tail;
+          loopID++;
+        }
+        else
+        {
+          tail = tail + 1;
+          coin = 1;
+        }
+      } while(coin);
+    }
+  }
+
+  std::vector<int> count(loopID, 0);
+  for(int k = 1; k < loopID; k++)
+  {
+    for(int kk = 0; kk < nfedge; kk++)
+    {
+      if(k == burnt[kk])
+      {
+        count[k] = count[k] + 1;
+      }
+    }
+  }
+
+  int start = afc[0];
+  int to = 0;
+  int from = 0;
+  int ctid = tin;
+  int where[3];
+  double vcrd1[3], vcrd2[3], vcrd3[3];
+
+  for(int j1 = 1; j1 < loopID; j1++)
+  {
+    int openL = 0;
+    int flip = 0;
+    int startEdge = -1;
+    int numN = count[j1];
+    to = to + numN;
+    from = to - numN;
+    std::vector<int> burnt_loop(static_cast<size_t>(numN) + 2, 0);
+
+    for(int i1 = from; i1 < to; i1++)
+    {
+      int cedge = burnt_list[i1];
+      int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+      int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+      if(start == cnode1)
+      {
+        openL = 1;
+        startEdge = cedge;
+        flip = 0;
+      }
+      else if(start == cnode2)
+      {
+        openL = 1;
+        startEdge = cedge;
+        flip = 1;
+      }
+    }
+
+    if(openL == 1)
+    {
+      if(flip == 1)
+      {
+        int tnode = static_cast<int>(e1[startEdge].node_id[0]);
+        int tspin = e1[startEdge].nSpin[0];
+        e1[startEdge].node_id[0] = e1[startEdge].node_id[1];
+        e1[startEdge].node_id[1] = tnode;
+        e1[startEdge].nSpin[0] = e1[startEdge].nSpin[1];
+        e1[startEdge].nSpin[1] = tspin;
+      }
+      burnt_loop[0] = startEdge;
+      int index = 1;
+      int endNode = static_cast<int>(e1[startEdge].node_id[1]);
+      int chaser = startEdge;
+      do
+      {
+        for(int n = from; n < to; n++)
+        {
+          int cedge = burnt_list[n];
+          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          if((cedge != chaser) && (endNode == cnode1))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+          }
+          else if((cedge != chaser) && (endNode == cnode2))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            int tspin = e1[cedge].nSpin[0];
+            e1[cedge].node_id[0] = e1[cedge].node_id[1];
+            e1[cedge].node_id[1] = tnode;
+            e1[cedge].nSpin[0] = e1[cedge].nSpin[1];
+            e1[cedge].nSpin[1] = tspin;
+          }
+        }
+        chaser = burnt_loop[index - 1];
+        endNode = static_cast<int>(e1[chaser].node_id[1]);
+      } while(index < numN);
+
+      if(numN == 2)
+      {
+        int te0 = burnt_loop[0], te1 = burnt_loop[1];
+        int tv0 = static_cast<int>(e1[te0].node_id[0]);
+        int tv1 = static_cast<int>(e1[te1].node_id[0]);
+        int tv2 = static_cast<int>(e1[te1].node_id[1]);
+        t1[ctid].node_id[0] = tv0;
+        t1[ctid].node_id[1] = tv1;
+        t1[ctid].node_id[2] = tv2;
+        for(int iii = 0; iii < 3; iii++)
+        {
+          vcrd1[iii] = v1[tv0].coord[iii];
+          vcrd2[iii] = v1[tv1].coord[iii];
+          vcrd3[iii] = v1[tv2].coord[iii];
+        }
+        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+        for(int jjj = 0; jjj < 3; jjj++)
+        {
+          t1[ctid].edgePlace[jjj] = where[jjj];
+        }
+        t1[ctid].nSpin[0] = e1[te0].nSpin[0];
+        t1[ctid].nSpin[1] = e1[te0].nSpin[1];
+        mCubeID[ctid] = mcid;
+        ctid++;
+      }
+      else if(numN > 2)
+      {
+        int numT = numN - 1;
+        int cnumT = 0;
+        int front = 0;
+        int back = numN;
+        int te0 = burnt_loop[front];
+        int te1 = burnt_loop[back - 1];
+        int tv0 = static_cast<int>(e1[te0].node_id[0]);
+        int tv1 = static_cast<int>(e1[te0].node_id[1]);
+        int tv2 = static_cast<int>(e1[te1].node_id[1]);
+        t1[ctid].node_id[0] = tv0;
+        t1[ctid].node_id[1] = tv1;
+        t1[ctid].node_id[2] = tv2;
+        for(int iii = 0; iii < 3; iii++)
+        {
+          vcrd1[iii] = v1[tv0].coord[iii];
+          vcrd2[iii] = v1[tv1].coord[iii];
+          vcrd3[iii] = v1[tv2].coord[iii];
+        }
+        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+        for(int jjj = 0; jjj < 3; jjj++)
+        {
+          t1[ctid].edgePlace[jjj] = where[jjj];
+        }
+        t1[ctid].nSpin[0] = e1[te0].nSpin[0];
+        t1[ctid].nSpin[1] = e1[te0].nSpin[1];
+        mCubeID[ctid] = mcid;
+        int new_node0 = tv2;
+        cnumT++;
+        ctid++;
+        do
+        {
+          if((cnumT % 2) != 0)
+          {
+            front = front + 1;
+            int ce = burnt_loop[front];
+            tv0 = static_cast<int>(e1[ce].node_id[0]);
+            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            tv2 = new_node0;
+            t1[ctid].node_id[0] = tv0;
+            t1[ctid].node_id[1] = tv1;
+            t1[ctid].node_id[2] = tv2;
+            for(int iii = 0; iii < 3; iii++)
+            {
+              vcrd1[iii] = v1[tv0].coord[iii];
+              vcrd2[iii] = v1[tv1].coord[iii];
+              vcrd3[iii] = v1[tv2].coord[iii];
+            }
+            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+            for(int jjj = 0; jjj < 3; jjj++)
+            {
+              t1[ctid].edgePlace[jjj] = where[jjj];
+            }
+            t1[ctid].nSpin[0] = e1[ce].nSpin[0];
+            t1[ctid].nSpin[1] = e1[ce].nSpin[1];
+            mCubeID[ctid] = mcid;
+            new_node0 = tv1;
+            cnumT++;
+            ctid++;
+          }
+          else
+          {
+            back = back - 1;
+            int ce = burnt_loop[back];
+            tv0 = static_cast<int>(e1[ce].node_id[0]);
+            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            tv2 = new_node0;
+            t1[ctid].node_id[0] = tv0;
+            t1[ctid].node_id[1] = tv1;
+            t1[ctid].node_id[2] = tv2;
+            for(int iii = 0; iii < 3; iii++)
+            {
+              vcrd1[iii] = v1[tv0].coord[iii];
+              vcrd2[iii] = v1[tv1].coord[iii];
+              vcrd3[iii] = v1[tv2].coord[iii];
+            }
+            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+            for(int jjj = 0; jjj < 3; jjj++)
+            {
+              t1[ctid].edgePlace[jjj] = where[jjj];
+            }
+            t1[ctid].nSpin[0] = e1[ce].nSpin[0];
+            t1[ctid].nSpin[1] = e1[ce].nSpin[1];
+            mCubeID[ctid] = mcid;
+            new_node0 = tv0;
+            cnumT++;
+            ctid++;
+          }
+        } while(cnumT < numT);
+      }
+    }
+    else
+    {
+      int startEdge2 = burnt_list[from];
+      burnt_loop[0] = startEdge2;
+      int index = 1;
+      int endNode = static_cast<int>(e1[startEdge2].node_id[1]);
+      int chaser = startEdge2;
+      do
+      {
+        for(int n = from; n < to; n++)
+        {
+          int cedge = burnt_list[n];
+          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          if((cedge != chaser) && (endNode == cnode1))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+          }
+          else if((cedge != chaser) && (endNode == cnode2))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            int tspin = e1[cedge].nSpin[0];
+            e1[cedge].node_id[0] = e1[cedge].node_id[1];
+            e1[cedge].node_id[1] = tnode;
+            e1[cedge].nSpin[0] = e1[cedge].nSpin[1];
+            e1[cedge].nSpin[1] = tspin;
+          }
+        }
+        chaser = burnt_loop[index - 1];
+        endNode = static_cast<int>(e1[chaser].node_id[1]);
+      } while(index < numN);
+
+      if(numN == 3)
+      {
+        int te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
+        int tv0 = static_cast<int>(e1[te0].node_id[0]);
+        int tv1 = static_cast<int>(e1[te1].node_id[0]);
+        int tv2 = static_cast<int>(e1[te2].node_id[0]);
+        t1[ctid].node_id[0] = tv0;
+        t1[ctid].node_id[1] = tv1;
+        t1[ctid].node_id[2] = tv2;
+        for(int iii = 0; iii < 3; iii++)
+        {
+          vcrd1[iii] = v1[tv0].coord[iii];
+          vcrd2[iii] = v1[tv1].coord[iii];
+          vcrd3[iii] = v1[tv2].coord[iii];
+        }
+        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+        for(int jjj = 0; jjj < 3; jjj++)
+        {
+          t1[ctid].edgePlace[jjj] = where[jjj];
+        }
+        t1[ctid].nSpin[0] = e1[te0].nSpin[0];
+        t1[ctid].nSpin[1] = e1[te0].nSpin[1];
+        mCubeID[ctid] = mcid;
+        ctid++;
+      }
+      else if(numN > 3)
+      {
+        int numT = numN - 2;
+        int cnumT = 0;
+        int front = 0;
+        int back = numN - 1;
+        int te0 = burnt_loop[front];
+        int te1 = burnt_loop[back];
+        int tv0 = static_cast<int>(e1[te0].node_id[0]);
+        int tv1 = static_cast<int>(e1[te0].node_id[1]);
+        int tv2 = static_cast<int>(e1[te1].node_id[0]);
+        t1[ctid].node_id[0] = tv0;
+        t1[ctid].node_id[1] = tv1;
+        t1[ctid].node_id[2] = tv2;
+        for(int iii = 0; iii < 3; iii++)
+        {
+          vcrd1[iii] = v1[tv0].coord[iii];
+          vcrd2[iii] = v1[tv1].coord[iii];
+          vcrd3[iii] = v1[tv2].coord[iii];
+        }
+        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+        for(int jjj = 0; jjj < 3; jjj++)
+        {
+          t1[ctid].edgePlace[jjj] = where[jjj];
+        }
+        t1[ctid].nSpin[0] = e1[te0].nSpin[0];
+        t1[ctid].nSpin[1] = e1[te0].nSpin[1];
+        mCubeID[ctid] = mcid;
+        int new_node0 = tv2;
+        cnumT++;
+        ctid++;
+        do
+        {
+          if((cnumT % 2) != 0)
+          {
+            front = front + 1;
+            int ce = burnt_loop[front];
+            tv0 = static_cast<int>(e1[ce].node_id[0]);
+            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            tv2 = new_node0;
+            t1[ctid].node_id[0] = tv0;
+            t1[ctid].node_id[1] = tv1;
+            t1[ctid].node_id[2] = tv2;
+            for(int iii = 0; iii < 3; iii++)
+            {
+              vcrd1[iii] = v1[tv0].coord[iii];
+              vcrd2[iii] = v1[tv1].coord[iii];
+              vcrd3[iii] = v1[tv2].coord[iii];
+            }
+            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+            for(int jjj = 0; jjj < 3; jjj++)
+            {
+              t1[ctid].edgePlace[jjj] = where[jjj];
+            }
+            t1[ctid].nSpin[0] = e1[ce].nSpin[0];
+            t1[ctid].nSpin[1] = e1[ce].nSpin[1];
+            mCubeID[ctid] = mcid;
+            new_node0 = tv1;
+            cnumT++;
+            ctid++;
+          }
+          else
+          {
+            back = back - 1;
+            int ce = burnt_loop[back];
+            tv0 = static_cast<int>(e1[ce].node_id[0]);
+            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            tv2 = new_node0;
+            t1[ctid].node_id[0] = tv0;
+            t1[ctid].node_id[1] = tv1;
+            t1[ctid].node_id[2] = tv2;
+            for(int iii = 0; iii < 3; iii++)
+            {
+              vcrd1[iii] = v1[tv0].coord[iii];
+              vcrd2[iii] = v1[tv1].coord[iii];
+              vcrd3[iii] = v1[tv2].coord[iii];
+            }
+            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+            for(int jjj = 0; jjj < 3; jjj++)
+            {
+              t1[ctid].edgePlace[jjj] = where[jjj];
+            }
+            t1[ctid].nSpin[0] = e1[ce].nSpin[0];
+            t1[ctid].nSpin[1] = e1[ce].nSpin[1];
+            mCubeID[ctid] = mcid;
+            new_node0 = tv0;
+            cnumT++;
+            ctid++;
+          }
+        } while(cnumT < numT);
+      }
+    }
+  }
+  *tout = ctid;
+}
+
+// -----------------------------------------------------------------------------
+// Generate triangles for a case-M cube (fan from body center for open loops).
+// Transcribed from M3CEntireVolume::get_caseM_triangles.
+// -----------------------------------------------------------------------------
+void get_caseM_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node* v1, Segment* e1, int nfedge, const int* afc, int nfctr, int tin, int* tout, int ccn, const double tcrd1[3],
+                         const double tcrd2[3], int mcid)
+{
+  const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
+  const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
+
+  std::vector<int> burnt(nfedge, 0);
+  std::vector<int> burnt_list(nfedge, -1);
+
+  int loopID = 1;
+  int tail = 0;
+  int head = 0;
+
+  for(int i = 0; i < nfedge; i++)
+  {
+    int cedge = afe[i];
+    if(burnt[i] == 0)
+    {
+      burnt[i] = loopID;
+      burnt_list[tail] = cedge;
+      int coin;
+      do
+      {
+        int chaser = burnt_list[tail];
+        int cspin1 = e1[chaser].nSpin[0];
+        int cspin2 = e1[chaser].nSpin[1];
+        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
+        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        for(int j = 0; j < nfedge; j++)
+        {
+          int nedge = afe[j];
+          if(burnt[j] == 0)
+          {
+            int nspin1 = e1[nedge].nSpin[0];
+            int nspin2 = e1[nedge].nSpin[1];
+            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
+            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
+            int nodeFlag = 0;
+            if((cnode1 == nnode1) && (cnode2 != nnode2))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode1 == nnode2) && (cnode2 != nnode1))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode2 == nnode1) && (cnode1 != nnode2))
+            {
+              nodeFlag = 1;
+            }
+            else if((cnode2 == nnode2) && (cnode1 != nnode1))
+            {
+              nodeFlag = 1;
+            }
+            if(spinFlag == 1 && nodeFlag == 1)
+            {
+              head = head + 1;
+              burnt_list[head] = nedge;
+              burnt[j] = loopID;
+            }
+          }
+        }
+        if(tail == head)
+        {
+          coin = 0;
+          tail = tail + 1;
+          head = tail;
+          loopID++;
+        }
+        else
+        {
+          tail = tail + 1;
+          coin = 1;
+        }
+      } while(coin);
+    }
+  }
+
+  std::vector<int> count(loopID, 0);
+  for(int k = 1; k < loopID; k++)
+  {
+    for(int kk = 0; kk < nfedge; kk++)
+    {
+      if(k == burnt[kk])
+      {
+        count[k] = count[k] + 1;
+      }
+    }
+  }
+
+  int to = 0;
+  int from = 0;
+  int ctid = tin;
+  int where[3];
+  double vcrd1[3], vcrd2[3], vcrd3[3];
+
+  for(int j1 = 1; j1 < loopID; j1++)
+  {
+    int openL = 0;
+    int flip = 0;
+    int startEdge = -1;
+    int numN = count[j1];
+    to = to + numN;
+    from = to - numN;
+    std::vector<int> burnt_loop(static_cast<size_t>(numN) + 2, 0);
+
+    for(int i1 = from; i1 < to; i1++)
+    {
+      int cedge = burnt_list[i1];
+      int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+      int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+      for(int n1 = 0; n1 < nfctr; n1++)
+      {
+        int start = afc[n1];
+        if(start == cnode1)
+        {
+          openL = 1;
+          startEdge = cedge;
+          flip = 0;
+        }
+        else if(start == cnode2)
+        {
+          openL = 1;
+          startEdge = cedge;
+          flip = 1;
+        }
+      }
+    }
+
+    if(openL == 1)
+    {
+      if(flip == 1)
+      {
+        int tnode = static_cast<int>(e1[startEdge].node_id[0]);
+        int tspin = e1[startEdge].nSpin[0];
+        e1[startEdge].node_id[0] = e1[startEdge].node_id[1];
+        e1[startEdge].node_id[1] = tnode;
+        e1[startEdge].nSpin[0] = e1[startEdge].nSpin[1];
+        e1[startEdge].nSpin[1] = tspin;
+      }
+      burnt_loop[0] = startEdge;
+      int index = 1;
+      int endNode = static_cast<int>(e1[startEdge].node_id[1]);
+      int chaser = startEdge;
+      do
+      {
+        for(int n = from; n < to; n++)
+        {
+          int cedge = burnt_list[n];
+          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          if((cedge != chaser) && (endNode == cnode1))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+          }
+          else if((cedge != chaser) && (endNode == cnode2))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            int tspin = e1[cedge].nSpin[0];
+            e1[cedge].node_id[0] = e1[cedge].node_id[1];
+            e1[cedge].node_id[1] = tnode;
+            e1[cedge].nSpin[0] = e1[cedge].nSpin[1];
+            e1[cedge].nSpin[1] = tspin;
+          }
+        }
+        chaser = burnt_loop[index - 1];
+        endNode = static_cast<int>(e1[chaser].node_id[1]);
+      } while(index < numN);
+
+      // triangulation: fan from the body-center node ccn
+      for(int iii = 0; iii < numN; iii++)
+      {
+        int ce = burnt_loop[iii];
+        int tn0 = static_cast<int>(e1[ce].node_id[0]);
+        int tn1 = static_cast<int>(e1[ce].node_id[1]);
+        int ts0 = e1[ce].nSpin[0];
+        int ts1 = e1[ce].nSpin[1];
+        t1[ctid].node_id[0] = ccn;
+        t1[ctid].node_id[1] = tn0;
+        t1[ctid].node_id[2] = tn1;
+        for(int i4 = 0; i4 < 3; i4++)
+        {
+          vcrd1[i4] = v1[ccn].coord[i4];
+          vcrd2[i4] = v1[tn0].coord[i4];
+          vcrd3[i4] = v1[tn1].coord[i4];
+        }
+        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+        for(int jjj = 0; jjj < 3; jjj++)
+        {
+          t1[ctid].edgePlace[jjj] = where[jjj];
+        }
+        t1[ctid].nSpin[0] = ts0;
+        t1[ctid].nSpin[1] = ts1;
+        mCubeID[ctid] = mcid;
+        ctid++;
+      }
+    }
+    else
+    {
+      int startEdge2 = burnt_list[from];
+      burnt_loop[0] = startEdge2;
+      int index = 1;
+      int endNode = static_cast<int>(e1[startEdge2].node_id[1]);
+      int chaser = startEdge2;
+      do
+      {
+        for(int n = from; n < to; n++)
+        {
+          int cedge = burnt_list[n];
+          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
+          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          if((cedge != chaser) && (endNode == cnode1))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+          }
+          else if((cedge != chaser) && (endNode == cnode2))
+          {
+            burnt_loop[index] = cedge;
+            index++;
+            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            int tspin = e1[cedge].nSpin[0];
+            e1[cedge].node_id[0] = e1[cedge].node_id[1];
+            e1[cedge].node_id[1] = tnode;
+            e1[cedge].nSpin[0] = e1[cedge].nSpin[1];
+            e1[cedge].nSpin[1] = tspin;
+          }
+        }
+        chaser = burnt_loop[index - 1];
+        endNode = static_cast<int>(e1[chaser].node_id[1]);
+      } while(index < numN);
+
+      if(numN == 3)
+      {
+        int te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
+        int tv0 = static_cast<int>(e1[te0].node_id[0]);
+        int tv1 = static_cast<int>(e1[te1].node_id[0]);
+        int tv2 = static_cast<int>(e1[te2].node_id[0]);
+        t1[ctid].node_id[0] = tv0;
+        t1[ctid].node_id[1] = tv1;
+        t1[ctid].node_id[2] = tv2;
+        for(int i4 = 0; i4 < 3; i4++)
+        {
+          vcrd1[i4] = v1[tv0].coord[i4];
+          vcrd2[i4] = v1[tv1].coord[i4];
+          vcrd3[i4] = v1[tv2].coord[i4];
+        }
+        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+        for(int jjj = 0; jjj < 3; jjj++)
+        {
+          t1[ctid].edgePlace[jjj] = where[jjj];
+        }
+        t1[ctid].nSpin[0] = e1[te0].nSpin[0];
+        t1[ctid].nSpin[1] = e1[te0].nSpin[1];
+        mCubeID[ctid] = mcid;
+        ctid++;
+      }
+      else if(numN > 3)
+      {
+        int numT = numN - 2;
+        int cnumT = 0;
+        int front = 0;
+        int back = numN - 1;
+        int te0 = burnt_loop[front];
+        int te1 = burnt_loop[back];
+        int tv0 = static_cast<int>(e1[te0].node_id[0]);
+        int tv1 = static_cast<int>(e1[te0].node_id[1]);
+        int tv2 = static_cast<int>(e1[te1].node_id[0]);
+        t1[ctid].node_id[0] = tv0;
+        t1[ctid].node_id[1] = tv1;
+        t1[ctid].node_id[2] = tv2;
+        for(int i4 = 0; i4 < 3; i4++)
+        {
+          vcrd1[i4] = v1[tv0].coord[i4];
+          vcrd2[i4] = v1[tv1].coord[i4];
+          vcrd3[i4] = v1[tv2].coord[i4];
+        }
+        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+        for(int jjj = 0; jjj < 3; jjj++)
+        {
+          t1[ctid].edgePlace[jjj] = where[jjj];
+        }
+        t1[ctid].nSpin[0] = e1[te0].nSpin[0];
+        t1[ctid].nSpin[1] = e1[te0].nSpin[1];
+        mCubeID[ctid] = mcid;
+        int new_node0 = tv2;
+        cnumT++;
+        ctid++;
+        do
+        {
+          if((cnumT % 2) != 0)
+          {
+            front = front + 1;
+            int ce = burnt_loop[front];
+            tv0 = static_cast<int>(e1[ce].node_id[0]);
+            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            tv2 = new_node0;
+            t1[ctid].node_id[0] = tv0;
+            t1[ctid].node_id[1] = tv1;
+            t1[ctid].node_id[2] = tv2;
+            for(int i4 = 0; i4 < 3; i4++)
+            {
+              vcrd1[i4] = v1[tv0].coord[i4];
+              vcrd2[i4] = v1[tv1].coord[i4];
+              vcrd3[i4] = v1[tv2].coord[i4];
+            }
+            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+            for(int jjj = 0; jjj < 3; jjj++)
+            {
+              t1[ctid].edgePlace[jjj] = where[jjj];
+            }
+            t1[ctid].nSpin[0] = e1[ce].nSpin[0];
+            t1[ctid].nSpin[1] = e1[ce].nSpin[1];
+            mCubeID[ctid] = mcid;
+            new_node0 = tv1;
+            cnumT++;
+            ctid++;
+          }
+          else
+          {
+            back = back - 1;
+            int ce = burnt_loop[back];
+            tv0 = static_cast<int>(e1[ce].node_id[0]);
+            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            tv2 = new_node0;
+            t1[ctid].node_id[0] = tv0;
+            t1[ctid].node_id[1] = tv1;
+            t1[ctid].node_id[2] = tv2;
+            for(int i4 = 0; i4 < 3; i4++)
+            {
+              vcrd1[i4] = v1[tv0].coord[i4];
+              vcrd2[i4] = v1[tv1].coord[i4];
+              vcrd3[i4] = v1[tv2].coord[i4];
+            }
+            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
+            for(int jjj = 0; jjj < 3; jjj++)
+            {
+              t1[ctid].edgePlace[jjj] = where[jjj];
+            }
+            t1[ctid].nSpin[0] = e1[ce].nSpin[0];
+            t1[ctid].nSpin[1] = e1[ce].nSpin[1];
+            mCubeID[ctid] = mcid;
+            new_node0 = tv0;
+            cnumT++;
+            ctid++;
+          }
+        } while(cnumT < numT);
+      }
+    }
+  }
+  *tout = ctid;
+}
+
+// -----------------------------------------------------------------------------
+// Fill the pre-sized triangle array cube-by-cube. Transcribed from
+// M3CEntireVolume::get_triangles.
+// -----------------------------------------------------------------------------
+void get_triangles(const VoxelCoord* p, Triangle* t, int* mCubeID, Face* sq, const Node* v, Segment* e, int ns, int nsp, int xDim)
+{
+  int tidIn = 0;
+  int tidOut = 0;
+
+  for(int i = 1; i <= (ns - nsp); i++)
+  {
+    int cubeFlag = 0;
+    int sqID[6];
+    sqID[0] = 3 * (i - 1);
+    sqID[1] = 3 * (i - 1) + 1;
+    sqID[2] = 3 * (i - 1) + 2;
+    sqID[3] = 3 * i + 2;
+    sqID[4] = 3 * (i + xDim - 1) + 1;
+    sqID[5] = 3 * (i + nsp - 1);
+    int nFC = 0;
+    int nFE = 0;
+    int eff = 0;
+    int bodyCtr = 7 * (i - 1) + 6;
+    int arrayFC[6];
+    for(int ii = 0; ii < 6; ii++)
+    {
+      arrayFC[ii] = -1;
+    }
+    int fcid = 0;
+    for(int ii = 0; ii < 6; ii++)
+    {
+      int tsq = sqID[ii];
+      int tFCnode = sq[tsq].FCnode;
+      if(tFCnode != -1)
+      {
+        arrayFC[fcid] = tFCnode;
+        fcid++;
+      }
+      nFE = nFE + sq[tsq].nEdge;
+      eff = eff + sq[tsq].effect;
+    }
+    nFC = fcid;
+    if(eff > 0)
+    {
+      cubeFlag = 1;
+    }
+
+    if(cubeFlag == 1 && nFE > 2)
+    {
+      double coord1[3], coord2[3];
+      for(int k = 0; k < 3; k++)
+      {
+        coord1[k] = p[i].coord[k];
+        coord2[k] = p[i + 1 + xDim + nsp].coord[k];
+      }
+      std::vector<int> arrayFE(nFE);
+      int tindex = 0;
+      for(int i1 = 0; i1 < 6; i1++)
+      {
+        int tsq = sqID[i1];
+        int tnfe = sq[tsq].nEdge;
+        for(int i2 = 0; i2 < tnfe; i2++)
+        {
+          arrayFE[tindex] = static_cast<int>(sq[tsq].edge_id[i2]);
+          tindex++;
+        }
+      }
+
+      if(nFC == 0)
+      {
+        get_case0_triangles(t, mCubeID, arrayFE.data(), v, e, nFE, tidIn, &tidOut, coord1, coord2, i);
+        tidIn = tidOut;
+      }
+      else if(nFC == 2)
+      {
+        get_case2_triangles(t, mCubeID, arrayFE.data(), v, e, nFE, arrayFC, nFC, tidIn, &tidOut, coord1, coord2, i);
+        tidIn = tidOut;
+      }
+      else if(nFC > 2 && nFC <= 6)
+      {
+        get_caseM_triangles(t, mCubeID, arrayFE.data(), v, e, nFE, arrayFC, nFC, tidIn, &tidOut, bodyCtr, coord1, coord2, i);
+        tidIn = tidOut;
+      }
+    }
+  }
+}
+// -----------------------------------------------------------------------------
+// Match each triangle side to the face edge it lies on (edgePlace 0 = face edge).
+// Transcribed from M3CEntireVolume::update_triangle_sides_with_fedge.
+// -----------------------------------------------------------------------------
+void update_triangle_sides_with_fedge(Triangle* t, const int* mCubeID, const Segment* e, const Face* sq, int nT, int xDim, int nsp)
+{
+  int tFEarray[100];
+  int index = 0;
+  int prevMCID = -1;
+
+  for(int i = 0; i < nT; i++)
+  {
+    int ii = mCubeID[i];
+    if(ii != prevMCID)
+    {
+      index = 0;
+      int sqID[6];
+      sqID[0] = 3 * (ii - 1);
+      sqID[1] = 3 * (ii - 1) + 1;
+      sqID[2] = 3 * (ii - 1) + 2;
+      sqID[3] = 3 * ii + 2;
+      sqID[4] = 3 * (ii + xDim - 1) + 1;
+      sqID[5] = 3 * (ii + nsp - 1);
+      for(int i1 = 0; i1 < 6; i1++)
+      {
+        int tsq = sqID[i1];
+        int nFE = sq[tsq].nEdge;
+        for(int i2 = 0; i2 < nFE; i2++)
+        {
+          tFEarray[index] = static_cast<int>(sq[tsq].edge_id[i2]);
+          index++;
+        }
+      }
+    }
+
+    for(int j = 0; j < 3; j++)
+    {
+      int index1 = j;
+      int index2 = (j + 1 == 3) ? 0 : j + 1;
+      int cnode1 = static_cast<int>(t[i].node_id[index1]);
+      int cnode2 = static_cast<int>(t[i].node_id[index2]);
+      for(int k = 0; k < index; k++)
+      {
+        int cfe = tFEarray[k];
+        int tnode1 = static_cast<int>(e[cfe].node_id[0]);
+        int tnode2 = static_cast<int>(e[cfe].node_id[1]);
+        if((cnode1 == tnode1 && cnode2 == tnode2) || (cnode2 == tnode1 && cnode1 == tnode2))
+        {
+          t[i].e_id[index1] = cfe;
+          t[i].edgePlace[index1] = 0;
+          break;
+        }
+      }
+    }
+    prevMCID = ii;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Count unique inner edges (two-pass sizing). Transcribed from
+// M3CEntireVolume::get_number_unique_inner_edges.
+// -----------------------------------------------------------------------------
+int get_number_unique_inner_edges(const Triangle* t, const int* mCubeID, int nT)
+{
+  int arrayIEnode[120][2];
+  int bFlag[120];
+  int nIE = 0;
+  int index = 0;
+
+  for(int mm = 0; mm < 120; mm++)
+  {
+    bFlag[mm] = 0;
+    arrayIEnode[mm][0] = -1;
+    arrayIEnode[mm][1] = -1;
+  }
+
+  int i = 0;
+  do
+  {
+    int cmcID = mCubeID[i];
+    int nmcID = (i == (nT - 1)) ? -1 : mCubeID[i + 1];
+
+    for(int j = 0; j < 3; j++)
+    {
+      if(t[i].edgePlace[j] == 1)
+      {
+        int index1 = j;
+        int index2 = (j + 1 == 3) ? 0 : j + 1;
+        arrayIEnode[index][0] = static_cast<int>(t[i].node_id[index1]);
+        arrayIEnode[index][1] = static_cast<int>(t[i].node_id[index2]);
+        index++;
+      }
+    }
+
+    if(cmcID != nmcID)
+    {
+      int nIEDmc = index;
+      for(int m = 0; m < nIEDmc; m++)
+      {
+        bFlag[m] = 0;
+      }
+      int nIEmc = 0;
+      for(int k = 0; k < nIEDmc; k++)
+      {
+        if(bFlag[k] == 0)
+        {
+          int cnode1 = arrayIEnode[k][0];
+          int cnode2 = arrayIEnode[k][1];
+          bFlag[k] = -1;
+          for(int kk = 0; kk < nIEDmc; kk++)
+          {
+            if(bFlag[kk] == 0)
+            {
+              int nnode1 = arrayIEnode[kk][0];
+              int nnode2 = arrayIEnode[kk][1];
+              if((cnode1 == nnode1 && cnode2 == nnode2) || (cnode2 == nnode1 && cnode1 == nnode2))
+              {
+                bFlag[kk] = -1;
+              }
+            }
+          }
+          nIEmc++;
+        }
+      }
+      nIE = nIE + nIEmc;
+      index = 0;
+    }
+    i++;
+  } while(i < nT);
+
+  return nIE;
+}
+
+// -----------------------------------------------------------------------------
+// Build unique inner edges with their spins and stamp triangle e_id. Transcribed
+// from M3CEntireVolume::get_unique_inner_edges.
+// -----------------------------------------------------------------------------
+void get_unique_inner_edges(Triangle* t, const int* mCubeID, ISegment* ie, int nT, int nfedge)
+{
+  int arrayTri[120];
+  int arrayIEnode[120][2];
+  int bFlag[120];
+  int index = 0;
+  int IEindex = 0;
+
+  for(int mm = 0; mm < 120; mm++)
+  {
+    bFlag[mm] = 0;
+    arrayIEnode[mm][0] = -1;
+    arrayIEnode[mm][1] = -1;
+  }
+
+  int i = 0;
+  do
+  {
+    int cmcID = mCubeID[i];
+    int nmcID = (i == (nT - 1)) ? -1 : mCubeID[i + 1];
+
+    for(int j = 0; j < 3; j++)
+    {
+      if(t[i].edgePlace[j] == 1)
+      {
+        int index1 = j;
+        int index2 = (j + 1 == 3) ? 0 : j + 1;
+        arrayIEnode[index][0] = static_cast<int>(t[i].node_id[index1]);
+        arrayIEnode[index][1] = static_cast<int>(t[i].node_id[index2]);
+        arrayTri[index] = i;
+        index++;
+      }
+    }
+
+    if(cmcID != nmcID)
+    {
+      int nIEDmc = index;
+      for(int m = 0; m <= nIEDmc; m++)
+      {
+        bFlag[m] = 0;
+      }
+
+      for(int k = 0; k < nIEDmc; k++)
+      {
+        if(bFlag[k] == 0)
+        {
+          int cnode1 = arrayIEnode[k][0];
+          int cnode2 = arrayIEnode[k][1];
+          bFlag[k] = -1;
+          ie[IEindex].node_id[0] = cnode1;
+          ie[IEindex].node_id[1] = cnode2;
+          int ctri = arrayTri[k];
+          ie[IEindex].nSpin[0] = t[ctri].nSpin[0];
+          ie[IEindex].nSpin[1] = t[ctri].nSpin[1];
+          ie[IEindex].nSpin[2] = 0;
+          ie[IEindex].nSpin[3] = 0;
+          int tedgeKind = 2;
+
+          for(int jj = 0; jj < 3; jj++)
+          {
+            if(t[ctri].edgePlace[jj] == 1)
+            {
+              int index1 = jj;
+              int index2 = (jj + 1 == 3) ? 0 : jj + 1;
+              int tnode1 = static_cast<int>(t[ctri].node_id[index1]);
+              int tnode2 = static_cast<int>(t[ctri].node_id[index2]);
+              if((tnode1 == cnode1 && tnode2 == cnode2) || (tnode2 == cnode1 && tnode1 == cnode2))
+              {
+                t[ctri].e_id[index1] = static_cast<uint64>(IEindex + nfedge);
+              }
+            }
+          }
+
+          for(int kk = 0; kk < nIEDmc; kk++)
+          {
+            if(bFlag[kk] == 0)
+            {
+              int nnode1 = arrayIEnode[kk][0];
+              int nnode2 = arrayIEnode[kk][1];
+              if((cnode1 == nnode1 && cnode2 == nnode2) || (cnode2 == nnode1 && cnode1 == nnode2))
+              {
+                bFlag[kk] = -1;
+                int nspin1Flag = 0;
+                int nspin2Flag = 0;
+                int ntri = arrayTri[kk];
+                int nspin1 = t[ntri].nSpin[0];
+                int nspin2 = t[ntri].nSpin[1];
+                for(int jjj = 0; jjj < 3; jjj++)
+                {
+                  if(t[ntri].edgePlace[jjj] == 1)
+                  {
+                    int index1 = jjj;
+                    int index2 = (jjj + 1 == 3) ? 0 : jjj + 1;
+                    int tnode1 = static_cast<int>(t[ntri].node_id[index1]);
+                    int tnode2 = static_cast<int>(t[ntri].node_id[index2]);
+                    if((tnode1 == cnode1 && tnode2 == cnode2) || (tnode2 == cnode1 && tnode1 == cnode2))
+                    {
+                      t[ntri].e_id[index1] = static_cast<uint64>(IEindex + nfedge);
+                    }
+                  }
+                }
+                for(int ii = 0; ii < 4; ii++)
+                {
+                  if(nspin1 == ie[IEindex].nSpin[ii])
+                  {
+                    nspin1Flag++;
+                  }
+                  if(nspin2 == ie[IEindex].nSpin[ii])
+                  {
+                    nspin2Flag++;
+                  }
+                }
+                if((nspin1Flag * nspin2Flag) == 0)
+                {
+                  if(nspin1Flag == 0)
+                  {
+                    ie[IEindex].nSpin[tedgeKind] = nspin1;
+                    tedgeKind++;
+                  }
+                  else if(nspin2Flag == 0)
+                  {
+                    ie[IEindex].nSpin[tedgeKind] = nspin2;
+                    tedgeKind++;
+                  }
+                  else
+                  {
+                    ie[IEindex].nSpin[tedgeKind] = nspin1;
+                    tedgeKind++;
+                    ie[IEindex].nSpin[tedgeKind] = nspin2;
+                    tedgeKind++;
+                  }
+                }
+              }
+            }
+          }
+          ie[IEindex].edgeKind = tedgeKind;
+          IEindex++;
+        }
+      }
+      index = 0;
+    }
+    i++;
+  } while(i < nT);
+}
+
+// -----------------------------------------------------------------------------
+// Bump node/edge kinds by 10 on outer-surface triangles (label sign flip).
+// Transcribed from M3CEntireVolume::update_node_edge_kind.
+// -----------------------------------------------------------------------------
+void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Triangle* t, int nT, int nfedge)
+{
+  for(int j = 0; j < nT; j++)
+  {
+    int tspin1 = t[j].nSpin[0];
+    int tspin2 = t[j].nSpin[1];
+    if(tspin1 * tspin2 < 0)
+    {
+      for(int i = 0; i < 3; i++)
+      {
+        int tn = static_cast<int>(t[j].node_id[i]);
+        int tnkind = nodeType[tn];
+        if(tnkind < 10)
+        {
+          nodeType[tn] = static_cast<int8_t>(tnkind + 10);
+        }
+        int te = static_cast<int>(t[j].e_id[i]);
+        if(te < nfedge)
+        {
+          if(fe[te].edgeKind < 10)
+          {
+            fe[te].edgeKind = fe[te].edgeKind + 10;
+          }
+        }
+        else
+        {
+          te = te - nfedge;
+          if(ie[te].edgeKind < 10)
+          {
+            ie[te].edgeKind = ie[te].edgeKind + 10;
+          }
+        }
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Per-triangle winding: order the two face labels by which region center-of-mass
+// aligns with the triangle normal. Transcribed from M3CEntireVolume::arrange_spins.
+// -----------------------------------------------------------------------------
+void arrange_spins(const int32_t* p, const VoxelCoord* pCoord, Triangle* t, const Node* v, int numT, int xDim, int nsp)
+{
+  for(int i = 0; i < numT; i++)
+  {
+    int nspin1 = t[i].nSpin[0];
+    int nspin2 = t[i].nSpin[1];
+    double xSum = 0.0, ySum = 0.0, zSum = 0.0;
+    double xSum1 = 0.0, ySum1 = 0.0, zSum1 = 0.0;
+    double xSum2 = 0.0, ySum2 = 0.0, zSum2 = 0.0;
+    int nEnode = 0;
+    double vcoord[3][3];
+    int tsite1 = 0, tsite2 = 0;
+
+    for(int j = 0; j < 3; j++)
+    {
+      int cnode = static_cast<int>(t[i].node_id[j]);
+      int csite = cnode / 7 + 1;
+      int kind = cnode % 7;
+
+      xSum += v[cnode].coord[0];
+      ySum += v[cnode].coord[1];
+      zSum += v[cnode].coord[2];
+      vcoord[j][0] = v[cnode].coord[0];
+      vcoord[j][1] = v[cnode].coord[1];
+      vcoord[j][2] = v[cnode].coord[2];
+
+      int tspin1 = -1;
+      int tspin2 = -1;
+      if(kind == 0)
+      {
+        nEnode++;
+        tsite1 = csite;
+        tsite2 = csite + 1;
+        tspin1 = p[tsite1];
+        tspin2 = p[tsite2];
+      }
+      else if(kind == 1)
+      {
+        nEnode++;
+        tsite1 = csite;
+        tsite2 = csite + xDim;
+        tspin1 = p[tsite1];
+        tspin2 = p[tsite2];
+      }
+      else if(kind == 2)
+      {
+        nEnode++;
+        tsite1 = csite;
+        tsite2 = csite + nsp;
+        tspin1 = p[tsite1];
+        tspin2 = p[tsite2];
+      }
+
+      if(tspin1 == nspin1)
+      {
+        xSum1 += pCoord[tsite1].coord[0];
+        ySum1 += pCoord[tsite1].coord[1];
+        zSum1 += pCoord[tsite1].coord[2];
+        xSum2 += pCoord[tsite2].coord[0];
+        ySum2 += pCoord[tsite2].coord[1];
+        zSum2 += pCoord[tsite2].coord[2];
+      }
+      else if(tspin2 == nspin1)
+      {
+        xSum1 += pCoord[tsite2].coord[0];
+        ySum1 += pCoord[tsite2].coord[1];
+        zSum1 += pCoord[tsite2].coord[2];
+        xSum2 += pCoord[tsite1].coord[0];
+        ySum2 += pCoord[tsite1].coord[1];
+        zSum2 += pCoord[tsite1].coord[2];
+      }
+    }
+
+    double cx = xSum / 3.0;
+    double cy = ySum / 3.0;
+    double cz = zSum / 3.0;
+    double ctr1[3] = {xSum1 / static_cast<double>(nEnode), ySum1 / static_cast<double>(nEnode), zSum1 / static_cast<double>(nEnode)};
+    double ctr2[3] = {xSum2 / static_cast<double>(nEnode), ySum2 / static_cast<double>(nEnode), zSum2 / static_cast<double>(nEnode)};
+    double tv1[3] = {ctr1[0] - cx, ctr1[1] - cy, ctr1[2] - cz};
+    double tv2[3] = {ctr2[0] - cx, ctr2[1] - cy, ctr2[2] - cz};
+    double length1 = std::sqrt(tv1[0] * tv1[0] + tv1[1] * tv1[1] + tv1[2] * tv1[2]);
+    double length2 = std::sqrt(tv2[0] * tv2[0] + tv2[1] * tv2[1] + tv2[2] * tv2[2]);
+
+    double u[3] = {vcoord[1][0] - vcoord[0][0], vcoord[1][1] - vcoord[0][1], vcoord[1][2] - vcoord[0][2]};
+    double w[3] = {vcoord[2][0] - vcoord[0][0], vcoord[2][1] - vcoord[0][1], vcoord[2][2] - vcoord[0][2]};
+    double a = u[1] * w[2] - u[2] * w[1];
+    double b = u[2] * w[0] - u[0] * w[2];
+    double c = u[0] * w[1] - u[1] * w[0];
+    double length = std::sqrt(a * a + b * b + c * c);
+    double nv[3] = {a, b, c};
+
+    double dotP1 = tv1[0] * nv[0] + tv1[1] * nv[1] + tv1[2] * nv[2];
+    double dotP2 = tv2[0] * nv[0] + tv2[1] * nv[1] + tv2[2] * nv[2];
+    double cs1 = dotP1 / (length * length1);
+    double cs2 = dotP2 / (length * length2);
+    if(cs1 > 1.0)
+    {
+      cs1 = 1.0;
+    }
+    else if(cs1 < -1.0)
+    {
+      cs1 = -1.0;
+    }
+    if(cs2 > 1.0)
+    {
+      cs2 = 1.0;
+    }
+    else if(cs2 < -1.0)
+    {
+      cs2 = -1.0;
+    }
+    double theta1 = 180.0 / M_PI * std::acos(cs1);
+    double theta2 = 180.0 / M_PI * std::acos(cs2);
+    if(theta1 < theta2)
+    {
+      t[i].nSpin[0] = nspin1;
+      t[i].nSpin[1] = nspin2;
+    }
+    else
+    {
+      t[i].nSpin[0] = nspin2;
+      t[i].nSpin[1] = nspin1;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Assign compacted sequential ids to used nodes (nodeType > 0); node_ids must be
+// pre-filled with -1. Returns the used-node count. From assign_new_nodeID.
+// -----------------------------------------------------------------------------
+int assign_new_nodeID(const int8_t* nodeType, int32_t* node_ids, int ns)
+{
+  int numN = 7 * ns;
+  int newnid = 0;
+  for(int i = 0; i < numN; i++)
+  {
+    if(nodeType[i] > 0)
+    {
+      node_ids[i] = newnid;
+      newnid++;
+    }
+  }
+  return newnid;
+}
+} // namespace
+
+namespace nx::core
+{
+// -----------------------------------------------------------------------------
+M3CSurfaceMeshing::M3CSurfaceMeshing(DataStructure& dataStructure, M3CSurfaceMeshingInputValues* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler)
+: m_DataStructure(dataStructure)
+, m_InputValues(inputValues)
+, m_ShouldCancel(shouldCancel)
+, m_MessageHandler(mesgHandler)
+{
+}
+
+// -----------------------------------------------------------------------------
+M3CSurfaceMeshing::~M3CSurfaceMeshing() noexcept = default;
+
+// -----------------------------------------------------------------------------
+Result<> M3CSurfaceMeshing::operator()()
+{
+  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
+
+  // Dimensions (cell counts). Spacing/origin from ImageGeom; RectGrid falls back to unit spacing (TODO).
+  SizeVec3 gridDims = gridGeom.getDimensions();
+  size_t dims[3] = {gridDims[0], gridDims[1], gridDims[2]};
+  float res[3] = {1.0f, 1.0f, 1.0f};
+  float origin[3] = {0.0f, 0.0f, 0.0f};
+  if(const auto* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->GridGeomDataPath); imageGeom != nullptr)
+  {
+    FloatVec3 spacing = imageGeom->getSpacing();
+    FloatVec3 imgOrigin = imageGeom->getOrigin();
+    res[0] = spacing[0];
+    res[1] = spacing[1];
+    res[2] = spacing[2];
+    origin[0] = imgOrigin[0];
+    origin[1] = imgOrigin[1];
+    origin[2] = imgOrigin[2];
+  }
+
+  // Always wrap the volume in a ghost layer (NX inputs are not pre-wrapped).
+  constexpr bool k_AddSurfaceLayer = true;
+  size_t fileDim[3] = {dims[0] + 2, dims[1] + 2, dims[2] + 2};
+  const size_t totalPoints = fileDim[0] * fileDim[1] * fileDim[2];
+  const int NS = static_cast<int>(totalPoints);
+  const int NSP = static_cast<int>(fileDim[0] * fileDim[1]);
+
+  // Working copy of FeatureIds (contiguous). Note: FeatureId==0 renumbering happens on this copy.
+  std::vector<int32_t> grainIds(featureIdsStore.getNumberOfTuples());
+  for(size_t i = 0; i < grainIds.size(); ++i)
+  {
+    grainIds[i] = featureIdsStore[i];
+  }
+
+  m_MessageHandler("Initializing working grid and ghost layer...");
+  std::vector<int32_t> point(totalPoints + 1, 0);
+  std::vector<VoxelCoord> voxCoords(totalPoints + 1);
+  const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, res, origin, fileDim, grainIds.data(), point.data(), voxCoords.data());
+
+  m_MessageHandler("Finding neighbors for each site...");
+  std::vector<Neighbor> neighbors(static_cast<size_t>(NS) + 1);
+  get_neighbor_list(neighbors.data(), NS, NSP, static_cast<int>(fileDim[0]), static_cast<int>(fileDim[1]), static_cast<int>(fileDim[2]));
+
+  m_MessageHandler("Initializing candidate nodes and squares...");
+  std::vector<Face> squares(static_cast<size_t>(3) * NS);
+  std::vector<Node> nodes(static_cast<size_t>(7) * NS);
+  std::vector<int8_t> nodeType(static_cast<size_t>(7) * NS, 0);
+  initialize_nodes(voxCoords.data(), nodes.data(), nodeType.data(), NS, res[0], res[1], res[2]);
+  initialize_squares(neighbors.data(), squares.data(), NS, NSP);
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // --- Stage 2: face edges ---------------------------------------------------
+  m_MessageHandler("Counting face edges...");
+  const int nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors.data(), NS);
+
+  m_MessageHandler("Finding nodes and edges on each square...");
+  std::vector<Segment> fedges(static_cast<size_t>(nFEdge < 0 ? 0 : nFEdge));
+  get_nodes_fEdges(squares.data(), point.data(), neighbors.data(), nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]));
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // --- Stage 3: triangles ----------------------------------------------------
+  m_MessageHandler("Counting triangles...");
+  const int nTriangle = get_number_triangles(point.data(), squares.data(), nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]));
+
+  m_MessageHandler("Generating triangles...");
+  std::vector<Triangle> triangles(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle));
+  std::vector<int> mCubeID(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle), 0);
+  get_triangles(voxCoords.data(), triangles.data(), mCubeID.data(), squares.data(), nodes.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]));
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // --- Stage 4: triangle-side/edge connectivity, inner edges, winding --------
+  m_MessageHandler("Building triangle/edge connectivity...");
+  update_triangle_sides_with_fedge(triangles.data(), mCubeID.data(), fedges.data(), squares.data(), nTriangle, static_cast<int>(fileDim[0]), NSP);
+
+  const int nIEdge = get_number_unique_inner_edges(triangles.data(), mCubeID.data(), nTriangle);
+  std::vector<ISegment> iedges(static_cast<size_t>(nIEdge < 0 ? 0 : nIEdge));
+  get_unique_inner_edges(triangles.data(), mCubeID.data(), iedges.data(), nTriangle, nFEdge);
+
+  update_node_edge_kind(nodeType.data(), fedges.data(), iedges.data(), triangles.data(), nTriangle, nFEdge);
+
+  m_MessageHandler("Arranging triangle winding...");
+  arrange_spins(point.data(), voxCoords.data(), triangles.data(), nodes.data(), nTriangle, static_cast<int>(fileDim[0]), NSP);
+
+  if(m_ShouldCancel)
+  {
+    return {};
+  }
+
+  // --- Stage 5: compact nodes and write the output TriangleGeom --------------
+  m_MessageHandler("Writing surface mesh...");
+  std::vector<int32_t> newNodeIds(static_cast<size_t>(7) * NS, -1);
+  const int nNodes = assign_new_nodeID(nodeType.data(), newNodeIds.data(), NS);
+
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  triangleGeom.resizeVertexList(static_cast<usize>(nNodes));
+  triangleGeom.resizeFaceList(static_cast<usize>(nTriangle));
+  triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nNodes)});
+  triangleGeom.getFaceAttributeMatrix()->resizeTuples({static_cast<usize>(nTriangle)});
+
+  auto& vertexStore = triangleGeom.getVertices()->getDataStoreRef();
+  auto& triStore = triangleGeom.getFaces()->getDataStoreRef();
+  auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath).getDataStoreRef();
+  auto& nodeTypesOut = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath).getDataStoreRef();
+  faceLabels.resizeTuples({static_cast<usize>(nTriangle)});
+  nodeTypesOut.resizeTuples({static_cast<usize>(nNodes)});
+
+  // Compact nodes: scatter coordinates + node types to their new ids.
+  const int numCandidateNodes = 7 * NS;
+  for(int i = 0; i < numCandidateNodes; i++)
+  {
+    int32_t nid = newNodeIds[i];
+    if(nid != -1)
+    {
+      vertexStore[static_cast<usize>(nid) * 3 + 0] = nodes[i].coord[0];
+      vertexStore[static_cast<usize>(nid) * 3 + 1] = nodes[i].coord[1];
+      vertexStore[static_cast<usize>(nid) * 3 + 2] = nodes[i].coord[2];
+      nodeTypesOut[static_cast<usize>(nid)] = nodeType[i];
+    }
+  }
+
+  // Triangles: remap to compacted node ids; revert the FeatureId==0 renumbering (maxGrainId -> 0).
+  for(int i = 0; i < nTriangle; i++)
+  {
+    triStore[static_cast<usize>(i) * 3 + 0] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[0]]);
+    triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[1]]);
+    triStore[static_cast<usize>(i) * 3 + 2] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[2]]);
+
+    int label0 = triangles[i].nSpin[0];
+    int label1 = triangles[i].nSpin[1];
+    if(label0 == maxGrainId)
+    {
+      label0 = 0;
+    }
+    if(label1 == maxGrainId)
+    {
+      label1 = 0;
+    }
+    faceLabels[static_cast<usize>(i) * 2 + 0] = label0;
+    faceLabels[static_cast<usize>(i) * 2 + 1] = label1;
+  }
+
+  // Optional winding-consistency repair (arrange_spins is only per-triangle).
+  if(m_InputValues->RepairTriangleWinding)
+  {
+    m_MessageHandler("Generating connectivity and triangle neighbors...");
+    triangleGeom.findElementNeighbors(true);
+    const auto optionalId = triangleGeom.getElementNeighborsId();
+    if(optionalId.has_value())
+    {
+      const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+      m_MessageHandler("Repairing windings...");
+      Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
+                                                                       m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+      m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
+      m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
+      if(windingResult.invalid())
+      {
+        return windingResult;
+      }
+    }
+  }
+
+  return {};
+}
+} // namespace nx::core

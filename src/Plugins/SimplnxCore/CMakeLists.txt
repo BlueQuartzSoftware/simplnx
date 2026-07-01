@@ -96,6 +96,7 @@ set(FilterList
   IterativeClosestPointFilter
   LabelTriangleGeometryFilter
   LaplacianSmoothingFilter
+  M3CSurfaceMeshingFilter
   MapPointCloudToRegularGridFilter
   MoveDataFilter
   MultiThresholdObjectsFilter
@@ -264,6 +265,7 @@ set(AlgorithmList
   InterpolatePointCloudToRegularGrid
   LabelTriangleGeometry
   LaplacianSmoothing
+  M3CSurfaceMeshing
   MapPointCloudToRegularGrid
 #  MoveData
   MultiThresholdObjects
