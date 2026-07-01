@@ -102,6 +102,13 @@ void RunM3C(bool repairWinding, const std::string& outputName)
   REQUIRE(faceLabels.getNumberOfComponents() == 2);
   REQUIRE(nodeTypes.getNumberOfTuples() == numVertices);
 
+  // FaceLabels must have the smaller feature id in component 0 (QuickSurfaceMesh/SurfaceNets convention).
+  const auto& faceLabelsStore = faceLabels.getDataStoreRef();
+  for(usize i = 0; i < numTriangles; i++)
+  {
+    REQUIRE(faceLabelsStore[i * 2] <= faceLabelsStore[i * 2 + 1]);
+  }
+
   // Each transferred Cell/Feature array must exist on the face group with the component shape
   // doubled (one value per side of the face) and one tuple per triangle.
   auto checkTransferred = [&](const std::vector<DataPath>& selectedPaths) {

@@ -48,8 +48,10 @@ struct Neighbor
 };
 struct Face // a marching "square"
 {
-  int64 site_id[4];
-  int64 edge_id[4];
+  // int32 (not int64): site/edge indices fit in 32 bits within the supported volume size, and this
+  // is the largest working array (3 per site). Halves its footprint vs. 64-bit fields.
+  int32_t site_id[4];
+  int32_t edge_id[4];
   int nEdge;
   int FCnode; // face-center node id, -1 if none
   int effect; // 0 = useless square, 1 = straddles >=2 labels
@@ -72,6 +74,57 @@ struct Triangle
   uint64 e_id[3];
   int nSpin[2];
   int edgePlace[3];
+};
+
+// On-demand coordinate accessors. A site's coordinate and each of its 7 candidate node positions are
+// pure functions of the 1-based padded site index, so they are computed as needed rather than stored
+// in full-volume arrays (which dominated the algorithm's memory footprint).
+struct SiteCoords
+{
+  size_t fileDim0;
+  size_t fileDim1;
+  size_t fileNSP; // fileDim0 * fileDim1
+  float res[3];
+  float origin[3];
+
+  VoxelCoord operator[](int64 site) const
+  {
+    const size_t linear = static_cast<size_t>(site - 1);
+    const size_t i = linear % fileDim0;
+    const size_t j = (linear / fileDim0) % fileDim1;
+    const size_t k = linear / fileNSP;
+    return VoxelCoord{{static_cast<float>(i) * res[0] + origin[0], static_cast<float>(j) * res[1] + origin[1], static_cast<float>(k) * res[2] + origin[2]}};
+  }
+};
+
+struct NodeCoords
+{
+  SiteCoords sites;
+
+  // 7 candidate nodes per site: +x/+y/+z edge midpoints (0,1,2), xy/xz/yz face centers (3,4,5),
+  // body center (6). Matches the legacy initialize_nodes half-spacing offsets.
+  Node operator[](int64 id) const
+  {
+    const int64 site = id / 7 + 1;
+    const int kind = static_cast<int>(id % 7);
+    const VoxelCoord b = sites[site];
+    const float hx = sites.res[0] / 2.0f;
+    const float hy = sites.res[1] / 2.0f;
+    const float hz = sites.res[2] / 2.0f;
+    Node n{{b.coord[0], b.coord[1], b.coord[2]}};
+    switch(kind)
+    {
+    case 0: n.coord[0] += hx; break;
+    case 1: n.coord[1] += hy; break;
+    case 2: n.coord[2] += hz; break;
+    case 3: n.coord[0] += hx; n.coord[1] += hy; break;
+    case 4: n.coord[0] += hx; n.coord[2] += hz; break;
+    case 5: n.coord[1] += hy; n.coord[2] += hz; break;
+    case 6: n.coord[0] += hx; n.coord[1] += hy; n.coord[2] += hz; break;
+    default: break;
+    }
+    return n;
+  }
 };
 
 // The multi-material marching-squares case tables. Byte-identical between the legacy
@@ -99,7 +152,7 @@ constexpr int k_NsTable2d[20][8] = {
 // zeros were remapped to; callers revert it on output). Transcribed from
 // M3CEntireVolume::initialize_micro_from_grainIds.
 // -----------------------------------------------------------------------------
-int initialize_micro(bool addSurfaceLayer, const size_t dims[3], const float res[3], const float origin[3], const size_t fileDim[3], const int32_t* grainIds, int32_t* p, VoxelCoord* point)
+int initialize_micro(bool addSurfaceLayer, const size_t dims[3], const size_t fileDim[3], const int32_t* grainIds, int32_t* p)
 {
   int maxGrainId = 0;
 
@@ -162,23 +215,14 @@ int initialize_micro(bool addSurfaceLayer, const size_t dims[3], const float res
 
   p[0] = 0; // Point 0 is garbage
 
-  // Fill voxel coordinates (x fastest). NOTE: legacy M3CEntireVolume ignored the origin;
-  // we add it here so the mesh lands in the geometry's real coordinate frame.
-  for(size_t k = 0; k < fileDim[2]; k++)
+  // Renumber the (formerly) zero feature to the reserved id. Ghost cells are negative and untouched.
+  // Voxel coordinates are no longer stored; they are computed on demand via SiteCoords/NodeCoords.
+  const size_t totalPoints = fileDim[0] * fileDim[1] * fileDim[2];
+  for(size_t id = 1; id <= totalPoints; id++)
   {
-    for(size_t j = 0; j < fileDim[1]; j++)
+    if(p[id] == 0)
     {
-      for(size_t i = 0; i < fileDim[0]; i++)
-      {
-        size_t id = (k * fileDim[0] * fileDim[1]) + (j * fileDim[0]) + (i + 1);
-        point[id].coord[0] = static_cast<float>(i) * res[0] + origin[0];
-        point[id].coord[1] = static_cast<float>(j) * res[1] + origin[1];
-        point[id].coord[2] = static_cast<float>(k) * res[2] + origin[2];
-        if(p[id] == 0)
-        {
-          p[id] = maxGrainId;
-        }
-      }
+      p[id] = maxGrainId;
     }
   }
   return maxGrainId;
@@ -238,59 +282,9 @@ void get_neighbor_list(Neighbor* n, int ns, int nsp, int xDim, int /*yDim*/, int
 }
 
 // -----------------------------------------------------------------------------
-// Lay down the 7 candidate nodes per site (edge midpoints, face centers, body
-// center). Transcribed from M3CEntireVolume::initialize_nodes (the member
-// m_SurfaceMeshNodeType is passed in as nodeType).
+// (Candidate node coordinates are computed on demand via NodeCoords; node types are
+//  zero-initialized with their backing vector, so no explicit node-initialization pass is needed.)
 // -----------------------------------------------------------------------------
-void initialize_nodes(const VoxelCoord* p, Node* v, int8_t* nodeType, int ns, float dx, float dy, float dz)
-{
-  const float halfdx = dx / 2.0f;
-  const float halfdy = dy / 2.0f;
-  const float halfdz = dz / 2.0f;
-
-  for(int i = 1; i <= ns; i++)
-  {
-    int id = 7 * (i - 1);
-    float tx = p[i].coord[0];
-    float ty = p[i].coord[1];
-    float tz = p[i].coord[2];
-
-    v[id].coord[0] = tx + halfdx;
-    v[id].coord[1] = ty;
-    v[id].coord[2] = tz;
-    nodeType[id] = 0;
-
-    v[id + 1].coord[0] = tx;
-    v[id + 1].coord[1] = ty + halfdy;
-    v[id + 1].coord[2] = tz;
-    nodeType[id + 1] = 0;
-
-    v[id + 2].coord[0] = tx;
-    v[id + 2].coord[1] = ty;
-    v[id + 2].coord[2] = tz + halfdz;
-    nodeType[id + 2] = 0;
-
-    v[id + 3].coord[0] = tx + halfdx;
-    v[id + 3].coord[1] = ty + halfdy;
-    v[id + 3].coord[2] = tz;
-    nodeType[id + 3] = 0;
-
-    v[id + 4].coord[0] = tx + halfdx;
-    v[id + 4].coord[1] = ty;
-    v[id + 4].coord[2] = tz + halfdz;
-    nodeType[id + 4] = 0;
-
-    v[id + 5].coord[0] = tx;
-    v[id + 5].coord[1] = ty + halfdy;
-    v[id + 5].coord[2] = tz + halfdz;
-    nodeType[id + 5] = 0;
-
-    v[id + 6].coord[0] = tx + halfdx;
-    v[id + 6].coord[1] = ty + halfdy;
-    v[id + 6].coord[2] = tz + halfdz;
-    nodeType[id + 6] = 0;
-  }
-}
 
 // -----------------------------------------------------------------------------
 // Set up the 3 marching squares per site (top/back/left) with their 4 corner
@@ -1403,7 +1397,7 @@ int get_number_triangles(const int32_t* p, Face* sq, int8_t* nodeType, Segment* 
 // -----------------------------------------------------------------------------
 // Generate triangles for a case-0 cube. Transcribed from M3CEntireVolume::get_case0_triangles.
 // -----------------------------------------------------------------------------
-void get_case0_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node* v1, Segment* e1, int nfedge, int tin, int* tout, const double tcrd1[3], const double tcrd2[3], int mcid)
+void get_case0_triangles(Triangle* t1, int* mCubeID, const int* afe, const NodeCoords& v1, Segment* e1, int nfedge, int tin, int* tout, const double tcrd1[3], const double tcrd2[3], int mcid)
 {
   const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
   const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
@@ -1641,7 +1635,7 @@ void get_case0_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node*
 // -----------------------------------------------------------------------------
 // Generate triangles for a case-2 cube. Transcribed from M3CEntireVolume::get_case2_triangles.
 // -----------------------------------------------------------------------------
-void get_case2_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node* v1, Segment* e1, int nfedge, const int* afc, int /*nfctr*/, int tin, int* tout, const double tcrd1[3], const double tcrd2[3],
+void get_case2_triangles(Triangle* t1, int* mCubeID, const int* afe, const NodeCoords& v1, Segment* e1, int nfedge, const int* afc, int /*nfctr*/, int tin, int* tout, const double tcrd1[3], const double tcrd2[3],
                          int mcid)
 {
   const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
@@ -2088,7 +2082,7 @@ void get_case2_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node*
 // Generate triangles for a case-M cube (fan from body center for open loops).
 // Transcribed from M3CEntireVolume::get_caseM_triangles.
 // -----------------------------------------------------------------------------
-void get_caseM_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node* v1, Segment* e1, int nfedge, const int* afc, int nfctr, int tin, int* tout, int ccn, const double tcrd1[3],
+void get_caseM_triangles(Triangle* t1, int* mCubeID, const int* afe, const NodeCoords& v1, Segment* e1, int nfedge, const int* afc, int nfctr, int tin, int* tout, int ccn, const double tcrd1[3],
                          const double tcrd2[3], int mcid)
 {
   const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
@@ -2449,7 +2443,7 @@ void get_caseM_triangles(Triangle* t1, int* mCubeID, const int* afe, const Node*
 // Fill the pre-sized triangle array cube-by-cube. Transcribed from
 // M3CEntireVolume::get_triangles.
 // -----------------------------------------------------------------------------
-void get_triangles(const VoxelCoord* p, Triangle* t, int* mCubeID, Face* sq, const Node* v, Segment* e, int ns, int nsp, int xDim)
+void get_triangles(const SiteCoords& p, Triangle* t, int* mCubeID, Face* sq, const NodeCoords& v, Segment* e, int ns, int nsp, int xDim)
 {
   int tidIn = 0;
   int tidOut = 0;
@@ -2861,7 +2855,7 @@ void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Tr
 // Per-triangle winding: order the two face labels by which region center-of-mass
 // aligns with the triangle normal. Transcribed from M3CEntireVolume::arrange_spins.
 // -----------------------------------------------------------------------------
-void arrange_spins(const int32_t* p, const VoxelCoord* pCoord, Triangle* t, const Node* v, int numT, int xDim, int nsp)
+void arrange_spins(const int32_t* p, const SiteCoords& pCoord, Triangle* t, const NodeCoords& v, int numT, int xDim, int nsp)
 {
   for(int i = 0; i < numT; i++)
   {
@@ -3105,19 +3099,20 @@ Result<> M3CSurfaceMeshing::operator()()
 
   m_MessageHandler("Initializing working grid and ghost layer...");
   std::vector<int32_t> point(totalPoints + 1, 0);
-  std::vector<VoxelCoord> voxCoords(totalPoints + 1);
-  const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, res, origin, fileDim, grainIds.data(), point.data(), voxCoords.data());
+  const int maxGrainId = initialize_micro(k_AddSurfaceLayer, dims, fileDim, grainIds.data(), point.data());
+
+  // On-demand coordinate accessors replace the former full-volume voxCoords and node arrays.
+  const SiteCoords siteCoords{fileDim[0], fileDim[1], fileDim[0] * fileDim[1], {res[0], res[1], res[2]}, {origin[0], origin[1], origin[2]}};
+  const NodeCoords nodeCoords{siteCoords};
 
   m_MessageHandler("Finding neighbors for each site...");
   std::vector<Neighbor> neighbors(static_cast<size_t>(NS) + 1);
   get_neighbor_list(neighbors.data(), NS, NSP, static_cast<int>(fileDim[0]), static_cast<int>(fileDim[1]), static_cast<int>(fileDim[2]));
 
-  // 3 marching squares (top/back/left) and 7 candidate nodes (edge/face/body) per site.
+  // 3 marching squares (top/back/left) per site; node types (7 candidate nodes/site) start Unused (0).
   m_MessageHandler("Initializing candidate nodes and squares...");
   std::vector<Face> squares(static_cast<size_t>(3) * NS);
-  std::vector<Node> nodes(static_cast<size_t>(7) * NS);
   std::vector<int8_t> nodeType(static_cast<size_t>(7) * NS, 0);
-  initialize_nodes(voxCoords.data(), nodes.data(), nodeType.data(), NS, res[0], res[1], res[2]);
   initialize_squares(neighbors.data(), squares.data(), NS, NSP);
 
   if(m_ShouldCancel)
@@ -3145,7 +3140,7 @@ Result<> M3CSurfaceMeshing::operator()()
   m_MessageHandler("Generating triangles...");
   std::vector<Triangle> triangles(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle));
   std::vector<int> mCubeID(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle), 0);
-  get_triangles(voxCoords.data(), triangles.data(), mCubeID.data(), squares.data(), nodes.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]));
+  get_triangles(siteCoords, triangles.data(), mCubeID.data(), squares.data(), nodeCoords, fedges.data(), NS, NSP, static_cast<int>(fileDim[0]));
 
   if(m_ShouldCancel)
   {
@@ -3163,7 +3158,7 @@ Result<> M3CSurfaceMeshing::operator()()
   update_node_edge_kind(nodeType.data(), fedges.data(), iedges.data(), triangles.data(), nTriangle, nFEdge);
 
   m_MessageHandler("Arranging triangle winding...");
-  arrange_spins(point.data(), voxCoords.data(), triangles.data(), nodes.data(), nTriangle, static_cast<int>(fileDim[0]), NSP);
+  arrange_spins(point.data(), siteCoords, triangles.data(), nodeCoords, nTriangle, static_cast<int>(fileDim[0]), NSP);
 
   if(m_ShouldCancel)
   {
@@ -3195,25 +3190,31 @@ Result<> M3CSurfaceMeshing::operator()()
     int32_t nid = newNodeIds[i];
     if(nid != -1)
     {
-      vertexStore[static_cast<usize>(nid) * 3 + 0] = nodes[i].coord[0];
-      vertexStore[static_cast<usize>(nid) * 3 + 1] = nodes[i].coord[1];
-      vertexStore[static_cast<usize>(nid) * 3 + 2] = nodes[i].coord[2];
+      const Node nodeCoord = nodeCoords[i];
+      vertexStore[static_cast<usize>(nid) * 3 + 0] = nodeCoord.coord[0];
+      vertexStore[static_cast<usize>(nid) * 3 + 1] = nodeCoord.coord[1];
+      vertexStore[static_cast<usize>(nid) * 3 + 2] = nodeCoord.coord[2];
       nodeTypesOut[static_cast<usize>(nid)] = nodeType[i];
     }
   }
 
-  // Triangles: remap to compacted node ids; revert the FeatureId==0 renumbering (maxGrainId -> 0).
+  // FaceLabels convention (matches QuickSurfaceMesh / SurfaceNets): negative ghost labels -> -1
+  // (exterior box surface), the renumbered zero-feature (maxGrainId) -> 0, and the SMALLER of the two
+  // labels is placed in component 0 (downstream filters rely on this). Triangle winding is made
+  // consistent with this ordering separately by the optional repair pass below.
+  const auto toFaceLabel = [maxGrainId](int nSpin) -> int32 { return (nSpin < 0) ? -1 : ((nSpin == maxGrainId) ? 0 : nSpin); };
+
+  // Triangles: remap to compacted node ids and write the ordered FaceLabels.
   for(int i = 0; i < nTriangle; i++)
   {
     triStore[static_cast<usize>(i) * 3 + 0] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[0]]);
     triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[1]]);
     triStore[static_cast<usize>(i) * 3 + 2] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[2]]);
 
-    // Map to the simplnx FaceLabels convention: negative ghost labels -> -1 (exterior box surface);
-    // the renumbered zero-feature (maxGrainId) -> 0.
-    const auto toFaceLabel = [maxGrainId](int nSpin) -> int32 { return (nSpin < 0) ? -1 : ((nSpin == maxGrainId) ? 0 : nSpin); };
-    faceLabels[static_cast<usize>(i) * 2 + 0] = toFaceLabel(triangles[i].nSpin[0]);
-    faceLabels[static_cast<usize>(i) * 2 + 1] = toFaceLabel(triangles[i].nSpin[1]);
+    const int32 labelA = toFaceLabel(triangles[i].nSpin[0]);
+    const int32 labelB = toFaceLabel(triangles[i].nSpin[1]);
+    faceLabels[static_cast<usize>(i) * 2 + 0] = (labelA <= labelB) ? labelA : labelB;
+    faceLabels[static_cast<usize>(i) * 2 + 1] = (labelA <= labelB) ? labelB : labelA;
   }
 
   // --- Transfer selected Cell/Feature arrays to the two sides of each face -----------------------
@@ -3236,8 +3237,15 @@ Result<> M3CSurfaceMeshing::operator()()
 
     for(int i = 0; i < nTriangle; i++)
     {
-      const usize cell0 = findSourceCell(triangles[i].nSpin[0], mCubeID[i], neighbors.data(), point.data(), fileDim, dims);
-      const usize cell1 = findSourceCell(triangles[i].nSpin[1], mCubeID[i], neighbors.data(), point.data(), fileDim, dims);
+      // Match the smaller-first FaceLabel ordering above so each transferred component aligns with
+      // the feature in the same FaceLabels component.
+      const int32 labelA = toFaceLabel(triangles[i].nSpin[0]);
+      const int32 labelB = toFaceLabel(triangles[i].nSpin[1]);
+      const bool side0IsComp0 = (labelA <= labelB);
+      const int nSpinComp0 = side0IsComp0 ? triangles[i].nSpin[0] : triangles[i].nSpin[1];
+      const int nSpinComp1 = side0IsComp0 ? triangles[i].nSpin[1] : triangles[i].nSpin[0];
+      const usize cell0 = findSourceCell(nSpinComp0, mCubeID[i], neighbors.data(), point.data(), fileDim, dims);
+      const usize cell1 = findSourceCell(nSpinComp1, mCubeID[i], neighbors.data(), point.data(), fileDim, dims);
       for(const auto& transfer : transfers)
       {
         transfer->quickSurfaceTransfer(static_cast<usize>(i), cell0, cell1, faceLabels);

@@ -26,8 +26,9 @@ Nets **Filters**:
 
 - A **Triangle Geometry** (shared vertex list + shared triangle list).
 - **Face Labels** — a two-component `int32` **Data Array** giving the two **Feature Ids** on either
-  side of each triangle. Faces on the outer boundary of the volume use a value of *-1* on their
-  exterior side.
+  side of each triangle. The smaller of the two ids is placed in component 0 (matching Surface Nets
+  and QuickMesh). Faces on the outer boundary of the volume use a value of *-1* on their exterior
+  side (which therefore sorts into component 0).
 - **Node Types** — a one-component `int8` **Data Array** classifying each vertex by how many
   **Features** meet there (see the table below).
 
