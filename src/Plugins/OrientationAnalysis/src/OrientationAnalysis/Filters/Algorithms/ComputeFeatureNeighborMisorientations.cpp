@@ -23,12 +23,6 @@ ComputeFeatureNeighborMisorientations::ComputeFeatureNeighborMisorientations(Dat
 ComputeFeatureNeighborMisorientations::~ComputeFeatureNeighborMisorientations() noexcept = default;
 
 // -----------------------------------------------------------------------------
-const std::atomic_bool& ComputeFeatureNeighborMisorientations::getCancel()
-{
-  return m_ShouldCancel;
-}
-
-// -----------------------------------------------------------------------------
 Result<> ComputeFeatureNeighborMisorientations::operator()()
 {
 
@@ -43,8 +37,6 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
   // The output misorientations is going to be used as a vector because the output array is optional and might
   // not exist in the DataStructure. We cannot get it by reference.
   auto* avgMisorientations = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgMisorientationsArrayName);
-
-  size_t tempMisoList = 0;
 
   size_t totalFeatures = inFeaturePhases.getNumberOfTuples();
 
@@ -65,6 +57,11 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
     const NeighborList<int32_t>::VectorType featureNeighborList = inNeighborList.at(static_cast<int32_t>(i));
 
     tempMisorientationLists[i].assign(featureNeighborList.size(), -1.0);
+    // Divisor is the count of hex-hex neighbor pairs, decremented per mismatch below. Declared
+    // inside the outer loop so each feature gets a fresh starting count; an earlier function-scope
+    // declaration combined with an inner-loop re-assignment caused the per-mismatch decrements to
+    // be clobbered (V&V cycle 2026-06-02).
+    size_t tempMisoList = featureNeighborList.size();
 
     for(size_t j = 0; j < featureNeighborList.size(); j++)
     {
@@ -72,7 +69,6 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       quatIndex = neighborFeatureId * 4;
       ebsdlib::QuatD q2(inAvgQuats[quatIndex], inAvgQuats[quatIndex + 1], inAvgQuats[quatIndex + 2], inAvgQuats[quatIndex + 3]);
       uint32_t xtalType2 = inXtalStruct[inFeaturePhases[neighborFeatureId]];
-      tempMisoList = featureNeighborList.size();
       if(laueClass1 == xtalType2 && static_cast<int64_t>(laueClass1) < static_cast<int64_t>(orientationOps.size()))
       {
         ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass1]->calculateMisorientation(q1, q2);
@@ -102,7 +98,6 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       {
         (*avgMisorientations)[i] = NAN;
       }
-      tempMisoList = 0;
     }
   }
 

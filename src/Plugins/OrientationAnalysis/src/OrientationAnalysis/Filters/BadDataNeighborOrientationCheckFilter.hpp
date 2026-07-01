@@ -9,7 +9,19 @@ namespace nx::core
 {
 /**
  * @class BadDataNeighborOrientationCheckFilter
- * @brief This filter will ....
+ * @brief Iteratively flips voxels in a Mask array from "bad" (false) to "good" (true) when a
+ * sufficient number of same-phase face neighbors have similar crystallographic orientations.
+ *
+ * The algorithm operates in two passes:
+ *  (1) For each masked-false voxel, count how many of its 6 face neighbors are both masked-true
+ *      and within the user-supplied misorientation tolerance (computed per the appropriate
+ *      Laue-group symmetry).
+ *  (2) Iterate from currentLevel = 6 down to the user-supplied NumberOfNeighbors, flipping every
+ *      bad voxel whose count meets the current level and updating its still-bad neighbors' counts
+ *      after the flip. The iteration produces a flood-fill behavior across voxels that pass the
+ *      tolerance check, terminating when no further flips occur at the user-supplied lower bound.
+ *
+ * Phase mismatches and background voxels (phase <= 0) are skipped.
  */
 class ORIENTATIONANALYSIS_EXPORT BadDataNeighborOrientationCheckFilter : public IFilter
 {

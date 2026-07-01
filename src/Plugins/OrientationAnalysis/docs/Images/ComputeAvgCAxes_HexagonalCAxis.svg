@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 480 400" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g transform="matrix(1,0,0,0.769231,0,0)">
+        <path d="M480,15.6L480,504.4C480,513.01 474.623,520 468,520L12,520C5.377,520 0,513.01 0,504.4L0,15.6C0,6.99 5.377,0 12,0L468,0C474.623,0 480,6.99 480,15.6Z" style="fill:white;stroke:rgb(208,213,218);stroke-width:1.5px;"/>
+    </g>
+    <g transform="matrix(1.37405,0,0,1.37405,239.196,41.2215)">
+        <text x="-79.82px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:17px;fill:rgb(44,62,80);">Hexagonal Unit Cell</text>
+    </g>
+    <g transform="matrix(1.37405,0,0,1.37405,239.196,68.7024)">
+        <text x="-162.224px" y="0px" style="font-family:'Helvetica';font-size:13px;fill:rgb(93,109,126);">The C-axis [001] is the unique axis in hexagonal crystals</text>
+    </g>
+    <g transform="matrix(1,0,0,1,220,230)">
+        <g transform="matrix(1.37405,0,0,1.37405,4.39035,143.332)">
+            <path d="M-40,-130L40,-130" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:1px;stroke-dasharray:5,4;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,4.39035,143.332)">
+            <path d="M80,-100L40,-130" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:1.5px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,4.39035,143.332)">
+            <path d="M40,-130L-40,-130" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:1.5px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,4.39035,143.332)">
+            <path d="M-40,-130L-80,-100" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:1.5px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,4.39035,143.332)">
+            <path d="M-80,-100L-40,-70" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:1.5px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,4.39035,143.332)">
+            <path d="M-40,-70L40,-70" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:1.5px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,4.39035,143.332)">
+            <path d="M40,-70L80,-100" style="fill:none;fill-rule:nonzero;stroke:rgb(44,62,80);stroke-width:1.5px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,0.515788,-4.61051,-22.5784)">
+            <path d="M0,60L0,-180" style="fill:none;fill-rule:nonzero;"/>
+            <g transform="matrix(0.727776,-0,-0,1.93878,-156.755,-402.145)">
+                <path d="M211.498,230.585L215.389,238.369L219.281,230.585L211.498,230.585Z" style="fill:rgb(40,116,166);fill-rule:nonzero;"/>
+                <path d="M211.498,122.363L215.389,114.58L219.281,122.363L211.498,122.363Z" style="fill:rgb(40,116,166);fill-rule:nonzero;"/>
+                <path d="M215.389,232.142L215.389,120.807" style="fill:none;fill-rule:nonzero;stroke:rgb(40,116,166);stroke-width:2.59px;"/>
+            </g>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,-21.925,-109.634)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:16px;fill:rgb(40,116,166);">c</text>
+        </g>
+        <g transform="matrix(1.21294,-0.2143,0.191517,1.35723,-3.38356,5.38908)">
+            <path d="M0,0L95,15" style="fill:none;fill-rule:nonzero;stroke:rgb(142,68,173);stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,125.219,7.7577)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:14px;fill:rgb(142,68,173);">a</text>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,140.334,14.6279)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:10px;fill:rgb(142,68,173);">1</text>
+        </g>
+        <g transform="matrix(1.1098,-0.196365,-0.245025,1.18929,-0.835086,5.95158)">
+            <path d="M0,0L-55,-45" style="fill:none;fill-rule:nonzero;stroke:rgb(142,68,173);stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,-73.1822,-47.7739)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:14px;fill:rgb(142,68,173);">a</text>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,-58.0677,-40.9036)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:10px;fill:rgb(142,68,173);">2</text>
+        </g>
+        <g transform="matrix(0.728443,-0.0886945,0.72032,1.11111,-3.38356,5.38908)">
+            <path d="M0,0L-95,30" style="fill:none;fill-rule:nonzero;stroke:rgb(142,68,173);stroke-width:2px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,-73.1822,64.0706)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-BoldOblique', 'Helvetica';font-weight:700;font-style:italic;font-size:14px;fill:rgb(142,68,173);">a</text>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,-58.0677,70.9409)">
+            <text x="0px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:10px;fill:rgb(142,68,173);">3</text>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,-4.61051,4.24675)">
+            <circle cx="0" cy="0" r="3" style="fill:rgb(44,62,80);"/>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,20,380)">
+        <g transform="matrix(0.875084,0,0,0.790716,27.4815,-48.2382)">
+            <path d="M440,10.117L440,49.883C440,55.467 435.904,60 430.858,60L9.142,60C4.096,60 0,55.467 0,49.883L0,10.117C0,4.533 4.096,0 9.142,0L430.858,0C435.904,0 440,4.533 440,10.117Z" style="fill:rgb(244,236,247);stroke:rgb(142,68,173);stroke-width:1px;"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,34.8161,-63.8515)">
+            <circle cx="20" cy="30" r="10" style="fill:rgb(142,68,173);"/>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,62.3192,-18.0091)">
+            <text x="-1.528px" y="0px" style="font-family:'Helvetica-Bold', 'Helvetica';font-weight:700;font-size:11px;fill:white;">i</text>
+        </g>
+        <g transform="matrix(1.37405,0,0,1.37405,82.4434,-18.0091)">
+            <g transform="matrix(12,0,0,12,228.111,0)">
+            </g>
+            <text x="0px" y="0px" style="font-family:'Helvetica';font-size:12px;fill:rgb(91,45,128);">The C-axis is unique in hexagonal crystals.</text>
+        </g>
+    </g>
+</svg>

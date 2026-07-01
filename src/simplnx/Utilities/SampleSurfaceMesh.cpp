@@ -358,5 +358,7 @@ Result<> SampleSurfaceMesh::execute(SampleSurfaceMeshInputValues& inputValues)
   // create array to hold which polyhedron (feature) each point falls in
   auto& polyIds = m_DataStructure.getDataRefAs<IDataArray>(inputValues.FeatureIdsArrayPath);
 
-  return ExecuteDataFunction(SampleSurfaceMeshFunctor{}, iFaceLabels.getDataType(), this, triangleGeom, iFaceLabels, polyIds, m_ShouldCancel, m_MessageHelper);
+  // Face labels are always an integer type (the parameter is restricted to GetIntegerDataTypes()), so dispatch only
+  // over the integer types.
+  return ExecuteDataFunctionIntType(SampleSurfaceMeshFunctor{}, iFaceLabels.getDataType(), this, triangleGeom, iFaceLabels, polyIds, m_ShouldCancel, m_MessageHelper);
 }

@@ -47,14 +47,12 @@ constexpr StringLiteral k_ExecuteParamLong = "--execute";
 constexpr StringLiteral k_PreflightParamLong = "--preflight";
 constexpr StringLiteral k_LogFileParamLong = "--logfile";
 constexpr StringLiteral k_ConvertParamLong = "--convert";
-constexpr StringLiteral k_ConvertOutputParamLong = "--convert-output";
 
 constexpr StringLiteral k_HelpParamShort = "-h";
 constexpr StringLiteral k_ExecuteParamShort = "-e";
 constexpr StringLiteral k_PreflightParamShort = "-p";
 constexpr StringLiteral k_LogFileParamShort = "-l";
 constexpr StringLiteral k_ConvertParamShort = "-c";
-constexpr StringLiteral k_ConvertOutputParamShort = "-co";
 
 void LoadApp()
 {
@@ -145,8 +143,7 @@ enum class ArgumentType
   Preflight,
   Help,
   Logfile,
-  Convert,
-  ConvertOutput
+  Convert
 };
 
 struct Argument
@@ -240,11 +237,6 @@ Result<CliArguments> ParseParameters(int argc, char* argv[])
       std::string argStr = ParseArgument(argc, argv, index);
       args.emplace_back(ArgumentType::Convert, argStr);
     }
-    else if(arg == k_ConvertOutputParamLong || arg == k_ConvertOutputParamShort)
-    {
-      std::string argStr = ParseArgument(argc, argv, index);
-      args.emplace_back(ArgumentType::ConvertOutput, argStr);
-    }
     else
     {
       args.emplace_back(ArgumentType::Invalid, arg);
@@ -320,7 +312,7 @@ Result<> ExecutePipeline(const Argument& arg)
   if(pipelinePath.ends_with(".json"))
   {
     cliOut << "Input file '" << pipelinePath << "' is a legacy DREAM.3D version 6.x formatted pipeline.\n";
-    cliOut << "  You will need to run `nxrunner --convert-output [PATH TO .JSON FILE]` to first convert the\n";
+    cliOut << "  You will need to run `nxrunner --convert [PATH TO .JSON FILE]` to first convert the\n";
     cliOut << "  pipeline file to the newer format. Please note that the conversion can fail as filters have\n";
     cliOut << "  been updated and previous parameters may not be available in DREAM3D-NX.\n";
     return nx::core::ConvertResult(std::move(loadPipelineResult));
@@ -357,7 +349,7 @@ Result<> PreflightPipeline(const Argument& arg)
   if(pipelinePath.ends_with(".json"))
   {
     cliOut << "Input file '" << pipelinePath << "' is a legacy DREAM.3D version 6.x formatted pipeline.\n";
-    cliOut << "  You will need to run `nxrunner --convert-output [PATH TO .JSON FILE]` to first convert the\n";
+    cliOut << "  You will need to run `nxrunner --convert [PATH TO .JSON FILE]` to first convert the\n";
     cliOut << "  pipeline file to the newer format. Please note that the conversion can fail as filters have\n";
     cliOut << "  been updated and previous parameters may not be available in DREAM3D-NX.\n";
     return nx::core::ConvertResult(std::move(loadPipelineResult));
@@ -447,52 +439,44 @@ Result<> ConvertPipeline(const Argument& arg, bool printConvertedPipeline, bool 
 void DisplayDefaultHelp()
 {
   cliOut << "Options:\n";
-  cliOut << fmt::format("\t {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
-         << "\t Execute the pipeline at the target filepath. Optionally, create a log file at the specified path.\n";
-  cliOut << fmt::format("\t {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
-         << "\t Preflight the pipeline at the target filepath. Optionally, create a log file at the specified path.\n";
-  cliOut << fmt::format("\t {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertParamLong, k_ConvertParamShort, k_LogFileParamLong, k_LogFileParamShort)
-         << "\t Convert the SIMPL pipeline at the target filepath. Optionally, create a log file at the specified path.";
-  cliOut << fmt::format("\t <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "\t Creates a log file at the specified path.";
+  cliOut << fmt::format("  {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "  Execute the pipeline at the target filepath. Optionally, create a log file at the specified path.\n";
+  cliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "  Preflight the pipeline at the target filepath. Optionally, create a log file at the specified path.\n";
+  cliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertParamLong, k_ConvertParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "  Convert the SIMPL pipeline at the target filepath. Optionally, create a log file at the specified path.";
+  cliOut << fmt::format("  <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "  Creates a log file at the specified path.";
   cliOut.endline();
 }
 
 void DisplayExecuteHelp()
 {
   cliOut << "To execute a target pipeline file:\n\t";
-  cliOut << fmt::format("\t {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
-         << "\t Execute the pipeline at the target filepath. Optionally, create a log file at the specified path.";
+  cliOut << fmt::format("  {}|{} <pipeline filepath> [{}|{} <log filepath>]\t", k_ExecuteParamLong, k_ExecuteParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "  Execute the pipeline at the target filepath. Optionally, create a log file at the specified path.";
   cliOut.endline();
 }
 
 void DisplayPreflightHelp()
 {
   cliOut << "To preflight a target pipeline file:\n\t";
-  cliOut << fmt::format("\t {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
-         << "\t Preflight the pipeline at the target filepath. Optionally, create a log file at the specified path.";
+  cliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_PreflightParamLong, k_PreflightParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "  Preflight the pipeline at the target filepath. Optionally, create a log file at the specified path.";
   cliOut.endline();
 }
 
 void DisplayConvertHelp()
 {
   cliOut << "To convert a target SIMPL pipeline file:\n\t";
-  cliOut << fmt::format("\t {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertParamLong, k_ConvertParamShort, k_LogFileParamLong, k_LogFileParamShort)
-         << "\t Convert the SIMPL pipeline at the target filepath. Optionally, create a log file at the specified path.";
-  cliOut.endline();
-}
-
-void DisplayConvertOutputHelp()
-{
-  cliOut << "To convert and save a target SIMPL pipeline file:\n\t";
-  cliOut << fmt::format("\t {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertOutputParamLong, k_ConvertOutputParamShort, k_LogFileParamLong, k_LogFileParamShort)
-         << "\t Convert the SIMPL pipeline at the target filepath and saves the converted version with the updated extension. Optionally, create a log file at the specified path.";
+  cliOut << fmt::format("  {}|{} <pipeline filepath>  [{}|{} <log filepath>]\t", k_ConvertParamLong, k_ConvertParamShort, k_LogFileParamLong, k_LogFileParamShort)
+         << "  Convert the SIMPL pipeline at the target filepath. Optionally, create a log file at the specified path.";
   cliOut.endline();
 }
 
 void DisplayLogfileHelp()
 {
   cliOut << "To export output a log file:\n\t";
-  cliOut << fmt::format("\t <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "\t Creates a log file at the specified path.";
+  cliOut << fmt::format("  <operand [argument]>  [{}|{} <log filepath>]\t", k_LogFileParamLong, k_LogFileParamShort) << "  Creates a log file at the specified path.";
   cliOut.endline();
 }
 
@@ -515,10 +499,6 @@ Result<> DisplayHelpMenu(const std::vector<Argument>& arguments)
   }
   case ArgumentType::Convert: {
     DisplayConvertHelp();
-    return {};
-  }
-  case ArgumentType::ConvertOutput: {
-    DisplayConvertOutputHelp();
     return {};
   }
   case ArgumentType::Logfile: {
@@ -584,9 +564,6 @@ int main(int argc, char* argv[])
       break;
     }
     case ArgumentType::Convert: {
-      [[fallthrough]];
-    }
-    case ArgumentType::ConvertOutput: {
       [[fallthrough]];
     }
     case ArgumentType::Execute: {
@@ -691,11 +668,6 @@ int main(int argc, char* argv[])
     break;
   }
   case ArgumentType::Convert: {
-    auto result = ConvertPipeline(arguments[0], true, false);
-    results.push_back(result);
-    break;
-  }
-  case ArgumentType::ConvertOutput: {
     auto result = ConvertPipeline(arguments[0], false, true);
     results.push_back(result);
     break;

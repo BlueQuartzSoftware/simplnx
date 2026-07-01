@@ -48,7 +48,7 @@ The dashboard a reviewer reads first. Lets a reviewer decide in 30 seconds wheth
 For detailed explanations of each class — with examples, strengths and weaknesses, drift-risk analysis, and a decision tree for picking the right class — see [`oracle_classes.md`](./oracle_classes.md). The summary below is the gate checklist.
 
 - [ ] Class named (1–5)
-  - 1 = Analytical (closed-form expected output on toy input)
+  - 1 = Analytical (closed-form expected output on hand-built input)
   - 2 = Reference implementation (NumPy / SciPy / MTEX / EbsdLib upstream)
   - 3 = Paper-based (published figure / table / equation)
   - 4 = Invariant-based (derivable property the output must satisfy)

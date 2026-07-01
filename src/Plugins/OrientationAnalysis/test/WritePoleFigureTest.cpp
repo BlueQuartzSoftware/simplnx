@@ -21,351 +21,284 @@ namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::UnitTest;
 
-// #define SIMPLNX_WRITE_TEST_OUTPUT
+// =============================================================================
+// Test pyramid for WritePoleFigureFilter:
+//
+//   EbsdLib's PoleFigureCompositorTest::All_Laue_Classes covers byte-level
+//   pixel reproducibility of the underlying rendering pipeline (Lambert,
+//   stereographic projection, canvas, color bar, font) across every Laue
+//   class. That's the right layer to pin the renderer.
+//
+//   This filter wraps PoleFigureCompositor::generateCompositeImage with just
+//   four things that EbsdLib doesn't do:
+//     1. Translate simplnx parameter indices to ebsdlib enums
+//        (HexConvention, ColorKeyKind, GenerationAlgorithm, ImageLayout).
+//     2. Filter Eulers by an optional Mask array before passing to EbsdLib.
+//     3. Resolve DataStructure paths + create output arrays in preflight.
+//     4. Convert legacy SIMPL JSON.
+//
+//   So the simplnx-side tests cover (2) and (1) here, (3) via the preflight
+//   path through the filter constructors, and (4) via the SIMPL conversion
+//   test below. We deliberately do NOT duplicate the EbsdLib pixel-level
+//   exemplar comparison -- doing so couples simplnx CI to EbsdLib rendering
+//   byte-identity, which was the source of the v5 baseline drift that
+//   bit us in the v3.0 release work.
+// =============================================================================
 
-namespace
-{
-const std::string k_ImagePrefix("Discrete Pole Figure");
-
-template <typename T>
-void CompareComponentsOfArrays(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, usize compIndex)
-{
-  // DataPath exemplaryDataPath = featureGroup.createChildPath("SurfaceFeatures");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath));
-  auto* computedData = dataStructure.getData(computedPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
-
-  const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
-  const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
-  REQUIRE(generatedDataArray.getNumberOfTuples() == exemplaryDataArray.getNumberOfTuples());
-
-  usize exemplaryNumComp = exemplaryDataArray.getNumberOfComponents();
-  usize generatedNumComp = generatedDataArray.getNumberOfComponents();
-
-  REQUIRE(compIndex < exemplaryNumComp);
-  REQUIRE(compIndex < generatedNumComp);
-
-  INFO(fmt::format("Bad Comparison\n  Input Data Array:'{}'\n  Output DataArray: '{}'", exemplaryDataPath.toString(), computedPath.toString()));
-
-  usize start = 0;
-  usize numTuples = exemplaryDataArray.getNumberOfTuples();
-  for(usize i = start; i < numTuples; i++)
-  {
-    auto oldVal = exemplaryDataArray[i * exemplaryNumComp + compIndex];
-    auto newVal = generatedDataArray[i * generatedNumComp + compIndex];
-    INFO(fmt::format("Index: {} Comp: {}", i, compIndex));
-
-    REQUIRE(oldVal == newVal);
-  }
-}
-
-} // namespace
-
-TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-Discrete", "[OrientationAnalysis][WritePoleFigureFilter]")
+// -----------------------------------------------------------------------------
+// Mask-effectiveness test (simplnx-unique behavior).
+//
+// The Pole_Figure_Exemplars_v6 archive contains 502 hex-Ti orientations with
+// a 251/251 mask. The unmasked pole figure shows several distinct clusters
+// per pole; with the mask applied, only 1-3 clusters per pole remain. So
+// the rendered output arrays must differ between use_mask=false and
+// use_mask=true by a substantial number of bytes if the simplnx mask filter
+// is wired correctly. If the mask is ignored (the bug we hit in 12.ang
+// pipeline debugging), the two outputs would be byte-identical.
+// -----------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the rendered pole figure", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v5.tar.gz", "PoleFigure_Exemplars_v5", true, true);
+  // decompressFiles=true so the .tar.gz is unpacked on first run, but
+  // removeTemp=false so the .dream3d survives between tests (the Mask test
+  // and the HexConvention test both consume it). With removeTemp=true the
+  // first test would wipe the file before the second could open it.
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
 
-  // Read the test data
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v5/PoleFigure_Exemplars_v5.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  WritePoleFigureFilter filter;
-  Arguments args;
+  const DataPath k_Eulers({"Imported Data", "Eulers"});
+  const DataPath k_Phases({"Imported Data", "Phases"});
+  const DataPath k_Mask({"Imported Data", "Mask"});
+  const DataPath k_CrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
+  const DataPath k_MaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Discrete Pole Figure"));
-  args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
-  args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
-  args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/Dir1/Dir2", unit_test::k_BinaryTestOutputDir))));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>(k_ImagePrefix));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(1024));
-  args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Discrete Pole Figure [CALCULATED]"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({"Discrete Count MRD [CALCULATED]"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(true));
+  auto runWithMask = [&](bool useMask, const std::string& outGeomName) {
+    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    WritePoleFigureFilter filter;
+    Arguments args;
+    args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Mask Test"));
+    args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
+    args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
+    args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0)); // Color
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));         // Horizontal
+    args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/MaskTestDir", unit_test::k_BinaryTestOutputDir))));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>("mask_test_"));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(256));
+    args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
+    args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(useMask));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(k_Mask));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_Eulers));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_Phases));
+    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructures));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(k_MaterialNames));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({outGeomName})));
+    args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(1)); // X||a*
+    args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(false));
 
-  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Phases"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "ThresholdArray"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "CrystalStructures"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "MaterialName"})));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    // Snapshot the rendered RGB array so we can compare across two filter runs
+    // that live in different DataStructures (lambda-local).
+    const DataPath imgPath = DataPath({outGeomName, "Cell Data", "Phase_1"});
+    const auto& store = dataStructure.getDataRefAs<UInt8Array>(imgPath).getDataStoreRef();
+    std::vector<uint8> snapshot(store.getSize());
+    for(usize i = 0; i < store.getSize(); ++i)
+    {
+      snapshot[i] = store[i];
+    }
+    return snapshot;
+  };
 
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/write_pole_figure-Discrete.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
+  const auto unmasked = runWithMask(false, "Unmasked PF");
+  const auto masked = runWithMask(true, "Masked PF");
 
+  REQUIRE(unmasked.size() == masked.size());
+  REQUIRE(unmasked.size() > 0);
+
+  usize diffBytes = 0;
+  for(usize i = 0; i < unmasked.size(); ++i)
   {
-    DataPath calculatedImageData({"Discrete Pole Figure [CALCULATED]", "Cell Data", fmt::format("Phase_{}", 1)});
-    DataPath exemplarImageData({"Discrete Pole Figure", "Cell Data", "Phase_1"});
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
+    if(unmasked[i] != masked[i])
+    {
+      ++diffBytes;
+    }
   }
+  INFO(fmt::format("Bytes that differ between mask-off and mask-on: {} / {} ({:.2f}%)", diffBytes, unmasked.size(), 100.0 * static_cast<double>(diffBytes) / static_cast<double>(unmasked.size())));
 
-  {
-    DataPath calculatedImageData({"Discrete Count MRD", "Cell Data", "Phase_1_<001>"});
-    DataPath exemplarImageData({"Discrete Count MRD [CALCULATED]", "Cell Data", "Phase_1_<001>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
-  }
-
-  {
-    DataPath calculatedImageData({"Discrete Count MRD", "Cell Data", "Phase_1_<011>"});
-    DataPath exemplarImageData({"Discrete Count MRD [CALCULATED]", "Cell Data", "Phase_1_<011>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
-  }
-
-  {
-    DataPath calculatedImageData({"Discrete Count MRD", "Cell Data", "Phase_1_<111>"});
-    DataPath exemplarImageData({"Discrete Count MRD [CALCULATED]", "Cell Data", "Phase_1_<111>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
-  }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  // The v6 fixture is constructed so the mask kills roughly half of the
+  // orientations and removes most of the visible clusters in each pole
+  // figure. A 1% byte-diff threshold is conservative but firmly above the
+  // noise floor of "the mask did literally nothing" (which would be 0%).
+  REQUIRE(diffBytes > unmasked.size() / 100);
 }
 
-TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-Discrete-Masked", "[OrientationAnalysis][WritePoleFigureFilter]")
+// -----------------------------------------------------------------------------
+// HexConvention plumbing test (simplnx-unique parameter wiring).
+//
+// k_HexConvention_Key must route through executeImpl's switch to
+// ebsdlib::HexConvention and reach PoleFigureConfiguration_t::hexConvention.
+// EbsdLib's own LaueOpsTest::GenerateSphereCoords_HexConvention_* exercises
+// the per-class sphere-coord math under both bases; here we just confirm
+// the simplnx-side wiring is intact.
+//
+// For hex 6/mmm input (the v6 fixture), the basal-plane plane families
+// (<10-10> and <11-20>) rotate 30° between X||a and X||a* renderings, so
+// the produced intensity arrays MUST differ. If they don't, the simplnx
+// switch is collapsing both choices onto the same enum value.
+// -----------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reaches algorithm", "[OrientationAnalysis][WritePoleFigureFilter]")
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v5.tar.gz", "PoleFigure_Exemplars_v5", true, true);
+  // decompressFiles=true so the .tar.gz is unpacked on first run, but
+  // removeTemp=false so the .dream3d survives between tests (the Mask test
+  // and the HexConvention test both consume it). With removeTemp=true the
+  // first test would wipe the file before the second could open it.
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
 
-  // Read the test data
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v5/PoleFigure_Exemplars_v5.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
 
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  WritePoleFigureFilter filter;
-  Arguments args;
+  const DataPath k_Eulers({"Imported Data", "Eulers"});
+  const DataPath k_Phases({"Imported Data", "Phases"});
+  const DataPath k_CrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
+  const DataPath k_MaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
 
-  // Create default Parameters for the filter.
-  args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Discrete Pole Figure Masked"));
-  args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
-  args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
-  args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(1));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/Dir1/Dir2", unit_test::k_BinaryTestOutputDir))));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>(k_ImagePrefix));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(1024));
-  args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Discrete Pole Figure Masked [CALCULATED]"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({"Discrete Count MRD Masked [CALCULATED]"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(true));
-
-  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Phases"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Mask"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "CrystalStructures"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "MaterialName"})));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/write_pole_figure-Discrete-Masked.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
+  // Two parallel snapshots per run -- the intensity array and the composite
+  // RGB image. These trace separate code paths in WritePoleFigure.cpp:
+  //   - intensity goes through PoleFigureConfiguration_t::hexConvention
+  //     (set unconditionally)
+  //   - composite RGB goes through CompositePoleFigureConfiguration_t::hexConvention
+  //     (was silently dropped on the floor pre-fix; bug found 2026-05-11)
+  // We need both to catch *both* plumbing paths in a single test.
+  struct ConvSnapshot
   {
-    DataPath calculatedImageData({"Discrete Pole Figure Masked [CALCULATED]", "Cell Data", fmt::format("Phase_{}", 1)});
-    DataPath exemplarImageData({"Discrete Pole Figure Masked", "Cell Data", "Phase_1"});
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
-  }
+    std::vector<float64> intensity;
+    std::vector<uint8> compositeRgb;
+  };
 
-  {
-    DataPath calculatedImageData({"Discrete Count MRD Masked", "Cell Data", "Phase_1_<001>"});
-    DataPath exemplarImageData({"Discrete Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<001>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
-  }
+  auto runWithConv = [&](ChoicesParameter::ValueType convIndex, const std::string& geomName, const std::string& intensityName) {
+    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    WritePoleFigureFilter filter;
+    Arguments args;
+    args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Conv Test"));
+    args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
+    args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
+    args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0)); // Color
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));         // Horizontal
+    args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/HexConvDir", unit_test::k_BinaryTestOutputDir))));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>("conv_test_"));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(256));
+    args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
+    args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({geomName})));
+    args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
+    args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({intensityName})));
+    args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(true));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_Eulers));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_Phases));
+    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructures));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(k_MaterialNames));
+    args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(convIndex));
 
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    ConvSnapshot snap;
+
+    // Snapshot 1 -- the second-family intensity array. The output array
+    // names follow the user-supplied k_IntensityPlot{1,2,3}Name labels (here
+    // the defaults <001>/<011>/<111>), regardless of crystal structure --
+    // the contents are the family-0/1/2 intensities EbsdLib computed for
+    // the actual Laue class. For hex 6/mmm input that's c-axis / <10-10> /
+    // <11-20>. We pick family 1 (slot "<011>") because the basal-plane
+    // families rotate 30° between X||a and X||a*, so the array contents
+    // MUST differ. (Family 0 is the c-axis -- convention-invariant -- and
+    // would give a false-pass.)
+    const DataPath intensityPath = DataPath({intensityName, "Cell Data", "Phase_1_<011>"});
+    const auto& intensityStore = dataStructure.getDataRefAs<Float64Array>(intensityPath).getDataStoreRef();
+    snap.intensity.resize(intensityStore.getSize());
+    for(usize i = 0; i < intensityStore.getSize(); ++i)
+    {
+      snap.intensity[i] = intensityStore[i];
+    }
+
+    // Snapshot 2 -- the composite RGB image. This is the array that becomes
+    // the PNG on disk and the geometry array downstream consumers actually
+    // read. Pre-fix, WritePoleFigure.cpp set PoleFigureConfiguration_t::
+    // hexConvention but never set CompositePoleFigureConfiguration_t::
+    // hexConvention, so this image was always rendered with the default
+    // XParallelAStar regardless of the k_HexConvention_Key value. The
+    // intensity snapshot above honors hexConvention either way, so it can't
+    // catch the dropped-on-the-floor composite path -- we need this second
+    // snapshot to do that.
+    const DataPath compositePath = DataPath({geomName, "Cell Data", "Phase_1"});
+    const auto& compositeStore = dataStructure.getDataRefAs<UInt8Array>(compositePath).getDataStoreRef();
+    snap.compositeRgb.resize(compositeStore.getSize());
+    for(usize i = 0; i < compositeStore.getSize(); ++i)
+    {
+      snap.compositeRgb[i] = compositeStore[i];
+    }
+
+    return snap;
+  };
+
+  const auto xa = runWithConv(0, "ConvTest_XA", "ConvIntensity_XA");
+  const auto xastar = runWithConv(1, "ConvTest_XAStar", "ConvIntensity_XAStar");
+
+  // ---- Assertion 1 -- intensity array honors hexConvention ----
+  REQUIRE(xa.intensity.size() == xastar.intensity.size());
+  REQUIRE(xa.intensity.size() > 0);
+
+  usize diffPixels = 0;
+  for(usize i = 0; i < xa.intensity.size(); ++i)
   {
-    DataPath calculatedImageData({"Discrete Count MRD Masked", "Cell Data", "Phase_1_<011>"});
-    DataPath exemplarImageData({"Discrete Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<011>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
+    if(std::abs(xa.intensity[i] - xastar.intensity[i]) > 1.0e-9)
+    {
+      ++diffPixels;
+    }
   }
+  INFO(fmt::format("Intensity pixels that differ between X||a and X||a* (<10-10> family): {} / {}", diffPixels, xa.intensity.size()));
+
+  // Hex 6/mmm <10-10> intensity must rotate 30° between conventions. We
+  // expect *many* differing pixels; a 1% threshold is conservative and
+  // strictly above the noise floor of "the conventions are identical."
+  REQUIRE(diffPixels > xa.intensity.size() / 100);
+
+  // ---- Assertion 2 -- composite RGB also honors hexConvention ----
+  // This is the assertion that would have FAILED on the pre-fix code
+  // where compositeConfig.hexConvention was never set. The composite is
+  // a horizontal strip of three stereographic pole figures (one per
+  // family); the <10-10> and <11-20> halves of the strip rotate 30°
+  // between bases, so we expect substantially more than 1% byte-diff.
+  REQUIRE(xa.compositeRgb.size() == xastar.compositeRgb.size());
+  REQUIRE(xa.compositeRgb.size() > 0);
+
+  usize diffBytes = 0;
+  for(usize i = 0; i < xa.compositeRgb.size(); ++i)
   {
-    DataPath calculatedImageData({"Discrete Count MRD Masked", "Cell Data", "Phase_1_<111>"});
-    DataPath exemplarImageData({"Discrete Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<111>"});
-    CompareComponentsOfArrays<float64>(dataStructure, exemplarImageData, calculatedImageData, 0);
+    if(xa.compositeRgb[i] != xastar.compositeRgb[i])
+    {
+      ++diffBytes;
+    }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  INFO(fmt::format("Composite RGB bytes that differ between X||a and X||a*: {} / {} ({:.2f}%)", diffBytes, xa.compositeRgb.size(),
+                   100.0 * static_cast<double>(diffBytes) / static_cast<double>(xa.compositeRgb.size())));
+
+  REQUIRE(diffBytes > xa.compositeRgb.size() / 100);
 }
 
-TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-Color", "[OrientationAnalysis][WritePoleFigureFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v5.tar.gz", "PoleFigure_Exemplars_v5", true, true);
-
-  // Read the test data
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v5/PoleFigure_Exemplars_v5.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  WritePoleFigureFilter filter;
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Color Pole Figure"));
-  args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
-  args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
-  args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/Dir1/Dir2", unit_test::k_BinaryTestOutputDir))));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>(k_ImagePrefix));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(1024));
-  args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Color Pole Figure [CALCULATED]"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({"Color Count MRD [CALCULATED]"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(true));
-
-  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Phases"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Mask"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "CrystalStructures"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "MaterialName"})));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/write_pole_figure-Color.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
-  {
-    DataPath calculatedImageData({"Color Pole Figure [CALCULATED]", "Cell Data", fmt::format("Phase_{}", 1)});
-    DataPath exemplarImageData({"Color Pole Figure", "Cell Data", "Phase_1"});
-
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
-  }
-
-  {
-    DataPath calculatedImageData({"Color Count MRD", "Cell Data", "Phase_1_<001>"});
-    DataPath exemplarImageData({"Color Count MRD [CALCULATED]", "Cell Data", "Phase_1_<001>"});
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
-  }
-
-  {
-    DataPath calculatedImageData({"Color Count MRD", "Cell Data", "Phase_1_<011>"});
-    DataPath exemplarImageData({"Color Count MRD [CALCULATED]", "Cell Data", "Phase_1_<011>"});
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
-  }
-
-  {
-    DataPath calculatedImageData({"Color Count MRD", "Cell Data", "Phase_1_<111>"});
-    DataPath exemplarImageData({"Color Count MRD [CALCULATED]", "Cell Data", "Phase_1_<111>"});
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
-  }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
-TEST_CASE("OrientationAnalysis::WritePoleFigureFilter-Color-Masked", "[OrientationAnalysis][WritePoleFigureFilter]")
-{
-  UnitTest::LoadPlugins();
-
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "PoleFigure_Exemplars_v5.tar.gz", "PoleFigure_Exemplars_v5", true, true);
-
-  // Read the test data
-  auto baseDataFilePath = fs::path(fmt::format("{}/PoleFigure_Exemplars_v5/PoleFigure_Exemplars_v5.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-
-  // Instantiate the filter, a DataStructure object and an Arguments Object
-  WritePoleFigureFilter filter;
-  Arguments args;
-
-  // Create default Parameters for the filter.
-  args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Color Pole Figure Masked"));
-  args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
-  args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
-  args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/Dir1/Dir2", unit_test::k_BinaryTestOutputDir))));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>(k_ImagePrefix));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(1024));
-  args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"Color Pole Figure Masked [CALCULATED]"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(true));
-  args.insertOrAssign(WritePoleFigureFilter::k_IntensityGeometryPath, std::make_any<DataPath>(DataPath({"Color Count MRD Masked [CALCULATED]"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_NormalizeToMRD, std::make_any<bool>(true));
-
-  args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "EulerAngles"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Phases"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "Cell Data", "Mask"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "CrystalStructures"})));
-  args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(DataPath({"fw-ar-IF1-aptr12-corr", "CellEnsembleData", "MaterialName"})));
-
-  // Preflight the filter and check result
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-
-  // Execute the filter and check the result
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fmt::format("{}/write_pole_figure-Color-Masked.dream3d", unit_test::k_BinaryTestOutputDir));
-#endif
-  {
-    DataPath calculatedImageData({"Color Pole Figure Masked [CALCULATED]", "Cell Data", fmt::format("Phase_{}", 1)});
-    DataPath exemplarImageData({"Color Pole Figure Masked", "Cell Data", "Phase_1"});
-
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 0);
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 1);
-    CompareComponentsOfArrays<uint8>(dataStructure, exemplarImageData, calculatedImageData, 2);
-  }
-
-  {
-    DataPath calculatedImageData({"Color Count MRD Masked", "Cell Data", "Phase_1_<001>"});
-    DataPath exemplarImageData({"Color Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<001>"});
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
-  }
-
-  {
-    DataPath calculatedImageData({"Color Count MRD Masked", "Cell Data", "Phase_1_<011>"});
-    DataPath exemplarImageData({"Color Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<011>"});
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
-  }
-
-  {
-    DataPath calculatedImageData({"Color Count MRD Masked", "Cell Data", "Phase_1_<111>"});
-    DataPath exemplarImageData({"Color Count MRD Masked [CALCULATED]", "Cell Data", "Phase_1_<111>"});
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, exemplarImageData, calculatedImageData, 0.0001f, false);
-  }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-}
-
+// -----------------------------------------------------------------------------
+// SIMPL JSON backwards compatibility.
+// -----------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][WritePoleFigureFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

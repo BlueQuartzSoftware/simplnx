@@ -10,6 +10,10 @@ using namespace nx::core;
 
 namespace
 {
+// Compile-time policy struct that selects between the 4 algorithm variants
+// (UseNonContiguousNeighbors x FindCheckedFeatures). Resolving these flags
+// at compile time via template specialization keeps the inner-loop hot path
+// free of runtime branches on the flag values.
 template <bool UseNonContiguousNeighbors, bool FindCheckedFeatures>
 struct FindDensitySpecializations
 {
@@ -17,6 +21,14 @@ struct FindDensitySpecializations
   static constexpr bool FindingCheckedFeatures = FindCheckedFeatures;
 };
 
+// Core grouping-density computation. For each parent, walk its assigned
+// features and their neighbors (contiguous always; non-contiguous when the
+// template flag is set), accumulating totalFeatureCheckVolume, then write
+// GroupingDensities[parent] = parentVolume / totalFeatureCheckVolume, or
+// the sentinel -1.0f if no features touched the parent. When
+// FindingCheckedFeatures is set, also write the largest-volume claiming
+// parent into CheckedFeatures[feature] (ties go to first-encountered parent
+// because the comparison uses strict `>`).
 template <class FindDensitySpecializations = FindDensitySpecializations<true, true>>
 class FindDensityGrouping
 {
@@ -36,10 +48,10 @@ public:
   }
   ~FindDensityGrouping() noexcept = default;
 
-  FindDensityGrouping(const FindDensityGrouping&) = delete;            // Copy Constructor Default Implemented
-  FindDensityGrouping(FindDensityGrouping&&) = delete;                 // Move Constructor Not Implemented
-  FindDensityGrouping& operator=(const FindDensityGrouping&) = delete; // Copy Assignment Not Implemented
-  FindDensityGrouping& operator=(FindDensityGrouping&&) = delete;      // Move Assignment Not Implemented
+  FindDensityGrouping(const FindDensityGrouping&) = delete;
+  FindDensityGrouping(FindDensityGrouping&&) = delete;
+  FindDensityGrouping& operator=(const FindDensityGrouping&) = delete;
+  FindDensityGrouping& operator=(FindDensityGrouping&&) = delete;
 
   Result<> operator()()
   {
@@ -71,7 +83,7 @@ public:
     // Start the Parent Outer Loop
     for(usize currentParentId = 1; currentParentId < numParents; currentParentId++)
     {
-      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{}/{} {}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); });
+      throttledMessenger.sendThrottledMessage([&]() { return fmt::format("{}/{} {:.1f}%", currentParentId, numParents, CalculatePercentComplete(currentParentId, numParents)); });
 
       if(m_ShouldCancel)
       {
@@ -111,6 +123,10 @@ public:
       curParentVolume = parentVolumesRef[currentParentId];
       if(totalFeatureCheckVolume == 0.0f)
       {
+        // Sentinel: this parent had no assigned features (so no neighbors
+        // were walked, and totalFeatureCheckVolume stayed at 0). Downstream
+        // consumers treat -1.0f in GroupingDensities as "density is not
+        // defined for this parent." See the filter documentation.
         outGroupingDensitiesRef[currentParentId] = -1.0f;
       }
       else
@@ -128,14 +144,17 @@ public:
                                float32& totalFeatureCheckVolume, const AbstractDataStore<float>& parentVolumesRef, std::vector<float32>& checkedFeatureVolumes,
                                AbstractDataStore<int>& outCheckedFeaturesRef)
   {
-    auto featureNeighbors = neighborList.at(currentFeatureId);
-    auto numNeighbors = static_cast<int32>(featureNeighbors.size());
-
+    const usize numNeighbors = neighborList.getListSize(currentFeatureId);
     for(int32 neighborIdx = 0; neighborIdx < numNeighbors; neighborIdx++)
     {
-      auto neighborId = featureNeighbors.at(neighborIdx);
+      bool ok = false;
+      int32 neighborId = neighborList.getValue(currentFeatureId, neighborIdx, ok);
+      if(!ok) // If trying to retrieve the value fails for some reason. This should never happen.
+      {
+        return;
+      }
 
-      // If the current neighbor is NOT in the check list...
+      // If the current neighbor is NOT in the checklist...
       if(!totalFeatureCheckList.contains(neighborId))
       {
         // update the volumes and the check list

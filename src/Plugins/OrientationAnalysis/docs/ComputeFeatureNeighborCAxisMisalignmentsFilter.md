@@ -16,9 +16,9 @@ There are 2 outputs from this filter:
 
 ### Notes
 
-**NOTE:** Only features with identical phase values and a crystal structure of **Hexagonal_High** will be calculated. If two features have different phase values or a crystal structure that is *not* Hexagonal_High then a value of NaN is set for the misorientation.
+**NOTE:** Only features with identical phase values and a crystal structure of **Hexagonal_High** (6/mmm) or **Hexagonal_Low** (6/m) will be calculated. If two features have different phase values, or if the shared phase has a crystal structure that is not one of the two hexagonal Laue classes, then a value of NaN is set for the misalignment.
 
-Results from this filter can differ from its original version in DREAM.3D 6.5.171 by around 0.0001. This version uses double precision and Eigen for matrix operations which account for the differences in output.
+Results from this filter can differ from its original version in DREAM.3D 6.5.171 by around 0.0001 degrees. This version uses double precision and Eigen for matrix operations which account for the differences in output.
 
 % Auto generated parameter table will be inserted here
 

@@ -49,6 +49,7 @@ float32 GetXCharWidth(int32 imageSize, float32 fontPtSize)
   tempContext.set_font(m_LatoBold.data(), static_cast<int>(m_LatoBold.size()), fontPtSize);
   return tempContext.measure_text("X");
 }
+
 } // namespace
 
 namespace nx::core
@@ -98,6 +99,13 @@ Parameters WritePoleFigureFilter::parameters() const
                                                                     ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
   params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
   params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
+  params.insert(std::make_unique<ChoicesParameter>(
+      k_HexConvention_Key, "Hex/Trig Cartesian Basis Convention",
+      "Cartesian basis used for hex/trigonal phases. Pole-figure positions and corner labels are rotated 30° about the c-axis between the two:\n"
+      "  X parallel to a: EDAX/TSL/OIM Analysis convention. This is the convention every released DREAM.3D / DREAM3DNX / SIMPL / SIMPLNX file stores hex/trig EulerAngles in.\n"
+      "  X parallel to a*: MTEX / Oxford Channel 5 / AZtec convention. Pick this for apples-to-apples comparison against MTEX-produced pole figures.\n"
+      "Cubic, tetragonal, orthorhombic, monoclinic, and triclinic phases ignore this setting.",
+      0, ChoicesParameter::Choices{"X || A (EDAX/TSL)", "X || A* (MTEX/Aztec)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Orientation Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Euler Angles", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",
@@ -158,7 +166,7 @@ Parameters WritePoleFigureFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType WritePoleFigureFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -203,8 +211,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  // Roughly calculate the output dimensions of the ImageGeometry. This may change
-  // in small amounts due to the XCharWidth not being calculated.
+  // Roughly calculate the output dimensions of the ImageGeometry.
   float32 fontPtSize = pImageSizeValue / 16.0f;
   float32 margins = pImageSizeValue / 32.0f;
 
@@ -309,6 +316,18 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.IntensityPlot1Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot1Name);
   inputValues.IntensityPlot2Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot2Name);
   inputValues.IntensityPlot3Name = filterArgs.value<DataObjectNameParameter::ValueType>(k_IntensityPlot3Name);
+  const auto hexConventionChoice = filterArgs.value<ChoicesParameter::ValueType>(k_HexConvention_Key);
+  switch(hexConventionChoice)
+  {
+  case 0:
+    inputValues.HexConvention = ebsdlib::HexConvention::XParallelA;
+    break;
+  case 1:
+    inputValues.HexConvention = ebsdlib::HexConvention::XParallelAStar;
+    break;
+  default:
+    return MakeErrorResult(-680010, fmt::format("Invalid Hex Convention choice: {}. Valid range is [0, 1].", hexConventionChoice));
+  }
 
   return WritePoleFigure(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

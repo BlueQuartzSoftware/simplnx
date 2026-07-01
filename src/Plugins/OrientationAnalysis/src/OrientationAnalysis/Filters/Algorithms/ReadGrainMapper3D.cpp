@@ -71,6 +71,7 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
   auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_MaterialName));
   auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_LatticeConstants));
   Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
+  auto& universalHermannMauguin = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_UniversalHermannMauguin));
 
   crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   materialNames[0] = "Invalid Phase";
@@ -80,6 +81,7 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
   latticeConstants->setComponent(0, 3, 0.0f);
   latticeConstants->setComponent(0, 4, 0.0f);
   latticeConstants->setComponent(0, 5, 0.0f);
+  universalHermannMauguin[0] = "Invalid Phase";
   int32 index = 1;
   for(const auto& phase : phases)
   {
@@ -94,6 +96,8 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
     latticeConstants->setComponent(phaseId, 3, static_cast<float32>(lc[3]));
     latticeConstants->setComponent(phaseId, 4, static_cast<float32>(lc[4]));
     latticeConstants->setComponent(phaseId, 5, static_cast<float32>(lc[5]));
+
+    universalHermannMauguin[phaseId] = phase.UniversalHermannMauguin;
   }
 
   return {};

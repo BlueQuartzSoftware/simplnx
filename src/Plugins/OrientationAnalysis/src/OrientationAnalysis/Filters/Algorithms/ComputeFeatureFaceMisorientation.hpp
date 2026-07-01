@@ -5,19 +5,17 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
-#include "simplnx/Parameters/ArrayCreationParameter.hpp"
-#include "simplnx/Parameters/ArraySelectionParameter.hpp"
 
 namespace nx::core
 {
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureFaceMisorientationInputValues
 {
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  std::string SurfaceMeshFaceMisorientationColorsArrayName;
+  DataPath surfaceMeshFaceLabelsArrayPath;
+  DataPath avgQuatsArrayPath;
+  DataPath featurePhasesArrayPath;
+  DataPath crystalStructuresArrayPath;
+  DataPath misorientationArrayPath;
 };
 
 /**
@@ -36,8 +34,6 @@ public:
   ComputeFeatureFaceMisorientation& operator=(ComputeFeatureFaceMisorientation&&) noexcept = delete;
 
   Result<> operator()();
-
-  const std::atomic_bool& getCancel();
 
 private:
   DataStructure& m_DataStructure;

@@ -217,10 +217,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: InValid Filter Exe
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_gbcd_metric_based.tar.gz", "6_6_find_gbcd_metric_based");
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
 
   // Read Exemplar DREAM3D File Input
-  auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbcd_metric_based/6_6_find_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
+  auto exemplarInputFilePath = fs::path(fmt::format("{}/compute_gbcd_metric_based/compute_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);
 
   fs::path computedDistOutput(fmt::format("{}/computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));

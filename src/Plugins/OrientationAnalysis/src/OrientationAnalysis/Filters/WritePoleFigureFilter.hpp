@@ -48,6 +48,7 @@ public:
   static constexpr StringLiteral k_IntensityPlot1Name = "intensity_plot_1_name";
   static constexpr StringLiteral k_IntensityPlot2Name = "intensity_plot_2_name";
   static constexpr StringLiteral k_IntensityPlot3Name = "intensity_plot_3_name";
+  static constexpr StringLiteral k_HexConvention_Key = "hex_convention_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

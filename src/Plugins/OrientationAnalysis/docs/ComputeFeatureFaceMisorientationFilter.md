@@ -6,7 +6,13 @@ Processing (Crystallography)
 
 ## Description
 
-This **Filter** generates a 3 component vector for each **Triangle** in a **Triangle Geometry** that is the axis-angle of the misorientation associated with the **Features** that lie on either side of the **Triangle**.  The axis is normalized, so if the magnitude of the vector is viewed, it will be the *misorientation angle* in degrees.
+This **Filter** generates a 3 component vector for each **Triangle** in a **Triangle Geometry** that is the axis-angle of the misorientation associated with the **Features** that lie on either side of the **Triangle**. The axis is normalized, so if the magnitude of the vector is viewed, it will be the *misorientation angle* in degrees. This filter works on all valid crystal-structures/laue classes.
+
+If you want to get the "raw" (un-normalized) axis-angle of the misorientation, enable "Store Full Axis Angle" and then (optionally) modify the "Axis Angle Array Name" parameter. The actual axis-angle is stored in a 4 component DataArray with the format as follows:
+
+```text
+{{x_axis, y_axis, z_axis, angle}, ...}
+```
 
 % Auto generated parameter table will be inserted here
 

@@ -8,6 +8,8 @@
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
+#include <EbsdLib/Core/EbsdLibConstants.h>
+
 #include <vector>
 
 namespace nx::core
@@ -25,6 +27,7 @@ struct ORIENTATIONANALYSIS_EXPORT ComputeIPFColorsInputValues
   DataPath cellEulerAnglesArrayPath;
   DataPath crystalStructuresArrayPath;
   DataPath cellIpfColorsArrayPath;
+  ebsdlib::ColorKeyKind colorKey = ebsdlib::ColorKeyKind::TSL;
 };
 
 /**

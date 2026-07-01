@@ -3,11 +3,14 @@
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 #include <catch2/catch.hpp>
+
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 
@@ -130,6 +133,59 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Invalid filter exe
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// -----------------------------------------------------------------------------
+// Plumbing test: the k_ColorKey_Key choice index must route through executeImpl's
+// switch into the right `ebsdlib::ColorKeyKind` and reach generateIPFColor. The
+// per-Laue-class correctness of TSL / PUCM / Nolze-Hielscher is covered by
+// EbsdLib's ColorKeyKindTest; here we only assert that the simplnx side wiring
+// is intact -- non-default choices must produce a different output array than
+// the default (TSL) run on the same input data.
+TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: ColorKey choice reaches algorithm", "[OrientationAnalysis][ComputeFaceIPFColoringFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+
+  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
+  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+
+  // Run the filter once per kind, writing into uniquely-named output arrays.
+  auto runWithKind = [&](ChoicesParameter::ValueType kindIndex, const std::string& firstName, const std::string& secondName) {
+    ComputeFaceIPFColoringFilter filter;
+    Arguments args;
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceLabels));
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(faceNormals));
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructurePath));
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_FirstFaceIPFColorsArrayName_Key, std::make_any<std::string>(firstName));
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_SecondFaceIPFColorsArrayName_Key, std::make_any<std::string>(secondName));
+    args.insertOrAssign(ComputeFaceIPFColoringFilter::k_ColorKey_Key, std::make_any<ChoicesParameter::ValueType>(kindIndex));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  };
+
+  runWithKind(0, "FirstIPF_TSL", "SecondIPF_TSL");
+  runWithKind(1, "FirstIPF_PUCM", "SecondIPF_PUCM");
+  runWithKind(2, "FirstIPF_NH", "SecondIPF_NH");
+
+  const auto& tslFirst = dataStructure.getDataRefAs<UInt8Array>(faceDataGroup.createChildPath("FirstIPF_TSL"));
+  const auto& pucmFirst = dataStructure.getDataRefAs<UInt8Array>(faceDataGroup.createChildPath("FirstIPF_PUCM"));
+  const auto& nhFirst = dataStructure.getDataRefAs<UInt8Array>(faceDataGroup.createChildPath("FirstIPF_NH"));
+
+  REQUIRE(tslFirst.getSize() == pucmFirst.getSize());
+  REQUIRE(tslFirst.getSize() == nhFirst.getSize());
+
+  // Sanity: at least one tuple must differ between TSL and each other kind. If
+  // the switch in executeImpl ever silently collapsed every kind onto TSL,
+  // these arrays would be identical.
+  REQUIRE(!std::equal(tslFirst.cbegin(), tslFirst.cend(), pucmFirst.cbegin()));
+  REQUIRE(!std::equal(tslFirst.cbegin(), tslFirst.cend(), nhFirst.cbegin()));
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeFaceIPFColoringFilter][BackwardsCompatibility]")

@@ -54,6 +54,7 @@
 #include "OrientationAnalysis/Filters/ComputeFeatureFaceMisorientationFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeFZQuaternionsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeGBCDPoleFigureFilter.hpp"
+#include "OrientationAnalysis/Filters/GroupMicroTextureRegionsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeIPFColorsFilter.hpp"
 #include "OrientationAnalysis/Filters/ComputeQuaternionConjugateFilter.hpp"
 #include "OrientationAnalysis/Filters/ReadH5EspritDataFilter.hpp"
@@ -147,6 +148,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("d67e9f28-2fe5-5188-b0f8-323a7e603de6").value(), {nx::core::FilterTraits<ComputeGBCDMetricBasedFilter>::uuid, &ComputeGBCDMetricBasedFilter::FromSIMPLJson}}, // ComputeGBCDMetricBased
     {nx::core::Uuid::FromString("a4952f40-22dd-54ec-8c38-69c3fcd0e6f7").value(), {nx::core::FilterTraits<WriteStatsGenOdfAngleFileFilter>::uuid, &WriteStatsGenOdfAngleFileFilter::FromSIMPLJson}}, // WriteStatsGenOdfAngleFile
     {nx::core::Uuid::FromString("27c724cc-8b69-5ebe-b90e-29d33858a032").value(), {nx::core::FilterTraits<WriteINLFileFilter>::uuid, &WriteINLFileFilter::FromSIMPLJson}}, // INLWriter
+    {nx::core::Uuid::FromString("5e18a9e2-e342-56ac-a54e-3bd0ca8b9c53").value(), {nx::core::FilterTraits<GroupMicroTextureRegionsFilter>::uuid, &GroupMicroTextureRegionsFilter::FromSIMPLJson}}, // GroupMicroTextureRegions
     // @@__MAP__UPDATE__TOKEN__DO__NOT__DELETE__@@
   };
 

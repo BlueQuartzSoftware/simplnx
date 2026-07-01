@@ -66,6 +66,7 @@ set(FilterList
   CreateEnsembleInfoFilter
   EBSDSegmentFeaturesFilter
   EbsdToH5EbsdFilter
+  GroupMicroTextureRegionsFilter
   MergeTwinsFilter
   NeighborOrientationCorrelationFilter
   ReadAngDataFilter
@@ -204,6 +205,7 @@ set(filter_algorithms
   CreateEnsembleInfo
   EBSDSegmentFeatures
   EbsdToH5Ebsd
+  GroupMicroTextureRegions
   MergeTwins
   NeighborOrientationCorrelation
   ReadAngData

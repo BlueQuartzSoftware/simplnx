@@ -49,19 +49,16 @@ public:
 
   /**
    * @brief Returns the total number of lists in the list store.
-   * @return uint64 The number of lists
+   * @return usize The number of lists
    */
-  virtual uint64 getNumberOfLists() const = 0;
+  virtual usize getNumberOfLists() const = 0;
 
   /**
    * @brief Returns the total number of lists in the list store.
    * Alias for getNumberOfLists().
-   * @return uint64 The number of lists
+   * @return usize The number of lists
    */
-  uint64 size() const
-  {
-    return getNumberOfLists();
-  }
+  virtual usize size() const = 0;
 
   /**
    * @brief Clears the array.
