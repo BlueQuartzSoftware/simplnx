@@ -233,6 +233,10 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
       auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(GM3DConstants::k_MaterialName));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
+    {
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(ensembleTupleDims, cellEnsembleAMPath.createChildPath(GM3DConstants::k_UniversalHermannMauguin));
+      resultOutputActions.value().appendAction(std::move(createArrayAction));
+    }
   }
 
   // **************************************************************************

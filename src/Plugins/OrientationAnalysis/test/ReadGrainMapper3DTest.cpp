@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArrayCreationParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
@@ -49,7 +50,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadLabDCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedDCTImageGeometryPath_Key, std::make_any<DataPath>(computedDCTGeometryPath));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertPhaseToInt32_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertOrientationData_Key, std::make_any<bool>(true));
@@ -78,6 +79,26 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
   UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Data), dataStructure, computedDCTGeometryPath.createChildPath(k_Cell_Data));
   UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_Cell_Data), dataStructure,
                                                      computedAbsorptionCTGeometryPath.createChildPath(k_Cell_Data));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data), dataStructure,
+                                                     computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data));
+
+  // The exemplar .dream3d predates the UniversalHermannMauguin ensemble array and therefore cannot be used
+  // to compare it. Verify the parsed values directly against the known phase metadata so a regression in the
+  // dataset that is read (UniversalHermannMauguin vs. Name) is caught. Index 0 is the reserved invalid phase.
+  {
+    const std::vector<std::string> expectedHermannMauguin = {
+        "Invalid Phase",    "F d -3 m :2 (a-1/8,b-1/8,c-1/8)", "F d -3 m :2 (a-1/8,b-1/8,c-1/8)", "P 63/m m c", "P 42/m n m", "R -3 c :H (-y+z,x+z,-x+y+z)", "P 32 2 1", "P b c n", "C 1 2/m 1",
+        "P -1 (a+b,a-b,-c)"};
+    const DataPath hermannMauguinPath = computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data).createChildPath("UniversalHermannMauguin");
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(hermannMauguinPath));
+    const auto& hermannMauguinArray = dataStructure.getDataRefAs<StringArray>(hermannMauguinPath);
+    REQUIRE(hermannMauguinArray.getNumberOfTuples() == expectedHermannMauguin.size());
+    for(usize i = 0; i < expectedHermannMauguin.size(); i++)
+    {
+      CAPTURE(i);
+      REQUIRE(hermannMauguinArray[i] == expectedHermannMauguin[i]);
+    }
+  }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -110,7 +131,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadLabDCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedDCTImageGeometryPath_Key, std::make_any<DataPath>(computedDCTGeometryPath));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertPhaseToInt32_Key, std::make_any<bool>(false));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertOrientationData_Key, std::make_any<bool>(false));
@@ -138,6 +159,8 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
   UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Data), dataStructure, computedDCTGeometryPath.createChildPath(k_Cell_Data));
   UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_Cell_Data), dataStructure,
                                                      computedAbsorptionCTGeometryPath.createChildPath(k_Cell_Data));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data), dataStructure,
+                                                     computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

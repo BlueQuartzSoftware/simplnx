@@ -398,7 +398,7 @@ herr_t GrainMapperReader::readPhaseInfo(hid_t parentId)
       return error;
     }
 
-    error = H5Lite::readStringDataset(phaseGid, Constants::k_Name, phase.UniversalHermannMauguin);
+    error = H5Lite::readStringDataset(phaseGid, Constants::k_UniversalHermannMauguinName, phase.UniversalHermannMauguin);
     if(error < 0)
     {
       return error;
