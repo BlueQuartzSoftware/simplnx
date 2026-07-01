@@ -70,10 +70,10 @@ These values may be exposed as user-configurable parameters in a future release.
 
 % Auto generated parameter table will be inserted here
 
+
 ## Example Pipelines
 
 + (02) Small IN100 Full Reconstruction
-+ InsertTransformationPhase
 + (05) SmallIN100 Crystallographic Statistics
 + (06) SmallIN100 Synthetic
 
