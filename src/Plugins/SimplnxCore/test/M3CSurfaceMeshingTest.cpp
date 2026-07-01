@@ -305,3 +305,91 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: SIMPL Backwards Compatibility",
   CHECK(args.value<std::string>(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key) == "TestName");
   CHECK(args.value<std::string>(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key) == "TestName");
 }
+
+namespace
+{
+// Self-generated ("circular") regression oracle: the exemplar is produced BY this filter, so it only
+// guards against future *changes* to the output, not against correctness of the current output. It
+// should be replaced by an independent oracle (e.g. legacy DREAM3D M3C output) when available.
+const fs::path k_ExemplarFile = fs::path(nx::core::unit_test::k_TestFilesDir.view()) / "M3CSurfaceMeshingExemplar" / "M3CSurfaceMeshingExemplar.dream3d";
+const DataPath k_ExemplarMeshPath({"Computed M3C Mesh"});
+
+// Runs M3C (winding repair on) on an already-loaded Small IN100 input, creating k_ExemplarMeshPath.
+void RunM3COnSmallIn100(DataStructure& dataStructure)
+{
+  Arguments args;
+  M3CSurfaceMeshingFilter filter;
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(true));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_GridGeometryDataPath_Key, std::make_any<DataPath>(DataPath({k_DataContainer})));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_DataContainer, k_CellData, k_FeatureIds})));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_ExemplarMeshPath));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+}
+
+DataStructure LoadSmallIn100Input()
+{
+  auto inputPath = fs::path(fmt::format("{}/QuickSurfaceMeshTest_v2/QuickSurfaceMeshTest_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
+  return UnitTest::LoadDataStructure(inputPath);
+}
+} // namespace
+
+// Hidden test: regenerate the exemplar .dream3d from the current output. Run explicitly with the tag
+// [.][M3CGenerateExemplar], then upload the file to the DREAM3D Data_Archive.
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGenerateExemplar]")
+{
+  UnitTest::LoadPlugins();
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+
+  DataStructure dataStructure = LoadSmallIn100Input();
+  RunM3COnSmallIn100(dataStructure);
+
+  // Drop the input container so the exemplar holds only the generated mesh.
+  dataStructure.removeData(DataPath({k_DataContainer}));
+  fs::create_directories(k_ExemplarFile.parent_path());
+  WriteTestDataStructure(dataStructure, k_ExemplarFile);
+}
+
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Exemplar Comparison", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+{
+  UnitTest::LoadPlugins();
+  if(!fs::exists(k_ExemplarFile))
+  {
+    // TODO: once the exemplar is published to the Data_Archive, replace this guard with a
+    // TestFileSentinel download. Until then, run the "Generate Exemplar" test to create it locally.
+    WARN(fmt::format("Skipping M3C exemplar comparison: exemplar not found at {}", k_ExemplarFile.string()));
+    return;
+  }
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
+  DataStructure dataStructure = LoadSmallIn100Input();
+  RunM3COnSmallIn100(dataStructure);
+
+  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath));
+  REQUIRE_NOTHROW(exemplarDS.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath));
+  const auto& computedGeom = dataStructure.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath);
+  const auto& exemplarGeom = exemplarDS.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath);
+
+  REQUIRE(computedGeom.getNumberOfVertices() == exemplarGeom.getNumberOfVertices());
+  REQUIRE(computedGeom.getNumberOfFaces() == exemplarGeom.getNumberOfFaces());
+
+  // Vertices, faces, and the face/vertex attribute arrays must match the golden reference exactly.
+  UnitTest::CompareArrays<float32>(computedGeom.getVertices(), exemplarGeom.getVertices());
+  UnitTest::CompareArrays<IGeometry::MeshIndexType>(computedGeom.getFaces(), exemplarGeom.getFaces());
+
+  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+  const DataPath nodeTypesPath = k_ExemplarMeshPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
+  UnitTest::CompareArrays<int32>(dataStructure.getDataAs<IArray>(faceLabelsPath), exemplarDS.getDataAs<IArray>(faceLabelsPath));
+  UnitTest::CompareArrays<int8>(dataStructure.getDataAs<IArray>(nodeTypesPath), exemplarDS.getDataAs<IArray>(nodeTypesPath));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
