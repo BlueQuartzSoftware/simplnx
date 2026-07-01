@@ -8,7 +8,7 @@ This filter's V&V oracle is **inline hand-built data** encoded directly in `test
 |---|---|
 | **Archive** | `7_ComputeAvgOrientation_v2.tar.gz` |
 | **SHA512** | `2c2a691f1da301c449c20bafec65512d5134db38384ac7cb4c910880ccd87a260a5f011e905f35b97abff3952309f109c737c63ec3c833708926827a62a92efc` |
-| **Status** | **Retired YYYY-MM-DD** (replaced by inline oracle) |
+| **Status** | **Retired 2026-06-30** (replaced by inline oracle) |
 
 This archive bundled the filter's own computed `AvgQuats` / `Watson Avg Quats` / `vMF Avg Quats` / Euler / Kappa arrays as the comparison target. It was regenerated from post-fix SIMPLNX output in PR #1577 and therefore could not serve as an independent oracle (any bug present at capture time would be confirmed forever). It is named in the V&V audit's cross-cutting circular-oracle list. The V&V replaces it with the Class 1/2/4 oracle below.
 
