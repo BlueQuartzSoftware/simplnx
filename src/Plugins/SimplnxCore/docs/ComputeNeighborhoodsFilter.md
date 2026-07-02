@@ -6,14 +6,20 @@ Statistics (Morphological)
 
 ## Description
 
-For each feature, determine how many other features are within a user defined multiple of the average *Equivalent Sphere Diameter* of the centroid of the feature.
+For each feature, determine how many other features have their *centroid* within a user defined search radius of the feature's centroid.
+
+The **Search Radius Type** parameter selects how that search radius is defined:
+
+- **Multiples of Average Diameter** *(default)*: the search radius is computed as the average *Equivalent Sphere Diameter* of all features multiplied by the user supplied *Multiples of Average Diameter* value, divided by two. This is the original behavior of the filter. This mode requires the *Equivalent Diameters* feature array.
+- **Search Radius (microns)**: the user supplies an absolute search radius (in microns) that is used directly. This mode does **not** require the *Equivalent Diameters* array.
 
 The algorithm for determining the number of **Features** is given below:
 
 1. Compute the average equivalent diameter for all features in a given phase
-2. Define a sphere centered at the **Feature**'s *centroid* and with radius equal to the average equivalent sphere diameter multiplied by the user defined multiple
-3. Check every other **Feature**'s *centroid* to see if it lies within the sphere and keep count and list of those that satisfy
-4. Repeat 2. & 3. for all **Features**
+2. Determine the search radius from the selected **Search Radius Type**
+3. Define a sphere centered at the **Feature**'s *centroid* with the search radius from step 2
+4. Check every other **Feature**'s *centroid* to see if it lies within the sphere and keep count and list of those that satisfy
+5. Repeat 3. & 4. for all **Features**
 
 ![](images/ComputeFeatureNeighborhoods_MultiplesOfAvgDiameter.png)
 

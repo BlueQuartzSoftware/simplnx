@@ -67,13 +67,13 @@ struct BinKeyHasher
 class ComputeNeighborhoodsImpl
 {
 public:
-  ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, const nx::core::AbstractDataStore<float>& centroids, const std::vector<int64>& bins, float32 avgDiam, float32 multiplesOfAverage,
+  ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, const nx::core::AbstractDataStore<float>& centroids, const std::vector<int64>& bins, float32 radiusSq, int64 k,
                            const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_Centroids(centroids)
   , m_Bins(bins)
-  , m_AvgDiam(avgDiam)
-  , m_MultiplesOfAverage(multiplesOfAverage)
+  , m_RadiusSq(radiusSq)
+  , m_K(k)
   , m_ShouldCancel(shouldCancel)
   , m_ProgressMessageHelper(progressMessageHelper)
   {
@@ -96,10 +96,9 @@ public:
       binToFeatures[key].push_back(i);
     }
 
-    // 2. Precompute radius info
-    const float32 radius = m_AvgDiam * m_MultiplesOfAverage / 2.0f;
-    const float32 radiusSq = radius * radius;
-    const int64 k = static_cast<int64>(std::ceil(m_MultiplesOfAverage));
+    // 2. Radius info was precomputed by the caller based on the selected Search Radius Type
+    const float32 radiusSq = m_RadiusSq;
+    const int64 k = m_K;
 
     ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
     for(usize i = start; i < end; i++)
@@ -180,8 +179,8 @@ private:
   ComputeNeighborhoods* m_Filter = nullptr;
   const nx::core::AbstractDataStore<float>& m_Centroids;
   const std::vector<int64>& m_Bins;
-  float32 m_AvgDiam;
-  float32 m_MultiplesOfAverage;
+  float32 m_RadiusSq;
+  int64 m_K;
   const std::atomic_bool& m_ShouldCancel;
   ProgressMessageHelper& m_ProgressMessageHelper;
 };
@@ -213,12 +212,11 @@ Result<> ComputeNeighborhoods::operator()()
 {
   // m_ProgressCounter initialized to zero on filter creation
   auto multiplesOfAverage = m_InputValues->MultiplesOfAverage;
-  const auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath)->getDataStoreRef();
   const auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
   m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
 
-  const usize totalFeatures = equivalentDiameters.getNumberOfTuples();
+  const usize totalFeatures = centroids.getNumberOfTuples();
 
   ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
   progressMessageHelper.setMaxProgresss(totalFeatures);
@@ -226,18 +224,43 @@ Result<> ComputeNeighborhoods::operator()()
 
   m_LocalNeighborhoodList.resize(totalFeatures);
 
-  // (a) This section finds the average equivalent spherical (ESD) diameter of ALL features
-  float32 avgDiameter = 0.0f;
   for(usize i = 1; i < totalFeatures; i++)
   {
     (*m_Neighborhoods)[i] = 0;
-    avgDiameter += equivalentDiameters[i];
   }
-  avgDiameter /= static_cast<float32>(totalFeatures);
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Average Diameter: '{}'", avgDiameter));
 
-  // (c) We are going to place each feature's centroid into a bin in the normalized 3D space.
-  // The centroid is normalized by the Average Diameter
+  // Determine the neighbor search radius and the spatial-bin grid size based on the user-selected Search Radius Type.
+  //   Type 0 (Multiples of Average Diameter): the radius is a multiple of the average feature Equivalent Sphere
+  //     Diameter (radius = avgDiameter * multiples / 2). The bin grid is sized by that same average diameter.
+  //   Type 1 (Search Radius in microns): the radius is the absolute value supplied by the user; the Equivalent
+  //     Diameters array is not needed, so the bin grid is sized by the search radius itself.
+  // The scan window k = ceil(2 * radius / binSize) reproduces the historical k = ceil(multiples) for Type 0.
+  float32 radius = 0.0f;
+  float32 binSize = 0.0f;
+  if(m_InputValues->SearchRadiusType == 0)
+  {
+    // Find the average equivalent spherical (ESD) diameter of ALL features
+    const auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath)->getDataStoreRef();
+    float32 avgDiameter = 0.0f;
+    for(usize i = 1; i < totalFeatures; i++)
+    {
+      avgDiameter += equivalentDiameters[i];
+    }
+    avgDiameter /= static_cast<float32>(totalFeatures);
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Average Diameter: '{}'", avgDiameter));
+
+    radius = avgDiameter * multiplesOfAverage / 2.0f;
+    binSize = avgDiameter;
+  }
+  else
+  {
+    radius = m_InputValues->SearchRadius;
+    binSize = m_InputValues->SearchRadius;
+  }
+  const float32 radiusSq = radius * radius;
+  const int64 k = static_cast<int64>(std::ceil(2.0f * radius / binSize));
+
+  // Place each feature's centroid into a bin in the normalized 3D space (normalized by binSize)
   std::vector<int64> bins(3 * totalFeatures, 0);
   FloatVec3 origin = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry)->getOrigin();
   for(usize i = 1; i < totalFeatures; i++)
@@ -245,18 +268,19 @@ Result<> ComputeNeighborhoods::operator()()
     const float32 x = centroids[3 * i];
     const float32 y = centroids[3 * i + 1];
     const float32 z = centroids[3 * i + 2];
-    bins[3 * i] = static_cast<int64>((x - origin[0]) / avgDiameter);     // x-Bin
-    bins[3 * i + 1] = static_cast<int64>((y - origin[1]) / avgDiameter); // y-Bin
-    bins[3 * i + 2] = static_cast<int64>((z - origin[2]) / avgDiameter); // z-Bin
+    bins[3 * i] = static_cast<int64>((x - origin[0]) / binSize);     // x-Bin
+    bins[3 * i + 1] = static_cast<int64>((y - origin[1]) / binSize); // y-Bin
+    bins[3 * i + 2] = static_cast<int64>((z - origin[2]) / binSize); // z-Bin
   }
   if(m_ShouldCancel)
   {
     return {};
   }
+
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(0, totalFeatures));
   parallelAlgorithm.setParallelizationEnabled(true);
-  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, avgDiameter, multiplesOfAverage, m_ShouldCancel, progressMessageHelper));
+  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, radiusSq, k, m_ShouldCancel, progressMessageHelper));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborhoodListArrayName);
