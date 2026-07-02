@@ -35,6 +35,8 @@ using uint64 = std::uint64_t;
 // Index of a padded site / voxel (i.e. an index into the FeatureId grid). MUST be 64-bit: a large
 // Image Geometry can have well over 2^31 voxels, and node ids derived as 7*site must not overflow.
 using SiteId = std::int64_t;
+// Sentinel stored in the compacted-node map for candidate slots that are not real mesh nodes.
+constexpr uint32_t k_UnusedNodeId = std::numeric_limits<uint32_t>::max();
 
 constexpr int num_neigh = 26; // number of 3D neighbors per site (legacy #define)
 
@@ -55,8 +57,8 @@ struct Face // a marching "square"
 {
   // The 4 corner site ids are NOT stored (they are recomputed on demand from the site index, keeping
   // the FeatureId indexing 64-bit) so that this, the largest working array (3 per site), stays small.
-  // edge_id is a 32-bit edge index (mesh-scale, capped near 2^31 edges); FCnode is a 64-bit node id.
-  int32_t edge_id[4];
+  // edge_id is an UNSIGNED 32-bit edge index (mesh-scale, capped near 2^32 edges); FCnode is a 64-bit node id.
+  uint32_t edge_id[4];
   SiteId FCnode; // face-center node id, -1 if none
   int8_t nEdge;
   int8_t effect; // 0 = useless square, 1 = straddles >=2 labels
@@ -510,9 +512,9 @@ void get_spins(const int32_t* p1, SiteId cst, int ord, const int pID[2], int* pS
 // Count the total number of face edges across all squares (two-pass sizing).
 // Transcribed from M3CEntireVolume::get_number_fEdges.
 // -----------------------------------------------------------------------------
-int get_number_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, SiteId ns, const std::atomic_bool& shouldCancel)
+int64 get_number_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, SiteId ns, const std::atomic_bool& shouldCancel)
 {
-  int sumEdge = 0;
+  int64 sumEdge = 0;
   for(SiteId k = 0; k < (3 * ns); k++)
   {
     if(shouldCancel)
@@ -593,7 +595,7 @@ int get_number_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, Sit
 // -----------------------------------------------------------------------------
 void get_nodes_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, int8_t* nodeType, Segment* e, SiteId ns, SiteId nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
-  int eid = 0;
+  int64 eid = 0;
   for(SiteId k = 0; k < (3 * ns); k++)
   {
     if(shouldCancel)
@@ -723,10 +725,10 @@ void find_edgePlace(const double tvcrd1[3], const double tvcrd2[3], const double
 // Count triangles for a case-0 cube (no face centers): burn edges into closed
 // loops, fan-triangulate. Transcribed from M3CEntireVolume::get_number_case0_triangles.
 // -----------------------------------------------------------------------------
-int get_number_case0_triangles(const int* afe, Segment* e1, int nfedge)
+int get_number_case0_triangles(const SiteId* afe, Segment* e1, int nfedge)
 {
   std::vector<int> burnt(nfedge, 0);
-  std::vector<int> burnt_list(nfedge, -1);
+  std::vector<SiteId> burnt_list(nfedge, -1);
 
   int loopID = 1;
   int tail = 0;
@@ -734,7 +736,7 @@ int get_number_case0_triangles(const int* afe, Segment* e1, int nfedge)
 
   for(int i = 0; i < nfedge; i++)
   {
-    int cedge = afe[i];
+    SiteId cedge = afe[i];
     if(burnt[i] == 0)
     {
       burnt[i] = loopID;
@@ -742,21 +744,21 @@ int get_number_case0_triangles(const int* afe, Segment* e1, int nfedge)
       int coin;
       do
       {
-        int chaser = burnt_list[tail];
+        SiteId chaser = burnt_list[tail];
         int cspin1 = e1[chaser].nSpin[0];
         int cspin2 = e1[chaser].nSpin[1];
-        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
-        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        SiteId cnode1 = static_cast<SiteId>(e1[chaser].node_id[0]);
+        SiteId cnode2 = static_cast<SiteId>(e1[chaser].node_id[1]);
 
         for(int j = 0; j < nfedge; j++)
         {
-          int nedge = afe[j];
+          SiteId nedge = afe[j];
           if(burnt[j] == 0)
           {
             int nspin1 = e1[nedge].nSpin[0];
             int nspin2 = e1[nedge].nSpin[1];
-            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
-            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            SiteId nnode1 = static_cast<SiteId>(e1[nedge].node_id[0]);
+            SiteId nnode2 = static_cast<SiteId>(e1[nedge].node_id[1]);
             int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
             int nodeFlag;
             int flip;
@@ -839,10 +841,10 @@ int get_number_case0_triangles(const int* afe, Segment* e1, int nfedge)
 // Count triangles for a case-2 cube (two face centers). Transcribed from
 // M3CEntireVolume::get_number_case2_triangles.
 // -----------------------------------------------------------------------------
-int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const int* afc, int /*nfctr*/)
+int get_number_case2_triangles(const SiteId* afe, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/)
 {
   std::vector<int> burnt(nfedge, 0);
-  std::vector<int> burnt_list(nfedge, -1);
+  std::vector<SiteId> burnt_list(nfedge, -1);
 
   int loopID = 1;
   int tail = 0;
@@ -850,7 +852,7 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
 
   for(int i = 0; i < nfedge; i++)
   {
-    int cedge = afe[i];
+    SiteId cedge = afe[i];
     if(burnt[i] == 0)
     {
       burnt[i] = loopID;
@@ -858,21 +860,21 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
       int coin;
       do
       {
-        int chaser = burnt_list[tail];
+        SiteId chaser = burnt_list[tail];
         int cspin1 = e1[chaser].nSpin[0];
         int cspin2 = e1[chaser].nSpin[1];
-        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
-        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        SiteId cnode1 = static_cast<SiteId>(e1[chaser].node_id[0]);
+        SiteId cnode2 = static_cast<SiteId>(e1[chaser].node_id[1]);
 
         for(int j = 0; j < nfedge; j++)
         {
-          int nedge = afe[j];
+          SiteId nedge = afe[j];
           if(burnt[j] == 0)
           {
             int nspin1 = e1[nedge].nSpin[0];
             int nspin2 = e1[nedge].nSpin[1];
-            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
-            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            SiteId nnode1 = static_cast<SiteId>(e1[nedge].node_id[0]);
+            SiteId nnode2 = static_cast<SiteId>(e1[nedge].node_id[1]);
             int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
             int nodeFlag = 0;
             if((cnode1 == nnode1) && (cnode2 != nnode2))
@@ -929,7 +931,7 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
   }
 
   int numTri = 0;
-  int start = afc[0];
+  SiteId start = afc[0];
   int to = 0;
   int from = 0;
 
@@ -937,17 +939,17 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
   {
     int openL = 0;
     int flip = 0;
-    int startEdge = -1;
+    SiteId startEdge = -1;
     int numN = count[j1];
     to = to + numN;
     from = to - numN;
-    std::vector<int> burnt_loop(static_cast<size_t>(numN) + 2, 0);
+    std::vector<SiteId> burnt_loop(static_cast<size_t>(numN) + 2, 0);
 
     for(int i1 = from; i1 < to; i1++)
     {
-      int cedge = burnt_list[i1];
-      int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-      int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+      SiteId cedge = burnt_list[i1];
+      SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+      SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
       if(start == cnode1)
       {
         openL = 1;
@@ -966,7 +968,7 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
     {
       if(flip == 1)
       {
-        int tnode = static_cast<int>(e1[startEdge].node_id[0]);
+        SiteId tnode = static_cast<SiteId>(e1[startEdge].node_id[0]);
         int tspin = e1[startEdge].nSpin[0];
         e1[startEdge].node_id[0] = e1[startEdge].node_id[1];
         e1[startEdge].node_id[1] = tnode;
@@ -976,15 +978,15 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
 
       burnt_loop[0] = startEdge;
       int index = 1;
-      int endNode = static_cast<int>(e1[startEdge].node_id[1]);
-      int chaser = startEdge;
+      SiteId endNode = static_cast<SiteId>(e1[startEdge].node_id[1]);
+      SiteId chaser = startEdge;
       do
       {
         for(int n = from; n < to; n++)
         {
-          int cedge = burnt_list[n];
-          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          SiteId cedge = burnt_list[n];
+          SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+          SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
             burnt_loop[index] = cedge;
@@ -994,7 +996,7 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
           {
             burnt_loop[index] = cedge;
             index++;
-            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
             e1[cedge].node_id[0] = e1[cedge].node_id[1];
             e1[cedge].node_id[1] = tnode;
@@ -1003,7 +1005,7 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
           }
         }
         chaser = burnt_loop[index - 1];
-        endNode = static_cast<int>(e1[chaser].node_id[1]);
+        endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
       if((numN + 1) == 3)
@@ -1017,18 +1019,18 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
     }
     else
     {
-      int startEdge2 = burnt_list[from];
+      SiteId startEdge2 = burnt_list[from];
       burnt_loop[0] = startEdge2;
       int index = 1;
-      int endNode = static_cast<int>(e1[startEdge2].node_id[1]);
-      int chaser = startEdge2;
+      SiteId endNode = static_cast<SiteId>(e1[startEdge2].node_id[1]);
+      SiteId chaser = startEdge2;
       do
       {
         for(int n = from; n < to; n++)
         {
-          int cedge = burnt_list[n];
-          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          SiteId cedge = burnt_list[n];
+          SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+          SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
             burnt_loop[index] = cedge;
@@ -1038,7 +1040,7 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
           {
             burnt_loop[index] = cedge;
             index++;
-            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
             e1[cedge].node_id[0] = e1[cedge].node_id[1];
             e1[cedge].node_id[1] = tnode;
@@ -1047,7 +1049,7 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
           }
         }
         chaser = burnt_loop[index - 1];
-        endNode = static_cast<int>(e1[chaser].node_id[1]);
+        endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
       if(numN == 3)
@@ -1067,10 +1069,10 @@ int get_number_case2_triangles(const int* afe, Segment* e1, int nfedge, const in
 // Count triangles for a case-M cube (>=3 face centers). Transcribed from
 // M3CEntireVolume::get_number_caseM_triangles.
 // -----------------------------------------------------------------------------
-int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const int* afc, int nfctr)
+int get_number_caseM_triangles(const SiteId* afe, Segment* e1, int nfedge, const SiteId* afc, int nfctr)
 {
   std::vector<int> burnt(nfedge, 0);
-  std::vector<int> burnt_list(nfedge, -1);
+  std::vector<SiteId> burnt_list(nfedge, -1);
 
   int loopID = 1;
   int tail = 0;
@@ -1078,7 +1080,7 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
 
   for(int i = 0; i < nfedge; i++)
   {
-    int cedge = afe[i];
+    SiteId cedge = afe[i];
     if(burnt[i] == 0)
     {
       burnt[i] = loopID;
@@ -1086,21 +1088,21 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
       int coin;
       do
       {
-        int chaser = burnt_list[tail];
+        SiteId chaser = burnt_list[tail];
         int cspin1 = e1[chaser].nSpin[0];
         int cspin2 = e1[chaser].nSpin[1];
-        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
-        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        SiteId cnode1 = static_cast<SiteId>(e1[chaser].node_id[0]);
+        SiteId cnode2 = static_cast<SiteId>(e1[chaser].node_id[1]);
 
         for(int j = 0; j < nfedge; j++)
         {
-          int nedge = afe[j];
+          SiteId nedge = afe[j];
           if(burnt[j] == 0)
           {
             int nspin1 = e1[nedge].nSpin[0];
             int nspin2 = e1[nedge].nSpin[1];
-            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
-            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            SiteId nnode1 = static_cast<SiteId>(e1[nedge].node_id[0]);
+            SiteId nnode2 = static_cast<SiteId>(e1[nedge].node_id[1]);
             int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
             int nodeFlag = 0;
             if((cnode1 == nnode1) && (cnode2 != nnode2))
@@ -1164,20 +1166,20 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
   {
     int openL = 0;
     int flip = 0;
-    int startEdge = -1;
+    SiteId startEdge = -1;
     int numN = count[j1];
     to = to + numN;
     from = to - numN;
-    std::vector<int> burnt_loop(static_cast<size_t>(numN) + 2, 0);
+    std::vector<SiteId> burnt_loop(static_cast<size_t>(numN) + 2, 0);
 
     for(int i1 = from; i1 < to; i1++)
     {
-      int cedge = burnt_list[i1];
-      int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-      int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+      SiteId cedge = burnt_list[i1];
+      SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+      SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
       for(int n1 = 0; n1 < nfctr; n1++)
       {
-        int start = afc[n1];
+        SiteId start = afc[n1];
         if(start == cnode1)
         {
           openL = 1;
@@ -1197,7 +1199,7 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
     {
       if(flip == 1)
       {
-        int tnode = static_cast<int>(e1[startEdge].node_id[0]);
+        SiteId tnode = static_cast<SiteId>(e1[startEdge].node_id[0]);
         int tspin = e1[startEdge].nSpin[0];
         e1[startEdge].node_id[0] = e1[startEdge].node_id[1];
         e1[startEdge].node_id[1] = tnode;
@@ -1207,15 +1209,15 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
 
       burnt_loop[0] = startEdge;
       int index = 1;
-      int endNode = static_cast<int>(e1[startEdge].node_id[1]);
-      int chaser = startEdge;
+      SiteId endNode = static_cast<SiteId>(e1[startEdge].node_id[1]);
+      SiteId chaser = startEdge;
       do
       {
         for(int n = from; n < to; n++)
         {
-          int cedge = burnt_list[n];
-          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          SiteId cedge = burnt_list[n];
+          SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+          SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
             burnt_loop[index] = cedge;
@@ -1225,7 +1227,7 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
           {
             burnt_loop[index] = cedge;
             index++;
-            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
             e1[cedge].node_id[0] = e1[cedge].node_id[1];
             e1[cedge].node_id[1] = tnode;
@@ -1234,7 +1236,7 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
           }
         }
         chaser = burnt_loop[index - 1];
-        endNode = static_cast<int>(e1[chaser].node_id[1]);
+        endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
       if((numN + 2) == 3)
@@ -1248,18 +1250,18 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
     }
     else
     {
-      int startEdge2 = burnt_list[from];
+      SiteId startEdge2 = burnt_list[from];
       burnt_loop[0] = startEdge2;
       int index = 1;
-      int endNode = static_cast<int>(e1[startEdge2].node_id[1]);
-      int chaser = startEdge2;
+      SiteId endNode = static_cast<SiteId>(e1[startEdge2].node_id[1]);
+      SiteId chaser = startEdge2;
       do
       {
         for(int n = from; n < to; n++)
         {
-          int cedge = burnt_list[n];
-          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          SiteId cedge = burnt_list[n];
+          SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+          SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
             burnt_loop[index] = cedge;
@@ -1269,7 +1271,7 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
           {
             burnt_loop[index] = cedge;
             index++;
-            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
             e1[cedge].node_id[0] = e1[cedge].node_id[1];
             e1[cedge].node_id[1] = tnode;
@@ -1278,7 +1280,7 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
           }
         }
         chaser = burnt_loop[index - 1];
-        endNode = static_cast<int>(e1[chaser].node_id[1]);
+        endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
       if(numN == 3)
@@ -1298,11 +1300,11 @@ int get_number_caseM_triangles(const int* afe, Segment* e1, int nfedge, const in
 // Count the total triangles across all cubes and set body-center node types.
 // Transcribed from M3CEntireVolume::get_number_triangles.
 // -----------------------------------------------------------------------------
-int get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& neighbors, int8_t* nodeType, Segment* e, SiteId ns, SiteId nsp, int xDim, const std::atomic_bool& shouldCancel)
+int64 get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& neighbors, int8_t* nodeType, Segment* e, SiteId ns, SiteId nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
-  int nTri0 = 0;
-  int nTri2 = 0;
-  int nTriM = 0;
+  int64 nTri0 = 0;
+  int64 nTri2 = 0;
+  int64 nTriM = 0;
 
   for(SiteId i = 1; i <= (ns - nsp); i++)
   {
@@ -1318,11 +1320,11 @@ int get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& nei
     sqID[3] = 3 * i + 2;
     sqID[4] = 3 * (i + xDim - 1) + 1;
     sqID[5] = 3 * (i + nsp - 1);
-    int BCnode = 7 * (i - 1) + 6;
+    SiteId BCnode = 7 * (i - 1) + 6;
     int nFC = 0;
     int nFE = 0;
     int eff = 0;
-    int arrayFC[6];
+    SiteId arrayFC[6];
     for(int ii = 0; ii < 6; ii++)
     {
       arrayFC[ii] = -1;
@@ -1382,7 +1384,7 @@ int get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& nei
 
     if(cubeFlag == 1 && nFE > 2)
     {
-      std::vector<int> arrayFE(nFE);
+      std::vector<SiteId> arrayFE(nFE);
       int tindex = 0;
       for(int i1 = 0; i1 < 6; i1++)
       {
@@ -1390,7 +1392,7 @@ int get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& nei
         int tnfe = sq[tsq].nEdge;
         for(int i2 = 0; i2 < tnfe; i2++)
         {
-          arrayFE[tindex] = static_cast<int>(sq[tsq].edge_id[i2]);
+          arrayFE[tindex] = sq[tsq].edge_id[i2];
           tindex++;
         }
       }
@@ -1415,13 +1417,13 @@ int get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& nei
 // -----------------------------------------------------------------------------
 // Generate triangles for a case-0 cube. Transcribed from M3CEntireVolume::get_case0_triangles.
 // -----------------------------------------------------------------------------
-void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const NodeCoords& v1, Segment* e1, int nfedge, int tin, int* tout, const double tcrd1[3], const double tcrd2[3], SiteId mcid)
+void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, int tin, int* tout, const double tcrd1[3], const double tcrd2[3], SiteId mcid)
 {
   const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
   const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
 
   std::vector<int> burnt(nfedge, 0);
-  std::vector<int> burnt_list(nfedge, -1);
+  std::vector<SiteId> burnt_list(nfedge, -1);
 
   int loopID = 1;
   int tail = 0;
@@ -1429,7 +1431,7 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
 
   for(int i = 0; i < nfedge; i++)
   {
-    int cedge = afe[i];
+    SiteId cedge = afe[i];
     if(burnt[i] == 0)
     {
       burnt[i] = loopID;
@@ -1437,20 +1439,20 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
       int coin;
       do
       {
-        int chaser = burnt_list[tail];
+        SiteId chaser = burnt_list[tail];
         int cspin1 = e1[chaser].nSpin[0];
         int cspin2 = e1[chaser].nSpin[1];
-        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
-        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        SiteId cnode1 = static_cast<SiteId>(e1[chaser].node_id[0]);
+        SiteId cnode2 = static_cast<SiteId>(e1[chaser].node_id[1]);
         for(int j = 0; j < nfedge; j++)
         {
-          int nedge = afe[j];
+          SiteId nedge = afe[j];
           if(burnt[j] == 0)
           {
             int nspin1 = e1[nedge].nSpin[0];
             int nspin2 = e1[nedge].nSpin[1];
-            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
-            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            SiteId nnode1 = static_cast<SiteId>(e1[nedge].node_id[0]);
+            SiteId nnode2 = static_cast<SiteId>(e1[nedge].node_id[1]);
             int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
             int nodeFlag;
             int flip;
@@ -1522,7 +1524,7 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
     int numN = count[jj];
     sumN = sumN + numN;
     int from = sumN - numN;
-    std::vector<int> loop(numN);
+    std::vector<SiteId> loop(numN);
     for(int mm = 0; mm < numN; mm++)
     {
       loop[mm] = burnt_list[from + mm];
@@ -1530,10 +1532,10 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
 
     if(numN == 3)
     {
-      int te0 = loop[0], te1 = loop[1], te2 = loop[2];
-      int tv0 = static_cast<int>(e1[te0].node_id[0]);
-      int tv1 = static_cast<int>(e1[te1].node_id[0]);
-      int tv2 = static_cast<int>(e1[te2].node_id[0]);
+      SiteId te0 = loop[0], te1 = loop[1], te2 = loop[2];
+      SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
+      SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
+      SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
       t1[ctid].node_id[0] = tv0;
       t1[ctid].node_id[1] = tv1;
       t1[ctid].node_id[2] = tv2;
@@ -1560,11 +1562,11 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
       int front = 0;
       int back = numN - 1;
 
-      int te0 = loop[front];
-      int te1 = loop[back];
-      int tv0 = static_cast<int>(e1[te0].node_id[0]);
-      int tv1 = static_cast<int>(e1[te0].node_id[1]);
-      int tv2 = static_cast<int>(e1[te1].node_id[0]);
+      SiteId te0 = loop[front];
+      SiteId te1 = loop[back];
+      SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
+      SiteId tv1 = static_cast<SiteId>(e1[te0].node_id[1]);
+      SiteId tv2 = static_cast<SiteId>(e1[te1].node_id[0]);
       t1[ctid].node_id[0] = tv0;
       t1[ctid].node_id[1] = tv1;
       t1[ctid].node_id[2] = tv2;
@@ -1591,9 +1593,9 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
         if((cnumT % 2) != 0)
         {
           front = front + 1;
-          int ce = loop[front];
-          tv0 = static_cast<int>(e1[ce].node_id[0]);
-          tv1 = static_cast<int>(e1[ce].node_id[1]);
+          SiteId ce = loop[front];
+          tv0 = static_cast<SiteId>(e1[ce].node_id[0]);
+          tv1 = static_cast<SiteId>(e1[ce].node_id[1]);
           tv2 = new_node0;
           t1[ctid].node_id[0] = tv0;
           t1[ctid].node_id[1] = tv1;
@@ -1619,9 +1621,9 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
         else
         {
           back = back - 1;
-          int ce = loop[back];
-          tv0 = static_cast<int>(e1[ce].node_id[0]);
-          tv1 = static_cast<int>(e1[ce].node_id[1]);
+          SiteId ce = loop[back];
+          tv0 = static_cast<SiteId>(e1[ce].node_id[0]);
+          tv1 = static_cast<SiteId>(e1[ce].node_id[1]);
           tv2 = new_node0;
           t1[ctid].node_id[0] = tv0;
           t1[ctid].node_id[1] = tv1;
@@ -1653,14 +1655,14 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
 // -----------------------------------------------------------------------------
 // Generate triangles for a case-2 cube. Transcribed from M3CEntireVolume::get_case2_triangles.
 // -----------------------------------------------------------------------------
-void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const NodeCoords& v1, Segment* e1, int nfedge, const int* afc, int /*nfctr*/, int tin, int* tout, const double tcrd1[3], const double tcrd2[3],
+void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/, int tin, int* tout, const double tcrd1[3], const double tcrd2[3],
                          SiteId mcid)
 {
   const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
   const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
 
   std::vector<int> burnt(nfedge, 0);
-  std::vector<int> burnt_list(nfedge, -1);
+  std::vector<SiteId> burnt_list(nfedge, -1);
 
   int loopID = 1;
   int tail = 0;
@@ -1668,7 +1670,7 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
 
   for(int i = 0; i < nfedge; i++)
   {
-    int cedge = afe[i];
+    SiteId cedge = afe[i];
     if(burnt[i] == 0)
     {
       burnt[i] = loopID;
@@ -1676,20 +1678,20 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
       int coin;
       do
       {
-        int chaser = burnt_list[tail];
+        SiteId chaser = burnt_list[tail];
         int cspin1 = e1[chaser].nSpin[0];
         int cspin2 = e1[chaser].nSpin[1];
-        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
-        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        SiteId cnode1 = static_cast<SiteId>(e1[chaser].node_id[0]);
+        SiteId cnode2 = static_cast<SiteId>(e1[chaser].node_id[1]);
         for(int j = 0; j < nfedge; j++)
         {
-          int nedge = afe[j];
+          SiteId nedge = afe[j];
           if(burnt[j] == 0)
           {
             int nspin1 = e1[nedge].nSpin[0];
             int nspin2 = e1[nedge].nSpin[1];
-            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
-            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            SiteId nnode1 = static_cast<SiteId>(e1[nedge].node_id[0]);
+            SiteId nnode2 = static_cast<SiteId>(e1[nedge].node_id[1]);
             int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
             int nodeFlag = 0;
             if((cnode1 == nnode1) && (cnode2 != nnode2))
@@ -1744,7 +1746,7 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
     }
   }
 
-  int start = afc[0];
+  SiteId start = afc[0];
   int to = 0;
   int from = 0;
   int ctid = tin;
@@ -1755,17 +1757,17 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
   {
     int openL = 0;
     int flip = 0;
-    int startEdge = -1;
+    SiteId startEdge = -1;
     int numN = count[j1];
     to = to + numN;
     from = to - numN;
-    std::vector<int> burnt_loop(static_cast<size_t>(numN) + 2, 0);
+    std::vector<SiteId> burnt_loop(static_cast<size_t>(numN) + 2, 0);
 
     for(int i1 = from; i1 < to; i1++)
     {
-      int cedge = burnt_list[i1];
-      int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-      int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+      SiteId cedge = burnt_list[i1];
+      SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+      SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
       if(start == cnode1)
       {
         openL = 1;
@@ -1784,7 +1786,7 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
     {
       if(flip == 1)
       {
-        int tnode = static_cast<int>(e1[startEdge].node_id[0]);
+        SiteId tnode = static_cast<SiteId>(e1[startEdge].node_id[0]);
         int tspin = e1[startEdge].nSpin[0];
         e1[startEdge].node_id[0] = e1[startEdge].node_id[1];
         e1[startEdge].node_id[1] = tnode;
@@ -1793,15 +1795,15 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
       }
       burnt_loop[0] = startEdge;
       int index = 1;
-      int endNode = static_cast<int>(e1[startEdge].node_id[1]);
-      int chaser = startEdge;
+      SiteId endNode = static_cast<SiteId>(e1[startEdge].node_id[1]);
+      SiteId chaser = startEdge;
       do
       {
         for(int n = from; n < to; n++)
         {
-          int cedge = burnt_list[n];
-          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          SiteId cedge = burnt_list[n];
+          SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+          SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
             burnt_loop[index] = cedge;
@@ -1811,7 +1813,7 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           {
             burnt_loop[index] = cedge;
             index++;
-            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
             e1[cedge].node_id[0] = e1[cedge].node_id[1];
             e1[cedge].node_id[1] = tnode;
@@ -1820,15 +1822,15 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           }
         }
         chaser = burnt_loop[index - 1];
-        endNode = static_cast<int>(e1[chaser].node_id[1]);
+        endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
       if(numN == 2)
       {
-        int te0 = burnt_loop[0], te1 = burnt_loop[1];
-        int tv0 = static_cast<int>(e1[te0].node_id[0]);
-        int tv1 = static_cast<int>(e1[te1].node_id[0]);
-        int tv2 = static_cast<int>(e1[te1].node_id[1]);
+        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1];
+        SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
+        SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
+        SiteId tv2 = static_cast<SiteId>(e1[te1].node_id[1]);
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
@@ -1854,11 +1856,11 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
         int cnumT = 0;
         int front = 0;
         int back = numN;
-        int te0 = burnt_loop[front];
-        int te1 = burnt_loop[back - 1];
-        int tv0 = static_cast<int>(e1[te0].node_id[0]);
-        int tv1 = static_cast<int>(e1[te0].node_id[1]);
-        int tv2 = static_cast<int>(e1[te1].node_id[1]);
+        SiteId te0 = burnt_loop[front];
+        SiteId te1 = burnt_loop[back - 1];
+        SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
+        SiteId tv1 = static_cast<SiteId>(e1[te0].node_id[1]);
+        SiteId tv2 = static_cast<SiteId>(e1[te1].node_id[1]);
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
@@ -1884,9 +1886,9 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           if((cnumT % 2) != 0)
           {
             front = front + 1;
-            int ce = burnt_loop[front];
-            tv0 = static_cast<int>(e1[ce].node_id[0]);
-            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            SiteId ce = burnt_loop[front];
+            tv0 = static_cast<SiteId>(e1[ce].node_id[0]);
+            tv1 = static_cast<SiteId>(e1[ce].node_id[1]);
             tv2 = new_node0;
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
@@ -1912,9 +1914,9 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           else
           {
             back = back - 1;
-            int ce = burnt_loop[back];
-            tv0 = static_cast<int>(e1[ce].node_id[0]);
-            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            SiteId ce = burnt_loop[back];
+            tv0 = static_cast<SiteId>(e1[ce].node_id[0]);
+            tv1 = static_cast<SiteId>(e1[ce].node_id[1]);
             tv2 = new_node0;
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
@@ -1942,18 +1944,18 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
     }
     else
     {
-      int startEdge2 = burnt_list[from];
+      SiteId startEdge2 = burnt_list[from];
       burnt_loop[0] = startEdge2;
       int index = 1;
-      int endNode = static_cast<int>(e1[startEdge2].node_id[1]);
-      int chaser = startEdge2;
+      SiteId endNode = static_cast<SiteId>(e1[startEdge2].node_id[1]);
+      SiteId chaser = startEdge2;
       do
       {
         for(int n = from; n < to; n++)
         {
-          int cedge = burnt_list[n];
-          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          SiteId cedge = burnt_list[n];
+          SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+          SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
             burnt_loop[index] = cedge;
@@ -1963,7 +1965,7 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           {
             burnt_loop[index] = cedge;
             index++;
-            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
             e1[cedge].node_id[0] = e1[cedge].node_id[1];
             e1[cedge].node_id[1] = tnode;
@@ -1972,15 +1974,15 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           }
         }
         chaser = burnt_loop[index - 1];
-        endNode = static_cast<int>(e1[chaser].node_id[1]);
+        endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
       if(numN == 3)
       {
-        int te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
-        int tv0 = static_cast<int>(e1[te0].node_id[0]);
-        int tv1 = static_cast<int>(e1[te1].node_id[0]);
-        int tv2 = static_cast<int>(e1[te2].node_id[0]);
+        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
+        SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
+        SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
+        SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
@@ -2006,11 +2008,11 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
         int cnumT = 0;
         int front = 0;
         int back = numN - 1;
-        int te0 = burnt_loop[front];
-        int te1 = burnt_loop[back];
-        int tv0 = static_cast<int>(e1[te0].node_id[0]);
-        int tv1 = static_cast<int>(e1[te0].node_id[1]);
-        int tv2 = static_cast<int>(e1[te1].node_id[0]);
+        SiteId te0 = burnt_loop[front];
+        SiteId te1 = burnt_loop[back];
+        SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
+        SiteId tv1 = static_cast<SiteId>(e1[te0].node_id[1]);
+        SiteId tv2 = static_cast<SiteId>(e1[te1].node_id[0]);
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
@@ -2036,9 +2038,9 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           if((cnumT % 2) != 0)
           {
             front = front + 1;
-            int ce = burnt_loop[front];
-            tv0 = static_cast<int>(e1[ce].node_id[0]);
-            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            SiteId ce = burnt_loop[front];
+            tv0 = static_cast<SiteId>(e1[ce].node_id[0]);
+            tv1 = static_cast<SiteId>(e1[ce].node_id[1]);
             tv2 = new_node0;
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
@@ -2064,9 +2066,9 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           else
           {
             back = back - 1;
-            int ce = burnt_loop[back];
-            tv0 = static_cast<int>(e1[ce].node_id[0]);
-            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            SiteId ce = burnt_loop[back];
+            tv0 = static_cast<SiteId>(e1[ce].node_id[0]);
+            tv1 = static_cast<SiteId>(e1[ce].node_id[1]);
             tv2 = new_node0;
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
@@ -2100,14 +2102,14 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
 // Generate triangles for a case-M cube (fan from body center for open loops).
 // Transcribed from M3CEntireVolume::get_caseM_triangles.
 // -----------------------------------------------------------------------------
-void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const NodeCoords& v1, Segment* e1, int nfedge, const int* afc, int nfctr, int tin, int* tout, SiteId ccn, const double tcrd1[3],
+void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int nfctr, int tin, int* tout, SiteId ccn, const double tcrd1[3],
                          const double tcrd2[3], SiteId mcid)
 {
   const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
   const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
 
   std::vector<int> burnt(nfedge, 0);
-  std::vector<int> burnt_list(nfedge, -1);
+  std::vector<SiteId> burnt_list(nfedge, -1);
 
   int loopID = 1;
   int tail = 0;
@@ -2115,7 +2117,7 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
 
   for(int i = 0; i < nfedge; i++)
   {
-    int cedge = afe[i];
+    SiteId cedge = afe[i];
     if(burnt[i] == 0)
     {
       burnt[i] = loopID;
@@ -2123,20 +2125,20 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
       int coin;
       do
       {
-        int chaser = burnt_list[tail];
+        SiteId chaser = burnt_list[tail];
         int cspin1 = e1[chaser].nSpin[0];
         int cspin2 = e1[chaser].nSpin[1];
-        int cnode1 = static_cast<int>(e1[chaser].node_id[0]);
-        int cnode2 = static_cast<int>(e1[chaser].node_id[1]);
+        SiteId cnode1 = static_cast<SiteId>(e1[chaser].node_id[0]);
+        SiteId cnode2 = static_cast<SiteId>(e1[chaser].node_id[1]);
         for(int j = 0; j < nfedge; j++)
         {
-          int nedge = afe[j];
+          SiteId nedge = afe[j];
           if(burnt[j] == 0)
           {
             int nspin1 = e1[nedge].nSpin[0];
             int nspin2 = e1[nedge].nSpin[1];
-            int nnode1 = static_cast<int>(e1[nedge].node_id[0]);
-            int nnode2 = static_cast<int>(e1[nedge].node_id[1]);
+            SiteId nnode1 = static_cast<SiteId>(e1[nedge].node_id[0]);
+            SiteId nnode2 = static_cast<SiteId>(e1[nedge].node_id[1]);
             int spinFlag = (((cspin1 == nspin1) && (cspin2 == nspin2)) || ((cspin1 == nspin2) && (cspin2 == nspin1))) ? 1 : 0;
             int nodeFlag = 0;
             if((cnode1 == nnode1) && (cnode2 != nnode2))
@@ -2201,20 +2203,20 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
   {
     int openL = 0;
     int flip = 0;
-    int startEdge = -1;
+    SiteId startEdge = -1;
     int numN = count[j1];
     to = to + numN;
     from = to - numN;
-    std::vector<int> burnt_loop(static_cast<size_t>(numN) + 2, 0);
+    std::vector<SiteId> burnt_loop(static_cast<size_t>(numN) + 2, 0);
 
     for(int i1 = from; i1 < to; i1++)
     {
-      int cedge = burnt_list[i1];
-      int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-      int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+      SiteId cedge = burnt_list[i1];
+      SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+      SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
       for(int n1 = 0; n1 < nfctr; n1++)
       {
-        int start = afc[n1];
+        SiteId start = afc[n1];
         if(start == cnode1)
         {
           openL = 1;
@@ -2234,7 +2236,7 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
     {
       if(flip == 1)
       {
-        int tnode = static_cast<int>(e1[startEdge].node_id[0]);
+        SiteId tnode = static_cast<SiteId>(e1[startEdge].node_id[0]);
         int tspin = e1[startEdge].nSpin[0];
         e1[startEdge].node_id[0] = e1[startEdge].node_id[1];
         e1[startEdge].node_id[1] = tnode;
@@ -2243,15 +2245,15 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
       }
       burnt_loop[0] = startEdge;
       int index = 1;
-      int endNode = static_cast<int>(e1[startEdge].node_id[1]);
-      int chaser = startEdge;
+      SiteId endNode = static_cast<SiteId>(e1[startEdge].node_id[1]);
+      SiteId chaser = startEdge;
       do
       {
         for(int n = from; n < to; n++)
         {
-          int cedge = burnt_list[n];
-          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          SiteId cedge = burnt_list[n];
+          SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+          SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
             burnt_loop[index] = cedge;
@@ -2261,7 +2263,7 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           {
             burnt_loop[index] = cedge;
             index++;
-            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
             e1[cedge].node_id[0] = e1[cedge].node_id[1];
             e1[cedge].node_id[1] = tnode;
@@ -2270,15 +2272,15 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           }
         }
         chaser = burnt_loop[index - 1];
-        endNode = static_cast<int>(e1[chaser].node_id[1]);
+        endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
       // triangulation: fan from the body-center node ccn
       for(int iii = 0; iii < numN; iii++)
       {
-        int ce = burnt_loop[iii];
-        int tn0 = static_cast<int>(e1[ce].node_id[0]);
-        int tn1 = static_cast<int>(e1[ce].node_id[1]);
+        SiteId ce = burnt_loop[iii];
+        SiteId tn0 = static_cast<SiteId>(e1[ce].node_id[0]);
+        SiteId tn1 = static_cast<SiteId>(e1[ce].node_id[1]);
         int ts0 = e1[ce].nSpin[0];
         int ts1 = e1[ce].nSpin[1];
         t1[ctid].node_id[0] = ccn;
@@ -2303,18 +2305,18 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
     }
     else
     {
-      int startEdge2 = burnt_list[from];
+      SiteId startEdge2 = burnt_list[from];
       burnt_loop[0] = startEdge2;
       int index = 1;
-      int endNode = static_cast<int>(e1[startEdge2].node_id[1]);
-      int chaser = startEdge2;
+      SiteId endNode = static_cast<SiteId>(e1[startEdge2].node_id[1]);
+      SiteId chaser = startEdge2;
       do
       {
         for(int n = from; n < to; n++)
         {
-          int cedge = burnt_list[n];
-          int cnode1 = static_cast<int>(e1[cedge].node_id[0]);
-          int cnode2 = static_cast<int>(e1[cedge].node_id[1]);
+          SiteId cedge = burnt_list[n];
+          SiteId cnode1 = static_cast<SiteId>(e1[cedge].node_id[0]);
+          SiteId cnode2 = static_cast<SiteId>(e1[cedge].node_id[1]);
           if((cedge != chaser) && (endNode == cnode1))
           {
             burnt_loop[index] = cedge;
@@ -2324,7 +2326,7 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           {
             burnt_loop[index] = cedge;
             index++;
-            int tnode = static_cast<int>(e1[cedge].node_id[0]);
+            SiteId tnode = static_cast<SiteId>(e1[cedge].node_id[0]);
             int tspin = e1[cedge].nSpin[0];
             e1[cedge].node_id[0] = e1[cedge].node_id[1];
             e1[cedge].node_id[1] = tnode;
@@ -2333,15 +2335,15 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           }
         }
         chaser = burnt_loop[index - 1];
-        endNode = static_cast<int>(e1[chaser].node_id[1]);
+        endNode = static_cast<SiteId>(e1[chaser].node_id[1]);
       } while(index < numN);
 
       if(numN == 3)
       {
-        int te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
-        int tv0 = static_cast<int>(e1[te0].node_id[0]);
-        int tv1 = static_cast<int>(e1[te1].node_id[0]);
-        int tv2 = static_cast<int>(e1[te2].node_id[0]);
+        SiteId te0 = burnt_loop[0], te1 = burnt_loop[1], te2 = burnt_loop[2];
+        SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
+        SiteId tv1 = static_cast<SiteId>(e1[te1].node_id[0]);
+        SiteId tv2 = static_cast<SiteId>(e1[te2].node_id[0]);
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
@@ -2367,11 +2369,11 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
         int cnumT = 0;
         int front = 0;
         int back = numN - 1;
-        int te0 = burnt_loop[front];
-        int te1 = burnt_loop[back];
-        int tv0 = static_cast<int>(e1[te0].node_id[0]);
-        int tv1 = static_cast<int>(e1[te0].node_id[1]);
-        int tv2 = static_cast<int>(e1[te1].node_id[0]);
+        SiteId te0 = burnt_loop[front];
+        SiteId te1 = burnt_loop[back];
+        SiteId tv0 = static_cast<SiteId>(e1[te0].node_id[0]);
+        SiteId tv1 = static_cast<SiteId>(e1[te0].node_id[1]);
+        SiteId tv2 = static_cast<SiteId>(e1[te1].node_id[0]);
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
@@ -2397,9 +2399,9 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           if((cnumT % 2) != 0)
           {
             front = front + 1;
-            int ce = burnt_loop[front];
-            tv0 = static_cast<int>(e1[ce].node_id[0]);
-            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            SiteId ce = burnt_loop[front];
+            tv0 = static_cast<SiteId>(e1[ce].node_id[0]);
+            tv1 = static_cast<SiteId>(e1[ce].node_id[1]);
             tv2 = new_node0;
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
@@ -2425,9 +2427,9 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const int* afe, const No
           else
           {
             back = back - 1;
-            int ce = burnt_loop[back];
-            tv0 = static_cast<int>(e1[ce].node_id[0]);
-            tv1 = static_cast<int>(e1[ce].node_id[1]);
+            SiteId ce = burnt_loop[back];
+            tv0 = static_cast<SiteId>(e1[ce].node_id[0]);
+            tv1 = static_cast<SiteId>(e1[ce].node_id[1]);
             tv2 = new_node0;
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
@@ -2484,7 +2486,7 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
     int nFE = 0;
     int eff = 0;
     SiteId bodyCtr = 7 * (i - 1) + 6;
-    int arrayFC[6];
+    SiteId arrayFC[6];
     for(int ii = 0; ii < 6; ii++)
     {
       arrayFC[ii] = -1;
@@ -2516,7 +2518,7 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
         coord1[k] = p[i].coord[k];
         coord2[k] = p[i + 1 + xDim + nsp].coord[k];
       }
-      std::vector<int> arrayFE(nFE);
+      std::vector<SiteId> arrayFE(nFE);
       int tindex = 0;
       for(int i1 = 0; i1 < 6; i1++)
       {
@@ -2524,7 +2526,7 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
         int tnfe = sq[tsq].nEdge;
         for(int i2 = 0; i2 < tnfe; i2++)
         {
-          arrayFE[tindex] = static_cast<int>(sq[tsq].edge_id[i2]);
+          arrayFE[tindex] = sq[tsq].edge_id[i2];
           tindex++;
         }
       }
@@ -2551,9 +2553,9 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
 // Match each triangle side to the face edge it lies on (edgePlace 0 = face edge).
 // Transcribed from M3CEntireVolume::update_triangle_sides_with_fedge.
 // -----------------------------------------------------------------------------
-void update_triangle_sides_with_fedge(Triangle* t, const SiteId* mCubeID, const Segment* e, const Face* sq, int nT, int xDim, int nsp)
+void update_triangle_sides_with_fedge(Triangle* t, const SiteId* mCubeID, const Segment* e, const Face* sq, int64 nT, int xDim, SiteId nsp)
 {
-  int tFEarray[100];
+  SiteId tFEarray[100];
   int index = 0;
   int prevMCID = -1;
 
@@ -2576,7 +2578,7 @@ void update_triangle_sides_with_fedge(Triangle* t, const SiteId* mCubeID, const 
         int nFE = sq[tsq].nEdge;
         for(int i2 = 0; i2 < nFE; i2++)
         {
-          tFEarray[index] = static_cast<int>(sq[tsq].edge_id[i2]);
+          tFEarray[index] = sq[tsq].edge_id[i2];
           index++;
         }
       }
@@ -2586,13 +2588,13 @@ void update_triangle_sides_with_fedge(Triangle* t, const SiteId* mCubeID, const 
     {
       int index1 = j;
       int index2 = (j + 1 == 3) ? 0 : j + 1;
-      int cnode1 = static_cast<int>(t[i].node_id[index1]);
-      int cnode2 = static_cast<int>(t[i].node_id[index2]);
+      SiteId cnode1 = t[i].node_id[index1];
+      SiteId cnode2 = t[i].node_id[index2];
       for(int k = 0; k < index; k++)
       {
-        int cfe = tFEarray[k];
-        int tnode1 = static_cast<int>(e[cfe].node_id[0]);
-        int tnode2 = static_cast<int>(e[cfe].node_id[1]);
+        SiteId cfe = tFEarray[k];
+        SiteId tnode1 = static_cast<SiteId>(e[cfe].node_id[0]);
+        SiteId tnode2 = static_cast<SiteId>(e[cfe].node_id[1]);
         if((cnode1 == tnode1 && cnode2 == tnode2) || (cnode2 == tnode1 && cnode1 == tnode2))
         {
           t[i].e_id[index1] = cfe;
@@ -2609,12 +2611,12 @@ void update_triangle_sides_with_fedge(Triangle* t, const SiteId* mCubeID, const 
 // Count unique inner edges (two-pass sizing). Transcribed from
 // M3CEntireVolume::get_number_unique_inner_edges.
 // -----------------------------------------------------------------------------
-int get_number_unique_inner_edges(const Triangle* t, const SiteId* mCubeID, int nT, const std::atomic_bool& shouldCancel)
+int64 get_number_unique_inner_edges(const Triangle* t, const SiteId* mCubeID, int64 nT, const std::atomic_bool& shouldCancel)
 {
   // Per marching cube. Sized well above the algorithm's maximum of ~36 unique inner edges per cube.
-  int arrayIEnode[120][2];
+  SiteId arrayIEnode[120][2];
   int bFlag[120];
-  int nIE = 0;
+  int64 nIE = 0;
   int index = 0;
 
   for(int mm = 0; mm < 120; mm++)
@@ -2640,8 +2642,8 @@ int get_number_unique_inner_edges(const Triangle* t, const SiteId* mCubeID, int 
       {
         int index1 = j;
         int index2 = (j + 1 == 3) ? 0 : j + 1;
-        arrayIEnode[index][0] = static_cast<int>(t[i].node_id[index1]);
-        arrayIEnode[index][1] = static_cast<int>(t[i].node_id[index2]);
+        arrayIEnode[index][0] = static_cast<SiteId>(t[i].node_id[index1]);
+        arrayIEnode[index][1] = static_cast<SiteId>(t[i].node_id[index2]);
         index++;
       }
     }
@@ -2658,15 +2660,15 @@ int get_number_unique_inner_edges(const Triangle* t, const SiteId* mCubeID, int 
       {
         if(bFlag[k] == 0)
         {
-          int cnode1 = arrayIEnode[k][0];
-          int cnode2 = arrayIEnode[k][1];
+          SiteId cnode1 = arrayIEnode[k][0];
+          SiteId cnode2 = arrayIEnode[k][1];
           bFlag[k] = -1;
           for(int kk = 0; kk < nIEDmc; kk++)
           {
             if(bFlag[kk] == 0)
             {
-              int nnode1 = arrayIEnode[kk][0];
-              int nnode2 = arrayIEnode[kk][1];
+              SiteId nnode1 = arrayIEnode[kk][0];
+              SiteId nnode2 = arrayIEnode[kk][1];
               if((cnode1 == nnode1 && cnode2 == nnode2) || (cnode2 == nnode1 && cnode1 == nnode2))
               {
                 bFlag[kk] = -1;
@@ -2689,14 +2691,14 @@ int get_number_unique_inner_edges(const Triangle* t, const SiteId* mCubeID, int 
 // Build unique inner edges with their spins and stamp triangle e_id. Transcribed
 // from M3CEntireVolume::get_unique_inner_edges.
 // -----------------------------------------------------------------------------
-void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, int nT, int nfedge, const std::atomic_bool& shouldCancel)
+void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, int64 nT, int64 nfedge, const std::atomic_bool& shouldCancel)
 {
   // Per marching cube. Sized well above the algorithm's maximum of ~36 unique inner edges per cube.
   int arrayTri[120];
-  int arrayIEnode[120][2];
+  SiteId arrayIEnode[120][2];
   int bFlag[120];
   int index = 0;
-  int IEindex = 0;
+  int64 IEindex = 0;
 
   for(int mm = 0; mm < 120; mm++)
   {
@@ -2721,8 +2723,8 @@ void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, in
       {
         int index1 = j;
         int index2 = (j + 1 == 3) ? 0 : j + 1;
-        arrayIEnode[index][0] = static_cast<int>(t[i].node_id[index1]);
-        arrayIEnode[index][1] = static_cast<int>(t[i].node_id[index2]);
+        arrayIEnode[index][0] = static_cast<SiteId>(t[i].node_id[index1]);
+        arrayIEnode[index][1] = static_cast<SiteId>(t[i].node_id[index2]);
         arrayTri[index] = i;
         index++;
       }
@@ -2741,8 +2743,8 @@ void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, in
       {
         if(bFlag[k] == 0)
         {
-          int cnode1 = arrayIEnode[k][0];
-          int cnode2 = arrayIEnode[k][1];
+          SiteId cnode1 = arrayIEnode[k][0];
+          SiteId cnode2 = arrayIEnode[k][1];
           bFlag[k] = -1;
           ie[IEindex].node_id[0] = cnode1;
           ie[IEindex].node_id[1] = cnode2;
@@ -2759,8 +2761,8 @@ void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, in
             {
               int index1 = jj;
               int index2 = (jj + 1 == 3) ? 0 : jj + 1;
-              int tnode1 = static_cast<int>(t[ctri].node_id[index1]);
-              int tnode2 = static_cast<int>(t[ctri].node_id[index2]);
+              SiteId tnode1 = t[ctri].node_id[index1];
+              SiteId tnode2 = t[ctri].node_id[index2];
               if((tnode1 == cnode1 && tnode2 == cnode2) || (tnode2 == cnode1 && tnode1 == cnode2))
               {
                 t[ctri].e_id[index1] = static_cast<uint64>(IEindex + nfedge);
@@ -2772,8 +2774,8 @@ void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, in
           {
             if(bFlag[kk] == 0)
             {
-              int nnode1 = arrayIEnode[kk][0];
-              int nnode2 = arrayIEnode[kk][1];
+              SiteId nnode1 = arrayIEnode[kk][0];
+              SiteId nnode2 = arrayIEnode[kk][1];
               if((cnode1 == nnode1 && cnode2 == nnode2) || (cnode2 == nnode1 && cnode1 == nnode2))
               {
                 bFlag[kk] = -1;
@@ -2788,8 +2790,8 @@ void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, in
                   {
                     int index1 = jjj;
                     int index2 = (jjj + 1 == 3) ? 0 : jjj + 1;
-                    int tnode1 = static_cast<int>(t[ntri].node_id[index1]);
-                    int tnode2 = static_cast<int>(t[ntri].node_id[index2]);
+                    SiteId tnode1 = t[ntri].node_id[index1];
+                    SiteId tnode2 = t[ntri].node_id[index2];
                     if((tnode1 == cnode1 && tnode2 == cnode2) || (tnode2 == cnode1 && tnode1 == cnode2))
                     {
                       t[ntri].e_id[index1] = static_cast<uint64>(IEindex + nfedge);
@@ -2844,7 +2846,7 @@ void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, in
 // Bump node/edge kinds by 10 on outer-surface triangles (label sign flip).
 // Transcribed from M3CEntireVolume::update_node_edge_kind.
 // -----------------------------------------------------------------------------
-void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Triangle* t, int nT, int nfedge)
+void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Triangle* t, int64 nT, int64 nfedge)
 {
   for(int j = 0; j < nT; j++)
   {
@@ -2854,13 +2856,13 @@ void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Tr
     {
       for(int i = 0; i < 3; i++)
       {
-        int tn = static_cast<int>(t[j].node_id[i]);
+        SiteId tn = t[j].node_id[i];
         int tnkind = nodeType[tn];
         if(tnkind < 10)
         {
           nodeType[tn] = static_cast<int8_t>(tnkind + 10);
         }
-        int te = static_cast<int>(t[j].e_id[i]);
+        SiteId te = t[j].e_id[i];
         if(te < nfedge)
         {
           if(fe[te].edgeKind < 10)
@@ -2885,10 +2887,10 @@ void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Tr
 // Assign compacted sequential ids to used nodes (nodeType > 0); node_ids must be
 // pre-filled with -1. Returns the used-node count. From assign_new_nodeID.
 // -----------------------------------------------------------------------------
-int assign_new_nodeID(const int8_t* nodeType, int32_t* node_ids, int ns)
+int64 assign_new_nodeID(const int8_t* nodeType, uint32_t* node_ids, SiteId ns)
 {
-  int numN = 7 * ns;
-  int newnid = 0;
+  SiteId numN = 7 * ns;
+  int64 newnid = 0;
   for(int i = 0; i < numN; i++)
   {
     if(nodeType[i] > 0)
@@ -2919,7 +2921,7 @@ usize paddedSiteToOriginalCell(int64 site, const size_t fileDim[3], const size_t
 // cube. Returns SIZE_MAX if no non-ghost corner carries that label (i.e. the label is exterior).
 usize findSourceCell(int workLabel, int64 cubeSite, const NeighborAccessor& n, const int32_t* point, const size_t fileDim[3], const size_t dims[3])
 {
-  const Neighbor nb = n[static_cast<int>(cubeSite)]; // cache: 7 neighbors of the cube site read below
+  const Neighbor nb = n[cubeSite]; // cache: 7 neighbors of the cube site read below
   const int64 cornerSites[8] = {cubeSite,
                                 nb.neigh_id[1],
                                 nb.neigh_id[7],
@@ -3015,7 +3017,7 @@ Result<> M3CSurfaceMeshing::operator()()
 
   // --- Stage 2: face edges ---------------------------------------------------
   m_MessageHandler("Counting face edges...");
-  const int nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors, NS, m_ShouldCancel);
+  const int64 nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors, NS, m_ShouldCancel);
 
   m_MessageHandler("Finding nodes and edges on each square...");
   std::vector<Segment> fedges(static_cast<size_t>(nFEdge < 0 ? 0 : nFEdge));
@@ -3028,7 +3030,7 @@ Result<> M3CSurfaceMeshing::operator()()
 
   // --- Stage 3: triangles ----------------------------------------------------
   m_MessageHandler("Counting triangles...");
-  const int nTriangle = get_number_triangles(point.data(), squares.data(), neighbors, nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
+  const int64 nTriangle = get_number_triangles(point.data(), squares.data(), neighbors, nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
   m_MessageHandler("Generating triangles...");
   std::vector<Triangle> triangles(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle));
@@ -3044,7 +3046,7 @@ Result<> M3CSurfaceMeshing::operator()()
   m_MessageHandler("Building triangle/edge connectivity...");
   update_triangle_sides_with_fedge(triangles.data(), mCubeID.data(), fedges.data(), squares.data(), nTriangle, static_cast<int>(fileDim[0]), NSP);
 
-  const int nIEdge = get_number_unique_inner_edges(triangles.data(), mCubeID.data(), nTriangle, m_ShouldCancel);
+  const int64 nIEdge = get_number_unique_inner_edges(triangles.data(), mCubeID.data(), nTriangle, m_ShouldCancel);
   std::vector<ISegment> iedges(static_cast<size_t>(nIEdge < 0 ? 0 : nIEdge));
   get_unique_inner_edges(triangles.data(), mCubeID.data(), iedges.data(), nTriangle, nFEdge, m_ShouldCancel);
 
@@ -3057,8 +3059,8 @@ Result<> M3CSurfaceMeshing::operator()()
 
   // --- Stage 5: compact nodes and write the output TriangleGeom --------------
   m_MessageHandler("Writing surface mesh...");
-  std::vector<int32_t> newNodeIds(static_cast<size_t>(7) * NS, -1);
-  const int nNodes = assign_new_nodeID(nodeType.data(), newNodeIds.data(), NS);
+  std::vector<uint32_t> newNodeIds(static_cast<size_t>(7) * NS, k_UnusedNodeId);
+  const int64 nNodes = assign_new_nodeID(nodeType.data(), newNodeIds.data(), NS);
 
   auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
   triangleGeom.resizeVertexList(static_cast<usize>(nNodes));
@@ -3074,11 +3076,11 @@ Result<> M3CSurfaceMeshing::operator()()
   nodeTypesOut.resizeTuples({static_cast<usize>(nNodes)});
 
   // Compact nodes: scatter coordinates + node types to their new ids.
-  const int numCandidateNodes = 7 * NS;
-  for(int i = 0; i < numCandidateNodes; i++)
+  const SiteId numCandidateNodes = 7 * NS;
+  for(SiteId i = 0; i < numCandidateNodes; i++)
   {
-    int32_t nid = newNodeIds[i];
-    if(nid != -1)
+    uint32_t nid = newNodeIds[i];
+    if(nid != k_UnusedNodeId)
     {
       const Node nodeCoord = nodeCoords[i];
       vertexStore[static_cast<usize>(nid) * 3 + 0] = nodeCoord.coord[0];
@@ -3095,7 +3097,7 @@ Result<> M3CSurfaceMeshing::operator()()
   const auto toFaceLabel = [maxGrainId](int nSpin) -> int32 { return (nSpin < 0) ? -1 : ((nSpin == maxGrainId) ? 0 : nSpin); };
 
   // Triangles: remap to compacted node ids and write the ordered FaceLabels.
-  for(int i = 0; i < nTriangle; i++)
+  for(int64 i = 0; i < nTriangle; i++)
   {
     triStore[static_cast<usize>(i) * 3 + 0] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[0]]);
     triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[1]]);
@@ -3125,7 +3127,7 @@ Result<> M3CSurfaceMeshing::operator()()
       AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[numCellArrays + i], m_InputValues->FeatureIdsArrayPath, transfers);
     }
 
-    for(int i = 0; i < nTriangle; i++)
+    for(int64 i = 0; i < nTriangle; i++)
     {
       // Match the smaller-first FaceLabel ordering above so each transferred component aligns with
       // the feature in the same FaceLabels component.
