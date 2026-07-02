@@ -59,6 +59,16 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
+  // Whole-volume variant (the original M3CEntireVolume port): allocates all per-site scratch
+  // (squares/nodeType/newNodeIds) over the entire volume. Peak memory is O(volume).
+  Result<> runEntireVolume();
+
+  // Sliding-window variant: sweeps the volume z-slice by z-slice, keeping only a few slices of
+  // per-site scratch resident at once. Peak scratch memory is O(sliceArea) = O(N^2/3). Produces
+  // byte-identical output to runEntireVolume(). Selected for development via the M3C_WINDOWED env var
+  // until it is proven and promoted to the default.
+  Result<> runWindowed();
+
   // --- Legacy M3CEntireVolume pipeline stages (to be ported incrementally) ---
   // get_neighbor_list, initialize_nodes, initialize_squares,
   // get_number_fEdges + get_nodes_fEdges (uses inline edgeTable_2d/nsTable_2d),

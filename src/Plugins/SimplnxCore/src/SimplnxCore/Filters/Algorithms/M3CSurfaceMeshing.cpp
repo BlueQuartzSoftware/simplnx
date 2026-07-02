@@ -13,6 +13,8 @@
 #include <array>
 #include <atomic>
 #include <cstdint>
+#include <cstdlib>
+#include <string_view>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -2962,6 +2964,18 @@ M3CSurfaceMeshing::~M3CSurfaceMeshing() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> M3CSurfaceMeshing::operator()()
 {
+  // Dev toggle: the sliding-window variant is being brought up alongside the proven whole-volume
+  // variant. It must produce byte-identical output; once verified it will become the default.
+  if(const char* windowed = std::getenv("M3C_WINDOWED"); windowed != nullptr && std::string_view(windowed) == "1")
+  {
+    return runWindowed();
+  }
+  return runEntireVolume();
+}
+
+// -----------------------------------------------------------------------------
+Result<> M3CSurfaceMeshing::runEntireVolume()
+{
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
   const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
@@ -3168,5 +3182,14 @@ Result<> M3CSurfaceMeshing::operator()()
   }
 
   return {};
+}
+
+// -----------------------------------------------------------------------------
+// Sliding-window (z-slice) variant. See M3CSurfaceMeshing.hpp and the design notes: fuses the
+// whole-volume passes into a single z-marching sweep so per-site scratch stays O(sliceArea). Being
+// implemented incrementally; must remain byte-identical to runEntireVolume().
+Result<> M3CSurfaceMeshing::runWindowed()
+{
+  return MakeErrorResult(-95000, "M3C sliding-window variant is not yet implemented; unset M3C_WINDOWED to use the whole-volume variant.");
 }
 } // namespace nx::core
