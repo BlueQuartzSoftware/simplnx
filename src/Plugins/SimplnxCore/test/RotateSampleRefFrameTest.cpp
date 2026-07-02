@@ -298,6 +298,50 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition 
 }
 
 // -----------------------------------------------------------------------------
+// Class 1 (origin): KeepInputGeometryOrigin controls the output origin.
+// For a 90-degree rotation about Z, R maps (x,y)->(-y,x). A 4x3x2 volume at
+// origin (0,0,0) has its rotated bounding box spanning x' in [-3,0] (from y in
+// [0,3]) and y' in [0,4], so the transform-derived origin is (-3,0,0). With
+// KeepInputGeometryOrigin the output keeps the input origin (0,0,0).
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: KeepInputGeometryOrigin controls output origin", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const SizeVec3 inDims = {4, 3, 2};
+  const VectorFloat32Parameter::ValueType axisAngle{0.0f, 0.0f, 1.0f, 90.0f};
+  RotateSampleRefFrameFilter filter;
+
+  SECTION("Keep input origin -> (0,0,0)")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle, /*sliceBySlice=*/false, /*keepOrigin=*/true);
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    const auto origin = dataStructure.getDataAs<ImageGeom>(k_OutputPath)->getOrigin();
+    REQUIRE(origin[0] == Approx(0.0f).margin(1e-4f));
+    REQUIRE(origin[1] == Approx(0.0f).margin(1e-4f));
+    REQUIRE(origin[2] == Approx(0.0f).margin(1e-4f));
+  }
+
+  SECTION("Transform-derived origin -> (-3,0,0)")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle, /*sliceBySlice=*/false, /*keepOrigin=*/false);
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    const auto origin = dataStructure.getDataAs<ImageGeom>(k_OutputPath)->getOrigin();
+    REQUIRE(origin[0] == Approx(-3.0f).margin(1e-4f));
+    REQUIRE(origin[1] == Approx(0.0f).margin(1e-4f));
+    REQUIRE(origin[2] == Approx(0.0f).margin(1e-4f));
+  }
+}
+
+// -----------------------------------------------------------------------------
 // Slice-by-slice: a 180-degree rotation about an in-plane axis (X/Y) preserves
 // the Z (slice) axis, so slice-by-slice is a valid, lossless per-slice flip. It
 // must still be a value bijection, and it must differ from the true 3D rotation
