@@ -31,9 +31,8 @@
 #include <fmt/core.h>
 
 #include <algorithm>
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
+#include <array>
+#include <cmath>
 
 using namespace nx::core;
 
@@ -41,6 +40,54 @@ namespace
 {
 const std::string k_TempGeometryName = ".rotated_image_geometry";
 using RotationRepresentationType = RotateSampleRefFrame::RotationRepresentation;
+
+// Tolerance for treating a rotation-matrix entry as one of {-1, 0, +1}. The axis-angle path
+// builds the matrix from cos/sin in float32, so a 90-degree rotation yields entries like
+// cos(90) ~= -4.4e-8 (treated as 0) and sin(90) == 1. A tolerance of 1e-4 cleanly separates the
+// principal-90 rotations from any off-axis or non-90-degree rotation (e.g. 1 degree gives ~0.017).
+constexpr float32 k_Rotation90Tolerance = 1.0e-4f;
+
+constexpr int32 k_NonPrincipalRotation_Error = -6850;
+constexpr int32 k_SliceBySliceReordersSlices_Error = -6851;
+
+// -----------------------------------------------------------------------------
+// Returns true if the 3x3 rotation block is a proper signed axis-permutation matrix, i.e. a
+// rotation by a multiple of 90 degrees about the X, Y, or Z axis. Such a rotation maps the voxel
+// grid exactly onto itself, so the transform is a lossless permutation of the voxels. Any other
+// rotation is a lossy nearest-neighbor resample (see the RotateSampleRefFrame V&V report).
+bool IsPrincipalAxis90Rotation(const ImageRotationUtilities::Matrix3fR& rotation, float32 tol)
+{
+  std::array<int32, 3> rowOnesCount = {0, 0, 0};
+  std::array<int32, 3> colOnesCount = {0, 0, 0};
+  for(int32 row = 0; row < 3; row++)
+  {
+    for(int32 col = 0; col < 3; col++)
+    {
+      const float32 absValue = std::fabs(rotation(row, col));
+      const bool isZero = absValue < tol;
+      const bool isOne = std::fabs(absValue - 1.0f) < tol;
+      if(!isZero && !isOne)
+      {
+        return false; // entry is not near -1, 0, or +1 -> not a principal-90 rotation
+      }
+      if(isOne)
+      {
+        rowOnesCount[row]++;
+        colOnesCount[col]++;
+      }
+    }
+  }
+  // Exactly one +/-1 per row and per column (a signed permutation matrix)
+  for(int32 i = 0; i < 3; i++)
+  {
+    if(rowOnesCount[i] != 1 || colOnesCount[i] != 1)
+    {
+      return false;
+    }
+  }
+  // A proper rotation has determinant +1; determinant -1 would be a reflection, not a rotation.
+  return std::fabs(rotation.determinant() - 1.0f) < tol;
+}
 } // namespace
 
 namespace nx::core
@@ -152,6 +199,30 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     rotationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(rotationMatrixTable);
     break;
   }
+  }
+
+  // V&V guard: RotateSampleRefFrame is only a lossless reference-frame rotation when the rotation is
+  // a multiple of 90 degrees about a principal (X/Y/Z) axis. For any other rotation the nearest-neighbor
+  // resample drops/duplicates voxels and introduces background fill, so it is rejected here. Arbitrary
+  // rotations belong to the "Apply Transformation To Geometry" filter.
+  const ImageRotationUtilities::Matrix3fR rotationBlock = rotationMatrix.block(0, 0, 3, 3);
+  if(!IsPrincipalAxis90Rotation(rotationBlock, k_Rotation90Tolerance))
+  {
+    return MakePreflightErrorResult(k_NonPrincipalRotation_Error,
+                                    "Rotate Sample Reference Frame only supports rotations that are a multiple of 90 degrees (90, 180, 270) about the X, Y, or Z axis. The requested rotation is not "
+                                    "axis-aligned, which would produce a lossy resampled result. For an arbitrary rotation use the 'Apply Transformation To Geometry' filter instead.");
+  }
+
+  // The slice-by-slice option pins each output slice to the same input slice index (planeOld = k). That is
+  // only valid when the rotation preserves the Z (slice) axis (rotation about Z, or a 180-degree flip about
+  // X/Y). A 90/270-degree rotation about X or Y remaps Z to another axis, so slice-by-slice would index out
+  // of bounds and silently zero-fill data.
+  auto sliceBySlice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
+  if(sliceBySlice && (std::fabs(std::fabs(rotationBlock(2, 2)) - 1.0f) >= k_Rotation90Tolerance))
+  {
+    return MakePreflightErrorResult(k_SliceBySliceReordersSlices_Error,
+                                    "The 'Perform Slice By Slice Transform' option requires a rotation that preserves the Z (slice) axis: a rotation about the Z axis, or a 180-degree rotation about "
+                                    "the X or Y axis. The requested rotation reorders slices, which is incompatible with a slice-by-slice transform.");
   }
 
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);

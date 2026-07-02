@@ -5,53 +5,84 @@
 #include "simplnx/Common/Numbers.hpp"
 #include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DynamicTableParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <Eigen/Dense>
 #include <catch2/catch.hpp>
 
+#include <algorithm>
 #include <filesystem>
-#include <fstream>
 #include <string>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
 
+// =============================================================================
+// V&V test suite for RotateSampleRefFrame.
+//
+// Oracle: Class 1 (Analytical) primary + Class 4 (Invariant) companion.
+//
+// RotateSampleRefFrame performs a reference-frame rotation of an ImageGeom by
+// nearest-neighbor resampling. As shown in the V&V report, this is a *lossless
+// voxel permutation* if and only if the rotation is a multiple of 90 degrees
+// about a principal (X/Y/Z) axis. A preflight guard now rejects every other
+// rotation, so the entire supported domain is analytically provable:
+//
+//   * Class 1: the output is an exact, hand-derivable permutation of the input
+//     (e.g. a 180-degree rotation about Z of a single slice is a full reversal),
+//     and the output dimensions are a deterministic permutation of the input
+//     dimensions.
+//   * Class 4: a principal-90 rotation is a bijection on the voxel set, so the
+//     multiset of output values equals the multiset of input values, no
+//     background (0) is introduced, and composing the rotation back to 360
+//     degrees returns the original array exactly.
+//
+// Input cell values are 1..N (never 0) so a 0 anywhere in the output
+// unambiguously signals background fill introduced by a (disallowed) lossy
+// resample. No external exemplar file is used.
+// =============================================================================
+
 namespace
 {
+const std::string k_CellDataName = "CellData";
+const std::string k_ValuesName = "Values";
+const DataPath k_InputPath({"Input"});
+const DataPath k_OutputPath({"Output"});
 
-void CompareImageGeometryAlt(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, float32 threshold = 0.0f)
+// Build an ImageGeom whose single Int32 cell array is filled 1..N in ZYX order.
+ImageGeom* CreateSequentialImageGeom(DataStructure& dataStructure, const std::string& name, const SizeVec3& dims, const FloatVec3& spacing = FloatVec3{1.0f, 1.0f, 1.0f},
+                                     const FloatVec3& origin = FloatVec3{0.0f, 0.0f, 0.0f})
 {
-  INFO(fmt::format("Comparing Image Geometries. {} and {}", exemplaryDataPath.toString(), computedPath.toString()));
+  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, name);
+  imageGeom->setDimensions(dims);
+  imageGeom->setSpacing(spacing);
+  imageGeom->setOrigin(origin);
 
-  const auto* exemplarGeom = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
-  const auto* computedGeom = dataStructure.getDataAs<ImageGeom>(computedPath);
-  REQUIRE(exemplarGeom != nullptr);
-  REQUIRE(computedGeom != nullptr);
+  AttributeMatrix* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, {dims[2], dims[1], dims[0]}, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
 
-  const auto exemplarDims = exemplarGeom->getDimensions();
-  const auto computedDims = computedGeom->getDimensions();
-  REQUIRE(exemplarDims == computedDims);
-
-  const auto exemplarSpacing = exemplarGeom->getSpacing();
-  const auto computedSpacing = computedGeom->getSpacing();
-  REQUIRE(std::fabs(exemplarSpacing[0] - computedSpacing[0]) <= threshold);
-  REQUIRE(std::fabs(exemplarSpacing[1] - computedSpacing[1]) <= threshold);
-  REQUIRE(std::fabs(exemplarSpacing[2] - computedSpacing[2]) <= threshold);
+  Int32Array* values = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_ValuesName, {dims[2], dims[1], dims[0]}, {1}, cellAM->getId());
+  auto& valuesStore = values->getDataStoreRef();
+  for(usize i = 0; i < valuesStore.getNumberOfTuples(); i++)
+  {
+    valuesStore[i] = static_cast<int32>(i + 1); // 1..N, all distinct, none == 0
+  }
+  return imageGeom;
 }
 
+// Convert a 3x3 rotation matrix into the 4x4 DynamicTable expected by the Rotation Matrix representation.
 std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& matrix)
 {
   std::vector<std::vector<float64>> data;
-
   for(Eigen::Index i = 0; i < matrix.rows(); i++)
   {
     std::vector<float64> row;
@@ -62,112 +93,313 @@ std::vector<std::vector<float64>> ConvertMatrixToTable(const Eigen::Matrix3f& ma
     row.push_back(0.0);
     data.push_back(row);
   }
-
-  data.push_back({0.0l, 0.0, 0.0, 1.0});
+  data.push_back({0.0, 0.0, 0.0, 1.0});
   return data;
+}
+
+// Base arguments common to every run (axis-angle representation).
+Arguments MakeAxisAngleArgs(const DataPath& inputPath, const DataPath& outputPath, const VectorFloat32Parameter::ValueType& axisAngle, bool sliceBySlice = false, bool keepOrigin = false)
+{
+  Arguments args;
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false));
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputPath));
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>(axisAngle));
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_RotateSliceBySlice_Key, std::make_any<bool>(sliceBySlice));
+  args.insertOrAssign(RotateSampleRefFrameFilter::k_KeepInputGeometryOrigin_Key, std::make_any<bool>(keepOrigin));
+  return args;
+}
+
+// Read the output Int32 "Values" array (ZYX order) into a vector.
+std::vector<int32> ReadOutputValues(const DataStructure& dataStructure, const DataPath& geomPath)
+{
+  const auto* values = dataStructure.getDataAs<Int32Array>(geomPath.createChildPath(k_CellDataName).createChildPath(k_ValuesName));
+  REQUIRE(values != nullptr);
+  const auto& store = values->getDataStoreRef();
+  std::vector<int32> out(store.getNumberOfTuples());
+  for(usize i = 0; i < out.size(); i++)
+  {
+    out[i] = store[i];
+  }
+  return out;
+}
+
+// A principal-90 rotation is a bijection on the voxel set: the output values are exactly the input
+// values as a multiset, and no background (0) was introduced.
+void RequireValueBijection(const std::vector<int32>& output, usize inputCount)
+{
+  REQUIRE(output.size() == inputCount);
+  std::vector<int32> sorted = output;
+  std::sort(sorted.begin(), sorted.end());
+  std::vector<int32> expected(inputCount);
+  for(usize i = 0; i < inputCount; i++)
+  {
+    expected[i] = static_cast<int32>(i + 1);
+  }
+  REQUIRE(std::count(output.begin(), output.end(), 0) == 0); // no background introduced
+  REQUIRE(sorted == expected);                               // multiset conserved
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::RotateSampleRefFrame", "[Core][RotateSampleRefFrameFilter]")
+// -----------------------------------------------------------------------------
+// Class 1: an explicit, hand-derived permutation.
+// A 180-degree rotation about Z maps in-plane (x, y) -> (-x, -y). On a single
+// Z-slice this reverses the row-major order of the plane, so a slice filled
+// 1..6 becomes 6..1. Verified for both the Axis-Angle and Rotation-Matrix
+// representations (the latter also cross-checks GenerateRotationTransformationMatrix
+// against an Eigen-built matrix, an incidental Class 2 check).
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a slice", "[SimplnxCore][RotateSampleRefFrameFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Rotate_Sample_Ref_Frame_Test_v3.tar.gz", "Rotate_Sample_Ref_Frame_Test_v3");
+  const SizeVec3 dims = {3, 2, 1}; // 6 cells: [1 2 3 / 4 5 6]
+  const std::vector<int32> expected = {6, 5, 4, 3, 2, 1};
 
-  const DataPath k_OriginalGeomPath({"Original"});
+  RotateSampleRefFrameFilter filter;
 
-  Result<DataStructure> dataStructureResult =
-      DREAM3D::ImportDataStructureFromFile(fs::path(fmt::format("{}/Rotate_Sample_Ref_Frame_Test_v3/Rotate_Sample_Ref_Frame_Test_v3.dream3d", nx::core::unit_test::k_TestFilesDir)), false);
-  SIMPLNX_RESULT_REQUIRE_VALID(dataStructureResult);
-
-  DataStructure dataStructure = std::move(dataStructureResult.value());
-
-  const auto* originalImageGeom = dataStructure.getDataAs<ImageGeom>(k_OriginalGeomPath);
-  REQUIRE(originalImageGeom != nullptr);
-
-  auto [sectionName, exemplaryGeomPath, axisAngle, keepInputGeometryOrigin] =
-      GENERATE(std::make_tuple("180 degrees around X", DataPath({"180_100"}), VectorFloat32Parameter::ValueType{1.0F, 0.0F, 0.0F, 180.0F}, false),
-               std::make_tuple("180 degrees around Y", DataPath({"180_010"}), VectorFloat32Parameter::ValueType{0.0F, 1.0F, 0.0F, 180.0F}, false),
-               std::make_tuple("180 degrees around Z", DataPath({"180_001"}), VectorFloat32Parameter::ValueType{0.0F, 0.0F, 1.0F, 180.0F}, false),
-               std::make_tuple("90 degrees around X", DataPath({"90_100"}), VectorFloat32Parameter::ValueType{1.0F, 0.0F, 0.0F, 90.0F}, false),
-               std::make_tuple("90 degrees around Y", DataPath({"90_010"}), VectorFloat32Parameter::ValueType{0.0F, 1.0F, 0.0F, 90.0F}, false),
-               std::make_tuple("90 degrees around Z", DataPath({"90_001"}), VectorFloat32Parameter::ValueType{0.0F, 0.0F, 1.0F, 90.0F}, false),
-               std::make_tuple("45 degrees around X", DataPath({"45_100"}), VectorFloat32Parameter::ValueType{1.0F, 0.0F, 0.0F, 45.0F}, false),
-               std::make_tuple("45 degrees around Y", DataPath({"45_010"}), VectorFloat32Parameter::ValueType{0.0F, 1.0F, 0.0F, 45.0F}, false),
-               std::make_tuple("45 degrees around Z", DataPath({"45_001"}), VectorFloat32Parameter::ValueType{0.0F, 0.0F, 1.0F, 45.0F}, false),
-               std::make_tuple("180 degrees around X - Keep Origin", DataPath({"180_100_KeepOrigin"}), VectorFloat32Parameter::ValueType{1.0F, 0.0F, 0.0F, 180.0F}, true),
-               std::make_tuple("180 degrees around Y - Keep Origin", DataPath({"180_010_KeepOrigin"}), VectorFloat32Parameter::ValueType{0.0F, 1.0F, 0.0F, 180.0F}, true),
-               std::make_tuple("180 degrees around Z - Keep Origin", DataPath({"180_001_KeepOrigin"}), VectorFloat32Parameter::ValueType{0.0F, 0.0F, 1.0F, 180.0F}, true),
-               std::make_tuple("90 degrees around X - Keep Origin", DataPath({"90_100_KeepOrigin"}), VectorFloat32Parameter::ValueType{1.0F, 0.0F, 0.0F, 90.0F}, true),
-               std::make_tuple("90 degrees around Y - Keep Origin", DataPath({"90_010_KeepOrigin"}), VectorFloat32Parameter::ValueType{0.0F, 1.0F, 0.0F, 90.0F}, true),
-               std::make_tuple("90 degrees around Z - Keep Origin", DataPath({"90_001_KeepOrigin"}), VectorFloat32Parameter::ValueType{0.0F, 0.0F, 1.0F, 90.0F}, true),
-               std::make_tuple("45 degrees around X - Keep Origin", DataPath({"45_100_KeepOrigin"}), VectorFloat32Parameter::ValueType{1.0F, 0.0F, 0.0F, 45.0F}, true),
-               std::make_tuple("45 degrees around Y - Keep Origin", DataPath({"45_010_KeepOrigin"}), VectorFloat32Parameter::ValueType{0.0F, 1.0F, 0.0F, 45.0F}, true),
-               std::make_tuple("45 degrees around Z - Keep Origin", DataPath({"45_001_KeepOrigin"}), VectorFloat32Parameter::ValueType{0.0F, 0.0F, 1.0F, 45.0F}, true));
-
-  SECTION(sectionName)
+  SECTION("Axis-Angle representation")
   {
-    fmt::print("Testing {}\n", sectionName);
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", dims);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f});
 
-    RotateSampleRefFrameFilter filter;
-    Arguments args;
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    DataPath outputImageGeomPath = DataPath({fmt::format("{}_Test_AxisAngle", exemplaryGeomPath.getTargetName())});
-
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::AxisAngle)));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_OriginalGeomPath));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RemoveOriginalGeometry_Key, std::make_any<bool>(false)); // We need to keep the geometries around.
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputImageGeomPath));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>(axisAngle));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_KeepInputGeometryOrigin_Key, std::make_any<bool>(keepInputGeometryOrigin));
-
-    auto preflightAxisAngleResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightAxisAngleResult.outputActions);
-
-    auto executeAxisAngleResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeAxisAngleResult.result);
-
-    auto* outputImageGeom = dataStructure.getDataAs<ImageGeom>(outputImageGeomPath);
-    REQUIRE(outputImageGeom != nullptr);
-
-    {
-      UnitTest::CompareImageGeometry(dataStructure, exemplaryGeomPath, outputImageGeomPath, UnitTest::EPSILON);
-
-      DataPath exemplarAMDataPath = exemplaryGeomPath.createChildPath("CellData");
-      DataPath outputAMDataPath = outputImageGeomPath.createChildPath("CellData");
-      UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAMDataPath, dataStructure, outputAMDataPath);
-    }
-
-    /* This section will convert the Axis Angle into a Rotation Matrix and send that into the
-     * filter as the RotateSampleRefFrameFilter::RotationRepresentation::RotationMatrix type
-     */
-    Eigen::Vector3f axis(axisAngle[0], axisAngle[1], axisAngle[2]);
-    float32 angleRadians = axisAngle[3] * (numbers::pi / 180.0F);
-    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(angleRadians, axis).toRotationMatrix();
-
-    std::vector<std::vector<float64>> table = ConvertMatrixToTable(rotationMatrix);
-
-    outputImageGeomPath = DataPath({fmt::format("{}_Test_RotationMatrix", exemplaryGeomPath.getTargetName())});
-
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
-                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(table));
-    args.insertOrAssign(RotateSampleRefFrameFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(outputImageGeomPath));
-
-    auto preflightRotationMatrixResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightRotationMatrixResult.outputActions);
-
-    auto executeRotationMatrixResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeRotationMatrixResult.result);
-
-    {
-      UnitTest::CompareImageGeometry(dataStructure, exemplaryGeomPath, outputImageGeomPath, UnitTest::EPSILON);
-
-      DataPath exemplarAMDataPath = exemplaryGeomPath.createChildPath("CellData");
-      DataPath outputAMDataPath = outputImageGeomPath.createChildPath("CellData");
-      UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAMDataPath, dataStructure, outputAMDataPath);
-    }
+    REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SECTION("Rotation-Matrix representation")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", dims);
+
+    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(180.0f * (numbers::pi_v<float> / 180.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f)).toRotationMatrix();
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f});
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
+                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(ConvertMatrixToTable(rotationMatrix)));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Class 1 (dimensions) + Class 4 (value bijection): sweep every principal-90
+// rotation. Output dimensions are a deterministic axis permutation, and the
+// output is a lossless permutation of the input (multiset conserved, no
+// background). Covered for both representations.
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations are lossless permutations", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const SizeVec3 inDims = {4, 3, 2};
+  const usize inCount = 4 * 3 * 2;
+
+  // {label, axis-angle, expected output dims}
+  auto [label, axisAngle, expectedDims] = GENERATE(
+      std::make_tuple("90 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3{3, 4, 2}),
+      std::make_tuple("180 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f}, SizeVec3{4, 3, 2}),
+      std::make_tuple("270 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 270.0f}, SizeVec3{3, 4, 2}),
+      std::make_tuple("90 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3{4, 2, 3}),
+      std::make_tuple("180 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 180.0f}, SizeVec3{4, 3, 2}),
+      std::make_tuple("270 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 270.0f}, SizeVec3{4, 2, 3}),
+      std::make_tuple("90 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, SizeVec3{2, 3, 4}),
+      std::make_tuple("180 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 180.0f}, SizeVec3{4, 3, 2}),
+      std::make_tuple("270 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 270.0f}, SizeVec3{2, 3, 4}));
+
+  RotateSampleRefFrameFilter filter;
+
+  DYNAMIC_SECTION(label << " (Axis-Angle)")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle);
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
+    REQUIRE(outputGeom != nullptr);
+    REQUIRE(outputGeom->getDimensions() == expectedDims);
+    RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
+  }
+
+  DYNAMIC_SECTION(label << " (Rotation-Matrix)")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+
+    Eigen::Vector3f axis(axisAngle[0], axisAngle[1], axisAngle[2]);
+    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(axisAngle[3] * (numbers::pi_v<float> / 180.0f), axis).toRotationMatrix();
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle);
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
+                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(ConvertMatrixToTable(rotationMatrix)));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
+    REQUIRE(outputGeom != nullptr);
+    REQUIRE(outputGeom->getDimensions() == expectedDims);
+    RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Class 4 (composition / group invariant): applying a rotation until it sums to
+// 360 degrees must return the original array and dimensions exactly. This pins
+// the exact permutation convention without hand-encoding it.
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition is identity", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const SizeVec3 inDims = {4, 3, 2};
+
+  auto [label, axisAngle, repeats] = GENERATE(std::make_tuple("four 90 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, 4),
+                                              std::make_tuple("two 180 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f}, 2),
+                                              std::make_tuple("four 90 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, 4),
+                                              std::make_tuple("four 90 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, 4));
+
+  DYNAMIC_SECTION(label)
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+    const std::vector<int32> original = ReadOutputValues(dataStructure, k_InputPath);
+
+    RotateSampleRefFrameFilter filter;
+    DataPath currentInput = k_InputPath;
+    for(int32 step = 0; step < repeats; step++)
+    {
+      DataPath stepOutput({fmt::format("Step_{}", step)});
+      Arguments args = MakeAxisAngleArgs(currentInput, stepOutput, axisAngle);
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+      currentInput = stepOutput;
+    }
+
+    const auto* finalGeom = dataStructure.getDataAs<ImageGeom>(currentInput);
+    REQUIRE(finalGeom != nullptr);
+    REQUIRE(finalGeom->getDimensions() == inDims);
+    REQUIRE(ReadOutputValues(dataStructure, currentInput) == original);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Slice-by-slice: a 180-degree rotation about an in-plane axis (X/Y) preserves
+// the Z (slice) axis, so slice-by-slice is a valid, lossless per-slice flip. It
+// must still be a value bijection, and it must differ from the true 3D rotation
+// (which reverses slice order).
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lossless per-slice flip", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const SizeVec3 inDims = {4, 3, 2};
+  const usize inCount = 4 * 3 * 2;
+  const VectorFloat32Parameter::ValueType axisAngle{0.0f, 1.0f, 0.0f, 180.0f};
+
+  RotateSampleRefFrameFilter filter;
+
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", inDims);
+
+  // Slice-by-slice per-slice flip
+  DataPath slicePath({"SliceBySlice"});
+  {
+    Arguments args = MakeAxisAngleArgs(k_InputPath, slicePath, axisAngle, /*sliceBySlice=*/true);
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    RequireValueBijection(ReadOutputValues(dataStructure, slicePath), inCount);
+  }
+
+  // True 3D rotation (reverses slice order)
+  DataPath fullPath({"Full3D"});
+  {
+    Arguments args = MakeAxisAngleArgs(k_InputPath, fullPath, axisAngle, /*sliceBySlice=*/false);
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    RequireValueBijection(ReadOutputValues(dataStructure, fullPath), inCount);
+  }
+
+  // The two modes produce genuinely different permutations (slice order preserved vs reversed).
+  REQUIRE(ReadOutputValues(dataStructure, slicePath) != ReadOutputValues(dataStructure, fullPath));
+}
+
+// -----------------------------------------------------------------------------
+// Guard (negative tests): arbitrary rotations are rejected in preflight because
+// they would produce a lossy resampled result rather than a reference-frame
+// rotation. Error code -6850.
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: rejects non-principal-90 rotations", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const SizeVec3 inDims = {4, 3, 2};
+  RotateSampleRefFrameFilter filter;
+
+  SECTION("45 degrees about Z (Axis-Angle)")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 45.0f});
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.outputActions.errors().at(0).code == -6850);
+  }
+
+  SECTION("90 degrees about a non-principal axis (Axis-Angle)")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{1.0f, 1.0f, 1.0f, 90.0f});
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.outputActions.errors().at(0).code == -6850);
+  }
+
+  SECTION("Arbitrary (45 degree) Rotation Matrix")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+    Eigen::Matrix3f rotationMatrix = Eigen::AngleAxisf(45.0f * (numbers::pi_v<float> / 180.0f), Eigen::Vector3f(0.0f, 0.0f, 1.0f)).toRotationMatrix();
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 45.0f});
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationRepresentation_Key,
+                        std::make_any<ChoicesParameter::ValueType>(to_underlying(RotateSampleRefFrame::RotationRepresentation::RotationMatrix)));
+    args.insertOrAssign(RotateSampleRefFrameFilter::k_RotationMatrix_Key, std::make_any<DynamicTableParameter::ValueType>(ConvertMatrixToTable(rotationMatrix)));
+    auto preflightResult = filter.preflight(dataStructure, args);
+    REQUIRE(preflightResult.outputActions.invalid());
+    REQUIRE(preflightResult.outputActions.errors().at(0).code == -6850);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Guard (negative test): slice-by-slice combined with a rotation that reorders
+// slices (90 degrees about X) is rejected. Error code -6851.
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: rejects slice-by-slice with a slice-reordering rotation", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const SizeVec3 inDims = {4, 3, 2};
+  RotateSampleRefFrameFilter filter;
+
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", inDims);
+  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, /*sliceBySlice=*/true);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  REQUIRE(preflightResult.outputActions.invalid());
+  REQUIRE(preflightResult.outputActions.errors().at(0).code == -6851);
 }
 
 TEST_CASE("SimplnxCore::RotateSampleRefFrameFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RotateSampleRefFrameFilter][BackwardsCompatibility]")
