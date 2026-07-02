@@ -2,7 +2,6 @@
 
 #include "SimplnxCore/Filters/Algorithms/FillBadData.hpp"
 
-#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/AttributeMatrixSelectionParameter.hpp"
@@ -68,8 +67,7 @@ Parameters FillBadDataFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when performing the algorithm",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
-                                                               nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, GetAllDataTypes()));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_StoreAsNewPhase_Key, k_CellPhasesArrayPath_Key, true);
 
@@ -96,10 +94,10 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
 
   if(pMinAllowedDefectSizeValue < 1)
   {
-    MakeErrorResult(-16500, fmt::format("Minimum Allowed Defect Size must be at least 1. Value given was {}", pMinAllowedDefectSizeValue));
+    return MakePreflightErrorResult(-16500, fmt::format("Minimum Allowed Defect Size must be at least 1. Value given was {}", pMinAllowedDefectSizeValue));
   }
 
-  nx::core::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
@@ -112,7 +110,7 @@ IFilter::PreflightResult FillBadDataFilter::preflightImpl(const DataStructure& d
   // Cell Data is going to be modified
   auto featureIdsPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto ignoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), ignoredDataArrayPaths);
+  AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureIdsPath.getParent(), ignoredDataArrayPaths);
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }

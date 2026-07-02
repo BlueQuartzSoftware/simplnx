@@ -64,12 +64,6 @@ void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractD
     const int32 featureName = featureIds[tupleIndex];
     const int32 neighbor = neighbors[tupleIndex];
 
-    // Skip if no neighbor assignment
-    if(neighbor == tupleIndex)
-    {
-      continue;
-    }
-
     // Copy data from the valid neighbor to bad data voxel
     // Only copy if the current voxel is bad data (-1) and the neighbor is valid (>0)
     if(featureName < 0 && neighbor != -1 && featureIds[static_cast<usize>(neighbor)] > 0)
@@ -339,13 +333,17 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
           // Check already-processed neighbors (scanline order: -Z, -Y, -X)
           // We only check "backward" neighbors because "forward" neighbors
           // haven't been processed yet in the scanline order
+          //
+          // Note the following checks do not need to validate the
+          // featureIdsStore is zero because that is a prerequisite to
+          // insertion of an index value into provisionalLabels
           std::vector<int64> neighborLabels;
 
           // Check -X neighbor
           if(x > 0)
           {
             const usize neighborIdx = index - 1;
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
+            if(provisionalLabels.contains(neighborIdx))
             {
               neighborLabels.push_back(provisionalLabels[neighborIdx]);
             }
@@ -355,7 +353,7 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
           if(y > 0)
           {
             const usize neighborIdx = index - dims[0];
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
+            if(provisionalLabels.contains(neighborIdx))
             {
               neighborLabels.push_back(provisionalLabels[neighborIdx]);
             }
@@ -365,7 +363,7 @@ void FillBadData::phaseOneCCL(Int32AbstractDataStore& featureIdsStore, ChunkAwar
           if(z > 0)
           {
             const usize neighborIdx = index - dims[0] * dims[1];
-            if(provisionalLabels.contains(neighborIdx) && featureIdsStore[neighborIdx] == 0)
+            if(provisionalLabels.contains(neighborIdx))
             {
               neighborLabels.push_back(provisionalLabels[neighborIdx]);
             }
@@ -473,7 +471,7 @@ void FillBadData::phaseThreeRelabeling(Int32AbstractDataStore& featureIdsStore, 
   std::unordered_set<int64> localSmallRegions;
   for(const auto& [root, size] : rootSizes)
   {
-    if(static_cast<int32>(size) < m_InputValues->minAllowedDefectSizeValue)
+    if(size < static_cast<usize>(m_InputValues->minAllowedDefectSizeValue))
     {
       localSmallRegions.insert(root);
     }
@@ -583,6 +581,11 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
   // Iteratively fill until no voxels with -1 value remain
   while(count != 0)
   {
+    if(m_ShouldCancel)
+    {
+      return;
+    }
+
     iteration++;
     count = 0; // Reset count of voxels with a -1 value for this iteration
 
@@ -636,7 +639,6 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
         // Reset vote counters for next voxel
         // Only reset features that were actually counted to save time
         // Loop over the 6 face neighbors of the voxel
-        isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
         for(const auto& faceIndex : faceNeighborInternalIdx)
         {
           if(!isValidFaceNeighbor[faceIndex])
