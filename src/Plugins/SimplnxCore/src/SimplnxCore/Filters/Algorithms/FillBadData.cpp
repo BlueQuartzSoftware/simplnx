@@ -52,7 +52,7 @@ namespace
 // @param outputDataStore The data array to update
 // @param neighbors The neighbor assignments (index of the neighbor to copy from)
 template <typename T>
-void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int32>& neighbors)
+void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int64>& neighbors)
 {
   usize start = 0;
   usize stop = outputDataStore.getNumberOfTuples();
@@ -62,7 +62,7 @@ void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractD
   for(usize tupleIndex = start; tupleIndex < stop; tupleIndex++)
   {
     const int32 featureName = featureIds[tupleIndex];
-    const int32 neighbor = neighbors[tupleIndex];
+    const int64 neighbor = neighbors[tupleIndex];
 
     // Copy data from the valid neighbor to bad data voxel
     // Only copy if the current voxel is bad data (-1) and the neighbor is valid (>0)
@@ -85,7 +85,7 @@ void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractD
 struct FillBadDataUpdateTuplesFunctor
 {
   template <typename T>
-  void operator()(const Int32AbstractDataStore& featureIds, IDataArray* outputIDataArray, const std::vector<int32>& neighbors)
+  void operator()(const Int32AbstractDataStore& featureIds, IDataArray* outputIDataArray, const std::vector<int64>& neighbors)
   {
     auto& outputStore = outputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     FillBadDataUpdateTuples(featureIds, outputStore, neighbors);
@@ -557,7 +557,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
   // Neighbor assignment array: neighbors[i] = index of the neighbor to copy from
-  std::vector<int32> neighbors(totalPoints, -1);
+  std::vector<int64> neighbors(totalPoints, -1);
 
   // Feature vote counter: tracks how many times each feature appears as the neighbor
   std::vector<int32> featureNumber(numFeatures + 1, 0);
@@ -631,7 +631,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
             if(current > most)
             {
               most = current;
-              neighbors[voxelIndex] = static_cast<int32>(neighborPoint); // Store neighbor to copy from
+              neighbors[voxelIndex] = neighborPoint; // Store neighbor to copy from
             }
           }
         }
