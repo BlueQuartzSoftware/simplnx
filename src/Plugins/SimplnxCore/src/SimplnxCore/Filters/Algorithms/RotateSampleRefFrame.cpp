@@ -67,16 +67,13 @@ Result<> RotateSampleRefFrame::operator()()
 
   ImageRotationUtilities::RotateArgs rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, rotationMatrix);
 
-  auto selectedCellDataChildren = GetAllChildArrayDataPaths(m_DataStructure, srcImageGeom.getCellDataPath());
-  auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
-
   ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
   // The actual rotating of the dataStructure arrays is done in parallel where parallel here
   // refers to the cropping of each DataArray being done on a separate thread.
   ParallelTaskAlgorithm taskRunner;
   taskRunner.setParallelizationEnabled(true);
-  const DataPath srcCelLDataAMPath = srcImageGeom.getCellDataPath();
+  const DataPath srcCellDataAMPath = srcImageGeom.getCellDataPath();
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
 
   const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
@@ -88,7 +85,7 @@ Result<> RotateSampleRefFrame::operator()()
       return {};
     }
 
-    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCellDataAMPath.createChildPath(srcDataObject->getName()));
     auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
     m_MessageHandler(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
 
