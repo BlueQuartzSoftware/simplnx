@@ -2988,8 +2988,8 @@ Result<> M3CSurfaceMeshing::operator()()
   size_t fileDim[3] = {dims[0] + 2, dims[1] + 2, dims[2] + 2};
   const size_t totalPoints = fileDim[0] * fileDim[1] * fileDim[2];
   // Site count and per-plane site count are 64-bit (SiteId): they index the FeatureId grid and must
-  // support volumes with more than 2^31 voxels. (Edge/node id storage is still 32-bit, capping the
-  // MESH size near 2^31 elements; the peak memory model still scales with volume - see docs.)
+  // support volumes with more than 2^31 voxels. (Edge/node id storage is unsigned 32-bit, capping the
+  // MESH size near 2^32 elements; the peak memory model still scales with volume - see docs.)
   const SiteId NS = static_cast<SiteId>(totalPoints);
   const SiteId NSP = static_cast<SiteId>(fileDim[0] * fileDim[1]);
 
