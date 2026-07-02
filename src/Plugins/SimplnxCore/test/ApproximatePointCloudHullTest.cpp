@@ -19,8 +19,11 @@
 #include <string>
 
 namespace fs = std::filesystem;
+
 using namespace nx::core;
 using namespace nx::core::Constants;
+using namespace nx::core::UnitTest;
+
 namespace
 {
 static const std::vector<float> s_Vertices = {

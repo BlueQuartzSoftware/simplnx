@@ -541,6 +541,52 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilte
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: Preflight Error - Cell array tuple count mismatch (-9800)",
+          "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+
+  // Build a minimal synthetic DataStructure where the three cell-level arrays that are
+  // validated together (FeatureIds, CellPhases, Quats) do NOT all share the same tuple
+  // count. This drives the validateNumberOfTuples() guard in preflightImpl that emits
+  // error -9800.
+  DataStructure dataStructure;
+  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeom->setDimensions({10, 1, 1});
+
+  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {10}, {1}, cellAM->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
+
+  // CellPhases lives in a separate AttributeMatrix with a deliberately different tuple
+  // count (9 != 10) so the cross-array tuple-count check fails.
+  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+
+  auto* featureAM = AttributeMatrix::Create(dataStructure, "CellFeatureData", {5}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<float32>(dataStructure, "AvgCAxes", {5}, {3}, featureAM->getId());
+
+  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
+  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+
+  ComputeFeatureReferenceCAxisMisorientationsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "MismatchData", "Phases"})));
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Quats"})));
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_AvgCAxesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellFeatureData", "AvgCAxes"})));
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_CrystalStructuresArrayPath_Key,
+                      std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_FeatureReferenceCAxisMisorientationsArrayName_Key, std::make_any<std::string>("FeatureRefCAxisMisorientation"));
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_FeatureAvgCAxisMisorientationsArrayName_Key, std::make_any<std::string>("AvgCAxisMisorientation"));
+  args.insertOrAssign(ComputeFeatureReferenceCAxisMisorientationsFilter::k_FeatureStdevCAxisMisorientationsArrayName_Key, std::make_any<std::string>("StdevCAxisMisorientation"));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -9800);
+}
+
 TEST_CASE("OrientationAnalysis::ComputeFeatureReferenceCAxisMisorientationsFilter: SIMPL Backwards Compatibility",
           "[OrientationAnalysis][ComputeFeatureReferenceCAxisMisorientationsFilter][BackwardsCompatibility]")
 {

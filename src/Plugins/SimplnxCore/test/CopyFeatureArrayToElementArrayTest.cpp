@@ -61,6 +61,32 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Parameter Check", 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
+TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - Feature array tuple count mismatch (-3020)", "[Core][CopyFeatureArrayToElementArrayFilter][preflight]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+
+  // Cell-level FeatureIds must exist (validated selection parameter) but is not part of the tuple-count check.
+  Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {{30}}, {1});
+
+  // Two feature-level arrays with deliberately different tuple counts (3 != 4) so the validateNumberOfTuples()
+  // guard over the selected feature arrays fails and emits error -3020.
+  Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_FeatureTemperatureName, {3}, {1});
+  Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, k_FeatureDataArrayName, {4}, {1});
+
+  CopyFeatureArrayToElementArrayFilter filter;
+  Arguments args;
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_SelectedFeatureArrayPath_Key,
+                      std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({k_FeatureTemperatureName}), DataPath({k_FeatureDataArrayName})}));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({k_CellFeatureIdsArrayName})));
+  args.insertOrAssign(CopyFeatureArrayToElementArrayFilter::k_CreatedArraySuffix_Key, std::make_any<StringParameter::ValueType>(k_CellTempArraySuffix));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -3020);
+}
+
 using ListOfTypes = std::tuple<int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, float64>;
 TEMPLATE_LIST_TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Valid filter execution", "[Core][CopyFeatureArrayToElementArrayFilter]", ListOfTypes)
 {
