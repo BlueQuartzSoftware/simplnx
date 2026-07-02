@@ -203,16 +203,15 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
   const usize inCount = 4 * 3 * 2;
 
   // {label, axis-angle, expected output dims}
-  auto [label, axisAngle, expectedDims] = GENERATE(
-      std::make_tuple("90 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3{3, 4, 2}),
-      std::make_tuple("180 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f}, SizeVec3{4, 3, 2}),
-      std::make_tuple("270 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 270.0f}, SizeVec3{3, 4, 2}),
-      std::make_tuple("90 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3{4, 2, 3}),
-      std::make_tuple("180 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 180.0f}, SizeVec3{4, 3, 2}),
-      std::make_tuple("270 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 270.0f}, SizeVec3{4, 2, 3}),
-      std::make_tuple("90 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, SizeVec3{2, 3, 4}),
-      std::make_tuple("180 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 180.0f}, SizeVec3{4, 3, 2}),
-      std::make_tuple("270 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 270.0f}, SizeVec3{2, 3, 4}));
+  auto [label, axisAngle, expectedDims] = GENERATE(std::make_tuple("90 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3{3, 4, 2}),
+                                                   std::make_tuple("180 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 180.0f}, SizeVec3{4, 3, 2}),
+                                                   std::make_tuple("270 about Z", VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 270.0f}, SizeVec3{3, 4, 2}),
+                                                   std::make_tuple("90 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3{4, 2, 3}),
+                                                   std::make_tuple("180 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 180.0f}, SizeVec3{4, 3, 2}),
+                                                   std::make_tuple("270 about X", VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 270.0f}, SizeVec3{4, 2, 3}),
+                                                   std::make_tuple("90 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, SizeVec3{2, 3, 4}),
+                                                   std::make_tuple("180 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 180.0f}, SizeVec3{4, 3, 2}),
+                                                   std::make_tuple("270 about Y", VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 270.0f}, SizeVec3{2, 3, 4}));
 
   RotateSampleRefFrameFilter filter;
 

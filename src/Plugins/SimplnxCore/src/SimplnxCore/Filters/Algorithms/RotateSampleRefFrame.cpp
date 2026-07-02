@@ -100,5 +100,6 @@ Result<> RotateSampleRefFrame::operator()()
     destImageGeom.setOrigin(srcImageGeom.getOrigin());
   }
 
-  return {};
+  // Surface any error/warning a parallel resample task reported through the shared callback.
+  return filterProgressCallback.takeResult();
 }

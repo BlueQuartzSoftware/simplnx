@@ -123,7 +123,8 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 
   taskRunner.wait(); // This will spill over if the number of DataArrays to process does not divide evenly by the number of threads.
 
-  return {};
+  // Surface any error/warning a parallel resample task reported through the shared callback.
+  return filterProgressCallback.takeResult();
 }
 
 // -----------------------------------------------------------------------------
