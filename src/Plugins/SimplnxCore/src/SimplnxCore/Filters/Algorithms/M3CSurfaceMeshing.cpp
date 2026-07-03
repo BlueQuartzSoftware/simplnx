@@ -2886,25 +2886,6 @@ void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Tr
   }
 }
 
-// -----------------------------------------------------------------------------
-// Assign compacted sequential ids to used nodes (nodeType > 0); node_ids must be
-// pre-filled with -1. Returns the used-node count. From assign_new_nodeID.
-// -----------------------------------------------------------------------------
-int64 assign_new_nodeID(const int8_t* nodeType, uint32_t* node_ids, SiteId ns)
-{
-  SiteId numN = 7 * ns;
-  int64 newnid = 0;
-  for(int i = 0; i < numN; i++)
-  {
-    if(nodeType[i] > 0)
-    {
-      node_ids[i] = newnid;
-      newnid++;
-    }
-  }
-  return newnid;
-}
-
 // Convert a 1-based padded working-grid site to the 0-based index into the original (unpadded)
 // cell arrays, or SIZE_MAX if the site is in the ghost shell.
 usize paddedSiteToOriginalCell(int64 site, const size_t fileDim[3], const size_t dims[3])
@@ -2975,8 +2956,41 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   // --- Stage 5: compact nodes and write the output TriangleGeom --------------
   messageHandler("Writing surface mesh...");
-  std::vector<uint32_t> newNodeIds(static_cast<size_t>(7) * NS, k_UnusedNodeId);
-  const int64 nNodes = assign_new_nodeID(nodeType.data(), newNodeIds.data(), NS);
+  // Node-id compaction without a dense 7*NS candidate->id map. A candidate's compacted id is simply
+  // the number of real nodes (nodeType > 0) that precede it; we answer that from a coarse per-block
+  // prefix over nodeType plus a small in-block scan (saves ~3.8 GB at 512^3 vs a uint32 map). This is
+  // valid because update_node_edge_kind above only adds +10 to kinds and never clears a node, so the
+  // set of real nodes is exactly what the sweep produced.
+  const SiteId numCandidateNodes = 7 * NS;
+  constexpr SiteId k_NodeBlock = 128;
+  const SiteId numNodeBlocks = (numCandidateNodes + k_NodeBlock - 1) / k_NodeBlock;
+  std::vector<uint32_t> nodeBlockBase(static_cast<size_t>(numNodeBlocks));
+  int64 realNodeRunning = 0;
+  for(SiteId b = 0; b < numNodeBlocks; b++)
+  {
+    nodeBlockBase[static_cast<size_t>(b)] = static_cast<uint32_t>(realNodeRunning);
+    const SiteId lo = b * k_NodeBlock;
+    const SiteId hi = std::min<SiteId>(lo + k_NodeBlock, numCandidateNodes);
+    for(SiteId c = lo; c < hi; c++)
+    {
+      if(nodeType[c] > 0)
+      {
+        realNodeRunning++;
+      }
+    }
+  }
+  const int64 nNodes = realNodeRunning;
+  const auto compactedNodeId = [&](SiteId c) -> int64 {
+    int64 r = nodeBlockBase[static_cast<size_t>(c / k_NodeBlock)];
+    for(SiteId cc = (c / k_NodeBlock) * k_NodeBlock; cc < c; cc++)
+    {
+      if(nodeType[cc] > 0)
+      {
+        r++;
+      }
+    }
+    return r;
+  };
 
   auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(inputValues->TriangleGeometryPath);
   triangleGeom.resizeVertexList(static_cast<usize>(nNodes));
@@ -2991,18 +3005,19 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   faceLabels.resizeTuples({static_cast<usize>(nTriangle)});
   nodeTypesOut.resizeTuples({static_cast<usize>(nNodes)});
 
-  // Compact nodes: scatter coordinates + node types to their new ids.
-  const SiteId numCandidateNodes = 7 * NS;
+  // Compact nodes: scatter coordinates + node types to their new (sequential) ids. Walking candidates
+  // in ascending order and emitting with a running counter reproduces assign_new_nodeID's numbering.
+  int64 vtxRunning = 0;
   for(SiteId i = 0; i < numCandidateNodes; i++)
   {
-    uint32_t nid = newNodeIds[i];
-    if(nid != k_UnusedNodeId)
+    if(nodeType[i] > 0)
     {
       const Node nodeCoord = nodeCoords[i];
-      vertexStore[static_cast<usize>(nid) * 3 + 0] = nodeCoord.coord[0];
-      vertexStore[static_cast<usize>(nid) * 3 + 1] = nodeCoord.coord[1];
-      vertexStore[static_cast<usize>(nid) * 3 + 2] = nodeCoord.coord[2];
-      nodeTypesOut[static_cast<usize>(nid)] = nodeType[i];
+      vertexStore[static_cast<usize>(vtxRunning) * 3 + 0] = nodeCoord.coord[0];
+      vertexStore[static_cast<usize>(vtxRunning) * 3 + 1] = nodeCoord.coord[1];
+      vertexStore[static_cast<usize>(vtxRunning) * 3 + 2] = nodeCoord.coord[2];
+      nodeTypesOut[static_cast<usize>(vtxRunning)] = nodeType[i];
+      vtxRunning++;
     }
   }
 
@@ -3015,9 +3030,9 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // Triangles: remap to compacted node ids and write the ordered FaceLabels.
   for(int64 i = 0; i < nTriangle; i++)
   {
-    triStore[static_cast<usize>(i) * 3 + 0] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[0]]);
-    triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[1]]);
-    triStore[static_cast<usize>(i) * 3 + 2] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[2]]);
+    triStore[static_cast<usize>(i) * 3 + 0] = static_cast<IGeometry::MeshIndexType>(compactedNodeId(triangles[i].node_id[0]));
+    triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(compactedNodeId(triangles[i].node_id[1]));
+    triStore[static_cast<usize>(i) * 3 + 2] = static_cast<IGeometry::MeshIndexType>(compactedNodeId(triangles[i].node_id[2]));
 
     const int32 labelA = toFaceLabel(triangles[i].nSpin[0]);
     const int32 labelB = toFaceLabel(triangles[i].nSpin[1]);
@@ -3200,128 +3215,8 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   m_MessageHandler("Building triangle/edge connectivity...");
   update_triangle_sides_with_fedge(triangles.data(), mCubeID.data(), fedges.data(), squares.data(), nTriangle, static_cast<int>(fileDim[0]), NSP);
 
-  const int64 nIEdge = get_number_unique_inner_edges(triangles.data(), mCubeID.data(), nTriangle, m_ShouldCancel);
-  std::vector<ISegment> iedges(static_cast<size_t>(nIEdge < 0 ? 0 : nIEdge));
-  get_unique_inner_edges(triangles.data(), mCubeID.data(), iedges.data(), nTriangle, nFEdge, m_ShouldCancel);
-
-  update_node_edge_kind(nodeType.data(), fedges.data(), iedges.data(), triangles.data(), nTriangle, nFEdge);
-
-  if(m_ShouldCancel)
-  {
-    return {};
-  }
-
-  // --- Stage 5: compact nodes and write the output TriangleGeom --------------
-  m_MessageHandler("Writing surface mesh...");
-  std::vector<uint32_t> newNodeIds(static_cast<size_t>(7) * NS, k_UnusedNodeId);
-  const int64 nNodes = assign_new_nodeID(nodeType.data(), newNodeIds.data(), NS);
-
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  triangleGeom.resizeVertexList(static_cast<usize>(nNodes));
-  triangleGeom.resizeFaceList(static_cast<usize>(nTriangle));
-  triangleGeom.getVertexAttributeMatrix()->resizeTuples({static_cast<usize>(nNodes)});
-  triangleGeom.getFaceAttributeMatrix()->resizeTuples({static_cast<usize>(nTriangle)});
-
-  auto& vertexStore = triangleGeom.getVertices()->getDataStoreRef();
-  auto& triStore = triangleGeom.getFaces()->getDataStoreRef();
-  auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsDataPath).getDataStoreRef();
-  auto& nodeTypesOut = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesDataPath).getDataStoreRef();
-  faceLabels.resizeTuples({static_cast<usize>(nTriangle)});
-  nodeTypesOut.resizeTuples({static_cast<usize>(nNodes)});
-
-  // Compact nodes: scatter coordinates + node types to their new ids.
-  const SiteId numCandidateNodes = 7 * NS;
-  for(SiteId i = 0; i < numCandidateNodes; i++)
-  {
-    uint32_t nid = newNodeIds[i];
-    if(nid != k_UnusedNodeId)
-    {
-      const Node nodeCoord = nodeCoords[i];
-      vertexStore[static_cast<usize>(nid) * 3 + 0] = nodeCoord.coord[0];
-      vertexStore[static_cast<usize>(nid) * 3 + 1] = nodeCoord.coord[1];
-      vertexStore[static_cast<usize>(nid) * 3 + 2] = nodeCoord.coord[2];
-      nodeTypesOut[static_cast<usize>(nid)] = nodeType[i];
-    }
-  }
-
-  // FaceLabels convention (matches QuickSurfaceMesh / SurfaceNets): negative ghost labels -> -1
-  // (exterior box surface), the renumbered zero-feature (maxGrainId) -> 0, and the SMALLER of the two
-  // labels is placed in component 0 (downstream filters rely on this). Triangle winding is made
-  // consistent with this ordering separately by the optional repair pass below.
-  const auto toFaceLabel = [maxGrainId](int nSpin) -> int32 { return (nSpin < 0) ? -1 : ((nSpin == maxGrainId) ? 0 : nSpin); };
-
-  // Triangles: remap to compacted node ids and write the ordered FaceLabels.
-  for(int64 i = 0; i < nTriangle; i++)
-  {
-    triStore[static_cast<usize>(i) * 3 + 0] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[0]]);
-    triStore[static_cast<usize>(i) * 3 + 1] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[1]]);
-    triStore[static_cast<usize>(i) * 3 + 2] = static_cast<IGeometry::MeshIndexType>(newNodeIds[triangles[i].node_id[2]]);
-
-    const int32 labelA = toFaceLabel(triangles[i].nSpin[0]);
-    const int32 labelB = toFaceLabel(triangles[i].nSpin[1]);
-    faceLabels[static_cast<usize>(i) * 2 + 0] = (labelA <= labelB) ? labelA : labelB;
-    faceLabels[static_cast<usize>(i) * 2 + 1] = (labelA <= labelB) ? labelB : labelA;
-  }
-
-  // --- Transfer selected Cell/Feature arrays to the two sides of each face -----------------------
-  // Reuses the simplnx TupleTransfer machinery. For each triangle, a representative source cell is
-  // derived per side from the triangle's marching-cube corner cells (matched by working label). The
-  // exterior side (FaceLabel == -1) is skipped by the transfer functions.
-  if(!m_InputValues->SelectedCellDataArrayPaths.empty() || !m_InputValues->SelectedFeatureDataArrayPaths.empty())
-  {
-    m_MessageHandler("Transferring attribute arrays to the mesh faces...");
-    std::vector<std::shared_ptr<AbstractTupleTransfer>> transfers;
-    for(usize i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
-    {
-      AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], transfers);
-    }
-    const usize numCellArrays = m_InputValues->SelectedCellDataArrayPaths.size();
-    for(usize i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
-    {
-      AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[numCellArrays + i], m_InputValues->FeatureIdsArrayPath, transfers);
-    }
-
-    for(int64 i = 0; i < nTriangle; i++)
-    {
-      // Match the smaller-first FaceLabel ordering above so each transferred component aligns with
-      // the feature in the same FaceLabels component.
-      const int32 labelA = toFaceLabel(triangles[i].nSpin[0]);
-      const int32 labelB = toFaceLabel(triangles[i].nSpin[1]);
-      const bool side0IsComp0 = (labelA <= labelB);
-      const int nSpinComp0 = side0IsComp0 ? triangles[i].nSpin[0] : triangles[i].nSpin[1];
-      const int nSpinComp1 = side0IsComp0 ? triangles[i].nSpin[1] : triangles[i].nSpin[0];
-      const usize cell0 = findSourceCell(nSpinComp0, mCubeID[i], neighbors, point.data(), fileDim, dims);
-      const usize cell1 = findSourceCell(nSpinComp1, mCubeID[i], neighbors, point.data(), fileDim, dims);
-      for(const auto& transfer : transfers)
-      {
-        transfer->quickSurfaceTransfer(static_cast<usize>(i), cell0, cell1, faceLabels);
-      }
-    }
-  }
-
-  // Optional winding-consistency repair. M3C does not itself guarantee globally consistent normals,
-  // so this pass (using triangle connectivity) makes the winding consistent with the FaceLabels.
-  if(m_InputValues->RepairTriangleWinding)
-  {
-    m_MessageHandler("Generating connectivity and triangle neighbors...");
-    triangleGeom.findElementNeighbors(true);
-    const auto optionalId = triangleGeom.getElementNeighborsId();
-    if(optionalId.has_value())
-    {
-      const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
-      m_MessageHandler("Repairing windings...");
-      Result<> windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                                       m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
-      m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
-      m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
-      if(windingResult.invalid())
-      {
-        return windingResult;
-      }
-    }
-  }
-
-  return {};
+  return finalizeMesh(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel, triangles, mCubeID, fedges, nodeType, point,
+                       nodeCoords, neighbors, NS, fileDim, dims, maxGrainId);
 }
 
 // -----------------------------------------------------------------------------
