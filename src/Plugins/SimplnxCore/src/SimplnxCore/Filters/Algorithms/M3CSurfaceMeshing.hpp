@@ -35,7 +35,6 @@ struct SIMPLNXCORE_EXPORT M3CSurfaceMeshingInputValues
  * `M3CSliceBySlice` is intentionally NOT ported; the whole mesh is accumulated in memory and written
  * directly into the output TriangleGeom.
  *
- * The private method names mirror the legacy pipeline so the port can be filled in stage-by-stage.
  * Grafted from the slice variant: ghost-layer wrapping and FeatureId==0 renumbering (on a local copy).
  */
 class SIMPLNXCORE_EXPORT M3CSurfaceMeshing
@@ -63,19 +62,11 @@ private:
   // (squares/nodeType/newNodeIds) over the entire volume. Peak memory is O(volume).
   Result<> runEntireVolume();
 
-  // Sliding-window variant: sweeps the volume z-slice by z-slice, keeping only a few slices of
-  // per-site scratch resident at once. Peak scratch memory is O(sliceArea) = O(N^2/3). Produces
-  // byte-identical output to runEntireVolume(). Selected for development via the M3C_WINDOWED env var
-  // until it is proven and promoted to the default.
+  // Sliding-window variant: sweeps the volume z-slice by z-slice, keeping only a few slices of the
+  // per-site square scratch resident at once, so that scratch is O(sliceArea) = O(N^2/3) instead of
+  // O(volume) (nodeType remains a whole-volume int8 array). Produces byte-identical output to
+  // runEntireVolume(). This is the DEFAULT path; set the environment variable M3C_WHOLE_VOLUME=1 to
+  // force runEntireVolume() (kept as a byte-identical reference).
   Result<> runWindowed();
-
-  // --- Legacy M3CEntireVolume pipeline stages (to be ported incrementally) ---
-  // get_neighbor_list, initialize_nodes, initialize_squares,
-  // get_number_fEdges + get_nodes_fEdges (uses inline edgeTable_2d/nsTable_2d),
-  // get_number_triangles + get_triangles (+ get_case0/2/M_triangles, get_square_index, treat_anomaly),
-  // update_triangle_sides_with_fedge,
-  // get_number_unique_inner_edges + get_unique_inner_edges (ISegment connectivity),
-  // update_node_edge_kind, arrange_spins (per-triangle winding heuristic),
-  // assign_new_nodeID, then write final TriangleGeom + FaceLabels + NodeTypes.
 };
 } // namespace nx::core

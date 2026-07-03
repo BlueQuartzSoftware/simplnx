@@ -173,6 +173,11 @@ int initialize_micro(bool addSurfaceLayer, const size_t dims[3], const size_t fi
   }
   else
   {
+    // Wrap the volume in a one-cell ghost shell. Ghost cells carry distinct NEGATIVE sentinel labels
+    // (-3..-8) so the marching-cubes code treats them as "outside the volume" (only the sign matters;
+    // the distinct values are a legacy convention distinguishing which face/edge of the shell a ghost
+    // cell belongs to): -3 bottom z-slice, -4/-7 the y-row pads of each interior slice, -5/-6 the
+    // per-row x-end pads, -8 top z-slice.
     size_t index = 0;
     size_t gIdx = 0;
 
@@ -322,7 +327,7 @@ void initialize_squares(Face* sq, SiteId ns)
   {
     for(int j = 0; j < 4; j++)
     {
-      sq[sqId].edge_id[j] = -1;
+      sq[sqId].edge_id[j] = k_UnusedNodeId;
     }
     sq[sqId].nEdge = 0;
     sq[sqId].FCnode = -1;
@@ -517,21 +522,21 @@ int64 get_number_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, S
     }
     const std::array<SiteId, 4> tnsite = squareCorners(k, n);
     int tnspin[4];
-    int atBulk = 0;
+    int numGhostCorners = 0;
     for(int m = 0; m < 4; m++)
     {
       tnspin[m] = p[tnsite[m]];
       if(tnspin[m] < 0)
       {
-        atBulk++;
+        numGhostCorners++;
       }
     }
-    if(atBulk != 4)
+    if(numGhostCorners != 4)
     {
       sq[k].effect = 1; // mark as effective (can be marching-cubed)
     }
 
-    if(atBulk != 4)
+    if(numGhostCorners != 4)
     {
       int sqIndex = get_square_index(tnspin);
       if(sqIndex == 15)
@@ -554,15 +559,15 @@ int64 get_number_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, S
       }
       else if(sqIndex == 7 || sqIndex == 11 || sqIndex == 13 || sqIndex == 14)
       {
-        if(atBulk == 3)
+        if(numGhostCorners == 3)
         {
           numCEdge = 2;
         }
-        else if(atBulk == 2)
+        else if(numGhostCorners == 2)
         {
           numCEdge = 3;
         }
-        else if(atBulk == 1)
+        else if(numGhostCorners == 1)
         {
           // "one negative spin" case is not supposed to happen; leave numCEdge = 0.
           numCEdge = 0;
@@ -601,18 +606,18 @@ void get_nodes_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, int
 
     const std::array<SiteId, 4> tnsite = squareCorners(k, n);
     int tnspin[4];
-    int atBulk = 0;
+    int numGhostCorners = 0;
     for(int m = 0; m < 4; m++)
     {
       tnspin[m] = p[tnsite[m]];
       if(tnspin[m] < 0)
       {
-        atBulk++;
+        numGhostCorners++;
       }
     }
 
     int edgeCount = 0;
-    if(atBulk != 4)
+    if(numGhostCorners != 4)
     {
       int sqIndex = get_square_index(tnspin);
       if(sqIndex == 15)
@@ -638,7 +643,7 @@ void get_nodes_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, int
               e[eid].node_id[1] = nodeID[1];
               e[eid].nSpin[0] = pixSpin[0];
               e[eid].nSpin[1] = pixSpin[1];
-              sq[k].edge_id[edgeCount] = eid;
+              sq[k].edge_id[edgeCount] = static_cast<uint32_t>(eid);
               edgeCount++;
               eid++;
             }
@@ -1297,7 +1302,7 @@ int64 get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& n
     for(int ii = 0; ii < 6; ii++)
     {
       int tsq = sqID[ii];
-      int tFCnode = sq[tsq].FCnode;
+      SiteId tFCnode = sq[tsq].FCnode;
       if(tFCnode != -1)
       {
         arrayFC[fcid] = tFCnode;
@@ -1381,7 +1386,7 @@ int64 get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& n
 // -----------------------------------------------------------------------------
 // Generate triangles for a case-0 cube. Transcribed from M3CEntireVolume::get_case0_triangles.
 // -----------------------------------------------------------------------------
-void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, int tin, int* tout, const double tcrd1[3], const double tcrd2[3], SiteId mcid)
+void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, int64 tin, int64* tout, const double tcrd1[3], const double tcrd2[3], SiteId mcid)
 {
 
   std::vector<int> burnt(nfedge, 0);
@@ -1477,7 +1482,7 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
   }
 
   int sumN = 0;
-  int ctid = tin;
+  int64 ctid = tin;
 
   for(int jj = 1; jj < loopID; jj++)
   {
@@ -1571,7 +1576,7 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 // -----------------------------------------------------------------------------
 // Generate triangles for a case-2 cube. Transcribed from M3CEntireVolume::get_case2_triangles.
 // -----------------------------------------------------------------------------
-void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/, int tin, int* tout, const double tcrd1[3], const double tcrd2[3],
+void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/, int64 tin, int64* tout, const double tcrd1[3], const double tcrd2[3],
                          SiteId mcid)
 {
 
@@ -1663,7 +1668,7 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
   SiteId start = afc[0];
   int to = 0;
   int from = 0;
-  int ctid = tin;
+  int64 ctid = tin;
 
   for(int j1 = 1; j1 < loopID; j1++)
   {
@@ -1926,7 +1931,7 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 // Generate triangles for a case-M cube (fan from body center for open loops).
 // Transcribed from M3CEntireVolume::get_caseM_triangles.
 // -----------------------------------------------------------------------------
-void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int nfctr, int tin, int* tout, SiteId ccn, const double tcrd1[3],
+void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int nfctr, int64 tin, int64* tout, SiteId ccn, const double tcrd1[3],
                          const double tcrd2[3], SiteId mcid)
 {
 
@@ -2017,7 +2022,7 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
   int to = 0;
   int from = 0;
-  int ctid = tin;
+  int64 ctid = tin;
 
   for(int j1 = 1; j1 < loopID; j1++)
   {
@@ -2230,8 +2235,8 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 // -----------------------------------------------------------------------------
 void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, const NodeCoords& v, Segment* e, SiteId ns, SiteId nsp, int xDim, const std::atomic_bool& shouldCancel)
 {
-  int tidIn = 0;
-  int tidOut = 0;
+  int64 tidIn = 0;
+  int64 tidOut = 0;
 
   for(SiteId i = 1; i <= (ns - nsp); i++)
   {
@@ -2260,7 +2265,7 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
     for(int ii = 0; ii < 6; ii++)
     {
       int tsq = sqID[ii];
-      int tFCnode = sq[tsq].FCnode;
+      SiteId tFCnode = sq[tsq].FCnode;
       if(tFCnode != -1)
       {
         arrayFC[fcid] = tFCnode;
@@ -2367,7 +2372,7 @@ usize findSourceCell(int workLabel, int64 cubeSite, const NeighborAccessor& n, c
 // Kept as a free function so it can name the file-local mesh types.
 Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInputValues* inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                       std::vector<Triangle>& triangles, std::vector<SiteId>& mCubeID, std::vector<Segment>& fedges, std::vector<int8_t>& nodeType, std::vector<int32_t>& point,
-                      const NodeCoords& nodeCoords, const NeighborAccessor& neighbors, SiteId NS, const size_t* fileDim, const size_t* dims, int maxGrainId)
+                      const NodeCoords& nodeCoords, const NeighborAccessor& neighbors, SiteId numSites, const size_t* fileDim, const size_t* dims, int maxGrainId)
 {
   const int64 nTriangle = static_cast<int64>(triangles.size());
 
@@ -2402,12 +2407,12 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
 
   // --- Stage 5: compact nodes and write the output TriangleGeom --------------
   messageHandler("Writing surface mesh...");
-  // Node-id compaction without a dense 7*NS candidate->id map. A candidate's compacted id is simply
+  // Node-id compaction without a dense 7*numSites candidate->id map. A candidate's compacted id is simply
   // the number of real nodes (nodeType > 0) that precede it; we answer that from a coarse per-block
   // prefix over nodeType plus a small in-block scan (saves ~3.8 GB at 512^3 vs a uint32 map). This is
   // valid because the surface-node promotion above only adds +10 to kinds and never clears a node, so
   // the set of real nodes is exactly what the sweep produced.
-  const SiteId numCandidateNodes = 7 * NS;
+  const SiteId numCandidateNodes = 7 * numSites;
   constexpr SiteId k_NodeBlock = 128;
   const SiteId numNodeBlocks = (numCandidateNodes + k_NodeBlock - 1) / k_NodeBlock;
   std::vector<uint32_t> nodeBlockBase(static_cast<size_t>(numNodeBlocks));
@@ -2616,8 +2621,8 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   // Site count and per-plane site count are 64-bit (SiteId): they index the FeatureId grid and must
   // support volumes with more than 2^31 voxels. (Edge/node id storage is unsigned 32-bit, capping the
   // MESH size near 2^32 elements; the peak memory model still scales with volume - see docs.)
-  const SiteId NS = static_cast<SiteId>(totalPoints);
-  const SiteId NSP = static_cast<SiteId>(fileDim[0] * fileDim[1]);
+  const SiteId numSites = static_cast<SiteId>(totalPoints);
+  const SiteId numSitesPerPlane = static_cast<SiteId>(fileDim[0] * fileDim[1]);
 
   // Read FeatureIds directly from its DataStore (no full-array copy) into the padded working grid.
   // The FeatureId==0 renumbering happens on the working grid, never on the input array.
@@ -2628,13 +2633,13 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   // On-demand accessors replace the former full-volume voxCoords, node, and neighbor arrays.
   const SiteCoords siteCoords{fileDim[0], fileDim[1], fileDim[0] * fileDim[1], {res[0], res[1], res[2]}, {origin[0], origin[1], origin[2]}};
   const NodeCoords nodeCoords{siteCoords};
-  const NeighborAccessor neighbors{NS, NSP, static_cast<int>(fileDim[0])};
+  const NeighborAccessor neighbors{numSites, numSitesPerPlane, static_cast<int>(fileDim[0])};
 
   // 3 marching squares (top/back/left) per site; node types (7 candidate nodes/site) start Unused (0).
   m_MessageHandler("Initializing candidate nodes and squares...");
-  std::vector<Face> squares(static_cast<size_t>(3) * NS);
-  std::vector<int8_t> nodeType(static_cast<size_t>(7) * NS, 0);
-  initialize_squares(squares.data(), NS);
+  std::vector<Face> squares(static_cast<size_t>(3) * numSites);
+  std::vector<int8_t> nodeType(static_cast<size_t>(7) * numSites, 0);
+  initialize_squares(squares.data(), numSites);
 
   if(m_ShouldCancel)
   {
@@ -2643,11 +2648,11 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
 
   // --- Stage 2: face edges ---------------------------------------------------
   m_MessageHandler("Counting face edges...");
-  const int64 nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors, NS, m_ShouldCancel);
+  const int64 nFEdge = get_number_fEdges(squares.data(), point.data(), neighbors, numSites, m_ShouldCancel);
 
   m_MessageHandler("Finding nodes and edges on each square...");
   std::vector<Segment> fedges(static_cast<size_t>(nFEdge < 0 ? 0 : nFEdge));
-  get_nodes_fEdges(squares.data(), point.data(), neighbors, nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
+  get_nodes_fEdges(squares.data(), point.data(), neighbors, nodeType.data(), fedges.data(), numSites, numSitesPerPlane, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
   if(m_ShouldCancel)
   {
@@ -2656,12 +2661,12 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
 
   // --- Stage 3: triangles ----------------------------------------------------
   m_MessageHandler("Counting triangles...");
-  const int64 nTriangle = get_number_triangles(point.data(), squares.data(), neighbors, nodeType.data(), fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
+  const int64 nTriangle = get_number_triangles(point.data(), squares.data(), neighbors, nodeType.data(), fedges.data(), numSites, numSitesPerPlane, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
   m_MessageHandler("Generating triangles...");
   std::vector<Triangle> triangles(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle));
   std::vector<SiteId> mCubeID(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle), 0);
-  get_triangles(siteCoords, triangles.data(), mCubeID.data(), squares.data(), nodeCoords, fedges.data(), NS, NSP, static_cast<int>(fileDim[0]), m_ShouldCancel);
+  get_triangles(siteCoords, triangles.data(), mCubeID.data(), squares.data(), nodeCoords, fedges.data(), numSites, numSitesPerPlane, static_cast<int>(fileDim[0]), m_ShouldCancel);
 
   if(m_ShouldCancel)
   {
@@ -2669,13 +2674,13 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   }
 
   return finalizeMesh(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel, triangles, mCubeID, fedges, nodeType, point,
-                       nodeCoords, neighbors, NS, fileDim, dims, maxGrainId);
+                       nodeCoords, neighbors, numSites, fileDim, dims, maxGrainId);
 }
 
 // -----------------------------------------------------------------------------
-// Sliding-window (z-slice) variant. See M3CSurfaceMeshing.hpp and the design notes: fuses the
-// whole-volume passes into a single z-marching sweep so per-site scratch stays O(sliceArea). Being
-// implemented incrementally; must remain byte-identical to runEntireVolume().
+// Sliding-window (z-slice) variant (the default path). See M3CSurfaceMeshing.hpp: the marching-square
+// scratch is held for only two z-slices at a time, so per-site scratch is O(sliceArea) rather than
+// O(volume). Produces byte-identical output to runEntireVolume().
 Result<> M3CSurfaceMeshing::runWindowed()
 {
   // --- Setup (identical to runEntireVolume) ----------------------------------
@@ -2702,8 +2707,8 @@ Result<> M3CSurfaceMeshing::runWindowed()
   constexpr bool k_AddSurfaceLayer = true;
   size_t fileDim[3] = {dims[0] + 2, dims[1] + 2, dims[2] + 2};
   const size_t totalPoints = fileDim[0] * fileDim[1] * fileDim[2];
-  const SiteId NS = static_cast<SiteId>(totalPoints);
-  const SiteId NSP = static_cast<SiteId>(fileDim[0] * fileDim[1]);
+  const SiteId numSites = static_cast<SiteId>(totalPoints);
+  const SiteId numSitesPerPlane = static_cast<SiteId>(fileDim[0] * fileDim[1]);
   const int xDim = static_cast<int>(fileDim[0]);
 
   m_MessageHandler("Initializing working grid and ghost layer...");
@@ -2712,19 +2717,19 @@ Result<> M3CSurfaceMeshing::runWindowed()
 
   const SiteCoords siteCoords{fileDim[0], fileDim[1], fileDim[0] * fileDim[1], {res[0], res[1], res[2]}, {origin[0], origin[1], origin[2]}};
   const NodeCoords nodeCoords{siteCoords};
-  const NeighborAccessor neighbors{NS, NSP, xDim};
+  const NeighborAccessor neighbors{numSites, numSitesPerPlane, xDim};
 
   // Mesh-scale accumulators grow with the output; only the per-site squares are windowed.
-  std::vector<int8_t> nodeType(static_cast<size_t>(7) * NS, 0);
+  std::vector<int8_t> nodeType(static_cast<size_t>(7) * numSites, 0);
   std::vector<Segment> fedges;
   std::vector<Triangle> triangles;
   std::vector<SiteId> mCubeID;
 
   // --- Square window: two z-slices of the 3-marching-squares-per-site scratch ------------------
-  // squareId = 3*(site-1)+ord. The window holds squares for sites [winBaseSite, winBaseSite + 2*NSP);
+  // squareId = 3*(site-1)+ord. The window holds squares for sites [winBaseSite, winBaseSite + 2*numSitesPerPlane);
   // winIndex maps an absolute squareId to its slot. As the cube sweep crosses into the next slice the
   // window slides forward by one slice (memmove the second slice down, compute the new second slice).
-  const SiteId sliceSquares = 3 * NSP; // squares per z-slice
+  const SiteId sliceSquares = 3 * numSitesPerPlane; // squares per z-slice
   std::vector<Face> window(static_cast<size_t>(2) * sliceSquares);
   SiteId winBaseSite = 1;
   auto winIndex = [&winBaseSite](SiteId squareId) -> size_t { return static_cast<size_t>(squareId - 3 * (winBaseSite - 1)); };
@@ -2749,22 +2754,22 @@ Result<> M3CSurfaceMeshing::runWindowed()
       const int sqOrder = static_cast<int>(k % 3);
       const std::array<SiteId, 4> tnsite = squareCorners(k, neighbors);
       int tnspin[4];
-      int atBulk = 0;
+      int numGhostCorners = 0;
       for(int m = 0; m < 4; m++)
       {
         tnspin[m] = point[tnsite[m]];
         if(tnspin[m] < 0)
         {
-          atBulk++;
+          numGhostCorners++;
         }
       }
-      if(atBulk != 4)
+      if(numGhostCorners != 4)
       {
         sqk.effect = 1;
       }
 
       int edgeCount = 0;
-      if(atBulk != 4)
+      if(numGhostCorners != 4)
       {
         int sqIndex = get_square_index(tnspin);
         if(sqIndex == 15)
@@ -2781,8 +2786,8 @@ Result<> M3CSurfaceMeshing::runWindowed()
               int pixIndex[2] = {k_NsTable2d[sqIndex][j], k_NsTable2d[sqIndex][j + 1]};
               SiteId nodeID[2];
               int pixSpin[2];
-              get_nodes(cubeOrigin, sqOrder, nodeIndex, nodeID, NSP, xDim);
-              get_spins(point.data(), cubeOrigin, sqOrder, pixIndex, pixSpin, NSP, xDim);
+              get_nodes(cubeOrigin, sqOrder, nodeIndex, nodeID, numSitesPerPlane, xDim);
+              get_spins(point.data(), cubeOrigin, sqOrder, pixIndex, pixSpin, numSitesPerPlane, xDim);
 
               if(pixSpin[0] > 0 || pixSpin[1] > 0)
               {
@@ -2852,22 +2857,22 @@ Result<> M3CSurfaceMeshing::runWindowed()
     winBaseSite = 1;
     int64 eid = 0;
     int64 tidRun = 0;
-    computeSquares(0, std::min<SiteId>(2 * sliceSquares, 3 * NS), appendEdges, eid);
+    computeSquares(0, std::min<SiteId>(2 * sliceSquares, 3 * numSites), appendEdges, eid);
 
-    for(SiteId i = 1; i <= (NS - NSP); i++)
+    for(SiteId i = 1; i <= (numSites - numSitesPerPlane); i++)
     {
       if(m_ShouldCancel)
       {
         return;
       }
 
-      // Slide the window forward so it always covers sites [i, i + NSP].
-      while(i >= winBaseSite + NSP)
+      // Slide the window forward so it always covers sites [i, i + numSitesPerPlane].
+      while(i >= winBaseSite + numSitesPerPlane)
       {
         std::memmove(window.data(), window.data() + sliceSquares, static_cast<size_t>(sliceSquares) * sizeof(Face));
-        winBaseSite += NSP;
-        const SiteId newLoSquare = 3 * (winBaseSite + NSP - 1);
-        const SiteId newHiSquare = std::min<SiteId>(3 * (winBaseSite + 2 * NSP - 1), 3 * NS);
+        winBaseSite += numSitesPerPlane;
+        const SiteId newLoSquare = 3 * (winBaseSite + numSitesPerPlane - 1);
+        const SiteId newHiSquare = std::min<SiteId>(3 * (winBaseSite + 2 * numSitesPerPlane - 1), 3 * numSites);
         if(newLoSquare < newHiSquare)
         {
           computeSquares(newLoSquare, newHiSquare, appendEdges, eid);
@@ -2880,7 +2885,7 @@ Result<> M3CSurfaceMeshing::runWindowed()
       sqID[2] = 3 * (i - 1) + 2;
       sqID[3] = 3 * i + 2;
       sqID[4] = 3 * (i + xDim - 1) + 1;
-      sqID[5] = 3 * (i + NSP - 1);
+      sqID[5] = 3 * (i + numSitesPerPlane - 1);
 
       SiteId arrayFC[6];
       for(int ii = 0; ii < 6; ii++)
@@ -2979,10 +2984,10 @@ Result<> M3CSurfaceMeshing::runWindowed()
       for(int k = 0; k < 3; k++)
       {
         coord1[k] = siteCoords[i].coord[k];
-        coord2[k] = siteCoords[i + 1 + xDim + NSP].coord[k];
+        coord2[k] = siteCoords[i + 1 + xDim + numSitesPerPlane].coord[k];
       }
-      int tin = static_cast<int>(tidRun);
-      int tout = tin;
+      int64 tin = tidRun;
+      int64 tout = tin;
       if(nFC == 0)
       {
         get_case0_triangles(triangles.data(), mCubeID.data(), arrayFE.data(), nodeCoords, fedges.data(), nFE, tin, &tout, coord1, coord2, i);
@@ -3016,6 +3021,6 @@ Result<> M3CSurfaceMeshing::runWindowed()
     return {};
   }
 
-  return finalizeMesh(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel, triangles, mCubeID, fedges, nodeType, point, nodeCoords, neighbors, NS, fileDim, dims, maxGrainId);
+  return finalizeMesh(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel, triangles, mCubeID, fedges, nodeType, point, nodeCoords, neighbors, numSites, fileDim, dims, maxGrainId);
 }
 } // namespace nx::core
