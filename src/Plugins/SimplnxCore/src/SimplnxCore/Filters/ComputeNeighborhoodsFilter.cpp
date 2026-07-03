@@ -174,7 +174,8 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
     const float32 minSpacing = std::min({spacing[0], spacing[1], spacing[2]});
     const float32 maxExtent = std::max({extents[0], extents[1], extents[2]});
 
-    preflightUpdatedValues.push_back({"Search Radius Context", fmt::format("Search Radius: {} x {} x {} voxels ", std::floor(pSearchRadiusValue / spacing[0]),std::floor(pSearchRadiusValue / spacing[1]),std::floor(pSearchRadiusValue / spacing[2]))});
+    preflightUpdatedValues.push_back({"Search Radius Context", fmt::format("Search Radius: {} x {} x {} voxels ", std::floor(pSearchRadiusValue / spacing[0]),
+                                                                           std::floor(pSearchRadiusValue / spacing[1]), std::floor(pSearchRadiusValue / spacing[2]))});
 
     // Warn if the radius is smaller than a single voxel (likely finds no neighbors) or larger than the
     // whole geometry (likely makes every feature a neighbor of every other feature)

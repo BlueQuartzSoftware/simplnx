@@ -238,7 +238,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_InvalidSearchRadius", "[SimplnxCore
   ComputeNeighborhoodsFilter filter;
   Arguments args;
   args.insert(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL)); // Search Radius (microns)
-  args.insert(ComputeNeighborhoodsFilter::k_SearchRadius_Key, std::make_any<float32>(0.0F));                          // invalid
+  args.insert(ComputeNeighborhoodsFilter::k_SearchRadius_Key, std::make_any<float32>(0.0F));                         // invalid
   args.insert(ComputeNeighborhoodsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(data.imageGeomPath));
   args.insert(ComputeNeighborhoodsFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(data.centroidsPath));
   args.insert(ComputeNeighborhoodsFilter::k_NeighborhoodsArrayName_Key, std::make_any<std::string>("Neighborhoods"));
