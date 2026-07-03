@@ -2937,7 +2937,7 @@ usize findSourceCell(int workLabel, int64 cubeSite, const NeighborAccessor& n, c
 // matching (update_triangle_sides_with_fedge, done per-cube in the windowed sweep or as a whole-volume
 // pass in runEntireVolume).
 Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInputValues* inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                      std::vector<Triangle>& triangles, std::vector<SiteId>& mCubeID, std::vector<Segment>& fedges, std::vector<int8_t>& nodeType, const std::vector<int32_t>& point,
+                      std::vector<Triangle>& triangles, std::vector<SiteId>& mCubeID, std::vector<Segment>& fedges, std::vector<int8_t>& nodeType, std::vector<int32_t>& point,
                       const NodeCoords& nodeCoords, const NeighborAccessor& neighbors, SiteId NS, const size_t* fileDim, const size_t* dims, int maxGrainId)
 {
   const int64 nTriangle = static_cast<int64>(triangles.size());
@@ -2948,6 +2948,11 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   get_unique_inner_edges(triangles.data(), mCubeID.data(), iedges.data(), nTriangle, nFEdge, shouldCancel);
 
   update_node_edge_kind(nodeType.data(), fedges.data(), iedges.data(), triangles.data(), nTriangle, nFEdge);
+
+  // Face/inner edge segments are no longer needed after node-kind refinement; release them before the
+  // memory-heavy output write + winding-repair stages.
+  std::vector<Segment>().swap(fedges);
+  std::vector<ISegment>().swap(iedges);
 
   if(shouldCancel)
   {
@@ -3076,6 +3081,15 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
+  // The M3C working buffers are dead once the output mesh and attribute transfer are written; the
+  // winding-repair pass below reads only the output TriangleGeom + FaceLabels. Release them here so
+  // findElementNeighbors' adjacency is not allocated on top of them (this is where peak memory lands).
+  std::vector<Triangle>().swap(triangles);
+  std::vector<SiteId>().swap(mCubeID);
+  std::vector<int8_t>().swap(nodeType);
+  std::vector<int32_t>().swap(point);
+  std::vector<uint32_t>().swap(nodeBlockBase);
+
   // Optional winding-consistency repair. M3C does not itself guarantee globally consistent normals,
   // so this pass (using triangle connectivity) makes the winding consistent with the FaceLabels.
   if(inputValues->RepairTriangleWinding)
@@ -3121,11 +3135,11 @@ Result<> M3CSurfaceMeshing::operator()()
 {
   // Dev toggle: the sliding-window variant is being brought up alongside the proven whole-volume
   // variant. It must produce byte-identical output; once verified it will become the default.
-  if(const char* windowed = std::getenv("M3C_WINDOWED"); windowed != nullptr && std::string_view(windowed) == "1")
-  {
+  // if(const char* windowed = std::getenv("M3C_WINDOWED"); windowed != nullptr && std::string_view(windowed) == "1")
+  // {
     return runWindowed();
-  }
-  return runEntireVolume();
+  // }
+  // return runEntireVolume();
 }
 
 // -----------------------------------------------------------------------------
