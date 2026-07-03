@@ -3133,13 +3133,15 @@ M3CSurfaceMeshing::~M3CSurfaceMeshing() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> M3CSurfaceMeshing::operator()()
 {
-  // Dev toggle: the sliding-window variant is being brought up alongside the proven whole-volume
-  // variant. It must produce byte-identical output; once verified it will become the default.
-  // if(const char* windowed = std::getenv("M3C_WINDOWED"); windowed != nullptr && std::string_view(windowed) == "1")
-  // {
-    return runWindowed();
-  // }
-  // return runEntireVolume();
+  // The sliding-window variant is the default: it produces byte-identical output to the whole-volume
+  // variant (verified against the exemplar) with far lower peak memory (per-site scratch is O(sliceArea)
+  // instead of O(volume)). The whole-volume variant is kept as a reference and can be forced by setting
+  // the environment variable M3C_WHOLE_VOLUME=1.
+  if(const char* wholeVol = std::getenv("M3C_WHOLE_VOLUME"); wholeVol != nullptr && std::string_view(wholeVol) == "1")
+  {
+    return runEntireVolume();
+  }
+  return runWindowed();
 }
 
 // -----------------------------------------------------------------------------
