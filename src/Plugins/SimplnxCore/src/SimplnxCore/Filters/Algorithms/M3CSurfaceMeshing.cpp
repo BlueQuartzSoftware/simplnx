@@ -69,14 +69,7 @@ struct Face // a marching "square"
 struct Segment // a face edge
 {
   int64 node_id[2];
-  int edgeKind;
   int nSpin[2]; // labels on left/right of the arrow
-};
-struct ISegment // an inner edge (connectivity)
-{
-  int64 node_id[2];
-  int edgeKind;
-  int nSpin[4];
 };
 struct Triangle
 {
@@ -646,7 +639,6 @@ void get_nodes_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, int
               e[eid].nSpin[0] = pixSpin[0];
               e[eid].nSpin[1] = pixSpin[1];
               sq[k].edge_id[edgeCount] = eid;
-              e[eid].edgeKind = 2;
               edgeCount++;
               eid++;
             }
@@ -2799,7 +2791,6 @@ Result<> M3CSurfaceMeshing::runWindowed()
                 seg.node_id[1] = nodeID[1];
                 seg.nSpin[0] = pixSpin[0];
                 seg.nSpin[1] = pixSpin[1];
-                seg.edgeKind = 2;
                 sqk.edge_id[edgeCount] = static_cast<uint32_t>(eid);
                 if(appendEdges)
                 {
