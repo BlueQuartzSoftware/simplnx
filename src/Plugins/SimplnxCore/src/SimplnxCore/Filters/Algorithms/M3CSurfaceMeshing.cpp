@@ -2552,339 +2552,9 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
     }
   }
 }
-// -----------------------------------------------------------------------------
-// Match each triangle side to the face edge it lies on (edgePlace 0 = face edge).
-// Transcribed from M3CEntireVolume::update_triangle_sides_with_fedge.
-// -----------------------------------------------------------------------------
-void update_triangle_sides_with_fedge(Triangle* t, const SiteId* mCubeID, const Segment* e, const Face* sq, int64 nT, int xDim, SiteId nsp)
-{
-  SiteId tFEarray[100];
-  int index = 0;
-  int prevMCID = -1;
 
-  for(int i = 0; i < nT; i++)
-  {
-    SiteId ii = mCubeID[i];
-    if(ii != prevMCID)
-    {
-      index = 0;
-      SiteId sqID[6];
-      sqID[0] = 3 * (ii - 1);
-      sqID[1] = 3 * (ii - 1) + 1;
-      sqID[2] = 3 * (ii - 1) + 2;
-      sqID[3] = 3 * ii + 2;
-      sqID[4] = 3 * (ii + xDim - 1) + 1;
-      sqID[5] = 3 * (ii + nsp - 1);
-      for(int i1 = 0; i1 < 6; i1++)
-      {
-        int tsq = sqID[i1];
-        int nFE = sq[tsq].nEdge;
-        for(int i2 = 0; i2 < nFE; i2++)
-        {
-          tFEarray[index] = sq[tsq].edge_id[i2];
-          index++;
-        }
-      }
-    }
 
-    for(int j = 0; j < 3; j++)
-    {
-      int index1 = j;
-      int index2 = (j + 1 == 3) ? 0 : j + 1;
-      SiteId cnode1 = t[i].node_id[index1];
-      SiteId cnode2 = t[i].node_id[index2];
-      for(int k = 0; k < index; k++)
-      {
-        SiteId cfe = tFEarray[k];
-        SiteId tnode1 = static_cast<SiteId>(e[cfe].node_id[0]);
-        SiteId tnode2 = static_cast<SiteId>(e[cfe].node_id[1]);
-        if((cnode1 == tnode1 && cnode2 == tnode2) || (cnode2 == tnode1 && cnode1 == tnode2))
-        {
-          t[i].e_id[index1] = cfe;
-          t[i].edgePlace[index1] = 0;
-          break;
-        }
-      }
-    }
-    prevMCID = ii;
-  }
-}
 
-// -----------------------------------------------------------------------------
-// Count unique inner edges (two-pass sizing). Transcribed from
-// M3CEntireVolume::get_number_unique_inner_edges.
-// -----------------------------------------------------------------------------
-int64 get_number_unique_inner_edges(const Triangle* t, const SiteId* mCubeID, int64 nT, const std::atomic_bool& shouldCancel)
-{
-  // Per marching cube. Sized well above the algorithm's maximum of ~36 unique inner edges per cube.
-  SiteId arrayIEnode[120][2];
-  int bFlag[120];
-  int64 nIE = 0;
-  int index = 0;
-
-  for(int mm = 0; mm < 120; mm++)
-  {
-    bFlag[mm] = 0;
-    arrayIEnode[mm][0] = -1;
-    arrayIEnode[mm][1] = -1;
-  }
-
-  int i = 0;
-  do
-  {
-    if(shouldCancel)
-    {
-      return 0;
-    }
-    SiteId cmcID = mCubeID[i];
-    SiteId nmcID = (i == (nT - 1)) ? -1 : mCubeID[i + 1];
-
-    for(int j = 0; j < 3; j++)
-    {
-      if(t[i].edgePlace[j] == 1)
-      {
-        int index1 = j;
-        int index2 = (j + 1 == 3) ? 0 : j + 1;
-        arrayIEnode[index][0] = static_cast<SiteId>(t[i].node_id[index1]);
-        arrayIEnode[index][1] = static_cast<SiteId>(t[i].node_id[index2]);
-        index++;
-      }
-    }
-
-    if(cmcID != nmcID)
-    {
-      int nIEDmc = index;
-      for(int m = 0; m < nIEDmc; m++)
-      {
-        bFlag[m] = 0;
-      }
-      int nIEmc = 0;
-      for(int k = 0; k < nIEDmc; k++)
-      {
-        if(bFlag[k] == 0)
-        {
-          SiteId cnode1 = arrayIEnode[k][0];
-          SiteId cnode2 = arrayIEnode[k][1];
-          bFlag[k] = -1;
-          for(int kk = 0; kk < nIEDmc; kk++)
-          {
-            if(bFlag[kk] == 0)
-            {
-              SiteId nnode1 = arrayIEnode[kk][0];
-              SiteId nnode2 = arrayIEnode[kk][1];
-              if((cnode1 == nnode1 && cnode2 == nnode2) || (cnode2 == nnode1 && cnode1 == nnode2))
-              {
-                bFlag[kk] = -1;
-              }
-            }
-          }
-          nIEmc++;
-        }
-      }
-      nIE = nIE + nIEmc;
-      index = 0;
-    }
-    i++;
-  } while(i < nT);
-
-  return nIE;
-}
-
-// -----------------------------------------------------------------------------
-// Build unique inner edges with their spins and stamp triangle e_id. Transcribed
-// from M3CEntireVolume::get_unique_inner_edges.
-// -----------------------------------------------------------------------------
-void get_unique_inner_edges(Triangle* t, const SiteId* mCubeID, ISegment* ie, int64 nT, int64 nfedge, const std::atomic_bool& shouldCancel)
-{
-  // Per marching cube. Sized well above the algorithm's maximum of ~36 unique inner edges per cube.
-  int arrayTri[120];
-  SiteId arrayIEnode[120][2];
-  int bFlag[120];
-  int index = 0;
-  int64 IEindex = 0;
-
-  for(int mm = 0; mm < 120; mm++)
-  {
-    bFlag[mm] = 0;
-    arrayIEnode[mm][0] = -1;
-    arrayIEnode[mm][1] = -1;
-  }
-
-  int i = 0;
-  do
-  {
-    if(shouldCancel)
-    {
-      return;
-    }
-    SiteId cmcID = mCubeID[i];
-    SiteId nmcID = (i == (nT - 1)) ? -1 : mCubeID[i + 1];
-
-    for(int j = 0; j < 3; j++)
-    {
-      if(t[i].edgePlace[j] == 1)
-      {
-        int index1 = j;
-        int index2 = (j + 1 == 3) ? 0 : j + 1;
-        arrayIEnode[index][0] = static_cast<SiteId>(t[i].node_id[index1]);
-        arrayIEnode[index][1] = static_cast<SiteId>(t[i].node_id[index2]);
-        arrayTri[index] = i;
-        index++;
-      }
-    }
-
-    if(cmcID != nmcID)
-    {
-      int nIEDmc = index;
-      // Only bFlag[0..nIEDmc-1] are ever read below; the legacy loop wrote one past the end.
-      for(int m = 0; m < nIEDmc; m++)
-      {
-        bFlag[m] = 0;
-      }
-
-      for(int k = 0; k < nIEDmc; k++)
-      {
-        if(bFlag[k] == 0)
-        {
-          SiteId cnode1 = arrayIEnode[k][0];
-          SiteId cnode2 = arrayIEnode[k][1];
-          bFlag[k] = -1;
-          ie[IEindex].node_id[0] = cnode1;
-          ie[IEindex].node_id[1] = cnode2;
-          int ctri = arrayTri[k];
-          ie[IEindex].nSpin[0] = t[ctri].nSpin[0];
-          ie[IEindex].nSpin[1] = t[ctri].nSpin[1];
-          ie[IEindex].nSpin[2] = 0;
-          ie[IEindex].nSpin[3] = 0;
-          int tedgeKind = 2;
-
-          for(int jj = 0; jj < 3; jj++)
-          {
-            if(t[ctri].edgePlace[jj] == 1)
-            {
-              int index1 = jj;
-              int index2 = (jj + 1 == 3) ? 0 : jj + 1;
-              SiteId tnode1 = t[ctri].node_id[index1];
-              SiteId tnode2 = t[ctri].node_id[index2];
-              if((tnode1 == cnode1 && tnode2 == cnode2) || (tnode2 == cnode1 && tnode1 == cnode2))
-              {
-                t[ctri].e_id[index1] = static_cast<uint64>(IEindex + nfedge);
-              }
-            }
-          }
-
-          for(int kk = 0; kk < nIEDmc; kk++)
-          {
-            if(bFlag[kk] == 0)
-            {
-              SiteId nnode1 = arrayIEnode[kk][0];
-              SiteId nnode2 = arrayIEnode[kk][1];
-              if((cnode1 == nnode1 && cnode2 == nnode2) || (cnode2 == nnode1 && cnode1 == nnode2))
-              {
-                bFlag[kk] = -1;
-                int nspin1Flag = 0;
-                int nspin2Flag = 0;
-                int ntri = arrayTri[kk];
-                int nspin1 = t[ntri].nSpin[0];
-                int nspin2 = t[ntri].nSpin[1];
-                for(int jjj = 0; jjj < 3; jjj++)
-                {
-                  if(t[ntri].edgePlace[jjj] == 1)
-                  {
-                    int index1 = jjj;
-                    int index2 = (jjj + 1 == 3) ? 0 : jjj + 1;
-                    SiteId tnode1 = t[ntri].node_id[index1];
-                    SiteId tnode2 = t[ntri].node_id[index2];
-                    if((tnode1 == cnode1 && tnode2 == cnode2) || (tnode2 == cnode1 && tnode1 == cnode2))
-                    {
-                      t[ntri].e_id[index1] = static_cast<uint64>(IEindex + nfedge);
-                    }
-                  }
-                }
-                for(int ii = 0; ii < 4; ii++)
-                {
-                  if(nspin1 == ie[IEindex].nSpin[ii])
-                  {
-                    nspin1Flag++;
-                  }
-                  if(nspin2 == ie[IEindex].nSpin[ii])
-                  {
-                    nspin2Flag++;
-                  }
-                }
-                if((nspin1Flag * nspin2Flag) == 0)
-                {
-                  if(nspin1Flag == 0)
-                  {
-                    ie[IEindex].nSpin[tedgeKind] = nspin1;
-                    tedgeKind++;
-                  }
-                  else if(nspin2Flag == 0)
-                  {
-                    ie[IEindex].nSpin[tedgeKind] = nspin2;
-                    tedgeKind++;
-                  }
-                  else
-                  {
-                    ie[IEindex].nSpin[tedgeKind] = nspin1;
-                    tedgeKind++;
-                    ie[IEindex].nSpin[tedgeKind] = nspin2;
-                    tedgeKind++;
-                  }
-                }
-              }
-            }
-          }
-          ie[IEindex].edgeKind = tedgeKind;
-          IEindex++;
-        }
-      }
-      index = 0;
-    }
-    i++;
-  } while(i < nT);
-}
-
-// -----------------------------------------------------------------------------
-// Bump node/edge kinds by 10 on outer-surface triangles (label sign flip).
-// Transcribed from M3CEntireVolume::update_node_edge_kind.
-// -----------------------------------------------------------------------------
-void update_node_edge_kind(int8_t* nodeType, Segment* fe, ISegment* ie, const Triangle* t, int64 nT, int64 nfedge)
-{
-  for(int j = 0; j < nT; j++)
-  {
-    int tspin1 = t[j].nSpin[0];
-    int tspin2 = t[j].nSpin[1];
-    if(tspin1 * tspin2 < 0)
-    {
-      for(int i = 0; i < 3; i++)
-      {
-        SiteId tn = t[j].node_id[i];
-        int tnkind = nodeType[tn];
-        if(tnkind < 10)
-        {
-          nodeType[tn] = static_cast<int8_t>(tnkind + 10);
-        }
-        SiteId te = t[j].e_id[i];
-        if(te < nfedge)
-        {
-          if(fe[te].edgeKind < 10)
-          {
-            fe[te].edgeKind = fe[te].edgeKind + 10;
-          }
-        }
-        else
-        {
-          te = te - nfedge;
-          if(ie[te].edgeKind < 10)
-          {
-            ie[te].edgeKind = ie[te].edgeKind + 10;
-          }
-        }
-      }
-    }
-  }
-}
 
 // Convert a 1-based padded working-grid site to the 0-based index into the original (unpadded)
 // cell arrays, or SIZE_MAX if the site is in the ghost shell.
@@ -2930,29 +2600,38 @@ usize findSourceCell(int workLabel, int64 cubeSite, const NeighborAccessor& n, c
 
 // -----------------------------------------------------------------------------
 // Shared finalization for both the whole-volume and sliding-window variants: given the assembled
-// triangles/mCubeID/fedges and the (fully populated) nodeType array, build inner-edge connectivity,
-// refine node kinds, compact node ids, and write the output TriangleGeom + FaceLabels + NodeTypes,
-// then transfer selected arrays and (optionally) repair triangle windings. Kept as a free function so
-// it can name the file-local mesh types. Callers must have already run the triangle-side/face-edge
-// matching (update_triangle_sides_with_fedge, done per-cube in the windowed sweep or as a whole-volume
-// pass in runEntireVolume).
+// triangles/nodeType, promote surface nodes, compact node ids, and write the output TriangleGeom +
+// FaceLabels + NodeTypes, then transfer selected arrays and (optionally) repair triangle windings.
+// Kept as a free function so it can name the file-local mesh types.
 Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInputValues* inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                       std::vector<Triangle>& triangles, std::vector<SiteId>& mCubeID, std::vector<Segment>& fedges, std::vector<int8_t>& nodeType, std::vector<int32_t>& point,
                       const NodeCoords& nodeCoords, const NeighborAccessor& neighbors, SiteId NS, const size_t* fileDim, const size_t* dims, int maxGrainId)
 {
   const int64 nTriangle = static_cast<int64>(triangles.size());
-  const int64 nFEdge = static_cast<int64>(fedges.size());
 
-  const int64 nIEdge = get_number_unique_inner_edges(triangles.data(), mCubeID.data(), nTriangle, shouldCancel);
-  std::vector<ISegment> iedges(static_cast<size_t>(nIEdge < 0 ? 0 : nIEdge));
-  get_unique_inner_edges(triangles.data(), mCubeID.data(), iedges.data(), nTriangle, nFEdge, shouldCancel);
+  // Promote surface nodes to their exterior variant (+10). A triangle that borders the outside of the
+  // volume has exactly one negative feature label (nSpin[0]*nSpin[1] < 0), so each of its nodes lies on
+  // the volume boundary. This is the only output-relevant effect of the legacy triangle-side/inner-edge
+  // connectivity pass: the per-triangle edge ids, edgePlace flags, and unique inner-edge list it also
+  // built never appear in the output (Triangle Geometry + Face Labels + Node Types), so that machinery
+  // has been removed.
+  for(int64 j = 0; j < nTriangle; j++)
+  {
+    if(triangles[j].nSpin[0] * triangles[j].nSpin[1] < 0)
+    {
+      for(int i = 0; i < 3; i++)
+      {
+        const SiteId tn = triangles[j].node_id[i];
+        if(nodeType[tn] < 10)
+        {
+          nodeType[tn] = static_cast<int8_t>(nodeType[tn] + 10);
+        }
+      }
+    }
+  }
 
-  update_node_edge_kind(nodeType.data(), fedges.data(), iedges.data(), triangles.data(), nTriangle, nFEdge);
-
-  // Face/inner edge segments are no longer needed after node-kind refinement; release them before the
-  // memory-heavy output write + winding-repair stages.
+  // The face-edge segments are no longer needed; release before the memory-heavy output + winding stages.
   std::vector<Segment>().swap(fedges);
-  std::vector<ISegment>().swap(iedges);
 
   if(shouldCancel)
   {
@@ -2964,8 +2643,8 @@ Result<> finalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // Node-id compaction without a dense 7*NS candidate->id map. A candidate's compacted id is simply
   // the number of real nodes (nodeType > 0) that precede it; we answer that from a coarse per-block
   // prefix over nodeType plus a small in-block scan (saves ~3.8 GB at 512^3 vs a uint32 map). This is
-  // valid because update_node_edge_kind above only adds +10 to kinds and never clears a node, so the
-  // set of real nodes is exactly what the sweep produced.
+  // valid because the surface-node promotion above only adds +10 to kinds and never clears a node, so
+  // the set of real nodes is exactly what the sweep produced.
   const SiteId numCandidateNodes = 7 * NS;
   constexpr SiteId k_NodeBlock = 128;
   const SiteId numNodeBlocks = (numCandidateNodes + k_NodeBlock - 1) / k_NodeBlock;
@@ -3226,10 +2905,6 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
   {
     return {};
   }
-
-  // --- Stage 4: triangle-side/edge connectivity, inner edges, winding --------
-  m_MessageHandler("Building triangle/edge connectivity...");
-  update_triangle_sides_with_fedge(triangles.data(), mCubeID.data(), fedges.data(), squares.data(), nTriangle, static_cast<int>(fileDim[0]), NSP);
 
   return finalizeMesh(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel, triangles, mCubeID, fedges, nodeType, point,
                        nodeCoords, neighbors, NS, fileDim, dims, maxGrainId);
@@ -3560,42 +3235,6 @@ Result<> M3CSurfaceMeshing::runWindowed()
         get_caseM_triangles(triangles.data(), mCubeID.data(), arrayFE.data(), nodeCoords, fedges.data(), nFE, arrayFC, nFC, tin, &tout, BCnode, coord1, coord2, i);
       }
       tidRun = tout;
-
-      // Match each new triangle's sides to the cube's face edges (per-cube update_triangle_sides).
-      SiteId tFEarray[100];
-      int idx = 0;
-      for(int i1 = 0; i1 < 6; i1++)
-      {
-        const Face& sqf = window[winIndex(sqID[i1])];
-        int nfe = sqf.nEdge;
-        for(int i2 = 0; i2 < nfe; i2++)
-        {
-          tFEarray[idx] = sqf.edge_id[i2];
-          idx++;
-        }
-      }
-      for(int t = tin; t < tout; t++)
-      {
-        for(int j = 0; j < 3; j++)
-        {
-          int index1 = j;
-          int index2 = (j + 1 == 3) ? 0 : j + 1;
-          SiteId cnode1 = triangles[t].node_id[index1];
-          SiteId cnode2 = triangles[t].node_id[index2];
-          for(int k = 0; k < idx; k++)
-          {
-            SiteId cfe = tFEarray[k];
-            SiteId tnode1 = static_cast<SiteId>(fedges[cfe].node_id[0]);
-            SiteId tnode2 = static_cast<SiteId>(fedges[cfe].node_id[1]);
-            if((cnode1 == tnode1 && cnode2 == tnode2) || (cnode2 == tnode1 && cnode1 == tnode2))
-            {
-              triangles[t].e_id[index1] = cfe;
-              triangles[t].edgePlace[index1] = 0;
-              break;
-            }
-          }
-        }
-      }
     }
   };
 
