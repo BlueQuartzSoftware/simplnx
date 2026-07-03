@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="620" height="600" viewBox="0 0 620 600" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <radialGradient id="tGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d6483f" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#d6483f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="619" height="599" rx="14" fill="#f7faf5" stroke="#d7e0d8"/>
+
+  <!-- To scale: feature radius = 30, so feature DIAMETER = 60.
+       1x ring = 60 (= one diameter), 2x = 120, 3x = 180. Rings scale 1:2:3. Center (310,265). -->
+  <circle cx="310" cy="265" r="180" fill="#eaf0e2" stroke="#cfe0c9" stroke-width="1" stroke-dasharray="7 5"/>
+  <circle cx="310" cy="265" r="120" fill="#efe7d5" stroke="#e0912f" stroke-width="1" stroke-dasharray="7 5" opacity="0.9"/>
+  <circle cx="310" cy="265" r="60" fill="#dcecea" stroke="#2f7fd1" stroke-width="1.4" stroke-dasharray="6 4"/>
+
+  <!-- ring tags (small, on the top arc of each ring) -->
+  <text x="310" y="99" fill="#5f7a4f" font-size="12" font-family="monospace" text-anchor="middle" font-weight="600">3&#215;</text>
+  <text x="310" y="159" fill="#b9791f" font-size="12" font-family="monospace" text-anchor="middle" font-weight="600">2&#215;</text>
+  <text x="310" y="213" fill="#2f7fd1" font-size="12" font-family="monospace" text-anchor="middle" font-weight="600">1&#215;</text>
+
+  <!-- 1x radius arrow: length 60 = the feature's own diameter -->
+  <line x1="310" y1="265" x2="370" y2="265" stroke="#2f7fd1" stroke-width="2"/>
+  <polygon points="370,265 362,261 362,269" fill="#2f7fd1"/>
+  <text x="376" y="270" fill="#2f7fd1" font-size="11.5" font-family="monospace">= 1 diameter</text>
+
+  <!-- neighbor features (all drawn same size; only their centroid dots are tested) -->
+  <!-- inside 1x : A, B -->
+  <circle cx="300" cy="320" r="30" fill="#e07b39" stroke="#b45f24" stroke-width="1.5"/><circle cx="300" cy="320" r="3" fill="#3a2410"/><text x="300" y="360" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">A</text>
+  <circle cx="262" cy="250" r="30" fill="#9b6fc0" stroke="#754c99" stroke-width="1.5"/><circle cx="262" cy="250" r="3" fill="#2a1638"/><text x="235" y="238" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">B</text>
+  <!-- between 1x and 2x : C, D, E, J, L -->
+  <circle cx="365" cy="320" r="30" fill="#34b3a2" stroke="#238476" stroke-width="1.5"/><circle cx="365" cy="320" r="3" fill="#0e3a34"/><text x="365" y="360" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">C</text>
+  <circle cx="205" cy="300" r="30" fill="#6fbf73" stroke="#4a8f4e" stroke-width="1.5"/><circle cx="205" cy="300" r="3" fill="#193d1b"/><text x="205" y="340" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">D</text>
+  <circle cx="240" cy="185" r="30" fill="#d9a441" stroke="#ac7e28" stroke-width="1.5"/><circle cx="240" cy="185" r="3" fill="#3d2c08"/><text x="240" y="163" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">E</text>
+  <circle cx="330" cy="155" r="30" fill="#e07b39" stroke="#b45f24" stroke-width="1.5"/><circle cx="330" cy="155" r="3" fill="#3a2410"/><text x="330" y="133" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">J</text>
+  <circle cx="415" cy="235" r="30" fill="#7d8794" stroke="#59626d" stroke-width="1.5"/><circle cx="415" cy="235" r="3" fill="#22272d"/><text x="415" y="213" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">L</text>
+  <!-- between 2x and 3x : F, G, I -->
+  <circle cx="170" cy="350" r="30" fill="#5b9bd5" stroke="#3e75a8" stroke-width="1.5"/><circle cx="170" cy="350" r="3" fill="#122a3f"/><text x="170" y="390" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">F</text>
+  <circle cx="460" cy="320" r="30" fill="#9b6fc0" stroke="#754c99" stroke-width="1.5"/><circle cx="460" cy="320" r="3" fill="#2a1638"/><text x="460" y="360" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">G</text>
+  <circle cx="330" cy="425" r="30" fill="#34b3a2" stroke="#238476" stroke-width="1.5"/><circle cx="330" cy="425" r="3" fill="#0e3a34"/><text x="330" y="465" fill="#223a52" font-size="12" text-anchor="middle" font-weight="600">I</text>
+  <!-- outside 3x : H, K (faded) -->
+  <g opacity="0.5">
+    <circle cx="120" cy="205" r="30" fill="#d6483f" stroke="#a5352e" stroke-width="1.5"/><circle cx="120" cy="205" r="3" fill="#3d0f0c"/><text x="120" y="183" fill="#6a7b8c" font-size="12" text-anchor="middle" font-weight="600">H</text>
+    <circle cx="492" cy="197" r="30" fill="#7d8794" stroke="#59626d" stroke-width="1.5"/><circle cx="492" cy="197" r="3" fill="#22272d"/><text x="492" y="175" fill="#6a7b8c" font-size="12" text-anchor="middle" font-weight="600">K</text>
+  </g>
+
+  <!-- target feature (drawn last so it sits on top of any overlap): radius 30, diameter 60 -->
+  <circle cx="310" cy="265" r="42" fill="url(#tGlow)"/>
+  <circle cx="310" cy="265" r="30" fill="#d6483f" stroke="#a5352e" stroke-width="2"/>
+  <text x="310" y="274" fill="#ffffff" font-size="26" text-anchor="middle">&#9733;</text>
+
+  <!-- legend -->
+  <line x1="40" y1="516" x2="74" y2="516" stroke="#2f7fd1" stroke-width="3" stroke-dasharray="6 4"/>
+  <text x="82" y="520" fill="#3a4a5a" font-size="12.5">1&#215; feature diameter &#8594; 2 neighbors (A, B)</text>
+  <line x1="40" y1="540" x2="74" y2="540" stroke="#e0912f" stroke-width="3" stroke-dasharray="6 4"/>
+  <text x="82" y="544" fill="#3a4a5a" font-size="12.5">2&#215; &#8594; +5 (C, D, E, J, L) = 7 total</text>
+  <line x1="360" y1="516" x2="394" y2="516" stroke="#8f9b5a" stroke-width="3" stroke-dasharray="6 4"/>
+  <text x="402" y="520" fill="#3a4a5a" font-size="12.5">3&#215; &#8594; +3 (F, G, I) = 10 total</text>
+  <circle cx="377" cy="540" r="6" fill="#d6483f" opacity="0.5"/>
+  <text x="402" y="544" fill="#3a4a5a" font-size="12.5">outside rings &#8594; not a neighbor (H, K)</text>
+
+  <text x="310" y="575" fill="#6a7b8c" font-size="11.5" font-style="italic" text-anchor="middle">Drawn to scale: the 1&#215; ring radius equals the feature's own diameter.</text>
+</svg>

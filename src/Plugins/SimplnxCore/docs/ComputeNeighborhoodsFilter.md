@@ -13,6 +13,14 @@ The **Search Radius Type** parameter selects how the search radius is defined:
 - **Multiples of Average Diameter** *(default)*: each feature searches within a radius equal to **its own** *Equivalent Sphere Diameter* multiplied by the *Multiples of Average Diameter* value (`radius_i = equivalentDiameter[i] × multiples`). Because the radius scales with each feature's own size, larger features have larger neighborhoods and the neighbor relationship can be **asymmetric** (a large feature may reach a small one that does not reach back). This mode requires the *Equivalent Diameters* feature array. *(Note: despite the parameter name, the multiplier is applied to each feature's own diameter, not the global average; the average diameter is used only to size the internal search grid. This preserves the behavior of the legacy DREAM3D `FindNeighborhoods` filter.)*
 - **Search Radius (microns)**: every feature uses the same absolute search radius (in microns) supplied by the user. The neighborhood is therefore symmetric, and the *Equivalent Diameters* array is **not** required.
 
+In the "Multiples of Average Diameter" mode the search radius for feature *i* is:
+
+```text
+radius_i = MultiplesOfAvgDiameter × EquivalentDiameter_i
+```
+
+(there is no division by two; the average diameter is used only to size the internal search grid). In the "Search Radius (microns)" mode the radius is the absolute value entered by the user.
+
 The algorithm for determining the number of neighboring **Features** is:
 
 1. Determine each feature's search radius from the selected **Search Radius Type**
@@ -20,7 +28,9 @@ The algorithm for determining the number of neighboring **Features** is:
 3. Check every other **Feature**'s *centroid* to see if it lies within the sphere; keep a count and a list of those that satisfy the test
 4. Repeat for all **Features**
 
-![](images/ComputeFeatureNeighborhoods_MultiplesOfAvgDiameter.png)
+The figure below shows a single target feature and how progressively larger multiples of its own diameter capture more neighboring centroids.
+
+![Search sphere around a feature at 1x, 2x, and 3x its own diameter](Images/ComputeFeatureNeighborhoods_SearchSphere.png)
 
 ## Output Notes
 
