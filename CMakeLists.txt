@@ -251,6 +251,14 @@ endif()
 # Force HDF5 1.10 API
 target_compile_definitions(simplnx PUBLIC "H5_USE_110_API")
 
+# The vcpkg HDF5 build is not thread-safe. Enable H5SUPPORT_MUTEX_LOCK() so the
+# four macro-guarded helpers in H5Support.cpp serialize on the single process-wide
+# ApiLock(). PUBLIC so it propagates to consumers (including simplnx_test, whose
+# ApiLock regression guard is otherwise a compile-time no-op). Perf note: this is a
+# coarse, process-wide lock around those HDF5 leaf calls; it trades some HDF5-call
+# concurrency for correctness against the non-thread-safe C library.
+target_compile_definitions(simplnx PUBLIC "H5Support_USE_MUTEX")
+
 target_compile_options(simplnx
   PUBLIC
     $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang,Intel>:-ffp-contract=off>
