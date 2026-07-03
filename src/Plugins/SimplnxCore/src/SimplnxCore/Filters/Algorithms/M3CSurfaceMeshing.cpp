@@ -692,35 +692,6 @@ void get_nodes_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, int
   }
 }
 
-// -----------------------------------------------------------------------------
-// Classify each triangle edge as face/inner. NOTE: legacy always sets tw[*]=1
-// (both branches); the inner/outer distinction is effectively unused downstream.
-// Transcribed from M3CEntireVolume::find_edgePlace.
-// -----------------------------------------------------------------------------
-void find_edgePlace(const double tvcrd1[3], const double tvcrd2[3], const double tvcrd3[3], int tw[3], double xh, double xl, double yh, double yl, double zh, double zl)
-{
-  const double eps = 1.0e-6;
-  double txc, tyc, tzc;
-
-  txc = (tvcrd1[0] + tvcrd2[0]) / 2.0;
-  tyc = (tvcrd1[1] + tvcrd2[1]) / 2.0;
-  tzc = (tvcrd1[2] + tvcrd2[2]) / 2.0;
-  tw[0] = 1;
-  (void)((txc < (xh - eps) && txc > (xl + eps)) && (tyc < (yh - eps) && tyc > (yl + eps)) && (tzc < (zh - eps) && tzc > (zl + eps)));
-
-  txc = (tvcrd2[0] + tvcrd3[0]) / 2.0;
-  tyc = (tvcrd2[1] + tvcrd3[1]) / 2.0;
-  tzc = (tvcrd2[2] + tvcrd3[2]) / 2.0;
-  tw[1] = 1;
-
-  txc = (tvcrd3[0] + tvcrd1[0]) / 2.0;
-  tyc = (tvcrd3[1] + tvcrd1[1]) / 2.0;
-  tzc = (tvcrd3[2] + tvcrd1[2]) / 2.0;
-  tw[2] = 1;
-  (void)txc;
-  (void)tyc;
-  (void)tzc;
-}
 
 // -----------------------------------------------------------------------------
 // Count triangles for a case-0 cube (no face centers): burn edges into closed
@@ -1420,8 +1391,6 @@ int64 get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& n
 // -----------------------------------------------------------------------------
 void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, int tin, int* tout, const double tcrd1[3], const double tcrd2[3], SiteId mcid)
 {
-  const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
-  const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
 
   std::vector<int> burnt(nfedge, 0);
   std::vector<SiteId> burnt_list(nfedge, -1);
@@ -1517,8 +1486,6 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 
   int sumN = 0;
   int ctid = tin;
-  int where[3];
-  double vcrd1[3], vcrd2[3], vcrd3[3];
 
   for(int jj = 1; jj < loopID; jj++)
   {
@@ -1540,13 +1507,6 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
       t1[ctid].node_id[0] = tv0;
       t1[ctid].node_id[1] = tv1;
       t1[ctid].node_id[2] = tv2;
-      for(int iii = 0; iii < 3; iii++)
-      {
-        vcrd1[iii] = v1[tv0].coord[iii];
-        vcrd2[iii] = v1[tv1].coord[iii];
-        vcrd3[iii] = v1[tv2].coord[iii];
-      }
-      find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
       t1[ctid].nSpin[0] = e1[te0].nSpin[0];
       t1[ctid].nSpin[1] = e1[te0].nSpin[1];
       mCubeID[ctid] = mcid;
@@ -1567,13 +1527,6 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
       t1[ctid].node_id[0] = tv0;
       t1[ctid].node_id[1] = tv1;
       t1[ctid].node_id[2] = tv2;
-      for(int iii = 0; iii < 3; iii++)
-      {
-        vcrd1[iii] = v1[tv0].coord[iii];
-        vcrd2[iii] = v1[tv1].coord[iii];
-        vcrd3[iii] = v1[tv2].coord[iii];
-      }
-      find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
       t1[ctid].nSpin[0] = e1[te0].nSpin[0];
       t1[ctid].nSpin[1] = e1[te0].nSpin[1];
       mCubeID[ctid] = mcid;
@@ -1593,13 +1546,6 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
           t1[ctid].node_id[0] = tv0;
           t1[ctid].node_id[1] = tv1;
           t1[ctid].node_id[2] = tv2;
-          for(int iii = 0; iii < 3; iii++)
-          {
-            vcrd1[iii] = v1[tv0].coord[iii];
-            vcrd2[iii] = v1[tv1].coord[iii];
-            vcrd3[iii] = v1[tv2].coord[iii];
-          }
-          find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
           t1[ctid].nSpin[0] = e1[ce].nSpin[0];
           t1[ctid].nSpin[1] = e1[ce].nSpin[1];
           mCubeID[ctid] = mcid;
@@ -1617,13 +1563,6 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
           t1[ctid].node_id[0] = tv0;
           t1[ctid].node_id[1] = tv1;
           t1[ctid].node_id[2] = tv2;
-          for(int iii = 0; iii < 3; iii++)
-          {
-            vcrd1[iii] = v1[tv0].coord[iii];
-            vcrd2[iii] = v1[tv1].coord[iii];
-            vcrd3[iii] = v1[tv2].coord[iii];
-          }
-          find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
           t1[ctid].nSpin[0] = e1[ce].nSpin[0];
           t1[ctid].nSpin[1] = e1[ce].nSpin[1];
           mCubeID[ctid] = mcid;
@@ -1643,8 +1582,6 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/, int tin, int* tout, const double tcrd1[3], const double tcrd2[3],
                          SiteId mcid)
 {
-  const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
-  const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
 
   std::vector<int> burnt(nfedge, 0);
   std::vector<SiteId> burnt_list(nfedge, -1);
@@ -1735,8 +1672,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
   int to = 0;
   int from = 0;
   int ctid = tin;
-  int where[3];
-  double vcrd1[3], vcrd2[3], vcrd3[3];
 
   for(int j1 = 1; j1 < loopID; j1++)
   {
@@ -1819,13 +1754,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
-        for(int iii = 0; iii < 3; iii++)
-        {
-          vcrd1[iii] = v1[tv0].coord[iii];
-          vcrd2[iii] = v1[tv1].coord[iii];
-          vcrd3[iii] = v1[tv2].coord[iii];
-        }
-        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
         t1[ctid].nSpin[0] = e1[te0].nSpin[0];
         t1[ctid].nSpin[1] = e1[te0].nSpin[1];
         mCubeID[ctid] = mcid;
@@ -1845,13 +1773,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
-        for(int iii = 0; iii < 3; iii++)
-        {
-          vcrd1[iii] = v1[tv0].coord[iii];
-          vcrd2[iii] = v1[tv1].coord[iii];
-          vcrd3[iii] = v1[tv2].coord[iii];
-        }
-        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
         t1[ctid].nSpin[0] = e1[te0].nSpin[0];
         t1[ctid].nSpin[1] = e1[te0].nSpin[1];
         mCubeID[ctid] = mcid;
@@ -1870,13 +1791,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
             t1[ctid].node_id[2] = tv2;
-            for(int iii = 0; iii < 3; iii++)
-            {
-              vcrd1[iii] = v1[tv0].coord[iii];
-              vcrd2[iii] = v1[tv1].coord[iii];
-              vcrd3[iii] = v1[tv2].coord[iii];
-            }
-            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
             t1[ctid].nSpin[0] = e1[ce].nSpin[0];
             t1[ctid].nSpin[1] = e1[ce].nSpin[1];
             mCubeID[ctid] = mcid;
@@ -1894,13 +1808,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
             t1[ctid].node_id[2] = tv2;
-            for(int iii = 0; iii < 3; iii++)
-            {
-              vcrd1[iii] = v1[tv0].coord[iii];
-              vcrd2[iii] = v1[tv1].coord[iii];
-              vcrd3[iii] = v1[tv2].coord[iii];
-            }
-            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
             t1[ctid].nSpin[0] = e1[ce].nSpin[0];
             t1[ctid].nSpin[1] = e1[ce].nSpin[1];
             mCubeID[ctid] = mcid;
@@ -1955,13 +1862,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
-        for(int iii = 0; iii < 3; iii++)
-        {
-          vcrd1[iii] = v1[tv0].coord[iii];
-          vcrd2[iii] = v1[tv1].coord[iii];
-          vcrd3[iii] = v1[tv2].coord[iii];
-        }
-        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
         t1[ctid].nSpin[0] = e1[te0].nSpin[0];
         t1[ctid].nSpin[1] = e1[te0].nSpin[1];
         mCubeID[ctid] = mcid;
@@ -1981,13 +1881,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
-        for(int iii = 0; iii < 3; iii++)
-        {
-          vcrd1[iii] = v1[tv0].coord[iii];
-          vcrd2[iii] = v1[tv1].coord[iii];
-          vcrd3[iii] = v1[tv2].coord[iii];
-        }
-        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
         t1[ctid].nSpin[0] = e1[te0].nSpin[0];
         t1[ctid].nSpin[1] = e1[te0].nSpin[1];
         mCubeID[ctid] = mcid;
@@ -2006,13 +1899,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
             t1[ctid].node_id[2] = tv2;
-            for(int iii = 0; iii < 3; iii++)
-            {
-              vcrd1[iii] = v1[tv0].coord[iii];
-              vcrd2[iii] = v1[tv1].coord[iii];
-              vcrd3[iii] = v1[tv2].coord[iii];
-            }
-            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
             t1[ctid].nSpin[0] = e1[ce].nSpin[0];
             t1[ctid].nSpin[1] = e1[ce].nSpin[1];
             mCubeID[ctid] = mcid;
@@ -2030,13 +1916,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
             t1[ctid].node_id[2] = tv2;
-            for(int iii = 0; iii < 3; iii++)
-            {
-              vcrd1[iii] = v1[tv0].coord[iii];
-              vcrd2[iii] = v1[tv1].coord[iii];
-              vcrd3[iii] = v1[tv2].coord[iii];
-            }
-            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
             t1[ctid].nSpin[0] = e1[ce].nSpin[0];
             t1[ctid].nSpin[1] = e1[ce].nSpin[1];
             mCubeID[ctid] = mcid;
@@ -2058,8 +1937,6 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int nfctr, int tin, int* tout, SiteId ccn, const double tcrd1[3],
                          const double tcrd2[3], SiteId mcid)
 {
-  const double xhigh = tcrd2[0], yhigh = tcrd2[1], zhigh = tcrd2[2];
-  const double xlow = tcrd1[0], ylow = tcrd1[1], zlow = tcrd1[2];
 
   std::vector<int> burnt(nfedge, 0);
   std::vector<SiteId> burnt_list(nfedge, -1);
@@ -2149,8 +2026,6 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
   int to = 0;
   int from = 0;
   int ctid = tin;
-  int where[3];
-  double vcrd1[3], vcrd2[3], vcrd3[3];
 
   for(int j1 = 1; j1 < loopID; j1++)
   {
@@ -2239,13 +2114,6 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
         t1[ctid].node_id[0] = ccn;
         t1[ctid].node_id[1] = tn0;
         t1[ctid].node_id[2] = tn1;
-        for(int i4 = 0; i4 < 3; i4++)
-        {
-          vcrd1[i4] = v1[ccn].coord[i4];
-          vcrd2[i4] = v1[tn0].coord[i4];
-          vcrd3[i4] = v1[tn1].coord[i4];
-        }
-        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
         t1[ctid].nSpin[0] = ts0;
         t1[ctid].nSpin[1] = ts1;
         mCubeID[ctid] = mcid;
@@ -2296,13 +2164,6 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
-        for(int i4 = 0; i4 < 3; i4++)
-        {
-          vcrd1[i4] = v1[tv0].coord[i4];
-          vcrd2[i4] = v1[tv1].coord[i4];
-          vcrd3[i4] = v1[tv2].coord[i4];
-        }
-        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
         t1[ctid].nSpin[0] = e1[te0].nSpin[0];
         t1[ctid].nSpin[1] = e1[te0].nSpin[1];
         mCubeID[ctid] = mcid;
@@ -2322,13 +2183,6 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
         t1[ctid].node_id[0] = tv0;
         t1[ctid].node_id[1] = tv1;
         t1[ctid].node_id[2] = tv2;
-        for(int i4 = 0; i4 < 3; i4++)
-        {
-          vcrd1[i4] = v1[tv0].coord[i4];
-          vcrd2[i4] = v1[tv1].coord[i4];
-          vcrd3[i4] = v1[tv2].coord[i4];
-        }
-        find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
         t1[ctid].nSpin[0] = e1[te0].nSpin[0];
         t1[ctid].nSpin[1] = e1[te0].nSpin[1];
         mCubeID[ctid] = mcid;
@@ -2347,13 +2201,6 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
             t1[ctid].node_id[2] = tv2;
-            for(int i4 = 0; i4 < 3; i4++)
-            {
-              vcrd1[i4] = v1[tv0].coord[i4];
-              vcrd2[i4] = v1[tv1].coord[i4];
-              vcrd3[i4] = v1[tv2].coord[i4];
-            }
-            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
             t1[ctid].nSpin[0] = e1[ce].nSpin[0];
             t1[ctid].nSpin[1] = e1[ce].nSpin[1];
             mCubeID[ctid] = mcid;
@@ -2371,13 +2218,6 @@ void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
             t1[ctid].node_id[0] = tv0;
             t1[ctid].node_id[1] = tv1;
             t1[ctid].node_id[2] = tv2;
-            for(int i4 = 0; i4 < 3; i4++)
-            {
-              vcrd1[i4] = v1[tv0].coord[i4];
-              vcrd2[i4] = v1[tv1].coord[i4];
-              vcrd3[i4] = v1[tv2].coord[i4];
-            }
-            find_edgePlace(vcrd1, vcrd2, vcrd3, where, xhigh, xlow, yhigh, ylow, zhigh, zlow);
             t1[ctid].nSpin[0] = e1[ce].nSpin[0];
             t1[ctid].nSpin[1] = e1[ce].nSpin[1];
             mCubeID[ctid] = mcid;
