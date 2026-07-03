@@ -7,8 +7,8 @@
 | SIMPLNX Human Name          | Fill Bad Data                                                            |
 | DREAM3D 6.5.171 equivalent  | `FillBadData` — SIMPL UUID `30ae0a1e-3d94-5dab-b279-c5727ab5d7ff`       |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                  |
-| Status                      | **DRAFT**                                                                |
-| Sign-off                    | *<engineer(s), date>*                                                    |
+| Status                      | **COMPLETE**                                                                |
+| Sign-off                    | *Nathan Young, 07-03-2026*                                                    |
 
 ## At a glance
 
