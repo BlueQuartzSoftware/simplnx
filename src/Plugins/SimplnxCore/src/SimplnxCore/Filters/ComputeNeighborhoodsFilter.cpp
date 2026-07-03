@@ -68,10 +68,15 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
-      k_SearchRadiusType_Key, "Search Radius Type", "How the neighbor search radius is defined: (0) as a multiple of the average feature diameter, or (1) as an absolute search radius in microns.",
-      k_MultiplesOfAverageIndex, ChoicesParameter::Choices{"Multiples of Average Diameter", "Search Radius (microns)"}));
+      k_SearchRadiusType_Key, "Search Radius Type",
+      "How the neighbor search radius is defined: (0) as a multiple of each feature's own Equivalent Sphere Diameter, or (1) as an absolute search radius in microns.", k_MultiplesOfAverageIndex,
+      ChoicesParameter::Choices{"Multiples of Average Diameter", "Search Radius (microns)"}));
 
-  params.insert(std::make_unique<Float32Parameter>(k_MultiplesOfAverage_Key, "Multiples of Average Diameter", "Defines the search distance to use when looking for 'neighboring' Features", 1.0F));
+  params.insert(std::make_unique<Float32Parameter>(
+      k_MultiplesOfAverage_Key, "Multiples of Average Diameter",
+      "Each feature searches within a radius equal to its OWN Equivalent Sphere Diameter multiplied by this value (radius = equivalentDiameter[i] * multiples). Larger features therefore have larger "
+      "neighborhoods, and the neighbor relationship can be asymmetric.",
+      1.0F));
   params.insert(std::make_unique<Float32Parameter>(k_SearchRadius_Key, "Search Radius (microns)",
                                                    "The absolute radius (in microns) within which to search for 'neighboring' Features. A Feature is a neighbor if its centroid lies within this "
                                                    "distance of the target Feature's centroid.",

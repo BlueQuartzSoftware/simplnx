@@ -6,20 +6,19 @@ Statistics (Morphological)
 
 ## Description
 
-For each feature, determine how many other features have their *centroid* within a user defined search radius of the feature's centroid.
+For each feature, determine how many other features have their *centroid* within a search radius of that feature's centroid, counted using a true Euclidean (spherical) distance test.
 
-The **Search Radius Type** parameter selects how that search radius is defined:
+The **Search Radius Type** parameter selects how the search radius is defined:
 
-- **Multiples of Average Diameter** *(default)*: the search radius is computed as the average *Equivalent Sphere Diameter* of all features multiplied by the user supplied *Multiples of Average Diameter* value, divided by two. This is the original behavior of the filter. This mode requires the *Equivalent Diameters* feature array.
-- **Search Radius (microns)**: the user supplies an absolute search radius (in microns) that is used directly. This mode does **not** require the *Equivalent Diameters* array.
+- **Multiples of Average Diameter** *(default)*: each feature searches within a radius equal to **its own** *Equivalent Sphere Diameter* multiplied by the *Multiples of Average Diameter* value (`radius_i = equivalentDiameter[i] × multiples`). Because the radius scales with each feature's own size, larger features have larger neighborhoods and the neighbor relationship can be **asymmetric** (a large feature may reach a small one that does not reach back). This mode requires the *Equivalent Diameters* feature array. *(Note: despite the parameter name, the multiplier is applied to each feature's own diameter, not the global average; the average diameter is used only to size the internal search grid. This preserves the behavior of the legacy DREAM3D `FindNeighborhoods` filter.)*
+- **Search Radius (microns)**: every feature uses the same absolute search radius (in microns) supplied by the user. The neighborhood is therefore symmetric, and the *Equivalent Diameters* array is **not** required.
 
-The algorithm for determining the number of **Features** is given below:
+The algorithm for determining the number of neighboring **Features** is:
 
-1. Compute the average equivalent diameter for all features in a given phase
-2. Determine the search radius from the selected **Search Radius Type**
-3. Define a sphere centered at the **Feature**'s *centroid* with the search radius from step 2
-4. Check every other **Feature**'s *centroid* to see if it lies within the sphere and keep count and list of those that satisfy
-5. Repeat 3. & 4. for all **Features**
+1. Determine each feature's search radius from the selected **Search Radius Type**
+2. Define a sphere centered at the **Feature**'s *centroid* using that radius
+3. Check every other **Feature**'s *centroid* to see if it lies within the sphere; keep a count and a list of those that satisfy the test
+4. Repeat for all **Features**
 
 ![](images/ComputeFeatureNeighborhoods_MultiplesOfAvgDiameter.png)
 
