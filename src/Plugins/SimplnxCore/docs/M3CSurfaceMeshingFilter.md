@@ -70,11 +70,14 @@ curvature-dependent analysis.
   edge of the volume are meshed correctly; no manual padding is required.
 - **Feature Id** values of 0 are handled internally and restored on output.
 - For a **RectGrid Geometry** the node coordinates currently assume uniform **Cell** spacing.
-- **Memory:** the algorithm allocates several per-**Cell** working arrays over the whole volume, so
-  peak memory scales with the total number of **Cells**. As a rough guide a 100 × 100 × 100 volume
-  requires on the order of 0.5 GB. Very large volumes may require a machine with substantial RAM.
+- **Memory:** the volume is swept one **Z** slice at a time, so the per-**Cell** working scratch is
+  proportional to a slice (roughly the square of the in-plane dimension), not to the whole volume.
+  Peak memory is therefore dominated by the size of the generated mesh itself (the number of
+  triangles and vertices) rather than by the input dimensions; meshes with a very large number of
+  small **Features** produce more triangles and use more memory.
 
-This implementation is a port of the legacy DREAM.3D `M3CSliceBySlice` **Filter**, originally
+This implementation ports the in-memory algorithm of the legacy DREAM.3D `M3CEntireVolume` **Filter**
+(it is the functional replacement for the legacy `M3CSliceBySlice` **Filter**), originally
 contributed by Dr. Sukbin Lee (Carnegie Mellon University), based on the algorithm of
 Wu & Sullivan, "Multiple material marching cubes algorithm," *International Journal for Numerical
 Methods in Engineering*, 58(2):189–207, 2003.

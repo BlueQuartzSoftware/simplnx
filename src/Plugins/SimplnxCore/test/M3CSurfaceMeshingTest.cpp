@@ -27,7 +27,7 @@ namespace
 {
 // Runs M3C on the shared QuickSurfaceMesh Small IN100 test dataset and returns nothing;
 // asserts a valid, non-empty, well-formed mesh. `repairWinding` toggles the winding pass.
-void RunM3C(bool repairWinding, const std::string& outputName)
+void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
 {
   UnitTest::LoadPlugins();
 
@@ -79,9 +79,9 @@ void RunM3C(bool repairWinding, const std::string& outputName)
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    // NOTE: temporarily unconditional so the mesh can be visually inspected during bring-up.
-    // Restore the `#ifdef SIMPLNX_WRITE_TEST_OUTPUT` guard before finalizing this test.
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
     WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, outputName)));
+#endif
   }
 
   // There is no M3C exemplar yet, so validate that the mesh is present and well-formed:
@@ -154,7 +154,7 @@ namespace
 // asserts a valid, non-empty, well-formed mesh. Used for tiny toy datasets that deterministically
 // exercise specific get_square_index cases (saddles, quad points, triple lines) with no data file.
 template <typename LabelFuncT>
-void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, const std::string& outputName)
+void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[maybe_unused]] const std::string& outputName)
 {
   UnitTest::LoadPlugins();
 
@@ -230,7 +230,9 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, const
     }
   }
 
+#ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/{}", unit_test::k_BinaryTestOutputDir, outputName)));
+#endif
 }
 } // namespace
 

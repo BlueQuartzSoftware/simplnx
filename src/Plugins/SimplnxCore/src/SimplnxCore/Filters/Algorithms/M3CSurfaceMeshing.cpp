@@ -2853,6 +2853,9 @@ Result<> M3CSurfaceMeshing::runWindowed()
   //                                               generate triangles (applying all generate-flips).
   int64 nTriangle = 0;
 
+  const int64 totalSlices = (numSitesPerPlane > 0) ? (numSites / numSitesPerPlane) : 1;
+  const int64 progressStep = std::max<int64>(1, totalSlices / 20); // ~20 progress updates per sweep
+
   auto sweep = [&](bool appendEdges, bool generate) {
     winBaseSite = 1;
     int64 eid = 0;
@@ -2871,6 +2874,11 @@ Result<> M3CSurfaceMeshing::runWindowed()
       {
         std::memmove(window.data(), window.data() + sliceSquares, static_cast<size_t>(sliceSquares) * sizeof(Face));
         winBaseSite += numSitesPerPlane;
+        const int64 sliceIdx = winBaseSite / numSitesPerPlane;
+        if(sliceIdx % progressStep == 0)
+        {
+          m_MessageHandler(fmt::format("Sweeping z-slices ({}): slice {} / {}", generate ? "pass 2, generating triangles" : "pass 1, counting", sliceIdx, totalSlices));
+        }
         const SiteId newLoSquare = 3 * (winBaseSite + numSitesPerPlane - 1);
         const SiteId newHiSquare = std::min<SiteId>(3 * (winBaseSite + 2 * numSitesPerPlane - 1), 3 * numSites);
         if(newLoSquare < newHiSquare)
