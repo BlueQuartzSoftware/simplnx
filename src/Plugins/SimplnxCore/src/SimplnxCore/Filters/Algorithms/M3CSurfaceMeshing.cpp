@@ -12,6 +12,8 @@
 
 #include <array>
 #include <atomic>
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
+
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -2587,7 +2589,13 @@ Result<> M3CSurfaceMeshing::operator()()
   {
     return runEntireVolume();
   }
-  return runWindowed();
+  // Experimental multithreaded sweep (per-cube private edge copies; see runWindowed). Produces a
+  // correct, watertight mesh with byte-identical vertices, FaceLabels, and NodeTypes, but a DIFFERENT
+  // (valid) triangulation of the same interfaces: the legacy per-cube loop triangulation depends on
+  // cross-cube edge-flip propagation, which is inherently serial, so the parallel path drops it. Opt-in.
+  const char* par = std::getenv("M3C_PARALLEL");
+  const bool useParallel = (par != nullptr && std::string_view(par) == "1");
+  return runWindowed(useParallel);
 }
 
 // -----------------------------------------------------------------------------
@@ -2681,7 +2689,7 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
 // Sliding-window (z-slice) variant (the default path). See M3CSurfaceMeshing.hpp: the marching-square
 // scratch is held for only two z-slices at a time, so per-site scratch is O(sliceArea) rather than
 // O(volume). Produces byte-identical output to runEntireVolume().
-Result<> M3CSurfaceMeshing::runWindowed()
+Result<> M3CSurfaceMeshing::runWindowed(bool parallel)
 {
   // --- Setup (identical to runEntireVolume) ----------------------------------
   const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
@@ -3012,17 +3020,227 @@ Result<> M3CSurfaceMeshing::runWindowed()
     }
   };
 
-  m_MessageHandler("Sweeping z-slices (pass 1: face edges + triangle count)...");
-  sweep(true, false);
-  if(m_ShouldCancel)
+  if(!parallel)
   {
-    return {};
-  }
-  triangles.resize(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle));
-  mCubeID.resize(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle), 0);
+    m_MessageHandler("Sweeping z-slices (pass 1: face edges + triangle count)...");
+    sweep(true, false);
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    triangles.resize(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle));
+    mCubeID.resize(static_cast<size_t>(nTriangle < 0 ? 0 : nTriangle), 0);
 
-  m_MessageHandler("Sweeping z-slices (pass 2: generating triangles)...");
-  sweep(false, true);
+    m_MessageHandler("Sweeping z-slices (pass 2: generating triangles)...");
+    sweep(false, true);
+  }
+  else
+  {
+    // Experimental multithreaded sweep. The edge stage (computeSquares) runs SERIALLY per slice, so the
+    // squares, fedges, and edge-node nodeType are built identically to the serial path (hence identical
+    // vertices, FaceLabels, and NodeTypes). The per-cube count/generate work is then parallel across the
+    // cubes of each slice: each cube reads the shared squares/fedges but flips a PRIVATE copy of its face
+    // edges, so cubes never mutate shared state and no coloring is needed. Because the legacy per-cube
+    // loop triangulation depends on cross-cube edge-flip propagation (inherently serial), dropping it
+    // yields a DIFFERENT but valid triangulation of the same interfaces -- correct and watertight, but
+    // not the same triangles as the serial path. Triangle order still matches (offsets from the count).
+    const SiteId lastCube = numSites - numSitesPerPlane;
+    const size_t numCubes = (lastCube >= 1) ? static_cast<size_t>(lastCube) : 0; // cubes are 1..lastCube
+
+    // Per-cube work with a private edge copy (thread-safe). doGenerate=false counts (and sets the
+    // body-center node type); doGenerate=true writes triangles at triOffset. Returns the triangle count.
+    auto perCube = [&](SiteId i, bool doGenerate, int64 triOffset) -> int64 {
+      SiteId sqID[6];
+      sqID[0] = 3 * (i - 1);
+      sqID[1] = 3 * (i - 1) + 1;
+      sqID[2] = 3 * (i - 1) + 2;
+      sqID[3] = 3 * i + 2;
+      sqID[4] = 3 * (i + xDim - 1) + 1;
+      sqID[5] = 3 * (i + numSitesPerPlane - 1);
+      SiteId arrayFC[6];
+      for(int ii = 0; ii < 6; ii++)
+      {
+        arrayFC[ii] = -1;
+      }
+      int fcid = 0;
+      int nFE = 0;
+      int eff = 0;
+      for(int ii = 0; ii < 6; ii++)
+      {
+        const Face& sqf = window[winIndex(sqID[ii])];
+        if(sqf.FCnode != -1)
+        {
+          arrayFC[fcid] = sqf.FCnode;
+          fcid++;
+        }
+        nFE = nFE + sqf.nEdge;
+        eff = eff + sqf.effect;
+      }
+      const int nFC = fcid;
+      const SiteId BCnode = 7 * (i - 1) + 6;
+      if(!doGenerate && nFC >= 3)
+      {
+        const std::array<SiteId, 4> corners1 = squareCorners(sqID[0], neighbors);
+        const std::array<SiteId, 4> corners2 = squareCorners(sqID[5], neighbors);
+        int arraySpin[8];
+        for(int j = 0; j < 4; j++)
+        {
+          arraySpin[j] = point[corners1[j]];
+          arraySpin[j + 4] = point[corners2[j]];
+        }
+        int nds = 0;
+        for(int k = 0; k < 8; k++)
+        {
+          int cspin = arraySpin[k];
+          if(cspin != -1)
+          {
+            nds++;
+            arraySpin[k] = -1;
+            for(int kk = 0; kk < 8; kk++)
+            {
+              if(cspin == arraySpin[kk])
+              {
+                arraySpin[kk] = -1;
+              }
+            }
+          }
+        }
+        nodeType[BCnode] = static_cast<int8_t>(nds);
+      }
+      if(eff <= 0 || nFE <= 2)
+      {
+        return 0;
+      }
+      // Private copy of this cube's face edges; local indices are 0..nFE-1 (max ~24, buffer is 64).
+      std::array<SiteId, 64> localAFE{};
+      std::array<Segment, 64> localEdges{};
+      int tindex = 0;
+      for(int i1 = 0; i1 < 6; i1++)
+      {
+        const Face& sqf = window[winIndex(sqID[i1])];
+        int tnfe = sqf.nEdge;
+        for(int i2 = 0; i2 < tnfe; i2++)
+        {
+          localEdges[static_cast<size_t>(tindex)] = fedges[sqf.edge_id[i2]];
+          localAFE[static_cast<size_t>(tindex)] = tindex;
+          tindex++;
+        }
+      }
+      if(!doGenerate)
+      {
+        if(nFC == 0)
+        {
+          return get_number_case0_triangles(localAFE.data(), localEdges.data(), nFE);
+        }
+        if(nFC == 2)
+        {
+          return get_number_case2_triangles(localAFE.data(), localEdges.data(), nFE, arrayFC, nFC);
+        }
+        if(nFC > 2 && nFC <= 6)
+        {
+          return get_number_caseM_triangles(localAFE.data(), localEdges.data(), nFE, arrayFC, nFC);
+        }
+        return 0;
+      }
+      double coord1[3];
+      double coord2[3];
+      for(int k = 0; k < 3; k++)
+      {
+        coord1[k] = siteCoords[i].coord[k];
+        coord2[k] = siteCoords[i + 1 + xDim + numSitesPerPlane].coord[k];
+      }
+      int64 tin = triOffset;
+      int64 tout = tin;
+      if(nFC == 0)
+      {
+        get_case0_triangles(triangles.data(), mCubeID.data(), localAFE.data(), nodeCoords, localEdges.data(), nFE, tin, &tout, coord1, coord2, i);
+      }
+      else if(nFC == 2)
+      {
+        get_case2_triangles(triangles.data(), mCubeID.data(), localAFE.data(), nodeCoords, localEdges.data(), nFE, arrayFC, nFC, tin, &tout, coord1, coord2, i);
+      }
+      else
+      {
+        get_caseM_triangles(triangles.data(), mCubeID.data(), localAFE.data(), nodeCoords, localEdges.data(), nFE, arrayFC, nFC, tin, &tout, BCnode, coord1, coord2, i);
+      }
+      return tout - triOffset;
+    };
+
+    // Slide the serial edge-stage window forward until it covers sites [targetBaseSite, +2*NSP).
+    auto advanceWindowTo = [&](SiteId targetBaseSite, bool appendEdges, int64& eid) {
+      while(winBaseSite < targetBaseSite)
+      {
+        std::memmove(window.data(), window.data() + sliceSquares, static_cast<size_t>(sliceSquares) * sizeof(Face));
+        winBaseSite += numSitesPerPlane;
+        const SiteId newLoSquare = 3 * (winBaseSite + numSitesPerPlane - 1);
+        const SiteId newHiSquare = std::min<SiteId>(3 * (winBaseSite + 2 * numSitesPerPlane - 1), 3 * numSites);
+        if(newLoSquare < newHiSquare)
+        {
+          computeSquares(newLoSquare, newHiSquare, appendEdges, eid);
+        }
+      }
+    };
+
+    std::vector<int64> triOffset(numCubes + 1, 0); // 1-based per-cube; pass 1 fills counts, then prefix -> offsets
+
+    m_MessageHandler("Sweeping z-slices (parallel pass 1: counting)...");
+    {
+      winBaseSite = 1;
+      int64 eid = 0;
+      computeSquares(0, std::min<SiteId>(2 * sliceSquares, 3 * numSites), true, eid);
+      for(SiteId sliceBase = 1; sliceBase <= lastCube; sliceBase += numSitesPerPlane)
+      {
+        if(m_ShouldCancel)
+        {
+          return {};
+        }
+        advanceWindowTo(sliceBase, true, eid);
+        const SiteId cubeEnd = std::min<SiteId>(sliceBase + numSitesPerPlane, lastCube + 1);
+        ParallelDataAlgorithm alg;
+        alg.setRange(static_cast<size_t>(sliceBase), static_cast<size_t>(cubeEnd));
+        alg.execute([&](const Range& range) {
+          for(size_t idx = range.min(); idx < range.max(); idx++)
+          {
+            triOffset[idx] = perCube(static_cast<SiteId>(idx), false, 0);
+          }
+        });
+      }
+    }
+
+    int64 total = 0;
+    for(size_t i = 1; i <= numCubes; i++)
+    {
+      const int64 cnt = triOffset[i];
+      triOffset[i] = total;
+      total += cnt;
+    }
+    triangles.resize(static_cast<size_t>(total));
+    mCubeID.resize(static_cast<size_t>(total), 0);
+
+    m_MessageHandler("Sweeping z-slices (parallel pass 2: generating triangles)...");
+    {
+      winBaseSite = 1;
+      int64 eid = 0;
+      computeSquares(0, std::min<SiteId>(2 * sliceSquares, 3 * numSites), false, eid);
+      for(SiteId sliceBase = 1; sliceBase <= lastCube; sliceBase += numSitesPerPlane)
+      {
+        if(m_ShouldCancel)
+        {
+          return {};
+        }
+        advanceWindowTo(sliceBase, false, eid);
+        const SiteId cubeEnd = std::min<SiteId>(sliceBase + numSitesPerPlane, lastCube + 1);
+        ParallelDataAlgorithm alg;
+        alg.setRange(static_cast<size_t>(sliceBase), static_cast<size_t>(cubeEnd));
+        alg.execute([&](const Range& range) {
+          for(size_t idx = range.min(); idx < range.max(); idx++)
+          {
+            perCube(static_cast<SiteId>(idx), true, triOffset[idx]);
+          }
+        });
+      }
+    }
+  }
 
   if(m_ShouldCancel)
   {

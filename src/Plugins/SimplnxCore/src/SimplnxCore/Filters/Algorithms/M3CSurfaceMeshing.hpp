@@ -67,6 +67,6 @@ private:
   // O(volume) (nodeType remains a whole-volume int8 array). Produces byte-identical output to
   // runEntireVolume(). This is the DEFAULT path; set the environment variable M3C_WHOLE_VOLUME=1 to
   // force runEntireVolume() (kept as a byte-identical reference).
-  Result<> runWindowed();
+  Result<> runWindowed(bool parallel);
 };
 } // namespace nx::core
