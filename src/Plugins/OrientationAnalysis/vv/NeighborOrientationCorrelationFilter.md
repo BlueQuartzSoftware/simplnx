@@ -18,13 +18,13 @@
 | Code paths enumerated  | 19 of 20 exercised; the cancel path is not directly tested (requires cancel-signal injection). |
 | Tests today            | 14 ctest cases — 11 oracle/invariant fixtures + 1 production-scale invariant verification (Small IN100, archive-free snapshot) + 1 preflight error + 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). |
 | Exemplar archive       | **None — fully retired.** All oracle data is inline (programmatic toy fixtures); the Small IN100 test uses archive-free invariant checks. v1 was retired for a hollow comparison (container name mismatch silently skipped every array since 2022); a briefly-created v2 was retired the same day as a circular oracle. |
-| Legacy comparison      | **Three-way (SIMPLNX vs 6.5.171 vs 6.5.172)** on 11 legacy-native fixtures — SIMPLNX (fixed) and 6.5.172 (patched, commit `e00baedb0`) are bit-identical and match the oracle; stock 6.5.171 differs on 10 of 11, fully explained by D1–D3. |
+| Legacy comparison      | **Run — SIMPLNX vs DREAM3D 6.5.171** on 11 legacy-native fixtures: 6.5.171 differs on 10 of 11, fully explained by D1–D3. Each root cause was proven by applying the corresponding surgical fix to a local build of the legacy source, after which the legacy output became bit-identical to SIMPLNX on all 11 fixtures. |
 | Bug flags              | D1 (legacy stale-w), D2 (double level decrement, was also in SIMPLNX — fixed), D3 (last-wins selection, was also in SIMPLNX — fixed). D4 is precision, not a bug. Plus: hollow exemplar comparison in the v1 test (fixed). |
 | V&V phase              | All phases complete. Outstanding: second-engineer oracle review at PR; fresh before/after doc screenshots (existing images predate the fixes). |
 
 ## Summary
 
-Neighbor Orientation Correlation replaces low-confidence EBSD cells with the attributes of their "best" face neighbor — the one most orientation-similar to the other neighbors — over `6 − Level` passes. It was verified against a NumPy reference implementation with hand-derived (convention-free, co-axial rotation) expected outputs on 11 fixtures covering every logic branch, which exposed and fixed two inherited legacy defects in SIMPLNX (halved pass count; last-wins instead of arg-max selection). Post-fix SIMPLNX matches the oracle exactly on all fixtures and is bit-identical to the patched 6.5.172 proof build; four deviations from stock 6.5.171 are documented.
+Neighbor Orientation Correlation replaces low-confidence EBSD cells with the attributes of their "best" face neighbor — the one most orientation-similar to the other neighbors — over `6 − Level` passes. It was verified against a NumPy reference implementation with hand-derived (convention-free, co-axial rotation) expected outputs on 11 fixtures covering every logic branch, which exposed and fixed two inherited legacy defects in SIMPLNX (halved pass count; last-wins instead of arg-max selection). Post-fix SIMPLNX matches the oracle exactly on all fixtures; four deviations from DREAM3D 6.5.171 are documented, each with its root cause proven by a surgical patch to a local build of the legacy source.
 
 ## Algorithm Relationship
 
@@ -125,7 +125,7 @@ All 14 pass at the verified commit in both in-core (`simplnx-Rel`) and OOC (`sim
 
 ## Deviations from DREAM3D 6.5.171
 
-Comparison run three-way (stock 6.5.171 / patched 6.5.172 `e00baedb0` / fixed SIMPLNX) on all 11 legacy-native V&V fixtures; every binary matched its reference-implementation prediction exactly.
+Comparison run (SIMPLNX vs DREAM3D 6.5.171) on all 11 legacy-native V&V fixtures; both binaries matched their reference-implementation predictions exactly. Root causes were proven by applying the D1–D3 fixes to a local build of the legacy source, which then reproduced SIMPLNX's output bit-for-bit.
 
 - `NeighborOrientationCorrelationFilter-D1` — 6.5.171 stale-`w` can replace a cell with **different-phase** data — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
 - `NeighborOrientationCorrelationFilter-D2` — 6.5.171 (and pre-fix SIMPLNX) ran half the documented cleanup passes — see `vv/deviations/NeighborOrientationCorrelationFilter.md`

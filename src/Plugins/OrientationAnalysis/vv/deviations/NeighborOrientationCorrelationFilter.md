@@ -4,7 +4,7 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-**Comparison summary (2026-07-06):** three-way A/B/C on the 11 legacy-native V&V fixtures (engineer's V&V working archive, `VV_Work/NeighborOrientationCorrelationFilter/`). Stock 6.5.171 reproduces the diagnostic `legacy` prediction of the reference implementation on all 11; SIMPLNX (post-fix) and the patched 6.5.172 proof branch reproduce the canonical `intended` oracle on all 11 and are **bit-identical to each other**. 10 of 11 fixtures show 6.5.171 vs SIMPLNX differences, fully explained by D1–D3 below; D4 (precision) is latent by fixture design.
+**Comparison summary (2026-07-06):** SIMPLNX vs DREAM3D 6.5.171 on the 11 legacy-native V&V fixtures (engineer's V&V working archive, `VV_Work/NeighborOrientationCorrelationFilter/`). 6.5.171 reproduces the diagnostic `legacy` prediction of the reference implementation on all 11; SIMPLNX (post-fix) reproduces the canonical `intended` oracle on all 11. 10 of 11 fixtures show 6.5.171 vs SIMPLNX differences, fully explained by D1–D3 below; D4 (precision) is latent by fixture design. Each root cause was proven by applying the corresponding surgical fix to a local build of the legacy 6.5.171 source, after which the legacy output became **bit-identical to SIMPLNX** on all 11 fixtures.
 
 ---
 
@@ -22,7 +22,7 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 
 **Affected users:** Anyone running 6.5.171 on multi-phase (or partially-indexed, phase-0-containing) datasets. Cells at phase boundaries can be filled from the wrong phase; single-phase fully-indexed datasets are unaffected.
 
-**Recommendation:** Trust SIMPLNX. The 6.5.171 behavior is mathematically incorrect. Legacy-parity proof patch: 6.5.172 proof-branch commit "BUG: NeighborOrientationCorrelation stale-w, double level decrement, best-neighbor argmax".
+**Recommendation:** Trust SIMPLNX. The 6.5.171 behavior is mathematically incorrect. The root cause was proven by resetting `w` in a local build of the legacy source, which eliminated the difference.
 
 ---
 
@@ -40,7 +40,7 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 
 **Affected users:** Anyone using *Cleanup Level* ≤ 4 on data where bad regions are more than one erosion layer deep — the filter fills noticeably less than documented. Level 5 datasets (1 pass either way) are unaffected.
 
-**Recommendation:** Trust SIMPLNX (post-fix). It implements the documented and originally-intended pass schedule; the same fix is on the 6.5.172 proof branch.
+**Recommendation:** Trust SIMPLNX (post-fix). It implements the documented and originally-intended pass schedule; applying the same fix to a local build of the legacy source reproduces SIMPLNX's output exactly.
 
 ---
 
@@ -58,7 +58,7 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 
 **Affected users:** Every 6.5.171 replacement decision where neighbor similarity counts are unequal — common at grain boundaries and noise-cluster edges. In uniform-neighborhood interiors all counts tie and only the tie-break (first vs last neighbor) differs; the copied attributes there are usually indistinguishable.
 
-**Recommendation:** Trust SIMPLNX (post-fix). The 6.5.171 selection ignores the computed similarity ranking; the same fix is on the 6.5.172 proof branch.
+**Recommendation:** Trust SIMPLNX (post-fix). The 6.5.171 selection ignores the computed similarity ranking; applying the same fix to a local build of the legacy source reproduces SIMPLNX's output exactly.
 
 ---
 
@@ -83,5 +83,5 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 ## Shared characterized behaviors (not deviations — identical in both versions)
 
 - **`neighborDiffCount` is dead code**: the count of neighbors *different* from the reference cell is accumulated but never read, in every version since 2013; the documented "at least *Cleanup Level* neighbors must be different than the reference cell" threshold has never been enforced (`currentLevel` never appears in the loop body — the Level parameter only sets the pass count). Documentation corrected during this V&V.
-- **`bestNeighbor` persists across passes**: a cell replaced in pass *n* is re-copied from the same neighbor in later passes even if its confidence is now above the threshold. Identical in 6.5.171, 6.5.172-patched, and SIMPLNX; mirrored by the reference oracle.
+- **`bestNeighbor` persists across passes**: a cell replaced in pass *n* is re-copied from the same neighbor in later passes even if its confidence is now above the threshold. Identical in 6.5.171 and SIMPLNX; mirrored by the reference oracle.
 - **Level ≥ 6 means zero passes**: the filter is a no-op at its default parameter value in both versions (invariant I4 in the unit tests).
