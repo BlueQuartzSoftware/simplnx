@@ -225,6 +225,82 @@ void VerifyAgainstSnapshot(const DataStructure& dataStructure, const CellSnapsho
   }
 }
 } // namespace NOCOracle
+
+namespace SmallIn100Invariants
+{
+/**
+ * Losslessly widen a numeric cell array to float64 for before/after comparison.
+ * Every type in the Small IN100 cell data (bool/uint8/int32/float32) is exactly
+ * representable as float64, so equality of the widened values is equality of the
+ * originals.
+ */
+template <typename T>
+std::vector<float64> ToDoubles(const IDataArray& iDataArray)
+{
+  const auto& storeRef = dynamic_cast<const DataArray<T>&>(iDataArray).getDataStoreRef();
+  std::vector<float64> values(storeRef.getSize());
+  for(usize i = 0; i < storeRef.getSize(); i++)
+  {
+    values[i] = static_cast<float64>(storeRef[i]);
+  }
+  return values;
+}
+
+std::vector<float64> SnapshotArray(const IDataArray& iDataArray)
+{
+  switch(iDataArray.getDataType())
+  {
+  case DataType::boolean:
+    return ToDoubles<bool>(iDataArray);
+  case DataType::int8:
+    return ToDoubles<int8>(iDataArray);
+  case DataType::int16:
+    return ToDoubles<int16>(iDataArray);
+  case DataType::int32:
+    return ToDoubles<int32>(iDataArray);
+  case DataType::uint8:
+    return ToDoubles<uint8>(iDataArray);
+  case DataType::uint16:
+    return ToDoubles<uint16>(iDataArray);
+  case DataType::uint32:
+    return ToDoubles<uint32>(iDataArray);
+  case DataType::float32:
+    return ToDoubles<float32>(iDataArray);
+  case DataType::float64:
+    return ToDoubles<float64>(iDataArray);
+  default: {
+    // int64/uint64 are not exactly representable as float64 above 2^53; none occur in
+    // the Small IN100 cell data. Fail loudly if that ever changes.
+    FAIL("Unsupported cell array type in Small IN100 invariant snapshot");
+    return {};
+  }
+  }
+}
+
+struct CellArraySnapshot
+{
+  DataPath path;
+  usize numComponents = 0;
+  std::vector<float64> values;
+};
+
+std::vector<CellArraySnapshot> SnapshotCellArrays(const DataStructure& dataStructure, const DataPath& cellAMPath)
+{
+  std::vector<CellArraySnapshot> snapshots;
+  const auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(cellAMPath);
+  for(const auto& child : cellDataGroup)
+  {
+    const DataPath arrayPath = cellAMPath.createChildPath(child.second->getName());
+    const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(arrayPath);
+    if(arrayPtr == nullptr)
+    {
+      continue; // NeighborLists / string arrays are not part of the tuple transfer
+    }
+    snapshots.push_back({arrayPath, arrayPtr->getNumberOfComponents(), SnapshotArray(*arrayPtr)});
+  }
+  return snapshots;
+}
+} // namespace SmallIn100Invariants
 } // namespace
 
 /**
@@ -248,15 +324,9 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
 {
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "neighbor_orientation_correlation_v2.tar.gz", "neighbor_orientation_correlation_v2.dream3d");
-
   const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
   auto* filterList = Application::Instance()->getFilterList();
-
-  // Read Exemplar DREAM3D File Filter
-  auto exemplarFilePath = fs::path(fmt::format("{}/neighbor_orientation_correlation_v2.dream3d", unit_test::k_TestFilesDir));
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
@@ -280,6 +350,15 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
   // Bad Data Neighbor Orientation Check Filter
   SmallIn100::ExecuteBadDataNeighborOrientationCheck(dataStructure, *filterList);
 
+  // Snapshot the full cell data before running the filter. There is deliberately NO
+  // golden-output (exemplar) comparison in this test: exact expected outputs are pinned
+  // by the inline oracle fixtures below, whose values are derived independently of the
+  // implementation. This test verifies the Class 4 invariants at production scale.
+  const std::vector<SmallIn100Invariants::CellArraySnapshot> preFilterCellData = SmallIn100Invariants::SnapshotCellArrays(dataStructure, k_CellAttributeMatrix);
+  REQUIRE(!preFilterCellData.empty());
+
+  constexpr float32 k_SmallIn100MinConfidence = 0.2f;
+
   // Neighbor Orientation Correlation Filter
   {
     auto filter = filterList->createFilter(k_NeighborOrientationCorrelationFilterHandle);
@@ -288,7 +367,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
     Arguments args;
     // Create default Parameters for the filter.
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_MinConfidence_Key, std::make_any<float32>(0.2f));
+    args.insertOrAssign(NeighborOrientationCorrelationFilter::k_MinConfidence_Key, std::make_any<float32>(k_SmallIn100MinConfidence));
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_MisorientationTolerance_Key, std::make_any<float32>(5.0f));
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_Level_Key, std::make_any<int32>(2));
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CorrelationArrayPath_Key, std::make_any<DataPath>(k_ConfidenceIndexArrayPath));
@@ -306,88 +385,62 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  // Loop and compare each array from the 'Exemplar Data / CellData' to the 'Data Container / CellData' group.
-  // A missing or type-mismatched exemplar array is a hard failure: the v1 archive's container was named
-  // 'DataContainer', so every path lookup against 'Exemplar Data' returned null and the original
-  // silent 'continue' skipped ALL comparisons — the test passed without comparing a single array.
+  // Class 4 invariant verification against the pre-filter snapshot (archive-free):
+  //   I1  - a cell whose pre-filter Confidence Index was >= MinConfidence is never modified,
+  //         in any cell array.
+  //   I1b - every modified cell was a low-confidence cell.
+  //   Smoke - the filter modified at least one cell (Small IN100 has low-confidence cells).
   {
-    auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(k_CellAttributeMatrix);
-    std::vector<DataPath> selectedCellArrays;
+    const std::vector<SmallIn100Invariants::CellArraySnapshot> postFilterCellData = SmallIn100Invariants::SnapshotCellArrays(dataStructure, k_CellAttributeMatrix);
+    REQUIRE(postFilterCellData.size() == preFilterCellData.size());
 
-    // Create the vector of selected cell DataPaths
-    for(auto& child : cellDataGroup)
+    // Locate the pre-filter Confidence Index values
+    const std::vector<float64>* preCIPtr = nullptr;
+    for(const auto& snapshot : preFilterCellData)
     {
-      selectedCellArrays.push_back(k_CellAttributeMatrix.createChildPath(child.second->getName()));
-    }
-    REQUIRE(!selectedCellArrays.empty());
-
-    for(const auto& cellArrayPath : selectedCellArrays)
-    {
-      const auto& generatedDataArray = dataStructure.getDataRefAs<IDataArray>(cellArrayPath);
-      DataType type = generatedDataArray.getDataType();
-
-      // Now generate the path to the exemplar data set in the exemplar data structure.
-      std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
-      generatedPathVector[0] = k_ExemplarDataContainer;
-      DataPath exemplarDataArrayPath(generatedPathVector);
-
-      CAPTURE(exemplarDataArrayPath.toString());
-      REQUIRE(nullptr != exemplarDataStructure.getDataAs<IDataArray>(exemplarDataArrayPath));
-
-      auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath);
-      REQUIRE(type == exemplarDataArray.getDataType());
-
-      switch(type)
+      if(snapshot.path == k_ConfidenceIndexArrayPath)
       {
-      case DataType::boolean: {
-        UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::int8: {
-        UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::int16: {
-        UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::int32: {
-        UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::int64: {
-        UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::uint8: {
-        UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::uint16: {
-        UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::uint32: {
-        UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::uint64: {
-        UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::float32: {
-        UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      case DataType::float64: {
-        UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
-        break;
-      }
-      default: {
-        throw std::runtime_error("Invalid DataType");
-      }
+        preCIPtr = &snapshot.values;
       }
     }
+    REQUIRE(preCIPtr != nullptr);
+    const std::vector<float64>& preCI = *preCIPtr;
+    const usize numCells = preCI.size();
+
+    // Mark every cell whose tuple changed in ANY cell array
+    std::vector<bool> cellModified(numCells, false);
+    for(usize arrayIdx = 0; arrayIdx < preFilterCellData.size(); arrayIdx++)
+    {
+      const auto& before = preFilterCellData[arrayIdx];
+      const auto& after = postFilterCellData[arrayIdx];
+      REQUIRE(after.path == before.path);
+      REQUIRE(after.values.size() == before.values.size());
+      const usize comps = before.numComponents;
+      for(usize valueIdx = 0; valueIdx < before.values.size(); valueIdx++)
+      {
+        if(before.values[valueIdx] != after.values[valueIdx])
+        {
+          cellModified[valueIdx / comps] = true;
+        }
+      }
+    }
+
+    usize modifiedCount = 0;
+    usize highConfidenceViolations = 0;
+    for(usize cell = 0; cell < numCells; cell++)
+    {
+      if(cellModified[cell])
+      {
+        modifiedCount++;
+        if(preCI[cell] >= static_cast<float64>(k_SmallIn100MinConfidence))
+        {
+          highConfidenceViolations++;
+        }
+      }
+    }
+    INFO(fmt::format("{} of {} cells modified; {} high-confidence cells illegally modified", modifiedCount, numCells, highConfidenceViolations));
+    REQUIRE(highConfidenceViolations == 0);
+    REQUIRE(modifiedCount > 0);
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT

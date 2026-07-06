@@ -16,8 +16,8 @@
 | Algorithm Relationship | **Minor changes** — statement-for-statement port of legacy `NeighborOrientationCorrelation` with two port-time corrections (stale-w fix, double-precision quats) plus two V&V-cycle bug fixes (pass schedule, argmax selection). |
 | Oracle (confirmed)     | **Class 2 (Reference implementation) + Class 1 (Analytical) + Class 4 (Invariant)** — NumPy reference (`reference_noc.py`) with 33 hand-derivation cross-checks; encoded as 11 inline fixtures `Oracle F01`–`F11` + invariant tests in `test/NeighborOrientationCorrelationTest.cpp`, all pass. |
 | Code paths enumerated  | 19 of 20 exercised; the cancel path is not directly tested (requires cancel-signal injection). |
-| Tests today            | 14 ctest cases — 11 oracle/invariant fixtures + 1 production-scale exemplar regression (Small IN100) + 1 preflight error + 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). |
-| Exemplar archive       | `neighbor_orientation_correlation_v2.tar.gz` — regression-pin outputs; **replaces v1**, whose container name mismatch made the exemplar comparison silently skip every array (hollow pass since 2022). |
+| Tests today            | 14 ctest cases — 11 oracle/invariant fixtures + 1 production-scale invariant verification (Small IN100, archive-free snapshot) + 1 preflight error + 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). |
+| Exemplar archive       | **None — fully retired.** All oracle data is inline (programmatic toy fixtures); the Small IN100 test uses archive-free invariant checks. v1 was retired for a hollow comparison (container name mismatch silently skipped every array since 2022); a briefly-created v2 was retired the same day as a circular oracle. |
 | Legacy comparison      | **Three-way (SIMPLNX vs 6.5.171 vs 6.5.172)** on 11 legacy-native fixtures — SIMPLNX (fixed) and 6.5.172 (patched, commit `e00baedb0`) are bit-identical and match the oracle; stock 6.5.171 differs on 10 of 11, fully explained by D1–D3. |
 | Bug flags              | D1 (legacy stale-w), D2 (double level decrement, was also in SIMPLNX — fixed), D3 (last-wins selection, was also in SIMPLNX — fixed). D4 is precision, not a bug. Plus: hollow exemplar comparison in the v1 test (fixed). |
 | V&V phase              | All phases complete. Outstanding: second-engineer oracle review at PR; fresh before/after doc screenshots (existing images predate the fixes). |
@@ -88,13 +88,13 @@ counting + best-neighbor selection), (c) per-pass in-place tuple transfer, repea
 | 17 | (b) | 2D image (`dims[2] == 1`) degenerate-z validity masks | `Oracle F05`, `F07` |
 | 18 | (b+c) | cancel requested → abort before transfer | *Not directly tested. Requires cancel-signal injection; low-value guard.* |
 | 19 | — | SIMPL 6.4/6.5 JSON parameter conversion | `SIMPL Backwards Compatibility` (2 DYNAMIC_SECTIONs) |
-| 20 | — | production-scale regression (Small IN100, 4.4M cells, Level 2) | `Small IN100 Pipeline` |
+| 20 | — | production-scale invariant verification (Small IN100, 4.4M cells, Level 2) | `Small IN100 Pipeline` |
 
 ## Test inventory
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `Small IN100 Pipeline` | kept (modified) | Runs the 6-filter Small IN100 chain + this filter, compares all 8 CellData arrays against `neighbor_orientation_correlation_v2` exemplar. **Modified for V&V:** repointed to the v2 archive and hardened — the v1 comparison silently skipped every array (container name mismatch, hollow pass since 2022); missing/type-mismatched exemplar arrays now fail via `REQUIRE`. |
+| `Small IN100 Pipeline` | kept (modified) | Runs the 6-filter Small IN100 chain + this filter, then verifies the Class 4 invariants at 4.4M cells against an in-memory pre-filter snapshot of all 8 CellData arrays (high-confidence cells untouched everywhere; every modified cell was low-confidence; ≥ 1 cell modified). **Modified for V&V:** the previous exemplar comparison was hollow (v1 archive container name mismatch → silent skip of every array since 2022) and its replacement would have been a circular oracle, so the exemplar dependency was removed entirely. |
 | `Preflight Error - Cell array tuple count mismatch (-580093)` | kept | Verifies the `validateNumberOfTuples` guard and error code. |
 | `SIMPL Backwards Compatibility` | kept | 2 DYNAMIC_SECTIONs (6.5 UUID / 6.4 Filter_Name), 9 argument checks each. |
 | `Oracle F01 - uniform neighbors 3D` | new-for-V&V | Full-tuple snapshot verify of the replacement + I1 on all other cells (6 arrays × 125 cells). |
@@ -113,9 +113,15 @@ All 14 pass at the verified commit in both in-core (`simplnx-Rel`) and OOC (`sim
 
 ## Exemplar archive
 
-- **Archive:** `neighbor_orientation_correlation_v2.tar.gz` (replaces retired `neighbor_orientation_correlation.tar.gz`)
-- **SHA512:** `1596d028af1e885005eda9d07e118fc4a03afb4cf30064095052805ea0c098759e4968ceac2f82ac58eae1c9c92a367eae93b4bcd332cebf1622d06ea968e9e7`
-- **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/neighbor_orientation_correlation_v2.md`
+- **Archive:** None — this filter has no exemplar-archive dependency. All oracle data is
+  built inline by the test fixtures, and the production-scale test verifies invariants
+  against an in-memory pre-filter snapshot.
+- **Retired:** `neighbor_orientation_correlation.tar.gz` (v1 — hollow comparison: container
+  name mismatch caused every array lookup to fail and the silent `continue` to skip all
+  comparisons since 2022) and `neighbor_orientation_correlation_v2.tar.gz` (created and
+  retired 2026-07-06 — a regression pin generated from post-fix SIMPLNX output is a
+  circular oracle, which the V&V policy forbids).
+- **Provenance (retirement record):** `src/Plugins/OrientationAnalysis/vv/provenance/neighbor_orientation_correlation_v2.md`
 
 ## Deviations from DREAM3D 6.5.171
 

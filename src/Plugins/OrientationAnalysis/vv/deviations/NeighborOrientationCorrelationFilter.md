@@ -4,7 +4,7 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-**Comparison summary (2026-07-06):** three-way A/B/C on the 11 legacy-native V&V fixtures (`neighbor_orientation_correlation_v2` archive). Stock 6.5.171 reproduces the diagnostic `legacy` prediction of the reference implementation on all 11; SIMPLNX (post-fix) and the patched 6.5.172 proof branch reproduce the canonical `intended` oracle on all 11 and are **bit-identical to each other**. 10 of 11 fixtures show 6.5.171 vs SIMPLNX differences, fully explained by D1–D3 below; D4 (precision) is latent by fixture design.
+**Comparison summary (2026-07-06):** three-way A/B/C on the 11 legacy-native V&V fixtures (engineer's V&V working archive, `VV_Work/NeighborOrientationCorrelationFilter/`). Stock 6.5.171 reproduces the diagnostic `legacy` prediction of the reference implementation on all 11; SIMPLNX (post-fix) and the patched 6.5.172 proof branch reproduce the canonical `intended` oracle on all 11 and are **bit-identical to each other**. 10 of 11 fixtures show 6.5.171 vs SIMPLNX differences, fully explained by D1–D3 below; D4 (precision) is latent by fixture design.
 
 ---
 
