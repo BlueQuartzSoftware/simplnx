@@ -9,12 +9,6 @@
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
-#ifdef SIMPLNX_ENABLE_MULTICORE
-#define RUN_TASK g->run
-#else
-#define RUN_TASK
-#endif
-
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 using namespace nx::core;
@@ -56,7 +50,10 @@ public:
 private:
   MessageHelper& m_MessageHelper;
   size_t m_TotalPoints = 0;
-  std::vector<int64> m_BestNeighbor;
+  // Reference, not a copy: one task exists per transferred array and bestNeighbor is
+  // 8 bytes per voxel. All tasks finish before the referenced vector leaves scope
+  // (ParallelTaskAlgorithm waits in its destructor inside the level-loop iteration).
+  const std::vector<int64>& m_BestNeighbor;
   std::shared_ptr<IDataArray> m_DataArrayPtr;
 };
 
@@ -76,9 +73,6 @@ NeighborOrientationCorrelation::~NeighborOrientationCorrelation() noexcept = def
 // -----------------------------------------------------------------------------
 Result<> NeighborOrientationCorrelation::operator()()
 {
-  size_t progress = 0;
-  size_t totalProgress = 0;
-
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
   const auto& confidenceIndex = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ConfidenceIndexArrayPath);
@@ -89,7 +83,7 @@ Result<> NeighborOrientationCorrelation::operator()()
 
   float misorientationToleranceR = m_InputValues->MisorientationTolerance * numbers::pi_v<float> / 180.0f;
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
   SizeVec3 udims = imageGeom.getDimensions();
 
   std::array<int64, 3> dims = {
@@ -98,14 +92,10 @@ Result<> NeighborOrientationCorrelation::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  int32 best = 0;
-  int64 neighborPoint2 = 0;
-
   constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  std::vector<int32> neighborDiffCount(totalPoints, 0);
   std::vector<int32> neighborSimCount(6, 0);
   std::vector<int64> bestNeighbor(totalPoints, -1);
   const int32 startLevel = 6;
@@ -143,31 +133,23 @@ Result<> NeighborOrientationCorrelation::operator()()
           }
           const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndexJ];
 
-          uint32 laueClass = crystalStructures[cellPhases[voxelIndex]];
-          ebsdlib::QuatD quat1(quats[voxelIndex * 4], quats[voxelIndex * 4 + 1], quats[voxelIndex * 4 + 2], quats[voxelIndex * 4 + 3]);
-          ebsdlib::QuatD quat2(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
-          ebsdlib::AxisAngleDType axisAngle(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
-          if(cellPhases[voxelIndex] == cellPhases[neighborPoint] && cellPhases[voxelIndex] > 0)
-          {
-            axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
-          }
-          if(axisAngle[3] > misorientationToleranceR)
-          {
-            neighborDiffCount[voxelIndex]++;
-          }
-
+          // Compare every unordered pair (J, K) of valid face neighbors: a pair whose
+          // cells share a phase (> 0) and lie within the misorientation tolerance is
+          // "similar" and credits both neighbors' counts. The misorientation is freshly
+          // initialized to max() per pair so a mixed-phase or phase-0 pair can never
+          // inherit the previous pair's value (legacy 6.5.171 defect, deviation D1).
           for(size_t faceIndexK = faceIndexJ + 1; faceIndexK < VoxelNeighbors<Image3D>::k_FaceNeighborCount; faceIndexK++)
           {
             if(!isValidFaceNeighbor[faceIndexK])
             {
               continue;
             }
-            neighborPoint2 = voxelIndex + neighborVoxelIndexOffsets[faceIndexK];
+            const int64 neighborPoint2 = voxelIndex + neighborVoxelIndexOffsets[faceIndexK];
 
-            laueClass = crystalStructures[cellPhases[neighborPoint2]];
-            quat1 = ebsdlib::QuatD(quats[neighborPoint2 * 4], quats[neighborPoint2 * 4 + 1], quats[neighborPoint2 * 4 + 2], quats[neighborPoint2 * 4 + 3]);
-            quat2 = ebsdlib::QuatD(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
-            axisAngle = ebsdlib::AxisAngleDType(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
+            const uint32 laueClass = crystalStructures[cellPhases[neighborPoint2]];
+            const ebsdlib::QuatD quat1(quats[neighborPoint2 * 4], quats[neighborPoint2 * 4 + 1], quats[neighborPoint2 * 4 + 2], quats[neighborPoint2 * 4 + 3]);
+            const ebsdlib::QuatD quat2(quats[neighborPoint * 4], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
+            ebsdlib::AxisAngleDType axisAngle(0.0, 0.0, 0.0, std::numeric_limits<double>::max());
             if(cellPhases[neighborPoint2] == cellPhases[neighborPoint] && cellPhases[neighborPoint2] > 0)
             {
               axisAngle = orientationOps[laueClass]->calculateMisorientation(quat1, quat2);
@@ -180,15 +162,17 @@ Result<> NeighborOrientationCorrelation::operator()()
           }
         }
 
-        // Loop over the 6 face neighbors of the voxel
+        // Loop over the 6 face neighbors of the voxel and keep the neighbor with the
+        // highest similarity count (first of ties in scan order). 'best' must persist
+        // across the whole loop; resetting it per neighbor degrades the argmax to
+        // "last neighbor with any similar pair" (legacy 6.5.171 defect, deviation D3).
+        int32 best = 0;
         for(const auto& faceIndex : faceNeighborInternalIdx)
         {
           if(!isValidFaceNeighbor[faceIndex])
           {
             continue;
           }
-          best = 0;
-
           const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
           if(neighborSimCount[faceIndex] > best)
@@ -216,8 +200,6 @@ Result<> NeighborOrientationCorrelation::operator()()
     {
       parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(messageHelper, totalPoints, bestNeighbor, dataArrayPtr));
     }
-
-    currentLevel = currentLevel - 1;
   }
 
   return {};
