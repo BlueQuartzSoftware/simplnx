@@ -4,7 +4,7 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`GroupMicroTextureRegionsFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-For the 6.5.172 reference commit (Mike Jackson's custom backport branch that mirrors the SIMPLNX design fixes onto the legacy codebase for root-cause confirmation), see `/Users/mjackson/DREAM3D-Dev/DREAM3D` commit `3d513ea1` (2025-10-23) `BUG: GroupMicrotextureRegions bug fixes, expose as usable filter`.
+Root-cause confirmation used a surgically patched local build of the legacy source that mirrors the SIMPLNX design fixes onto the legacy codebase — a 2025-10-23 fix titled `BUG: GroupMicrotextureRegions bug fixes, expose as usable filter`. Contact the DREAM3D team for the legacy-parity patch.
 
 ---
 
@@ -54,7 +54,7 @@ Legacy 6.5.171 `GroupFeatures::execute()` gates the *use* of `nonContigNeighList
 
 **Root cause:** Bug. In `GroupMicroTextureRegions::operator()` (algorithm class), the `RandomizeFeatureIds` call was a commented-out block annotated `// !!! COMMENT OUT FOR DEMONSTRATION !!!`. The seed-array output was still written, but the randomization step was a no-op. Additionally, the algorithm's RNG (`m_Generator`) was initialized with `std::mt19937::default_seed` rather than `m_InputValues->SeedValue`, so the user-supplied seed never reached the seed-selection loop in `getSeed()`.
 
-**Fix:** Adopted the 6.5.172 design (Mike's backport commit `3d513ea1`, 2025-10-23): added a new user parameter `RandomizeParentIds` (default `false`, so default behaviour is reproducible parent-id assignment). Restored a `randomizeParentIds(totalPoints, totalParentIds)` helper that performs a Fisher-Yates shuffle using `m_Generator` already seeded by `operator()`. Fixed the `operator()` RNG initialization to use `m_InputValues->SeedValue`. `parametersVersion()` bumped from 1 to 2 to flag the new parameter for SIMPL-conversion JSON.
+**Fix:** Adopted the patched-legacy design (the 2025-10-23 fix applied to a local build of the legacy source): added a new user parameter `RandomizeParentIds` (default `false`, so default behaviour is reproducible parent-id assignment). Restored a `randomizeParentIds(totalPoints, totalParentIds)` helper that performs a Fisher-Yates shuffle using `m_Generator` already seeded by `operator()`. Fixed the `operator()` RNG initialization to use `m_InputValues->SeedValue`. `parametersVersion()` bumped from 1 to 2 to flag the new parameter for SIMPL-conversion JSON.
 
 **Affected users:** Anyone migrating a pipeline from 6.5.171 that depended on randomized parent IDs (e.g., feeding the parent IDs straight into a color-mapped visualization where adjacent groups should not share the same color by accident). Post-fix:
 - `RandomizeParentIds=false` (default) → reproducible parent IDs, suitable for diff testing and exemplar comparisons.
@@ -95,7 +95,7 @@ if(phase1 == phase2 && (phase1 == Ebsd::CrystalStructure::Hexagonal_High))   // 
 
 When `UseRunningAverage=true`, `phase1` stays at 0; the subsequent `phase1 == Hexagonal_High` check fails for every candidate; no grouping ever occurs. Bug introduced upstream on 2014-01-30 by J. Tucker (commit `7e49e52f362005e44ea9bf21b7a717277b2af04e` in the original DREAM3D repository) and never caught.
 
-**Fix in SIMPLNX:** The 2024-01-08 initial port (`ca6d0aa`) corrected the bug by assigning `phase1` outside the conditional, before the Hex_High check. The same fix was *deliberately back-ported to legacy* by the 6.5.172 reference commit `3d513ea1` (2025-10-23) — confirmed by inspecting the commit's parent, which still has the buggy `phase1` declaration. The 6.5.172 commit renames the variable to `phase1Xtal`, hoists the assignment out of the `if(!m_UseRunningAverage)` block, and ships with a developer comment that explicitly names the J. Tucker 2014-01-30 introduction as the bug source. The 6.5.171 release line was never patched.
+**Fix in SIMPLNX:** The 2024-01-08 initial port (`ca6d0aa`) corrected the bug by assigning `phase1` outside the conditional, before the Hex_High check. The same fix was *deliberately applied to a local build of the legacy source* (2025-10-23) — confirmed by inspecting the pre-fix legacy source, which still has the buggy `phase1` declaration. The legacy-side fix renames the variable to `phase1Xtal`, hoists the assignment out of the `if(!m_UseRunningAverage)` block, and ships with a developer comment that explicitly names the J. Tucker 2014-01-30 introduction as the bug source. The 6.5.171 release line was never patched.
 
 **Affected users:** Anyone running 6.5.171 with `UseRunningAverage=true` saw degenerate output (one group per feature) without warning. Users migrating that workflow to SIMPLNX will see *real* groupings for the first time, and downstream filters that consumed the degenerate output may behave differently.
 

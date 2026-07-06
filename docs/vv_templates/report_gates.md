@@ -24,7 +24,7 @@ The dashboard a reviewer reads first. Lets a reviewer decide in 30 seconds wheth
 - [ ] **Code paths enumerated** row states `N of M exercised` — agrees with the long-form `## Code path coverage` count
 - [ ] **Tests today** row gives the test-case count and a one-phrase shape of coverage (parameter sweep, positive/negative/conversion, etc.)
 - [ ] **Exemplar archive** row names the archive and flags retired/replaced archives (cross-reference the long-form `## Exemplar archive` SHA512)
-- [ ] **Legacy comparison** row is `Run` / `Not run` / `Three-way (SIMPLNX vs 6.5.171 vs 6.5.172)` plus a one-sentence headline. "Not run" must include a brief reason ("design-by-inspection — pure port", "legacy binary unavailable", "deferred to Phase 9")
+- [ ] **Legacy comparison** row is `Run` / `Not run` plus a one-sentence headline. The comparison is always framed as SIMPLNX vs DREAM3D 6.5.171. When a deviation's root cause was proven by surgically patching a local build of the legacy source, describe it exactly that way — the report must NOT name any other legacy version number (the patched build is internal proof tooling, not a shipping comparison target). "Not run" must include a brief reason ("design-by-inspection — pure port", "legacy binary unavailable", "deferred to Phase 9")
 - [ ] **Bug flags** row is `None` or a list of deviation IDs flagged as suspected bugs (not all deviations are bugs; only those classified as bug under the root-cause taxonomy)
 - [ ] **V&V phase** row lists which phases of the workflow are complete and what is outstanding — drives the Status field in the header table
 
