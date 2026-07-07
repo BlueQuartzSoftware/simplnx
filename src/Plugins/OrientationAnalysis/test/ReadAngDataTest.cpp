@@ -199,11 +199,11 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle", "
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath);
   {
-    const SizeVec3 dims = imageGeom.getDimensions();       // NCOLS_EVEN=3, NROWS=2, one slice
+    const SizeVec3 dims = imageGeom.getDimensions(); // NCOLS_EVEN=3, NROWS=2, one slice
     REQUIRE(dims == SizeVec3(3, 2, 1));
-    const FloatVec3 spacing = imageGeom.getSpacing();       // XSTEP=0.25, YSTEP=0.5, z hard-coded 1.0
+    const FloatVec3 spacing = imageGeom.getSpacing(); // XSTEP=0.25, YSTEP=0.5, z hard-coded 1.0
     REQUIRE(spacing == FloatVec3(0.25F, 0.5F, 1.0F));
-    const FloatVec3 origin = imageGeom.getOrigin();         // hard-coded (0,0,0)
+    const FloatVec3 origin = imageGeom.getOrigin(); // hard-coded (0,0,0)
     REQUIRE(origin == FloatVec3(0.0F, 0.0F, 0.0F));
     REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
   }

@@ -7,8 +7,8 @@
 | SIMPLNX Human Name | Read EDAX EBSD Data (.ang) |
 | DREAM3D 6.5.171 equivalent | `ReadAngData` (SIMPL UUID `b8e128a8-c2a3-5e6c-a7ad-e4fb864e5d40`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/ReadAngData.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW — all V&V phases complete; verified-correct against independent oracle; legacy comparison bit-identical on numerics. Pending: sign-off. |
-| Sign-off | *Michael Jackson <mike.jackson@bluequartz.net> — in progress, 2026-07-07* |
+| Status | COMPLETE — all V&V phases complete; verified-correct against independent oracle; legacy comparison bit-identical on numerics. |
+| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-07 |
 
 ## At a glance
 

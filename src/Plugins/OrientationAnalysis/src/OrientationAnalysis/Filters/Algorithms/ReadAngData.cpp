@@ -92,8 +92,8 @@ Result<> ReadAngData::loadMaterialInfo(ebsdlib::AngReader* reader) const
     // This guard only trips if the file changed between preflight and execute.
     if(phaseID < 1 || static_cast<usize>(phaseID) >= numTuples)
     {
-      return MakeErrorResult(-19502, fmt::format("Phase index {} from the .ang file falls outside the Ensemble Attribute Matrix range [1, {}]. The input file may have changed since preflight.",
-                                                 phaseID, numTuples - 1));
+      return MakeErrorResult(
+          -19502, fmt::format("Phase index {} from the .ang file falls outside the Ensemble Attribute Matrix range [1, {}]. The input file may have changed since preflight.", phaseID, numTuples - 1));
     }
     crystalStructures[phaseID] = phase->determineOrientationOpsIndex();
     // EbsdLib's AngPhase::parseMaterialName() rejoins the name tokens with a trailing
