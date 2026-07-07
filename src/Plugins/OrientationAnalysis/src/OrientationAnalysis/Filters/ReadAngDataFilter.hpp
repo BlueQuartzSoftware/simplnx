@@ -5,13 +5,8 @@
 #include "simplnx/Filter/FilterTraits.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-#include <memory>
-
 namespace nx::core
 {
-// forward declare the private implementation
-class ReadAngDataPrivate;
-
 /**
  * @class ReadAngDataFilter
  * @brief This filter will read a single .ang file into a new Image Geometry, allowing the immediate use of Filters on the data instead of having to generate the intermediate
@@ -120,9 +115,6 @@ protected:
    */
   Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
                        const ExecutionContext& executionContext) const override;
-
-private:
-  std::shared_ptr<ReadAngDataPrivate> m_AngDataPrivate;
 };
 } // namespace nx::core
 

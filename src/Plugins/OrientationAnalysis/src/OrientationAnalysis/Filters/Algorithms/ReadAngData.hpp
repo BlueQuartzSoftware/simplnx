@@ -2,10 +2,8 @@
 
 #include "OrientationAnalysis/OrientationAnalysis_export.hpp"
 
-#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
-#include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
 #include <EbsdLib/IO/TSL/AngReader.h>
@@ -19,35 +17,6 @@ struct ORIENTATIONANALYSIS_EXPORT ReadAngDataInputValues
   DataPath DataContainerName;
   std::string CellAttributeMatrixName;
   std::string CellEnsembleAttributeMatrixName;
-};
-
-struct ORIENTATIONANALYSIS_EXPORT Ang_Private_Data
-{
-  std::array<size_t, 3> dims = {0, 0, 0};
-  std::array<float, 3> resolution = {0.0F, 0.0F, 0.0F};
-  std::array<float, 3> origin = {0.0F, 0.0F, 0.0F};
-  std::vector<ebsdlib::AngPhase::Pointer> phases;
-  int32_t units = 0;
-};
-
-/**
- * @brief The ReadAngDataPrivate class is a private implementation of the ReadAngData class
- */
-class ORIENTATIONANALYSIS_EXPORT ReadAngDataPrivate
-{
-public:
-  ReadAngDataPrivate() = default;
-  ~ReadAngDataPrivate() = default;
-
-  ReadAngDataPrivate(const ReadAngDataPrivate&) = delete;            // Copy Constructor Not Implemented
-  ReadAngDataPrivate(ReadAngDataPrivate&&) = delete;                 // Move Constructor Not Implemented
-  ReadAngDataPrivate& operator=(const ReadAngDataPrivate&) = delete; // Copy Assignment Not Implemented
-  ReadAngDataPrivate& operator=(ReadAngDataPrivate&&) = delete;      // Move Assignment Not Implemented
-
-  Ang_Private_Data m_Data;
-
-  std::string m_InputFile_Cache;
-  fs::file_time_type m_TimeStamp_Cache;
 };
 
 /**
@@ -75,15 +44,19 @@ private:
   const ReadAngDataInputValues* m_InputValues = nullptr;
 
   /**
-   * @brief
-   * @param reader
-   * @return Error code.
+   * @brief Populates the Ensemble Attribute Matrix arrays (CrystalStructures, MaterialName,
+   * LatticeConstants) from the phase sections parsed out of the .ang header. Every slot is
+   * first initialized to the "Invalid Phase" defaults, then overwritten per parsed phase.
+   * @param reader The AngReader that has already successfully read the input file.
+   * @return Error result if no phases were parsed or a phase index falls outside the ensemble arrays.
    */
-  std::pair<int32, std::string> loadMaterialInfo(ebsdlib::AngReader* reader) const;
+  Result<> loadMaterialInfo(ebsdlib::AngReader* reader) const;
 
   /**
-   * @brief
-   * @param reader
+   * @brief Copies the per-point data columns from the AngReader into the Cell Attribute Matrix
+   * arrays: remaps phase values < 1 to 1, interleaves phi1/PHI/phi2 into the 3-component
+   * EulerAngles array, and copies the remaining columns verbatim.
+   * @param reader The AngReader that has already successfully read the input file.
    */
   void copyRawEbsdData(ebsdlib::AngReader* reader) const;
 };
