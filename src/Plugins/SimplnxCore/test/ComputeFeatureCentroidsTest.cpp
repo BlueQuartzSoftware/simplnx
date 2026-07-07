@@ -2,9 +2,11 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
-#include "simplnx/Parameters/Dream3dImportParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Pipeline/PipelineFilter.hpp"
@@ -12,66 +14,204 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <filesystem>
-#include <fstream>
+#include <vector>
 
 namespace fs = std::filesystem;
 using namespace nx::core;
 using namespace nx::core::UnitTest;
-using namespace nx::core::Constants;
 
-TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
+// =============================================================================
+// V&V Class 1 (Analytical) + Class 4 (Invariant) oracle support — added 2026-07-07.
+//
+// The centroid of a feature is the arithmetic mean of the voxel-center coordinates
+// (voxel-center = origin + (index + 0.5) * spacing) of every cell belonging to that
+// feature. This is a closed-form Class 1 oracle: expected values are hand-derivable on
+// a toy grid, independently of any DREAM3D implementation. These inline fixtures replace
+// the retired consistency-with-self exemplar test (Centroids NX vs a sibling Centroids
+// array in 6_6_stats_test_v2.dream3d), which was a circular oracle.
+//
+// Reference: src/Plugins/SimplnxCore/vv/ComputeFeatureCentroidsFilter.md
+// =============================================================================
+
+namespace CentroidToy
 {
+const std::string k_GeomName = "Image";
+const std::string k_CellAMName = "CellData";
+const std::string k_FeatureAMName = "FeatureData";
+const std::string k_FeatureIdsName = "FeatureIds";
+const std::string k_CentroidsName = "Centroids";
+
+struct Scaffold
+{
+  DataStructure ds;
+  DataPath geomPath;
+  DataPath featureIdsPath;
+  DataPath featureAMPath;
+  DataPath centroidsPath;
+};
+
+// Build an ImageGeom + Cell Data AM (with FeatureIds) + empty Feature Data AM sized to numFeatures.
+// featureIds are supplied in row-major (z, y, x) order.
+inline Scaffold Build(usize dimX, usize dimY, usize dimZ, std::array<float32, 3> spacing, std::array<float32, 3> origin, usize numFeatures, const std::vector<int32>& featureIdValues)
+{
+  Scaffold s;
+  auto* imageGeom = ImageGeom::Create(s.ds, k_GeomName);
+  imageGeom->setDimensions({dimX, dimY, dimZ});
+  imageGeom->setSpacing({spacing[0], spacing[1], spacing[2]});
+  imageGeom->setOrigin({origin[0], origin[1], origin[2]});
+
+  const ShapeType cellTupleShape{dimZ, dimY, dimX};
+  auto* cellAM = AttributeMatrix::Create(s.ds, k_CellAMName, cellTupleShape, imageGeom->getId());
+  imageGeom->setCellData(*cellAM);
+
+  auto* featureIds = CreateTestDataArray<int32>(s.ds, k_FeatureIdsName, cellTupleShape, {1}, cellAM->getId());
+  REQUIRE(featureIdValues.size() == dimX * dimY * dimZ);
+  for(usize i = 0; i < featureIdValues.size(); ++i)
+  {
+    (*featureIds)[i] = featureIdValues[i];
+  }
+
+  AttributeMatrix::Create(s.ds, k_FeatureAMName, ShapeType{numFeatures}, imageGeom->getId());
+
+  s.geomPath = DataPath({k_GeomName});
+  s.featureIdsPath = s.geomPath.createChildPath(k_CellAMName).createChildPath(k_FeatureIdsName);
+  s.featureAMPath = s.geomPath.createChildPath(k_FeatureAMName);
+  s.centroidsPath = s.featureAMPath.createChildPath(k_CentroidsName);
+  return s;
+}
+
+// Run the filter and return the flat [numFeatures * 3] Centroids values.
+inline std::vector<float32> Run(Scaffold& s, bool isPeriodic)
+{
+  ComputeFeatureCentroidsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(s.geomPath));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(s.featureIdsPath));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(s.featureAMPath));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsName));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_IsPeriodic_Key, std::make_any<bool>(isPeriodic));
+
+  auto preflightResult = filter.preflight(s.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  auto executeResult = filter.execute(s.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  REQUIRE_NOTHROW(s.ds.getDataRefAs<Float32Array>(s.centroidsPath));
+  const auto& centroids = s.ds.getDataRefAs<Float32Array>(s.centroidsPath);
+  std::vector<float32> out(centroids.getSize());
+  for(usize i = 0; i < centroids.getSize(); ++i)
+  {
+    out[i] = centroids[i];
+  }
+  return out;
+}
+
+inline void RequireCentroid(const std::vector<float32>& c, usize featureId, float32 x, float32 y, float32 z, float32 margin = 1.0e-4f)
+{
+  REQUIRE(c[featureId * 3 + 0] == Approx(x).margin(margin));
+  REQUIRE(c[featureId * 3 + 1] == Approx(y).margin(margin));
+  REQUIRE(c[featureId * 3 + 2] == Approx(z).margin(margin));
+}
+} // namespace CentroidToy
+
+TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1 - Analytical Centroids", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
+{
+  using namespace CentroidToy;
   UnitTest::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
-
-  // Read the Small IN100 Data set
-  auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = LoadDataStructure(baseDataFilePath);
-
-  const std::string k_CentroidsNX("Centroids NX");
-
-  // Instantiate ComputeFeatureCentroidsFilter
+  SECTION("Fixture A - single multi-cell feature + empty background")
   {
-    ComputeFeatureCentroidsFilter filter;
-    Arguments args;
-
-    const DataPath k_FeatureIdsArrayPath2({k_DataContainer, k_CellData, k_FeatureIds});
-    const DataPath k_CentroidsNXArrayPath({k_DataContainer, k_CellFeatureData, k_CentroidsNX});
-    const DataPath k_FeatureAttributeMatrix({k_DataContainer, k_CellFeatureData});
-    const DataPath k_SelectedImageGeometry({k_DataContainer});
-
-    // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath2));
-    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsNX));
-    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAttributeMatrix));
-    args.insertOrAssign(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_SelectedImageGeometry));
-
-    // Preflight the filter and check result
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-
-    // Execute the filter and check the result
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+    // 3x1x1, spacing 1, origin 0; FeatureIds [1,1,1]; 2 features (0 empty, 1 present)
+    auto s = Build(3, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 2, {1, 1, 1});
+    auto c = Run(s, false);
+    RequireCentroid(c, 0, 0.0f, 0.0f, 0.0f); // count==0 -> stays (0,0,0)
+    RequireCentroid(c, 1, 1.5f, 0.5f, 0.5f); // x=(0.5+1.5+2.5)/3
   }
 
+  SECTION("Fixture B - multi-feature 2D (averaging, single-cell, empty id)")
   {
-    const DataPath k_CentroidsArrayPath({k_DataContainer, k_CellFeatureData, k_Centroids});
-    const DataPath k_CentroidsNXArrayPath({k_DataContainer, k_CellFeatureData, k_CentroidsNX});
-
-    const auto& k_CentroidsArray = dataStructure.getDataRefAs<IDataArray>(k_CentroidsArrayPath);
-    const auto& k_CentroidsNXArray = dataStructure.getDataRefAs<IDataArray>(k_CentroidsNXArrayPath);
-
-    CompareDataArrays<float>(k_CentroidsArray, k_CentroidsNXArray);
+    // 4x2x1; row y0 [1,1,2,2], row y1 [1,3,2,2]; 4 features
+    auto s = Build(4, 2, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 4, {1, 1, 2, 2, 1, 3, 2, 2});
+    auto c = Run(s, false);
+    RequireCentroid(c, 0, 0.0f, 0.0f, 0.0f);               // empty
+    RequireCentroid(c, 1, 5.0f / 6.0f, 5.0f / 6.0f, 0.5f); // (0.8333.., 0.8333.., 0.5)
+    RequireCentroid(c, 2, 3.0f, 1.0f, 0.5f);
+    RequireCentroid(c, 3, 1.5f, 1.5f, 0.5f); // single cell (1,1)
   }
 
-#ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_feature_centroids.dream3d", unit_test::k_BinaryTestOutputDir)));
-#endif
+  SECTION("Fixture C - 3D volume (z-stride correctness)")
+  {
+    // 2x2x2; z0 plane all fid1, z1 plane all fid2; 3 features
+    auto s = Build(2, 2, 2, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 3, {1, 1, 1, 1, 2, 2, 2, 2});
+    auto c = Run(s, false);
+    RequireCentroid(c, 0, 0.0f, 0.0f, 0.0f);
+    RequireCentroid(c, 1, 1.0f, 1.0f, 0.5f); // z index 0
+    RequireCentroid(c, 2, 1.0f, 1.0f, 1.5f); // z index 1
+  }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  UnitTest::CheckArraysInheritTupleDims(Build(3, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 2, {1, 1, 1}).ds);
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boundary", "[SimplnxCore][ComputeFeatureCentroidsFilter][Periodic]")
+{
+  using namespace CentroidToy;
+  UnitTest::LoadPlugins();
+
+  SECTION("Fixture D - periodic wrap, unit spacing")
+  {
+    // 4x1x1; FeatureIds [1,2,1,1]; feature 1 spans x=0 and x=3 (full extent), feature 2 (x=1) does not.
+    // feature 1 cells x=0,2,3 -> centers 0.5,2.5,3.5 -> mean 6.5/3 = 2.16667
+    auto sNP = Build(4, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 3, {1, 2, 1, 1});
+    auto nonPeriodic = Run(sNP, false);
+    RequireCentroid(nonPeriodic, 1, 6.5f / 3.0f, 0.5f, 0.5f);
+    RequireCentroid(nonPeriodic, 2, 1.5f, 0.5f, 0.5f); // single cell x=1
+
+    auto sP = Build(4, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 3, {1, 2, 1, 1});
+    auto periodic = Run(sP, true);
+    // Class 1 (given the DREAM3D periodic-shift model): spanning feature 1 gets +(dim-1)/2 = +1.5.
+    RequireCentroid(periodic, 1, 6.5f / 3.0f + 1.5f, 0.5f, 0.5f);
+    // Class 4 invariant: the non-spanning feature 2 must be unchanged by the periodic pass.
+    RequireCentroid(periodic, 2, 1.5f, 0.5f, 0.5f);
+  }
+
+  SECTION("Fixture E - periodic wrap, NON-unit spacing (regression pin for the spacing fix)")
+  {
+    // 4x1x1, spacing (2,1,1), origin (10,0,0); FeatureIds [1,2,2,1]
+    // x-centers: idx0 -> 11.0, idx3 -> 17.0; non-periodic centroid.x = 14.0
+    auto sNP = Build(4, 1, 1, {2.0f, 1.0f, 1.0f}, {10.0f, 0.0f, 0.0f}, 3, {1, 2, 2, 1});
+    auto nonPeriodic = Run(sNP, false);
+    RequireCentroid(nonPeriodic, 1, 14.0f, 0.5f, 0.5f); // unambiguous analytical value
+
+    auto sP = Build(4, 1, 1, {2.0f, 1.0f, 1.0f}, {10.0f, 0.0f, 0.0f}, 3, {1, 2, 2, 1});
+    auto periodic = Run(sP, true);
+    // The periodic offset must scale with spacing: (dim-1)*spacing_x/2 = 3*2/2 = 3.0 -> 14.0 + 3.0 = 17.0.
+    // Before the fix this returned 15.5 (offset 1.5 in cell units, ignoring spacing). Regression pin for
+    // the AdjustCentroidsForPeriodicFaces spacing fix. See vv/ComputeFeatureCentroidsFilter.md Phase 6.
+    RequireCentroid(periodic, 1, 17.0f, 0.5f, 0.5f);
+  }
+}
+
+TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Error - FeatureId exceeds Feature AM", "[SimplnxCore][ComputeFeatureCentroidsFilter]")
+{
+  using namespace CentroidToy;
+  UnitTest::LoadPlugins();
+
+  // 2x1x1 with FeatureIds {0, 5} but only 2 feature tuples -> id 5 >= numFeatures -> error -5351.
+  auto s = Build(2, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 2, {0, 5});
+
+  ComputeFeatureCentroidsFilter filter;
+  Arguments args;
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(s.geomPath));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(s.featureIdsPath));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_FeatureAttributeMatrixPath_Key, std::make_any<DataPath>(s.featureAMPath));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_CentroidsArrayName_Key, std::make_any<std::string>(k_CentroidsName));
+  args.insertOrAssign(ComputeFeatureCentroidsFilter::k_IsPeriodic_Key, std::make_any<bool>(false));
+
+  auto executeResult = filter.execute(s.ds, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeatureCentroidsFilter][BackwardsCompatibility]")

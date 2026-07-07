@@ -13,13 +13,17 @@ using namespace nx::core;
 
 namespace
 {
+// Computes per-feature centroids as the mean of the voxel-center coordinates of every cell in the
+// feature, using Kahan compensated summation to limit float round-off on large features. m_Sum holds
+// the running per-component sum; m_Compensation holds the Kahan compensation (the low-order bits lost
+// on the previous add) — it is NOT a center. The centroid is produced later as m_Sum / m_Count.
 class ComputeFeatureCentroidsImpl1
 {
 public:
-  ComputeFeatureCentroidsImpl1(Float64AbstractDataStore& sum, Float64AbstractDataStore& center, UInt64AbstractDataStore& count, std::array<size_t, 3> dims, const nx::core::ImageGeom& imageGeom,
+  ComputeFeatureCentroidsImpl1(Float64AbstractDataStore& sum, Float64AbstractDataStore& compensation, UInt64AbstractDataStore& count, std::array<size_t, 3> dims, const nx::core::ImageGeom& imageGeom,
                                const Int32AbstractDataStore& featureIds, UInt64AbstractDataStore& rangeXStoreRef, UInt64AbstractDataStore& rangeYStoreRef, UInt64AbstractDataStore& rangeZStoreRef)
   : m_Sum(sum)
-  , m_Center(center)
+  , m_Compensation(compensation)
   , m_Count(count)
   , m_Dims(dims)
   , m_ImageGeom(imageGeom)
@@ -60,25 +64,25 @@ public:
 
           // Kahan Sum for X Coord
           size_t featureId_idx = featureId * 3ULL;
-          auto componentValue = static_cast<double>(voxel_center[0] - m_Center[featureId_idx]);
+          auto componentValue = static_cast<double>(voxel_center[0] - m_Compensation[featureId_idx]);
           double temp = m_Sum[featureId_idx] + componentValue;
-          m_Center[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
+          m_Compensation[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
           m_Sum[featureId_idx] = temp;
           m_Count[featureId_idx].inc();
 
           // Kahan Sum for Y Coord
           featureId_idx = featureId * 3ULL + 1;
-          componentValue = static_cast<double>(voxel_center[1] - m_Center[featureId_idx]);
+          componentValue = static_cast<double>(voxel_center[1] - m_Compensation[featureId_idx]);
           temp = m_Sum[featureId_idx] + componentValue;
-          m_Center[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
+          m_Compensation[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
           m_Sum[featureId_idx] = temp;
           m_Count[featureId_idx].inc();
 
           // Kahan Sum for Z Coord
           featureId_idx = featureId * 3ULL + 2;
-          componentValue = static_cast<double>(voxel_center[2] - m_Center[featureId_idx]);
+          componentValue = static_cast<double>(voxel_center[2] - m_Compensation[featureId_idx]);
           temp = m_Sum[featureId_idx] + componentValue;
-          m_Center[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
+          m_Compensation[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
           m_Sum[featureId_idx] = temp;
           m_Count[featureId_idx].inc();
         }
@@ -93,7 +97,7 @@ public:
 
 private:
   Float64AbstractDataStore& m_Sum;
-  Float64AbstractDataStore& m_Center;
+  Float64AbstractDataStore& m_Compensation;
   UInt64AbstractDataStore& m_Count;
   std::array<size_t, 3> m_Dims = {0, 0, 0};
   const nx::core::ImageGeom& m_ImageGeom;
@@ -154,15 +158,15 @@ Result<> ComputeFeatureCentroids::operator()()
   ShapeType componentShape{3};
 
   auto sumPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
-  auto centerPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto compensationPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
   auto countPtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
 
   Float64AbstractDataStore& sum = *sumPtr.get();
-  Float64AbstractDataStore& center = *centerPtr.get();
+  Float64AbstractDataStore& compensation = *compensationPtr.get();
   UInt64AbstractDataStore& count = *countPtr.get();
 
   sum.fill(0.0);
-  center.fill(0.0);
+  compensation.fill(0.0);
   count.fill(0.0);
 
   // Create data stores to check if feature IDs are periodic
@@ -183,25 +187,27 @@ Result<> ComputeFeatureCentroids::operator()()
   // by the total number of cores/threads and do a ParallelTask Algorithm instead
   // we might see some speedup.
   dataAlg.setParallelizationEnabled(false);
-  dataAlg.execute(ComputeFeatureCentroidsImpl1(sum, center, count, {xPoints, yPoints, zPoints}, imageGeom, featureIdsStoreRef, rangeXStoreRef, rangeYStoreRef, rangeZStoreRef));
+  dataAlg.execute(ComputeFeatureCentroidsImpl1(sum, compensation, count, {xPoints, yPoints, zPoints}, imageGeom, featureIdsStoreRef, rangeXStoreRef, rangeYStoreRef, rangeZStoreRef));
 
   // Here we are only looping over the number of features so let this just go in serial mode.
+  // The count store carries the same voxel count in all three components of a feature; a feature with
+  // zero cells keeps its default (0,0,0) centroid.
   for(size_t featureId = 0; featureId < totalFeatures; featureId++)
   {
     auto featureId_idx = static_cast<size_t>(featureId * 3);
-    if(static_cast<float>(count[featureId_idx]) > 0.0f)
+    if(count[featureId_idx] > 0)
     {
       centroids[featureId_idx] = static_cast<float>(sum[featureId_idx] / static_cast<double>(count[featureId_idx]));
     }
 
     featureId_idx++; // featureId * 3 + 1
-    if(static_cast<float>(count[featureId_idx]) > 0.0f)
+    if(count[featureId_idx] > 0)
     {
       centroids[featureId_idx] = static_cast<float>(sum[featureId_idx] / static_cast<double>(count[featureId_idx]));
     }
 
     featureId_idx++; // featureId * 3 + 2
-    if(static_cast<float>(count[featureId_idx]) > 0.0f)
+    if(count[featureId_idx] > 0)
     {
       centroids[featureId_idx] = static_cast<float>(sum[featureId_idx] / static_cast<double>(count[featureId_idx]));
     }
