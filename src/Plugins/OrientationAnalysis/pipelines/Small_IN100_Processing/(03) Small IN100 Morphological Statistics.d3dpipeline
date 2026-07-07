@@ -224,10 +224,6 @@
           "value": "DataContainer/Cell Feature Data/EquivalentDiameters",
           "version": 1
         },
-        "feature_phases_array_path": {
-          "value": "DataContainer/Cell Feature Data/Phases",
-          "version": 1
-        },
         "input_image_geometry_path": {
           "value": "DataContainer",
           "version": 1
@@ -244,7 +240,15 @@
           "value": "Neighborhoods",
           "version": 1
         },
-        "parameters_version": 1
+        "search_radius": {
+          "value": 1.0,
+          "version": 1
+        },
+        "search_radius_type_index": {
+          "value": 0,
+          "version": 1
+        },
+        "parameters_version": 2
       },
       "comments": "",
       "filter": {

@@ -24,7 +24,7 @@ public:
   ComputeNeighborhoodsFilter& operator=(ComputeNeighborhoodsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SearchRadiusType_Key = "search_radius_type";
+  static constexpr StringLiteral k_SearchRadiusType_Key = "search_radius_type_index";
   static constexpr StringLiteral k_MultiplesOfAverage_Key = "multiples_of_average";
   static constexpr StringLiteral k_SearchRadius_Key = "search_radius";
   static constexpr StringLiteral k_EquivalentDiametersArrayPath_Key = "equivalent_diameters_array_path";
