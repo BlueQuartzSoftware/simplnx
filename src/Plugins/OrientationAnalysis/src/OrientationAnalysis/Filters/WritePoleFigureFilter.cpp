@@ -171,7 +171,7 @@ Parameters WritePoleFigureFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType WritePoleFigureFilter::parametersVersion() const
 {
-  return 2;
+  return 3;
 }
 
 //------------------------------------------------------------------------------
