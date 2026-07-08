@@ -92,12 +92,11 @@ Parameters WritePoleFigureFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<StringParameter>(k_Title_Key, "Figure Title", "The title to place at the top of the Pole Figure", "Figure Title"));
   params.insert(std::make_unique<Int32Parameter>(k_ImageSize_Key, "Image Size (Square Pixels)", "The number of pixels that define the height and width of **each** output pole figure", 512));
-  // params.insertLinkableParameter(std::make_unique<BoolParameter>(k_FlipFinalImage_Key, "Y Axis Points Up", "", true));
 
   params.insert(std::make_unique<ChoicesParameter>(k_ImageLayout_Key, "Image Layout", "How to layout the 3 pole figures. 0=Horizontal, 1=Vertical, 2=Square", 0,
                                                    ChoicesParameter::Choices{"Horizontal", "Vertical", "Square"}));
 
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "The type of pole figure generated. 0=Color, 1=Discrete", 1,
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GenerationAlgorithm_Key, "Pole Figure Type", "The type of pole figure generated. 0=Color, 1=Discrete", 0,
                                                                     ChoicesParameter::Choices{"Color Intensity", "Discrete"}));
   params.insert(std::make_unique<Int32Parameter>(k_LambertSize_Key, "Lambert Image Size (Pixels)", "The height/width of the internal Lambert Square that is used for interpolation", 64));
   params.insert(std::make_unique<Int32Parameter>(k_NumColors_Key, "Number of Colors", "The number of colors to use for the Color Intensity pole figures", 32));
@@ -208,6 +207,20 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
 
   PreflightResult preflightResult;
 
+  if(pImageSizeValue <= 0)
+  {
+    return {MakeErrorResult<OutputActions>(-680002, fmt::format("'Image Size (Square Pixels)' must be greater than zero. Value given: {}", pImageSizeValue)), {}};
+  }
+  // The marker radius is only active (and only used) for the Discrete pole figure type.
+  if(filterArgs.value<ChoicesParameter::ValueType>(k_GenerationAlgorithm_Key) == 1ULL)
+  {
+    const auto pDiscreteMarkerRadiusValue = filterArgs.value<int32>(k_DiscreteMarkerRadius_Key);
+    if(pDiscreteMarkerRadiusValue < 1)
+    {
+      return {MakeErrorResult<OutputActions>(-680003, fmt::format("'Discrete Marker Radius (Pixels)' must be at least 1. Value given: {}", pDiscreteMarkerRadiusValue)), {}};
+    }
+  }
+
   const auto* materialNamePtr = dataStructure.getDataAs<StringArray>(pMaterialNameArrayPathValue);
   if(nullptr == materialNamePtr)
   {
@@ -257,7 +270,7 @@ IFilter::PreflightResult WritePoleFigureFilter::preflightImpl(const DataStructur
   std::vector<PreflightValue> preflightUpdatedValues;
   if(pWriteImageToDisk)
   {
-    preflightUpdatedValues.push_back({"Example Output File.", fmt::format("{}/{}Phase_1.tiff", pOutputPathValue.string(), pImagePrefixValue)});
+    preflightUpdatedValues.push_back({"Example Output File.", fmt::format("{}/{}Phase_1.png", pOutputPathValue.string(), pImagePrefixValue)});
   }
 
   if(pSaveIntensityPlot)
@@ -316,7 +329,9 @@ Result<> WritePoleFigureFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.SaveAsImageGeometry = filterArgs.value<bool>(k_SaveAsImageGeometry_Key);
   inputValues.WriteImageToDisk = filterArgs.value<bool>(k_WriteImageToDisk);
   inputValues.OutputImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.FlipFinalImage = true; // filterArgs.value<bool>(k_FlipFinalImage_Key);
+  // Always render with the +Y axis pointing up, matching the legacy behavior where flipAndMirror was
+  // unconditionally applied. Not user-selectable.
+  inputValues.FlipFinalImage = true;
 
   inputValues.SaveIntensityData = filterArgs.value<bool>(k_SaveIntensityDataArrays);
   inputValues.NormalizeToMRD = filterArgs.value<bool>(k_NormalizeToMRD);
@@ -348,7 +363,6 @@ constexpr StringLiteral k_TitleKey = "Title";
 constexpr StringLiteral k_GenerationAlgorithmKey = "GenerationAlgorithm";
 constexpr StringLiteral k_LambertSizeKey = "LambertSize";
 constexpr StringLiteral k_NumColorsKey = "NumColors";
-constexpr StringLiteral k_ImageFormatKey = "ImageFormat";
 constexpr StringLiteral k_ImageLayoutKey = "ImageLayout";
 constexpr StringLiteral k_OutputPathKey = "OutputPath";
 constexpr StringLiteral k_ImagePrefixKey = "ImagePrefix";
@@ -372,12 +386,8 @@ Result<Arguments> WritePoleFigureFilter::FromSIMPLJson(const nlohmann::json& jso
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_GenerationAlgorithmKey, k_GenerationAlgorithm_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_LambertSizeKey, k_LambertSize_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumColorsKey, k_NumColors_Key));
-  Result<> formatResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ImageFormatKey, k_ImageFormat_Key);
-  if(formatResult.valid())
-  {
-    // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
-    results.push_back(std::move(formatResult));
-  }
+  // The legacy ImageFormat choice (tif/bmp/png/pdf) is intentionally dropped: SIMPLNX always writes PNG.
+  // See vv/deviations/WritePoleFigureFilter.md D5.
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ImageLayoutKey, k_ImageLayout_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputPath_Key));
   results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ImagePrefixKey, k_ImagePrefix_Key));

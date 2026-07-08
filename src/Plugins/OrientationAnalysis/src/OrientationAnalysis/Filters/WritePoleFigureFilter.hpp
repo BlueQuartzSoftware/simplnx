@@ -29,7 +29,6 @@ public:
   static constexpr StringLiteral k_LambertSize_Key = "lambert_size";
   static constexpr StringLiteral k_NumColors_Key = "num_colors";
   static constexpr StringLiteral k_DiscreteMarkerRadius_Key = "discrete_marker_radius";
-  static constexpr StringLiteral k_ImageFormat_Key = "image_format";
   static constexpr StringLiteral k_ImageLayout_Key = "image_layout_index";
   static constexpr StringLiteral k_OutputPath_Key = "output_path";
   static constexpr StringLiteral k_ImagePrefix_Key = "image_prefix";
@@ -50,8 +49,6 @@ public:
   static constexpr StringLiteral k_IntensityPlot2Name = "intensity_plot_2_name";
   static constexpr StringLiteral k_IntensityPlot3Name = "intensity_plot_3_name";
   static constexpr StringLiteral k_HexConvention_Key = "hex_convention_index";
-
-  // static constexpr StringLiteral k_FlipFinalImage_Key = "y_axis_points_up";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.

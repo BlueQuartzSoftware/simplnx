@@ -15,7 +15,7 @@
 |------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | Algorithm Relationship | **Rewrite** — same intent (generate `<001>/<011>/<111>` pole figures) but a different output medium and rendering stack: legacy writes a **PDF per phase** via libharu; SIMPLNX creates an **image geometry** (+ optional intensity arrays) and optional raster image on disk, rendered by the **EbsdLib compositor**. |
 | Oracle (confirmed)     | **Class 5 (Expert-visual)** primary + **Class 4 (Invariant)** companions. Expert side-by-side sign-off of hex and cubic renders (6.5.171 / 6.5.172 / SIMPLNX). Invariants encoded in `WritePoleFigureTest.cpp` (mask-effectiveness, hex-convention plumbing) pass on EbsdLib 3.1.0. |
-| Code paths enumerated  | 9 of 12 simplnx-wrapper paths exercised; the 3 uncovered are defensive/error branches noted below. (Per-Laue-class + pixel rendering is owned and byte-tested by EbsdLib upstream.) |
+| Code paths enumerated  | 10 of 13 simplnx-wrapper paths exercised in CI; the 3 uncovered are defensive/error branches noted below. (Per-Laue-class + pixel rendering is owned and byte-tested by EbsdLib upstream.) |
 | Tests today            | 3 test cases — mask-effectiveness (Class 4), hex-convention plumbing (Class 4, intensity + composite paths), SIMPL 6.4/6.5 backward-compat. All pass against EbsdLib 3.1.0. |
 | Exemplar archive       | `Pole_Figure_Exemplars_v6.tar.gz` (inputs only — 502 hex-Ti orientations + 251/251 mask). No baked image exemplar (deliberate: avoids coupling CI to EbsdLib pixel byte-identity). |
 | Legacy comparison      | Three-way expert-visual (6.5.171 / 6.5.172 / SIMPLNX) on hex **and** cubic. 6.5.171 == 6.5.172 (byte-identical). Data (pole positions, intensity, color mapping) visually identical; 4 cosmetic/rendering deviations. |
@@ -56,14 +56,14 @@ The shared pole-figure projection math (modified Lambert for Color, stereographi
 
 ## Code path coverage
 
-9 of 12 simplnx-wrapper paths exercised. The filter is a wrapper around the EbsdLib compositor; per-Laue-class projection and pixel rendering are owned/tested by EbsdLib. Logical phases: (a) preflight validation + array creation, (b) parameter→enum translation, (c) per-phase mask filtering, (d) intensity generation, (e) composite image generation.
+10 of 13 simplnx-wrapper paths exercised in CI. The filter is a wrapper around the EbsdLib compositor; per-Laue-class projection and pixel rendering are owned/tested by EbsdLib. Logical phases: (a) preflight validation + array creation, (b) parameter→enum translation, (c) per-phase mask filtering, (d) intensity generation, (e) composite image generation.
 
 Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/WritePoleFigure.cpp` + `WritePoleFigureFilter.cpp`.
 
 | #  | Phase              | Path                                                                     | Test case                                                        |
 |----|--------------------|--------------------------------------------------------------------------|------------------------------------------------------------------|
 | 1  | (b) Param→enum     | GenerationAlgorithm = Color (0)                                          | Mask + HexConvention tests; legacy A/B (hex + cubic)             |
-| 2  | (b) Param→enum     | GenerationAlgorithm = Discrete (1) → vector markers                     | Legacy A/B Discrete renders (hex + cubic), expert sign-off       |
+| 2  | (b) Param→enum     | GenerationAlgorithm = Discrete (1) → vector markers                     | `Discrete mode and marker radius reach algorithm` (CI) + legacy A/B Discrete renders (hex + cubic), expert sign-off |
 | 3  | (b) Param→enum     | HexConvention X‖a (0) vs X‖a* (1)                                        | `HexConvention choice reaches algorithm` (intensity + composite) |
 | 4  | (b) Param→enum     | ImageLayout (Horizontal/Vertical/Square)                                | *Not directly asserted; Horizontal exercised in all runs. EbsdLib layout enum — low-value to sweep here.* |
 | 5  | (c) Mask filter    | UseMask off / on                                                        | `Mask filter changes the rendered pole figure`                   |
@@ -71,9 +71,10 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 | 7  | (d) Intensity      | SaveIntensityDataArrays on + NormalizeToMRD                             | `HexConvention choice reaches algorithm` (SaveIntensity=true, MRD=true) |
 | 8  | (d) Intensity      | crystal-structure dispatch (Cubic_High, Hexagonal_High)                 | Hex: tests + A/B; Cubic: A/B. Other Laue classes owned by EbsdLib upstream. |
 | 9  | (d) Intensity      | unknown crystal structure → warning, skip                              | *Not directly tested — defensive warning branch.*                |
-| 10 | (e) Composite      | SaveAsImageGeometry / WriteImageToDisk; DiscreteMarkerRadius            | A/B renders (write-to-disk); Mask/HexConv tests (image geometry) |
+| 10 | (e) Composite      | SaveAsImageGeometry / WriteImageToDisk; DiscreteMarkerRadius            | `Discrete mode and marker radius reach algorithm` (1 px vs 10 px composites differ); A/B renders (write-to-disk); Mask/HexConv tests (image geometry) |
 | 11 | (a) Preflight      | mask array wrong type → error `-53900`                                  | *Not directly tested — low-value validation branch.*             |
-| 12 | (h) SIMPL convert  | 6.4 / 6.5 SIMPL JSON → Arguments                                        | `SIMPL Backwards Compatibility`                                  |
+| 12 | (a) Preflight      | ImageSize ≤ 0 → error `-680002`; Discrete mode with marker radius < 1 → error `-680003` | *Guards added during review; not directly tested — low-value validation branches.* |
+| 13 | (h) SIMPL convert  | 6.4 / 6.5 SIMPL JSON → Arguments (legacy ImageFormat dropped, D5)       | `SIMPL Backwards Compatibility`                                  |
 
 ## Test inventory
 
@@ -81,7 +82,8 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 |-----------|--------|-------|
 | `Mask filter changes the rendered pole figure` | kept | Class 4 invariant: masked vs unmasked composite RGB differ by >1% of bytes. Consumes `Pole_Figure_Exemplars_v6`. Passes on EbsdLib 3.1.0. |
 | `HexConvention choice reaches algorithm` | kept | Class 4 invariant: X‖a vs X‖a* differ in both the intensity array and the composite RGB (both plumbing paths). Passes on EbsdLib 3.1.0. |
-| `SIMPL Backwards Compatibility` | kept | 6.4 + 6.5 SIMPL JSON → Arguments round-trip. |
+| `Discrete mode and marker radius reach algorithm` | new-for-V&V | Class 4 invariant: Discrete vs Color composites differ; 1 px vs 10 px marker radii differ. Pins the GenerationAlgorithm and DiscreteMarkerRadius plumbing in CI (previously covered only by manual A/B renders). |
+| `SIMPL Backwards Compatibility` | kept | 6.4 + 6.5 SIMPL JSON → Arguments round-trip. The legacy `ImageFormat` key is intentionally not converted (D5). |
 
 ## Exemplar archive
 
@@ -98,5 +100,6 @@ Established by expert (Class 5) visual comparison on hex and cubic; 6.5.171 == 6
 - `WritePoleFigureFilter-D2` — font/text-metrics differ (libharu Helvetica → EbsdLib canvas_ity). Library, cosmetic.
 - `WritePoleFigureFilter-D3` — hex/trig per-figure family labels differ but name symmetry-equivalent families. Cosmetic.
 - `WritePoleFigureFilter-D4` — Discrete markers: filled circles (configurable radius) → intentional rendering improvement over legacy single black pixels.
+- `WritePoleFigureFilter-D5` — legacy Image Format choice (tif/bmp/png/pdf) dropped; SIMPLNX always writes PNG. The legacy `ImageFormat` key is not converted from SIMPL JSON.
 
 See `vv/deviations/WritePoleFigureFilter.md`.

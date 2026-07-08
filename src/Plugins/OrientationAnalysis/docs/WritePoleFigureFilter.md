@@ -15,7 +15,7 @@ The filter reads **Euler angles** (in *radians*, Bunge Z-X-Z convention) describ
 Two rendering methods are available through the *Pole Figure Type* parameter:
 
 - **Color Intensity [0]**: Produces a continuous color intensity map. To do this the filter accumulates orientation counts onto a **modified Lambert square** -- an equal-area grid laid over a square that can be folded onto a hemisphere -- and interpolates that grid onto the unit circle. This is a **Lambert (equal-area) projection**. EBSD OEM software does not use this exact interpolation, so the output may look slightly different from an OEM-generated pole figure.
-- **Discrete [1]**: Produces a point-based plot, marking each pixel that received at least one orientation count as a single colored point. This uses a **stereographic** projection, the classic pole-figure projection that maps directions from a sphere onto a plane while preserving angles.
+- **Discrete [1]**: Produces a point-based plot, drawing a small filled circle at each projected orientation. The circle size is controlled by the *Discrete Marker Radius (Pixels)* parameter so markers stay visible at any image size (legacy DREAM3D marked each hit as a single pixel). This uses a **stereographic** projection, the classic pole-figure projection that maps directions from a sphere onto a plane while preserving angles.
 
 The crystal symmetry used when folding orientations into the pole figure is determined by each phase's **Laue Class** -- the point-group symmetry class of the crystal (for example, cubic m-3m or hexagonal 6/mmm). The Laue Class is looked up from the per-**Ensemble** Crystal Structures array.
 
@@ -25,7 +25,7 @@ The crystal symmetry used when folding orientations into the pole figure is dete
 
 This filter plots orientations exactly as they are stored in the **Euler Angles** array; it applies **no reference-frame correction** of its own. A pole figure depends only on the orientations, never on the physical location of the **Cell** each orientation came from.
 
-This matters when comparing the output to other tools. TSL/EDAX `.ang` files record the **Euler angles** and the spatial scan coordinates in two *different* reference frames that are offset by a fixed rotation. EDAX OIM Analysis and the MTEX toolbox display pole figures in the *corrected* (spatial) frame, so their pole figures appear rotated relative to the uncorrected orientations this filter receives. With no correction applied, this filter's output is consistent with MTEX loaded *without* `convertEuler2SpatialReferenceFrame` (the renderer itself is verified to match MTEX point-for-point).
+This matters when comparing the output to other tools. TSL/EDAX `.ang` files record the **Euler angles** and the spatial scan coordinates in two *different* reference frames that are offset by a fixed rotation. EDAX OIM Analysis and the MTEX toolbox display pole figures in the *corrected* (spatial) frame, so their pole figures appear rotated relative to the uncorrected orientations this filter receives. With no correction applied, this filter's output is consistent with MTEX loaded *without* `convertEuler2SpatialReferenceFrame`.
 
 To make a pole figure match EDAX OIM or MTEX, apply the [Rotate Euler Reference Frame](RotateEulerRefFrameFilter.md) filter to the **Euler Angles** *before* this filter. The [Rotate Sample Reference Frame](../SimplnxCore/RotateSampleRefFrameFilter.md) filter only relocates **Cells** in space and leaves orientation values unchanged, so it has **no effect** on a pole figure.
 
@@ -52,7 +52,7 @@ The *Hex/Trig Cartesian Basis Convention* parameter (*x||a* or *x||a\**) is a se
 
 ### Write Image to Disk
 
-When *Write Pole Figure as Image* is enabled, the combined set of pole figures is written to disk as a TIFF image file, one file per phase, in the selected output directory.
+When *Write Pole Figure as Image* is enabled, the combined set of pole figures is written to disk as a PNG image file, one file per phase, in the selected output directory.
 
 ### Save Pole Figure as Image Geometry
 

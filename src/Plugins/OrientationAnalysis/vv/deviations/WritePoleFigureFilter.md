@@ -77,3 +77,21 @@ All entries below were established by an expert (Class 5) side-by-side review of
 **Affected users:** Users of the Discrete pole-figure mode. Markers are more visible than legacy single pixels (the legacy points were often nearly invisible at typical image sizes). Pole positions are identical.
 
 **Recommendation:** Trust SIMPLNX. This is an intentional, user-controllable visibility improvement; set **Discrete Marker Radius** to taste. No data change.
+
+---
+
+## WritePoleFigureFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `WritePoleFigureFilter-D5` |
+| **Filter UUID** | `00cbb97e-a5c2-43e6-9a35-17a0f9ce26ed` |
+| **Status** | active |
+
+**Symptom:** Legacy DREAM3D offered an **Image Format** choice (tif/bmp/png/pdf) for the on-disk pole figure file; SIMPLNX has no such parameter and always writes a **PNG** file.
+
+**Root cause:** Algorithmic choice (API simplification). The SIMPLNX rewrite renders through EbsdLib's raster compositor and writes the composite with `PngWriter`; the legacy multi-format option was not carried over. The legacy `ImageFormat` key is dropped during SIMPL pipeline conversion.
+
+**Affected users:** Anyone whose legacy pipeline selected a non-PNG output format, or whose downstream tooling expects a `.tif`/`.pdf` file extension. The image content is the same composite; only the container format is fixed to PNG.
+
+**Recommendation:** Trust SIMPLNX. PNG is lossless and universally readable; convert externally if another container is required.
