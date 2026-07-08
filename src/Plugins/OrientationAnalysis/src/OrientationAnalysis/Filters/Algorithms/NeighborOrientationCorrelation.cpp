@@ -19,11 +19,13 @@ public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
-  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr)
+  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr,
+                                                 const std::atomic_bool& shouldCancel)
   : m_MessageHelper(messageHelper)
   , m_TotalPoints(totalPoints)
   , m_BestNeighbor(bestNeighbor)
   , m_DataArrayPtr(dataArrayPtr)
+  , m_ShouldCancel(shouldCancel)
   {
   }
   NeighborOrientationCorrelationTransferDataImpl(NeighborOrientationCorrelationTransferDataImpl&&) = default;                // Move Constructor Not Implemented
@@ -38,6 +40,10 @@ public:
     std::string arrayName = m_DataArrayPtr->getName();
     for(size_t i = 0; i < m_TotalPoints; i++)
     {
+      if(m_ShouldCancel)
+      {
+        return;
+      }
       throttledMessenger.sendThrottledMessage([&]() { return fmt::format("Processing {}: {:.2f}% completed", arrayName, CalculatePercentComplete(i, m_TotalPoints)); });
       int64 neighbor = m_BestNeighbor[i];
       if(neighbor != -1)
@@ -55,6 +61,7 @@ private:
   // (ParallelTaskAlgorithm waits in its destructor inside the level-loop iteration).
   const std::vector<int64>& m_BestNeighbor;
   std::shared_ptr<IDataArray> m_DataArrayPtr;
+  const std::atomic_bool& m_ShouldCancel;
 };
 
 // -----------------------------------------------------------------------------
@@ -96,7 +103,7 @@ Result<> NeighborOrientationCorrelation::operator()()
   const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
   constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
 
-  std::vector<int32> neighborSimCount(6, 0);
+  std::array<int32, 6> neighborSimCount = {};
   std::vector<int64> bestNeighbor(totalPoints, -1);
   const int32 startLevel = 6;
 
@@ -106,7 +113,7 @@ Result<> NeighborOrientationCorrelation::operator()()
 
   for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
   {
-    for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
+    for(int64 voxelIndex = 0; voxelIndex < static_cast<int64>(totalPoints); voxelIndex++)
     {
       throttledMessenger.sendThrottledMessage([&]() {
         return fmt::format("Level '{}' of '{}' || Processing Data {:.2f}% completed", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level,
@@ -163,9 +170,12 @@ Result<> NeighborOrientationCorrelation::operator()()
         }
 
         // Loop over the 6 face neighbors of the voxel and keep the neighbor with the
-        // highest similarity count (first of ties in scan order). 'best' must persist
-        // across the whole loop; resetting it per neighbor degrades the argmax to
-        // "last neighbor with any similar pair" (legacy 6.5.171 defect, deviation D3).
+        // highest similarity count. 'best' must persist across the whole loop; resetting
+        // it per neighbor degrades the argmax to "last neighbor with any similar pair"
+        // (legacy 6.5.171 defect, deviation D3). Ties resolve to the LAST neighbor in
+        // scan order via '>=' so that fully-tied neighborhoods (the common interior
+        // case) pick the same neighbor as 6.5.171; the count must be > 0 so a cell with
+        // no similar pairs is never replaced.
         int32 best = 0;
         for(const auto& faceIndex : faceNeighborInternalIdx)
         {
@@ -175,7 +185,7 @@ Result<> NeighborOrientationCorrelation::operator()()
           }
           const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
-          if(neighborSimCount[faceIndex] > best)
+          if(neighborSimCount[faceIndex] > 0 && neighborSimCount[faceIndex] >= best)
           {
             best = neighborSimCount[faceIndex];
             bestNeighbor[voxelIndex] = neighborPoint;
@@ -190,15 +200,15 @@ Result<> NeighborOrientationCorrelation::operator()()
       return {};
     }
 
-    // Build up a list of the DataArrays that we are going to operate on.
+    // Transfer stage: copy the winning neighbor's tuple into each replaced cell,
+    // parallelized with one task per DataArray (only sibling DataArray objects of the
+    // confidence-index array take part; NeighborList/String arrays are excluded — see
+    // deviation D5).
     std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
-    // The idea for this parallel section is to parallelize over each Data Array that
-    // will need it's data adjusted. This should go faster than before by about 2x.
-    // Better speed up could be achieved if we had better data locality.
     ParallelTaskAlgorithm parallelTask;
     for(const auto& dataArrayPtr : voxelArrays)
     {
-      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(messageHelper, totalPoints, bestNeighbor, dataArrayPtr));
+      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(messageHelper, totalPoints, bestNeighbor, dataArrayPtr, m_ShouldCancel));
     }
   }
 

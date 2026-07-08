@@ -14,7 +14,7 @@ that bar:
 - **v1 (`neighbor_orientation_correlation.tar.gz`, retired 2026-07-06):** its data container
   was named `DataContainer` while the test looked up `Exemplar Data/...`, so every array
   lookup returned null and the comparison loop's silent `continue` skipped everything —
-  **the exemplar comparison never compared a single array** (hollow pass since 2022-08).
+  **the exemplar comparison never compared a single array at any commit in its history.** Bisect proof (2026-07-07): the comparison loop was introduced already mapping to `Exemplar Data` with the silent `continue` (commit `d199bc749`, 2022-07-24, pre-simplnx plugin repo), and the archive's SHA512 (`1223674…`) is unchanged from its first `download_test_data()` registration (commit `e34baf1f2`, 2022-12-02) through retirement — its container was always `DataContainer`. Hollow from birth.
 - **v2 (this archive):** created during the 2026-07-06 V&V cycle from the post-fix SIMPLNX
   output as a regression pin. That is a circular oracle by construction; it was retired the
   same day, before the V&V branch merged, and the `Small IN100 Pipeline` test was rewritten
