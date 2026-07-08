@@ -11,6 +11,8 @@ Two independent comparisons confirm output equivalence between SIMPLNX and DREAM
 1. **SmallIN100 (in-unit-test):** `FillBadData_SmallIN100` compares SIMPLNX output against `6_5_exemplar.dream3d` with `MinAllowedDefectSize=1000`, `StoreAsNewPhase=false`. Passes — no differences.
 2. **Test 08 A/B run (2026-07-03):** A 7×7×3 synthetic fixture with disconnected bad-data regions (one small → fills, one large → preserved) was executed through DREAM3D 6.5.171, 6.5.172, and DREAM3D-NX. All three produced identical FeatureIds output (147 voxels, element-wise match). See `fill_bad_data_vv/comparison_report.md`.
 
+> **⚠ Evidence archival (open action):** `test_08_input.dream3d` and `fill_bad_data_vv/comparison_report.md` are **not** present in the committed `6_5_fill_bad_data.tar.gz` archive (which contains fixtures for Tests 01–07, 11, 13 only) and are not in the source tree, so this Test 08 A/B is **not reproducible or reviewable from the repository**. The fixture, both legacy runs, and the comparison report must be uploaded to the OneDrive verification archive (per the archive-filter-verification workflow) — or added to the test-data archive — and this note replaced with the archive link before the filter is promoted to COMPLETE. The SmallIN100 in-test comparison (Class 2) remains reproducible in the meantime.
+
 ## Comparison method
 
 ### SmallIN100 (automated, in-unit-test)

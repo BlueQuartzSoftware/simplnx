@@ -588,6 +588,11 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
 
     iteration++;
     count = 0; // Reset count of voxels with a -1 value for this iteration
+    // Tracks whether this iteration assigned at least one fill source. If bad voxels remain but none
+    // has a positive neighbor to copy from (e.g. an all-bad volume, or a bad pocket fully enclosed by
+    // other bad voxels), no assignment is ever made and count can never reach 0 — without this guard
+    // the loop would spin forever. When that happens we stop and leave the unfillable voxels as-is.
+    bool madeAssignment = false;
 
     // Pass 1: Determine neighbor assignments for all -1 voxels
     // For each -1 voxel, find the most common positive feature among neighbors
@@ -632,6 +637,7 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
             {
               most = current;
               neighbors[voxelIndex] = neighborPoint; // Store neighbor to copy from
+              madeAssignment = true;
             }
           }
         }
@@ -655,6 +661,15 @@ void FillBadData::phaseFourIterativeFill(Int32AbstractDataStore& featureIdsStore
           }
         }
       }
+    }
+
+    // No fill source could be found for any remaining bad voxel: further iterations cannot make
+    // progress, so stop instead of looping forever. Remaining -1 voxels are left unchanged.
+    if(count != 0 && !madeAssignment)
+    {
+      m_MessageHandler(
+          {IFilter::Message::Type::Warning, fmt::format("  {} bad-data voxel(s) could not be filled: they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration)});
+      break;
     }
 
     // Pass 2: Update all cell data arrays based on neighbor assignments
@@ -730,14 +745,16 @@ Result<> FillBadData::operator()() const
     }
   }
 
-  // Count the number of existing features for array sizing
+  // Count the number of existing features for array sizing. Only positive feature ids matter;
+  // comparing a negative (bad-data) featureName directly against the unsigned numFeatures would
+  // sign-extend it to a huge value and blow up the featureNumber allocation below.
   usize numFeatures = 0;
   for(usize i = 0; i < totalPoints; i++)
   {
     int32 featureName = featureIdsStore[i];
-    if(featureName > numFeatures)
+    if(featureName > 0 && static_cast<usize>(featureName) > numFeatures)
     {
-      numFeatures = featureName;
+      numFeatures = static_cast<usize>(featureName);
     }
   }
 

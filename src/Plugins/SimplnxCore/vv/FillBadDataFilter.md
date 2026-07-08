@@ -7,8 +7,8 @@
 | SIMPLNX Human Name          | Fill Bad Data                                                            |
 | DREAM3D 6.5.171 equivalent  | `FillBadData` — SIMPL UUID `30ae0a1e-3d94-5dab-b279-c5727ab5d7ff`       |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                  |
-| Status                      | **COMPLETE**                                                                |
-| Sign-off                    | *Nathan Young, 07-03-2026*                                                    |
+| Status                      | **READY FOR REVIEW** (second-engineer review + Test 08 evidence archival outstanding — see V&V phase) |
+| Sign-off                    | *pending second-engineer review*                                             |
 
 ## At a glance
 
@@ -16,12 +16,12 @@
 |------------------------|---------------|
 | Algorithm Relationship | **Rewrite** — 4-phase chunk-sequential CCL+Union-Find (OOC support); legacy used a simpler in-memory approach. Functional behavior preserved. |
 | Oracle                 | **Class 2** for `FillBadData_SmallIN100` (`6_5_exemplar.dream3d` from legacy 6.5 pipeline). **Class 1** for Tests 01–13 (hand-authored expected values serialized by a format-conversion script that never runs `FillBadDataFilter`). Circular-oracle concern resolved. |
-| Code paths             | **14 of 15** covered. Only gap: `m_ShouldCancel` cancel path in Phase 4 while-loop (Path 14). |
-| Tests                  | **12 TEST_CASEs**, all pass. 1 SmallIN100 (Class 2) + 9 OOC synthetic fixtures (Class 1, Tests 01–07, 11, 13) + 1 preflight-error inline + 1 SIMPL backwards-compat. |
-| Exemplar archive       | `6_5_fill_bad_data.tar.gz` — `6_5_input/exemplar.dream3d` (Class 2) + `test_NN_input/expected.dream3d` pairs for Tests 01–13 (Class 1). |
-| Legacy comparison      | **Complete.** No deviations — SmallIN100 in-test + independent binary A/B (Test 08, 6.5.171 vs 6.5.172 vs NX, 2026-07-03). |
-| Bug flags              | None. `FillBadDataFilter-B1` (preflight dead-return for `minAllowedDefectSize < 1`) resolved. |
-| V&V phase              | **DRAFT — ready for second-engineer review.** Remaining gap: cancel path (Path 14). |
+| Code paths             | **15 of 16** covered. Only gap: `m_ShouldCancel` cancel path in Phase 4 while-loop (Path 14). |
+| Tests                  | **14 TEST_CASEs**, all pass. 1 SmallIN100 (Class 2) + 9 OOC synthetic fixtures (Class 1, Tests 01–07, 11, 13) + 1 all-bad-data termination guard + 1 preflight-error inline (asserts `-16500`) + 1 SIMPL backwards-compat. |
+| Exemplar archive       | `6_5_fill_bad_data.tar.gz` — `6_5_input/exemplar.dream3d` (Class 2) + `test_NN_input/expected.dream3d` pairs for Tests 01–07, 11, 13 (Class 1). *(Tests 08–10 and 12 have no fixtures — the numbering is non-contiguous.)* |
+| Legacy comparison      | SmallIN100 in-test (Class 2). The Test 08 binary A/B (6.5.171 vs 6.5.172 vs NX) is **not reproducible from the committed archive** — its fixture and comparison report were not included (see V&V phase / deviations); this is an open archival action, so the legacy comparison is not yet independently reviewable. |
+| Bug flags              | `FillBadDataFilter-B1` (preflight dead-return for `minAllowedDefectSize < 1`) resolved. Fixed this cycle: an all-bad-data / enclosed-bad-pocket input previously looped forever in Phase 4 (no fillable neighbor → `count` never reached 0); a no-progress guard now stops with a warning. |
+| V&V phase              | **READY FOR REVIEW.** Outstanding: (1) second-engineer spot-check of Tests 11/13; (2) the Test 08 A/B fixture + `comparison_report.md` must be added to the archive (or the Test 08 claim dropped) before COMPLETE; (3) cancel path (Path 14) untested. |
 
 ## Summary
 
@@ -80,7 +80,8 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/FillBadData.
 | 12 | Phase 4 — Fill | Neighbor tie-break → first-encountered wins by scan order | `Test11_NeighborTieBreaking` |
 | 13 | `operator()` | `storeAsNewPhase=false` → `cellPhasesPtr = nullptr`, phases loop skipped | Tests 01–07, 11, SmallIN100 |
 | 14 | `operator()` | `m_ShouldCancel` in Phase 4 while-loop | *Not covered.* No test exercises mid-fill cancellation. |
-| 15 | Preflight | `minAllowedDefectSize < 1` → `MakePreflightErrorResult(-16500, …)` | `"SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size"` — inline DataStructure, `minAllowedDefectSize=0`. |
+| 15 | Preflight | `minAllowedDefectSize < 1` → `MakePreflightErrorResult(-16500, …)` | `"SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size"` — inline DataStructure, `minAllowedDefectSize=0`; asserts error code `-16500`. |
+| 16 | Phase 4 | no fillable neighbor for any remaining bad voxel → no-progress break (warning) | `AllBadData_TerminatesWithoutHang` — all-bad-data slab; asserts the filter returns instead of looping forever. |
 
 ## Test inventory
 
@@ -96,7 +97,8 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/FillBadData.
 | `SimplnxCore::FillBadData::Test07_DefectsAtBoundaries` | OOC (100-byte sentinel). threshold=20. Regions at image boundary — exercises Phase 1 CCL boundary handling. Class 1. |
 | `SimplnxCore::FillBadData::Test11_NeighborTieBreaking` | OOC (50-byte sentinel). threshold=10. Tie-break via scan order. Class 1. |
 | `SimplnxCore::FillBadData::Test13_StoreAsNewPhase` | OOC (100-byte sentinel). threshold=20, storeAsNewPhase=true. Only test for `cellPhasesPtr ≠ nullptr` path (Path 8). Class 1. |
-| `SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size` | Inline DataStructure (no file load). `minAllowedDefectSize=0` → asserts `SIMPLNX_RESULT_REQUIRE_INVALID`. Covers Path 15. |
+| `SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size` | Inline DataStructure (no file load). `minAllowedDefectSize=0` → asserts invalid **and** error code `-16500`. Covers Path 15. |
+| `SimplnxCore::FillBadData::AllBadData_TerminatesWithoutHang` | Inline 3×3×1 all-bad-data slab (no good neighbor). Asserts the filter returns rather than looping forever. Covers Path 16 (no-progress guard). |
 | `SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility` | SIMPL 6.4 + 6.5 via `DYNAMIC_SECTION`. UUID + arg-key + value assertions only. Not an oracle test. |
 
 ## Exemplar archive

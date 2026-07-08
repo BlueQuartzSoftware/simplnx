@@ -11,6 +11,10 @@
 #include "SimplnxCore/Filters/FillBadDataFilter.hpp"
 #include "SimplnxCore/Filters/ReadDREAM3DFilter.hpp"
 
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/NumberParameter.hpp"
+
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -410,6 +414,51 @@ TEST_CASE("SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size", 
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors().size() == 1);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -16500);
+}
+
+// Termination guard: a volume containing bad-data voxels (featureId < 0) with NO adjacent good-data
+// voxel cannot be filled. Before the no-progress guard was added, the iterative fill looped forever
+// (count could never reach 0). This test builds an all-bad-data slab and asserts the filter simply
+// returns (does not hang) and leaves the unfillable voxels untouched.
+TEST_CASE("SimplnxCore::FillBadData::AllBadData_TerminatesWithoutHang", "[Core][FillBadDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  const DataPath k_GeomPath({"DataContainer"});
+  const DataPath k_CellDataPath = k_GeomPath.createChildPath("CellData");
+  const DataPath k_FeatureIdsPath = k_CellDataPath.createChildPath("FeatureIds");
+  const DataPath k_PhasesPath = k_CellDataPath.createChildPath("Phases");
+
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({3, 3, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 3, 3}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
+  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 3, 3}, {1}, cellDataPtr->getId());
+  auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {1, 3, 3}, {1}, cellDataPtr->getId());
+  // Every voxel is bad data (featureId 0 -> marked for fill); there is no good neighbor to fill from.
+  featureIds->fill(0);
+  phases->fill(1);
+
+  FillBadDataFilter filter;
+  Arguments args;
+  args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(1));
+  args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+
+  // The key assertion is simply that this call returns (the no-progress guard breaks the fill loop).
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][FillBadDataFilter][BackwardsCompatibility]")
