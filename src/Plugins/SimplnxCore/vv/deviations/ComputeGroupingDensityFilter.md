@@ -13,7 +13,7 @@
 
 **No deviations observed.** All 4 `(UseNonContiguousNeighbors, FindCheckedFeatures)`
 configurations of `ComputeGroupingDensityFilter` (SIMPLNX) and `FindGroupingDensity`
-(legacy 6.5.172 build with the feature-branch sources) produced **bit-identical**
+(a local build of the legacy DREAM3D 6.5 source with the feature-branch sources) produced **bit-identical**
 `GroupingDensities` and `CheckedFeatures` arrays when run against identical
 input data.
 
@@ -59,7 +59,7 @@ non-contiguous-included cases — these are the exact float32 representations).
 
 | Side | Build / source |
 |---|---|
-| Legacy 6.5.172 | `/Users/mjackson/DREAM3D-Dev/DREAM3D` (6.5.172 branch + `tuks188/DREAM3D` `feature/770_Grouping_Density` sources pulled in). `FindGroupingDensity.{cpp,h}` placed at `Source/Plugins/Statistics/StatisticsFilters/`. |
+| Legacy (local rebuild) | Local build of the legacy DREAM3D 6.5 source (`tuks188/DREAM3D` `feature/770_Grouping_Density` sources pulled in). `FindGroupingDensity.{cpp,h}` placed at `Source/Plugins/Statistics/StatisticsFilters/`. |
 | SIMPLNX | `Workspace3/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel/Bin/nxrunner` (1.7.0 build 2026/05/07). Filter at `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeGroupingDensity.{hpp,cpp}` and `.../Filters/ComputeGroupingDensityFilter.{hpp,cpp}`. |
 
 ## Algorithmic deltas observed (none affect output)

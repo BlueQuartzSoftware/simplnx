@@ -4,9 +4,9 @@ This file lists every documented behavioral difference between this SIMPLNX filt
 
 Entries are referenced by stable ID (`ComputeAvgCAxesFilter-D<N>`) from the V&V report and from public migration guidance. The ID is stable across renames; the Filter UUID field is the permanent cross-reference anchor.
 
-**Headline result of the three-way comparison** (all values float32, 11-cell hand-built fixture; expected once the 6.5.172 normalize-backport is re-run):
+**Headline result of the comparison** (all values float32, 11-cell hand-built fixture; expected once the normalize fix is re-applied to the local build of the legacy source):
 
-| Feature | 6.5.171 (official) | 6.5.172 (backport, post-normalize) | SIMPLNX (post-normalize) | Notes |
+| Feature | 6.5.171 (official) | Patched legacy (post-normalize) | SIMPLNX (post-normalize) | Notes |
 |---|---|---|---|---|
 | **0** | **(0, 0, 0)** | **(NaN, NaN, NaN)** | **(NaN, NaN, NaN)** | **placeholder — D1 (counter==0)** |
 | 1 | (0, 0, 1.000) | (0, 0, 1.000) | (0, 0, 1.000) | identity quaternion, all match |
@@ -17,7 +17,7 @@ Entries are referenced by stable ID (`ComputeAvgCAxesFilter-D<N>`) from the V&V 
 | **6** | **(0, 0, 1.000)** | **(NaN, NaN, NaN)** | **(NaN, NaN, NaN)** | **all cells non-hex — D1** |
 | **7** | **(0, 0, 0.667)** | **(0, 0.866, 0.500)** | **(0, 0.866, 0.500)** | **antipodal-flip boundary, post-normalize — D2** |
 
-SIMPLNX is expected to be bit-identical to 6.5.172 (once the backport's normalize step lands). 6.5.171 differs at F0/F5/F6 (D1) and F7 (D2). The Phase-7 changes in the 6.5.172 backport (precision + matrix-math style + counter==0 → NaN at finalize + final per-feature normalize) explain all 4 deviations completely.
+SIMPLNX is expected to be bit-identical to the patched local build of the legacy source (once the patch's normalize step lands). 6.5.171 differs at F0/F5/F6 (D1) and F7 (D2). The Phase-7 changes applied surgically to the legacy build (precision + matrix-math style + counter==0 → NaN at finalize + final per-feature normalize) explain all 4 deviations completely.
 
 ---
 
@@ -67,7 +67,7 @@ else
 }
 ```
 
-The legacy DREAM3D 6.5.171 `FindAvgCAxes` instead writes `(0, 0, 1)` at the counter==0 case, and starts the finalize loop at index 1. The 6.5.172 backport (commit on branch `v6_5_172` at `/Users/mjackson/DREAM3D-Dev/DREAM3D`) retrofits both the SIMPLNX-style `counter==0 → NaN` write and the finalize-loop start-at-0 into the legacy code, producing **bit-identical** SIMPLNX output across F0, F5, and F6.
+The legacy DREAM3D 6.5.171 `FindAvgCAxes` instead writes `(0, 0, 1)` at the counter==0 case, and starts the finalize loop at index 1. A surgical fix applied to a local build of the legacy source retrofits both the SIMPLNX-style `counter==0 → NaN` write and the finalize-loop start-at-0 into the legacy code, producing **bit-identical** SIMPLNX output across F0, F5, and F6.
 
 **Affected users:** Anyone running the filter on EBSD data with one or more of:
 - Multi-phase data including non-hexagonal phases (some features may end up all-non-hex)
@@ -104,7 +104,7 @@ if(cosAngle < 0.0)
 
 At F7 cell 10, the mathematically exact cosAngle is zero — the cell's c-axis is perpendicular to the running average. In SIMPLNX's `Eigen::Vector3d` double-precision path the computed `cosAngle` lands at a tiny negative value, firing the flip. In legacy 6.5.171's float-only path (or in a pure-double NumPy replay), the computed cosAngle lands at a tiny positive value, NOT firing the flip. The accumulated sums diverge to genuinely different directions.
 
-PR #1438 ("Microtexture related filter cleanup") changed the inner-loop accumulator from `float` to `Eigen::Vector3d` (double); this precision change is the proximate driver. The EbsdLib API refactor (PR #1472) replaced explicit `qu2om` + helper calls with inline `toOrientationMatrix()` — verified functionally equivalent by the 6.5.172 backport's matching output. The Phase-7 normalize-at-finalize step (V&V cycle) widens the deviation: pre-normalize, both implementations had magnitude 2/3 at F7; post-normalize, SIMPLNX has magnitude 1.0 while 6.5.171 still has 2/3 (since the legacy code never normalized).
+PR #1438 ("Microtexture related filter cleanup") changed the inner-loop accumulator from `float` to `Eigen::Vector3d` (double); this precision change is the proximate driver. The EbsdLib API refactor (PR #1472) replaced explicit `qu2om` + helper calls with inline `toOrientationMatrix()` — verified functionally equivalent by the matching output of the patched local build of the legacy source. The Phase-7 normalize-at-finalize step (V&V cycle) widens the deviation: pre-normalize, both implementations had magnitude 2/3 at F7; post-normalize, SIMPLNX has magnitude 1.0 while 6.5.171 still has 2/3 (since the legacy code never normalized).
 
 **Affected users:** Anyone running the filter on EBSD data containing features whose cell-level c-axes are arranged near the antipodal-flip cancellation boundary. In practice this is rare in natural EBSD data — it requires several cells with c-axes that summed (without flip) would lie nearly orthogonal to a previously-accumulated direction. The deliberately-pathological F7 test case demonstrates the sensitivity. **Users computing pole figures or per-feature texture statistics will get different magnitudes (1.0 vs ≤ 1.0) between SIMPLNX and 6.5.171, with the SIMPLNX magnitude being more predictable across pipelines (always unit-vector).**
 
@@ -114,12 +114,12 @@ PR #1438 ("Microtexture related filter cleanup") changed the inner-loop accumula
 
 ## Comparison build & library nuance
 
-The legacy DREAM3D 6.5.171 / 6.5.172 both use the **built-in EbsdLib/OrientationLib** inside the DREAM3D source tree (frozen at the 6.5.171 release point, with the user's targeted backport patches in the 6.5.172 branch). SIMPLNX uses an **independent, vcpkg-installed EbsdLib** that is actively updated. Both implement Rowenhorst conventions but the underlying code differs. The 6.5.172 backport reproduces SIMPLNX *functional behavior*, not *identical library code* — sufficient to isolate the design-choice drivers of the deviations.
+Legacy DREAM3D 6.5.171 (and the patched local build of its source) uses the **built-in EbsdLib/OrientationLib** inside the DREAM3D source tree (frozen at the 6.5.171 release point, with the targeted surgical patches applied on top). SIMPLNX uses an **independent, vcpkg-installed EbsdLib** that is actively updated. Both implement Rowenhorst conventions but the underlying code differs. The patched legacy build reproduces SIMPLNX *functional behavior*, not *identical library code* — sufficient to isolate the design-choice drivers of the deviations.
 
-The 6.5.172 backport's purpose is **root-cause proof**. If every observed SIMPLNX-vs-6.5.171 difference disappears when the targeted changes are applied to the legacy code, those targeted changes are conclusively the cause. They are.
+The patched legacy build's purpose is **root-cause proof**. If every observed SIMPLNX-vs-6.5.171 difference disappears when the targeted changes are applied to the legacy code, those targeted changes are conclusively the cause. They are.
 
 **Comparison fixtures:**
 - `/Users/mjackson/Workspace9/DREAM3D_Data/TestFiles/compute_avg_c_axis/output_legacy/6_5_171_compute_avg_c_axis.dream3d` — official DREAM3D 6.5.171 release output
-- `/Users/mjackson/Workspace9/DREAM3D_Data/TestFiles/compute_avg_c_axis/output_legacy/6_5_172_compute_avg_c_axis.dream3d` — user's targeted-backport 6.5.172 output (pending re-run after normalize-backport)
+- a second output file alongside it in `output_legacy/` — output of the surgically patched local build of the legacy source (pending re-run after the normalize fix)
 - `output_simplnx/simplnx_compute_avg_caxes.dream3d` — SIMPLNX output
 - Three-way diff report: `vv/comparisons/ComputeAvgCAxesFilter/results/three_way_comparison.txt`

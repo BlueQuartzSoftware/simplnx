@@ -20,7 +20,7 @@ A scannable dashboard for reviewers. Each row is one sentence to one short parag
 | Code paths enumerated  | *N of M exercised; one phrase about any uncovered paths.*                                                                    |
 | Tests today            | *N test cases — one phrase about coverage (e.g., "parameter sweep over (Tolerance, NumberOfNeighbors)", "1 positive + 1 negative + 1 SIMPL backward-compat").* |
 | Exemplar archive       | *`<archive.tar.gz>` — one phrase on what it provides (inputs only, inputs + outputs, retired/replaced).*                     |
-| Legacy comparison      | *Run / Not run / Three-way (SIMPLNX vs 6.5.171 vs 6.5.172) — one-sentence headline (bit-identical, N deviations).*           |
+| Legacy comparison      | *Run / Not run — one-sentence headline (bit-identical, N deviations). Always framed as SIMPLNX vs DREAM3D 6.5.171; root-cause proof via a patched local build of the legacy source is described without naming a legacy version or commit.* |
 | Bug flags              | *None / list of deviation IDs flagged as suspected bugs.*                                                                    |
 | V&V phase              | *Which phases of the V&V workflow are complete; what is outstanding before status promotion.*                                |
 

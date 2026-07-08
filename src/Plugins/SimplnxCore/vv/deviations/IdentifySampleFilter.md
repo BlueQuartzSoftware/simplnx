@@ -47,11 +47,11 @@ if(column==0 || column==(xp-1) || row==0 || row==(yp-1) || plane==0 || plane==(z
 
 For a 2D geometry `zp==1`, so `plane==0` (and `plane==(zp-1)`) is unconditionally true — **every** voxel is flagged as touching the sample boundary, so no bad component is ever "enclosed" and no hole is filled. The same applies to 1D (two degenerate axes). SIMPLNX's `EmptyZ/Y/XImage2D` (and 1D) hole-fill flags the boundary only when an in-plane neighbor is actually invalid, so a genuinely interior hole is filled.
 
-**A/B verification (2026-06-29):** degenerate fixtures were authored as legacy `.dream3d` and run through stock 6.5.171, SIMPLNX, and a 6.5.172 proof-patch build:
+**A/B verification (2026-06-29):** degenerate fixtures were authored as legacy `.dream3d` and run through stock 6.5.171, SIMPLNX, and a local build of the legacy source with a surgical fix applied:
 
 - 2D `{5,5,1}` with one enclosed bad voxel, `FillHoles=true`: **stock 6.5.171 left it bad; SIMPLNX filled it.**
 - Connectivity-only cases (2D `{3,4,1}` / `{1,3,4}` no-fill, 1D `{5,1,1}` with a tie-break, 3D `{4,4,4}` fill) were **byte-identical** across all three — confirming the deviation is isolated to hole-fill on degenerate geometry, and that the `>=` tie-break matches legacy.
-- The **6.5.172 proof patch** (boundary test made dimensionality-aware: only extremes of non-degenerate dims count; an all-degenerate geometry is treated as boundary) made legacy fill the 2D hole **identically to SIMPLNX**, while leaving 3D and connectivity byte-for-byte unchanged. This pins the root cause to the boundary test.
+- The **surgical fix to the local legacy build** (boundary test made dimensionality-aware: only extremes of non-degenerate dims count; an all-degenerate geometry is treated as boundary) made legacy fill the 2D hole **identically to SIMPLNX**, while leaving 3D and connectivity byte-for-byte unchanged. This pins the root cause to the boundary test.
 
 **Affected users:** Anyone running `IdentifySampleFilter` with `FillHoles=true` on a 2D or 1D `ImageGeom` (single-slice EBSD scan, line scan) expecting parity with DREAM3D 6.5.171 — legacy silently leaves holes unfilled.
 

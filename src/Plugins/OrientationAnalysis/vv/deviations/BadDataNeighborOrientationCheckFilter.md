@@ -36,7 +36,7 @@ SIMPLNX corrects this to `while(currentLevel >= m_InputValues->NumberOfNeighbors
 
 **Affected users:** Anyone running the filter in DREAM3D 6.5.171 with `NumberOfNeighbors < 6` on a dataset where the bottom level matters (i.e., where any bad voxel's eligible-neighbor count equals the user's `NumberOfNeighbors`). In practice this is the typical usage — the Small IN100 reconstruction pipeline (the canonical DREAM3D example) uses `NumberOfNeighbors = 4`. The 6.5.171 output left bad voxels unflipped that should have been flipped, manifesting downstream as smaller-than-expected grain reconstructions, more "rough" grain boundaries, and lower fraction of good voxels.
 
-**Recommendation:** Trust SIMPLNX. The 6.5.171 result was mathematically incorrect for the stated parameter semantics. The minimal legacy patch is a one-line change from `>` to `>=`; a local `v6_5_172` branch on `/Users/mjackson/DREAM3D-Dev/DREAM3D` carries this fix bundled with D2 (commit `0cad1b6b3`).
+**Recommendation:** Trust SIMPLNX. The 6.5.171 result was mathematically incorrect for the stated parameter semantics. The minimal legacy patch is a one-line change from `>` to `>=`; the root cause was proven by applying this fix (bundled with D2) to a local build of the legacy source — contact the DREAM3D team for the legacy-parity patch.
 
 ---
 
@@ -90,7 +90,7 @@ The bug is documented as "Issue 2" in the engineer's V&V test archive README at 
 
 **Why not observable in V&V A/B:** The D1 loop-bound bug prevents iteration from reaching the level where the bumped count would matter. With `NumberOfNeighbors = N`, D1 stops iteration at `currentLevel = N + 1`, so a voxel with count = N (true count) or N + 1 (bumped count) cannot be flipped at the N level. To isolate D2, one would need to patch legacy 6.5.171 with just the D1 fix (without D2 fix), then run a mixed-phase fixture where a bad voxel's neighbor sequence includes a same-phase good neighbor followed by a different-phase neighbor. This is a future Phase 8 regression test addition.
 
-**Recommendation:** Trust SIMPLNX. The 6.5.171 result was mathematically incorrect. The legacy backport for both D1 and D2 lives in commit `0cad1b6b3` on the local `v6_5_172` branch (see D1). Note: applying only the D1 fix to 6.5.171 without also applying the D2 fix would UNCOVER D2 as new false-positive flips at phase boundaries — both fixes belong together.
+**Recommendation:** Trust SIMPLNX. The 6.5.171 result was mathematically incorrect. Both the D1 and D2 fixes were applied together to a local build of the legacy source for the root-cause proof (see D1). Note: applying only the D1 fix to 6.5.171 without also applying the D2 fix would UNCOVER D2 as new false-positive flips at phase boundaries — both fixes belong together.
 
 ---
 

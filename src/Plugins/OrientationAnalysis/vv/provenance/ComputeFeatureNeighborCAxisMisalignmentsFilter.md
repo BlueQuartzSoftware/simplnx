@@ -195,18 +195,18 @@ After the V&V cycle's source-inspection comparison + analytical Class 1 fixtures
 | Binary | Path                                                                                                                                | Role                                                                       |
 |--------|-------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
 | A      | `/Users/mjackson/Applications/DREAM3D.app/Contents/bin/PipelineRunner`                                                              | DREAM3D 6.5.171 official release — pre-fix, buggy                          |
-| B      | `/Users/mjackson/DREAM3D-Dev/DREAM3D-Build/D3D-Rel-Qt515-6_5_171/Bin/PipelineRunner`                                                | DREAM3D 6.5.172 Mike's backport branch — divisor fix applied (commit `c50223a46`) |
+| B      | `/Users/mjackson/DREAM3D-Dev/DREAM3D-Build/D3D-Rel-Qt515-6_5_171/Bin/PipelineRunner`                                                | Local build of the DREAM3D 6.5.171 source with the surgical divisor fix applied — used to prove the root cause |
 | C      | `/Users/mjackson/Workspace9/DREAM3D-Build/NX-Com-Qt69-Vtk95-Rel-EbsdLib/Bin/nxrunner`                                               | SIMPLNX (post-fix), linked against EbsdLib 2.4.1 build                     |
 
 **Input:** `input/build_input.py` generates `input/f6_realistic_microstructure.dream3d` — a legacy v7.0-format `.dream3d` file containing the realistic-microstructure fixture (10×10×1 ImageGeom, 6 features, mixed hex/non-hex phases, pure-Φ Bunge ZXZ rotations). The Python script is fully reproducible — anyone can re-derive the input.
 
-**Pipelines:** `pipelines/legacy_6_5_171.json` (legacy SIMPL JSON format), `pipelines/legacy_6_5_172.json` (identical to 171 except output path), `pipelines/simplnx.d3dpipeline` (SIMPLNX format). All three pipelines: read the input → run the filter with `find_avg_misals=true` → write output.
+**Pipelines:** `pipelines/legacy_6_5_171.json` (legacy SIMPL JSON format), a second legacy pipeline for the patched build (identical except output path), `pipelines/simplnx.d3dpipeline` (SIMPLNX format). All three pipelines: read the input → run the filter with `find_avg_misals=true` → write output.
 
 **Comparison:** `notes/compare.py` reads all three output `.dream3d` files and prints per-feature side-by-side comparisons. Results captured in `notes/ab_results.txt`.
 
 **Key findings (validated against the analytical Class 1 expected values):**
 
-| Feature | Expected | Pre-fix bug prediction | 6.5.171 (actual) | 6.5.172 (actual) | SIMPLNX (actual) |
+| Feature | Expected | Pre-fix bug prediction | 6.5.171 (actual) | Patched legacy (actual) | SIMPLNX (actual) |
 |---------|----------|------------------------|------------------|------------------|------------------|
 | F1      | 10.0000° | 10.0000° (dormant)     | 10.0000°         | 10.0000°         | 10.0000°         |
 | F2      | 10.0000° | 7.5000° (bug fires)    | **7.5000°** ❌   | 10.0000° ✓       | 10.0000° ✓       |
@@ -215,28 +215,28 @@ After the V&V cycle's source-inspection comparison + analytical Class 1 fixtures
 | F5      | 8.3333°  | 6.2500° (bug fires)    | **6.2500°** ❌   | 8.3333° ✓        | 8.3333° ✓        |
 | F6      | 5.0000°  | 2.5000° (bug fires)    | **2.5000°** ❌   | 5.0000° ✓        | 5.0000° ✓        |
 
-Per-pair `CAxisMisalignmentList` values are functionally identical across all three binaries within float32 precision (~`1e-6°`). The drift between 6.5.171/172 (hand-rolled MatrixMath float32 path) and SIMPLNX (Eigen double-precision path) is the empirical magnitude of D4.
+Per-pair `CAxisMisalignmentList` values are functionally identical across all three binaries within float32 precision (~`1e-6°`). The drift between the legacy MatrixMath float32 path and SIMPLNX (Eigen double-precision path) is the empirical magnitude of D4.
 
 **Empirical conclusions about each deviation:**
 
-- **D1 confirmed**: bug fires on 6.5.171 producing exactly the predicted-buggy values; fixed in 6.5.172 backport AND in SIMPLNX. **Bonus observation**: F3's non-hex-only neighbor case produces `0.0` on 6.5.171 instead of `NaN` — see D1 entry's "Additional symptom" paragraph.
+- **D1 confirmed**: bug fires on 6.5.171 producing exactly the predicted-buggy values; fixed in the patched local build of the legacy source AND in SIMPLNX. **Bonus observation**: F3's non-hex-only neighbor case produces `0.0` on 6.5.171 instead of `NaN` — see D1 entry's "Additional symptom" paragraph.
 - **D2 dormant**: F1's exact `10.0000` proves the SIMPLNX `AvgCAxisMisalignments` array IS zero-initialized by the current in-memory DataStore default. The latent bug doesn't fire on the current backend.
-- **D4 quantified (pre-backport) and then closed (post-backport)**: pre-backport drift was `~1e-6°` per-pair / `~2e-5°` per-feature avg. Existing doc note's `~0.0001°` estimate is ~100× too high. **Backported to 6.5.172 commit `5adc45df0`** via Eigen + double precision conversion following the `FindAvgCAxes` (commit `3fc514cce`) and `FindFeatureReferenceCAxisMisorientations` (commit `d4b5509aa`) precedents. **Post-backport: 6.5.172 produces BIT-IDENTICAL output to SIMPLNX** — all 18 per-pair entries + 6 per-feature entries byte-compared via h5py and confirmed identical.
+- **D4 quantified (pre-fix) and then closed (post-fix)**: pre-fix drift was `~1e-6°` per-pair / `~2e-5°` per-feature avg. Existing doc note's `~0.0001°` estimate is ~100× too high. The Eigen + double precision conversion was surgically applied to a local build of the legacy source, following the `FindAvgCAxes` and `FindFeatureReferenceCAxisMisorientations` legacy-patch precedents. **Post-fix: the patched legacy build produces BIT-IDENTICAL output to SIMPLNX** — all 18 per-pair entries + 6 per-feature entries byte-compared via h5py and confirmed identical.
 - **D5 partially retracted**: empirical A/B confirmed SIMPLNX nxrunner DOES emit the algorithm-level "Non Hexagonal phases" warning at execute-time. The PR #1438 regression was specifically the *preflight-time* GUI banner, not the warning channel as originally claimed.
-- **D6 added 2026-06-04**: Hexagonal_Low support gap surfaced via source-inspection during the post-A/B precedent search. Not observable on the F#6 fixture (no Hex_Low features) but a real behavior gap on wurtzite-class data. **Backported to 6.5.172 commit `5adc45df0`** bundled with D4 (the Eigen conversion commit also lifted the Hex_High-only gate to accept both Hex Laue classes — same gate location, single commit).
+- **D6 added 2026-06-04**: Hexagonal_Low support gap surfaced via source-inspection during the post-A/B precedent search. Not observable on the F#6 fixture (no Hex_Low features) but a real behavior gap on wurtzite-class data. **Fixed in the patched local build of the legacy source** bundled with D4 (the Eigen conversion patch also lifted the Hex_High-only gate to accept both Hex Laue classes — same gate location, single patch).
 
-## Post-D4-backport byte-for-byte verification
+## Post-D4-fix byte-for-byte verification
 
-After applying commit `5adc45df0` (Eigen + double + Hex_Low) to the 6.5.172 branch, re-ran the A/B comparison via direct h5py byte-comparison:
+After applying the surgical fix (Eigen + double + Hex_Low) to the local build of the legacy source, re-ran the A/B comparison via direct h5py byte-comparison (`B` = patched legacy build):
 
 ```
 AvgCAxisMisalignments byte-by-byte diff:
-  F1: 172=10.0       NX=10.0       byte-match=True
-  F2: 172=10.0       NX=10.0       byte-match=True
-  F3: 172=nan        NX=nan        byte-match=True
-  F4: 172=10.0       NX=10.0       byte-match=True
-  F5: 172=8.333335   NX=8.333335   byte-match=True
-  F6: 172=5.0        NX=5.0        byte-match=True
+  F1: B=10.0       NX=10.0       byte-match=True
+  F2: B=10.0       NX=10.0       byte-match=True
+  F3: B=nan        NX=nan        byte-match=True
+  F4: B=10.0       NX=10.0       byte-match=True
+  F5: B=8.333335   NX=8.333335   byte-match=True
+  F6: B=5.0        NX=5.0        byte-match=True
 
 CAxisMisalignmentList byte-by-byte diff (flat 18 entries):
   All 18 entries: byte-match=True (incl. all NaN sentinel slots)
@@ -244,7 +244,7 @@ CAxisMisalignmentList byte-by-byte diff (flat 18 entries):
 
 This is the canonical "100% certainty" proof that:
 1. The only behavioral deviations between legacy and SIMPLNX for this filter are the four documented (D1, D2, D4, D6 — D5 retracted to UX-only).
-2. After backporting all four to 6.5.172 (D1 in `c50223a46`, D4+D6 in `5adc45df0`), 6.5.172 produces output identical to SIMPLNX at the bit level.
+2. After applying all four fixes to the local build of the legacy source (the D1 divisor fix and the D4+D6 Eigen/double/Hex_Low fix), the patched legacy build produces output identical to SIMPLNX at the bit level.
 3. No other latent algorithmic difference exists in this filter that the V&V cycle missed.
 
 ## Regenerated to fix a circular-oracle situation?
