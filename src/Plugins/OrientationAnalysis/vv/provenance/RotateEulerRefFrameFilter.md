@@ -58,6 +58,15 @@ NX (`nx_RotateEulerRefFrame_6cases.d3dpipeline`) pipelines, both output `.dream3
 `compare_outputs.py`, and `legacy_comparison_summary.md` (results: no deviations; max wrap-aware
 diff 7.2e-7 rad).
 
+> **⚠ Evidence archival (open action):** `Code_Review/RotateEulerRefFrame/` is the engineer's local
+> verification working folder and is **not** committed to the repository, so the legacy A/B is not
+> independently reproducible from this repo. These artifacts (input CSV, generator, both pipelines,
+> comparison script, and summary) must be uploaded to the OneDrive verification archive (per the
+> archive-filter-verification workflow) and this note replaced with the archive link before final
+> sign-off. Mitigation: the F8 oracle value and the 6-case comparison were independently reproduced
+> via scipy during review, so the numeric result is corroborated even though the working folder is
+> not yet archived.
+
 ## Second-engineer oracle review
 
 **Pending.** Requested focus: (a) walk the F1–F7 hand derivations (~30 minutes); (b) confirm the

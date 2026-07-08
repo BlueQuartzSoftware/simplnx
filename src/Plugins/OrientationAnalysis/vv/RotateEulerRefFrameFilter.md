@@ -16,11 +16,11 @@
 |------------------------|--|
 | Algorithm Relationship | **Port** of legacy `RotateEulerRefFrame::execute()`. Same per-tuple kernel `gNew = normalize_cols(eu2om(euler) * ax2om(axis, angle))` → `om2eu`; library swaps only (OrientationLib → EbsdLib, hand-rolled `MatrixMath` → Eigen) plus a double-precision degree→radian conversion and progress/cancel plumbing. |
 | Oracle (confirmed)     | **Class 1 (Analytical) primary** — 8 hand/script-derived fixtures (`AnalyticalFixtures::k_Fixtures`) with closed-form derivations for Z-axis (`phi1' = phi1 - w mod 2pi`), identity + X/111 axes, normalization, and zero-angle cases. **Class 4 (Invariant) companion** — output-range bounds, (n,w)/(-n,w) round-trip, 45°+45° = 90° composability. Cross-checked by an independent numpy script (Rowenhorst 2015 Eq. A.5/A.9 + first-principles frame-rotation derivation). All pass. |
-| Code paths enumerated  | 6 of 7 exercised; the mid-loop cancel path is not directly tested (requires cancel-signal injection — same accepted gap as prior V&V reports). |
+| Code paths enumerated  | 7 enumerated; **5 exercised**. The 2 gaps are both cancel branches (cancel-before-start and mid-loop cancel) — only their false path ever runs; taking the true path requires cancel-signal injection (same accepted gap as prior V&V reports). |
 | Tests today            | **5 TEST_CASEs / 13 ctest sections** — 8 Class 1 fixtures (DYNAMIC_SECTION), 3 Class 4 invariant sections, 1 zero-axis preflight-error test (new guard added this cycle), 1 legacy-parity 480k-tuple regression pin (ASCIIData), 1 SIMPL 6.4/6.5 backwards-compat. |
 | Exemplar archive       | `ASCIIData.tar.gz` (pre-existing, shared archive) — provides the 480k-tuple legacy-parity input/comparison CSVs only. **Not an oracle** (legacy-DREAM3D provenance); the Class 1 oracle is inline in the test source. No new archive needed. |
 | Legacy comparison      | **Run** against DREAM3D 6.5.171 on 6 axis/angle cases × 12 orientations (shared CSV input). Max wrap-aware diff 7.2e-7 rad (float32 ULP level). Both implementations independently match the numpy oracle (NX 2.3e-7, legacy 8.1e-7). No deviations; two non-deviations documented. |
-| Bug flags              | None. One SIMPLNX robustness gap fixed this cycle: zero-length rotation axis previously produced silent NaN corruption; preflight now rejects it (error `-96200`). Legacy 6.5.171 retains the NaN behavior (documented as a non-deviation — not output-correctness). |
+| Bug flags              | None affecting output. Two robustness/policy items addressed this cycle: (1) zero-length rotation axis previously produced silent NaN corruption — preflight now rejects it (`-96200`) and the Algorithm class guards it as well (`-67050`); (2) the parallel kernel writes the in-place Euler array via `operator[]` from TBB workers — per the project thread-safety policy this is now gated with `requireArraysInMemory` so parallelization is only enabled for in-core stores (the codebase-sanctioned pattern). Legacy 6.5.171 retains the zero-axis NaN behavior (documented as a non-deviation — not output-correctness). |
 | V&V phase              | Oracle design + reconciliation, algorithm review (fixes applied), code-path coverage, test inventory, legacy comparison, deviations, and provenance complete. **Outstanding:** second-engineer oracle review; engineer sign-off; dual-build (OOC) run deferred — no OOC-specific variant of this algorithm and no OOC build configured in Workspace4. |
 
 ## Summary
@@ -31,7 +31,7 @@
 
 *Classification:* **Port**
 
-*Evidence:* Near line-by-line translation of legacy `RotateEulerRefFrame::execute()` + `RotateEulerRefFrameImpl::convert()` (SIMPL UUID `{ef9420b2-8c46-55f3-8ae4-f53790639de4}` retained in the legacy-UUID map; SIMPL 6.4/6.5 conversion fixtures at `test/simpl_conversion/6_*/RotateEulerRefFrameFilter.json`). Identical control flow: normalize axis → per-tuple eu2om, multiply by ax2om rotation matrix, column-normalize, om2eu, write back in place, TBB-parallel over tuples.
+*Evidence:* Near line-by-line translation of legacy `RotateEulerRefFrame::execute()` + `RotateEulerRefFrameImpl::convert()` (SIMPL UUID `{ef9420b2-8c46-55f3-8ae4-f53790639de4}` retained in the legacy-UUID map; SIMPL 6.4/6.5 conversion fixtures at `test/simpl_conversion/6_*/RotateEulerRefFrameFilter.json`). Identical control flow: normalize axis → per-tuple eu2om, multiply by ax2om rotation matrix, column-normalize, om2eu, write back in place, parallel over tuples (now gated with `requireArraysInMemory` per the project thread-safety policy — a non-functional change from legacy).
 
 *Port-time deltas:*
 
@@ -55,7 +55,7 @@
 
 ## Code path coverage
 
-*6 of 7 paths exercised.*
+*5 of 7 paths exercised. The 2 gaps (paths 1 and 6) are both cancel branches whose true path is never taken without cancel-signal injection.*
 
 Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/RotateEulerRefFrame.cpp` (~130 lines).
 
@@ -68,7 +68,7 @@ The algorithm is flat: (a) entry/setup in `operator()` (cancel check, axis norma
 | 3 | (a) Entry | Zero-length axis → preflight error `-96200` (guard added this cycle) | `Zero-Length Axis Fails Preflight` |
 | 4 | (b) Kernel | Per-tuple rotate: eu2om → multiply → column-normalize → om2eu → write-back | All Class 1 fixtures + Class 4 sections + legacy-parity ASCIIData test |
 | 5 | (b) Kernel | om2eu gimbal-degenerate branch (`|g22| ≈ 1`) | `Class 1 Analytical Fixtures` — F1, F6 (Φ = 0 outputs) |
-| 6 | (b) Kernel | Mid-loop cancel check → early return | Exercised structurally with path 4 (flag always false); cancellation state itself not injected — see path 1. |
+| 6 | (b) Kernel | Mid-loop cancel check → early return | *Not directly tested — only the false branch runs; the true (cancel) path needs cancel-signal injection (see path 1).* |
 | 7 | (b) Kernel | Progress messaging (`counter >= counterIncrement`, incl. `counterIncrement == 0` for ranges < 100) | Exercised implicitly by every test (1-tuple fixtures take the `counterIncrement == 0` branch; the 480k-tuple ASCIIData test takes the batched branch). |
 
 ## Test inventory

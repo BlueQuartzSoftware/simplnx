@@ -9,6 +9,9 @@
 
 #include "simplnx/Parameters/VectorParameter.hpp"
 
+#include <cmath>
+#include <limits>
+
 using namespace nx::core;
 
 namespace nx::core

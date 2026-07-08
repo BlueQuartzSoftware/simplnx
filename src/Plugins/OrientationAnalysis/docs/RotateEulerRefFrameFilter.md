@@ -15,7 +15,7 @@ For each Euler angle triplet the filter computes `g' = g · R(n, ω)`, where `g`
 - The rotation **angle parameter is in degrees**; the **Euler angle data is in radians** (Bunge ZXZ convention).
 - The rotation axis does not need to be normalized — the filter normalizes it internally. A zero-length axis (0,0,0) is rejected during preflight.
 - The selected Euler angles array is modified **in place** (no new array is created).
-- Output Euler angles are canonicalized to `φ1, φ2 ∈ [0, 2π)` and `Φ ∈ [0, π]`.
+- Output Euler angles are canonicalized to `φ1, φ2 ∈ [0, 2π)` and `Φ ∈ [0, π]` by the double-precision conversion, then stored as `float32`. Because a `double` just below `2π` rounds up to the `float32` value `6.2831855`, a stored `φ1`/`φ2` can be numerically equal to (or a hair above) `2π`; treat the upper bound as inclusive at float32 precision.
 
 % Auto generated parameter table will be inserted here
 

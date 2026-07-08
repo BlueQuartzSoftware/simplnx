@@ -12,6 +12,9 @@
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 #include <EbsdLib/Orientation/OrientationMatrix.hpp>
 
+#include <cmath>
+#include <limits>
+
 using namespace nx::core;
 
 namespace
@@ -111,6 +114,13 @@ Result<> RotateEulerRefFrame::operator()()
   size_t totalElements = eulerAngles.getNumberOfTuples();
 
   nx::core::FloatVec3 axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
+  // The filter's preflight rejects a zero-length axis, but guard here as well so that any direct reuse of
+  // this Algorithm class cannot silently NaN-corrupt the data (normalize() of a zero vector is NaN).
+  const float32 axisMagnitude = std::sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+  if(axisMagnitude < std::numeric_limits<float32>::epsilon())
+  {
+    return MakeErrorResult(-67050, "The rotation axis has zero length; a rotation axis must be a non-zero vector.");
+  }
   axis = axis.normalize();
 
   MessageHelper messageHelper(m_MessageHandler);
@@ -118,9 +128,15 @@ Result<> RotateEulerRefFrame::operator()()
   progressMessageHelper.setMaxProgresss(totalElements);
   progressMessageHelper.setProgressMessageTemplate("RotateEulerRefFrame: {:.2f}% complete");
 
-  // Allow data-based parallelization
+  // Data-based parallelization: each worker reads and writes only its own disjoint tuple range of the
+  // in-place Euler array. Per the project thread-safety policy, concurrent DataStore access is unsafe for
+  // out-of-core stores, so requireArraysInMemory disables parallelization unless the array is resident in
+  // memory (the codebase-sanctioned pattern; see ConvertOrientations / PartitionGeometry).
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, totalElements);
+  IParallelAlgorithm::AlgorithmArrays algArrays;
+  algArrays.push_back(&eulerAngles);
+  dataAlg.requireArraysInMemory(algArrays);
   dataAlg.execute(RotateEulerRefFrameImpl(eulerAngles, axis, m_InputValues->rotationAxis[3], m_ShouldCancel, progressMessageHelper));
   return {};
 }
