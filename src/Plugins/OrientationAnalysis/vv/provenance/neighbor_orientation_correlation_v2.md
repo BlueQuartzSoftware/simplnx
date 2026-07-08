@@ -29,6 +29,14 @@ that bar:
   cross-checked by a NumPy reference implementation (Class 2, `reference_noc.py`,
   NumPy 2.4.2, 33 assertions in `check_derivations.py`) — both derived independently of the
   SIMPLNX and legacy implementations.
+
+  > **⚠ Evidence archival (open action):** `reference_noc.py`, `check_derivations.py`, and
+  > `DERIVATIONS.md` live only in the engineer's local `VV_Work/` folder and are **not** committed
+  > to the repository, so the Class 2 reference oracle is not reproducible from the repo. They must be
+  > uploaded to the OneDrive verification archive (per the archive-filter-verification workflow) and
+  > this note replaced with the archive link before final sign-off. Mitigation: every fixture's
+  > expected value is *also* hand-derivable (Class 1) and encoded inline in the test, so the fixtures
+  > remain auditable even while the reference scripts are unarchived.
 - **Production scale:** the `Small IN100 Pipeline` test snapshots the full cell data before
   the filter runs and asserts the Class 4 invariants at 4.4M cells (high-confidence cells
   bit-identical across every array; every modified cell was low-confidence; at least one

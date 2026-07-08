@@ -839,25 +839,58 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F07
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F08 - hexagonal Laue class", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
+TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F08 - Laue-class folding (hex vs cubic)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
   using namespace NOCOracle;
   UnitTest::LoadPlugins();
 
-  // F01 with CrystalStructures[1] = 0 (Hexagonal-High). 30 deg about c folds to
-  // min(30, 60-30) = 30 deg > tolerance. Same tied counts as F01 -> +Z neighbor 87.
-  // Exercises the non-cubic LaueOps dispatch.
-  OracleFixture fixture(5, 5, 5, {999, 0});
-  const usize center = fixture.idx(2, 2, 2);
-  fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 30.0;
+  // Discriminating Laue-class test. The bad center 62's six face neighbors are set so that exactly
+  // ONE pair — the -Z neighbor 37 (0 deg) and the +Z neighbor 87 (58 deg) — has a c-axis
+  // misorientation of 58 deg. The four remaining neighbors (57,61,63,67 at 20,27,34,41 deg) are
+  // mutually dissimilar and dissimilar to both 0 and 58 under either Laue class.
+  //
+  // A 58 deg misorientation about the c-axis folds to:
+  //   * Hexagonal-High (6/mmm, 60 deg periodicity): min(58, 60-58) = 2 deg  -> < 5 deg tol -> SIMILAR
+  //   * Cubic-High     (m-3m, 90 deg periodicity):  min(58, 90-58) = 32 deg -> > 5 deg tol -> NOT similar
+  //
+  // So the SAME fixture must give different results, which pins the Laue-class dispatch's folding
+  // (a bug that folded hex with cubic periodicity, or vice versa, would break exactly one section):
+  //   * Hex:   the 37/87 pair is similar; both get count 1, last-of-ties (+Z, 87) wins -> center<-87.
+  //   * Cubic: no pair is similar; all counts 0 -> center untouched.
+  const std::array<usize, 6> neighbors = {37, 57, 61, 63, 67, 87};
+  const std::array<float64, 6> angles = {0.0, 20.0, 27.0, 34.0, 41.0, 58.0};
 
-  DataStructure dataStructure = BuildDataStructure(fixture);
-  const CellSnapshot before = Capture(dataStructure);
-  ExecuteFixture(dataStructure, 5);
+  SECTION("Hexagonal-High: 58 deg folds to 2 deg -> center replaced by +Z neighbor 87")
+  {
+    OracleFixture fixture(5, 5, 5, {999, 0}); // phase 1 = Hexagonal-High
+    const usize center = fixture.idx(2, 2, 2);
+    fixture.ci[center] = k_BadCI;
+    for(usize j = 0; j < 6; j++)
+    {
+      fixture.anglesDeg[neighbors[j]] = angles[j];
+    }
+    DataStructure dataStructure = BuildDataStructure(fixture);
+    const CellSnapshot before = Capture(dataStructure);
+    ExecuteFixture(dataStructure, 5);
+    VerifyAgainstSnapshot(dataStructure, before, {{62, 87}});
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 
-  VerifyAgainstSnapshot(dataStructure, before, {{62, 87}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SECTION("Cubic-High: 58 deg folds to 32 deg -> no similar pair, center untouched")
+  {
+    OracleFixture fixture(5, 5, 5, {999, 1}); // phase 1 = Cubic-High
+    const usize center = fixture.idx(2, 2, 2);
+    fixture.ci[center] = k_BadCI;
+    for(usize j = 0; j < 6; j++)
+    {
+      fixture.anglesDeg[neighbors[j]] = angles[j];
+    }
+    DataStructure dataStructure = BuildDataStructure(fixture);
+    const CellSnapshot before = Capture(dataStructure);
+    ExecuteFixture(dataStructure, 5);
+    VerifyAgainstSnapshot(dataStructure, before, {});
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F09 - ignored arrays untouched (I2)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")

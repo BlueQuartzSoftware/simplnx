@@ -36,7 +36,7 @@ Neighbor Orientation Correlation replaces low-confidence EBSD cells with the att
 
 1. **Stale-misorientation fix** — legacy computes `w = getMisoQuat(...)` only inside the same-phase conditional but tests `w` against the tolerance unconditionally, so a mixed-phase (or phase-0) pair inherits the previous pair's `w`. SIMPLNX re-initializes the axis-angle to `std::numeric_limits<double>::max()` before every pair. Changes output on mixed-phase datasets (see deviations).
 2. **float → double quaternion math** — legacy uses `QuatF`/`getMisoQuat` (float32); SIMPLNX uses `ebsdlib::QuatD`/`calculateMisorientation` (float64, angle at index `[3]` of the returned Axis-Angle `<XYZ>W`). Only affects pairs whose misorientation sits within float rounding of the tolerance.
-3. **Parallel transfer stage** — legacy TBB `task_group` over arrays vs SIMPLNX `ParallelTaskAlgorithm` over arrays; both copy tuples per-array in ascending voxel order, so results are identical.
+3. **Parallel transfer stage** — legacy TBB `task_group` over arrays vs SIMPLNX `ParallelTaskAlgorithm` over arrays; both copy tuples per-array **in place, in ascending voxel order**. This ordering is a genuine behavioral characteristic, not a no-op: within a single pass, if a replaced cell's chosen source is a lower-indexed cell that is *also* replaced in the same pass, the higher-indexed cell inherits the already-overwritten (chained / double-hop) value rather than the source's original value. SIMPLNX reproduces legacy 6.5.171 here exactly (same ascending in-place copy), so on any given input the two agree — but see the coverage caveat below: the single-bad-cell oracle fixtures do not construct a chaining case, so a hypothetical reference implementation using snapshot-copy semantics would pass them. The parity is established by construction (statement-for-statement port) rather than by a discriminating fixture.
 4. **Face-neighbor refactor (PR #1523)** and 2D standardization (PR #1590) — replaced the hand-rolled bounds checks with `NeighborUtilities` (`initializeFaceNeighborOffsets` / `computeValidFaceNeighbors`); offset table and iteration order match legacy exactly.
 
 **Legacy quirks found ported into SIMPLNX** (disposition per this V&V):
@@ -60,8 +60,11 @@ Neighbor Orientation Correlation replaces low-confidence EBSD cells with the att
 
 ## Code path coverage
 
-**20 of 21 paths exercised.** The single gap (cancel path) needs cancel-signal injection and is a
-low-value guard exercised implicitly by the GUI.
+**20 of 22 paths exercised.** Two gaps: the cancel path (path 21) needs cancel-signal injection and is
+a low-value guard exercised implicitly by the GUI; and the within-pass in-place ascending-copy
+order-dependence (path 18a) is a documented legacy-parity behavior established by construction (the
+oracle fixtures do not build a chaining case). Neither is a correctness risk for the isolated-defect
+inputs the filter targets.
 
 Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/NeighborOrientationCorrelation.cpp` (216 lines).
 
@@ -81,13 +84,14 @@ counting + best-neighbor selection), (c) per-pass in-place tuple transfer, repea
 | 9  | (b) Scan | pair same phase, `w >= tol` → not counted | `Oracle F02` |
 | 10 | (b) Scan | pair with mismatched phases → never similar (D1 guard) | `Oracle F05` |
 | 11 | (b) Scan | pair involving phase 0 → never similar | `Oracle F06` |
-| 12 | (b) Scan | non-cubic LaueOps dispatch (`CrystalStructures = 0`, hex) | `Oracle F08` |
+| 12 | (b) Scan | Laue-class-dependent misorientation fold (hex 60° vs cubic 90° periodicity) | `Oracle F08` — a 58° c-axis pair is similar under hex (folds to 2°) but not cubic (folds to 32°), so the same fixture replaces the center under hex and leaves it untouched under cubic |
 | 13 | (b) Select | all counts zero → `bestNeighbor` stays −1, cell untouched | `Oracle F02` |
 | 14 | (b) Select | tied counts → last neighbor in −Z…+Z scan order (6.5.171-compatible) | `Oracle F01`, `F07`, `F11` |
 | 15 | (b) Select | unequal counts → arg-max wins, last of maxes (D3 fix) | `Oracle F03`, `F05`, `F06`, `F12` |
 | 16 | (c) Transfer | all non-ignored cell arrays copied from best neighbor | `Oracle F01` (all 6 arrays verified) |
 | 17 | (c) Transfer | ignored arrays excluded | `Oracle F09` |
 | 18 | (b+c) | multi-pass chaining: inherited CI enables next-pass fills (D2 fix) | `Oracle F04` (Level 2), `Oracle F10` (Level 4) |
+| 18a | (c) Transfer | **within-pass** in-place ascending-order copy: a replaced cell sourcing from a lower-indexed cell also replaced in the same pass inherits the chained value | *Not covered by a discriminating fixture — the oracle fixtures replace a single isolated bad cell whose source is a good cell, so no chaining occurs. Parity with legacy 6.5.171's ascending in-place copy is established by construction (statement-for-statement port). Known coverage gap; the behavior is documented in the Algorithm Relationship section.* |
 | 19 | (b+c) | `Level >= 6` → zero passes, output identical to input | `Class 4 - Level >= 6 is a no-op (I4)` |
 | 20 | (b) | 2D image (`dims[2] == 1`) degenerate-z validity masks | `Oracle F05`, `F07` |
 | 21 | (b+c) | cancel requested → abort scan / abort transfer tasks | *Not directly tested. Requires cancel-signal injection; low-value guard.* |
@@ -112,7 +116,7 @@ and the production-scale invariant verification (`Small IN100 Pipeline`, 4.44M c
 | `Oracle F05 - mixed-phase pair never similar (D1 regression)` | new-for-V&V | Pins the fresh-misorientation behavior; asserts phase never crosses. |
 | `Oracle F06 - phase-0 neighbors never counted` | new-for-V&V | Unindexed neighbors excluded from counting and selection. |
 | `Oracle F07 - 2D image` | new-for-V&V | Degenerate-z masks; 4-neighbor tie resolves to +Y (last in scan order). |
-| `Oracle F08 - hexagonal Laue class` | new-for-V&V | Non-cubic ops dispatch. |
+| `Oracle F08 - Laue-class folding (hex vs cubic)` | new-for-V&V | Discriminating Laue-class test: a 58° c-axis neighbor pair is similar under hex (folds to 2°) but not cubic (folds to 32°). Two sections run the identical fixture under Hexagonal-High and Cubic-High and assert opposite outcomes (center replaced vs untouched), so it catches a folding-periodicity bug in either dispatch. |
 | `Oracle F09 - ignored arrays untouched (I2)` | new-for-V&V | IgnoredDataArrayPaths honored; all other arrays copied. |
 | `Oracle F11 - volume corner` | new-for-V&V | 3-valid-neighbor boundary case. |
 | `Oracle F12 - anisotropic dims` | new-for-V&V | 4×5×3 (nx≠ny≠nz) so stride/axis-swap bugs cannot hide behind dimension symmetry; secondary D3 pin (last-of-maxes beats a later count-1 pair). |
