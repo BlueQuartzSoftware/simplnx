@@ -1,6 +1,7 @@
 #include "OrientationAnalysis/Filters/ComputeFaceIPFColoringFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
+#include "simplnx/Common/Constants.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
@@ -63,22 +64,42 @@ DataPath faceAreas = faceDataGroup.createChildPath(nx::core::Constants::k_FaceAr
 // The crystal-structure enum values that index ops[] are Hexagonal_High = 0,
 // Cubic_High = 1 (EbsdLib/Core/EbsdLibConstants.h).
 //
-// The fixture (identity orientations throughout) builds four faces:
+// Every feature carries a DISTINCT orientation so a wrong-Euler-index bug (the
+// Euler analogue of the #1635 wrong-phase-index bug) changes the output. The
+// orientations are chosen so the expected corner colors remain hand-derivable:
+//   Feature 1 (cubic): Euler (pi/2, 0, 0) -- a 90-degree rotation about Z. It maps
+//     <100>-family reference directions to other <100> directions and <111> to
+//     <111>, so the cubic corner colors are IDENTICAL to the identity's. The
+//     derivation is insensitive to the active/passive convention (both give a
+//     <100>/<111> family member).
+//   Feature 2 (hex):   Euler (pi/3, 0, 0) -- a 60-degree rotation about c, which
+//     is a 6/mmm symmetry operation, so every IPF color is IDENTICAL to the
+//     identity's (again convention-insensitive).
+//   Feature 3 (cubic): identity (0, 0, 0), distinct from feature 1.
+// If the algorithm ever reads the wrong feature's Euler angles (e.g. feature1's
+// on the phase-2 side), the hex side sees a 90-degree Z rotation instead of its
+// own 60-degree one: reference (1,0,0) then lands ~30 degrees away in eta -- the
+// opposite corner of the hex wedge -- and the exact-value assertions fail.
+//
+// The fixture builds five faces:
 //   Face 0  labels (1,2)  n=(-1,0,0)  mixed cubic/hex  -- the headline discriminator
 //   Face 1  labels (-1,2) n=(-1,0,0)  feature1 invalid -- boundary discriminator
 //   Face 2  labels (1,-1) n=(-1,0,0)  feature2 invalid -- control (second black)
 //   Face 3  labels (1,3)  n=(1,1,1)   same-phase cubic -- control (bug cannot manifest)
+//   Face 4  labels (2,1)  n=(0,0,1)   hex first side   -- hex c-axis corner (red)
 //
 // Why each side's expected color is what it is (FIX = correct behavior):
-//   F0 first  = cubic(+(-1,0,0)) = <100> red   = (255,  0,  0)
-//   F0 second = hex (-(-1,0,0)=(1,0,0)) basal   = (  0,255,  0)   [BUG -> cubic <100> = (255,0,0)]
-//   F1 first  = black (feature1 = -1 -> phase1 = 0)              = (  0,  0,  0)
-//   F1 second = hex (1,0,0) basal                = (  0,255,  0)   [BUG -> guard reads CrystalStructures[0]
-//                                                                   sentinel, fails, leaves black (0,0,0)]
-//   F2 first  = cubic(-1,0,0) = <100> red        = (255,  0,  0)
-//   F2 second = black (feature2 = -1 -> phase2 = 0)             = (  0,  0,  0)
-//   F3 first  = cubic(1,1,1) = <111> blue        = (  0,  0,255)
-//   F3 second = cubic(-(1,1,1)) = <111> blue      = (  0,  0,255)  [phase1==phase2, bug cannot manifest]
+//   F0 first  = cubic Rz(90)(-1,0,0) = <100> red    = (255,  0,  0)
+//   F0 second = hex Rz(60)(-(-1,0,0)=(1,0,0)) basal = (  0,255,  0)   [BUG -> cubic ops = red]
+//   F1 first  = black (feature1 = -1 -> phase1 = 0)               = (  0,  0,  0)
+//   F1 second = hex Rz(60)(1,0,0) basal              = (  0,255,  0)   [BUG -> guard reads CrystalStructures[0]
+//                                                                    sentinel, fails, leaves black (0,0,0)]
+//   F2 first  = cubic Rz(90)(-1,0,0) = <100> red     = (255,  0,  0)
+//   F2 second = black (feature2 = -1 -> phase2 = 0)              = (  0,  0,  0)
+//   F3 first  = cubic Rz(90)(1,1,1) = <111> blue     = (  0,  0,255)
+//   F3 second = cubic identity(-(1,1,1)) = <111> blue = (  0,  0,255)  [phase1==phase2, bug cannot manifest]
+//   F4 first  = hex Rz(60)(0,0,1) = c-axis           = (255,  0,  0)   [chi = 0 -> pure red corner]
+//   F4 second = cubic Rz(90)(-(0,0,1)) = <100> red    = (255,  0,  0)
 //
 // Faces 0 and 1 are the discriminators: under the pre-fix bug both their SECOND
 // colors are wrong (F0 -> red, F1 -> black); after the fix they are green.
@@ -100,19 +121,22 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Class 1 Oracle - m
   const DataPath phasesPath({"Data", "FeaturePhases"});
   const DataPath crystalStructuresPath({"Data", "CrystalStructures"});
 
-  // 4 faces, 2-component (feature1, feature2)
-  auto* faceLabelsArray = UnitTest::CreateTestDataArray<int32>(dataStructure, "FaceLabels", {4}, {2}, topGroup->getId());
-  const std::vector<int32> faceLabelValues = {1, 2, -1, 2, 1, -1, 1, 3};
+  // 5 faces, 2-component (feature1, feature2)
+  auto* faceLabelsArray = UnitTest::CreateTestDataArray<int32>(dataStructure, "FaceLabels", {5}, {2}, topGroup->getId());
+  const std::vector<int32> faceLabelValues = {1, 2, -1, 2, 1, -1, 1, 3, 2, 1};
   std::copy(faceLabelValues.begin(), faceLabelValues.end(), faceLabelsArray->begin());
 
-  // 4 faces, 3-component face normals (not normalized; EbsdLib normalizes internally)
-  auto* faceNormalsArray = UnitTest::CreateTestDataArray<float64>(dataStructure, "FaceNormals", {4}, {3}, topGroup->getId());
-  const std::vector<float64> faceNormalValues = {-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 1.0, 1.0};
+  // 5 faces, 3-component face normals (not normalized; EbsdLib normalizes internally)
+  auto* faceNormalsArray = UnitTest::CreateTestDataArray<float64>(dataStructure, "FaceNormals", {5}, {3}, topGroup->getId());
+  const std::vector<float64> faceNormalValues = {-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0};
   std::copy(faceNormalValues.begin(), faceNormalValues.end(), faceNormalsArray->begin());
 
-  // 4 features (index 0 unused), identity Euler angles throughout
+  // 4 features (index 0 unused). Distinct orientations per feature (see the derivation above):
+  //   feature 1 (cubic): (pi/2, 0, 0)  feature 2 (hex): (pi/3, 0, 0)  feature 3 (cubic): identity
   auto* eulerAngles = UnitTest::CreateTestDataArray<float32>(dataStructure, "FeatureEulerAngles", {4}, {3}, topGroup->getId());
   std::fill(eulerAngles->begin(), eulerAngles->end(), 0.0F);
+  (*eulerAngles)[3 * 1 + 0] = nx::core::Constants::k_PiOver2F; // feature 1: phi1 = 90 degrees
+  (*eulerAngles)[3 * 2 + 0] = nx::core::Constants::k_PiOver3F; // feature 2: phi1 = 60 degrees (hex symmetry op)
 
   // Feature phases: feature 1 -> phase 1 (cubic), feature 2 -> phase 2 (hex), feature 3 -> phase 1 (cubic)
   auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeaturePhases", {4}, {1}, topGroup->getId());
@@ -145,10 +169,10 @@ TEST_CASE("OrientationAnalysis::ComputeFaceIPFColoringFilter: Class 1 Oracle - m
   const auto& second = dataStructure.getDataRefAs<UInt8Array>(faceLabelsPath.replaceName(::k_SecondNXFaceIPFColors));
 
   // Expected colors (the FIX = correct behavior). Each row is one face.
-  const std::array<std::array<uint8, 3>, 4> expectedFirst = {{{255, 0, 0}, {0, 0, 0}, {255, 0, 0}, {0, 0, 255}}};
-  const std::array<std::array<uint8, 3>, 4> expectedSecond = {{{0, 255, 0}, {0, 255, 0}, {0, 0, 0}, {0, 0, 255}}};
+  const std::array<std::array<uint8, 3>, 5> expectedFirst = {{{255, 0, 0}, {0, 0, 0}, {255, 0, 0}, {0, 0, 255}, {255, 0, 0}}};
+  const std::array<std::array<uint8, 3>, 5> expectedSecond = {{{0, 255, 0}, {0, 255, 0}, {0, 0, 0}, {0, 0, 255}, {255, 0, 0}}};
 
-  for(usize face = 0; face < 4; face++)
+  for(usize face = 0; face < 5; face++)
   {
     INFO(fmt::format("face {}", face));
     REQUIRE(first[face * 3 + 0] == expectedFirst[face][0]);

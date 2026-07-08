@@ -180,6 +180,10 @@ Result<> ComputeFaceIPFColoring::operator()()
   ParallelDataAlgorithm parallelTask;
   parallelTask.setRange(0, numTriangles);
   parallelTask.requireArraysInMemory(algArrays);
+  // Per the project thread-safety policy, DataArray/DataStore access is not thread-safe even when each
+  // thread writes distinct indices, so parallelization stays disabled (same disposition as the
+  // ComputeFeatureFaceMisorientations V&V).
+  parallelTask.setParallelizationEnabled(false);
   parallelTask.execute(CalculateFaceIPFColorsImpl(faceLabels, phases, faceNormals, eulerAngles, crystalStructures, firstIpfColors, secondIpfColors, m_InputValues->ColorKey));
 
   return {};
