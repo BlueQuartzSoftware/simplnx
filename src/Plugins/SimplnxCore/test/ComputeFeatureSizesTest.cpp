@@ -225,8 +225,8 @@ DataStructure CreateRectGridDataStructure()
   // clang-format off
   // Expected Outputs:
   // numElements: 0 39 15 10
-  // volumes: 0.0 2358.834 352.462 15.104
-  // eqDiameters: 0.0 16.516 8.764 3.0994
+  // volumes: 0.0 2362.434 352.462 15.104
+  // eqDiameters: 0.0 16.5242 8.76404 3.06689
   const std::array<uint8, 64> featureIdsArray = {
     1, 2, 2, 2,
     1, 1, 1, 1,
@@ -317,6 +317,57 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
 #endif
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Characterization test for the 2D area formula: the flat dimension's spacing must be EXCLUDED so a
+// 2D area is a true area, not a volume. The existing "Valid: Image 2D" fixture uses a flat-dimension
+// spacing of 1.0, which hides an all-three-spacings bug; here the flat dimension's spacing is
+// deliberately non-unit (5.0). If the flat spacing were (incorrectly) included, every area would be
+// 5x too large. All three flat orientations are checked so the fix cannot be an axis-specific special
+// case. This matches DREAM3D 6.5.171, which uses only the two non-flat resolutions.
+TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing", "[SimplnxCore][ComputeFeatureSizes]")
+{
+  auto [label, dims, spacing] = GENERATE(std::make_tuple("flat Z", SizeVec3{2, 2, 1}, FloatVec3{2.0f, 3.0f, 5.0f}), std::make_tuple("flat X", SizeVec3{1, 2, 2}, FloatVec3{5.0f, 2.0f, 3.0f}),
+                                         std::make_tuple("flat Y", SizeVec3{2, 1, 2}, FloatVec3{2.0f, 5.0f, 3.0f}));
+
+  DYNAMIC_SECTION(label)
+  {
+    // Four cells, all feature 1 (feature 0 unused). Non-flat spacings are always 2.0 and 3.0, so the
+    // per-voxel area is 6.0 and the single feature's area is 4 * 6.0 = 24.0 regardless of which axis is
+    // flat. The flat dimension's spacing is 5.0 and must NOT appear in the product.
+    DataStructure dataStructure;
+    auto* imageGeom = ImageGeom::Create(dataStructure, Test::k_ImageGeomName);
+    imageGeom->setSpacing(spacing);
+    imageGeom->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f});
+    imageGeom->setDimensions(dims);
+
+    const ShapeType tupleShape{dims[2], dims[1], dims[0]};
+    auto* cellData = AttributeMatrix::Create(dataStructure, Test::k_CellAMName, tupleShape, imageGeom->getId());
+    imageGeom->setCellData(*cellData);
+    auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, Test::k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+    featureIds->fill(1);
+    AttributeMatrix::Create(dataStructure, Test::k_FeatureAMName, ShapeType{2}, imageGeom->getId());
+
+    ComputeFeatureSizesFilter filter;
+    Arguments args;
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto& areas = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
+    REQUIRE(areas.getValue(1) == Approx(24.0f)); // 4 voxels * (2.0 * 3.0); NOT 4 * (2.0 * 3.0 * 5.0) = 120
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes", "[SimplnxCore][ComputeFeatureSizes]")

@@ -93,6 +93,12 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
   FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
+  // The worker reads featureIds concurrently across slices; per the project thread-safety policy a
+  // DataStore is only safe for concurrent access when it is resident in memory, so gate parallelization
+  // on that (an out-of-core store falls back to serial execution).
+  IParallelAlgorithm::AlgorithmStores algStores;
+  algStores.push_back(&featureIds);
+  dataAlg.requireStoresInMemory(algStores);
   dataAlg.execute(ImageSummationImpl(threadLocalVoxelCounts, dims, featureIds, shouldCancel));
 
   if(shouldCancel)
@@ -142,8 +148,24 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
      * For these two cases the following code would BREAK, so do not enable.
      **/
 
-    // Calculate the area of a single voxel
-    const float64 voxelArea = static_cast<float64>(spacing[0]) * static_cast<float64>(spacing[1]) * static_cast<float64>(spacing[2]);
+    // Calculate the area of a single voxel from the two NON-flat dimensions only. Exactly one dimension
+    // is flat here (preflight rejects more than one empty dimension), so its spacing must be excluded --
+    // including it would compute a volume, not an area, and would diverge from DREAM3D 6.5.171 whenever
+    // the flat dimension's spacing != 1. This matches legacy FindSizes::findSizesImage, which uses only
+    // the two non-flat resolutions.
+    float64 voxelArea = 1.0;
+    if(xDimSize != 1)
+    {
+      voxelArea *= static_cast<float64>(spacing[0]);
+    }
+    if(yDimSize != 1)
+    {
+      voxelArea *= static_cast<float64>(spacing[1]);
+    }
+    if(zDimSize != 1)
+    {
+      voxelArea *= static_cast<float64>(spacing[2]);
+    }
 
     msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
     // Process each feature storing feature voxel counts, areas, and equivalent circular diameter
@@ -326,6 +348,11 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
   FeatureVolumesT threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
+  // The worker reads featureIds concurrently across slices; gate parallelization on the store being
+  // resident in memory (see the ProcessImageGeom note; project thread-safety policy).
+  IParallelAlgorithm::AlgorithmStores algStores;
+  algStores.push_back(&featureIds);
+  dataAlg.requireStoresInMemory(algStores);
   dataAlg.execute(RectGridSummationImpl(threadLocalVoxelCounts, threadLocalVolumes, dims, featureIds, elemSizes, shouldCancel));
 
   if(shouldCancel)

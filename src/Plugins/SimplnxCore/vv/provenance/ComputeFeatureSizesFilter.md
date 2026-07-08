@@ -64,8 +64,8 @@ The expected outputs are as follows:
 
 ```text
 NumElements: {0, 39, 15, 10}
-Volumes: {0.0, 2358.834, 352.462, 15.104}
-EquivalentDiameters: {0.0, 16.516, 8.764, 3.0994}
+Volumes: {0.0, 2362.434, 352.462, 15.104}
+EquivalentDiameters: {0.0, 16.5242, 8.764, 3.0669}
 ```
 
 In order to derive these values, the voxels must be processed individually and summed up. This is how it was done:

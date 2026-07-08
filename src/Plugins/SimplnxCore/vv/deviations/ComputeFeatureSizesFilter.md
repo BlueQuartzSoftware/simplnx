@@ -12,7 +12,9 @@ Source-inspection comparison of `ProcessImageGeom` against DREAM3D 6.5.171 `Find
 
 - Per-feature voxel count: identical parallel accumulation logic (serial in legacy).
 - 3D volume formula: `volume = voxelCount × voxelVolume`; ESD: `2·∛(volume / (4π/3))` — both use the standard sphere formula.
-- 2D area formula (any dim == 1): `area = voxelCount × voxelArea`; ECD: `2·√(area / π)` — both use the standard circle formula.
+- 2D area formula (exactly one dim == 1): `area = voxelCount × (product of the two NON-flat spacings)`; ECD: `2·√(area / π)` — both use the standard circle formula, and both exclude the flat dimension's spacing.
+
+> **Corrected this V&V cycle (was a latent SIMPLNX bug, now no deviation):** `ProcessImageGeom` previously multiplied **all three** spacings for the 2D voxel area (`spacing[0]·spacing[1]·spacing[2]`), which is a volume, not an area. It diverged from DREAM3D 6.5.171 (which uses only the two non-flat resolutions) whenever the flat dimension's spacing was not 1.0. The prior 2D unit fixture used a flat-dimension spacing of exactly 1.0, so the defect was invisible. The formula now excludes the flat dimension's spacing, restoring parity with legacy — hence this remains a *no-deviation* entry. Pinned by the `2D area excludes the flat-dimension spacing` characterization test (flat X/Y/Z, non-unit flat spacing).
 
 **Precision non-deviation (not flagged):** SIMPLNX promotes `voxelVolume` to `float64` and evaluates `cbrt` / `sqrt` in `float64` before casting to `float32` for storage. The legacy filter likely used `float32` throughout. The difference is within ~1 ULP of `float32` for typical EBSD spacings and is non-material for downstream morphological statistics.
 

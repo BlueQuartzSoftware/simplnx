@@ -16,14 +16,14 @@
 | Algorithm relationship | **Port** of both `FindSizes::execute()` (ImageGeom) and `FindSizes::findSizesUnstructured()` (RectGridGeom) |
 | Oracle | **Class 1 (Analytical)** — all test data inlined, hand-derived |
 | Code paths | **14 of 19** exercised; 5 gaps (cancel ×2, INT32_MAX overflow ×2, other-geom no-op ×1) |
-| Tests | **9 TEST_CASEs** — all pass |
+| Tests | **10 TEST_CASEs** — all pass |
 | External archive | None |
 | Deviations | **2 active**, both A/B-verified 2026-06-27: `ComputeFeatureSizes-D1` (float64+Kahan vs naive summation → `Volumes`), `ComputeFeatureSizes-D2` (float64 `std::cbrt` vs float32 `powf` → `EquivalentDiameters`) — see deviations file |
-| Open bugs | **1 open** (`Bug-1`): 2D area formula uses all 3 spacings (= volume) instead of the 2 non-flat spacings |
+| Open bugs | **None.** `Bug-1` (2D area formula multiplied all 3 spacings instead of the 2 non-flat spacings) was **fixed this cycle** and pinned by the `2D area excludes the flat-dimension spacing` characterization test; the ImageGeom 2D path now matches legacy (no deviation). |
 
 ## Summary
 
-`ComputeFeatureSizesFilter` produces three arrays per feature: `NumElements` (voxel count, `int32`), `Volumes`/`Areas` (float32), and `EquivalentDiameters` (ESD or ECD, float32). For ImageGeom it uses voxel count × voxel size; for RectGridGeom it sums per-cell element sizes per feature. Both paths are parallelized via `ParallelDataAlgorithm` + TBB `tbb::combinable`. All tests use Class 1 oracles (hand-constructed fixtures with first-principles expected values). Source-inspection confirms both geometry paths are ports of legacy `FindSizes`. Two precision deviations (`D1`, `D2`) — both confirmed by a direct A/B run against DREAM3D 6.5.171 — and one open bug (`Bug-1`) are documented below.
+`ComputeFeatureSizesFilter` produces three arrays per feature: `NumElements` (voxel count, `int32`), `Volumes`/`Areas` (float32), and `EquivalentDiameters` (ESD or ECD, float32). For ImageGeom it uses voxel count × voxel size; for RectGridGeom it sums per-cell element sizes per feature. Both paths are parallelized via `ParallelDataAlgorithm` + TBB `tbb::combinable`. All tests use Class 1 oracles (hand-constructed fixtures with first-principles expected values). Source-inspection confirms both geometry paths are ports of legacy `FindSizes`. Two precision deviations (`D1`, `D2`) — both confirmed by a direct A/B run against DREAM3D 6.5.171 — are documented below. A latent 2D-area bug (`Bug-1`: the flat dimension's spacing was included in the per-voxel area) was found during this V&V and **fixed**; the 2D path now matches legacy and is pinned by a dedicated characterization test with a non-unit flat-dimension spacing.
 
 ## Algorithm Relationship
 
@@ -79,19 +79,21 @@ Second-engineer review pending: verify hand-derivations for all three fixtures a
 
 ## Test inventory
 
-| Test case | Notes |
-|---|---|
-| `Valid: Image 2D` | Class 1; 5×5×1, spacing 20.2×0.1×1.0; SaveElementSizes=false |
-| `Valid: Image 2D with Element Sizes` | Same fixture; SaveElementSizes=true |
-| `Valid: Image Stack 3D` | Class 1; 5×5×5, spacing 1.2×0.9×2.1; SaveElementSizes=false |
-| `Valid: Image Stack 3D with Element Size` | Same fixture; SaveElementSizes=true |
-| `Valid: Rectilinear Grid` | Class 1; 4×4×4 non-uniform; SaveElementSizes=false; Kahan path exercised |
-| `Valid: Rectilinear Grid with Element Size` | Same fixture; SaveElementSizes=true |
-| `Invalid: Execution Failure` | FeatureId 10 in a 4-feature AM; asserts execute result invalid |
-| `Invalid: Preflight Failure` | 4 degenerate dim configs; asserts preflight result invalid |
-| `SIMPL Backwards Compatibility` | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5; validates UUID + arg-key + param-value decoding |
+| Test case | Status | Notes |
+|---|---|---|
+| `Valid: Image 2D` | kept | Class 1; 5×5×1, spacing 20.2×0.1×1.0 (flat-Z spacing 1.0); SaveElementSizes=false |
+| `2D area excludes the flat-dimension spacing` | new-for-V&V | Class 1 characterization pin for the Bug-1 fix. 2×2 slab, non-flat spacings 2.0×3.0, flat-dimension spacing **5.0**; asserts area == 24.0 (not 120.0). `GENERATE`s all three flat orientations (X/Y/Z) so the flat spacing is proven excluded regardless of axis. |
+| `Valid: Image 2D with Element Sizes` | kept | Same fixture as `Valid: Image 2D`; SaveElementSizes=true |
+| `Valid: Image Stack 3D` | kept | Class 1; 5×5×5, spacing 1.2×0.9×2.1; SaveElementSizes=false |
+| `Valid: Image Stack 3D with Element Size` | kept | Same fixture; SaveElementSizes=true |
+| `Valid: Rectilinear Grid` | kept | Class 1; 4×4×4 non-uniform; SaveElementSizes=false; Kahan path exercised |
+| `Valid: Rectilinear Grid with Element Size` | kept | Same fixture; SaveElementSizes=true |
+| `Invalid: Execution Failure` | kept | FeatureId 10 in a 4-feature AM; asserts execute result invalid |
+| `Invalid: Preflight Failure` | kept | 4 degenerate dim configs; asserts preflight result invalid |
+| `SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5; validates UUID + arg-key + param-value decoding |
+| `Legacy: Small IN100 Test` | retired | Real-data comparison against legacy-produced `6_6_stats_test_v2.dream3d` arrays. Retired because it was a legacy-output regression check (not an independent oracle) and the D1/D2 precision deviations intentionally change those exact values; the RectGrid A/B (deviations file) now provides the legacy comparison and the inline Class 1 fixtures provide the correctness oracle. |
 
-All 9 TEST_CASEs pass.
+All 10 TEST_CASEs pass.
 
 ## Exemplar archive
 
@@ -101,7 +103,7 @@ None — all fixtures constructed in C++ at test time. Provenance in `vv/provena
 
 Both deviations below were confirmed by a direct A/B run (2026-06-27), not source inspection alone: the exact RectGrid fixture was authored as a shared legacy `.dream3d` and run through stock DREAM3D 6.5.171, DREAM3D-NX, and a 6.5.172 proof-patch build. Applying **both** the D1 (summation) and D2 (ESD-evaluation) changes to legacy `findSizesUnstructured` made `Volumes` and `EquivalentDiameters` **bit-identical** to SIMPLNX; each change alone closed only its corresponding array.
 
-**`ComputeFeatureSizes-D1` (RectGridGeom → `Volumes`):** Per-feature volumes differ from `FindSizes::findSizesUnstructured()` output due to two precision improvements in SIMPLNX: (1) element sizes promoted from float32 to float64 before accumulation; (2) Kahan compensated summation applied per-thread and during TBB post-reduction, reducing accumulated error from O(N·ε_float32) to O(ε_float64). SIMPLNX is more accurate. Users migrating from DREAM3D 6.5.171 should expect small shifts in per-feature volumes for RectGridGeom; largest for features with many cells on grids with high cell-volume variation.
+**`ComputeFeatureSizes-D1` (RectGridGeom → `Volumes`):** Per-feature volumes differ from `FindSizes::findSizesUnstructured()` output due to two precision improvements in SIMPLNX: (1) element sizes promoted from float32 to float64 before accumulation; (2) Kahan compensated summation. Note the Kahan compensator is a local reset on each TBB body invocation (the `combinable` per-thread volume persists, but the compensation term does not carry across chunk boundaries within a thread), so the accumulated-error reduction is per-chunk rather than the full O(ε_float64) a single continuous Kahan pass would give; the dominant improvement is the float64 accumulation. SIMPLNX is still more accurate than the legacy naive float32 sum. Users migrating from DREAM3D 6.5.171 should expect small shifts in per-feature volumes for RectGridGeom; largest for features with many cells on grids with high cell-volume variation.
 
 **`ComputeFeatureSizes-D2` (RectGridGeom → `EquivalentDiameters`):** Even with identical `Volumes`, the equivalent spherical diameter differs because legacy evaluates the cube root with `powf` (float32) on the float32-rounded volume, while SIMPLNX uses `std::cbrt` (float64) on the float64 volume. SIMPLNX is more accurate. The same `powf`/`sqrtf`-on-float32 pattern exists on the ImageGeom path; it was previously noted only as a non-flagged precision difference and is now captured by D2.
 
