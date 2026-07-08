@@ -51,11 +51,14 @@ constexpr int32 k_NonPrincipalRotation_Error = -6850;
 constexpr int32 k_SliceBySliceReordersSlices_Error = -6851;
 
 // -----------------------------------------------------------------------------
-// Returns true if the 3x3 rotation block is a proper signed axis-permutation matrix, i.e. a
-// rotation by a multiple of 90 degrees about the X, Y, or Z axis. Such a rotation maps the voxel
-// grid exactly onto itself, so the transform is a lossless permutation of the voxels. Any other
-// rotation is a lossy nearest-neighbor resample (see the RotateSampleRefFrame V&V report).
-bool IsPrincipalAxis90Rotation(const ImageRotationUtilities::Matrix3fR& rotation, float32 tol)
+// Returns true if the 3x3 rotation block is a proper signed axis-permutation matrix (determinant +1
+// with exactly one +/-1 per row and column). This is precisely the octahedral rotation group — the 24
+// rotations that map the cubic voxel grid exactly onto itself. It includes the 90/180/270-degree
+// rotations about X/Y/Z, but ALSO the 180-degree rotations about a face-diagonal (110) axis and the
+// 120/240-degree rotations about a body-diagonal (111) axis. Every such rotation is a lossless
+// permutation of the voxels; any other rotation is a lossy nearest-neighbor resample (see the
+// RotateSampleRefFrame V&V report).
+bool IsLosslessGridRotation(const ImageRotationUtilities::Matrix3fR& rotation, float32 tol)
 {
   std::array<int32, 3> rowOnesCount = {0, 0, 0};
   std::array<int32, 3> colOnesCount = {0, 0, 0};
@@ -68,7 +71,7 @@ bool IsPrincipalAxis90Rotation(const ImageRotationUtilities::Matrix3fR& rotation
       const bool isOne = std::fabs(absValue - 1.0f) < tol;
       if(!isZero && !isOne)
       {
-        return false; // entry is not near -1, 0, or +1 -> not a principal-90 rotation
+        return false; // entry is not near -1, 0, or +1 -> not a signed permutation matrix
       }
       if(isOne)
       {
@@ -201,16 +204,17 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   }
   }
 
-  // V&V guard: RotateSampleRefFrame is only a lossless reference-frame rotation when the rotation is
-  // a multiple of 90 degrees about a principal (X/Y/Z) axis. For any other rotation the nearest-neighbor
-  // resample drops/duplicates voxels and introduces background fill, so it is rejected here. Arbitrary
-  // rotations belong to the "Apply Transformation To Geometry" filter.
+  // V&V guard: RotateSampleRefFrame is only a lossless reference-frame rotation when the rotation maps
+  // the cubic voxel grid exactly onto itself (a signed axis-permutation / octahedral-group rotation).
+  // For any other rotation the nearest-neighbor resample drops/duplicates voxels and introduces
+  // background fill, so it is rejected here. Arbitrary rotations belong to "Apply Transformation To Geometry".
   const ImageRotationUtilities::Matrix3fR rotationBlock = rotationMatrix.block(0, 0, 3, 3);
-  if(!IsPrincipalAxis90Rotation(rotationBlock, k_Rotation90Tolerance))
+  if(!IsLosslessGridRotation(rotationBlock, k_Rotation90Tolerance))
   {
     return MakePreflightErrorResult(k_NonPrincipalRotation_Error,
-                                    "Rotate Sample Reference Frame only supports rotations that are a multiple of 90 degrees (90, 180, 270) about the X, Y, or Z axis. The requested rotation is not "
-                                    "axis-aligned, which would produce a lossy resampled result. For an arbitrary rotation use the 'Apply Transformation To Geometry' filter instead.");
+                                    "Rotate Sample Reference Frame only supports rotations that map the voxel grid exactly onto itself: the 90/180/270-degree rotations about the X, Y, or Z axis "
+                                    "(and, more generally, any rotation of the octahedral symmetry group, such as 120 degrees about (111)). The requested rotation would produce a lossy resampled "
+                                    "result. For an arbitrary rotation use the 'Apply Transformation To Geometry' filter instead.");
   }
 
   // The slice-by-slice option pins each output slice to the same input slice index (planeOld = k). That is
@@ -233,9 +237,13 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
   if(!keepInputGeometryOrigin)
   {
-    origin[0] += rotateArgs.outputXMin;
-    origin[1] += rotateArgs.outputYMin;
-    origin[2] += rotateArgs.outputZMin;
+    // outputXMin/YMin/ZMin are the ABSOLUTE min corner of the transformed bounding box: DetermineMinMaxCoords
+    // transforms ImageGeom::getBoundingBoxf(), which already includes the input origin. Assign (do not add) so
+    // the persisted geometry origin equals the RotateArgs::TransformedOrigin the resample worker samples
+    // against; adding the input origin again double-counts it for any non-zero input origin.
+    origin[0] = rotateArgs.outputXMin;
+    origin[1] = rotateArgs.outputYMin;
+    origin[2] = rotateArgs.outputZMin;
   }
 
   std::vector<usize> dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX)

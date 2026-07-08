@@ -169,6 +169,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a s
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Rotation-Matrix representation")
@@ -188,6 +189,169 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - 180 about Z reverses a s
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Class 1 (chirality pin): an exact, hand-derived 90-degree permutation about
+// each principal axis. Unlike the 180-degree case above (which is its own
+// inverse) and the bijection/composition checks below (satisfied equally by a
+// +90 or a -90 rotation), these pin the *direction* of the rotation: a 90 and a
+// 270 rotation produce different permutations, so a regression that dropped the
+// inverse-transform (mapping destination->source with the forward matrix instead
+// of its inverse) would swap 90<->270 and fail here.
+//
+// The expected arrays are derived by hand from the resample definition (each
+// output voxel center is mapped back through R^-1 to the nearest source voxel),
+// independent of the implementation. The derivation method was validated by
+// re-deriving the 180-degree-about-Z case above and reproducing {6,5,4,3,2,1}.
+//
+//   90 about Z, input {3,2,1} = [1 2 3 / 4 5 6]  ->  {2,3,1} = [4 1 / 5 2 / 6 3]
+//   90 about X, input {1,3,2}                     ->  {1,2,3} = [4 1 5 2 6 3]
+//   90 about Y, input {3,1,2}                     ->  {2,1,3} = [3 6 2 5 1 4]
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - exact 90-degree permutation pins chirality", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  auto [label, inDims, axisAngle, expectedDims, expected] =
+      GENERATE(std::make_tuple("90 about Z", SizeVec3{3, 2, 1}, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, SizeVec3{2, 3, 1}, std::vector<int32>{4, 1, 5, 2, 6, 3}),
+               std::make_tuple("90 about X", SizeVec3{1, 3, 2}, VectorFloat32Parameter::ValueType{1.0f, 0.0f, 0.0f, 90.0f}, SizeVec3{1, 2, 3}, std::vector<int32>{4, 1, 5, 2, 6, 3}),
+               std::make_tuple("90 about Y", SizeVec3{3, 1, 2}, VectorFloat32Parameter::ValueType{0.0f, 1.0f, 0.0f, 90.0f}, SizeVec3{2, 1, 3}, std::vector<int32>{3, 6, 2, 5, 1, 4}));
+
+  RotateSampleRefFrameFilter filter;
+
+  DYNAMIC_SECTION(label)
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", inDims);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, axisAngle);
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
+    REQUIRE(outputGeom != nullptr);
+    REQUIRE(outputGeom->getDimensions() == expectedDims);
+    REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expected);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Class 1 (anisotropic spacing): a 90-degree rotation about Z swaps the X and Y
+// axes, so the output spacing must be the input spacing with X and Y swapped.
+// Input spacing (2, 5, 1) -> output spacing (5, 2, 1). This pins the spacing
+// permutation, which the isotropic (1,1,1) fixtures elsewhere cannot detect.
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - anisotropic spacing permutes with the axes", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", SizeVec3{2, 2, 1}, FloatVec3{2.0f, 5.0f, 1.0f});
+  RotateSampleRefFrameFilter filter;
+  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f});
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
+  REQUIRE(outputGeom != nullptr);
+  const FloatVec3 outSpacing = outputGeom->getSpacing();
+  REQUIRE(outSpacing[0] == Approx(5.0f));
+  REQUIRE(outSpacing[1] == Approx(2.0f));
+  REQUIRE(outSpacing[2] == Approx(1.0f));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// -----------------------------------------------------------------------------
+// Class 4 (enforced-domain boundary): the guard accepts the full octahedral
+// rotation group, not just principal-axis 90s. A 120-degree rotation about the
+// body diagonal (111) is a clean axis cycle (x->y->z), i.e. a signed permutation
+// matrix, so it maps the voxel grid onto itself losslessly and must be ACCEPTED
+// (the filter docs previously claimed (111) rotations are rejected). Its inverse,
+// a 90-degree rotation about (111), is NOT in the group and is rejected by the
+// negative test below.
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: accepts 120-degree rotation about (111)", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const SizeVec3 inDims = {2, 3, 4};
+  const usize inCount = 2 * 3 * 4;
+
+  DataStructure dataStructure;
+  CreateSequentialImageGeom(dataStructure, "Input", inDims);
+  RotateSampleRefFrameFilter filter;
+  Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{1.0f, 1.0f, 1.0f, 120.0f});
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// -----------------------------------------------------------------------------
+// Class 1 (origin placement): with a non-zero input origin the transform-derived
+// output origin must be the ABSOLUTE min corner of the rotated bounding box, not
+// the input origin plus that corner. For input origin (10, 20, 0), dims {3,2,1},
+// a 90-degree rotation about Z maps the bounding box [10,13]x[20,22] to
+// [-22,-20]x[10,13], so the output origin is (-22, 10, 0). (The prior code added
+// the input origin a second time, giving (-12, 30, 0).) With Keep Input Geometry
+// Origin the output origin instead equals the input origin. The voxel permutation
+// is translation-invariant, so it matches the origin-0 case either way.
+// -----------------------------------------------------------------------------
+TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1 - non-zero input origin", "[SimplnxCore][RotateSampleRefFrameFilter]")
+{
+  const SizeVec3 dims = {3, 2, 1};
+  const FloatVec3 inputOrigin = {10.0f, 20.0f, 0.0f};
+  const std::vector<int32> expectedValues = {4, 1, 5, 2, 6, 3}; // same permutation as the origin-0 90-about-Z case
+
+  RotateSampleRefFrameFilter filter;
+
+  SECTION("transform-derived origin (Keep Input Origin OFF)")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", dims, FloatVec3{1.0f, 1.0f, 1.0f}, inputOrigin);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f});
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
+    REQUIRE(outputGeom != nullptr);
+    const FloatVec3 outOrigin = outputGeom->getOrigin();
+    REQUIRE(outOrigin[0] == Approx(-22.0f));
+    REQUIRE(outOrigin[1] == Approx(10.0f));
+    REQUIRE(outOrigin[2] == Approx(0.0f));
+    REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expectedValues);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("Keep Input Geometry Origin ON preserves the input origin")
+  {
+    DataStructure dataStructure;
+    CreateSequentialImageGeom(dataStructure, "Input", dims, FloatVec3{1.0f, 1.0f, 1.0f}, inputOrigin);
+    Arguments args = MakeAxisAngleArgs(k_InputPath, k_OutputPath, VectorFloat32Parameter::ValueType{0.0f, 0.0f, 1.0f, 90.0f}, false, true);
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const auto* outputGeom = dataStructure.getDataAs<ImageGeom>(k_OutputPath);
+    REQUIRE(outputGeom != nullptr);
+    const FloatVec3 outOrigin = outputGeom->getOrigin();
+    REQUIRE(outOrigin[0] == Approx(inputOrigin[0]));
+    REQUIRE(outOrigin[1] == Approx(inputOrigin[1]));
+    REQUIRE(outOrigin[2] == Approx(inputOrigin[2]));
+    REQUIRE(ReadOutputValues(dataStructure, k_OutputPath) == expectedValues);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -230,6 +394,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
     REQUIRE(outputGeom != nullptr);
     REQUIRE(outputGeom->getDimensions() == expectedDims);
     RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   DYNAMIC_SECTION(label << " (Rotation-Matrix)")
@@ -253,6 +418,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 1/4 - principal-90 rotations
     REQUIRE(outputGeom != nullptr);
     REQUIRE(outputGeom->getDimensions() == expectedDims);
     RequireValueBijection(ReadOutputValues(dataStructure, k_OutputPath), inCount);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -293,6 +459,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Class 4 - full-circle composition 
     REQUIRE(finalGeom != nullptr);
     REQUIRE(finalGeom->getDimensions() == inDims);
     REQUIRE(ReadOutputValues(dataStructure, currentInput) == original);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -366,6 +533,7 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lo
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireValueBijection(ReadOutputValues(dataStructure, slicePath), inCount);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // True 3D rotation (reverses slice order)
@@ -377,10 +545,12 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: slice-by-slice 180 about Y is a lo
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireValueBijection(ReadOutputValues(dataStructure, fullPath), inCount);
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // The two modes produce genuinely different permutations (slice order preserved vs reversed).
   REQUIRE(ReadOutputValues(dataStructure, slicePath) != ReadOutputValues(dataStructure, fullPath));
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

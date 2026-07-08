@@ -10,16 +10,16 @@ This **Filter** rotates the *spatial reference frame* of an **Image Geometry** a
 
 ### Supported Rotations (Important)
 
-This **Filter** is a *lossless reference-frame rotation*: the output is an exact re-labeling (permutation) of the input **Cells**, with no interpolation, no data loss, and no introduced background. That is only possible when the rotation maps the voxel grid exactly onto itself, which happens **only** for:
+This **Filter** is a *lossless reference-frame rotation*: the output is an exact re-labeling (permutation) of the input **Cells**, with no interpolation, no data loss, and no introduced background. That is only possible when the rotation maps the cubic voxel grid exactly onto itself. Those rotations form the **octahedral rotation group** (the 24 rotational symmetries of a cube):
 
-- an angle of **90, 180, or 270 degrees**, and
-- a rotation axis of exactly **X (100)**, **Y (010)**, or **Z (001)**.
+- the **90, 180, or 270 degree** rotations about the **X (100)**, **Y (010)**, or **Z (001)** axis — the common cases; and
+- the other cube-symmetry rotations: a **180 degree** rotation about a face-diagonal axis such as **(110)**, and a **120 or 240 degree** rotation about a body-diagonal axis such as **(111)**.
 
-The **Filter** enforces this in preflight. Any other rotation (for example 45 degrees, or a rotation about a non-principal axis such as (111)) is rejected with an error, because a nearest-neighbor resample of a non-axis-aligned rotation would silently drop and duplicate voxels and pad the result with background values. To apply an arbitrary rotation (with interpolation), use the [Apply Transformation To Geometry](ApplyTransformationToGeometryFilter.md) filter instead.
+The **Filter** enforces this in preflight. Any rotation that does **not** map the grid onto itself — an arbitrary angle (e.g. 45 degrees), or an off-group axis/angle combination such as **90 degrees about (111)** — is rejected with an error, because a nearest-neighbor resample of such a rotation would silently drop and duplicate voxels and pad the result with background values. To apply an arbitrary rotation (with interpolation), use the [Apply Transformation To Geometry](ApplyTransformationToGeometryFilter.md) filter instead.
 
 ### Rotation Representation
 
-The *Rotation Representation* parameter selects how the rotation is specified. Both forms must still resolve to a 90/180/270 degree rotation about a principal axis:
+The *Rotation Representation* parameter selects how the rotation is specified. Both forms must still resolve to a rotation that maps the voxel grid onto itself (see Supported Rotations above):
 
 - **Axis Angle [0]**: a unit axis vector (x, y, z) and an angle in **degrees**.
 - **Rotation Matrix [1]**: a 3x3 rotation matrix entered directly. It must be a proper axis-permutation matrix (each entry -1, 0, or +1, one nonzero per row and column, determinant +1).
