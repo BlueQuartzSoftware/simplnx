@@ -57,8 +57,10 @@ private:
    * arrays: remaps phase values < 1 to 1, interleaves phi1/PHI/phi2 into the 3-component
    * EulerAngles array, and copies the remaining columns verbatim.
    * @param reader The AngReader that has already successfully read the input file.
+   * @return Error result if the reader produced fewer scan points than the preflight-sized geometry
+   * expects (which would otherwise read past the reader's buffers).
    */
-  void copyRawEbsdData(ebsdlib::AngReader* reader) const;
+  Result<> copyRawEbsdData(ebsdlib::AngReader* reader) const;
 };
 
 } // namespace nx::core

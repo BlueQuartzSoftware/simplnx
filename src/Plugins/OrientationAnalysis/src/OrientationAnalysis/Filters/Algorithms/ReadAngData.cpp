@@ -46,9 +46,7 @@ Result<> ReadAngData::operator()()
   }
 
   m_MessageHandler(IFilter::Message::Type::Info, "Copying cell data into the Image Geometry");
-  copyRawEbsdData(&reader);
-
-  return {};
+  return copyRawEbsdData(&reader);
 }
 
 // -----------------------------------------------------------------------------
@@ -88,12 +86,20 @@ Result<> ReadAngData::loadMaterialInfo(ebsdlib::AngReader* reader) const
   for(const ebsdlib::AngPhase::Pointer& phase : phases)
   {
     const int32_t phaseID = phase->getPhaseIndex();
-    // The ensemble arrays were sized in preflight from the same file's largest phase index.
-    // This guard only trips if the file changed between preflight and execute.
-    if(phaseID < 1 || static_cast<usize>(phaseID) >= numTuples)
+    // .ang phase numbering starts at 1. A phase index < 1 (Phase 0 or negative) is rejected: DREAM3D
+    // 6.5.171 tolerated a Phase 0 section (it skipped only negative indices and wrote Phase 0 into
+    // ensemble slot 0), so this is a documented behavior change vs legacy — see deviation
+    // ReadAngDataFilter-D5. A static "# Phase 0" fixture trips this deterministically.
+    if(phaseID < 1)
+    {
+      return MakeErrorResult(-19502, fmt::format("The .ang file declares phase index {}, but .ang phase numbering starts at 1 (Phase 0 and negative phases are not supported).", phaseID));
+    }
+    // The ensemble arrays were sized in preflight from the same file's largest phase index, so an index
+    // at or above the array count can only mean the file changed between preflight and execute.
+    if(static_cast<usize>(phaseID) >= numTuples)
     {
       return MakeErrorResult(
-          -19502, fmt::format("Phase index {} from the .ang file falls outside the Ensemble Attribute Matrix range [1, {}]. The input file may have changed since preflight.", phaseID, numTuples - 1));
+          -19504, fmt::format("Phase index {} from the .ang file is at or above the Ensemble Attribute Matrix count {}. The input file may have changed since preflight.", phaseID, numTuples));
     }
     crystalStructures[phaseID] = phase->determineOrientationOpsIndex();
     // EbsdLib's AngPhase::parseMaterialName() rejoins the name tokens with a trailing
@@ -111,18 +117,31 @@ Result<> ReadAngData::loadMaterialInfo(ebsdlib::AngReader* reader) const
 }
 
 // -----------------------------------------------------------------------------
-void ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
+Result<> ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
 {
   const DataPath cellAttributeMatrixPath = m_InputValues->DataContainerName.createChildPath(m_InputValues->CellAttributeMatrixName);
 
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DataContainerName);
   const size_t totalCells = imageGeom.getNumberOfCells();
 
+  // The Image Geometry was sized in preflight from the file's column/row header (NumEvenCols x NumRows),
+  // but the reader allocates its data buffers from NumOddCols x NumRows. Every copy below reads
+  // totalCells elements out of those buffers, so if the reader actually read fewer elements (a file that
+  // changed between preflight and execute, or a malformed header where NCOLS_EVEN > NCOLS_ODD) the copies
+  // would read past the end of the reader's heap buffers. Guard against that out-of-bounds read.
+  if(reader->getNumberOfElements() < totalCells)
+  {
+    return MakeErrorResult(-19503,
+                           fmt::format("The .ang reader produced {} scan points but the Image Geometry created at preflight expects {}. The input file may have changed since preflight, or its "
+                                       "column header (NCOLS_ODD/NCOLS_EVEN) is inconsistent.",
+                                       reader->getNumberOfElements(), totalCells));
+  }
+
   // Adjust the values of the 'phase' data to correct for invalid values and assign the read Phase Data into the actual DataArray
   {
     if(m_ShouldCancel)
     {
-      return;
+      return {};
     }
     auto& targetArray = m_DataStructure.getDataRefAs<Int32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::AngFile::Phases));
     int* phasePtr = reinterpret_cast<int32_t*>(reader->getPointerByName(ebsdlib::Ang::PhaseData));
@@ -140,7 +159,7 @@ void ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
   {
     if(m_ShouldCancel)
     {
-      return;
+      return {};
     }
     const auto* fComp0 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::Phi1));
     const auto* fComp1 = reinterpret_cast<float*>(reader->getPointerByName(ebsdlib::Ang::Phi));
@@ -157,7 +176,7 @@ void ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
 
   if(m_ShouldCancel)
   {
-    return;
+    return {};
   }
 
   {
@@ -195,4 +214,6 @@ void ReadAngData::copyRawEbsdData(ebsdlib::AngReader* reader) const
     auto& targetArray = m_DataStructure.getDataRefAs<Float32Array>(cellAttributeMatrixPath.createChildPath(ebsdlib::Ang::YPosition));
     std::copy(fComp0, fComp0 + totalCells, targetArray.begin());
   }
+
+  return {};
 }

@@ -77,4 +77,22 @@ Comparison run 2026-07-07 against the official DREAM3D 6.5.171 release on three 
 
 **Affected users:** Only scripts that match on specific error codes/messages from pipeline logs.
 
-**Recommendation:** Either acceptable. Update any error-code matching to the SIMPLNX codes (`-19500` HexGrid, `-19501` missing GRID, `-19502` phase-index range).
+**Recommendation:** Either acceptable. Update any error-code matching to the SIMPLNX codes (`-19500` HexGrid, `-19501` missing GRID, `-19502` phase index < 1, `-19503` reader/geometry element-count mismatch, `-19504` phase index above the ensemble count).
+
+---
+
+## ReadAngDataFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ReadAngDataFilter-D5` |
+| **Filter UUID** | `5b062816-79ac-47ce-93cb-e7966896bcbd` |
+| **Status** | active |
+
+**Symptom:** A `.ang` file containing a `# Phase 0` section is accepted by DREAM3D 6.5.171 but rejected by SIMPLNX at execute with error `-19502`.
+
+**Root cause:** Algorithmic choice. Legacy `ReadAngData` skipped only *negative* phase indices; a Phase 0 section was written into ensemble slot 0 (the slot SIMPLNX reserves for the "Invalid Phase" defaults) and the import succeeded. TSL `.ang` phase numbering starts at 1, so SIMPLNX treats a phase index `< 1` as malformed and rejects it. (Legacy also had no dedicated code path for it — it happened to not crash.) This is enforced in `loadMaterialInfo` and pinned by the static `Phase 0 rejected (-19502)` unit test, which trips the guard deterministically without any file-mutation injection.
+
+**Affected users:** Only users with nonstandard `.ang` files that declare a Phase 0 section — rare, and such files carry no meaningful phase-0 crystallography in legacy output anyway (slot 0 collided with the invalid-phase slot).
+
+**Recommendation:** Trust SIMPLNX. Renumber the file's phases to start at 1. A Phase 0 section is outside the TSL `.ang` specification.

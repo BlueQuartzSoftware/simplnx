@@ -18,8 +18,11 @@
  *                          The toy .ang fixture below is hand-authored and every
  *                          expected value is hand-derived from the fixture text.
  *
- * All fixture values are exactly representable in float32 (multiples of 1/8)
- * so the expected values can be asserted with exact equality.
+ * The Euler/IQ/CI/position/fit column values are exactly representable in
+ * float32 (multiples of 1/8), so they are asserted with exact equality. The
+ * lattice constants (e.g. 3.520, 2.950, 4.680) are NOT exact float32 values;
+ * they compare equal because runtime strtof and the compiler's parse of the
+ * same decimal literal round identically to the same float32 bit pattern.
  *
  * The prior exemplar archive read_ang_test.tar.gz was a CIRCULAR ORACLE (the
  * exemplar .dream3d was generated from this filter's own output) and has been
@@ -100,6 +103,21 @@ const std::string k_SparsePhaseBlock = R"(# Phase 2
 # LatticeConstants      2.950 2.950 4.680  90.000  90.000 120.000
 # NumberFamilies        1
 # hklFamilies    1  0  0 1 1.000000 1
+# Categories 0 0 0 0 0
+#
+)";
+
+// A "# Phase 0" section. DREAM3D 6.5.171 tolerated this (it wrote Phase 0 into ensemble slot 0),
+// but .ang phase numbering starts at 1, so SIMPLNX rejects it at execute with -19502. A static
+// fixture trips this deterministically — no file-mutation injection is needed.
+const std::string k_Phase0Block = R"(# Phase 0
+# MaterialName  Nickel
+# Formula     Ni
+# Info
+# Symmetry              43
+# LatticeConstants      3.520 3.520 3.520  90.000  90.000  90.000
+# NumberFamilies        1
+# hklFamilies    1  1  1 1 8.469246 1
 # Categories 0 0 0 0 0
 #
 )";
@@ -360,6 +378,30 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - N
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -150);
+}
+
+//------------------------------------------------------------------------------
+// Deviation D5: a "# Phase 0" section is accepted by legacy 6.5.171 but rejected
+// by SIMPLNX at execute with -19502 (.ang phase numbering starts at 1). This is a
+// STATIC fixture — it trips the guard deterministically, without any file-mutation
+// injection between preflight and execute.
+//------------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Phase 0 rejected (-19502)", "[OrientationAnalysis][ReadAngDataFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const fs::path inputAngFile = WriteAngFile("read_ang_vv_phase0.ang", k_HeaderPrefix + k_Phase0Block + SqrGridBlock() + k_DataBlock);
+
+  ReadAngDataFilter filter;
+  DataStructure dataStructure;
+  Arguments args = MakeDefaultArgs(inputAngFile);
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors()[0].code == -19502);
 }
 
 //------------------------------------------------------------------------------

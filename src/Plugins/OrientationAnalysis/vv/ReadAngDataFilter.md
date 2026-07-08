@@ -16,7 +16,7 @@
 |------------------------|---------------|
 | Algorithm Relationship | **Minor changes.** Faithful port of legacy `ReadAngData` control flow with 4 deliberate deltas: material-name trim added (D1), TEM/ACOM Nanometer-units detection dropped (D2, obsolete file variants), non-contiguous phase-index handling fixed (D3, legacy crashes), and error-code renumbering (D4). The legacy PIMPL file-cache was dropped (no output effect). |
 | Oracle (confirmed)     | **Confirmed.** **Class 1 (analytical) + Class 4 (invariant)**, scoped to the filter's value-add per the "don't re-test upstream" rule — EbsdLib (vcpkg 3.0.0) owns `.ang` parsing and is trusted (Class 2 boundary). A hand-authored inline toy `.ang` (3×2 grid, 2 phases, phase-0 points, all values float32-exact) with every expected value hand-derived from the fixture text. Encoded as 7 TEST_CASEs in `test/ReadAngDataTest.cpp`; all pass. SIMPLNX matched the oracle on every fixture with zero discrepancies. |
-| Code paths enumerated  | 13 of 15 paths exercised (see Code path coverage); the two gaps are cancel-signal paths and the file-changed-between-preflight-and-execute guard, both untestable without injection. |
+| Code paths enumerated  | 13 of 17 paths exercised (see Code path coverage); the gaps are one unreachable dead branch (`phases.empty()`), two file-changed/malformed-input guards (`-19503`, `-19504`), and the cancel-signal paths — all untestable without injection. |
 | Tests today            | 7 test cases: Class 1+4 analytical oracle, non-contiguous phase-index invariant (regression pin for D3), 2 value-add preflight error paths (-19500/-19501), 2 EbsdLib error passthroughs (-150/-600), and SIMPL 6.4/6.5 backwards-compat (DYNAMIC_SECTION, new — the filter previously had no conversion test). All inline hand-built fixtures — no exemplar archive. |
 | Exemplar archive       | **None — retired `read_ang_test.tar.gz`** (circular oracle: the exemplar `.dream3d` was generated from this filter's own output). `download_test_data()` entry removed from `test/CMakeLists.txt`; retirement documented in `vv/provenance/read_ang_test.md`. |
 | Legacy comparison      | **Run (2026-07-07) vs the official DREAM3D 6.5.171 release.** Three fixtures: hand-authored toy, Small IN100 `Slice_1.ang` (189×201 production scan), non-contiguous-phase toy. On the two supported-format fixtures **all numeric outputs are bit-identical** (cell arrays, ensemble arrays, geometry). Differences: MaterialName trailing space (D1) and the non-contiguous-phase fixture, where **6.5.171 segfaults** (D3). |
@@ -71,7 +71,8 @@ All 7 pass in the in-core `simplnx-rel` build. Reconciliation found zero SIMPLNX
 
 Line-by-line review performed via the `review-algorithm` skill after oracle reconciliation. All findings applied (all 7 tests still pass after rebuild):
 
-- **Robustness (Critical):** fixed the latent out-of-bounds ensemble write on non-contiguous phase indices (preflight `maxPhaseIndex+1` sizing; full default initialization of every slot; `-19502` range guard in `loadMaterialInfo`). Legacy twin of this bug segfaults (Deviation D3).
+- **Robustness (Critical):** fixed the latent out-of-bounds ensemble write on non-contiguous phase indices (preflight `maxPhaseIndex+1` sizing; full default initialization of every slot; `-19502`/`-19504` phase-range guards in `loadMaterialInfo`). Legacy twin of this bug segfaults (Deviation D3).
+- **Robustness:** added a cell-count guard at the top of `copyRawEbsdData` (`-19503`). The geometry is sized in preflight from the header's `NCOLS_EVEN`, but the reader allocates its buffers from `NCOLS_ODD`; the copies read `totalCells` elements from those buffers, so a file that changed between preflight and execute (or a malformed `NCOLS_EVEN > NCOLS_ODD` header) would read past the reader's heap. The guard rejects that case instead of reading out of bounds. Found by the adversarial review.
 - **Dead code:** removed the vestigial legacy PIMPL (`ReadAngDataPrivate`, `Ang_Private_Data`, `m_AngDataPrivate` member, forward declaration), the never-firing `replace("MaterialName", "")`, unused `tDims`/`cDims` locals, the unused `FloatVec3Type` alias, and scaffold-generator boilerplate comments.
 - **API consistency:** `loadMaterialInfo` now returns `Result<>` instead of `std::pair<int32, std::string>`.
 - **Progress messaging:** added status messages before the EbsdLib read and the cell-data copy (the loops themselves are memcpy-speed; no throttled messenger warranted).
@@ -79,7 +80,7 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 
 ## Code path coverage
 
-*13 of 15 paths exercised. Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ReadAngData.cpp` (198 lines) + preflight in `Filters/ReadAngDataFilter.cpp` (~265 lines).* Logical phases: **(a)** preflight (header-only read → output actions), **(b)** execute read + ensemble population (`loadMaterialInfo`), **(c)** cell-data copy (`copyRawEbsdData`).
+*13 of 17 enumerated paths exercised; 1 is unreachable dead code (row 8) and 3 are file-changed/malformed-input guards or cancel checks that need injection (rows 11b, 15b, 16). Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ReadAngData.cpp` + preflight in `Filters/ReadAngDataFilter.cpp`.* Logical phases: **(a)** preflight (header-only read → output actions), **(b)** execute read + ensemble population (`loadMaterialInfo`), **(c)** cell-data copy (`copyRawEbsdData`).
 
 | #  | Phase | Path | Test case |
 |----|-------|------|-----------|
@@ -90,14 +91,16 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 | 5  | (a) Preflight | Per-column array creation with int32/float32 type dispatch from `AngFields` | `Class 1 Analytical Oracle` (all 8 cell arrays exist with right types) |
 | 6  | (a) Preflight | Ensemble AM sized `maxPhaseIndex + 1`; CrystalStructures/LatticeConstants/MaterialName actions | `Class 1 Analytical Oracle` (3 tuples) + `Non-Contiguous Phase Index` (3 tuples from max index 2) |
 | 7  | (b) Execute | `readFile()` error → passthrough | `EbsdLib Error Passthrough - No Phase (-150)` *(−110/−100 variants are the same return statement)* and `…Truncated Data (-600)` |
-| 8  | (b) Execute | `phases.empty()` → error passthrough | `EbsdLib Error Passthrough - No Phase (-150)` |
+| 8  | (b) Execute | `phases.empty()` → error passthrough | *Unreachable dead code: `AngReader::readFile()` returns `-150` when the phase vector is empty, so `operator()` returns at the readFile error check (row 7) before `loadMaterialInfo` is ever entered with empty phases.* |
 | 9  | (b) Execute | All-slot Invalid-Phase default initialization | `Non-Contiguous Phase Index` (slot 1 keeps defaults) + `Class 1 Analytical Oracle` (slot 0) |
 | 10 | (b) Execute | Per-phase fill: symmetry→structure index, trimmed name, lattice constants | `Class 1 Analytical Oracle` (2 phases, 2 Laue classes) |
-| 11 | (b) Execute | `phaseID` out of ensemble range → `-19502` | *Not directly tested. Guard only trips if the file changes between preflight and execute; requires file-mutation injection.* |
+| 11a | (b) Execute | `phaseID < 1` (Phase 0 / negative) → `-19502` | `Phase 0 rejected (-19502)` — static `# Phase 0` fixture, trips deterministically (D5) |
+| 11b | (b) Execute | `phaseID >= ensemble count` → `-19504` | *Not directly tested. Only reachable if the file changes between preflight and execute; requires file-mutation injection.* |
 | 12 | (c) Copy | Phase remap `< 1 → 1` then copy | `Class 1 Analytical Oracle` (points 2, 5) |
 | 13 | (c) Copy | Euler interleave `3i/3i+1/3i+2` | `Class 1 Analytical Oracle` (18 values) |
 | 14 | (c) Copy | Verbatim copies: IQ, CI, SEM Signal, Fit, X/Y Position | `Class 1 Analytical Oracle` (6 arrays element-wise) |
-| 15 | (b)/(c) | Cancel checks (4 sites) | *Not directly tested. Requires cancel-signal injection; standard early-return pattern.* |
+| 15b | (c) Copy | reader element count `< totalCells` → `-19503` (out-of-bounds read guard) | *Not directly tested. Only reachable if the file changes between preflight and execute or a malformed `NCOLS_EVEN > NCOLS_ODD` header; requires injection.* |
+| 16 | (b)/(c) | Cancel checks (4 sites) | *Not directly tested. Requires cancel-signal injection; standard early-return pattern.* |
 
 ## Test inventory
 
@@ -105,6 +108,7 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 |-----------|--------|-------|
 | `OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle` | new-for-V&V | Class 1 + 4. Geometry (dims/spacing/origin/units), 8 cell arrays and 3 ensemble arrays asserted element-wise (≈70 assertions), all expected values hand-derived, float32-exact fixture. Inline data. |
 | `OrientationAnalysis::ReadAngDataFilter: Non-Contiguous Phase Index` | new-for-V&V | Class 4. Sparse `# Phase 2`-only file → ensemble sized to 3 tuples, uncovered slot keeps Invalid-Phase defaults. Regression pin for the OOB fix (Deviation D3). |
+| `OrientationAnalysis::ReadAngDataFilter: Phase 0 rejected (-19502)` | new-for-V&V | Value-add execute rejection. Static `# Phase 0` fixture; asserts `-19502`. Pins deviation D5 (legacy accepted Phase 0) and refutes the earlier claim that the phase-range guard needs file-mutation injection to reach. |
 | `OrientationAnalysis::ReadAngDataFilter: HexGrid Preflight Error (-19500)` | new-for-V&V | Value-add preflight rejection. |
 | `OrientationAnalysis::ReadAngDataFilter: Missing GRID Preflight Error (-19501)` | new-for-V&V | Value-add preflight rejection. |
 | `OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - No Phase (-150)` | new-for-V&V | Replaces the retired archive-based "Invalid Phase" test with an inline no-phase-header fixture; same error code asserted. |
@@ -128,3 +132,4 @@ Line-by-line review performed via the `review-algorithm` skill after oracle reco
 - `ReadAngDataFilter-D2` — TEM/ACOM `.ang` variants get Nanometer units in legacy, Micrometer in SIMPLNX. Document-only: EDAX retired those files 10+ years ago. Either acceptable.
 - `ReadAngDataFilter-D3` — **Legacy crash bug, empirically confirmed:** non-contiguous phase indices segfault 6.5.171 (OOB ensemble write, exit 139); SIMPLNX imports correctly (fixed this pass, test-pinned). Trust SIMPLNX.
 - `ReadAngDataFilter-D4` — Error-code renumbering on rejection paths (`-1000`→`-19500` HexGrid, etc.). No data effect. Either acceptable.
+- `ReadAngDataFilter-D5` — A `# Phase 0` section is accepted by 6.5.171 but rejected by SIMPLNX at execute (`-19502`); `.ang` phase numbering starts at 1. Pinned by a static fixture. Trust SIMPLNX.
