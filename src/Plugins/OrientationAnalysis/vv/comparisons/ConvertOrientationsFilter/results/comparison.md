@@ -26,7 +26,7 @@ The legacy 6.5.171 pipeline (`pipelines/legacy_6_5_171.json`) builds the EulerAn
 **Overall max |Δ| = 1.78e-06** (worst single component: cubochoric `cu[1]`, legacy `0.04432392` vs NX `0.04432571`). All conversions agree within 1e-5; four are bit-identical.
 
 ## Fixes Applied
-None. SIMPLNX is independently verified-correct against the Class 3 / Class 1 / Class 4 oracle; the legacy output is not wrong, so no legacy patch and no NX change. The sub-2e-6 differences are float32 round-off from the differing intermediate-conversion paths (legacy routes everything through a quaternion intermediate; NX uses EbsdLib 2.0 direct `input.toX()`). Largest in cubochoric, which involves a cube-root + series expansion most sensitive to intermediate precision.
+None. SIMPLNX is independently verified-correct against the Class 3 / Class 1 / Class 4 oracle; the legacy output is not wrong, so no legacy patch and no NX change. The sub-2e-6 differences are float32 round-off from library-generation drift: both legacy and NX dispatch each pair to the same direct pairwise transform (e.g. `eu2om`, `eu2cu`), but legacy links OrientationLib while NX links EbsdLib 3.x, and the two accumulate rounding differently. Largest in cubochoric, which involves a cube-root + series expansion most sensitive to intermediate precision.
 
 ## Notes
 - Confirms deviation **ConvertOrientationsFilter-D1** (order of operations + library): differences ≤ ~1.8e-6, recommendation "either acceptable within tolerance ~1e-5".

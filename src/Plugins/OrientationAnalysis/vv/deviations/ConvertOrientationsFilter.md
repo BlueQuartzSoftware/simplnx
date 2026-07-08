@@ -18,9 +18,9 @@ The SIMPLNX algorithm is a **Rewrite** of the filter plumbing under the retained
 | **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` (SIMPL `e5629880-98c4-5656-82b8-c9fe2b9744de`) |
 | **Status** | active |
 
-**Symptom:** For a given (input, output) representation pair, SIMPLNX and 6.5.171 may differ in the last 1–2 significant figures of float32 output. **Measured** on the toy orientation (Euler 45°/30°/60°): eu→Quaternion, eu→Axis-Angle, eu→Rodrigues, eu→Homochoric are **bit-identical**; eu→OrientationMatrix differs by ≤ 1.5e-8; eu→Cubochoric by ≤ 1.8e-6 (worst single component). Overall max |Δ| = **1.78e-6**.
+**Symptom:** For a given (input, output) representation pair, SIMPLNX and 6.5.171 may differ in the last 1–2 significant figures of float32 output. **Measured** on the toy orientation (Euler 45°/30°/60°): eu→Quaternion, eu→Axis-Angle, eu→Rodrigues, eu→Homochoric are **bit-identical**; eu→OrientationMatrix differs by ≤ 1.5e-8; eu→Cubochoric by ≤ 1.8e-6 (worst single component). Overall max |Δ| = **1.78e-6**. *Scope: the A/B measured only the six Euler-input pairs on a single in-range orientation; the other 36 legacy-shared pairs were compared by source reading only, so the numeric bound above is established for eu→X and inferred (not measured) elsewhere.*
 
-**Root cause:** *order of operations + library.* 6.5.171 `OrientationConverter::convertRepresentationTo()` routes **every** conversion through a quaternion intermediate (input → quaternion → output) regardless of the requested pair. SIMPLNX calls the EbsdLib 2.0 `input.toX()` member directly, which for many pairs takes a different intermediate path (e.g., `eu2om` is computed directly from the Euler closed form rather than `eu→qu→om`). Different intermediate computations accumulate float32 round-off differently — largest for Cubochoric, whose cube-root + series expansion is most sensitive to intermediate precision. Both paths implement the same Rowenhorst 2015 equations; neither is "more correct." See `../comparisons/ConvertOrientationsFilter/results/comparison.md`.
+**Root cause:** *library-generation drift (OrientationLib vs EbsdLib 3.x).* Both implementations dispatch each requested pair to a **direct** pairwise transform — 6.5.171 `OrientationConverter::convertRepresentationTo()` calls per-pair `toX()` methods that invoke e.g. `eu2om` (the Euler closed form, `OC_CONVERT_BODY(9, OrientationMatrix, eu2om, Eu2Om)`, `OrientationConverter.hpp:492`) and `eu2cu` (which chains `eu2ho→ho2cu`, `:517`); SIMPLNX calls the EbsdLib `input.toX()` members which take the same nominal routes. The residual deltas come from implementation differences accumulated between legacy **OrientationLib** and **EbsdLib 3.x** (constant definitions, expression ordering, series-evaluation details) — largest for Cubochoric, whose cube-root + series expansion is most sensitive to intermediate float32 round-off. That four of six conversions are bit-identical is consistent with this: those transforms' code paths are unchanged between library generations. Both implement the same Rowenhorst 2015 equations; neither is "more correct." *(An earlier draft of this entry attributed the deltas to legacy routing everything through a quaternion intermediate; a source check of `OrientationConverter.hpp` disproved that mechanism and it was corrected here.)* See `../comparisons/ConvertOrientationsFilter/results/comparison.md`.
 
 **Affected users:** Anyone diffing SIMPLNX output bit-for-bit against archived 6.5.171 output. Differences (≤ ~2e-6) are below visualization and typical downstream-analysis thresholds.
 
@@ -79,3 +79,21 @@ The SIMPLNX algorithm is a **Rewrite** of the filter plumbing under the retained
 **Affected users:** Scripts or tests that matched on the legacy numeric error codes `-1000`/`-1001`/`-1002`. No effect on successful conversions.
 
 **Recommendation:** *trust SIMPLNX.* Behavior is equivalent (invalid configurations are still rejected at preflight); only the error-code surface changed.
+
+---
+
+## ConvertOrientationsFilter-D5
+
+| Field | Value |
+|---|---|
+| **Deviation ID** | `ConvertOrientationsFilter-D5` |
+| **Filter UUID** | `501e54e6-a66f-4eeb-ae37-00e649c00d4b` (SIMPL `e5629880-98c4-5656-82b8-c9fe2b9744de`) |
+| **Status** | active |
+
+**Symptom:** For Euler-angle **input** outside `[0,2π]×[0,π]×[0,2π]`, 6.5.171 and SIMPLNX produce **genuinely different orientations** (not float round-off), and 6.5.171 additionally **mutated the user's stored input array** while SIMPLNX leaves it untouched.
+
+**Root cause:** *algorithmic choice (sanitization removed).* Every legacy `toX()` ran `sanityCheckInputData()` (`OC_CONVERT_BODY`, `OrientationConverter.hpp:386,403`); for Euler input, `EulerConverter::sanityCheckInputData()` ran `EulerSanityCheck` (`:425-446`) **in place on the actual stored array**: `fmod(φ1, 2π)`, `fmod(Φ, π)`, `fmod(φ2, 2π)` followed by sign flips for negative values. Two consequences: (a) the persisted `EulerAngles` array was silently modified as a side effect of running the filter; (b) `fmod(Φ, π)` and the sign flips are **not rotation-preserving**, so for out-of-range input the legacy conversion result corresponds to a *different orientation* than the one stored. SIMPLNX copies each tuple into a local `OrientationF` and never normalizes, converting exactly the orientation the user supplied. The A/B comparison (D1) used only in-range angles, so this difference did not appear in the measured deltas.
+
+**Affected users:** Pipelines feeding Euler angles outside the fundamental Bunge ranges (e.g. negative angles from upstream arithmetic, or Φ ∈ (π, 2π)). Under 6.5.171 those inputs were silently rewritten and converted as a different orientation; under SIMPLNX they convert as-supplied (EbsdLib's transforms are periodic in φ1/φ2, so only Φ out of `[0,π]` yields a mathematically distinct rotation description).
+
+**Recommendation:** *trust SIMPLNX.* Mutating input data as a side effect was a defect-prone behavior, and `fmod(Φ, π)` silently changed the orientation. Users with out-of-range Euler data should normalize it explicitly (upstream) rather than rely on a lossy implicit rewrite.

@@ -84,7 +84,7 @@ Orientation Matrix: Determinant must be +1.0
 
 ### Data Conversion Notes
 
-This **Filter** does not modify the input array; it creates a new output array holding the converted representation. The input orientation values are used as supplied. (Earlier DREAM3D versions documented an in-place Euler range-normalization step; that step is not performed.)
+This **Filter** does not modify the input array; it creates a new output array holding the converted representation. The input orientation values are used as supplied. (DREAM3D 6.5.171 *performed* an in-place Euler range-normalization step that both mutated the input array and — because it applied `fmod(Phi, pi)` and sign flips that are not rotation-preserving — could change the converted orientation for Euler input outside the standard Bunge ranges. That step is deliberately not performed here; see deviation D5.)
 
 ## Algorithm Reference
 

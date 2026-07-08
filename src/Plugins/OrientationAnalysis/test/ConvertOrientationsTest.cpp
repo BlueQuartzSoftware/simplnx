@@ -200,6 +200,18 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
     REQUIRE(!preflightResult.outputActions.valid());
   }
 
+  // Input component count does not match the selected input representation type: the 3-component
+  // array above is declared as a Quaternion (which requires 4 components) -> -67004.
+  {
+    args.insertOrAssign(ConvertOrientationsFilter::k_InputType_Key, std::make_any<ChoicesParameter::ValueType>(2));  // Quaternion (expects 4 components)
+    args.insertOrAssign(ConvertOrientationsFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(0)); // Euler
+    auto preflightResult = filter.preflight(dataStructure, args);
+    const std::vector<Error>& errors = preflightResult.outputActions.errors();
+    REQUIRE(errors.size() == 1);
+    REQUIRE(errors[0].code == convert_orientations_constants::k_InputComponentCountError);
+    REQUIRE(!preflightResult.outputActions.valid());
+  }
+
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
@@ -214,7 +226,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Invalid preflight", "[Orien
  * from EbsdLib 3.0.0 — see vv/ConvertOrientationsFilter.md). Wired to the wrong conversion the
  * output would be a detectably different number; the 3 distinct tuples additionally pin the striding
  * (identical tuples would not catch an offset bug). Class 3 (Rowenhorst 2015) dispatch landmarks
- * plus Class 4 (round-trip consistency) — tolerance 1.0e-3 matches EbsdLib's own consistency test.
+ * plus Class 4 (round-trip consistency) — tolerance 1.0e-4 (tightened during V&V; the observed float32 dispatch error is well under this).
  */
 TEST_CASE("OrientationAnalysis::ConvertOrientations: Dispatch and striding (8x8 matrix)", "[ConvertOrientationsFilter]")
 {
@@ -277,7 +289,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientations: Dispatch and striding (8x8 
           {
             INFO("tuple " << t << " component " << c);
             float absDif = std::fabs(output[t * k_Comps[out] + c] - k_Ref[t][out][c]);
-            REQUIRE(absDif < 1.0e-3F);
+            REQUIRE(absDif < 1.0e-4F);
           }
         }
 
