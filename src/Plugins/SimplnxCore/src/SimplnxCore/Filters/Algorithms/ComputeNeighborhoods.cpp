@@ -220,6 +220,10 @@ Result<> ComputeNeighborhoods::operator()()
   m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
 
   const usize totalFeatures = centroids.getNumberOfTuples();
+  if(totalFeatures == 0)
+  {
+    return {};
+  }
 
   ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
   progressMessageHelper.setMaxProgresss(totalFeatures);
@@ -227,14 +231,14 @@ Result<> ComputeNeighborhoods::operator()()
 
   m_LocalNeighborhoodList.resize(totalFeatures);
 
-  for(usize i = 1; i < totalFeatures; i++)
+  for(usize i = 0; i < totalFeatures; i++)
   {
     (*m_Neighborhoods)[i] = 0;
   }
 
   // Determine each feature's neighbor search radius and the spatial-bin grid size based on the user-selected
   // Search Radius Type.
-  //   Type 0 (Multiples of Average Diameter): each feature searches within its OWN Equivalent Sphere Diameter
+  //   Type 0 (Multiples of Equivalent Diameter): each feature searches within its OWN Equivalent Sphere Diameter
   //     times the multiplier (radius_i = equivalentDiameters[i] * multiples). The neighbor relation is therefore
   //     per-feature (asymmetric): larger features have larger neighborhoods. The bin grid is sized by the
   //     average diameter of all features.
@@ -244,14 +248,18 @@ Result<> ComputeNeighborhoods::operator()()
   float32 binSize = 0.0f;
   if(m_InputValues->SearchRadiusType == 0)
   {
-    // Find the average equivalent spherical (ESD) diameter of ALL features; used only to size the bin grid.
+    // Find the average equivalent spherical (ESD) diameter of ALL features (excluding the background feature 0);
+    // used only to size the bin grid.
     const auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath)->getDataStoreRef();
     float32 avgDiameter = 0.0f;
     for(usize i = 1; i < totalFeatures; i++)
     {
       avgDiameter += equivalentDiameters[i];
     }
-    avgDiameter /= static_cast<float32>(totalFeatures);
+    if(totalFeatures > 1)
+    {
+      avgDiameter /= static_cast<float32>(totalFeatures - 1);
+    }
     m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Average Diameter: '{}'", avgDiameter));
 
     for(usize i = 1; i < totalFeatures; i++)
@@ -262,8 +270,9 @@ Result<> ComputeNeighborhoods::operator()()
   }
   else
   {
+    // Feature 0 is the background/unassigned feature: it gets no search radius so it is never a search source.
     const float32 searchRadius = m_InputValues->SearchRadius;
-    std::fill(radii.begin(), radii.end(), searchRadius);
+    std::fill(radii.begin() + 1, radii.end(), searchRadius);
     binSize = searchRadius;
   }
 
@@ -284,15 +293,21 @@ Result<> ComputeNeighborhoods::operator()()
     return {};
   }
 
+  // Feature 0 is the background/unassigned feature: it is excluded both as a search source (range starts at 1)
+  // and as a candidate (binToFeatures is built from feature 1 onward), so Neighborhoods[0] stays 0 and
+  // NeighborhoodList[0] stays empty.
   ParallelDataAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(Range(0, totalFeatures));
-  parallelAlgorithm.setParallelizationEnabled(true);
+  parallelAlgorithm.setRange(Range(1, totalFeatures));
+  IParallelAlgorithm::AlgorithmStores algStores;
+  algStores.push_back(&centroids);
+  parallelAlgorithm.requireStoresInMemory(algStores);
   parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, radii, binSize, m_ShouldCancel, progressMessageHelper));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborhoodListArrayName);
-  // Set the vector for each list into the NeighborList Object
-  for(usize i = 1; i < totalFeatures; i++)
+  // Set the vector for each list into the NeighborList Object. Feature 0 gets an explicit empty list so the
+  // Neighborhoods[i] == NeighborhoodList[i].size() invariant holds at every index.
+  for(usize i = 0; i < totalFeatures; i++)
   {
     // Construct a shared vector<int32> through the std::vector<> copy constructor.
     const NeighborList<int32>::SharedVectorType sharedMisOrientationList(new std::vector<int32>(m_LocalNeighborhoodList[i]));

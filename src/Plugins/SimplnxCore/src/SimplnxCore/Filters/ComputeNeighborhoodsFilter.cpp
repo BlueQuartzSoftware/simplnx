@@ -70,10 +70,10 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
       k_SearchRadiusType_Key, "Search Radius Type",
       "How the neighbor search radius is defined: (0) as a multiple of each feature's own Equivalent Sphere Diameter, or (1) as an absolute search radius in microns.", k_MultiplesOfAverageIndex,
-      ChoicesParameter::Choices{"Multiples of Average Diameter", "Search Radius (microns)"}));
+      ChoicesParameter::Choices{"Multiples of Equivalent Diameter", "Search Radius (microns)"}));
 
   params.insert(std::make_unique<Float32Parameter>(
-      k_MultiplesOfAverage_Key, "Multiples of Average Diameter",
+      k_MultiplesOfAverage_Key, "Multiples of Equivalent Diameter",
       "Each feature searches within a radius equal to its OWN Equivalent Sphere Diameter multiplied by this value (radius = equivalentDiameter[i] * multiples). Larger features therefore have larger "
       "neighborhoods, and the neighbor relationship can be asymmetric.",
       1.0F));
@@ -88,7 +88,7 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_EquivalentDiametersArrayPath_Key, "Equivalent Diameters",
-      "Path to the array specifying the diameter of a sphere with the same volume as the Feature. Only required when 'Search Radius Type' is 'Multiples of Average Diameter'.",
+      "Path to the array specifying the diameter of a sphere with the same volume as the Feature. Only required when 'Search Radius Type' is 'Multiples of Equivalent Diameter'.",
       DataPath({"Cell Feature Data", "EquivalentDiameters"}), ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CentroidsArrayPath_Key, "Centroids", "Path to the array specifying the X, Y, Z coordinates of Feature center of mass",
                                                           DataPath({"Cell Feature Data", "Centroids"}), ArraySelectionParameter::AllowedTypes{DataType::float32},
@@ -146,13 +146,13 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
       {"Input Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(imageGeom.getDimensions(), imageGeom.getSpacing(), imageGeom.getOrigin(), imageGeom.getUnits())});
 
   // Validate only the value parameter that is active for the selected search radius type. In the
-  // "Multiples of Average Diameter" mode the Equivalent Diameters array is required and must have the
+  // "Multiples of Equivalent Diameter" mode the Equivalent Diameters array is required and must have the
   // same number of tuples as the Centroids; in the "Search Radius (microns)" mode it is not used.
   if(pSearchRadiusTypeValue == k_MultiplesOfAverageIndex)
   {
     if(pMultiplesOfAverageValue <= 0.0F)
     {
-      return {MakeErrorResult<OutputActions>(-5732, "'Multiples of Average Diameter' must be greater than zero.")};
+      return {MakeErrorResult<OutputActions>(-5732, "'Multiples of Equivalent Diameter' must be greater than zero.")};
     }
     auto tupleValidityCheck = dataStructure.validateNumberOfTuples({pEquivalentDiametersArrayPathValue, pCentroidsArrayPathValue});
     if(!tupleValidityCheck)
@@ -174,8 +174,9 @@ IFilter::PreflightResult ComputeNeighborhoodsFilter::preflightImpl(const DataStr
     const float32 minSpacing = std::min({spacing[0], spacing[1], spacing[2]});
     const float32 maxExtent = std::max({extents[0], extents[1], extents[2]});
 
-    preflightUpdatedValues.push_back({"Search Radius Context", fmt::format("Search Radius: {} x {} x {} voxels ", std::floor(pSearchRadiusValue / spacing[0]),
-                                                                           std::floor(pSearchRadiusValue / spacing[1]), std::floor(pSearchRadiusValue / spacing[2]))});
+    preflightUpdatedValues.push_back({"Search Radius Context", fmt::format("Search Radius of {} micron(s) spans approximately {} voxel(s) along X, {} along Y, {} along Z", pSearchRadiusValue,
+                                                                           static_cast<int64>(pSearchRadiusValue / spacing[0]), static_cast<int64>(pSearchRadiusValue / spacing[1]),
+                                                                           static_cast<int64>(pSearchRadiusValue / spacing[2]))});
 
     // Warn if the radius is smaller than a single voxel (likely finds no neighbors) or larger than the
     // whole geometry (likely makes every feature a neighbor of every other feature)

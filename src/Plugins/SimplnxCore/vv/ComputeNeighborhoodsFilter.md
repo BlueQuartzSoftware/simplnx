@@ -16,8 +16,8 @@
 |------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Algorithm Relationship | **Rewrite** of legacy `FindNeighborhoods`. Legacy tested an axis-aligned box in normalized bin-space with a per-feature reach; NX tests a true Euclidean sphere. During V&V a real **NX regression was found and fixed** (see Bug flags). A new "Search Radius (microns)" mode and removal of the unused Feature Phases input were also added. |
 | Oracle (confirmed)     | **Class 1 (Analytical) + Class 4 (Invariant).** Two hand-built synthetic fixtures with exact neighbor counts (microns mode; per-feature multiples mode incl. an asymmetry case), plus count==list-size and symmetry/asymmetry invariants. Encoded in `test/ComputeNeighborhoodsTest.cpp`; all pass. |
-| Code paths enumerated  | 11 of 13 exercised; 2 uncovered (a low-value preflight guard and the cancel-signal path).                                                                                                                                                                                                        |
-| Tests today            | **5 TEST_CASEs** — 2 analytical oracles (microns + per-feature multiples), 1 preflight info/warnings (3 sections), 1 invalid-parameter, 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). All inline/synthetic — no exemplar archive.                                                                  |
+| Code paths enumerated  | 13 of 14 exercised; 1 uncovered (the cancel-signal path, which requires cancel-signal injection).                                                                                                                                                                                                 |
+| Tests today            | **5 TEST_CASEs** — 2 analytical oracles (microns + per-feature multiples, incl. an exact-boundary inclusion pin and background-feature-0 exclusion assertions), 1 preflight info/warnings (3 sections), 1 invalid-parameter (4 sections, all error codes asserted), 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). All inline/synthetic — no exemplar archive. |
 | Exemplar archive       | **None.** All oracles are inline analytical values. The legacy comparison used the shared `6_6_stats_test_v2.tar.gz` Small IN100 stats dataset as input only (not a unit-test exemplar for this filter).                                                                                          |
 | Legacy comparison      | **Run** on Small IN100 (`6_6_stats_test_v2.dream3d`, 620 features, mult=1) via 6.5.171 `PipelineRunner` vs `nxrunner`. After the fix, NX correlates **0.894** with legacy and finds **50.8%** as many neighbors — exactly the sphere/box volume ratio. One documented deviation (D1); phases removal (D2). |
 | Bug flags              | **NX regression found & fixed in this PR** (not a legacy bug): the prior NX rewrite (PR #1485) introduced a `÷2` factor and a global (vs per-feature) radius, making the default `mult=1` find ~37× fewer neighbors than legacy (mean 0.29 vs 10.93). Fixed by restoring a per-feature Euclidean radius. |
@@ -50,7 +50,7 @@
 
 *Class:* **1 (Analytical)** primary, **4 (Invariant)** companion.
 
-*Applied:* Minimal synthetic geometries with hand-placed centroids (and, for multiples mode, hand-chosen equivalent diameters) make the expected neighbor counts derivable on paper. Microns mode: a constant radius of 3.5 on six features gives counts `{1,2,1,0,0}`. Multiples mode: `eqDiam = {6,2,2,2,2}`, `mult=1` gives per-feature radii `{6,2,2,2,2}`; the fixture is arranged so a large feature reaches a small one that does not reach back, yielding counts `{3,0,0,1,0}` and a checkable asymmetry. Class 4 invariants (`Neighborhoods[i] == NeighborList[i].size`, symmetry in microns mode, targeted per-feature asymmetry in multiples mode) are asserted alongside the exact values.
+*Applied:* Minimal synthetic geometries with hand-placed centroids (and, for multiples mode, hand-chosen equivalent diameters) make the expected neighbor counts derivable on paper. Microns mode: a constant radius of 3.5 on seven features gives counts `{0,1,2,1,1,0,1}`, including a pair (features 4 and 6) separated by exactly the search radius to pin the inclusive `distSq ≤ radius²` boundary. Multiples mode: `eqDiam = {6,2,2,2,2}`, `mult=1` gives per-feature radii `{6,2,2,2,2}`; the fixture is arranged so a large feature reaches a small one that does not reach back, yielding counts `{3,0,0,1,0}` and a checkable asymmetry. Both fixtures assert index 0 as well: the background feature 0 must end with a zero count and an empty list (the multiples fixture makes this discriminating by placing feature 0's centroid coincident with feature 1's). Class 4 invariants (`Neighborhoods[i] == NeighborList[i].size` for **every** index including 0, symmetry in microns mode, targeted per-feature asymmetry in multiples mode) are asserted alongside the exact values.
 
 *Encoded:* `test/ComputeNeighborhoodsTest.cpp::ComputeNeighborhoods_SyntheticOracle` (microns) and `::ComputeNeighborhoods_MultiplesAnalyticalOracle` (per-feature). All pass at the verified commit.
 
@@ -58,7 +58,7 @@
 
 ## Code path coverage
 
-*11 of 13 paths exercised.*
+*13 of 14 paths exercised.*
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeNeighborhoods.cpp` (~300 lines) + `ComputeNeighborhoodsFilter.cpp` preflight.
 
@@ -66,27 +66,28 @@ Logical phases: **(a) preflight validation/actions**, **(b) radius + bin setup**
 
 | #  | Phase | Path | Test case |
 |----|-------|------|-----------|
-| 1  | (a) | Multiples mode, `multiples ≤ 0` → error `-5732` | *Not directly tested. Low-value parameter guard.* |
-| 2  | (a) | Microns mode, `searchRadius ≤ 0` → error `-5733` | `ComputeNeighborhoods_InvalidSearchRadius` |
-| 3  | (a) | Multiples mode, tuple mismatch (eqDiam vs centroids) → error `-5730` | *Not directly tested. Guarded by selection-parameter validation upstream.* |
-| 4  | (a) | Centroids parent is not an Attribute Matrix → error `-5731` | *Exercised implicitly — all fixtures place Centroids in a feature AM.* |
+| 1  | (a) | Multiples mode, `multiples ≤ 0` → error `-5732` | `ComputeNeighborhoods_InvalidSearchRadius` (multiples section, code asserted) |
+| 2  | (a) | Microns mode, `searchRadius ≤ 0` → error `-5733` | `ComputeNeighborhoods_InvalidSearchRadius` (microns section, code asserted) |
+| 3  | (a) | Multiples mode, tuple mismatch (eqDiam vs centroids) → error `-5730` | `ComputeNeighborhoods_InvalidSearchRadius` (tuple-mismatch section, code asserted) |
+| 4  | (a) | Centroids parent is not an Attribute Matrix → error `-5731` | `ComputeNeighborhoods_InvalidSearchRadius` (loose-centroids section, code asserted) |
 | 5  | (a) | Report Input Image Geometry Info preflight value (both modes) | `..._SearchRadiusPreflightInfo` |
 | 6  | (a) | Microns sub-voxel radius → warning `-5734` | `..._SearchRadiusPreflightInfo` (sub-voxel section) |
 | 7  | (a) | Microns oversized radius → warning `-5735` | `..._SearchRadiusPreflightInfo` (oversized section) |
-| 8  | (b) | `SearchRadiusType == 0` → per-feature radii `eqDiam[i]·mult`, binSize = avgDiameter | `..._MultiplesAnalyticalOracle` |
-| 9  | (b) | `SearchRadiusType == 1` → constant radii = searchRadius, binSize = searchRadius | `..._SyntheticOracle` |
+| 8  | (b) | `SearchRadiusType == 0` → per-feature radii `eqDiam[i]·mult`, binSize = avgDiameter (excl. feature 0) | `..._MultiplesAnalyticalOracle` |
+| 9  | (b) | `SearchRadiusType == 1` → constant radii = searchRadius (feature 0 gets none), binSize = searchRadius | `..._SyntheticOracle` |
 | 10 | (c) | Neighbor within radius → `updateNeighborHood(i, j)` | both analytical oracles |
 | 11 | (c) | Per-feature asymmetry (radius varies by feature) | `..._MultiplesAnalyticalOracle` (asymmetry assertions) |
-| 12 | (c) | Self-skip (`j == i`) and background-skip (loop starts at feature 1) | Implicit in both oracles (feature 0 excluded, self never counted) |
+| 12 | (c) | Self-skip (`j == i`) and background exclusion — feature 0 is excluded both as a search **source** (`Range(1, N)`) and as a **candidate** (`binToFeatures` built from feature 1) | Explicitly asserted in both oracles: `Neighborhoods[0] == 0` and `NeighborhoodList[0]` empty; the multiples fixture places feature 0's centroid coincident with feature 1's so a regression here fails the assertion |
 | 13 | (c) | `shouldCancel` → early return from the parallel scan | *Not directly tested. Requires cancel-signal injection.* |
+| 14 | (c) | Inclusive boundary: `distSq == radiusSq` counts as a neighbor | `..._SyntheticOracle` (features 4 and 6 at exactly radius distance, exactly representable in float32) |
 
 ## Test inventory
 
 | Test case | Status | Notes |
 |-----------|--------|-------|
-| `ComputeNeighborhoods_SyntheticOracle` | new-for-V&V | Class 1 microns oracle (6 features, r=3.5, counts `{1,2,1,0,0}`) + Class 4 count==size and symmetry invariants. No Equivalent Diameters array (proves microns mode does not require it). |
-| `ComputeNeighborhoods_MultiplesAnalyticalOracle` | new-for-V&V | Class 1 per-feature multiples oracle (counts `{3,0,0,1,0}`) + count==size invariant + explicit per-feature asymmetry checks. |
-| `ComputeNeighborhoods_InvalidSearchRadius` | new-for-V&V | Preflight rejects a non-positive search radius (`-5733`). Synthetic input (no archive). |
+| `ComputeNeighborhoods_SyntheticOracle` | new-for-V&V | Class 1 microns oracle (7 features, r=3.5, counts `{0,1,2,1,1,0,1}`) + Class 4 count==size and symmetry invariants + inclusive-boundary pin (exact radius-distance pair) + background-feature-0 exclusion assertions. No Equivalent Diameters array (proves microns mode does not require it). |
+| `ComputeNeighborhoods_MultiplesAnalyticalOracle` | new-for-V&V | Class 1 per-feature multiples oracle (counts `{0,3,0,0,1,0}`) + count==size invariant + explicit per-feature asymmetry checks + background-feature-0 exclusion assertions (feature 0 coincident with feature 1). |
+| `ComputeNeighborhoods_InvalidSearchRadius` | new-for-V&V | 4 SECTIONs: preflight rejects a non-positive search radius (`-5733`), a non-positive multiplier (`-5732`), an eqDiam/centroids tuple mismatch (`-5730`), and Centroids outside an Attribute Matrix (`-5731`) — all error codes asserted. Synthetic input (no archive). |
 | `ComputeNeighborhoods_SearchRadiusPreflightInfo` | new-for-V&V | 3 SECTIONs: geometry-info preflight value present; sub-voxel warning `-5734`; oversized warning `-5735`. |
 | `ComputeNeighborhoodsFilter: SIMPL Backwards Compatibility` (2 DYNAMIC_SECTIONs) | kept | Validates UUID + argument decoding from SIMPL 6.4/6.5 JSON. |
 | `ComputeNeighborhoods_1` | retired | Circular exemplar comparison (golden `Neighborhoods_1` was not an independent oracle) and invalidated by the radius fix. Replaced by the Class 1 analytical oracle + legacy comparison. |
@@ -105,5 +106,6 @@ All non-retired tests pass at the verified commit. *(In-core build confirmed; OO
 
 Comparison run on `6_6_stats_test_v2.dream3d` (Small IN100, 620 features, mult=1) through 6.5.171 `PipelineRunner` and `nxrunner`.
 
-- `ComputeNeighborhoodsFilter-D1` — NX counts neighbors with a Euclidean sphere; 6.5.171 used an axis-aligned box in normalized bin space, so NX reports ~52% as many neighbors (correlation 0.894). See `vv/deviations/ComputeNeighborhoodsFilter.md`.
+- `ComputeNeighborhoodsFilter-D1` — NX counts neighbors with a Euclidean sphere (inclusive `≤` at the boundary); 6.5.171 used an axis-aligned box in normalized bin space with a strict `<`, so NX reports ~52% as many neighbors (correlation 0.894). See `vv/deviations/ComputeNeighborhoodsFilter.md`.
 - `ComputeNeighborhoodsFilter-D2` — the `FeaturePhases` required input was removed (unused by both implementations). See `vv/deviations/ComputeNeighborhoodsFilter.md`.
+- `ComputeNeighborhoodsFilter-D3` — NX rejects non-positive radius/multiplier values at preflight (`-5732`/`-5733`); 6.5.171 silently accepted them and produced all-zero output. See `vv/deviations/ComputeNeighborhoodsFilter.md`.

@@ -76,18 +76,25 @@ SyntheticFeatureData BuildSyntheticFeatures(usize numFeatures, const std::vector
 //
 //   Feature | Centroid       | Neighbors within radius 3.5 | Count
 //   --------|----------------|-----------------------------|------
-//     0     | (0,0,0) bkgnd  | (ignored)                   |  -
+//     0     | (0,0,0) bkgnd  | (excluded)                  |  0
 //     1     | (0,0,0)        | {2}          (d(1,2)=3.0)   |  1
 //     2     | (3,0,0)        | {1,3}        (d=3.0, 3.0)   |  2
 //     3     | (6,0,0)        | {2}          (d(2,3)=3.0)   |  1
-//     4     | (0,8,0)        | {}           (nearest d=8)  |  0
+//     4     | (0,8,0)        | {6}          (d(4,6)=3.5)   |  1
 //     5     | (100,100,0)    | {}           (isolated)     |  0
+//     6     | (3.5,8,0)      | {4}          (d(4,6)=3.5)   |  1
+//
+// Features 4 and 6 are separated by EXACTLY the search radius (3.5, exactly representable in float32, so
+// distSq == radiusSq == 12.25 with no rounding): this pins the inclusive `distSq <= radiusSq` boundary
+// semantics (a centroid exactly on the sphere surface IS a neighbor; legacy 6.5.171 used a strict `<` on
+// bin differences — see deviation D1).
 TEST_CASE("SimplnxCore::ComputeNeighborhoods_SyntheticOracle", "[SimplnxCore][ComputeNeighborhoods]")
 {
   UnitTest::LoadPlugins();
 
-  const usize k_NumFeatures = 6;
-  const std::vector<std::array<float32, 3>> centroids = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, {3.0F, 0.0F, 0.0F}, {6.0F, 0.0F, 0.0F}, {0.0F, 8.0F, 0.0F}, {100.0F, 100.0F, 0.0F}};
+  const usize k_NumFeatures = 7;
+  const std::vector<std::array<float32, 3>> centroids = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F},     {3.0F, 0.0F, 0.0F}, {6.0F, 0.0F, 0.0F},
+                                                         {0.0F, 8.0F, 0.0F}, {100.0F, 100.0F, 0.0F}, {3.5F, 8.0F, 0.0F}};
   auto data = BuildSyntheticFeatures(k_NumFeatures, centroids, {}, {200, 200, 1}, {1.0F, 1.0F, 1.0F});
 
   const std::string k_NeighborhoodsName("Neighborhoods");
@@ -111,8 +118,9 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_SyntheticOracle", "[SimplnxCore][Co
   const DataPath neighborhoodsPath = data.featureAMPath.createChildPath(k_NeighborhoodsName);
   REQUIRE_NOTHROW(data.dataStructure.getDataRefAs<Int32Array>(neighborhoodsPath));
   const auto& neighborhoods = data.dataStructure.getDataRefAs<Int32Array>(neighborhoodsPath);
-  const std::array<int32, k_NumFeatures> expectedCounts = {0, 1, 2, 1, 0, 0};
-  for(usize i = 1; i < k_NumFeatures; i++)
+  const std::array<int32, k_NumFeatures> expectedCounts = {0, 1, 2, 1, 1, 0, 1};
+  // Index 0 is asserted too: the background feature must never search nor be counted, so its count is 0.
+  for(usize i = 0; i < k_NumFeatures; i++)
   {
     INFO(fmt::format("Feature {} neighborhood count", i));
     REQUIRE(neighborhoods[i] == expectedCounts[i]);
@@ -122,11 +130,19 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_SyntheticOracle", "[SimplnxCore][Co
   REQUIRE_NOTHROW(data.dataStructure.getDataRefAs<NeighborList<int32>>(neighborListPath));
   const auto& neighborList = data.dataStructure.getDataRefAs<NeighborList<int32>>(neighborListPath);
 
-  // Class 4 invariant: count == list size for every feature
-  for(usize i = 1; i < k_NumFeatures; i++)
+  // Class 4 invariant: count == list size for every feature, including the background feature 0
+  for(usize i = 0; i < k_NumFeatures; i++)
   {
     INFO(fmt::format("Feature {} count-vs-list-size invariant", i));
     REQUIRE(neighborList.getListSize(static_cast<int32>(i)) == expectedCounts[i]);
+  }
+
+  // Boundary inclusion: features 4 and 6 are exactly 3.5 apart (== the search radius) and must list each other.
+  {
+    const auto list4 = neighborList.getList(4);
+    const auto list6 = neighborList.getList(6);
+    REQUIRE(std::find(list4.begin(), list4.end(), 6) != list4.end());
+    REQUIRE(std::find(list6.begin(), list6.end(), 4) != list6.end());
   }
 
   // Class 4 invariant: in microns mode every feature uses the SAME radius, so the neighbor relation is
@@ -145,7 +161,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_SyntheticOracle", "[SimplnxCore][Co
   UnitTest::CheckArraysInheritTupleDims(data.dataStructure);
 }
 
-// Class 1 (Analytical) oracle for the "Multiples of Average Diameter" mode. Each feature searches within a
+// Class 1 (Analytical) oracle for the "Multiples of Equivalent Diameter" mode. Each feature searches within a
 // radius equal to its OWN Equivalent Diameter times the multiplier (radius_i = eqDiam[i] * mult), so the
 // neighbor relation is per-feature and can be asymmetric: a large feature reaches a small one that does not
 // reach back. This fixture is designed to exercise that asymmetry.
@@ -173,7 +189,7 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle", "[Simpl
   {
     ComputeNeighborhoodsFilter filter;
     Arguments args;
-    args.insert(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL)); // Multiples of Average Diameter
+    args.insert(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL)); // Multiples of Equivalent Diameter
     args.insert(ComputeNeighborhoodsFilter::k_MultiplesOfAverage_Key, std::make_any<float32>(1.0F));
     args.insert(ComputeNeighborhoodsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(data.imageGeomPath));
     args.insert(ComputeNeighborhoodsFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(data.eqDiamPath));
@@ -192,7 +208,9 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle", "[Simpl
   REQUIRE_NOTHROW(data.dataStructure.getDataRefAs<Int32Array>(neighborhoodsPath));
   const auto& neighborhoods = data.dataStructure.getDataRefAs<Int32Array>(neighborhoodsPath);
   const std::array<int32, k_NumFeatures> expectedCounts = {0, 3, 0, 0, 1, 0};
-  for(usize i = 1; i < k_NumFeatures; i++)
+  // Index 0 is asserted too. Feature 0's centroid coincides with feature 1's, so if the background feature
+  // were ever allowed to act as a search source (or be counted as a candidate) this assertion would fail.
+  for(usize i = 0; i < k_NumFeatures; i++)
   {
     INFO(fmt::format("Feature {} neighborhood count", i));
     REQUIRE(neighborhoods[i] == expectedCounts[i]);
@@ -202,8 +220,8 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle", "[Simpl
   REQUIRE_NOTHROW(data.dataStructure.getDataRefAs<NeighborList<int32>>(neighborListPath));
   const auto& neighborList = data.dataStructure.getDataRefAs<NeighborList<int32>>(neighborListPath);
 
-  // Class 4 invariant: count == list size for every feature
-  for(usize i = 1; i < k_NumFeatures; i++)
+  // Class 4 invariant: count == list size for every feature, including the background feature 0
+  for(usize i = 0; i < k_NumFeatures; i++)
   {
     INFO(fmt::format("Feature {} count-vs-list-size invariant", i));
     REQUIRE(neighborList.getListSize(static_cast<int32>(i)) == neighborhoods[i]);
@@ -227,25 +245,77 @@ TEST_CASE("SimplnxCore::ComputeNeighborhoods_MultiplesAnalyticalOracle", "[Simpl
   UnitTest::CheckArraysInheritTupleDims(data.dataStructure);
 }
 
-// Search Radius must be greater than zero when the "Search Radius (microns)" mode is active.
+// The radius parameter that is active for the selected Search Radius Type must be greater than zero:
+// "Search Radius (microns)" rejects a non-positive radius with -5733 and "Multiples of Equivalent Diameter"
+// rejects a non-positive multiplier with -5732 (legacy 6.5.171 accepted these silently — see deviation D3).
 TEST_CASE("SimplnxCore::ComputeNeighborhoods_InvalidSearchRadius", "[SimplnxCore][ComputeNeighborhoods]")
 {
   UnitTest::LoadPlugins();
 
   const std::vector<std::array<float32, 3>> centroids = {{0.0F, 0.0F, 0.0F}, {1.0F, 0.0F, 0.0F}, {2.0F, 0.0F, 0.0F}};
-  auto data = BuildSyntheticFeatures(3, centroids, {}, {10, 10, 10}, {1.0F, 1.0F, 1.0F});
+  const std::vector<float32> eqDiams = {0.0F, 1.0F, 1.0F};
+  auto data = BuildSyntheticFeatures(3, centroids, eqDiams, {10, 10, 10}, {1.0F, 1.0F, 1.0F});
 
   ComputeNeighborhoodsFilter filter;
   Arguments args;
-  args.insert(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL)); // Search Radius (microns)
-  args.insert(ComputeNeighborhoodsFilter::k_SearchRadius_Key, std::make_any<float32>(0.0F));                         // invalid
   args.insert(ComputeNeighborhoodsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(data.imageGeomPath));
+  args.insert(ComputeNeighborhoodsFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(data.eqDiamPath));
   args.insert(ComputeNeighborhoodsFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(data.centroidsPath));
   args.insert(ComputeNeighborhoodsFilter::k_NeighborhoodsArrayName_Key, std::make_any<std::string>("Neighborhoods"));
   args.insert(ComputeNeighborhoodsFilter::k_NeighborhoodListArrayName_Key, std::make_any<std::string>("NeighborhoodList"));
 
-  auto preflightResult = filter.preflight(data.dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SECTION("microns mode: non-positive search radius fails preflight with -5733")
+  {
+    args.insert(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL)); // Search Radius (microns)
+    args.insert(ComputeNeighborhoodsFilter::k_SearchRadius_Key, std::make_any<float32>(0.0F));                         // invalid
+
+    auto preflightResult = filter.preflight(data.dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -5733);
+  }
+
+  SECTION("multiples mode: non-positive multiplier fails preflight with -5732")
+  {
+    args.insert(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL)); // Multiples of Equivalent Diameter
+    args.insert(ComputeNeighborhoodsFilter::k_MultiplesOfAverage_Key, std::make_any<float32>(0.0F));                   // invalid
+
+    auto preflightResult = filter.preflight(data.dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -5732);
+  }
+
+  SECTION("multiples mode: eqDiam/centroids tuple-count mismatch fails preflight with -5730")
+  {
+    auto* imageGeom = data.dataStructure.getDataAs<ImageGeom>(data.imageGeomPath);
+    Float32Array::CreateWithStore<Float32DataStore>(data.dataStructure, "WrongEqDiams", {4}, {1}, imageGeom->getId());
+
+    args.insert(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(0ULL)); // Multiples of Equivalent Diameter
+    args.insert(ComputeNeighborhoodsFilter::k_MultiplesOfAverage_Key, std::make_any<float32>(1.0F));
+    args.insertOrAssign(ComputeNeighborhoodsFilter::k_EquivalentDiametersArrayPath_Key, std::make_any<DataPath>(data.imageGeomPath.createChildPath("WrongEqDiams")));
+
+    auto preflightResult = filter.preflight(data.dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -5730);
+  }
+
+  SECTION("centroids not inside an Attribute Matrix fails preflight with -5731")
+  {
+    auto* imageGeom = data.dataStructure.getDataAs<ImageGeom>(data.imageGeomPath);
+    auto* looseCentroids = Float32Array::CreateWithStore<Float32DataStore>(data.dataStructure, "LooseCentroids", {3}, {3}, imageGeom->getId());
+    looseCentroids->fill(0.0F);
+
+    args.insert(ComputeNeighborhoodsFilter::k_SearchRadiusType_Key, std::make_any<ChoicesParameter::ValueType>(1ULL)); // Search Radius (microns)
+    args.insert(ComputeNeighborhoodsFilter::k_SearchRadius_Key, std::make_any<float32>(1.0F));
+    args.insertOrAssign(ComputeNeighborhoodsFilter::k_CentroidsArrayPath_Key, std::make_any<DataPath>(data.imageGeomPath.createChildPath("LooseCentroids")));
+
+    auto preflightResult = filter.preflight(data.dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    REQUIRE(preflightResult.outputActions.errors().size() == 1);
+    REQUIRE(preflightResult.outputActions.errors()[0].code == -5731);
+  }
 }
 
 // The "Search Radius (microns)" mode reports the input Image Geometry info as a preflight value and warns
