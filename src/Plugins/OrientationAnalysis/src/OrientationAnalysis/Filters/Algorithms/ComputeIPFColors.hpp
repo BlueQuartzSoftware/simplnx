@@ -10,6 +10,7 @@
 
 #include <EbsdLib/Core/EbsdLibConstants.h>
 
+#include <atomic>
 #include <vector>
 
 namespace nx::core
@@ -21,8 +22,8 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ComputeIPFColorsInputValues
 {
   std::vector<float> referenceDirection;
-  bool useGoodVoxels;
-  DataPath goodVoxelsArrayPath;
+  bool useMask;
+  DataPath maskArrayPath;
   DataPath cellPhasesArrayPath;
   DataPath cellEulerAnglesArrayPath;
   DataPath crystalStructuresArrayPath;
@@ -59,7 +60,8 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const ComputeIPFColorsInputValues* m_InputValues = nullptr;
 
-  int32_t m_PhaseWarningCount = 0;
+  // Written concurrently from the ParallelDataAlgorithm worker, so it must be atomic.
+  std::atomic_int32_t m_PhaseWarningCount = 0;
 };
 
 } // namespace nx::core
