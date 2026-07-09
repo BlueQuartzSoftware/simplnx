@@ -41,7 +41,7 @@ Closed forms verified by hand: Z-axis rotation ⇒ `phi1' = phi1 − w (mod 2π)
 
 | | |
 |---|---|
-| Script | `rotate_euler_ref_frame_oracle.py` — archived in the verification working folder (`Code_Review/RotateEulerRefFrame/`) and destined for the OneDrive verification archive |
+| Script | `rotate_euler_ref_frame_oracle.py` — in `Code_Review/RotateEulerRefFrame/`, uploaded to the OneDrive verification archive (2026-07-08) |
 | Library + version | numpy 2.0.2 (pure-numpy; equations typed from Rowenhorst 2015, not imported from any orientation library) |
 | Random seed | none — all fixtures deterministic |
 | What it does | Implements the first-principles derivation above; asserts all seven closed-form claims; asserts the Class 4 invariants (round-trip, composability); emits the F1–F8 expected-value table pasted into the C++ test source |
@@ -58,14 +58,11 @@ NX (`nx_RotateEulerRefFrame_6cases.d3dpipeline`) pipelines, both output `.dream3
 `compare_outputs.py`, and `legacy_comparison_summary.md` (results: no deviations; max wrap-aware
 diff 7.2e-7 rad).
 
-> **⚠ Evidence archival (open action):** `Code_Review/RotateEulerRefFrame/` is the engineer's local
-> verification working folder and is **not** committed to the repository, so the legacy A/B is not
-> independently reproducible from this repo. These artifacts (input CSV, generator, both pipelines,
-> comparison script, and summary) must be uploaded to the OneDrive verification archive (per the
-> archive-filter-verification workflow) and this note replaced with the archive link before final
-> sign-off. Mitigation: the F8 oracle value and the 6-case comparison were independently reproduced
-> via scipy during review, so the numeric result is corroborated even though the working folder is
-> not yet archived.
+> **Evidence archival (done):** `Code_Review/RotateEulerRefFrame/` (input CSV, generator, both
+> pipelines, both output `.dream3d` files, comparison script, and `legacy_comparison_summary.md`) was
+> **uploaded to the OneDrive verification archive** on 2026-07-08, so the legacy A/B is reproducible
+> and reviewable from the archive. The F8 oracle value and the 6-case comparison were additionally
+> reproduced via scipy during review.
 
 ## Second-engineer oracle review
 
