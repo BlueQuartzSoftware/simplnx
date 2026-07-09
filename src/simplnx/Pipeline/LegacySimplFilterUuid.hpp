@@ -315,7 +315,6 @@ static const std::map<std::string, std::string> k_LegacySimplFilterUuidMap{
     {"ReadH5Ebsd", "4ef7f56b-616e-5a80-9e68-1da8f35ad235"},
     {"ReadStlFile", "980c7bfd-20b2-5711-bc3b-0190b9096c34"},
     {"RegularGridSampleSurfaceMesh", "0df3da89-9106-538e-b1a9-6bbf1cf0aa92"},
-    {"RegularizeZSpacing", "bc4952fa-34ca-50bf-a1e9-2b9f7e5d47ce"},
     {"RemoveArrays", "7b1c8f46-90dd-584a-b3ba-34e16958a7d0"},
     {"RemoveComponentFromArray", "1b4b9941-62e4-52f2-9918-15d48147ab88"},
     {"RemoveFlaggedFeatures", "a8463056-3fa7-530b-847f-7f4cb78b8602"},
