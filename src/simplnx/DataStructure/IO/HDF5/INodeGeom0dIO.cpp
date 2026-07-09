@@ -30,13 +30,6 @@ Result<> INodeGeom0dIO::ReadNodeGeom0dData(DataStructureReader& dataStructureRea
   geometry.setVertexListId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
   geometry.setVertexDataId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
 
-  // Required data
-  if(useEmptyDataStore)
-  {
-    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
-    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_VertexDataTag));
-  }
-
   return {};
 }
 

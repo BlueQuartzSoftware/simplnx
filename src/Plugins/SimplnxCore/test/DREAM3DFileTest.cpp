@@ -10,6 +10,9 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -378,6 +381,77 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
     REQUIRE(dataArray->template getIDataStoreAs<EmptyDataStore<int8>>() != nullptr);
 
     UnitTest::CheckArraysInheritTupleDims(importDataStructure);
+  }
+}
+
+TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-only stores", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // geoms.dream3d ships a TriangleGeometry whose "required" connectivity arrays are the shared face
+  // list ("Triangles") and the shared vertex list ("Verts"). A metadata-only preflight must import
+  // these exactly like ordinary attribute arrays: as empty stores that carry only shape and type,
+  // never eagerly bulk-read from disk.
+  const fs::path inputFilePath = fs::path(unit_test::k_SimplnxTestDataSourceDir.view()) / "geoms.dream3d";
+
+  const DataPath sharedFaceListPath({"TriangleGeometry", "Triangles"});
+  const DataPath sharedVertexListPath({"TriangleGeometry", "Verts"});
+
+  const auto isEmptyStore = [](const IDataStore* store) {
+    return store != nullptr && (store->getStoreType() == IDataStore::StoreType::Empty || store->getStoreType() == IDataStore::StoreType::EmptyOutOfCore);
+  };
+
+  // Preflight (useEmptyDataStores == true): connectivity must remain an empty, metadata-only store.
+  {
+    auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, /*preflight=*/true);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    const DataStructure preflightStructure = std::move(readResult.value());
+
+    const auto* faceList = preflightStructure.getDataAs<IDataArray>(sharedFaceListPath);
+    REQUIRE(faceList != nullptr);
+    REQUIRE(isEmptyStore(faceList->getIDataStore()));
+
+    const auto* vertexList = preflightStructure.getDataAs<IDataArray>(sharedVertexListPath);
+    REQUIRE(vertexList != nullptr);
+    REQUIRE(isEmptyStore(vertexList->getIDataStore()));
+
+    // Shape metadata is still available from the empty store, which is all preflight requires.
+    REQUIRE(faceList->getNumberOfTuples() == 4);
+    REQUIRE(vertexList->getNumberOfTuples() == 10);
+  }
+
+  // Execute (useEmptyDataStores == false): connectivity is fully read from disk into a real store.
+  {
+    auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, /*preflight=*/false);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    const DataStructure executedStructure = std::move(readResult.value());
+
+    const auto* faceList = executedStructure.getDataAs<IDataArray>(sharedFaceListPath);
+    REQUIRE(faceList != nullptr);
+    REQUIRE_FALSE(isEmptyStore(faceList->getIDataStore()));
+    REQUIRE(faceList->getNumberOfTuples() == 4);
+
+    const auto* vertexList = executedStructure.getDataAs<IDataArray>(sharedVertexListPath);
+    REQUIRE(vertexList != nullptr);
+    REQUIRE_FALSE(isEmptyStore(vertexList->getIDataStore()));
+    REQUIRE(vertexList->getNumberOfTuples() == 10);
+  }
+
+  // Read directly through the DataStructureReader path overload with useEmptyDataStores == true. This
+  // overload must honor the flag when it delegates to the FileIO overload; connectivity must come back
+  // as an empty, metadata-only store rather than being fully read from disk.
+  {
+    auto readResult = HDF5::DataStructureReader::ReadFile(inputFilePath, /*useEmptyDataStores=*/true);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    const DataStructure preflightStructure = std::move(readResult.value());
+
+    const auto* faceList = preflightStructure.getDataAs<IDataArray>(sharedFaceListPath);
+    REQUIRE(faceList != nullptr);
+    REQUIRE(isEmptyStore(faceList->getIDataStore()));
+
+    const auto* vertexList = preflightStructure.getDataAs<IDataArray>(sharedVertexListPath);
+    REQUIRE(vertexList != nullptr);
+    REQUIRE(isEmptyStore(vertexList->getIDataStore()));
   }
 }
 

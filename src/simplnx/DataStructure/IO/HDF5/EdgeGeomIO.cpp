@@ -39,17 +39,6 @@ Result<> EdgeGeomIO::readData(DataStructureReader& structureReader, const group_
   geometry->setElementCentroidsId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
   geometry->setElementSizesId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
 
-  if(useEmptyDataStore)
-  {
-    // Add required data for preflight operations.
-    structureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_VertexListTag));
-    structureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_EdgeListTag));
-    structureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementContainingVertTag));
-    structureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementNeighborsTag));
-    structureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementCentroidTag));
-    structureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
-  }
-
   return {};
 }
 

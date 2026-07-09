@@ -22,7 +22,7 @@ DataStructureReader::~DataStructureReader() noexcept = default;
 Result<DataStructure> DataStructureReader::ReadFile(const std::filesystem::path& path, bool useEmptyDataStores)
 {
   const nx::core::HDF5::FileIO fileReader = HDF5::FileIO::ReadFile(path);
-  return ReadFile(fileReader);
+  return ReadFile(fileReader, useEmptyDataStores);
 }
 Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores)
 {
@@ -30,7 +30,14 @@ Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO
   auto groupReader = fileReader.openGroup(Constants::k_DataStructureTag);
   auto result = dataStructureReader.readGroup(groupReader, useEmptyDataStores);
 
-  if(result.valid())
+  // Keep preflight metadata-only. readGroup above already imports every array as an EmptyDataStore
+  // (shape and type only) when useEmptyDataStores is set, and that now includes geometry connectivity
+  // -- vertex/face/edge lists, derived connectivity, and rectilinear-grid bounds -- exactly like
+  // ordinary attribute arrays. Skipping loadRequiredData during preflight guarantees none of those
+  // arrays are eagerly bulk-read from disk, which keeps preflight cheap on high-latency storage. A
+  // full read (useEmptyDataStores == false) imports the real stores directly in readGroup, so nothing
+  // is lost by not running the required-data pass during preflight.
+  if(result.valid() && !useEmptyDataStores)
   {
     dataStructureReader.loadRequiredData(fileReader);
   }

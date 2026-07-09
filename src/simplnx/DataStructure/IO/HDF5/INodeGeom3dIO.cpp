@@ -25,14 +25,6 @@ Result<> INodeGeom3dIO::ReadNodeGeom3dData(DataStructureReader& dataStructureRea
   geom.setPolyhedraDataId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
   geom.setUnsharedFacedId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
 
-  // Required data
-  if(useEmptyDataStore)
-  {
-    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_PolyhedronListTag));
-    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_PolyhedronDataTag));
-    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_UnsharedFaceListTag));
-  }
-
   return {};
 }
 
