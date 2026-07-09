@@ -147,6 +147,19 @@ SIMPLNX_EXPORT Result<std::shared_ptr<DataObject>> ImportDataObjectFromFile(cons
 
 SIMPLNX_EXPORT Result<std::vector<std::shared_ptr<DataObject>>> ImportSelectDataObjectsFromFile(const nx::core::HDF5::FileIO& fileReader, const std::vector<DataPath>& dataPaths);
 
+/**
+ * @brief Inserts a shallow copy of the object at dataPath from importStructure
+ * into dataStructure, without opening or reading the source file. Opening a
+ * file is itself a round-trip on network storage, and preflight never reads
+ * file contents, so this preflight-mode half of FinishImportingObject needs no
+ * open file handle at all.
+ * @param importStructure The (metadata-only) structure imported from the file.
+ * @param dataStructure The pipeline structure receiving the object.
+ * @param dataPath The object to transfer.
+ * @return Result<> Errors if the path is missing or insertion fails.
+ */
+SIMPLNX_EXPORT Result<> FinishImportingObjectPreflight(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath);
+
 SIMPLNX_EXPORT Result<> FinishImportingObject(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, bool preflight);
 
 /**

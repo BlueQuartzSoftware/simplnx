@@ -9,6 +9,7 @@
 #include <H5Fpublic.h>
 
 #include <filesystem>
+#include <functional>
 #include <string>
 
 namespace nx::core::HDF5
@@ -19,6 +20,40 @@ public:
   static FileIO ReadFile(const std::filesystem::path& filepath);
   static FileIO WriteFile(const std::filesystem::path& filepath);
   static FileIO AppendFile(const std::filesystem::path& filepath);
+
+  /**
+   * @brief Returns the number of times ReadFile() has opened a file since the
+   * last ResetReadOpenCount(). Diagnostic used by tests to prove that cached
+   * preflight paths perform zero file opens; asserting on operation counts is
+   * deterministic where wall-clock timing is not.
+   * @return uint64
+   */
+  static uint64 GetReadOpenCount();
+
+  /**
+   * @brief Resets the ReadFile() open counter. For test isolation.
+   */
+  static void ResetReadOpenCount();
+
+  /**
+   * @brief Installs a callback invoked with the file-access property list used
+   * by ReadFile()/WriteFile() just before the file is opened.
+   *
+   * Why: benchmarks inject a latency-simulating HDF5 virtual file driver
+   * through this hook to reproduce network-storage behavior deterministically
+   * on local disks. Production code never sets it; when unset, files open with
+   * the default property list when no configurator is installed.
+   *
+   * Threading contract: this is a test-only diagnostic hook. It stores the
+   * callback without synchronization, so it must NOT be called while any
+   * ReadFile()/WriteFile() may be running on another thread (ReadFile() is
+   * invoked from preflight worker threads). Install the configurator before,
+   * and clear it after, any concurrent I/O.
+   * @param configurator Callback that receives the HDF5 file-access property
+   * list id to configure (e.g. to select a virtual file driver). Passing an
+   * empty function removes any previously installed configurator.
+   */
+  static void SetFaplConfigurator(std::function<void(hid_t faplId)> configurator);
 
   FileIO() = default;
 

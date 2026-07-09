@@ -29,6 +29,9 @@ add_executable(simplnx_test
   DataStructObserver.hpp
   DataStructObserver.cpp
   DataStructTest.cpp
+  DelayVfd.hpp
+  DelayVfd.cpp
+  Dream3dPreflightCacheTest.cpp
   DynamicFilterInstantiationTest.cpp
   FilePathGeneratorTest.cpp
   GeometryTest.cpp
