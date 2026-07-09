@@ -24,7 +24,7 @@ Entries are referenced by stable ID (`ComputeFaceIPFColoringFilter-D<N>`) from t
 The fix (`phase1`→`phase2`) is confirmed against the Class 1 analytical oracle and matches the legacy 6.5.172 backport `1c96b3b8e`.
 
 **Empirical evidence — legacy binary A/B (hand-built mixed cubic/hex mesh).** On a legacy-native
-4-face fixture (authored with the `legacy_dream3d` writer; see `vv_work/face_ipf/`), DREAM3D
+4-face fixture (authored with the `legacy_dream3d` writer; generators + pipelines archived on OneDrive under `vv_work/face_ipf/`), DREAM3D
 6.5.171 reproduces the hand-derived *buggy* oracle exactly: the mixed-phase face's Phase-2 color
 is cubic red `(255,0,0)` (Phase-1's operator on a hex feature) and the `feature1`-invalid boundary
 face's Phase-2 color is black `(0,0,0)`. DREAM3D 6.5.172 and SIMPLNX both apply the hex operator on
@@ -34,7 +34,11 @@ cubic|cubic control face are identical across all three.
 **Empirical evidence — real data (756,474-face Small IN100 GBCD mesh).** SIMPLNX (fixed) vs the
 buggy `SurfaceMeshFaceIPFColors` baked into the file (authentic 6.5.171-class output) differs on
 **exactly 120,000 faces**, every one a `feature1 ≤ 0` boundary face, **zero** elsewhere (single-phase,
-so only the boundary manifestation appears). Full write-up: `vv_work/face_ipf/legacy_comparison_summary.md`.
+so only the boundary manifestation appears). This figure is **reproducible** by re-running the A/B
+generators + pipelines archived on OneDrive (`vv_work/face_ipf/`); the rendered snapshots and the
+prose `legacy_comparison_summary.md` were not preserved, so it is reproducible rather than archived as
+a result file. The `phase1`→`phase2` fix itself is verified independently of this A/B by the Class 1
+analytical oracle, so this real-data figure is corroborating.
 
 **Affected users:** (a) Anyone coloring surface meshes of **multi-phase** microstructures where adjacent phases use different Laue groups — alpha/beta titanium, dual-phase steels, IN625 with inclusions. (b) **All** users (including single-phase) on exterior/boundary faces where the mesh ordered the exterior side as `feature1`; those faces' second color was silently black in 6.5.171. Users who only inspect the first color, or whose meshes order the real feature as `feature1`, are unaffected.
 

@@ -94,11 +94,11 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 
 ## Deviations from DREAM3D 6.5.171
 
-Three-way binary comparison (6.5.171 / 6.5.172 / SIMPLNX) on a hand-built legacy-native cubic/hex mesh, plus SIMPLNX-vs-baked on the 756,474-face real mesh. Full write-up: `vv_work/face_ipf/legacy_comparison_summary.md` in the engineer's verification working folder.
+Three-way binary comparison (6.5.171 / 6.5.172 / SIMPLNX) on a hand-built legacy-native cubic/hex mesh, plus SIMPLNX-vs-baked on the 756,474-face real mesh.
 
-> **⚠ Evidence archival (open action):** `vv_work/face_ipf/` is not committed to the repository. The comparison pipelines, fixture builder, and `legacy_comparison_summary.md` must be uploaded to the OneDrive verification archive (per the archive-filter-verification workflow) and this note replaced with the archive link before final sign-off. Until then the three-way A/B evidence is not independently reviewable from this repo.
+> **Evidence (reproducible from OneDrive archive):** the A/B **fixture builder and comparison pipelines** are archived in the OneDrive verification archive (`vv_work/face_ipf/`); the measured figures below are **reproducible by re-running those generators + pipelines** against DREAM3D 6.5.171 / 6.5.172 / SIMPLNX. The rendered output snapshots and the prose `legacy_comparison_summary.md` write-up were not preserved, so the byte-level figures are reproducible rather than directly archived as result files. This A/B is **corroborating, not load-bearing**: the `phase1`→`phase2` fix is independently verified by the Class 1 analytical oracle (mutation-tested), which is the primary correctness evidence.
 
-- `ComputeFaceIPFColoringFilter-D1` — Phase-2 face side colored with Phase-1's Laue symmetry operator (and left black on `feature1`-invalid boundary faces). The #1635 bug; 6.5.171 reproduces it, 6.5.172 and SIMPLNX fix it. Empirically 120,000/756,474 faces affected on real data. See `vv/deviations/ComputeFaceIPFColoringFilter.md`.
+- `ComputeFaceIPFColoringFilter-D1` — Phase-2 face side colored with Phase-1's Laue symmetry operator (and left black on `feature1`-invalid boundary faces). The #1635 bug; 6.5.171 reproduces it, 6.5.172 and SIMPLNX fix it. 120,000/756,474 faces affected on real data (reproducible from the archived A/B generators). See `vv/deviations/ComputeFaceIPFColoringFilter.md`.
 - `ComputeFaceIPFColoringFilter-D2` — hex basal IPF hue differs between EbsdLib 3.0.0 (SIMPLNX, green) and legacy EbsdLib (6.5.171 & 6.5.172, blue); a library deviation affecting all hex IPF coloring, flagged for review.
 
 *Note:* SIMPLNX-written `.dream3d` files are, by design, not readable by legacy DREAM3D 6.5.171 (the FileVersion dataset gates this), so the legacy A/B input was authored directly in legacy format with the `legacy_dream3d` writer — the standard approach for legacy comparisons.
