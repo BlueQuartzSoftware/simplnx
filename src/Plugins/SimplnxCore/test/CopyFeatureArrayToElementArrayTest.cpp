@@ -68,7 +68,7 @@ TEST_CASE("SimplnxCore::CopyFeatureArrayToElementArrayFilter: Preflight Error - 
   DataStructure dataStructure;
 
   // Cell-level FeatureIds must exist (validated selection parameter) but is not part of the tuple-count check.
-  Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {{30}}, {1});
+  Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellFeatureIdsArrayName, {30}, {1});
 
   // Two feature-level arrays with deliberately different tuple counts (3 != 4) so the validateNumberOfTuples()
   // guard over the selected feature arrays fails and emits error -3020.
