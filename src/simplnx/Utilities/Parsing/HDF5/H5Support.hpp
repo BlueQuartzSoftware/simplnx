@@ -12,16 +12,14 @@
 #include <hdf5.h>
 
 #include <iostream>
+#include <mutex>
 #include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #ifdef H5Support_USE_MUTEX
-#include <mutex>
-#define H5SUPPORT_MUTEX_LOCK()                                                                                                                                                                         \
-  std::mutex mutex;                                                                                                                                                                                    \
-  std::lock_guard<std::mutex> lock(mutex);
+#define H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
 #else
 #define H5SUPPORT_MUTEX_LOCK()
 #endif
@@ -299,6 +297,31 @@ std::string SIMPLNX_EXPORT StringForHDFType(hid_t dataTypeIdentifier);
  * @return std::string
  */
 std::string SIMPLNX_EXPORT GetNameFromFilterType(H5Z_filter_t id);
+
+/**
+ * @brief Returns the process-wide HDF5 API mutex.
+ *
+ * The vcpkg HDF5 build is not thread-safe, so every thread that calls into the
+ * HDF5 C library must serialize on this single lock. It is a Meyers singleton —
+ * one instance for the whole process — so every translation unit linked into
+ * libsimplnx shares the exact same mutex. It backs the H5SUPPORT_MUTEX_LOCK()
+ * macro; any other code needing the HDF5 lock aliases it rather than defining a
+ * second one (two locks guarding one non-thread-safe library would still race).
+ *
+ * SCOPE — the lock currently guards only the four macro-guarded helpers listed
+ * below. The many other direct H5* calls scattered through FileIO, DatasetIO,
+ * and Dream3dIO are NOT serialized by it, so this does not by itself make all
+ * HDF5 access thread-safe; it makes these four helpers safe and gives the rest a
+ * single lock to adopt as they are hardened.
+ *
+ * CONTRACT — this is a NON-recursive std::mutex. Lock it ONLY around leaf HDF5
+ * C-API calls, and NEVER while calling a function that may re-acquire it — in
+ * particular the macro-guarded helpers (IsGroup, GetObjectPath, GetDatasetType,
+ * StringForHDFType), which lock it themselves. Re-entering on the same thread
+ * would self-deadlock. Never hold it around heavy CPU work (e.g. (de)compression)
+ * either — that must run off the lock.
+ */
+SIMPLNX_EXPORT std::mutex& ApiLock();
 
 } // namespace Support
 } // namespace nx::core::HDF5
