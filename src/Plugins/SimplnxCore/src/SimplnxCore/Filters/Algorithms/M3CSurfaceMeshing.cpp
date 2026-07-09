@@ -2581,21 +2581,26 @@ M3CSurfaceMeshing::~M3CSurfaceMeshing() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> M3CSurfaceMeshing::operator()()
 {
-  // The sliding-window variant is the default: it produces byte-identical output to the whole-volume
-  // variant (verified against the exemplar) with far lower peak memory (per-site scratch is O(sliceArea)
-  // instead of O(volume)). The whole-volume variant is kept as a reference and can be forced by setting
-  // the environment variable M3C_WHOLE_VOLUME=1.
+  // Default: the multithreaded sliding-window sweep (runWindowed(parallel=true)). Peak per-site scratch
+  // is O(sliceArea) instead of O(volume), and the per-cube work runs across all cores. It is watertight
+  // and correct, with byte-identical vertices, FaceLabels, and NodeTypes to the serial path, but a
+  // slightly different (still valid) triangulation of the same interfaces -- the legacy per-cube loop
+  // triangulation depends on cross-cube edge-flip propagation, which is inherently serial. The parallel
+  // output is deterministic (each cube depends only on its own inputs, independent of thread scheduling).
+  //
+  // Two serial reference paths are kept for validation/debugging, selected via environment variables:
+  //   M3C_SERIAL=1        -> runWindowed(false): serial sliding window (same tessellation as legacy)
+  //   M3C_WHOLE_VOLUME=1  -> runEntireVolume():  serial whole-volume (O(volume) memory)
+  // Both serial paths are byte-identical to each other.
   if(const char* wholeVol = std::getenv("M3C_WHOLE_VOLUME"); wholeVol != nullptr && std::string_view(wholeVol) == "1")
   {
     return runEntireVolume();
   }
-  // Experimental multithreaded sweep (per-cube private edge copies; see runWindowed). Produces a
-  // correct, watertight mesh with byte-identical vertices, FaceLabels, and NodeTypes, but a DIFFERENT
-  // (valid) triangulation of the same interfaces: the legacy per-cube loop triangulation depends on
-  // cross-cube edge-flip propagation, which is inherently serial, so the parallel path drops it. Opt-in.
-  const char* par = std::getenv("M3C_PARALLEL");
-  const bool useParallel = (par != nullptr && std::string_view(par) == "1");
-  return runWindowed(useParallel);
+  if(const char* serial = std::getenv("M3C_SERIAL"); serial != nullptr && std::string_view(serial) == "1")
+  {
+    return runWindowed(false);
+  }
+  return runWindowed(true);
 }
 
 // -----------------------------------------------------------------------------

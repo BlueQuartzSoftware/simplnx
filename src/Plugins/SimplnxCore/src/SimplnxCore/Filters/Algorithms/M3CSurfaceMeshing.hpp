@@ -64,9 +64,14 @@ private:
 
   // Sliding-window variant: sweeps the volume z-slice by z-slice, keeping only a few slices of the
   // per-site square scratch resident at once, so that scratch is O(sliceArea) = O(N^2/3) instead of
-  // O(volume) (nodeType remains a whole-volume int8 array). Produces byte-identical output to
-  // runEntireVolume(). This is the DEFAULT path; set the environment variable M3C_WHOLE_VOLUME=1 to
-  // force runEntireVolume() (kept as a byte-identical reference).
+  // O(volume) (nodeType remains a whole-volume int8 array).
+  //   parallel == false: serial; byte-identical to runEntireVolume() (a reference, via M3C_SERIAL=1).
+  //   parallel == true : the DEFAULT. Multithreaded across the cubes of each slice (each cube flips a
+  //                      private edge copy, so cubes are independent). Byte-identical vertices,
+  //                      FaceLabels, and NodeTypes, and deterministic run-to-run, but a slightly
+  //                      different (still valid, watertight) triangulation than the serial path, since
+  //                      the legacy per-cube loop triangulation depends on inherently serial cross-cube
+  //                      edge-flip propagation.
   Result<> runWindowed(bool parallel);
 };
 } // namespace nx::core

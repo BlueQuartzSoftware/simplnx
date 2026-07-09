@@ -94,7 +94,7 @@ DREAM3D-NX provides three **Filters** that convert a segmented grid into a multi
 | Built-in smoothing | No (apply Laplacian Smoothing afterward) | Yes, optional and accuracy-controlled | No (apply Laplacian Smoothing afterward) |
 | Relative triangle count | Highest | Lowest | Moderate to high (configuration dependent) |
 | Multi-material junctions | Yes | Native | Yes (via case table) |
-| Performance | Fastest | Fast (parallelized) | Slower (single-threaded) |
+| Performance | Fastest | Fast (parallelized) | Moderate (multithreaded) |
 | Status | Deprecated | Recommended default | Specialized / legacy-compatible |
 
 **Guidance:** Surface Nets is the recommended default for most workflows — it yields the smoothest mesh with the fewest triangles and preserves sharp boundaries. Use M3C when a primal, marching-cubes case-table topology is required for a specific downstream modeling or simulation workflow. QuickMesh is retained for backward compatibility.

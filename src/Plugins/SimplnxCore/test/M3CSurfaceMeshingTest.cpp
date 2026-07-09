@@ -524,5 +524,8 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Exemplar Comparison", "[Simplnx
   UnitTest::CompareArrays<int32>(dataStructure.getDataAs<IArray>(faceLabelsPath), exemplarDS.getDataAs<IArray>(faceLabelsPath));
   UnitTest::CompareArrays<int8>(dataStructure.getDataAs<IArray>(nodeTypesPath), exemplarDS.getDataAs<IArray>(nodeTypesPath));
 
+  // Independent structural validation of the (default, multithreaded) output on real data.
+  CheckMeshIntegrity(dataStructure, k_ExemplarMeshPath, faceLabelsPath, nodeTypesPath);
+
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
