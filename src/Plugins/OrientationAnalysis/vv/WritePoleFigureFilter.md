@@ -49,7 +49,7 @@ The shared pole-figure projection math (modified Lambert for Color, stereographi
 
 *Encoded:*
 - **Class 4 (Invariant):** `test/WritePoleFigureTest.cpp::"OrientationAnalysis::WritePoleFigureFilter: Mask filter changes the rendered pole figure"` (masked output differs from unmasked by >1% of bytes → mask is wired) and `::"…: HexConvention choice reaches algorithm"` (X‖a vs X‖a* rotates the basal families 30° in both the intensity array and the composite RGB → both plumbing paths honor the convention). Both pass against EbsdLib 3.1.0.
-- **Class 5 (Expert-visual):** the hex + cubic renders committed in-repo under `Code_Review/vv/WritePoleFigure/` (legacy PDFs + SIMPLNX PNGs), signed off this cycle — see the provenance sidecar and that folder's `README.md`.
+- **Class 5 (Expert-visual):** the hex + cubic renders (legacy PDFs + SIMPLNX PNGs), signed off this cycle. Generator scripts + pipelines are committed under `Code_Review/vv/WritePoleFigure/`; the binary renders are archived to OneDrive — see the provenance sidecar and that folder's `README.md`.
 - **Class 2 (Reference), cited not duplicated:** EbsdLib `PoleFigureCompositorTest::All_Laue_Classes` pins per-Laue-class pixel reproduction.
 
 *Second-engineer review:* *Pending — recommend a second OA-domain engineer confirm the Class 5 acceptance criteria (that the four documented differences are the complete set and are all non-defect).*
@@ -94,7 +94,7 @@ Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorit
 
 ## Deviations from DREAM3D 6.5.171
 
-Established by expert (Class 5) visual comparison on hex and cubic; 6.5.171 == 6.5.172. Full renders committed in-repo under `Code_Review/vv/WritePoleFigure/`. All four are cosmetic / labeling / intentional-rendering; none is a defect.
+Established by expert (Class 5) visual comparison on hex and cubic; 6.5.171 == 6.5.172. Full renders archived to OneDrive; regeneration scripts committed under `Code_Review/vv/WritePoleFigure/`. All four are cosmetic / labeling / intentional-rendering; none is a defect.
 
 - `WritePoleFigureFilter-D1` — axis labels `X`/`Y` (legacy) → `A1`/`A2` (SIMPLNX). Cosmetic.
 - `WritePoleFigureFilter-D2` — font/text-metrics differ (libharu Helvetica → EbsdLib canvas_ity). Library, cosmetic.

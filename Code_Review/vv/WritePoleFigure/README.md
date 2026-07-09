@@ -5,6 +5,11 @@ is a **full fresh regeneration** — the original working folder's legacy-input 
 renders were unrecoverable (see `../../../vv_work/write_pole_figure/RECOVERY_STATUS.md`), so the entire
 set was rebuilt here from first principles and re-run through all three engines.
 
+> **What is committed here:** only the text artifacts — the three generator scripts, the four pipeline
+> files, and this README. The **binary evidence** (input `.dream3d` files and the rendered `.pdf`/`.png`
+> pole figures) is **archived to OneDrive**, not committed to the repo (see `.gitignore`). Everything is
+> reproducible from the committed scripts via the steps below.
+
 ## What is compared
 
 The same 502 orientations are rendered by three engines, in two modes, for two Laue groups:
