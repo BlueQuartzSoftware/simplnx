@@ -10,16 +10,16 @@
 
 #include <fmt/format.h>
 
+#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include <array>
 #include <atomic>
-#include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <string_view>
 #include <limits>
 #include <memory>
+#include <string_view>
 #include <vector>
 
 using namespace nx::core;
@@ -119,14 +119,34 @@ struct NodeCoords
     Node n{{b.coord[0], b.coord[1], b.coord[2]}};
     switch(kind)
     {
-    case 0: n.coord[0] += hx; break;
-    case 1: n.coord[1] += hy; break;
-    case 2: n.coord[2] += hz; break;
-    case 3: n.coord[0] += hx; n.coord[1] += hy; break;
-    case 4: n.coord[0] += hx; n.coord[2] += hz; break;
-    case 5: n.coord[1] += hy; n.coord[2] += hz; break;
-    case 6: n.coord[0] += hx; n.coord[1] += hy; n.coord[2] += hz; break;
-    default: break;
+    case 0:
+      n.coord[0] += hx;
+      break;
+    case 1:
+      n.coord[1] += hy;
+      break;
+    case 2:
+      n.coord[2] += hz;
+      break;
+    case 3:
+      n.coord[0] += hx;
+      n.coord[1] += hy;
+      break;
+    case 4:
+      n.coord[0] += hx;
+      n.coord[2] += hz;
+      break;
+    case 5:
+      n.coord[1] += hy;
+      n.coord[2] += hz;
+      break;
+    case 6:
+      n.coord[0] += hx;
+      n.coord[1] += hy;
+      n.coord[2] += hz;
+      break;
+    default:
+      break;
     }
     return n;
   }
@@ -253,7 +273,7 @@ struct NeighborAccessor
   Neighbor operator[](SiteId site_id) const
   {
     // Recover the (k, j, i) that the legacy triple loop used for this 1-based site.
-    const SiteId within = (site_id - 1) % nsp; // == j + (i - 1)
+    const SiteId within = (site_id - 1) % nsp;         // == j + (i - 1)
     const int i = static_cast<int>(within % xDim) + 1; // 1..xDim
     const SiteId j = within - (i - 1);                 // multiple of xDim, 0..nsp-xDim
     const SiteId k = ((site_id - 1) / nsp) * nsp;
@@ -435,33 +455,63 @@ void get_nodes(SiteId cst, int ord, const int nidx[2], SiteId* nid, SiteId nsp1,
     {
       switch(tempIndex)
       {
-      case 0: nid[ii] = 7 * (cst - 1); break;
-      case 1: nid[ii] = 7 * cst + 1; break;
-      case 2: nid[ii] = 7 * (cst + xDim1 - 1); break;
-      case 3: nid[ii] = 7 * (cst - 1) + 1; break;
-      case 4: nid[ii] = 7 * (cst - 1) + 3; break;
+      case 0:
+        nid[ii] = 7 * (cst - 1);
+        break;
+      case 1:
+        nid[ii] = 7 * cst + 1;
+        break;
+      case 2:
+        nid[ii] = 7 * (cst + xDim1 - 1);
+        break;
+      case 3:
+        nid[ii] = 7 * (cst - 1) + 1;
+        break;
+      case 4:
+        nid[ii] = 7 * (cst - 1) + 3;
+        break;
       }
     }
     else if(ord == 1)
     {
       switch(tempIndex)
       {
-      case 0: nid[ii] = 7 * (cst - 1); break;
-      case 1: nid[ii] = 7 * cst + 2; break;
-      case 2: nid[ii] = 7 * (cst + nsp1 - 1); break;
-      case 3: nid[ii] = 7 * (cst - 1) + 2; break;
-      case 4: nid[ii] = 7 * (cst - 1) + 4; break;
+      case 0:
+        nid[ii] = 7 * (cst - 1);
+        break;
+      case 1:
+        nid[ii] = 7 * cst + 2;
+        break;
+      case 2:
+        nid[ii] = 7 * (cst + nsp1 - 1);
+        break;
+      case 3:
+        nid[ii] = 7 * (cst - 1) + 2;
+        break;
+      case 4:
+        nid[ii] = 7 * (cst - 1) + 4;
+        break;
       }
     }
     else
     {
       switch(tempIndex)
       {
-      case 0: nid[ii] = 7 * (cst - 1) + 1; break;
-      case 1: nid[ii] = 7 * (cst - 1) + 2; break;
-      case 2: nid[ii] = 7 * (cst + nsp1 - 1) + 1; break;
-      case 3: nid[ii] = 7 * (cst + xDim1 - 1) + 2; break;
-      case 4: nid[ii] = 7 * (cst - 1) + 5; break;
+      case 0:
+        nid[ii] = 7 * (cst - 1) + 1;
+        break;
+      case 1:
+        nid[ii] = 7 * (cst - 1) + 2;
+        break;
+      case 2:
+        nid[ii] = 7 * (cst + nsp1 - 1) + 1;
+        break;
+      case 3:
+        nid[ii] = 7 * (cst + xDim1 - 1) + 2;
+        break;
+      case 4:
+        nid[ii] = 7 * (cst - 1) + 5;
+        break;
       }
     }
   }
@@ -480,30 +530,54 @@ void get_spins(const int32_t* p1, SiteId cst, int ord, const int pID[2], int* pS
     {
       switch(pixTemp)
       {
-      case 0: pSpin[i] = p1[cst]; break;
-      case 1: pSpin[i] = p1[cst + 1]; break;
-      case 2: pSpin[i] = p1[cst + xDim1 + 1]; break;
-      case 3: pSpin[i] = p1[cst + xDim1]; break;
+      case 0:
+        pSpin[i] = p1[cst];
+        break;
+      case 1:
+        pSpin[i] = p1[cst + 1];
+        break;
+      case 2:
+        pSpin[i] = p1[cst + xDim1 + 1];
+        break;
+      case 3:
+        pSpin[i] = p1[cst + xDim1];
+        break;
       }
     }
     else if(ord == 1)
     {
       switch(pixTemp)
       {
-      case 0: pSpin[i] = p1[cst]; break;
-      case 1: pSpin[i] = p1[cst + 1]; break;
-      case 2: pSpin[i] = p1[cst + nsp1 + 1]; break;
-      case 3: pSpin[i] = p1[cst + nsp1]; break;
+      case 0:
+        pSpin[i] = p1[cst];
+        break;
+      case 1:
+        pSpin[i] = p1[cst + 1];
+        break;
+      case 2:
+        pSpin[i] = p1[cst + nsp1 + 1];
+        break;
+      case 3:
+        pSpin[i] = p1[cst + nsp1];
+        break;
       }
     }
     else if(ord == 2)
     {
       switch(pixTemp)
       {
-      case 0: pSpin[i] = p1[cst + xDim1]; break;
-      case 1: pSpin[i] = p1[cst]; break;
-      case 2: pSpin[i] = p1[cst + nsp1]; break;
-      case 3: pSpin[i] = p1[cst + nsp1 + xDim1]; break;
+      case 0:
+        pSpin[i] = p1[cst + xDim1];
+        break;
+      case 1:
+        pSpin[i] = p1[cst];
+        break;
+      case 2:
+        pSpin[i] = p1[cst + nsp1];
+        break;
+      case 3:
+        pSpin[i] = p1[cst + nsp1 + xDim1];
+        break;
       }
     }
   }
@@ -690,7 +764,6 @@ void get_nodes_fEdges(Face* sq, const int32_t* p, const NeighborAccessor& n, int
     sq[k].nEdge = edgeCount;
   }
 }
-
 
 // -----------------------------------------------------------------------------
 // Count triangles for a case-0 cube (no face centers): burn edges into closed
@@ -1388,7 +1461,8 @@ int64 get_number_triangles(const int32_t* p, Face* sq, const NeighborAccessor& n
 // -----------------------------------------------------------------------------
 // Generate triangles for a case-0 cube. Transcribed from M3CEntireVolume::get_case0_triangles.
 // -----------------------------------------------------------------------------
-void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, int64 tin, int64* tout, const double tcrd1[3], const double tcrd2[3], SiteId mcid)
+void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, int64 tin, int64* tout, const double tcrd1[3], const double tcrd2[3],
+                         SiteId mcid)
 {
 
   std::vector<int> burnt(nfedge, 0);
@@ -1578,8 +1652,8 @@ void get_case0_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 // -----------------------------------------------------------------------------
 // Generate triangles for a case-2 cube. Transcribed from M3CEntireVolume::get_case2_triangles.
 // -----------------------------------------------------------------------------
-void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/, int64 tin, int64* tout, const double tcrd1[3], const double tcrd2[3],
-                         SiteId mcid)
+void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int /*nfctr*/, int64 tin, int64* tout,
+                         const double tcrd1[3], const double tcrd2[3], SiteId mcid)
 {
 
   std::vector<int> burnt(nfedge, 0);
@@ -1933,8 +2007,8 @@ void get_case2_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const
 // Generate triangles for a case-M cube (fan from body center for open loops).
 // Transcribed from M3CEntireVolume::get_caseM_triangles.
 // -----------------------------------------------------------------------------
-void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int nfctr, int64 tin, int64* tout, SiteId ccn, const double tcrd1[3],
-                         const double tcrd2[3], SiteId mcid)
+void get_caseM_triangles(Triangle* t1, SiteId* mCubeID, const SiteId* afe, const NodeCoords& v1, Segment* e1, int nfedge, const SiteId* afc, int nfctr, int64 tin, int64* tout, SiteId ccn,
+                         const double tcrd1[3], const double tcrd2[3], SiteId mcid)
 {
 
   std::vector<int> burnt(nfedge, 0);
@@ -2322,9 +2396,6 @@ void get_triangles(const SiteCoords& p, Triangle* t, SiteId* mCubeID, Face* sq, 
   }
 }
 
-
-
-
 // Convert a 1-based padded working-grid site to the 0-based index into the original (unpadded)
 // cell arrays, or SIZE_MAX if the site is in the ghost shell.
 usize paddedSiteToOriginalCell(int64 site, const size_t fileDim[3], const size_t dims[3])
@@ -2345,14 +2416,7 @@ usize paddedSiteToOriginalCell(int64 site, const size_t fileDim[3], const size_t
 usize findSourceCell(int workLabel, int64 cubeSite, const NeighborAccessor& n, const int32_t* point, const size_t fileDim[3], const size_t dims[3])
 {
   const Neighbor nb = n[cubeSite]; // cache: 7 neighbors of the cube site read below
-  const int64 cornerSites[8] = {cubeSite,
-                                nb.neigh_id[1],
-                                nb.neigh_id[7],
-                                nb.neigh_id[8],
-                                nb.neigh_id[18],
-                                nb.neigh_id[19],
-                                nb.neigh_id[25],
-                                nb.neigh_id[26]};
+  const int64 cornerSites[8] = {cubeSite, nb.neigh_id[1], nb.neigh_id[7], nb.neigh_id[8], nb.neigh_id[18], nb.neigh_id[19], nb.neigh_id[25], nb.neigh_id[26]};
   for(int64 site : cornerSites)
   {
     if(point[site] == workLabel)
@@ -2686,8 +2750,7 @@ Result<> M3CSurfaceMeshing::runEntireVolume()
     return {};
   }
 
-  return finalizeMesh(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel, triangles, mCubeID, fedges, nodeType, point,
-                       nodeCoords, neighbors, numSites, fileDim, dims, maxGrainId);
+  return finalizeMesh(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel, triangles, mCubeID, fedges, nodeType, point, nodeCoords, neighbors, numSites, fileDim, dims, maxGrainId);
 }
 
 // -----------------------------------------------------------------------------

@@ -70,6 +70,8 @@ curvature-dependent analysis.
   edge of the volume are meshed correctly; no manual padding is required.
 - **Feature Id** values of 0 are handled internally and restored on output.
 - For a **RectGrid Geometry** the node coordinates currently assume uniform **Cell** spacing.
+- The mesh is generated using multiple threads. For a given input the result is deterministic and
+  reproducible — it does not depend on the number of threads.
 - **Memory:** the volume is swept one **Z** slice at a time, so the per-**Cell** working scratch is
   proportional to a slice (roughly the square of the in-plane dimension), not to the whole volume.
   Peak memory is therefore dominated by the size of the generated mesh itself (the number of

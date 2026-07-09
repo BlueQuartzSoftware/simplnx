@@ -82,7 +82,8 @@ Parameters M3CSurfaceMeshingFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Output Vertex Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VertexDataGroupName_Key, "Vertex Data [AttributeMatrix]",
-                                                          "The name of the AttributeMatrix where the Vertex Data of the Triangle Geometry will be created", INodeGeometry0D::k_VertexAttributeMatrixName));
+                                                          "The name of the AttributeMatrix where the Vertex Data of the Triangle Geometry will be created",
+                                                          INodeGeometry0D::k_VertexAttributeMatrixName));
   params.insert(std::make_unique<DataObjectNameParameter>(k_NodeTypesArrayName_Key, "Node Type", "The name of the Array specifying the type of node in the Triangle Geometry", "NodeTypes"));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
@@ -129,8 +130,8 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
   auto pGridGeomPath = filterArgs.value<DataPath>(k_GridGeometryDataPath_Key);
   if(dataStructure.getDataAs<ImageGeom>(pGridGeomPath) == nullptr)
   {
-    resultOutputActions.warnings().push_back(
-        Warning{-90210, "The selected geometry is not an Image Geometry. M3C assumes uniform cell spacing; non-uniform RectGrid spacing is not honored and the node coordinates will use a spacing of 1.0 along each axis."});
+    resultOutputActions.warnings().push_back(Warning{-90210, "The selected geometry is not an Image Geometry. M3C assumes uniform cell spacing; non-uniform RectGrid spacing is not honored and the "
+                                                             "node coordinates will use a spacing of 1.0 along each axis."});
   }
 
   // The number of vertices and faces is not known until execute; create empty and resize in the algorithm.
@@ -172,8 +173,8 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
     }
     auto compShape = iDataArray.getComponentShape();
     compShape.insert(compShape.begin(), 2);
-    auto createArrayAction =
-        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()), dataStoreFormat);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape,
+                                                                 pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()), dataStoreFormat);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
   for(const auto& selectedDataPath : pFeatureDataPaths)
@@ -181,8 +182,8 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
     const auto& iDataArray = dataStructure.getDataRefAs<IDataArray>(selectedDataPath);
     auto compShape = iDataArray.getComponentShape();
     compShape.insert(compShape.begin(), 2);
-    auto createArrayAction =
-        std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape, pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()), dataStoreFormat);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(iDataArray.getDataType(), std::vector<usize>{numElements}, compShape,
+                                                                 pFaceGroupDataPath.createChildPath(selectedDataPath.getTargetName()), dataStoreFormat);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
