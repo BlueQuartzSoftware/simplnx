@@ -361,10 +361,10 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
   // (their outputs remain NaN); report that up front instead of dropping them silently.
   usize unknownXtalFeatureCount = 0;
   {
-    const std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
+    const usize numValidXtal = ebsdlib::LaueOps::GetAllOrientationOps().size();
     for(const auto& [featureId, phaseValue] : featureIdToPhaseMap)
     {
-      if(crystalStructures[phaseValue] >= ops.size())
+      if(crystalStructures[phaseValue] >= numValidXtal)
       {
         unknownXtalFeatureCount++;
       }
