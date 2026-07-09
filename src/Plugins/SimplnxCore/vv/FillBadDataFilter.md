@@ -7,7 +7,7 @@
 | SIMPLNX Human Name          | Fill Bad Data                                                            |
 | DREAM3D 6.5.171 equivalent  | `FillBadData` — SIMPL UUID `30ae0a1e-3d94-5dab-b279-c5727ab5d7ff`       |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                  |
-| Status                      | **READY FOR REVIEW** (second-engineer review + Test 08 evidence archival outstanding — see V&V phase) |
+| Status                      | **READY FOR REVIEW** (second-engineer review outstanding — see V&V phase) |
 | Sign-off                    | *pending second-engineer review*                                             |
 
 ## At a glance
@@ -19,9 +19,9 @@
 | Code paths             | **15 of 16** covered. Only gap: `m_ShouldCancel` cancel path in Phase 4 while-loop (Path 14). |
 | Tests                  | **14 TEST_CASEs**, all pass. 1 SmallIN100 (Class 2) + 9 OOC synthetic fixtures (Class 1, Tests 01–07, 11, 13) + 1 all-bad-data termination guard + 1 preflight-error inline (asserts `-16500`) + 1 SIMPL backwards-compat. |
 | Exemplar archive       | `6_5_fill_bad_data.tar.gz` — `6_5_input/exemplar.dream3d` (Class 2) + `test_NN_input/expected.dream3d` pairs for Tests 01–07, 11, 13 (Class 1). *(Tests 08–10 and 12 have no fixtures — the numbering is non-contiguous.)* |
-| Legacy comparison      | SmallIN100 in-test (Class 2). The Test 08 binary A/B (6.5.171 vs 6.5.172 vs NX) is **not reproducible from the committed archive** — its fixture and comparison report were not included (see V&V phase / deviations); this is an open archival action, so the legacy comparison is not yet independently reviewable. |
+| Legacy comparison      | SmallIN100 in-test (Class 2) — SIMPLNX matches the 6.5.x exemplar element-wise. A separate Test 08 three-way binary A/B was cited by an earlier revision but its working files are unrecoverable, so that claim is **withdrawn** (see deviations). Per-code-path correctness is pinned by the Class 1 analytical fixtures. |
 | Bug flags              | `FillBadDataFilter-B1` (preflight dead-return for `minAllowedDefectSize < 1`) resolved. Fixed this cycle: an all-bad-data / enclosed-bad-pocket input previously looped forever in Phase 4 (no fillable neighbor → `count` never reached 0); a no-progress guard now stops with a warning. |
-| V&V phase              | **READY FOR REVIEW.** Outstanding: (1) second-engineer spot-check of Tests 11/13; (2) the Test 08 A/B fixture + `comparison_report.md` must be added to the archive (or the Test 08 claim dropped) before COMPLETE; (3) cancel path (Path 14) untested. |
+| V&V phase              | **READY FOR REVIEW.** Outstanding: (1) second-engineer spot-check of Tests 11/13; (2) cancel path (Path 14) untested. *(The unrecoverable Test 08 A/B claim has been withdrawn — no longer a gate.)* |
 
 ## Summary
 
@@ -40,7 +40,7 @@ The SIMPLNX algorithm (`Algorithms/FillBadData.cpp`, ~765 lines) introduces a 4-
 
 SIMPL UUID mapping is preserved via `SimplnxCoreLegacyUUIDMapping.hpp` and SIMPL conversion fixtures (`test/simpl_conversion/6_5/` and `6_4/FillBadDataFilter.json`).
 
-*Behavioral equivalence evidence:* `FillBadData_SmallIN100` passes against `6_5_exemplar.dream3d` (Small IN100, threshold=1000). Manual A/B on Test 08 (7×7×3, threshold=10) shows identical FeatureIds output across 6.5.171, 6.5.172, and NX.
+*Behavioral equivalence evidence:* `FillBadData_SmallIN100` passes against `6_5_exemplar.dream3d` (Small IN100, threshold=1000). (A separate Test 08 three-way A/B was previously cited but its working files are unrecoverable; that claim is withdrawn — see deviations.)
 
 ## Oracle
 
@@ -109,9 +109,10 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/FillBadData.
 
 ## Deviations from DREAM3D 6.5.171
 
-No deviations observed. Two independent comparisons confirm output equivalence:
+No deviations observed. The legacy comparison is the SmallIN100 in-test check:
 
-1. `FillBadData_SmallIN100` passes against `6_5_exemplar.dream3d` (Small IN100, MinAllowedDefectSize=1000).
-2. Independent A/B run (2026-07-03) on Test 08 (7×7×3, MinAllowedDefectSize=10) — DREAM3D 6.5.171, 6.5.172, and NX produce identical FeatureIds output (element-wise match, 147 voxels).
+1. `FillBadData_SmallIN100` passes against `6_5_exemplar.dream3d` (Small IN100, MinAllowedDefectSize=1000) — SIMPLNX matches the 6.5.x exemplar element-wise.
+
+Per-code-path correctness is pinned independently by the Class 1 analytical fixtures (Tests 01–07, 11, 13). (An earlier revision also cited a Test 08 three-way binary A/B; its working files are unrecoverable, so that claim is withdrawn.)
 
 See `vv/deviations/FillBadDataFilter.md` for the full comparison record.
