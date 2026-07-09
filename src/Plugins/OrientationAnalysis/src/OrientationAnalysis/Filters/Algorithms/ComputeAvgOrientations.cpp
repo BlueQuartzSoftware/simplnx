@@ -34,6 +34,7 @@ public:
   {
     // Input FeatureIds + Input Orientations. All these should come from the same Attribute Matrix or have the same number of tuples
     Int32AbstractDataStore& featureIdsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath).getDataStoreRef();
+    Int32AbstractDataStore& phasesRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath).getDataStoreRef();
     Float32AbstractDataStore& quatsRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellQuatsArrayPath).getDataStoreRef();
     // Ensemble Level Data
     UInt32AbstractDataStore& xtalRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath).getDataStoreRef();
@@ -61,6 +62,7 @@ public:
     }
 
     usize numVoxels = featureIdsRef.getNumberOfTuples();
+    const usize numEnsembles = xtalRef.getNumberOfTuples();
 
     std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
 
@@ -95,8 +97,12 @@ public:
       // they want to find the average orientation of
       for(usize voxelIdx = 0; voxelIdx < numVoxels; voxelIdx++)
       {
-        // If the feature Id of the voxel matches the current feature Id, then grab that orientation
-        if(featureIdsRef[voxelIdx] == featureId)
+        // If the feature Id of the voxel matches the current feature Id, then grab that orientation.
+        // The phase gate MUST match the counting pass in computeVmfWatsonAverage() (and the
+        // Rodrigues path): phase-0/unindexed voxels are excluded from the average (issue #1659),
+        // and an out-of-range phase index would read past the CrystalStructures array (issue #1661).
+        const int32 voxelPhase = phasesRef[voxelIdx];
+        if(featureIdsRef[voxelIdx] == featureId && voxelPhase > 0 && static_cast<usize>(voxelPhase) < numEnsembles)
         {
           const ebsdlib::QuatD q1(quatsRef[voxelIdx * 4], quatsRef[voxelIdx * 4 + 1], quatsRef[voxelIdx * 4 + 2], quatsRef[voxelIdx * 4 + 3]);
           fzQuats.push_back(op->getFZQuat(q1)); // Fundamental Zone Reduction
@@ -276,16 +282,18 @@ Result<> ComputeAvgOrientations::operator()()
 
   MessageHelper messageHelper(m_MessageHandler);
 
-  Result<> result;
+  // Warnings (e.g. dropped voxels/features) from each path are merged and returned together.
+  Result<> finalResult;
   if(m_InputValues->useRodriguesAverage)
   {
     messageHelper.sendMessage("Computing Rodrigues Average Orientations");
 
-    result = computeRodriguesAverage();
+    Result<> result = computeRodriguesAverage();
     if(result.invalid())
     {
       return result;
     }
+    finalResult = MergeResults(std::move(finalResult), std::move(result));
   }
   if(m_InputValues->useVonMisesAverage || m_InputValues->useWatsonAverage)
   {
@@ -302,14 +310,15 @@ Result<> ComputeAvgOrientations::operator()()
       messageHelper.sendMessage("Computing von-Mises Fisher and Watson Average Orientations");
     }
 
-    result = computeVmfWatsonAverage();
+    Result<> result = computeVmfWatsonAverage();
     if(result.invalid())
     {
       return result;
     }
+    finalResult = MergeResults(std::move(finalResult), std::move(result));
   }
 
-  return {};
+  return finalResult;
 }
 
 // -----------------------------------------------------------------------------
@@ -318,20 +327,47 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
   // Input Data
   auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellFeatureIdsArrayPath);
   auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
 
   const size_t totalVoxels = featureIds.getNumberOfTuples();
+  const usize numEnsembles = crystalStructures.getNumberOfTuples();
 
-  // Run through the "voxels" and compute the number of voxels for each feature
+  // Run through the "voxels" and compute the number of voxels for each feature.
+  // NOTE: for a feature spanning multiple phases the map is last-writer-wins — the
+  // feature's crystal structure is taken from the phase of its highest-index voxel.
+  // (vMF/Watson uses one phase per feature; the Rodrigues path is per-voxel.)
   std::vector<usize> featureNumVoxels(m_NumberOfFeatures, 0);
   std::map<int32, int32> featureIdToPhaseMap;
+  usize outOfRangePhaseCount = 0;
   for(size_t i = 0; i < totalVoxels; i++)
   {
     const int32_t currentFeatureId = featureIds[i];
     const int32_t currentPhase = phases[i];
     if(currentPhase > 0)
     {
+      // An out-of-range phase index would read past the CrystalStructures array (issue #1661).
+      // This gate MUST match the gather loop in VmfWatsonSamplingImpl.
+      if(static_cast<usize>(currentPhase) >= numEnsembles)
+      {
+        outOfRangePhaseCount++;
+        continue;
+      }
       featureNumVoxels[currentFeatureId]++;
       featureIdToPhaseMap[currentFeatureId] = currentPhase;
+    }
+  }
+
+  // Features whose crystal structure is unknown/unsupported are skipped by the worker
+  // (their outputs remain NaN); report that up front instead of dropping them silently.
+  usize unknownXtalFeatureCount = 0;
+  {
+    const std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
+    for(const auto& [featureId, phaseValue] : featureIdToPhaseMap)
+    {
+      if(crystalStructures[phaseValue] >= ops.size())
+      {
+        unknownXtalFeatureCount++;
+      }
     }
   }
 
@@ -374,7 +410,19 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverage()
   dataAlg.setRange(0, m_NumberOfFeatures);
   dataAlg.execute(VmfWatsonSamplingImpl(this, m_InputValues, m_DataStructure, featureNumVoxels, featureIdToPhaseMap));
 
-  return {};
+  Result<> result;
+  if(unknownXtalFeatureCount > 0)
+  {
+    result.warnings().push_back(
+        {-54671, fmt::format("vMF/Watson average: {} feature(s) have an unknown/unsupported crystal structure value and were skipped; their output tuples remain NaN.", unknownXtalFeatureCount)});
+  }
+  if(outOfRangePhaseCount > 0)
+  {
+    result.warnings().push_back(
+        {-54672, fmt::format("vMF/Watson average: {} cell(s) have a Phases value outside the range of the Crystal Structures array ({} tuples) and were excluded from the average.",
+                             outOfRangePhaseCount, numEnsembles)});
+  }
+  return result;
 }
 
 // -----------------------------------------------------------------------------
@@ -392,9 +440,12 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
   auto& avgEuler = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgEulerAnglesArrayPath).getDataStoreRef();
 
   const size_t totalPoints = featureIds.getNumberOfTuples();
+  const usize numEnsembles = crystalStructures.getNumberOfTuples();
 
   size_t totalFeatures = avgQuats.getNumberOfTuples();
   std::vector<float> counts(totalFeatures, 0.0f);
+  usize outOfRangePhaseCount = 0;
+  usize unknownXtalCount = 0;
 
   // initialize the output arrays
   avgQuats.fill(0.0F);
@@ -430,10 +481,17 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     // for the filter should be updated to cover these use-cases.
     if(currentPhase > 0)
     {
+      // An out-of-range phase index would read past the CrystalStructures array (issue #1661).
+      if(static_cast<usize>(currentPhase) >= numEnsembles)
+      {
+        outOfRangePhaseCount++;
+        continue;
+      }
       const uint32 xtal = crystalStructures[currentPhase];
       // Guard against an out-of-range crystal-structure enum (e.g. 999/Unknown).
       if(xtal >= orientationOps.size())
       {
+        unknownXtalCount++;
         continue;
       }
       counts[currentFeatureId] += 1.0f;
@@ -477,5 +535,17 @@ Result<> ComputeAvgOrientations::computeRodriguesAverage()
     UpdateEulerArray(avgEuler, eu, featureId);
   }
 
-  return {};
+  Result<> result;
+  if(unknownXtalCount > 0)
+  {
+    result.warnings().push_back(
+        {-54671, fmt::format("Rodrigues average: {} cell(s) belong to a phase whose crystal structure value is unknown/unsupported and were excluded from the average.", unknownXtalCount)});
+  }
+  if(outOfRangePhaseCount > 0)
+  {
+    result.warnings().push_back(
+        {-54672, fmt::format("Rodrigues average: {} cell(s) have a Phases value outside the range of the Crystal Structures array ({} tuples) and were excluded from the average.",
+                             outOfRangePhaseCount, numEnsembles)});
+  }
+  return result;
 }

@@ -66,7 +66,10 @@ These values may be exposed as user-configurable parameters in a future release.
 
 - **Features with a single element:** For the vMF and Watson methods, if a feature contains only one element orientation, the EM algorithm is skipped entirely and the single quaternion is used directly as the average. The kappa value is set to 0 in this case.
 - **Features with zero elements:** Features with no elements (phase <= 0 for all voxels) will have their output arrays initialized to NaN (for vMF/Watson) or identity quaternion / zero Euler angles (for Rodrigues).
-- **Phase indexing:** The filter requires that phase values be > 0 for elements to be included in the averaging. Phase index 0 is reserved for "Unknown" in the Crystal Structures array and is always skipped.
+- **Phase indexing:** The filter requires that phase values be > 0 for elements to be included in the averaging. Phase index 0 is reserved for "Unknown" in the Crystal Structures array and is always skipped. This applies identically to all three methods.
+- **Invalid phases and crystal structures:** Elements whose phase value lies outside the range of the Crystal Structures array, and elements or features whose crystal structure value is not a supported Laue class (for example 999 = Unknown), are **excluded** from the averaging. The filter emits a warning (-54672 for out-of-range phases, -54671 for unknown crystal structures) reporting how many were dropped — the drop is never silent. A feature whose elements are all excluded finalizes to the identity quaternion (Rodrigues) or NaN (vMF/Watson).
+- **Multi-phase features:** The vMF/Watson methods use a single crystal structure per feature, taken from the phase of the feature's highest-index element; the Rodrigues method uses each element's own phase. Features are normally single-phase, so this distinction rarely matters.
+- **No method enabled:** If none of the three averaging methods is enabled the filter fails in preflight with error -54673.
 
 % Auto generated parameter table will be inserted here
 

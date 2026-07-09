@@ -150,6 +150,14 @@ IFilter::PreflightResult ComputeAvgOrientationsFilter::preflightImpl(const DataS
   auto pWatsonEulerAnglesArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonAvgEulerArrayName_Key));
   auto pWatsonKappaArrayPathValue = pCellFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_WatsonKappaArrayName_Key));
 
+  // With no method enabled the filter would produce nothing and was guaranteed to fail at
+  // runtime (-54670); reject it here so the GUI surfaces the problem before execution.
+  if(!pUseRodriguesAverage_Key && !pUseVonMisesFisher && !pUseWatson)
+  {
+    return {
+        MakeErrorResult<OutputActions>(-54673, "No averaging method is enabled. Enable at least one of: 'Compute Rodrigues Average', 'Compute von Mises-Fisher Average', 'Compute Watson Average'.")};
+  }
+
   Result<OutputActions> resultOutputActions;
 
   std::vector<DataPath> dataPaths;

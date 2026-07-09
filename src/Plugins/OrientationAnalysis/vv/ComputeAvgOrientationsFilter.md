@@ -17,10 +17,10 @@
 | Algorithm Relationship | **Minor changes** (Rodrigues method) **+ New** (vMF/Watson). The Rodrigues average is a faithful port of legacy `FindAvgOrientations::execute()` with 4 deliberate deltas (positive-orientation canonicalization, FeatureId==0 inclusion, divide-by-zero cleanup, EbsdLib library swap). The von Mises-Fisher and Watson methods are **new** (added PR #1577), have **no legacy equivalent**, are off by default, and delegate their EM math to EbsdLib `DirectionalStats`. |
 | Oracle (confirmed)     | **Confirmed.** Rodrigues → **Class 1 (analytical)** + **Class 4 (invariant)**; vMF/Watson → **Class 2 (EbsdLib reference, trusted, not re-tested)** + **Class 4 (invariant)**, scoped to the filter's value-add per the "don't re-test upstream" rule. Encoded as 2 oracle TEST_CASEs (+1 error test) in `test/ComputeAvgOrientationsTest.cpp`; all pass. SIMPLNX matches the oracle on every fixture. |
 | Code paths enumerated  | 10 of 11 paths exercised (see Code path coverage); the one gap is the Watson-only dispatch branch (low-value array-selection path).                                                                                                                                                                       |
-| Tests today            | 5 test cases: Rodrigues analytical (Class 1+4), vMF/Watson EbsdLib-reference (Class 2+4), no-method-enabled error (-54670), cell-array tuple-mismatch error (-651), and SIMPL 6.4/6.5 backwards-compat (DYNAMIC_SECTION). All inline hand-built data — no exemplar archive. Closes the GCOV vMF/Watson coverage gap.       |
+| Tests today            | 9 test cases: Rodrigues analytical (Class 1+4), Rodrigues cubic-symmetry invariant (Class 4, #1660), Rodrigues voxel-ordering independence (Class 4), vMF/Watson EbsdLib-reference (Class 2+4), vMF/Watson phase-0 exclusion regression (#1659), crystal-structure/phase guard warnings (#1661), no-method-enabled error (preflight -54673 + runtime backstop -54670), cell-array tuple-mismatch error (-651, code asserted), and SIMPL 6.4/6.5 backwards-compat (DYNAMIC_SECTION). All inline hand-built data — no exemplar archive. Closes the GCOV vMF/Watson coverage gap.       |
 | Exemplar archive       | **None — retired `7_ComputeAvgOrientation_v2.tar.gz`** (it was a circular oracle regenerated from post-fix SIMPLNX output in PR #1577). Oracle is now inline in the test source. `download_test_data()` entry to be removed in Phase 10.                                                                  |
 | Legacy comparison      | **Run (2026-06-30) vs the official DREAM3D 6.5.171 release.** Two fixtures. On the realistic 480k-cell / 408-feature input the two are **numerically equivalent on all real features** (`AvgQuats` ≤1e-6, zero sign flips; `AvgEulerAngles` max 4.77e-7). Divergences are confined to **feature-0 / unindexed-voxel handling**: **D3** (empty feature 0) and **D2** (FeatureId-0 voxels with phase>0 — demonstrated on a forcing fixture: NX computes the average, legacy writes `(0,0,0,0)`). **D4** sub-epsilon. **D1 downgraded** (no demonstrable divergence). vMF/Watson have no legacy equivalent (N/A). |
-| Bug flags              | One **legacy** bug, empirically confirmed: `ComputeAvgOrientationsFilter-D3` (6.5.171 leaves the zero-voxel feature 0 as `(0,0,0,0)` / divides zero-count features by zero; SIMPLNX writes a clean identity). D2 is a deliberate algorithmic-choice divergence (not a bug). **No SIMPLNX bugs.**                  |
+| Bug flags              | One **legacy** bug, empirically confirmed: `ComputeAvgOrientationsFilter-D3` (6.5.171 leaves the zero-voxel feature 0 as `(0,0,0,0)` / divides zero-count features by zero; SIMPLNX writes a clean identity). D2 is a deliberate algorithmic-choice divergence (not a bug). One **SIMPLNX** bug found by the post-merge adversarial review and fixed 2026-07-08: **issue #1659** — the vMF/Watson gather loop ignored `Phases`, so a phase-0 voxel inside a feature contributed a garbage quaternion to the EM average. Fixed by gating the gather identically to the counting pass; pinned by the `vMF/Watson Ignores Phase-0 Voxels` regression test.                  |
 | V&V phase              | **Phases 1, 3, 4, 5, 6, 7, 8, 9 complete** — oracle confirmed/reconciled, review fixes applied, all 5 tests pass (in-core `NX-Com-Qt69-Vtk95-Rel`, vcpkg EbsdLib 3.0.0), legacy comparison run (numerically equivalent). OOC build skipped (per maintainer). Outstanding: 11 (doc deviation links), 12 (OneDrive archive), 13 (tracking).                  |
 
 ## Summary
@@ -44,7 +44,7 @@
 
 ## Oracle
 
-*Status: in progress (Phase 4). Boundary with EbsdLib confirmed; plan below pending second-engineer review.*
+*Status: confirmed. Boundary with EbsdLib confirmed; second-engineer oracle review pending (see provenance sidecar).*
 
 *Class:* **1 (Analytical) + 4 (Invariant)** for Rodrigues; **2 (Reference — EbsdLib, trusted & not re-tested) + 4 (Invariant)** for vMF/Watson.
 
@@ -68,7 +68,12 @@ EbsdLib owns: EM convergence/multi-restart, symmetry-aware E/M steps, kappa esti
 - `test/ComputeAvgOrientationsTest.cpp::"OrientationAnalysis::ComputeAvgOrientations: vMF/Watson EbsdLib Reference Oracle"` — Class 2 (22-quat feature reproduces EbsdLib's documented VMF/WAT muhat+kappa; quat margin 5e-3, kappa 2% to absorb the float32 input round-trip) + Class 4 (zero-voxel→NaN).
 - `test/ComputeAvgOrientationsTest.cpp::"OrientationAnalysis::ComputeAvgOrientations: No Method Enabled Error"` — error path `-54670`.
 
-All pass in the `NX-Com-Qt69-Vtk95-Rel-EbsdLib` build (4/4). OOC dual-build confirmed in Phase 8.
+- `test/ComputeAvgOrientationsTest.cpp::"OrientationAnalysis::ComputeAvgOrientations: Rodrigues Cubic Symmetry Invariant"` — Class 4 under non-trivial (Cubic_High) symmetry: five representations of the same orientation (Rz(30°+90°k) and −Rz(30°)) must average to Rz(30°) (issue #1660).
+- `test/ComputeAvgOrientationsTest.cpp::"OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering Independence"` — Class 4: F3 fixture in both voxel orderings → identical Rz(45°).
+- `test/ComputeAvgOrientationsTest.cpp::"OrientationAnalysis::ComputeAvgOrientations: vMF/Watson Ignores Phase-0 Voxels"` — regression pin for issue #1659.
+- `test/ComputeAvgOrientationsTest.cpp::"OrientationAnalysis::ComputeAvgOrientations: Unknown Crystal Structure and Out-Of-Range Phase Guards"` — guard/warning coverage for issue #1661 (-54671/-54672).
+
+All 9 test cases pass in the `NX-Com-Qt69-Vtk95-Rel` build. OOC dual-build was skipped per maintainer (this filter's algorithm is feature-indexed with serial execution; no OOC-specific code path).
 
 *Second-engineer review:* *pending — recommend an OA-domain engineer (e.g. Joey) review the Triclinic closed-form derivations and confirm the 22-quaternion Class-2 reuse is a fair value-add check.*
 
@@ -86,7 +91,7 @@ Line-by-line review performed via the `review-algorithm` skill on the already-or
 
 ## Code path coverage
 
-*10 of 11 paths exercised. Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeAvgOrientations.cpp` (457 lines).* Logical phases: **(a)** `operator()` dispatch + output-array selection/validation, **(b)** Rodrigues two-pass average, **(c)** vMF/Watson per-feature EM (parallel over features).
+*15 of 16 paths exercised. Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/ComputeAvgOrientations.cpp`.* Logical phases: **(a)** `operator()` dispatch + output-array selection/validation, **(b)** Rodrigues two-pass average, **(c)** vMF/Watson per-feature EM (serial over features). Paths 12–16 were added by the #1659/#1661 follow-up work (2026-07-08).
 
 | #  | Phase            | Path                                                                                                                              | Test case            |
 |----|------------------|----|----------------------|
@@ -101,6 +106,11 @@ Line-by-line review performed via the `review-algorithm` skill on the already-or
 | 9  | (c) vMF/Watson   | `featureNumVoxels[fid] == 0` → skip (output stays NaN from fill)                                                                  | both oracle tests — F0/F5 and background feature → NaN |
 | 10 | (c) vMF/Watson   | `fzQuats.size() == 1` → muhat = single FZ quat, kappa = 0 (EM skipped)                                                            | `Rodrigues Analytical Oracle` — F1, F2 (single-voxel) |
 | 11 | (c) vMF/Watson   | `fzQuats.size() > 1` → `DirectionalStats::EMforDS` (VMF or WAT) → muhat, kappa; positiveOrientation; write quat/euler/kappa       | `vMF/Watson EbsdLib Reference Oracle` (22-quat feature) + `Rodrigues Analytical Oracle` F3/F4 |
+| 12 | (a) Preflight    | all three methods disabled → preflight error `-54673` (runtime `-54670` kept as backstop, pinned by direct algorithm invocation)  | `No Method Enabled Error` |
+| 13 | (b)+(c) Guards   | `Phases` value ≥ CrystalStructures tuple count → voxel excluded (no OOB read) + warning `-54672`                                  | `Unknown Crystal Structure and Out-Of-Range Phase Guards` |
+| 14 | (b) Rodrigues    | crystal structure ≥ ops count (e.g. 999/Unknown) → voxel excluded + warning `-54671`; fully-excluded feature → identity           | `Unknown Crystal Structure and Out-Of-Range Phase Guards` |
+| 15 | (c) vMF/Watson   | crystal structure ≥ ops count → feature skipped (outputs stay NaN) + warning `-54671`                                             | `Unknown Crystal Structure and Out-Of-Range Phase Guards` |
+| 16 | (c) vMF/Watson   | gather loop excludes phase-0 / out-of-range-phase voxels (gate identical to counting pass; issue #1659)                           | `vMF/Watson Ignores Phase-0 Voxels` + guards test |
 
 ## Test inventory
 
@@ -108,18 +118,22 @@ Line-by-line review performed via the `review-algorithm` skill on the already-or
 |-----------|--------|-------|
 | `OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Oracle` | new-for-V&V | Class 1 + Class 4. 6 Triclinic Rodrigues fixtures with closed-form averages (exact quats @1e-6) + invariants; also asserts vMF/Watson value-add invariants (single→FZ-quat & kappa 0, zero→NaN) on the same small data. Inline hand-built data. |
 | `OrientationAnalysis::ComputeAvgOrientations: vMF/Watson EbsdLib Reference Oracle` | new-for-V&V | Class 2 + Class 4. One Cubic feature of EbsdLib's 22 reference quaternions reproduces EbsdLib `DirectionalStatsTest`'s documented VMF/WAT muhat+kappa (quat margin 5e-3, kappa 2% to absorb float32 input round-trip). Inline hand-built data. |
-| `OrientationAnalysis::ComputeAvgOrientations: No Method Enabled Error` | new-for-V&V | Error path: no method enabled → algorithm returns `-54670`. |
-| `OrientationAnalysis::ComputeAvgOrientations: Cell Array Tuple Mismatch Error (-651)` | new-for-V&V | Preflight error path: mismatched cell-array tuple counts → `-651`. Overlaps PR #1644's GCOV contribution (same test file) — reconcile the duplicate at merge time. |
+| `OrientationAnalysis::ComputeAvgOrientations: Rodrigues Cubic Symmetry Invariant` | new (issue #1660) | Class 4 under Cubic_High: five representations of one orientation (Rz(30+90k), −Rz(30)) must average to Rz(30). Exercises the symmetry-reduction branch under 24 operators. |
+| `OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering Independence` | new (issue #1661) | Class 4: F3 fixture in both voxel orderings → identical Rz(45). Encodes the invariant the provenance previously claimed without a test. |
+| `OrientationAnalysis::ComputeAvgOrientations: vMF/Watson Ignores Phase-0 Voxels` | new (issue #1659) | Regression pin for the phase-gate fix: a phase-0 voxel inside a feature must not enter the gather (single-voxel shortcut preserved; EM path lands on the valid orientation; cross-checked vs Rodrigues). |
+| `OrientationAnalysis::ComputeAvgOrientations: Unknown Crystal Structure and Out-Of-Range Phase Guards` | new (issue #1661) | Guards: unknown crystal structure (999) and out-of-range `Phases` are excluded from both paths with warnings `-54671`/`-54672` (asserted); dropped features → identity/NaN. |
+| `OrientationAnalysis::ComputeAvgOrientations: No Method Enabled Error` | new-for-V&V (updated for #1661) | No method enabled → preflight error `-54673` (asserted); runtime backstop `-54670` pinned via direct algorithm invocation. |
+| `OrientationAnalysis::ComputeAvgOrientations: Cell Array Tuple Mismatch Error (-651)` | new-for-V&V (updated for #1661) | Preflight error path: mismatched cell-array tuple counts → `-651` (code asserted). The duplicate TEST_CASE that PR #1644 added to this file was removed in favor of this one. |
 | `OrientationAnalysis::ComputeAvgOrientationsFilter: SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5 conversion fixtures; validates UUID + argument-key conversion only. Unaffected by V&V. |
 
-**Coverage note (GCOV handoff, `.claude/gcov_ComputeAvgOrientations.md`):** the prior capture showed algorithm `.cpp` at 90.7% line / 46.5% branch, with the entire vMF/Watson path, the `-54670` branch, zero/single-voxel handling, and the VMF/Watson feature-array-detection branches **uncovered**. The V&V suite above now exercises all of them (Rodrigues, vMF, Watson, all-three-combined, both error paths, zero- and single-voxel features), closing the gap. The `-651` tuple branch (filter `.cpp`) is covered here and also by PR #1644.
+**Coverage note (GCOV handoff, `.claude/gcov_ComputeAvgOrientations.md`):** the prior capture showed algorithm `.cpp` at 90.7% line / 46.5% branch, with the entire vMF/Watson path, the `-54670` branch, zero/single-voxel handling, and the VMF/Watson feature-array-detection branches **uncovered**. The V&V suite above now exercises all of them (Rodrigues, vMF, Watson, all-three-combined, both error paths, zero- and single-voxel features), closing the gap. The `-651` tuple branch (filter `.cpp`) is covered here; PR #1644's duplicate `-651` TEST_CASE was removed from this file (issue #1661).
 | *(retired)* `OrientationAnalysis::ComputeAvgOrientations` | retired | Exemplar-comparison "valid execution" against `7_ComputeAvgOrientation_v2` (tol 5e-7). **Circular oracle** (exemplar regenerated from SIMPLNX output, PR #1577). Replaced by the Class 1/2/4 oracle tests above. |
 
 ## Exemplar archive
 
 - **Archive:** `7_ComputeAvgOrientation_v2.tar.gz`
 - **SHA512:** `2c2a691f1da301c449c20bafec65512d5134db38384ac7cb4c910880ccd87a260a5f011e905f35b97abff3952309f109c737c63ec3c833708926827a62a92efc`
-- **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/7_ComputeAvgOrientation_v2.md` *(to be written, documenting circular-oracle status and replacement)*
+- **Provenance:** `src/Plugins/OrientationAnalysis/vv/provenance/ComputeAvgOrientationsFilter.md` (documents the circular-oracle retirement and the inline replacement oracle)
 - **Circular-oracle flag:** This `_v2` archive was regenerated from post-fix SIMPLNX output during PR #1577 (it bundles the filter's own `AvgQuats`, `Watson Avg Quats`, `vMF Avg Quats`, etc. as the comparison target). It is named explicitly in the audit's cross-cutting circular-oracle list. The V&V replaces this with oracle-derived expected values (Phase 10).
 
 ## Deviations from DREAM3D 6.5.171
@@ -130,3 +144,17 @@ Line-by-line review performed via the `review-algorithm` skill on the already-or
 - `ComputeAvgOrientationsFilter-D2` — **Demonstrated:** FeatureId-0 voxels (phase>0) — SIMPLNX averages them, 6.5.171 writes `(0,0,0,0)`. Algorithmic choice (not a bug). See deviations file.
 - `ComputeAvgOrientationsFilter-D3` — **Confirmed legacy bug:** empty feature 0 is `(0,0,0,0)` in 6.5.171 vs clean identity `(0,0,0,1)` in SIMPLNX. See deviations file.
 - `ComputeAvgOrientationsFilter-D4` — **Confirmed sub-epsilon:** library/precision, `AvgEulerAngles` max diff 4.77e-7. See deviations file.
+
+## Post-merge follow-ups (issues #1659, #1660, #1661 — resolved 2026-07-08)
+
+The adversarial post-merge review of PR #1645 filed three follow-up issues; all are addressed:
+
+1. **#1659 (bug, fixed):** the vMF/Watson gather loop ignored `Phases`, so a phase-0 voxel inside a feature contributed a garbage quaternion to the EM average and defeated the single-voxel shortcut (counting pass said 1, gather collected 2). The gather now gates identically to the counting pass and the Rodrigues path (`phase > 0` and in-range). Regression test: `vMF/Watson Ignores Phase-0 Voxels` (verified failing pre-fix, passing post-fix).
+2. **#1660 (oracle gap, closed):** the Rodrigues symmetry-reduction interaction was only tested under Triclinic (where `getNearestQuat` is a sign-pick no-op). New Class-4 fixture `Rodrigues Cubic Symmetry Invariant` feeds one Cubic_High feature five representations of the same orientation (Rz(30°+90°k) plus −Rz(30°)); the average must be Rz(30°). Cubic correctness no longer rests on the legacy A/B diff.
+3. **#1661 (grab bag, all items):**
+   - Phase index is now range-checked against the CrystalStructures tuple count in both paths (previously an out-of-range read); unknown/unsupported crystal-structure values were already guarded. Both drops now emit warnings (`-54671` unknown crystal structure, `-54672` out-of-range phase) instead of silently dropping, tested by `Unknown Crystal Structure and Out-Of-Range Phase Guards`, and documented in the filter docs.
+   - All-methods-disabled is now a preflight error (`-54673`) instead of a guaranteed runtime failure; the runtime `-54670` backstop is pinned by direct algorithm invocation.
+   - Error tests assert their codes (`-54673`, `-54670`, `-651`); PR #1644's duplicate `-651` test was removed.
+   - The Euler invariant (Φ ≈ 0, finite) checks and the voxel-ordering-independence fixture that the provenance claimed are now actually encoded.
+   - Provenance tolerances reconciled to the shipped values (quat ±5e-3, kappa ±2%) with justification; `featureIdToPhaseMap` last-writer-wins behavior for multi-phase features documented in the algorithm, docs, and provenance.
+   - This report's self-contradictions fixed (test count, OOC status, dangling `7_ComputeAvgOrientation_v2.md` reference).
