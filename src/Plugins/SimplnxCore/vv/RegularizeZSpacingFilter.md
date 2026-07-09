@@ -16,7 +16,7 @@
 | Algorithm Relationship | **Port** of legacy `RegularizeZSpacing::execute()` — identical Z-plane mapping rule and `floor(extent/newZRes)` dim math (independently hand-traced, including the strict-`>` boundary and clamp cases). Five port-time deltas (bulk copy, new-geometry output mode, preflight validation, parallelization, cell-AM binding); none change output for valid input. |
 | Oracle (confirmed)     | **Class 1 (Analytical)** primary + **Class 4 (Invariant)** companion — closed-form indirection map `out[i] = in[map[i]]`. Element-wise Class 1 assertions in 2 fixtures (`Valid Execution (New Geometry)`, `Valid Execution (Spacing Exceeds Extent)`); Class 4 invariants across the valid fixtures. All pass in-core + OOC. |
 | Code paths enumerated  | 12 of 14 exercised; the 2 uncovered are the redundant file-open guard and the cancel check (reasons below).                  |
-| Tests today            | 4 TEST_CASEs (2 Class-1 valid + 1 in-place valid + 1 invalid-parameters with 6 SECTIONs); every documented preflight error code asserted explicitly. |
+| Tests today            | 5 TEST_CASEs (2 Class-1 valid + 1 in-place valid + 1 invalid-parameters with 6 SECTIONs + 1 SIMPL backwards-compat with 6.5/6.4 fixtures); every documented preflight error code asserted explicitly. |
 | Exemplar archive       | **None** — inline analytical fixtures (no `download_test_data`; avoids a circular oracle per project policy).                 |
 | Legacy comparison      | **Run** vs DREAM3D 6.5.171 on a synthetic multi-type fixture (int32 + bool + 3-component float). Bit-identical: legacy == SIMPLNX == Class-1 oracle on every array and on geometry (dims/spacing/origin). |
 | Bug flags              | None.                                                                                                                        |
@@ -85,6 +85,7 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/RegularizeZS
 | `Valid Execution (In Place)` | new-for-V&V | Asserts in-place result replaces the source geometry (same name), no output-name geometry created, output Z dim + Z spacing correct. |
 | `Valid Execution (Spacing Exceeds Extent)` | new-for-V&V | Class 1 clamp fixture: `newZRes` (20) > extent (10) → 1 output plane sourced from plane 0; dims (2,1,1), Z spacing 20, `Data` = {0,1} asserted. |
 | `Invalid Parameters` | new-for-V&V | 6 SECTIONs — non-positive spacing (`-5555`), too-few file values (`-5557`), non-monotonic values (`-5558`), zero total extent (`-5559`), missing cell AM (`-5560`), non-DataArray cell member (`-5561`); each asserts the specific error code. |
+| `SIMPL Backwards Compatibility` | new-for-V&V | 2 DYNAMIC_SECTIONs — converts the 6.5 (UUID-keyed) and 6.4 (Filter_Name-keyed) fixtures in `test/simpl_conversion/`; asserts converted geometry path, input file, Z spacing, and the in-place default. The 6.4 path exercises the `k_LegacySimplFilterUuidMap` name resolution. |
 
 ## Exemplar archive
 

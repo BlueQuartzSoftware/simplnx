@@ -1,0 +1,19 @@
+{
+  "PipelineBuilder": {
+    "Name": "Regularize Z Spacing 6.4 Backwards Compatibility Test",
+    "Number_Filters": 1,
+    "Version": 6
+  },
+  "0": {
+    "Filter_Enabled": true,
+    "Filter_Human_Label": "Regularize Z Spacing",
+    "Filter_Name": "RegularizeZSpacing",
+    "CellAttributeMatrixPath": {
+      "Data Container Name": "DataContainer",
+      "Attribute Matrix Name": "CellData",
+      "Data Array Name": ""
+    },
+    "InputFile": "/test/z_positions.txt",
+    "NewZRes": 0.5
+  }
+}
