@@ -82,26 +82,9 @@ Entries are referenced by stable ID (`NeighborOrientationCorrelationFilter-D<N>`
 
 ---
 
-## NeighborOrientationCorrelationFilter-D5
-
-| Field | Value |
-|---|---|
-| **Deviation ID** | `NeighborOrientationCorrelationFilter-D5` |
-| **Filter UUID** | `4625c192-7e46-4333-a294-67a2eb64cb37` |
-| **Status** | active |
-
-**Symptom:** When the cell attribute matrix contains NeighborList or String arrays, 6.5.171 copies their tuples into replaced cells along with everything else; SIMPLNX leaves them untouched.
-
-**Root cause:** Algorithmic choice / library. Legacy's transfer stage iterates `AttributeMatrix::getAttributeArrayNames()`, and in SIMPL both `NeighborList` and `StringDataArray` derive from `IDataArray`, so `copyTuple` runs on them. SIMPLNX builds its transfer list with `GenerateDataArrayList` (`findAllChildrenOfType<IDataArray>`), and in SIMPLNX `NeighborList` derives from `INeighborList` and `StringArray` from `IArray` — neither is an `IDataArray`, so both are silently excluded from the transfer.
-
-**Affected users:** Only pipelines that carry cell-level NeighborList or String arrays *through* this filter — an unusual configuration, since cell-level NeighborLists are typically created after cleanup. For such users, those arrays become internally inconsistent with the replaced cells' other attributes in SIMPLNX (stale values) but were rewritten in 6.5.171.
-
-**Recommendation:** Either acceptable for typical workflows; users who need those array types transferred should be aware of the difference. If parity is ever required, the SIMPLNX transfer list would need to widen beyond `IDataArray`. Not observable in the V&V fixtures (none carry these array types); identified by source inspection during adversarial review, 2026-07-07.
-
----
-
 ## Shared characterized behaviors (not deviations — identical in both versions)
 
+- **All cell array types are transferred**: the per-pass transfer copies numeric DataArrays *and* NeighborList and String cell arrays into replaced cells, so every attribute of a replaced cell stays consistent. Matches 6.5.171 (which copies all `AttributeMatrix` arrays). The transfer collects arrays via `findAllChildrenOfType<IArray>` and dispatches the tuple copy by concrete type — `IDataArray::copyTuple` / `INeighborList::copyTuple` / `StringArray::operator[]` (`GenerateTransferArrayList` and `CopyArrayTuple` in `Algorithms/NeighborOrientationCorrelation.cpp`). Verified by the `Oracle F13` unit test.
 - **`neighborDiffCount` is dead code**: the count of neighbors *different* from the reference cell is accumulated but never read, in every version since 2013; the documented "at least *Cleanup Level* neighbors must be different than the reference cell" threshold has never been enforced (`currentLevel` never appears in the loop body — the Level parameter only sets the pass count). Documentation corrected during this V&V.
 - **`bestNeighbor` persists across passes**: a cell replaced in pass *n* is re-copied from the same neighbor in later passes even if its confidence is now above the threshold. Identical in 6.5.171 and SIMPLNX; mirrored by the reference oracle.
 - **Level ≥ 6 means zero passes**: the filter is a no-op at its default parameter value in both versions (invariant I4 in the unit tests).

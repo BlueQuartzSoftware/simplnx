@@ -13,26 +13,26 @@
 
 | Aspect                 | Current state                                                                                                                |
 |------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| Algorithm Relationship | **Minor changes** — statement-for-statement port of legacy `NeighborOrientationCorrelation` with two port-time corrections (stale-w fix, double-precision quats) plus two V&V-cycle bug fixes (pass schedule, argmax selection). |
+| Algorithm Relationship | **Port with bug fixes** — statement-for-statement port of `NeighborOrientationCorrelation` with four deliberate correctness deltas: stale-w fix, double-precision quaternion math, restored `6 − Level` pass schedule, argmax neighbor selection. |
 | Oracle (confirmed)     | **Class 2 (Reference implementation) + Class 1 (Analytical) + Class 4 (Invariant)** — NumPy reference (`reference_noc.py`) with 35 hand-derivation cross-checks; encoded as 12 inline fixtures `Oracle F01`–`F12` + invariant tests in `test/NeighborOrientationCorrelationTest.cpp`, all pass. |
 | Code paths enumerated  | 20 of 21 exercised; the cancel path is not directly tested (requires cancel-signal injection). |
-| Tests today            | 17 ctest cases — 13 oracle/invariant fixtures + 1 production-scale invariant verification (Small IN100, archive-free snapshot) + 2 preflight validation tests + 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). |
-| Exemplar archive       | **None — fully retired.** All oracle data is inline (programmatic toy fixtures); the Small IN100 test uses archive-free invariant checks. v1 was retired for a hollow comparison — bisect-proven hollow from its 2022-07-24 introduction (`d199bc749`), archive SHA unchanged since first registration (`e34baf1f2`, 2022-12-02); a briefly-created v2 was retired the same day as a circular oracle. |
+| Tests today            | 18 ctest cases — 14 oracle/invariant fixtures (incl. `Oracle F13` verifying that NeighborList and String cell arrays are transferred) + 1 production-scale invariant verification (Small IN100, archive-free snapshot) + 2 preflight validation tests + 1 SIMPL backward-compat (2 DYNAMIC_SECTIONs). |
+| Exemplar archive       | **None — fully retired.** All oracle data is inline (programmatic toy fixtures); the Small IN100 test uses archive-free invariant checks. The v1 archive was retired because its comparison was hollow from its 2022-07-24 introduction (`d199bc749`; archive SHA unchanged since first registration `e34baf1f2`, 2022-12-02), and a regenerated exemplar would be a circular oracle — so no replacement archive exists. |
 | Legacy comparison      | **Run — SIMPLNX vs DREAM3D 6.5.171**, fixtures + production scale. Fixtures: 6.5.171 differs on exactly the 5 of 12 whose outcome depends on a defect (D1–D3); the 7 fully-tied fixtures are identical because SIMPLNX's argmax resolves ties to the same last-in-scan-order neighbor 6.5.171 picked. Production (Small IN100, 4.44M cells, Level 2): 14.29% of cells differ, decomposed per deviation entry. Each root cause proven by applying the surgical fix to a local build of the legacy source — then bit-identical to SIMPLNX on all 12 fixtures **and all 4,444,713 production cells** (which also bounds D4 precision at zero observed). |
 | Bug flags              | D1 (legacy stale-w), D2 (double level decrement, was also in SIMPLNX — fixed), D3 (last-wins selection, was also in SIMPLNX — fixed). D4 is precision, not a bug. Plus: hollow exemplar comparison in the v1 test (fixed). |
 | V&V phase              | All phases complete. Outstanding: second-engineer oracle review at PR; fresh before/after doc screenshots (existing images predate the fixes). |
 
 ## Summary
 
-Neighbor Orientation Correlation replaces low-confidence EBSD cells with the attributes of their "best" face neighbor — the one most orientation-similar to the other neighbors — over `6 − Level` passes. It was verified against a NumPy reference implementation with hand-derived (convention-free, co-axial rotation) expected outputs on 12 fixtures covering every logic branch, which exposed and fixed two inherited legacy defects in SIMPLNX (halved pass count; last-wins instead of arg-max selection; the corrected argmax deliberately resolves ties to the same neighbor 6.5.171 picked, confining migration diffs to genuinely defective decisions). Post-fix SIMPLNX matches the oracle exactly on all fixtures and at production scale; five deviations from DREAM3D 6.5.171 are documented — quantified on Small IN100 (14.29% of cells) — each root cause proven by a surgical patch to a local build of the legacy source.
+Neighbor Orientation Correlation replaces low-confidence EBSD cells with the attributes of their "best" face neighbor — the one most orientation-similar to the other neighbors — over `6 − Level` passes. It was verified against a NumPy reference implementation with hand-derived (convention-free, co-axial rotation) expected outputs on 12 fixtures covering every logic branch, which exposed and fixed two inherited legacy defects in SIMPLNX (halved pass count; last-wins instead of arg-max selection; the corrected argmax deliberately resolves ties to the same neighbor 6.5.171 picked, confining migration diffs to genuinely defective decisions). SIMPLNX matches the oracle exactly on all fixtures and at production scale. Four differences from DREAM3D 6.5.171 are documented (D1–D4) — cases where SIMPLNX is the more correct version, quantified on Small IN100 at 14.29% of cells, each root cause proven by a surgical patch to a local build of the legacy source.
 
 ## Algorithm Relationship
 
-**Minor changes** (port with two deliberate correctness deltas)
+**Minor changes** (port with deliberate correctness deltas)
 
-*Evidence:* SIMPL UUID `6427cd5e-0ad2-5a24-8847-29f8e0720f4f` maps to this filter in `OrientationAnalysisLegacyUUIDMapping.hpp`; the algorithm body is a statement-for-statement translation of legacy `NeighborOrientationCorrelation::execute()` (same 6-face neighbor order `{-XY, -X, -1, +1, +X, +XY}`, same pair-similarity counting, same per-level in-place tuple transfer; as originally ported it also reproduced legacy's last-similar-neighbor-wins selection, corrected during this V&V — deviation D3).
+*Evidence:* SIMPL UUID `6427cd5e-0ad2-5a24-8847-29f8e0720f4f` maps to this filter in `OrientationAnalysisLegacyUUIDMapping.hpp`; the algorithm body is a statement-for-statement translation of legacy `NeighborOrientationCorrelation::execute()` (same 6-face neighbor order `{-XY, -X, -1, +1, +X, +XY}`, same pair-similarity counting, same per-level in-place tuple transfer; SIMPLNX replaces legacy's last-similar-neighbor-wins selection with a last-of-ties argmax — deviation D3).
 
-**Port-time deltas:**
+**Deliberate deltas from legacy:**
 
 1. **Stale-misorientation fix** — legacy computes `w = getMisoQuat(...)` only inside the same-phase conditional but tests `w` against the tolerance unconditionally, so a mixed-phase (or phase-0) pair inherits the previous pair's `w`. SIMPLNX re-initializes the axis-angle to `std::numeric_limits<double>::max()` before every pair. Changes output on mixed-phase datasets (see deviations).
 2. **float → double quaternion math** — legacy uses `QuatF`/`getMisoQuat` (float32); SIMPLNX uses `ebsdlib::QuatD`/`calculateMisorientation` (float64, angle at index `[3]` of the returned Axis-Angle `<XYZ>W`). Only affects pairs whose misorientation sits within float rounding of the tolerance.
@@ -52,9 +52,9 @@ Neighbor Orientation Correlation replaces low-confidence EBSD cells with the att
 
 *Class:* **2 (Reference implementation)**, with Class 1 (Analytical) and Class 4 (Invariant) companions.
 
-*Applied:* A NumPy reference implementation of the intended algorithm (`reference_noc.py`, NumPy 2.4.2, pinned in the provenance sidecar) computes expected outputs for 12 synthetic fixtures. The intended selection rule is an argmax over neighbor similarity counts with **last-of-ties** resolution (`>=` with a count > 0 guard), deliberately tie-compatible with 6.5.171 (revised 2026-07-07, adversarial-review item A1). All fixture orientations are co-axial rotations about +Z with deltas ≤ 45° (cubic) / ≤ 30° (hex), where every misorientation-fold convention reduces to `|Δθ|` — so each single-pass fixture is *also* hand-derivable (Class 1; `check_derivations.py`, 35 assertions). Quirk toggles in the same script exactly predict pre-fix SIMPLNX and stock 6.5.171 behavior, which is how the defects were localized. Class 4 invariants: high-CI cells never modified (I1), ignored arrays untouched (I2), transfer only copies existing tuples (I3), Level ≥ 6 is a no-op (I4).
+*Applied:* A NumPy reference implementation of the intended algorithm (`reference_noc.py`, NumPy 2.4.2, pinned in the provenance sidecar) computes expected outputs for 12 synthetic fixtures. The intended selection rule is an argmax over neighbor similarity counts with **last-of-ties** resolution (`>=` with a count > 0 guard), deliberately tie-compatible with 6.5.171. All fixture orientations are co-axial rotations about +Z with deltas ≤ 45° (cubic) / ≤ 30° (hex), where every misorientation-fold convention reduces to `|Δθ|` — so each single-pass fixture is *also* hand-derivable (Class 1; `check_derivations.py`, 35 assertions). Quirk toggles in the same script exactly reproduce stock 6.5.171 behavior, pinning each deviation's root cause. Class 4 invariants: high-CI cells never modified (I1), ignored arrays untouched (I2), transfer only copies existing tuples (I3), Level ≥ 6 is a no-op (I4).
 
-*Encoded:* `test/NeighborOrientationCorrelationTest.cpp::Oracle F01..F12` (12 TEST_CASEs) + `::Class 4 - Level >= 6 is a no-op (I4)` + `::Preflight - Level validation` — all pass in in-core and OOC builds. Derivations embedded as comments beside each fixture.
+*Encoded:* `test/NeighborOrientationCorrelationTest.cpp::Oracle F01..F12` (12 TEST_CASEs) + `::Oracle F13` (NeighborList/String cell-array transfer — verified by construction, not by the reference implementation) + `::Class 4 - Level >= 6 is a no-op (I4)` + `::Preflight - Level validation` — all pass in in-core and OOC builds. Derivations embedded as comments beside each fixture.
 
 *Second-engineer review:* skipped in-session (single engineer) — requested at PR review; recorded in `vv/provenance/neighbor_orientation_correlation_v2.md`.
 
@@ -88,7 +88,7 @@ counting + best-neighbor selection), (c) per-pass in-place tuple transfer, repea
 | 13 | (b) Select | all counts zero → `bestNeighbor` stays −1, cell untouched | `Oracle F02` |
 | 14 | (b) Select | tied counts → last neighbor in −Z…+Z scan order (6.5.171-compatible) | `Oracle F01`, `F07`, `F11` |
 | 15 | (b) Select | unequal counts → arg-max wins, last of maxes (D3 fix) | `Oracle F03`, `F05`, `F06`, `F12` |
-| 16 | (c) Transfer | all non-ignored cell arrays copied from best neighbor | `Oracle F01` (all 6 arrays verified) |
+| 16 | (c) Transfer | all non-ignored cell arrays copied from best neighbor, including NeighborList and String types | `Oracle F01` (all 6 numeric arrays verified), `Oracle F13` (NeighborList + String) |
 | 17 | (c) Transfer | ignored arrays excluded | `Oracle F09` |
 | 18 | (b+c) | multi-pass chaining: inherited CI enables next-pass fills (D2 fix) | `Oracle F04` (Level 2), `Oracle F10` (Level 4) |
 | 18a | (c) Transfer | **within-pass** in-place ascending-order copy: a replaced cell sourcing from a lower-indexed cell also replaced in the same pass inherits the chained value | *Not covered by a discriminating fixture — the oracle fixtures replace a single isolated bad cell whose source is a good cell, so no chaining occurs. Parity with legacy 6.5.171's ascending in-place copy is established by construction (statement-for-statement port). Known coverage gap; the behavior is documented in the Algorithm Relationship section.* |
@@ -118,11 +118,12 @@ and the production-scale invariant verification (`Small IN100 Pipeline`, 4.44M c
 | `Oracle F07 - 2D image` | new-for-V&V | Degenerate-z masks; 4-neighbor tie resolves to +Y (last in scan order). |
 | `Oracle F08 - Laue-class folding (hex vs cubic)` | new-for-V&V | Discriminating Laue-class test: a 58° c-axis neighbor pair is similar under hex (folds to 2°) but not cubic (folds to 32°). Two sections run the identical fixture under Hexagonal-High and Cubic-High and assert opposite outcomes (center replaced vs untouched), so it catches a folding-periodicity bug in either dispatch. |
 | `Oracle F09 - ignored arrays untouched (I2)` | new-for-V&V | IgnoredDataArrayPaths honored; all other arrays copied. |
+| `Oracle F13 - NeighborList and String cell arrays transferred` | new-for-V&V | F01 geometry plus a cell-level NeighborList and StringArray; pins that both are copied into the replaced cell (matching 6.5.171) while every other cell keeps its own values. |
 | `Oracle F11 - volume corner` | new-for-V&V | 3-valid-neighbor boundary case. |
 | `Oracle F12 - anisotropic dims` | new-for-V&V | 4×5×3 (nx≠ny≠nz) so stride/axis-swap bugs cannot hide behind dimension symmetry; secondary D3 pin (last-of-maxes beats a later count-1 pair). |
 | `Class 4 - Level >= 6 is a no-op (I4)` | new-for-V&V | Default parameter value performs zero passes (now also surfaced as preflight warning `-580095`). |
 
-All 17 pass at the verified commit in both in-core (`simplnx-Rel`) and OOC (`simplnx-ooc-Rel`) builds.
+All 18 pass at the verified commit in both in-core (`simplnx-Rel`) and OOC (`simplnx-ooc-Rel`) builds.
 
 ## Exemplar archive
 
@@ -134,9 +135,8 @@ All 17 pass at the verified commit in both in-core (`simplnx-Rel`) and OOC (`sim
   skip all comparisons. Bisect-proven hollow from birth: the loop was introduced already
   mapping to `Exemplar Data` in `d199bc749` (2022-07-24) and the archive SHA512 never
   changed from first registration, `e34baf1f2` 2022-12-02, through retirement) and
-  `neighbor_orientation_correlation_v2.tar.gz` (created and retired 2026-07-06 — a
-  regression pin generated from post-fix SIMPLNX output is a circular oracle, which the
-  V&V policy forbids).
+  `neighbor_orientation_correlation_v2.tar.gz` (a regression pin generated from SIMPLNX's
+  own output is a circular oracle, which the V&V policy forbids).
 - **Provenance (retirement record):** `src/Plugins/OrientationAnalysis/vv/provenance/neighbor_orientation_correlation_v2.md`
 
 ## Deviations from DREAM3D 6.5.171
@@ -144,7 +144,6 @@ All 17 pass at the verified commit in both in-core (`simplnx-Rel`) and OOC (`sim
 Comparison run (SIMPLNX vs DREAM3D 6.5.171) on all 12 legacy-native V&V fixtures and at production scale (Small IN100, 4,444,713 cells: 14.29% of cells differ; full decomposition in the deviations file); both binaries matched their reference-implementation predictions exactly. Root causes were proven by applying the D1–D3 fixes to a local build of the legacy source, which then reproduced SIMPLNX's output bit-for-bit on all fixtures and on every production cell.
 
 - `NeighborOrientationCorrelationFilter-D1` — 6.5.171 stale-`w` can replace a cell with **different-phase** data — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
-- `NeighborOrientationCorrelationFilter-D2` — 6.5.171 (and pre-fix SIMPLNX) ran half the intended cleanup passes (measured: 115,380 Small IN100 cells filled only by SIMPLNX) — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
-- `NeighborOrientationCorrelationFilter-D3` — 6.5.171 (and pre-fix SIMPLNX) copied from the last similar neighbor, not the most similar; ties are unaffected by design — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
+- `NeighborOrientationCorrelationFilter-D2` — 6.5.171 (and SIMPLNX releases before this fix) ran half the intended cleanup passes (measured: 115,380 Small IN100 cells filled only by SIMPLNX) — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
+- `NeighborOrientationCorrelationFilter-D3` — 6.5.171 (and SIMPLNX releases before this fix) copied from the last similar neighbor, not the most similar; ties are unaffected by design — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
 - `NeighborOrientationCorrelationFilter-D4` — float32 vs float64 misorientation precision (latent; measured zero effect on Small IN100) — see `vv/deviations/NeighborOrientationCorrelationFilter.md`
-- `NeighborOrientationCorrelationFilter-D5` — legacy transfers NeighborList/String cell arrays, SIMPLNX transfers only DataArray types — see `vv/deviations/NeighborOrientationCorrelationFilter.md`

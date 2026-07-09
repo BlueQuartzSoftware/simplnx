@@ -1,17 +1,78 @@
 #include "NeighborOrientationCorrelation.hpp"
 
 #include "simplnx/Common/Numbers.hpp"
+#include "simplnx/DataStructure/BaseGroup.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
-#include "simplnx/Utilities/DataGroupUtilities.hpp"
+#include "simplnx/DataStructure/IArray.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/INeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Utilities/MessageHelper.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 #include "simplnx/Utilities/ParallelTaskAlgorithm.hpp"
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
+#include <algorithm>
+#include <memory>
+#include <set>
+#include <vector>
+
 using namespace nx::core;
+
+namespace
+{
+// Copy a single tuple from one voxel to another, in place, for any cell array type that
+// participates in the transfer. copyTuple() is declared separately on IDataArray and
+// INeighborList (there is no shared IArray::copyTuple), and StringArray offers neither, so
+// the copy is dispatched on the concrete array interface. Legacy DREAM3D 6.5.171 copied
+// numeric, NeighborList, and String cell arrays alike; this reproduces that.
+void CopyArrayTuple(IArray& array, usize from, usize to)
+{
+  if(auto* dataArrayPtr = dynamic_cast<IDataArray*>(&array); dataArrayPtr != nullptr)
+  {
+    dataArrayPtr->copyTuple(from, to);
+  }
+  else if(auto* neighborListPtr = dynamic_cast<INeighborList*>(&array); neighborListPtr != nullptr)
+  {
+    neighborListPtr->copyTuple(from, to);
+  }
+  else if(auto* stringArrayPtr = dynamic_cast<StringArray*>(&array); stringArrayPtr != nullptr)
+  {
+    (*stringArrayPtr)[to] = (*stringArrayPtr)[from];
+  }
+}
+
+// Collect every cell array that participates in the tuple transfer: the numeric DataArrays
+// plus NeighborList and String arrays that are siblings of the confidence-index array, minus
+// any the user marked ignored. Mirrors GenerateDataArrayList() but over IArray rather than
+// IDataArray so the NeighborList and String types are included (matching legacy 6.5.171).
+std::vector<std::shared_ptr<IArray>> GenerateTransferArrayList(const DataStructure& dataStructure, const DataPath& referencePath, const std::vector<DataPath>& ignoredDataPaths)
+{
+  std::vector<std::shared_ptr<IArray>> arrays;
+  const DataPath parentPath = referencePath.getParent();
+  const auto& parentGroup = dataStructure.getDataRefAs<BaseGroup>(parentPath);
+  const std::set<std::shared_ptr<IArray>> childArrays = parentGroup.findAllChildrenOfType<IArray>();
+  for(const auto& childArray : childArrays)
+  {
+    DataPath childArrayPath;
+    for(const auto& childDataPath : childArray->getDataPaths())
+    {
+      if(parentPath == childDataPath.getParent())
+      {
+        childArrayPath = childDataPath;
+      }
+    }
+    if(std::find(ignoredDataPaths.cbegin(), ignoredDataPaths.cend(), childArrayPath) == ignoredDataPaths.cend())
+    {
+      arrays.push_back(childArray);
+    }
+  }
+  return arrays;
+}
+} // namespace
 
 class NeighborOrientationCorrelationTransferDataImpl
 {
@@ -19,12 +80,12 @@ public:
   NeighborOrientationCorrelationTransferDataImpl() = delete;
   NeighborOrientationCorrelationTransferDataImpl(const NeighborOrientationCorrelationTransferDataImpl&) = default;
 
-  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IDataArray> dataArrayPtr,
+  NeighborOrientationCorrelationTransferDataImpl(MessageHelper& messageHelper, size_t totalPoints, const std::vector<int64>& bestNeighbor, std::shared_ptr<IArray> arrayPtr,
                                                  const std::atomic_bool& shouldCancel)
   : m_MessageHelper(messageHelper)
   , m_TotalPoints(totalPoints)
   , m_BestNeighbor(bestNeighbor)
-  , m_DataArrayPtr(dataArrayPtr)
+  , m_ArrayPtr(arrayPtr)
   , m_ShouldCancel(shouldCancel)
   {
   }
@@ -37,7 +98,7 @@ public:
   void operator()() const
   {
     ThrottledMessenger throttledMessenger = m_MessageHelper.createThrottledMessenger();
-    std::string arrayName = m_DataArrayPtr->getName();
+    std::string arrayName = m_ArrayPtr->getName();
     for(size_t i = 0; i < m_TotalPoints; i++)
     {
       if(m_ShouldCancel)
@@ -48,7 +109,7 @@ public:
       int64 neighbor = m_BestNeighbor[i];
       if(neighbor != -1)
       {
-        m_DataArrayPtr->copyTuple(neighbor, i);
+        CopyArrayTuple(*m_ArrayPtr, static_cast<usize>(neighbor), i);
       }
     }
   }
@@ -60,7 +121,7 @@ private:
   // 8 bytes per voxel. All tasks finish before the referenced vector leaves scope
   // (ParallelTaskAlgorithm waits in its destructor inside the level-loop iteration).
   const std::vector<int64>& m_BestNeighbor;
-  std::shared_ptr<IDataArray> m_DataArrayPtr;
+  std::shared_ptr<IArray> m_ArrayPtr;
   const std::atomic_bool& m_ShouldCancel;
 };
 
@@ -201,14 +262,15 @@ Result<> NeighborOrientationCorrelation::operator()()
     }
 
     // Transfer stage: copy the winning neighbor's tuple into each replaced cell,
-    // parallelized with one task per DataArray (only sibling DataArray objects of the
-    // confidence-index array take part; NeighborList/String arrays are excluded — see
-    // deviation D5).
-    std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
+    // parallelized with one task per array. Every sibling cell array of the confidence-index
+    // array takes part — numeric DataArrays plus NeighborList and String arrays — matching
+    // legacy 6.5.171. Each task owns a single array, so the parallel writes never touch the
+    // same array concurrently.
+    std::vector<std::shared_ptr<IArray>> voxelArrays = GenerateTransferArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
     ParallelTaskAlgorithm parallelTask;
-    for(const auto& dataArrayPtr : voxelArrays)
+    for(const auto& arrayPtr : voxelArrays)
     {
-      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(messageHelper, totalPoints, bestNeighbor, dataArrayPtr, m_ShouldCancel));
+      parallelTask.execute(NeighborOrientationCorrelationTransferDataImpl(messageHelper, totalPoints, bestNeighbor, arrayPtr, m_ShouldCancel));
     }
   }
 

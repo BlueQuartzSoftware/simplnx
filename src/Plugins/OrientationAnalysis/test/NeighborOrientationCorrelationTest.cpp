@@ -5,6 +5,8 @@
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/DataStructure/NeighborList.hpp"
+#include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -297,10 +299,9 @@ std::vector<CellArraySnapshot> SnapshotCellArrays(const DataStructure& dataStruc
     const auto* arrayPtr = dataStructure.getDataAs<IDataArray>(arrayPath);
     if(arrayPtr == nullptr)
     {
-      // Non-IDataArray members (NeighborList, StringArray) are excluded from the NX
-      // transfer by GenerateDataArrayList and therefore from this snapshot. Legacy
-      // 6.5.171 DID copy them - see deviation NeighborOrientationCorrelationFilter-D5.
-      // If the transfer's scope ever widens, widen this snapshot with it.
+      // This snapshot only widens numeric IDataArrays to float64 for comparison. The Small
+      // IN100 cell data contains no NeighborList/String arrays, so none are skipped here;
+      // the transfer of those types (when present) is covered by Oracle F13.
       continue;
     }
     snapshots.push_back({arrayPath, arrayPtr->getNumberOfComponents(), SnapshotArray(*arrayPtr)});
@@ -910,6 +911,63 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F09
   ExecuteFixture(dataStructure, 5, {k_Payload2Path});
 
   VerifyAgainstSnapshot(dataStructure, before, {{62, 87}}, {"Payload2"});
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F13 - NeighborList and String cell arrays transferred", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
+{
+  using namespace NOCOracle;
+  UnitTest::LoadPlugins();
+
+  // Same geometry as F01 (uniform neighbors -> center 62 replaced by the last-of-ties +Z
+  // neighbor 87), but the cell attribute matrix also carries a NeighborList and a StringArray.
+  // The transfer must copy every cell array type into replaced cells (matching legacy DREAM3D
+  // 6.5.171): this pins that both are transferred (center inherits neighbor 87's list/string)
+  // while every other cell keeps its own values.
+  OracleFixture fixture(5, 5, 5, {999, 1});
+  const usize center = fixture.idx(2, 2, 2);
+  const usize source = 87;
+  fixture.ci[center] = k_BadCI;
+  fixture.anglesDeg[center] = 30.0;
+
+  DataStructure dataStructure = BuildDataStructure(fixture);
+  auto* cellAMPtr = dataStructure.getDataAs<AttributeMatrix>(k_CellAMPath);
+  REQUIRE(cellAMPtr != nullptr);
+  const std::vector<usize> tupleShape = {fixture.nz, fixture.ny, fixture.nx};
+
+  // Each cell's NeighborList holds its own linear index; each cell's string is "cell_<index>".
+  auto* neighborListPtr = NeighborList<int32>::Create(dataStructure, "NeighborIds", tupleShape, cellAMPtr->getId());
+  std::vector<std::string> strings(fixture.count());
+  for(usize i = 0; i < fixture.count(); i++)
+  {
+    neighborListPtr->setList(static_cast<int32>(i), std::vector<int32>{static_cast<int32>(i)});
+    strings[i] = fmt::format("cell_{}", i);
+  }
+  const DataPath neighborListPath = k_CellAMPath.createChildPath("NeighborIds");
+  auto* stringArrayPtr = StringArray::CreateWithValues(dataStructure, "Labels", tupleShape, strings, cellAMPtr->getId());
+  REQUIRE(stringArrayPtr != nullptr);
+  const DataPath stringArrayPath = k_CellAMPath.createChildPath("Labels");
+
+  const CellSnapshot before = Capture(dataStructure);
+  ExecuteFixture(dataStructure, 5);
+
+  // Numeric arrays behave exactly as F01.
+  VerifyAgainstSnapshot(dataStructure, before, {{center, source}});
+
+  // The NeighborList and String at the replaced cell now hold the source neighbor's values;
+  // every other cell is untouched.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int32>>(neighborListPath));
+  const auto& resultNeighborList = dataStructure.getDataRefAs<NeighborList<int32>>(neighborListPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(stringArrayPath));
+  const auto& resultStrings = dataStructure.getDataRefAs<StringArray>(stringArrayPath);
+  for(usize i = 0; i < fixture.count(); i++)
+  {
+    const usize expected = (i == center) ? source : i;
+    CAPTURE(i, expected);
+    REQUIRE(resultNeighborList.getList(static_cast<int32>(i)) == std::vector<int32>{static_cast<int32>(expected)});
+    REQUIRE(resultStrings[i] == fmt::format("cell_{}", expected));
+  }
+
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
