@@ -3,6 +3,7 @@
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/Common/Range.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/IFilter.hpp"
@@ -15,7 +16,6 @@
 #include <chrono>
 #include <concepts>
 #include <fstream>
-#include <iostream>
 #include <mutex>
 
 namespace nx::core::ImageRotationUtilities
@@ -28,6 +28,9 @@ using Matrix3fR = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
 using Matrix4fR = Eigen::Matrix<float, 4, 4, Eigen::RowMajor>;
 
 using Vector3i64 = Eigen::Array<int64_t, 1, 3>;
+
+// Error code reported (via FilterProgressCallback::mergeResult) when a nearest-neighbor tuple copy fails.
+constexpr int32 k_NearestNeighborCopyFailed_Error = -6852;
 
 struct RotateArgs
 {
@@ -327,12 +330,34 @@ public:
     return m_ShouldCancel;
   }
 
+  /**
+   * @brief Thread-safe accumulation of a Result (errors and/or warnings) reported by a worker task.
+   * Worker tasks run on separate threads with no way to return a Result directly, so they merge
+   * into this shared sink; the owning algorithm reads it after the tasks have joined.
+   */
+  void mergeResult(Result<>&& result)
+  {
+    const std::lock_guard<std::mutex> lock(m_ResultMutex);
+    m_Result = MergeResults(std::move(m_Result), std::move(result));
+  }
+
+  /**
+   * @brief Returns and clears the accumulated Result. Call after the parallel tasks have joined.
+   */
+  Result<> takeResult()
+  {
+    const std::lock_guard<std::mutex> lock(m_ResultMutex);
+    return std::move(m_Result);
+  }
+
 private:
   const IFilter::MessageHandler& m_MessageHandler;
   const std::atomic_bool& m_ShouldCancel;
   mutable std::mutex m_ProgressMessage_Mutex;
   std::chrono::steady_clock::time_point m_InitialTime = std::chrono::steady_clock::now();
   int32 m_Progcounter = 0;
+  std::mutex m_ResultMutex;
+  Result<> m_Result;
 };
 
 /**
@@ -591,10 +616,10 @@ public:
 
             if(newDataStore.copyFrom(destIndex, oldDataStore, oldIndex, 1).invalid())
             {
-              std::cout << fmt::format("Array copy failed: Source Array Name: {} Source Tuple Index: {}\nDest Array Name: {}  Dest. Tuple Index {}\n", m_SourceArray->getName(), oldIndex,
-                                       m_SourceArray->getName(), destIndex)
-                        << std::endl;
-              break;
+              m_FilterCallback->mergeResult(
+                  MakeErrorResult(k_NearestNeighborCopyFailed_Error,
+                                  fmt::format("Nearest-neighbor array copy failed for '{}': source tuple index {} -> destination tuple index {}", m_SourceArray->getName(), oldIndex, destIndex)));
+              return;
             }
           }
           else

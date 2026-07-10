@@ -31,9 +31,8 @@
 #include <fmt/core.h>
 
 #include <algorithm>
-
-#include "simplnx/Utilities/SIMPLConversion.hpp"
-#include "simplnx/Utilities/StringUtilities.hpp"
+#include <array>
+#include <cmath>
 
 using namespace nx::core;
 
@@ -41,6 +40,57 @@ namespace
 {
 const std::string k_TempGeometryName = ".rotated_image_geometry";
 using RotationRepresentationType = RotateSampleRefFrame::RotationRepresentation;
+
+// Tolerance for treating a rotation-matrix entry as one of {-1, 0, +1}. The axis-angle path
+// builds the matrix from cos/sin in float32, so a 90-degree rotation yields entries like
+// cos(90) ~= -4.4e-8 (treated as 0) and sin(90) == 1. A tolerance of 1e-4 cleanly separates the
+// principal-90 rotations from any off-axis or non-90-degree rotation (e.g. 1 degree gives ~0.017).
+constexpr float32 k_Rotation90Tolerance = 1.0e-4f;
+
+constexpr int32 k_NonPrincipalRotation_Error = -6850;
+constexpr int32 k_SliceBySliceReordersSlices_Error = -6851;
+
+// -----------------------------------------------------------------------------
+// Returns true if the 3x3 rotation block is a proper signed axis-permutation matrix (determinant +1
+// with exactly one +/-1 per row and column). This is precisely the octahedral rotation group — the 24
+// rotations that map the cubic voxel grid exactly onto itself. It includes the 90/180/270-degree
+// rotations about X/Y/Z, but ALSO the 180-degree rotations about a face-diagonal (110) axis and the
+// 120/240-degree rotations about a body-diagonal (111) axis. Every such rotation is a lossless
+// permutation of the voxels; any other rotation is a lossy nearest-neighbor resample (see the
+// RotateSampleRefFrame V&V report).
+bool IsLosslessGridRotation(const ImageRotationUtilities::Matrix3fR& rotation, float32 tol)
+{
+  std::array<int32, 3> rowOnesCount = {0, 0, 0};
+  std::array<int32, 3> colOnesCount = {0, 0, 0};
+  for(int32 row = 0; row < 3; row++)
+  {
+    for(int32 col = 0; col < 3; col++)
+    {
+      const float32 absValue = std::fabs(rotation(row, col));
+      const bool isZero = absValue < tol;
+      const bool isOne = std::fabs(absValue - 1.0f) < tol;
+      if(!isZero && !isOne)
+      {
+        return false; // entry is not near -1, 0, or +1 -> not a signed permutation matrix
+      }
+      if(isOne)
+      {
+        rowOnesCount[row]++;
+        colOnesCount[col]++;
+      }
+    }
+  }
+  // Exactly one +/-1 per row and per column (a signed permutation matrix)
+  for(int32 i = 0; i < 3; i++)
+  {
+    if(rowOnesCount[i] != 1 || colOnesCount[i] != 1)
+    {
+      return false;
+    }
+  }
+  // A proper rotation has determinant +1; determinant -1 would be a reflection, not a rotation.
+  return std::fabs(rotation.determinant() - 1.0f) < tol;
+}
 } // namespace
 
 namespace nx::core
@@ -154,6 +204,31 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   }
   }
 
+  // V&V guard: RotateSampleRefFrame is only a lossless reference-frame rotation when the rotation maps
+  // the cubic voxel grid exactly onto itself (a signed axis-permutation / octahedral-group rotation).
+  // For any other rotation the nearest-neighbor resample drops/duplicates voxels and introduces
+  // background fill, so it is rejected here. Arbitrary rotations belong to "Apply Transformation To Geometry".
+  const ImageRotationUtilities::Matrix3fR rotationBlock = rotationMatrix.block(0, 0, 3, 3);
+  if(!IsLosslessGridRotation(rotationBlock, k_Rotation90Tolerance))
+  {
+    return MakePreflightErrorResult(k_NonPrincipalRotation_Error,
+                                    "Rotate Sample Reference Frame only supports rotations that map the voxel grid exactly onto itself: the 90/180/270-degree rotations about the X, Y, or Z axis "
+                                    "(and, more generally, any rotation of the octahedral symmetry group, such as 120 degrees about (111)). The requested rotation would produce a lossy resampled "
+                                    "result. For an arbitrary rotation use the 'Apply Transformation To Geometry' filter instead.");
+  }
+
+  // The slice-by-slice option pins each output slice to the same input slice index (planeOld = k). That is
+  // only valid when the rotation preserves the Z (slice) axis (rotation about Z, or a 180-degree flip about
+  // X/Y). A 90/270-degree rotation about X or Y remaps Z to another axis, so slice-by-slice would index out
+  // of bounds and silently zero-fill data.
+  auto sliceBySlice = filterArgs.value<bool>(k_RotateSliceBySlice_Key);
+  if(sliceBySlice && (std::fabs(std::fabs(rotationBlock(2, 2)) - 1.0f) >= k_Rotation90Tolerance))
+  {
+    return MakePreflightErrorResult(k_SliceBySliceReordersSlices_Error,
+                                    "The 'Perform Slice By Slice Transform' option requires a rotation that preserves the Z (slice) axis: a rotation about the Z axis, or a 180-degree rotation about "
+                                    "the X or Y axis. The requested rotation reorders slices, which is incompatible with a slice-by-slice transform.");
+  }
+
   const auto& selectedImageGeom = dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
   ImageRotationUtilities::RotateArgs rotateArgs = ImageRotationUtilities::CreateRotationArgs(selectedImageGeom, rotationMatrix);
@@ -162,9 +237,13 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
   auto origin = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
   if(!keepInputGeometryOrigin)
   {
-    origin[0] += rotateArgs.outputXMin;
-    origin[1] += rotateArgs.outputYMin;
-    origin[2] += rotateArgs.outputZMin;
+    // outputXMin/YMin/ZMin are the ABSOLUTE min corner of the transformed bounding box: DetermineMinMaxCoords
+    // transforms ImageGeom::getBoundingBoxf(), which already includes the input origin. Assign (do not add) so
+    // the persisted geometry origin equals the RotateArgs::TransformedOrigin the resample worker samples
+    // against; adding the input origin again double-counts it for any non-zero input origin.
+    origin[0] = rotateArgs.outputXMin;
+    origin[1] = rotateArgs.outputYMin;
+    origin[2] = rotateArgs.outputZMin;
   }
 
   std::vector<usize> dataArrayShape = {dims[2], dims[1], dims[0]}; // The DataArray shape goes slowest to fastest (ZYX)
