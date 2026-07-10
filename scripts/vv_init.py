@@ -62,7 +62,7 @@ def extract_uuid(filter_cpp: Path) -> str:
   """Pull the SIMPLNX UUID out of the filter .cpp by regex. Returns '<uuid>' if not found."""
   text = filter_cpp.read_text(encoding="utf-8", errors="replace")
   # Match the canonical Uuid::FromString("...") literal used by simplnx filters.
-  match = re.search(r'Uuid::FromString\(\s*"([0-9a-fA-F\-]{36})"', text)
+  match = re.search(r'SIMPLNX_DEF_FILTER_TRAITS\(.*, .*, "([0-9a-fA-F\-]{36})"\);', text)
   if match:
     return match.group(1)
   return "<uuid>"
@@ -94,7 +94,7 @@ def main() -> None:
 
   plugin_dir, filter_cpp = find_filter_source(args.filter_name, args.plugin)
   plugin_name = plugin_dir.name
-  uuid_value = extract_uuid(filter_cpp)
+  uuid_value = extract_uuid(filter_cpp.with_suffix('.hpp'))
   today = date.today().isoformat()
 
   report_template = TEMPLATE_DIR / "report_template.md"
