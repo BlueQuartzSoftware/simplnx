@@ -28,7 +28,7 @@ public:
   static constexpr StringLiteral k_GenerationAlgorithm_Key = "generation_algorithm_index";
   static constexpr StringLiteral k_LambertSize_Key = "lambert_size";
   static constexpr StringLiteral k_NumColors_Key = "num_colors";
-  static constexpr StringLiteral k_ImageFormat_Key = "image_format";
+  static constexpr StringLiteral k_DiscreteMarkerRadius_Key = "discrete_marker_radius";
   static constexpr StringLiteral k_ImageLayout_Key = "image_layout_index";
   static constexpr StringLiteral k_OutputPath_Key = "output_path";
   static constexpr StringLiteral k_ImagePrefix_Key = "image_prefix";

@@ -14,6 +14,12 @@ This **Filter** generates a pair of colors for each **Triangle** in a **Triangle
 
 ------------
 
+### Crystallographic Convention (Hexagonal & Trigonal)
+
+The IPF color itself is **convention-independent** for hexagonal/trigonal phases (the X‖a (TSL/EDAX) and X‖a\* (MTEX/Oxford) bases differ only by a 30° rotation about the c-axis, which does not change the RGB). Only the *labeling* of the inverse-pole-figure triangle corners depends on the convention; the IPF legends shipped with DREAM3D-NX are drawn in the **X‖a (TSL/EDAX)** convention (apex `[0001]` = red, the a-axis `[2-1-10]` = green, the m-axis `[10-10]` = blue). See the **Compute IPF Colors** filter documentation for the full corner→color table.
+
+------------
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines

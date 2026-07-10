@@ -297,6 +297,101 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: HexConvention choice reac
 }
 
 // -----------------------------------------------------------------------------
+// Discrete-mode plumbing test (simplnx-unique parameter wiring).
+//
+// Pins two pieces of plumbing that no other test executes:
+//   1. k_GenerationAlgorithm_Key = 1 routes to the discrete (vector-marker)
+//      renderer — the discrete composite must differ from the Color one.
+//   2. k_DiscreteMarkerRadius_Key reaches CompositePoleFigureConfiguration_t::
+//      markerStyle.radiusFraction (executeImpl converts pixels to a fraction
+//      of the image size) — a radius of 1 px vs 10 px must change the
+//      rendered composite.
+// Pixel-exact rendering is pinned at the EbsdLib layer (see the test-pyramid
+// note at the top of this file); here we only assert the parameters actually
+// reach the renderer.
+// -----------------------------------------------------------------------------
+TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: Discrete mode and marker radius reach algorithm", "[OrientationAnalysis][WritePoleFigureFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Pole_Figure_Exemplars_v6.tar.gz", "Pole_Figure_Exemplars_v6");
+
+  auto baseDataFilePath = fs::path(fmt::format("{}/Pole_Figure_Exemplars_v6/Pole_Figure_Exemplars_v6.dream3d", unit_test::k_TestFilesDir));
+
+  const DataPath k_Eulers({"Imported Data", "Eulers"});
+  const DataPath k_Phases({"Imported Data", "Phases"});
+  const DataPath k_CrystalStructures({"EnsembleAttributeMatrix", "CrystalStructures"});
+  const DataPath k_MaterialNames({"EnsembleAttributeMatrix", "PhaseNames"});
+
+  auto runPoleFigure = [&](ChoicesParameter::ValueType generationAlgorithm, int32 markerRadius, const std::string& geomName) {
+    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    WritePoleFigureFilter filter;
+    Arguments args;
+    args.insertOrAssign(WritePoleFigureFilter::k_Title_Key, std::make_any<StringParameter::ValueType>("Discrete Test"));
+    args.insertOrAssign(WritePoleFigureFilter::k_LambertSize_Key, std::make_any<int32>(64));
+    args.insertOrAssign(WritePoleFigureFilter::k_NumColors_Key, std::make_any<int32>(32));
+    args.insertOrAssign(WritePoleFigureFilter::k_GenerationAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(generationAlgorithm));
+    args.insertOrAssign(WritePoleFigureFilter::k_DiscreteMarkerRadius_Key, std::make_any<int32>(markerRadius));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageLayout_Key, std::make_any<ChoicesParameter::ValueType>(0)); // Horizontal
+    args.insertOrAssign(WritePoleFigureFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(fmt::format("{}/DiscreteTestDir", unit_test::k_BinaryTestOutputDir))));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImagePrefix_Key, std::make_any<StringParameter::ValueType>("discrete_test_"));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageSize_Key, std::make_any<int32>(256));
+    args.insertOrAssign(WritePoleFigureFilter::k_SaveAsImageGeometry_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WritePoleFigureFilter::k_WriteImageToDisk, std::make_any<bool>(false));
+    args.insertOrAssign(WritePoleFigureFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WritePoleFigureFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({geomName})));
+    args.insertOrAssign(WritePoleFigureFilter::k_SaveIntensityDataArrays, std::make_any<bool>(false));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(k_Eulers));
+    args.insertOrAssign(WritePoleFigureFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_Phases));
+    args.insertOrAssign(WritePoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(k_CrystalStructures));
+    args.insertOrAssign(WritePoleFigureFilter::k_MaterialNameArrayPath_Key, std::make_any<DataPath>(k_MaterialNames));
+    args.insertOrAssign(WritePoleFigureFilter::k_HexConvention_Key, std::make_any<ChoicesParameter::ValueType>(0)); // X||a
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    const DataPath compositePath = DataPath({geomName, "Cell Data", "Phase_1"});
+    const auto& compositeStore = dataStructure.getDataRefAs<UInt8Array>(compositePath).getDataStoreRef();
+    std::vector<uint8> snapshot(compositeStore.getSize());
+    for(usize i = 0; i < compositeStore.getSize(); ++i)
+    {
+      snapshot[i] = compositeStore[i];
+    }
+    return snapshot;
+  };
+
+  auto countDiffBytes = [](const std::vector<uint8>& a, const std::vector<uint8>& b) {
+    REQUIRE(a.size() == b.size());
+    REQUIRE(a.size() > 0);
+    usize diffBytes = 0;
+    for(usize i = 0; i < a.size(); ++i)
+    {
+      if(a[i] != b[i])
+      {
+        ++diffBytes;
+      }
+    }
+    return diffBytes;
+  };
+
+  const auto discreteSmall = runPoleFigure(1, 1, "Discrete_R1");
+  const auto discreteLarge = runPoleFigure(1, 10, "Discrete_R10");
+  const auto color = runPoleFigure(0, 3, "Color_PF");
+
+  // Marker radius must reach the renderer: 1 px vs 10 px markers change the image.
+  const usize radiusDiff = countDiffBytes(discreteSmall, discreteLarge);
+  INFO(fmt::format("Bytes that differ between 1 px and 10 px markers: {} / {}", radiusDiff, discreteSmall.size()));
+  REQUIRE(radiusDiff > discreteSmall.size() / 100);
+
+  // Generation algorithm must reach the renderer: discrete and color composites differ.
+  const usize modeDiff = countDiffBytes(discreteSmall, color);
+  INFO(fmt::format("Bytes that differ between Discrete and Color modes: {} / {}", modeDiff, discreteSmall.size()));
+  REQUIRE(modeDiff > discreteSmall.size() / 100);
+}
+
+// -----------------------------------------------------------------------------
 // SIMPL JSON backwards compatibility.
 // -----------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][WritePoleFigureFilter][BackwardsCompatibility]")
@@ -332,10 +427,7 @@ TEST_CASE("OrientationAnalysis::WritePoleFigureFilter: SIMPL Backwards Compatibi
       CHECK(pipelineFilter->getComments().empty());
 
       const Arguments args = pipelineFilter->getArguments();
-      if(label == "SIMPL 6.5 (UUID)")
-      {
-        CHECK(args.value<ChoicesParameter::ValueType>(WritePoleFigureFilter::k_ImageFormat_Key) == 0);
-      }
+      // The legacy ImageFormat choice is intentionally dropped during conversion (always PNG; deviation D5).
       CHECK(args.value<std::string>(WritePoleFigureFilter::k_Title_Key) == "TestName");
       CHECK(args.value<ChoicesParameter::ValueType>(WritePoleFigureFilter::k_GenerationAlgorithm_Key) == 0);
       CHECK(args.value<int32>(WritePoleFigureFilter::k_LambertSize_Key) == 5);

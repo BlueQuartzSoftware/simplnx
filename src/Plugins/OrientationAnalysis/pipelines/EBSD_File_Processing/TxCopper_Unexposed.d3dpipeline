@@ -327,7 +327,15 @@
           "value": "Cugrid_after 2nd_15kv_2kx_2/Phase Data/CrystalStructures",
           "version": 1
         },
+        "discrete_marker_radius": {
+          "value": 3,
+          "version": 1
+        },
         "generation_algorithm_index": {
+          "value": 0,
+          "version": 1
+        },
+        "hex_convention_index": {
           "value": 0,
           "version": 1
         },
@@ -387,7 +395,7 @@
           "value": "Data/Output/TexturedCopper",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 3,
         "save_as_image_geometry": {
           "value": true,
           "version": 1

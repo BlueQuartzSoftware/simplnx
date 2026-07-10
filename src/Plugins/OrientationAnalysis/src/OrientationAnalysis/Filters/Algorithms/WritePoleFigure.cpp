@@ -1,6 +1,5 @@
 #include "WritePoleFigure.hpp"
 
-#include "OrientationAnalysis/utilities/TiffWriter.hpp"
 #include "OrientationAnalysis/utilities/delaunator.h"
 
 #include "simplnx/Common/Constants.hpp"
@@ -607,6 +606,8 @@ Result<> WritePoleFigure::operator()()
     config.discrete = (static_cast<WritePoleFigure::Algorithm>(m_InputValues->GenerationAlgorithm) == WritePoleFigure::Algorithm::Discrete);
     config.discreteHeatMap = k_UseDiscreteHeatMap;
     config.hexConvention = m_InputValues->HexConvention;
+    config.flipFinalImage = m_InputValues->FlipFinalImage;
+    config.axisNames = std::vector<std::string>{"A1", "A2", "A3"};
 
     m_MessageHandler({IFilter::Message::Type::Info, fmt::format("Generating Pole Figures for Phase {}", phase)});
     if(m_InputValues->SaveIntensityData)
@@ -714,11 +715,13 @@ Result<> WritePoleFigure::operator()()
       compositeConfig.sphereRadius = config.sphereRadius;
       compositeConfig.discrete = config.discrete;
       compositeConfig.discreteHeatMap = config.discreteHeatMap;
+      compositeConfig.markerStyle.radiusFraction = m_InputValues->DiscreteMarkerRadius;
       compositeConfig.colorMap = config.colorMap;
-      compositeConfig.labels = config.labels;
+      compositeConfig.poleFigureNames = config.labels;
       compositeConfig.order = config.order;
-      // flipFinalImage defaults to true in CompositePoleFigureConfiguration_t,
-      // matching the old behavior where flipAndMirror was always applied.
+      compositeConfig.axisNames = config.axisNames;
+
+      compositeConfig.flipFinalImage = config.flipFinalImage;
       compositeConfig.layoutType = static_cast<ebsdlib::PoleFigureLayoutType>(m_InputValues->ImageLayout);
       compositeConfig.laueOpsIndex = crystalStructures[phase];
       compositeConfig.phaseName = materialNames[phase];
@@ -726,9 +729,10 @@ Result<> WritePoleFigure::operator()()
       compositeConfig.title = m_InputValues->Title;
       compositeConfig.hexConvention = m_InputValues->HexConvention;
 
-      // Generate the composite pole figure image
-      ebsdlib::PoleFigureCompositor compositor;
-      ebsdlib::CompositePoleFigureResult compositeResult = compositor.generateCompositeImage(compositeConfig);
+      // Generate the composite pole figure image. GeneratePoleFigureComposite routes
+      // discrete (non-heatmap) figures to the vector marker renderer and everything
+      // else to the raster PoleFigureCompositor.
+      ebsdlib::CompositePoleFigureResult compositeResult = ebsdlib::GeneratePoleFigureComposite(compositeConfig);
 
       if(compositeResult.image == nullptr)
       {
@@ -774,7 +778,7 @@ Result<> WritePoleFigure::operator()()
         auto result = PngWriter::WriteColorImage(filename, pageWidth, pageHeight, 4, compositeResult.image->getPointer(0));
         if(result.first < 0)
         {
-          return MakeErrorResult(-53900, fmt::format("Error writing pole figure image '{}' to disk.\n    Error Code from Tiff Writer: {}\n    Message: {}", filename, result.first, result.second));
+          return MakeErrorResult(-53900, fmt::format("Error writing pole figure image '{}' to disk.\n    Error Code from PNG Writer: {}\n    Message: {}", filename, result.first, result.second));
         }
       }
     }
