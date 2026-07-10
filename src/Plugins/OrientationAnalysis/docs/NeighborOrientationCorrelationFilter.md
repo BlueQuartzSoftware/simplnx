@@ -6,11 +6,13 @@ Processing (Cleanup)
 
 ## Description
 
-This filter first identifies all cells that have a *Confidence Index* below the minimum set by the user.  Then, for each of those cells, their neighboring cells are checked to determine the number of neighbor cells with orientations different than the reference cell by more than the user defined *Misorientation Tolerance*.  In addition the neighboring cells are compared with each other to determine the number of neighboring cells that have the same orientation (again within the user defined tolerance). The *Cleanup Level* set by the user is then used to determine which cells are replaced.  If a level of 5 is set, at least 5 of the neighboring cells must be within the same misorientation tolerance (and so on for other *Cleanup Level*). If a cell meets the replacement criteria, then all of its attributes are replaced with the attributes of one of the neighboring cells that are the same as each other.
+This filter first identifies all cells that have a *Confidence Index* below the minimum set by the user. Then, for each of those cells, every pair of its face-neighbor cells is compared: a pair whose two cells belong to the same (non-zero) phase and whose orientations differ by less than the user defined *Misorientation Tolerance* is counted as *similar*, and each similar pair credits both of its cells. The neighbor with the highest similar-pair count is the "best" neighbor, and **all** of the bad cell's attributes are replaced with that neighbor's attributes (ties resolve to the last neighbor in the fixed −Z, −Y, −X, +X, +Y, +Z scan order, which matches the neighbor DREAM.3D 6.5.171 picked whenever all counts tie). A low-confidence cell whose neighbors contain no similar pair is left unchanged.
 
-*Note:* The filter will iteratively reduce the *Cleanup Level* from 6 until it reaches the user defined number. So, if the user selects a level of 4, then the filter will run with a level of 6, then 5, then 4 before finishing.
+The whole scan-and-replace process runs `6 − Cleanup Level` times (a *Cleanup Level* of 4 runs 2 passes). Because the replaced cell also inherits its neighbor's *Confidence Index*, each pass can enable further replacements in the next pass, growing repairs inward from the edges of bad regions.
 
-Neighbors are defined as a the "nearest neighbors" which share a "face". For 3D structures it is 6 neighbors that share a common face with the current cell.
+*Note:* Despite its name, *Cleanup Level* is **not** a neighbor-count threshold — it only controls the number of passes. Lower values clean more aggressively. At the default value of 6 the filter performs **zero passes and makes no changes**; set the level below 6 for the filter to do anything.
+
+Neighbors are defined as the "nearest neighbors" which share a "face". For 3D structures it is 6 neighbors that share a common face with the current cell; for 2D data the 4 in-plane neighbors are used.
 
 ### Schematic Example
 
@@ -22,7 +24,7 @@ Neighbors are defined as a the "nearest neighbors" which share a "face". For 3D 
 
 Schematic layout of the neighboring cells. Only the In-Plane neighbors are shown.
 
-In this example, cell (1,1) has a confidence index < 0.1 and the surrounding cells all have a misorientation tolerance not greater than 5 degrees. Comparing cell (1,1) with its neighbor cells we can see that the misorientation is greater than 5 Degrees. In this case the central cell (1,1) would have all of its attributes replaced with the "best" neighbor based on the phase of a neighbor cell matching the central cell.
+In this example, cell (1,1) has a confidence index < 0.1. Its four neighbors are compared pairwise with each other: (13.0), (14.0), (12.0) and (15.0) are all within a few degrees of each other, so every neighbor participates in several similar pairs. The central cell (1,1) has all of its attributes replaced with those of the neighbor holding the highest similar-pair count. Note that the central cell's own orientation and phase play no role in choosing the replacement — only the mutual similarity of its neighbors matters.
 
 ## Example Data
 
@@ -37,7 +39,17 @@ These before and after images show how this filter can be used to "fill in" data
 
 ### Warning - Cell Level Data Modification
 
-This filter will copy all attribute data from neighboring cells into the target cell if the criteria is met.
+This filter will copy all attribute data from neighboring cells into the target cell if the criteria is met. Arrays listed in *Attribute Arrays to Ignore* are excluded from the copy.
+
+### Differences from legacy DREAM.3D 6.5.171
+
+DREAM3D-NX's implementation fixes three defects present in DREAM.3D 6.5.171, so results will differ on most datasets:
+
+1. 6.5.171 could count a mixed-phase (or unindexed, phase-0) neighbor pair as "similar" by reusing the previous pair's misorientation, occasionally replacing a cell with data from a **different phase**.
+2. 6.5.171 ran only half the cleanup passes of the original design (`ceil((6 − Level)/2)` instead of `6 − Level`), leaving deep bad regions partially unfilled.
+3. 6.5.171 copied from the *last* neighbor having any similar pair rather than the neighbor with the *highest* similarity count. (When all counts tie — the common case in grain interiors — both versions pick the same neighbor.)
+
+See `NeighborOrientationCorrelationFilter-D1` through `-D4` in `src/Plugins/OrientationAnalysis/vv/deviations/NeighborOrientationCorrelationFilter.md` for the full analysis and migration guidance.
 
 % Auto generated parameter table will be inserted here
 

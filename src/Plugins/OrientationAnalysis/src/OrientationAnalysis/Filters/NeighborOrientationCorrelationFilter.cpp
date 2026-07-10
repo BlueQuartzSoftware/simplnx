@@ -18,6 +18,8 @@ using namespace nx::core;
 namespace
 {
 constexpr int32 k_InvalidNumTuples = -580093;
+constexpr int32 k_InvalidLevel = -580094;
+constexpr int32 k_LevelIsNoOp = -580095;
 } // namespace
 
 namespace nx::core
@@ -61,7 +63,10 @@ Parameters NeighborOrientationCorrelationFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32Parameter>(k_MinConfidence_Key, "Minimum Confidence Index", "Sets the minimum value of 'confidence' a Cell must have", 0.1f));
   params.insert(std::make_unique<Float32Parameter>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)", "Angular tolerance used to compare with neighboring Cells", 5.0f));
-  params.insert(std::make_unique<Int32Parameter>(k_Level_Key, "Cleanup Level", "Minimum number of neighbor Cells that must have orientations within above tolerance to allow Cell to be changed", 6));
+  params.insert(std::make_unique<Int32Parameter>(
+      k_Level_Key, "Cleanup Level",
+      "Controls the number of cleanup passes: the filter runs (6 - Level) passes, so lower values clean more aggressively. At the default of 6 the filter performs zero passes and makes no changes",
+      6));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "Path to the target geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
@@ -110,6 +115,19 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   PreflightResult preflightResult;
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  // The level loop runs (6 - Level) passes. Negative values are almost certainly user
+  // error; 6 or above runs zero passes, which deserves a warning since the filter
+  // silently does nothing.
+  if(pLevelValue < 0)
+  {
+    return {MakeErrorResult<OutputActions>(k_InvalidLevel, fmt::format("Cleanup Level must be 0 or greater (the filter runs 6 - Level cleanup passes). Value supplied: {}", pLevelValue))};
+  }
+  if(pLevelValue >= 6)
+  {
+    resultOutputActions.warnings().push_back(
+        {k_LevelIsNoOp, fmt::format("Cleanup Level {} results in zero cleanup passes - the filter will make no changes. Set the level below 6 for the filter to do anything.", pLevelValue)});
+  }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pImageGeomPathValue);
 
