@@ -86,7 +86,7 @@ IFilter::PreflightResult ComputeFeaturePhasesFilter::preflightImpl(const DataStr
   auto pCellFeatureAMPathValue = filterArgs.value<DataPath>(k_CellFeaturesAttributeMatrixPath_Key);
   auto pFeaturePhasesArrayPathValue = pCellFeatureAMPathValue.createChildPath(filterArgs.value<std::string>(k_FeaturePhasesArrayName_Key));
 
-  nx::core::Result<OutputActions> resultOutputActions;
+  Result<OutputActions> resultOutputActions;
 
   const auto& cellFeatData = dataStructure.getDataRefAs<AttributeMatrix>(pCellFeatureAMPathValue);
 
