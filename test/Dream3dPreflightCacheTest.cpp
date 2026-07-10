@@ -169,11 +169,20 @@ TEST_CASE("Dream3dPreflightCache: modified file is detected and re-read", "[Drea
   cache.resetStats();
 
   const fs::path filePath = WriteTestFile("preflight_cache_stale.dream3d");
+  const auto cachedMtime = fs::last_write_time(filePath);
   REQUIRE(cache.fetch(filePath).valid());
   REQUIRE(cache.missCount() == 1);
 
-  // Rewrite with different content (more tuples -> different size), backdated.
+  // Rewrite with different content, then stamp the file with a modification time
+  // that is unambiguously different from the cached entry's while remaining
+  // older than the trust window. The rewrite's natural (size, mtime) token is
+  // not a reliable change signal: HDF5 aggregates small allocations into fixed
+  // blocks, so the 10- and 20-tuple files can be byte-identical in size, and
+  // filesystem timestamp granularity (notably ~15 ms on Windows) can give two
+  // writes milliseconds apart the same mtime. An explicit distinct mtime makes
+  // the staleness check deterministic on every platform.
   WriteTestFile("preflight_cache_stale.dream3d", 20);
+  fs::last_write_time(filePath, cachedMtime - std::chrono::seconds(20));
 
   Result<DataStructure> refreshed = cache.fetch(filePath);
   REQUIRE(refreshed.valid());
