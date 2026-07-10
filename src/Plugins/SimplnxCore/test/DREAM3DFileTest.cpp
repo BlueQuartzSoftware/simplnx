@@ -31,6 +31,7 @@
 #include <filesystem>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -388,14 +389,17 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
 {
   UnitTest::LoadPlugins();
 
-  // geoms.dream3d ships a TriangleGeometry whose "required" connectivity arrays are the shared face
-  // list ("Triangles") and the shared vertex list ("Verts"). A metadata-only preflight must import
-  // these exactly like ordinary attribute arrays: as empty stores that carry only shape and type,
-  // never eagerly bulk-read from disk.
+  // geoms.dream3d ships one geometry of every type whose connectivity was formerly registered as
+  // "required" preflight data: node geometries (vertex/edge/face/polyhedron lists) and a rectilinear
+  // grid (X/Y/Z bounds). A metadata-only preflight must import all of these exactly like ordinary
+  // attribute arrays: as empty stores that carry only shape and type, never eagerly bulk-read from disk.
   const fs::path inputFilePath = fs::path(unit_test::k_SimplnxTestDataSourceDir.view()) / "geoms.dream3d";
 
-  const DataPath sharedFaceListPath({"TriangleGeometry", "Triangles"});
-  const DataPath sharedVertexListPath({"TriangleGeometry", "Verts"});
+  // {connectivity array path, expected tuple count}
+  const std::vector<std::pair<DataPath, usize>> connectivityPaths = {
+      {DataPath({"EdgeGeometry", "Verts"}), 10},       {DataPath({"EdgeGeometry", "Edges"}), 5},       {DataPath({"TriangleGeometry", "Verts"}), 10}, {DataPath({"TriangleGeometry", "Triangles"}), 4},
+      {DataPath({"QuadGeometry", "Quads"}), 2},        {DataPath({"TetrahedralGeometry", "Tets"}), 1}, {DataPath({"HexahedralGeometry", "Hexs"}), 3}, {DataPath({"RectGridGeometry", "XBounds"}), 10},
+      {DataPath({"RectGridGeometry", "YBounds"}), 10}, {DataPath({"RectGridGeometry", "ZBounds"}), 10}};
 
   const auto isEmptyStore = [](const IDataStore* store) {
     return store != nullptr && (store->getStoreType() == IDataStore::StoreType::Empty || store->getStoreType() == IDataStore::StoreType::EmptyOutOfCore);
@@ -407,17 +411,18 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     const DataStructure preflightStructure = std::move(readResult.value());
 
-    const auto* faceList = preflightStructure.getDataAs<IDataArray>(sharedFaceListPath);
-    REQUIRE(faceList != nullptr);
-    REQUIRE(isEmptyStore(faceList->getIDataStore()));
+    for(const auto& [dataPath, numTuples] : connectivityPaths)
+    {
+      DYNAMIC_SECTION("Preflight: " << dataPath.toString())
+      {
+        const auto* dataArray = preflightStructure.getDataAs<IDataArray>(dataPath);
+        REQUIRE(dataArray != nullptr);
+        REQUIRE(isEmptyStore(dataArray->getIDataStore()));
 
-    const auto* vertexList = preflightStructure.getDataAs<IDataArray>(sharedVertexListPath);
-    REQUIRE(vertexList != nullptr);
-    REQUIRE(isEmptyStore(vertexList->getIDataStore()));
-
-    // Shape metadata is still available from the empty store, which is all preflight requires.
-    REQUIRE(faceList->getNumberOfTuples() == 4);
-    REQUIRE(vertexList->getNumberOfTuples() == 10);
+        // Shape metadata is still available from the empty store, which is all preflight requires.
+        REQUIRE(dataArray->getNumberOfTuples() == numTuples);
+      }
+    }
   }
 
   // Execute (useEmptyDataStores == false): connectivity is fully read from disk into a real store.
@@ -426,15 +431,16 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     const DataStructure executedStructure = std::move(readResult.value());
 
-    const auto* faceList = executedStructure.getDataAs<IDataArray>(sharedFaceListPath);
-    REQUIRE(faceList != nullptr);
-    REQUIRE_FALSE(isEmptyStore(faceList->getIDataStore()));
-    REQUIRE(faceList->getNumberOfTuples() == 4);
-
-    const auto* vertexList = executedStructure.getDataAs<IDataArray>(sharedVertexListPath);
-    REQUIRE(vertexList != nullptr);
-    REQUIRE_FALSE(isEmptyStore(vertexList->getIDataStore()));
-    REQUIRE(vertexList->getNumberOfTuples() == 10);
+    for(const auto& [dataPath, numTuples] : connectivityPaths)
+    {
+      DYNAMIC_SECTION("Execute: " << dataPath.toString())
+      {
+        const auto* dataArray = executedStructure.getDataAs<IDataArray>(dataPath);
+        REQUIRE(dataArray != nullptr);
+        REQUIRE_FALSE(isEmptyStore(dataArray->getIDataStore()));
+        REQUIRE(dataArray->getNumberOfTuples() == numTuples);
+      }
+    }
   }
 
   // Read directly through the DataStructureReader path overload with useEmptyDataStores == true. This
@@ -445,13 +451,15 @@ TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     const DataStructure preflightStructure = std::move(readResult.value());
 
-    const auto* faceList = preflightStructure.getDataAs<IDataArray>(sharedFaceListPath);
-    REQUIRE(faceList != nullptr);
-    REQUIRE(isEmptyStore(faceList->getIDataStore()));
-
-    const auto* vertexList = preflightStructure.getDataAs<IDataArray>(sharedVertexListPath);
-    REQUIRE(vertexList != nullptr);
-    REQUIRE(isEmptyStore(vertexList->getIDataStore()));
+    for(const auto& [dataPath, numTuples] : connectivityPaths)
+    {
+      DYNAMIC_SECTION("DataStructureReader::ReadFile: " << dataPath.toString())
+      {
+        const auto* dataArray = preflightStructure.getDataAs<IDataArray>(dataPath);
+        REQUIRE(dataArray != nullptr);
+        REQUIRE(isEmptyStore(dataArray->getIDataStore()));
+      }
+    }
   }
 }
 

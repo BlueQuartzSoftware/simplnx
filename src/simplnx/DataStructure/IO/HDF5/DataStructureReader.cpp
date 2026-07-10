@@ -28,20 +28,11 @@ Result<DataStructure> DataStructureReader::ReadFile(const nx::core::HDF5::FileIO
 {
   DataStructureReader dataStructureReader;
   auto groupReader = fileReader.openGroup(Constants::k_DataStructureTag);
-  auto result = dataStructureReader.readGroup(groupReader, useEmptyDataStores);
-
-  // Keep preflight metadata-only. readGroup above already imports every array as an EmptyDataStore
-  // (shape and type only) when useEmptyDataStores is set, and that now includes geometry connectivity
-  // -- vertex/face/edge lists, derived connectivity, and rectilinear-grid bounds -- exactly like
-  // ordinary attribute arrays. Skipping loadRequiredData during preflight guarantees none of those
-  // arrays are eagerly bulk-read from disk, which keeps preflight cheap on high-latency storage. A
-  // full read (useEmptyDataStores == false) imports the real stores directly in readGroup, so nothing
-  // is lost by not running the required-data pass during preflight.
-  if(result.valid() && !useEmptyDataStores)
-  {
-    dataStructureReader.loadRequiredData(fileReader);
-  }
-  return result;
+  // readGroup imports every array -- including geometry connectivity such as vertex/face/edge lists,
+  // derived connectivity, and rectilinear-grid bounds -- as an EmptyDataStore carrying only shape and
+  // type when useEmptyDataStores is set, keeping preflight metadata-only with no eager bulk reads from
+  // disk. A full read (useEmptyDataStores == false) imports the real stores directly in readGroup.
+  return dataStructureReader.readGroup(groupReader, useEmptyDataStores);
 }
 
 Result<std::shared_ptr<DataObject>> DataStructureReader::ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath)
@@ -273,40 +264,5 @@ std::shared_ptr<DataIOManager> DataStructureReader::getDataReader() const
 std::shared_ptr<IDataIO> DataStructureReader::getDataFactory(typename IDataIOManager::factory_id_type typeName) const
 {
   return getDataReader()->getFactoryAs<IDataIO>(typeName);
-}
-
-void DataStructureReader::addRequiredPath(const DataPath& requiredDataPath)
-{
-  m_RequiredPaths.push_back(requiredDataPath);
-}
-
-void DataStructureReader::addRequiredId(DataObject::IdType requiredDataId)
-{
-  m_RequiredIds.push_back(requiredDataId);
-}
-
-void DataStructureReader::addRequiredId(DataObject::OptionalId requiredDataId)
-{
-  if(requiredDataId.has_value())
-  {
-    m_RequiredIds.push_back(requiredDataId.value());
-  }
-}
-
-void DataStructureReader::loadRequiredData(const nx::core::HDF5::FileIO& fileReader)
-{
-  for(auto& id : m_RequiredIds)
-  {
-    auto* requiredObject = m_CurrentStructure.getData(id);
-    if(requiredObject != nullptr)
-    {
-      addRequiredPath(requiredObject->getDataPaths()[0]);
-    }
-  }
-
-  for(const auto& dataPath : m_RequiredPaths)
-  {
-    FinishImportingObject(m_CurrentStructure, fileReader, dataPath);
-  }
 }
 } // namespace nx::core::HDF5

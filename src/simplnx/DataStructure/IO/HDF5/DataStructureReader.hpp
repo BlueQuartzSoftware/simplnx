@@ -91,24 +91,6 @@ public:
    */
   void clearDataStructure();
 
-  /**
-   * @brief Adds a required DataPath that must be loaded during import.
-   * @param requiredDataPath The DataPath to mark as required
-   */
-  void addRequiredPath(const DataPath& requiredDataPath);
-
-  /**
-   * @brief Adds a required DataObject ID that must be loaded during import.
-   * @param requiredDataId The DataObject ID to mark as required
-   */
-  void addRequiredId(DataObject::IdType requiredDataId);
-
-  /**
-   * @brief Adds a required DataObject ID (optional) that must be loaded during import if present.
-   * @param requiredDataId The optional DataObject ID to mark as required
-   */
-  void addRequiredId(DataObject::OptionalId requiredDataId);
-
 protected:
   /**
    * @brief Returns a pointer to the nx::core::HDF5::DataFactoryManager used for finding the
@@ -125,16 +107,8 @@ protected:
    */
   std::shared_ptr<IDataIO> getDataFactory(typename IDataIOManager::factory_id_type typeName) const;
 
-  /**
-   * @brief Loads all data marked as required from the HDF5 file.
-   * @param fileReader The HDF5 file reader to load data from
-   */
-  void loadRequiredData(const nx::core::HDF5::FileIO& fileReader);
-
 private:
   std::shared_ptr<DataIOManager> m_IOManager = nullptr;
   DataStructure m_CurrentStructure;
-  std::vector<DataPath> m_RequiredPaths;
-  std::vector<DataObject::IdType> m_RequiredIds;
 };
 } // namespace nx::core::HDF5
