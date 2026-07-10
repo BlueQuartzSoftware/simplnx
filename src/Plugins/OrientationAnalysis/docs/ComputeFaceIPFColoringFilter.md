@@ -8,6 +8,10 @@ Processing (Crystallography)
 
 This **Filter** generates a pair of colors for each **Triangle** in a **Triangle Geometry** based on the inverse pole figure (IPF) color scheme for the present crystal structure. Each **Triangle** has 2 colors since any **Face** sits at a boundary between 2 **Features** for a well-connected set of **Features** that represent _grains_. The reference direction used for the IPF color generation is the _normal_ of the **Triangle**.
 
+Each side of a **Face** is colored using **that side's own** feature: the first color uses the first feature's orientation, its phase's crystal symmetry (Laue group), and the face normal; the second color uses the second feature's orientation, **its own** phase's crystal symmetry, and the negated (inward) face normal. This matters for multi-phase microstructures where the two features adjacent to a **Face** belong to phases with different Laue groups (for example a cubic phase against a hexagonal phase) — each side is colored with the correct symmetry for its phase. A side whose feature is invalid (a boundary/exterior face, feature id ≤ 0) is colored black.
+
+> **Note on migration from DREAM3D 6.5.171:** earlier DREAM3D 6.5.171 colored the *second* side of every **Face** using the *first* feature's crystal symmetry, which produced incorrect colors on mixed-Laue-group faces and left the second color black on faces whose first side was the exterior. DREAM3D-NX (and DREAM3D 6.5.172) compute each side with its own phase's symmetry. See V&V deviation `ComputeFaceIPFColoringFilter-D1`.
+
 ------------
 
 ![Face IPF Coloring](Images/ComputeFaceIPFColoring.png)
