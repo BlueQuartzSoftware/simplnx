@@ -25,14 +25,6 @@ Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureRea
   geometry.setFaceDataId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
   geometry.setUnsharedEdgesId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
 
-  // Required data
-  if(useEmptyDataStore)
-  {
-    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
-    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
-    dataStructureReader.addRequiredId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
-  }
-
   return {};
 }
 

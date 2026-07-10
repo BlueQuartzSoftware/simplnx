@@ -10,6 +10,9 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataArray.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/DataStructure/IO/HDF5/DataStructureReader.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/Filter/FilterHandle.hpp"
 #include "simplnx/Parameters/Dream3dImportParameter.hpp"
@@ -28,6 +31,7 @@
 #include <filesystem>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -378,6 +382,84 @@ TEST_CASE("DREAM3DFileTest:Import/Export DREAM3D Filter Test", "[ReadDREAM3DFilt
     REQUIRE(dataArray->template getIDataStoreAs<EmptyDataStore<int8>>() != nullptr);
 
     UnitTest::CheckArraysInheritTupleDims(importDataStructure);
+  }
+}
+
+TEST_CASE("DREAM3DFileTest: Preflight imports geometry connectivity as metadata-only stores", "[ReadDREAM3DFilter][WriteDREAM3DFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // geoms.dream3d ships one geometry of every type whose connectivity was formerly registered as
+  // "required" preflight data: node geometries (vertex/edge/face/polyhedron lists) and a rectilinear
+  // grid (X/Y/Z bounds). A metadata-only preflight must import all of these exactly like ordinary
+  // attribute arrays: as empty stores that carry only shape and type, never eagerly bulk-read from disk.
+  const fs::path inputFilePath = fs::path(unit_test::k_SimplnxTestDataSourceDir.view()) / "geoms.dream3d";
+
+  // {connectivity array path, expected tuple count}
+  const std::vector<std::pair<DataPath, usize>> connectivityPaths = {
+      {DataPath({"EdgeGeometry", "Verts"}), 10},       {DataPath({"EdgeGeometry", "Edges"}), 5},       {DataPath({"TriangleGeometry", "Verts"}), 10}, {DataPath({"TriangleGeometry", "Triangles"}), 4},
+      {DataPath({"QuadGeometry", "Quads"}), 2},        {DataPath({"TetrahedralGeometry", "Tets"}), 1}, {DataPath({"HexahedralGeometry", "Hexs"}), 3}, {DataPath({"RectGridGeometry", "XBounds"}), 10},
+      {DataPath({"RectGridGeometry", "YBounds"}), 10}, {DataPath({"RectGridGeometry", "ZBounds"}), 10}};
+
+  const auto isEmptyStore = [](const IDataStore* store) {
+    return store != nullptr && (store->getStoreType() == IDataStore::StoreType::Empty || store->getStoreType() == IDataStore::StoreType::EmptyOutOfCore);
+  };
+
+  // Preflight (useEmptyDataStores == true): connectivity must remain an empty, metadata-only store.
+  {
+    auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, /*preflight=*/true);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    const DataStructure preflightStructure = std::move(readResult.value());
+
+    for(const auto& [dataPath, numTuples] : connectivityPaths)
+    {
+      DYNAMIC_SECTION("Preflight: " << dataPath.toString())
+      {
+        const auto* dataArray = preflightStructure.getDataAs<IDataArray>(dataPath);
+        REQUIRE(dataArray != nullptr);
+        REQUIRE(isEmptyStore(dataArray->getIDataStore()));
+
+        // Shape metadata is still available from the empty store, which is all preflight requires.
+        REQUIRE(dataArray->getNumberOfTuples() == numTuples);
+      }
+    }
+  }
+
+  // Execute (useEmptyDataStores == false): connectivity is fully read from disk into a real store.
+  {
+    auto readResult = DREAM3D::ImportDataStructureFromFile(inputFilePath, /*preflight=*/false);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    const DataStructure executedStructure = std::move(readResult.value());
+
+    for(const auto& [dataPath, numTuples] : connectivityPaths)
+    {
+      DYNAMIC_SECTION("Execute: " << dataPath.toString())
+      {
+        const auto* dataArray = executedStructure.getDataAs<IDataArray>(dataPath);
+        REQUIRE(dataArray != nullptr);
+        REQUIRE_FALSE(isEmptyStore(dataArray->getIDataStore()));
+        REQUIRE(dataArray->getNumberOfTuples() == numTuples);
+      }
+    }
+  }
+
+  // Read directly through the DataStructureReader path overload with useEmptyDataStores == true. This
+  // overload must honor the flag when it delegates to the FileIO overload; connectivity must come back
+  // as an empty, metadata-only store rather than being fully read from disk.
+  {
+    auto readResult = HDF5::DataStructureReader::ReadFile(inputFilePath, /*useEmptyDataStores=*/true);
+    SIMPLNX_RESULT_REQUIRE_VALID(readResult);
+    const DataStructure preflightStructure = std::move(readResult.value());
+
+    for(const auto& [dataPath, numTuples] : connectivityPaths)
+    {
+      DYNAMIC_SECTION("DataStructureReader::ReadFile: " << dataPath.toString())
+      {
+        const auto* dataArray = preflightStructure.getDataAs<IDataArray>(dataPath);
+        REQUIRE(dataArray != nullptr);
+        REQUIRE(isEmptyStore(dataArray->getIDataStore()));
+      }
+    }
   }
 }
 
