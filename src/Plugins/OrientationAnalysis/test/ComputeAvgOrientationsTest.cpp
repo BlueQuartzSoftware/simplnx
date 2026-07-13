@@ -23,6 +23,7 @@
  * retired in favor of the inline oracle below.
  * ========================================================================== */
 
+#include "OrientationAnalysis/Filters/Algorithms/ComputeAvgOrientations.hpp"
 #include "OrientationAnalysis/Filters/ComputeAvgOrientationsFilter.hpp"
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
@@ -86,6 +87,17 @@ constexpr uint32 k_Triclinic = 4;
 constexpr float32 k_Rz90_z = 0.7071067811865476f; // sin(45) = cos(45)
 constexpr float32 k_Rz45_z = 0.3826834323650898f; // sin(22.5)
 constexpr float32 k_Rz45_w = 0.9238795325112867f; // cos(22.5)
+
+// Cubic-equivalent z-rotation representations of the physical orientation Rz(30):
+// Rz(90) is a cubic symmetry operator, so Rz(30+90k) all describe the same orientation.
+constexpr float32 k_Rz30_z = 0.2588190451025208f;   // sin(15)
+constexpr float32 k_Rz30_w = 0.9659258262890683f;   // cos(15)
+constexpr float32 k_Rz120_z = 0.8660254037844386f;  // sin(60)
+constexpr float32 k_Rz120_w = 0.5f;                 // cos(60)
+constexpr float32 k_Rz210_z = 0.9659258262890683f;  // sin(105)
+constexpr float32 k_Rz210_w = -0.2588190451025208f; // cos(105)
+constexpr float32 k_Rz300_z = 0.5f;                 // sin(150)
+constexpr float32 k_Rz300_w = -0.8660254037844386f; // cos(150)
 
 // ---------------------------------------------------------------------------
 // Build a DataStructure with an ImageGeom, a Cell Data AM (FeatureIds, Phases,
@@ -253,6 +265,15 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Ora
     REQUIRE(avgEuler.getDataStoreRef().getValue(1 * 3 + c) == Approx(0.0f).margin(1.0e-6f)); // F1 identity
     REQUIRE(avgEuler.getDataStoreRef().getValue(5 * 3 + c) == Approx(0.0f).margin(1.0e-6f)); // F5 empty
   }
+  // z-rotation fixtures (F2, F3, F4): Euler is gimbal-degenerate (only phi1+phi2 is
+  // determined), so assert the invariant — Phi ~= 0 and all components finite — rather
+  // than individual phi1/phi2 values.
+  for(usize f : {static_cast<usize>(2), static_cast<usize>(3), static_cast<usize>(4)})
+  {
+    REQUIRE(std::isfinite(avgEuler.getDataStoreRef().getValue(f * 3 + 0)));
+    REQUIRE(avgEuler.getDataStoreRef().getValue(f * 3 + 1) == Approx(0.0f).margin(1.0e-6f));
+    REQUIRE(std::isfinite(avgEuler.getDataStoreRef().getValue(f * 3 + 2)));
+  }
 
   // ---- Class 4: vMF / Watson value-add invariants on this small data ----
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
@@ -382,8 +403,298 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson EbsdLib Refer
 }
 
 // =============================================================================
-// Error path — no averaging method enabled => no feature-level result array is
-// created, so the algorithm returns error -54670.
+// Class 4 (Invariant) — Rodrigues under non-trivial (cubic) symmetry (#1660).
+// One Cubic_High feature is fed the SAME physical orientation, Rz(30 deg), as
+// five different representations: cubic-equivalent z-rotations Rz(30+90k) plus
+// the negated double-cover representative -Rz(30). Because Rz(90) is a cubic
+// symmetry operator (and getNearestQuat canonicalizes the sign), every voxel's
+// nearest-equivalent pick is exactly Rz(30), so the running average MUST
+// finalize to Rz(30) — an implementation-independent expectation that exercises
+// the 24-operator symmetry-reduction branch, the reset-to-identity first-voxel
+// branch (on a non-trivial representation), and the count weighting.
+// =============================================================================
+TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Cubic Symmetry Invariant", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const int32 numCells = 6;
+  const int32 numFeatures = 2;
+  const std::vector<int32> featureIds = {0, 1, 1, 1, 1, 1};
+  const std::vector<int32> phases = {0, 1, 1, 1, 1, 1};
+  // Deliberately scrambled order so the first-voxel reset operates on Rz(120),
+  // not the base representation.
+  const std::vector<float32> quats = {
+      0.0f, 0.0f, 0.0f,      1.0f,      // c0 background identity
+      0.0f, 0.0f, k_Rz120_z, k_Rz120_w, // c1 Rz(120) == Rz(30) * Rz(90)
+      0.0f, 0.0f, k_Rz30_z,  k_Rz30_w,  // c2 Rz(30)  base representation
+      0.0f, 0.0f, -k_Rz30_z, -k_Rz30_w, // c3 -Rz(30) double-cover representative
+      0.0f, 0.0f, k_Rz210_z, k_Rz210_w, // c4 Rz(210) == Rz(30) * Rz(180)
+      0.0f, 0.0f, k_Rz300_z, k_Rz300_w, // c5 Rz(300) == Rz(30) * Rz(270)
+  };
+  const std::vector<uint32> crystalStructures = {k_Unknown, k_CubicHigh};
+
+  DataStructure dataStructure = BuildDataStructure(numCells, numFeatures, featureIds, phases, quats, crystalStructures);
+
+  ComputeAvgOrientationsFilter filter;
+  Arguments args;
+  SetInputArgs(args);
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseRodriguesAverage_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesAvgEulerArrayName_Key, std::make_any<std::string>(k_AvgEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseVonMisesFisher_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgQuatsArrayName_Key, std::make_any<std::string>(k_VMFQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgEulerArrayName_Key, std::make_any<std::string>(k_VMFEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherKappaArrayName_Key, std::make_any<std::string>(k_VMFKappaName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseWatson_Key, std::make_any<bool>(false));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgQuatsArrayName_Key, std::make_any<std::string>(k_WatsonQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgEulerArrayName_Key, std::make_any<std::string>(k_WatsonEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+  const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz30_z, k_Rz30_w, 1.0e-5f);
+  CheckUnitNorthern(avgQuats, 1);
+
+  // Euler invariant for a pure z-rotation: Phi ~= 0, all components finite.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
+  const auto& avgEuler = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName));
+  REQUIRE(std::isfinite(avgEuler.getDataStoreRef().getValue(1 * 3 + 0)));
+  REQUIRE(avgEuler.getDataStoreRef().getValue(1 * 3 + 1) == Approx(0.0f).margin(1.0e-5f));
+  REQUIRE(std::isfinite(avgEuler.getDataStoreRef().getValue(1 * 3 + 2)));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// =============================================================================
+// Class 4 (Invariant) — Rodrigues voxel-ordering independence. The F3 fixture
+// of the analytical oracle (mean of identity and Rz(90) = Rz(45)) is run with
+// both voxel orderings; the result must be identical. Both orders accumulate
+// to (0, 0, 0.7071, 1.7071) before normalization (see provenance sidecar).
+// =============================================================================
+TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering Independence", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  const std::vector<float32> quatIdentity = {0.0f, 0.0f, 0.0f, 1.0f};
+  const std::vector<float32> quatRz90 = {0.0f, 0.0f, k_Rz90_z, k_Rz90_z};
+
+  const std::string ordering = GENERATE("identity-first", "Rz90-first");
+  DYNAMIC_SECTION("Ordering: " << ordering)
+  {
+    std::vector<float32> quats;
+    const std::vector<float32>& first = (ordering == "identity-first") ? quatIdentity : quatRz90;
+    const std::vector<float32>& second = (ordering == "identity-first") ? quatRz90 : quatIdentity;
+    quats.insert(quats.end(), first.begin(), first.end());
+    quats.insert(quats.end(), second.begin(), second.end());
+
+    const std::vector<int32> featureIds = {1, 1};
+    const std::vector<int32> phases = {1, 1};
+    const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
+    DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quats, crystalStructures);
+
+    ComputeAvgOrientationsFilter filter;
+    Arguments args;
+    SetInputArgs(args);
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseRodriguesAverage_Key, std::make_any<bool>(true));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuatsName));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesAvgEulerArrayName_Key, std::make_any<std::string>(k_AvgEulerName));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseVonMisesFisher_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgQuatsArrayName_Key, std::make_any<std::string>(k_VMFQuatsName));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgEulerArrayName_Key, std::make_any<std::string>(k_VMFEulerName));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherKappaArrayName_Key, std::make_any<std::string>(k_VMFKappaName));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseWatson_Key, std::make_any<bool>(false));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgQuatsArrayName_Key, std::make_any<std::string>(k_WatsonQuatsName));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgEulerArrayName_Key, std::make_any<std::string>(k_WatsonEulerName));
+    args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+    const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+    CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz45_z, k_Rz45_w, 1.0e-6f);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+}
+
+// =============================================================================
+// Regression (#1659) — the vMF/Watson voxel gather must ignore phase-0
+// (unindexed) voxels, matching the counting pass and the Rodrigues path.
+// Pre-fix, the gather loop collected every voxel of the feature regardless of
+// phase, so a phase-0 voxel contributed a garbage quaternion to the EM average
+// (and defeated the single-voxel shortcut when featureNumVoxels == 1).
+// =============================================================================
+TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson Ignores Phase-0 Voxels", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Two active features, each polluted with a phase-0 voxel carrying a garbage
+  // (non-unit, southern-hemisphere) quaternion. The counting pass gates on
+  // phase > 0, so:
+  //   F1: 1 counted voxel (Rz90)  -> single-voxel shortcut: muhat == Rz90, kappa == 0
+  //   F2: 2 counted voxels (Rz90) -> EM over identical quats: muhat == Rz90
+  const int32 numCells = 5;
+  const int32 numFeatures = 3; // F0 has no voxels -> NaN
+  const std::vector<int32> featureIds = {1, 1, 2, 2, 2};
+  const std::vector<int32> phases = {1, 0, 1, 1, 0};
+  const std::vector<float32> quats = {
+      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c0 F1 phase 1: Rz90
+      0.62f, -0.41f, 0.55f,    -0.37f,   // c1 F1 phase 0: garbage
+      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c2 F2 phase 1: Rz90
+      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c3 F2 phase 1: Rz90
+      0.62f, -0.41f, 0.55f,    -0.37f,   // c4 F2 phase 0: garbage
+  };
+  const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
+
+  DataStructure dataStructure = BuildDataStructure(numCells, numFeatures, featureIds, phases, quats, crystalStructures);
+
+  ComputeAvgOrientationsFilter filter;
+  Arguments args;
+  SetInputArgs(args);
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseRodriguesAverage_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesAvgEulerArrayName_Key, std::make_any<std::string>(k_AvgEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseVonMisesFisher_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgQuatsArrayName_Key, std::make_any<std::string>(k_VMFQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgEulerArrayName_Key, std::make_any<std::string>(k_VMFEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherKappaArrayName_Key, std::make_any<std::string>(k_VMFKappaName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseWatson_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgQuatsArrayName_Key, std::make_any<std::string>(k_WatsonQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgEulerArrayName_Key, std::make_any<std::string>(k_WatsonEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
+  const auto& vmfQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
+  const auto& vmfKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
+  const auto& watsonQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
+  const auto& watsonKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonKappaName));
+
+  for(const Float32Array* arr : {&vmfQuats, &watsonQuats})
+  {
+    // F1: the phase-0 garbage voxel must not defeat the single-voxel shortcut.
+    CheckQuat(*arr, 1, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
+    // F2: EM over the two identical counted voxels must land on Rz90 —
+    // orientation equality via |dot(muhat, Rz90)| == 1, robust to double cover.
+    const auto& store = arr->getDataStoreRef();
+    const double dot = store.getValue(2 * 4 + 2) * k_Rz90_z + store.getValue(2 * 4 + 3) * k_Rz90_z;
+    REQUIRE(std::abs(dot) == Approx(1.0).margin(1.0e-4));
+    REQUIRE(store.getValue(2 * 4 + 0) == Approx(0.0).margin(1.0e-4));
+    REQUIRE(store.getValue(2 * 4 + 1) == Approx(0.0).margin(1.0e-4));
+  }
+  // F1 single counted voxel -> EM skipped -> kappa == 0.
+  REQUIRE(vmfKappa.getDataStoreRef().getValue(1) == Approx(0.0f).margin(1.0e-6f));
+  REQUIRE(watsonKappa.getDataStoreRef().getValue(1) == Approx(0.0f).margin(1.0e-6f));
+
+  // Cross-path agreement: the Rodrigues path already excludes phase-0 voxels.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+  const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
+  CheckQuat(avgQuats, 2, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// =============================================================================
+// Guards (#1661) — unknown/unsupported crystal structures and out-of-range
+// Phases values must be excluded from BOTH averaging paths, must not read out
+// of range on the CrystalStructures array, and the drop must be reported as
+// warnings (-54671 unknown crystal structure, -54672 out-of-range phase) —
+// never a silent drop.
+// =============================================================================
+TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Unknown Crystal Structure and Out-Of-Range Phase Guards", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Ensemble: phase 1 valid Triclinic, phase 2 Unknown (999).
+  //  cell : feature, phase, quat            expectation
+  //   0   :   1,      1,    Rz90            valid, averaged
+  //   1   :   2,      2,    Rz90            unknown crystal structure -> dropped
+  //   2   :   3,      7,    Rz90            phase index out of range   -> dropped
+  //   3   :   1,      7,    garbage         out-of-range phase mixed into valid feature -> dropped
+  const int32 numCells = 4;
+  const int32 numFeatures = 4; // F0 empty
+  const std::vector<int32> featureIds = {1, 2, 3, 1};
+  const std::vector<int32> phases = {1, 2, 7, 7};
+  const std::vector<float32> quats = {
+      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c0 valid
+      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c1 unknown xtal
+      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c2 OOB phase
+      0.62f, -0.41f, 0.55f,    -0.37f,   // c3 OOB phase, garbage quat
+  };
+  const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic, k_Unknown};
+
+  DataStructure dataStructure = BuildDataStructure(numCells, numFeatures, featureIds, phases, quats, crystalStructures);
+
+  ComputeAvgOrientationsFilter filter;
+  Arguments args;
+  SetInputArgs(args);
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseRodriguesAverage_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesQuatsArrayName_Key, std::make_any<std::string>(k_AvgQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesAvgEulerArrayName_Key, std::make_any<std::string>(k_AvgEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseVonMisesFisher_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgQuatsArrayName_Key, std::make_any<std::string>(k_VMFQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgEulerArrayName_Key, std::make_any<std::string>(k_VMFEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherKappaArrayName_Key, std::make_any<std::string>(k_VMFKappaName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseWatson_Key, std::make_any<bool>(true));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgQuatsArrayName_Key, std::make_any<std::string>(k_WatsonQuatsName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgEulerArrayName_Key, std::make_any<std::string>(k_WatsonEulerName));
+  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  // The drops must be surfaced as warnings, not silent.
+  std::vector<int32> warningCodes;
+  for(const auto& warning : executeResult.result.warnings())
+  {
+    warningCodes.push_back(warning.code);
+  }
+  REQUIRE(std::count(warningCodes.begin(), warningCodes.end(), -54671) > 0); // unknown crystal structure
+  REQUIRE(std::count(warningCodes.begin(), warningCodes.end(), -54672) > 0); // out-of-range phase
+
+  // Rodrigues: F1 keeps only its valid voxel; F2/F3 fully dropped -> identity.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+  const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
+  CheckQuat(avgQuats, 2, 0.0f, 0.0f, 0.0f, 1.0f, 1.0e-6f);
+  CheckQuat(avgQuats, 3, 0.0f, 0.0f, 0.0f, 1.0f, 1.0e-6f);
+
+  // vMF/Watson: F1 single valid voxel -> shortcut; F2 (unknown xtal) and F3
+  // (all voxels out-of-range phase) -> NaN.
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
+  const auto& vmfQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
+  const auto& vmfKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
+  const auto& watsonQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
+  for(const Float32Array* arr : {&vmfQuats, &watsonQuats})
+  {
+    CheckQuat(*arr, 1, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
+    CheckQuatNaN(*arr, 2);
+    CheckQuatNaN(*arr, 3);
+  }
+  REQUIRE(vmfKappa.getDataStoreRef().getValue(1) == Approx(0.0f).margin(1.0e-6f));
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// =============================================================================
+// Error path — no averaging method enabled is now rejected in preflight with
+// -54673 so the GUI surfaces it before execution (issue #1661). The runtime
+// -54670 check in the algorithm remains as a backstop for direct invocation.
 // =============================================================================
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: No Method Enabled Error", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
@@ -414,15 +725,38 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: No Method Enabled Error"
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -54673);
+
+  // Runtime backstop: invoking the algorithm directly (bypassing preflight) with no
+  // method enabled must still fail with -54670 since no result array exists.
+  ComputeAvgOrientationsInputValues inputValues;
+  inputValues.cellFeatureIdsArrayPath = k_FeatureIdsPath;
+  inputValues.cellPhasesArrayPath = k_PhasesPath;
+  inputValues.cellQuatsArrayPath = k_QuatsPath;
+  inputValues.crystalStructuresArrayPath = k_CrystalStructuresPath;
+  inputValues.useRodriguesAverage = false;
+  inputValues.useVonMisesAverage = false;
+  inputValues.useWatsonAverage = false;
+  inputValues.avgQuatsArrayPath = k_FeatureDataPath.createChildPath(k_AvgQuatsName);
+  inputValues.avgEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_AvgEulerName);
+  inputValues.VMFQuatsArrayPath = k_FeatureDataPath.createChildPath(k_VMFQuatsName);
+  inputValues.VMFEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_VMFEulerName);
+  inputValues.VMFKappaArrayPath = k_FeatureDataPath.createChildPath(k_VMFKappaName);
+  inputValues.WatsonQuatsArrayPath = k_FeatureDataPath.createChildPath(k_WatsonQuatsName);
+  inputValues.WatsonEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_WatsonEulerName);
+  inputValues.WatsonKappaArrayPath = k_FeatureDataPath.createChildPath(k_WatsonKappaName);
+
+  const std::atomic_bool shouldCancel{false};
+  Result<> algoResult = ComputeAvgOrientations(dataStructure, IFilter::MessageHandler{}, shouldCancel, &inputValues)();
+  REQUIRE(algoResult.invalid());
+  REQUIRE(algoResult.errors()[0].code == -54670);
 }
 
 // =============================================================================
 // Preflight error — mismatched cell-array tuple counts => error -651.
-// (Mirrors the coverage target from GCOV/PR #1644; kept here so the V&V suite is
-// self-complete. Reconcile the duplicate at merge time if both land.)
+// (Covers the GCOV target from PR #1644; the duplicate TEST_CASE that #1644
+// added was removed in favor of this one — issue #1661.)
 // =============================================================================
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Cell Array Tuple Mismatch Error (-651)", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
@@ -463,64 +797,13 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Cell Array Tuple Mismatc
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  REQUIRE(preflightResult.outputActions.errors()[0].code == -651);
 }
 
 // =============================================================================
 // SIMPL Backwards Compatibility (kept, unchanged) — validates UUID + parameter
 // conversion of the legacy six-parameter (Rodrigues) filter.
 // =============================================================================
-TEST_CASE("OrientationAnalysis::ComputeAvgOrientationsFilter: Preflight Error - Cell array tuple count mismatch (-651)", "[OrientationAnalysis][ComputeAvgOrientationsFilter][preflight]")
-{
-  UnitTest::LoadPlugins();
-
-  // Build a minimal synthetic DataStructure where the three cell-level arrays that are
-  // validated together (Quats, Phases, FeatureIds) do NOT all share the same tuple count.
-  // This drives the validateNumberOfTuples() guard in preflightImpl that emits error -651.
-  DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
-
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {10}, {1}, cellAM->getId());
-
-  // CellPhases lives in a separate AttributeMatrix with a deliberately different tuple
-  // count (9 != 10) so the cross-array tuple-count check fails.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
-
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
-
-  AttributeMatrix::Create(dataStructure, "CellFeatureData", {5}, imageGeom->getId());
-
-  ComputeAvgOrientationsFilter filter;
-  Arguments args;
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "MismatchData", "Phases"})));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellQuatsArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellData", "Quats"})));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellEnsembleData", "CrystalStructures"})));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({"DataContainer", "CellFeatureData"})));
-
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseRodriguesAverage_Key, std::make_any<bool>(true));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesQuatsArrayName_Key, std::make_any<std::string>("AvgQuats"));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_RodriguesAvgEulerArrayName_Key, std::make_any<std::string>("AvgEulerAngles"));
-
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseVonMisesFisher_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgQuatsArrayName_Key, std::make_any<std::string>("vMF Avg Quats"));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherAvgEulerArrayName_Key, std::make_any<std::string>("vMF Avg EulerAngles"));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_VonMisesFisherKappaArrayName_Key, std::make_any<std::string>("vMF Kappas"));
-
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_UseWatson_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgQuatsArrayName_Key, std::make_any<std::string>("Watson Avg Quats"));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonAvgEulerArrayName_Key, std::make_any<std::string>("Watson Avg EulerAngles"));
-  args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>("Watson Kappas"));
-
-  auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -651);
-}
-
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientationsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeAvgOrientationsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

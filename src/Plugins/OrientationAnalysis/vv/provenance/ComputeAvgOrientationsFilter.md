@@ -34,7 +34,14 @@ Quaternions below are in `(x, y, z, w)` storage order (the order the filter read
 ### Class 4 (Invariant) companions — Rodrigues
 - Output quats unit-norm and northern-hemisphere (`w ≥ 0`).
 - Zero-voxel feature → identity `(0,0,0,1)` + zero Euler.
-- Voxel-ordering independence: F3 with voxels in order [identity, Rz90] vs [Rz90, identity] → identical result (verified: both accumulate to `(0,0,0.7071,1.7071)` pre-normalize).
+- z-rotation fixtures (F2–F4): Euler asserted as the invariant `Φ ≈ 0`, all components finite (encoded in `Rodrigues Analytical Oracle`).
+- Voxel-ordering independence: F3 with voxels in order [identity, Rz90] vs [Rz90, identity] → identical result (both accumulate to `(0,0,0.7071,1.7071)` pre-normalize). Encoded as `Rodrigues Voxel Ordering Independence` (DYNAMIC_SECTION over both orderings).
+
+## Class 4 (Invariant) — Rodrigues under cubic symmetry (issue #1660)
+
+The Triclinic fixtures above make `getNearestQuat` a sign-pick no-op, so they cannot exercise the symmetry-reduction interaction that is the Rodrigues path's value-add. The `Rodrigues Cubic Symmetry Invariant` test closes that gap with an implementation-independent expectation:
+
+One `Cubic_High` feature is fed the **same physical orientation** `Rz(30°)` as five different representations — the cubic-equivalent z-rotations `Rz(30°+90°k)` for k = 1..3 (Rz(90°) is a cubic symmetry operator), the base `Rz(30°)`, and the negated double-cover representative `−Rz(30°)` — in scrambled order so the first-voxel reset operates on `Rz(120°)`. Because rotations about a common axis commute, every representation has an exact distance-0 symmetry-equivalent `Rz(30°)`, so `getNearestQuat` must pick exactly `Rz(30°)` for each voxel and the average must finalize to `Rz(30°) = (0, 0, sin15°, cos15°) = (0, 0, 0.25881905, 0.96592583)` (asserted at ±1e-5). This exercises the 24-operator cubic branch, the reset-to-identity first-voxel branch, the double-cover canonicalization, and the count weighting — independent of the legacy A/B comparison.
 
 ## Class 2 (Reference — EbsdLib, trusted) — vMF / Watson average
 
@@ -47,12 +54,17 @@ The vMF/Watson EM math is owned and tested by EbsdLib (`EbsdLib/Source/Test/Dire
 | **vMF** | `(0.3322000547718371, −0.1964639452260062, 0.2450656693404858, 0.8893749825279105)` | `88.9943042750539774` | `DirectionalStatsTest.cpp:202–206` |
 | **Watson** | `(0.2948298270586034, −0.2106011604618418, 0.2378717152588106, 0.9011878668560466)` | `30.5730272919979669` | `DirectionalStatsTest.cpp:249–253` |
 
-This proves the filter feeds EbsdLib correctly and lands the result in the right output tuple, **without re-deriving any EM math** (per the "test the value-add, not upstream" rule). Tolerance: match EbsdLib's `Approx` margin (quaternion ±1e-6; kappa ±1e-4 relative).
+This proves the filter feeds EbsdLib correctly and lands the result in the right output tuple, **without re-deriving any EM math** (per the "test the value-add, not upstream" rule).
+
+**Tolerances (as shipped in the test):** quaternion components ±5e-3 absolute (`k_QuatMargin`), kappa ±2% relative (`k_KappaRel`). EbsdLib's own test asserts at ±1e-6, but it feeds `EMforDS` double-precision quaternions; the filter round-trips the same inputs through a `float32` DataArray, and the iterative EM estimate — kappa especially, being a concentration (inverse-spread) parameter — amplifies those input perturbations well beyond the raw float32 epsilon. The margins are set an order of magnitude above the observed cross-platform deltas for robustness while remaining far below any physically meaningful divergence (a 5e-3 quaternion delta ≈ 0.6° misorientation; the fixture's kappa values are ~89 and ~31).
 
 ### Class 4 (Invariant) companions — vMF / Watson
-- Single-voxel feature → `muhat` = that voxel's FZ quat, `kappa == 0` (filter shortcut, EM skipped; algorithm lines 103–106 / 139–141).
-- Zero-voxel feature → all vMF/Watson outputs `NaN` (fill at lines 339–355, never overwritten).
+- Single-voxel feature → `muhat` = that voxel's FZ quat, `kappa == 0` (filter shortcut, EM skipped).
+- Zero-voxel feature → all vMF/Watson outputs `NaN` (NaN pre-fill, never overwritten).
 - Output quats unit-norm + northern-hemisphere; results at the feature-index tuple (not voxel index).
+- Phase gating (regression, issue #1659): a phase-0 voxel inside a feature must be excluded from the gather — the counting pass, the gather loop, and the Rodrigues path all gate identically on `phase > 0`. Encoded as `vMF/Watson Ignores Phase-0 Voxels` (single-voxel shortcut preserved + EM path lands on the valid orientation, cross-checked against Rodrigues).
+- Guards (issue #1661): out-of-range `Phases` values and unknown/unsupported crystal-structure values are excluded from both paths and reported as warnings (-54672 / -54671, never silent); fully-excluded features finalize to identity (Rodrigues) / NaN (vMF/Watson). Encoded as `Unknown Crystal Structure and Out-Of-Range Phase Guards`.
+- Multi-phase features: the vMF/Watson `featureIdToPhaseMap` is last-writer-wins — the feature's crystal structure comes from the phase of its highest-index voxel (Rodrigues is per-voxel). Documented in the algorithm and the filter docs; features are normally single-phase.
 
 ## Second-engineer oracle review
 
