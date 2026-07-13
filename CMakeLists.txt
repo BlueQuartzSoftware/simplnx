@@ -606,6 +606,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/TriangleUtilities.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.hpp
@@ -803,6 +804,7 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Meshing/TriangleUtilities.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dIO.cpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/H5Support.cpp

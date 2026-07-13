@@ -3,7 +3,6 @@
 #include "simplnx/Common/Any.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Common/StringLiteralFormatting.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
@@ -183,11 +182,13 @@ Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
       return MakeErrorResult(-3, fmt::format("Path '{}' is not a file", path.string()));
     }
 
-    auto fileReader = HDF5::FileIO::ReadFile(path);
-    if(!fileReader.isValid())
-    {
-      return MakeErrorResult(-4, fmt::format("HDF5 file at path '{}' could not be read", path.string()));
-    }
+    // Opening the file to confirm it is readable HDF5 is left to the consuming
+    // filter's preflight (e.g. ReadDREAM3DFilter via Dream3dPreflightCache),
+    // which already performs that open to read the file's metadata. Doing it
+    // again here would be a second HDF5 open per parameter validation, and
+    // validation runs on every pipeline edit, so on high-latency storage that
+    // is a repeated, redundant round-trip for a check the preflight already
+    // makes authoritatively.
   } catch(const fs::filesystem_error& exception)
   {
     return MakeErrorResult(-5, fmt::format("Filesystem exception: {}", exception.what()));

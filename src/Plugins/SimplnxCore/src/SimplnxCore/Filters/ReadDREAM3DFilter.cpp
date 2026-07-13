@@ -6,7 +6,7 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
-#include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp"
 
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
@@ -16,7 +16,6 @@
 namespace
 {
 constexpr nx::core::int32 k_NoImportPathError = -1;
-constexpr nx::core::int32 k_FailedOpenFileIOError = -25;
 constexpr nx::core::int32 k_UnsupportedPathImportPolicyError = -51;
 } // namespace
 
@@ -82,16 +81,17 @@ IFilter::PreflightResult ReadDREAM3DFilter::preflightImpl(const DataStructure& d
   {
     return {MakeErrorResult<OutputActions>(k_NoImportPathError, "Import file path not provided.")};
   }
-  auto fileReader = nx::core::HDF5::FileIO::ReadFile(importData.FilePath);
-  if(!fileReader.isValid())
-  {
-    return {MakeErrorResult<OutputActions>(k_FailedOpenFileIOError, fmt::format("Failed to open the HDF5 file at the specified path: '{}'", importData.FilePath.string()))};
-  }
+
+  // Preflight metadata is served from Dream3dPreflightCache instead of being
+  // read from the file on every pass: pipelines re-preflight on every
+  // parameter edit, and a full HDF5 metadata traversal per edit freezes the
+  // UI for seconds on high-latency storage (network mounts). After the first
+  // import, each preflight costs a single stat() (see Dream3dPreflightCache).
+  Result<DataStructure> dataStructureResult = DREAM3D::Dream3dPreflightCache::Instance().fetch(importData.FilePath);
 
   Result<OutputActions> result;
   OutputActions& actions = result.value();
 
-  Result<DataStructure> dataStructureResult = DREAM3D::ImportDataStructureFromFile(fileReader, true);
   if(dataStructureResult.invalid())
   {
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(dataStructureResult)), {})};

@@ -24,10 +24,12 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
+#include "simplnx/Utilities/Parsing/DREAM3D/Dream3dPreflightCache.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
 #include <catch2/catch.hpp>
 
+#include <chrono>
 #include <filesystem>
 #include <mutex>
 #include <string>
@@ -967,4 +969,71 @@ TEST_CASE("WriteDREAM3DFilter: Compression_Preflight_RejectsOutOfRangeLevel", "[
     args.insertOrAssign(WriteDREAM3DFilter::k_CompressionLevel, static_cast<int32>(0));
     REQUIRE(filter.preflight(ds, args).outputActions.valid());
   }
+}
+
+TEST_CASE("DREAM3DFileTest: PreflightCache avoids re-reading unchanged files", "[ReadDREAM3DFilter][PreflightCache]")
+{
+  Application::GetOrCreateInstance()->loadPlugins(unit_test::k_BuildDir.view(), true);
+
+  // Build and write a small file, then backdate its mtime past the cache's
+  // trust window so hit/miss behavior is deterministic.
+  DataStructure writtenData;
+  auto* group = DataGroup::Create(writtenData, "CacheGroup");
+  auto floatStore = std::make_shared<DataStore<float32>>(ShapeType{16}, ShapeType{1}, 2.5f);
+  Float32Array::Create(writtenData, "CacheFloats", floatStore, group->getId());
+  fs::path filePath = GetDataDir(*Application::Instance()) / "preflight_cache_integration.dream3d";
+  fs::remove(filePath);
+  REQUIRE(DREAM3D::WriteFile(filePath, writtenData, Pipeline{}, false).valid());
+  fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
+
+  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  cache.clear();
+  cache.resetStats();
+  HDF5::FileIO::ResetReadOpenCount();
+
+  // Pipeline with a single ReadDREAM3DFilter, exactly as the GUI/nxrunner run it.
+  Pipeline pipeline;
+  Arguments args;
+  Dream3dImportParameter::ImportData importData(filePath);
+  args.insertOrAssign(ReadDREAM3DFilter::k_ImportFileData, importData);
+  auto filterNode = PipelineFilter::Create(k_ImportD3DHandle);
+  filterNode->setArguments(args);
+  pipeline.push_back(std::move(filterNode));
+
+  // Preflight #1 populates the cache: exactly one miss (the filter's fetch reads
+  // the file's metadata once). The import action's fetch on the same file is a
+  // hit, so it performs no second metadata traversal.
+  REQUIRE(pipeline.preflight());
+  REQUIRE(cache.missCount() == 1);
+
+  // Preflight #2 is the per-edit path. The cache serves the metadata, so there
+  // is no new miss and no metadata re-traversal -- the property that keeps
+  // re-preflight cheap on high-latency storage.
+  HDF5::FileIO::ResetReadOpenCount();
+  REQUIRE(pipeline.preflight());
+  REQUIRE(cache.missCount() == 1);
+  // A fully-cached preflight opens the file zero times: Dream3dImportParameter's
+  // validate() only stats the path (no HDF5 open), and the cache serves the
+  // filter's metadata fetch from memory instead of re-reading the file.
+  REQUIRE(HDF5::FileIO::GetReadOpenCount() == 0);
+
+  // Execute: bulk data must still be read correctly from disk.
+  REQUIRE(pipeline.execute());
+  const DataStructure executed = pipeline[0]->getDataStructure();
+  const auto* readFloats = executed.getDataAs<Float32Array>(DataPath({"CacheGroup", "CacheFloats"}));
+  REQUIRE(readFloats != nullptr);
+  REQUIRE((*readFloats)[0] == 2.5f);
+
+  // Rewriting the file must invalidate: preflight sees the new content.
+  DataStructure newData;
+  auto* group2 = DataGroup::Create(newData, "CacheGroup");
+  auto intStore = std::make_shared<DataStore<int32>>(ShapeType{4}, ShapeType{1}, 9);
+  Int32Array::Create(newData, "CacheInts", intStore, group2->getId());
+  fs::remove(filePath);
+  REQUIRE(DREAM3D::WriteFile(filePath, newData, Pipeline{}, false).valid());
+  fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
+
+  const uint64 missesBeforeRewritePreflight = cache.missCount();
+  REQUIRE(pipeline.preflight());
+  REQUIRE(cache.missCount() == missesBeforeRewritePreflight + 1);
 }

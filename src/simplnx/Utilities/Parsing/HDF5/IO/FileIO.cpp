@@ -4,12 +4,72 @@
 
 #include <fmt/format.h>
 
+#include <H5Ppublic.h>
+
+#include <atomic>
+#include <functional>
+
+namespace
+{
+// Counts every ReadFile() open so tests can assert that cached preflight paths
+// perform zero file opens. Process-wide and atomic because ReadFile() is called
+// from preflight worker threads.
+std::atomic<nx::core::uint64> s_ReadOpenCount{0};
+
+// Optional test-only hook applied to the file-access property list just before
+// a file is opened. Unset in production, so opens use H5P_DEFAULT unchanged.
+std::function<void(hid_t)> s_FaplConfigurator;
+
+// Builds the file-access property list for a file open. Returns H5P_DEFAULT
+// when no configurator is installed (the production path); otherwise creates a
+// fapl, hands it to the configurator, and returns it. The caller must close a
+// non-default result with CloseFaplId().
+hid_t MakeFaplId()
+{
+  if(!s_FaplConfigurator)
+  {
+    return H5P_DEFAULT;
+  }
+  hid_t faplId = H5Pcreate(H5P_FILE_ACCESS);
+  s_FaplConfigurator(faplId);
+  return faplId;
+}
+
+// Releases a fapl produced by MakeFaplId(). H5P_DEFAULT is a constant, not an
+// allocated id, so it is left alone.
+void CloseFaplId(hid_t faplId)
+{
+  if(faplId != H5P_DEFAULT)
+  {
+    H5Pclose(faplId);
+  }
+}
+} // namespace
+
 namespace nx::core::HDF5
 {
 FileIO FileIO::ReadFile(const std::filesystem::path& filepath)
 {
-  hid_t fileId = H5Fopen(filepath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+  s_ReadOpenCount++;
+  hid_t faplId = MakeFaplId();
+  hid_t fileId = H5Fopen(filepath.string().c_str(), H5F_ACC_RDONLY, faplId);
+  CloseFaplId(faplId);
   return FileIO(filepath, fileId);
+}
+
+uint64 FileIO::GetReadOpenCount()
+{
+  return s_ReadOpenCount.load();
+}
+
+void FileIO::ResetReadOpenCount()
+{
+  s_ReadOpenCount.store(0);
+}
+
+void FileIO::SetFaplConfigurator(std::function<void(hid_t)> configurator)
+{
+  s_FaplConfigurator = std::move(configurator);
 }
 
 FileIO FileIO::WriteFile(const std::filesystem::path& filepath)
@@ -26,7 +86,9 @@ FileIO FileIO::WriteFile(const std::filesystem::path& filepath)
     }
   }
 
-  hid_t fileId = H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+  hid_t faplId = MakeFaplId();
+  hid_t fileId = H5Fcreate(filepath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, faplId);
+  CloseFaplId(faplId);
   if(fileId > 0)
   {
     return FileIO(filepath, fileId);

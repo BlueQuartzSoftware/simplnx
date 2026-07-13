@@ -2309,7 +2309,7 @@ Result<std::vector<std::shared_ptr<DataObject>>> DREAM3D::ImportSelectDataObject
   return {dataObjects};
 }
 
-Result<> DREAM3D::FinishImportingObject(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, bool preflight)
+Result<> DREAM3D::FinishImportingObjectPreflight(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath)
 {
   if(!importStructure.containsData(dataPath))
   {
@@ -2327,24 +2327,35 @@ Result<> DREAM3D::FinishImportingObject(DataStructure& importStructure, DataStru
   {
     return MakeErrorResult(-6202, fmt::format("Unable to insert DataObject at DatPath '{}' into the DataStructure", dataPath.toString()));
   }
-  if(!preflight)
-  {
-    const auto dataPtr = dataStructure.getSharedData(dataPath);
-    if(dataPtr == nullptr)
-    {
-      return MakeErrorResult(-1502234, fmt::format("Cannot finish importing HDF5 data at DataPath '{}'. DataObject does not exist to copy data into.", dataPath.toString()));
-    }
+  return {};
+}
 
-    const auto fileVersion = GetFileVersion(fileReader);
-    if(fileVersion == k_CurrentFileVersion)
-    {
-      return HDF5::DataStructureReader::FinishImportingObject(dataStructure, fileReader, dataPath);
-    }
-    else if(fileVersion == k_LegacyFileVersion)
-    {
-      const auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
-      return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);
-    }
+Result<> DREAM3D::FinishImportingObject(DataStructure& importStructure, DataStructure& dataStructure, const DataPath& dataPath, const nx::core::HDF5::FileIO& fileReader, bool preflight)
+{
+  // Insert the (metadata-only) object first; in preflight mode this is all the
+  // work there is. The bulk-array read below is skipped for preflight because
+  // preflight never populates array contents.
+  Result<> insertResult = FinishImportingObjectPreflight(importStructure, dataStructure, dataPath);
+  if(insertResult.invalid() || preflight)
+  {
+    return insertResult;
+  }
+
+  const auto dataPtr = dataStructure.getSharedData(dataPath);
+  if(dataPtr == nullptr)
+  {
+    return MakeErrorResult(-1502234, fmt::format("Cannot finish importing HDF5 data at DataPath '{}'. DataObject does not exist to copy data into.", dataPath.toString()));
+  }
+
+  const auto fileVersion = GetFileVersion(fileReader);
+  if(fileVersion == k_CurrentFileVersion)
+  {
+    return HDF5::DataStructureReader::FinishImportingObject(dataStructure, fileReader, dataPath);
+  }
+  else if(fileVersion == k_LegacyFileVersion)
+  {
+    const auto dataStructureReader = fileReader.openGroup(k_LegacyDataStructureGroupTag);
+    return FinishImportingLegacyDataObject(dataStructure, dataStructureReader, dataPath);
   }
   return {};
 }
