@@ -22,14 +22,14 @@ class ComputeIPFColorsImpl
 {
 public:
   ComputeIPFColorsImpl(ComputeIPFColors* filter, nx::core::FloatVec3 referenceDir, nx::core::Float32Array& eulers, nx::core::Int32Array& phases, nx::core::UInt32Array& crystalStructures,
-                       int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8Array& colors, ebsdlib::ColorKeyKind colorKey)
+                       int32_t numPhases, const nx::core::IDataArray* maskArray, nx::core::UInt8Array& colors, ebsdlib::ColorKeyKind colorKey)
   : m_Filter(filter)
   , m_ReferenceDir(referenceDir)
   , m_CellEulerAngles(eulers.getDataStoreRef())
   , m_CellPhases(phases.getDataStoreRef())
   , m_CrystalStructures(crystalStructures.getDataStoreRef())
   , m_NumPhases(numPhases)
-  , m_GoodVoxels(goodVoxels)
+  , m_MaskArray(maskArray)
   , m_CellIPFColors(colors.getDataStoreRef())
   , m_ColorKey(colorKey)
   {
@@ -42,9 +42,9 @@ public:
   {
     using MaskArrayType = DataArray<T>;
     const MaskArrayType* maskArray = nullptr;
-    if(nullptr != m_GoodVoxels)
+    if(nullptr != m_MaskArray)
     {
-      maskArray = dynamic_cast<const MaskArrayType*>(m_GoodVoxels);
+      maskArray = dynamic_cast<const MaskArrayType*>(m_MaskArray);
     }
 
     std::vector<ebsdlib::LaueOps::Pointer> ops = ebsdlib::LaueOps::GetAllOrientationOps();
@@ -93,13 +93,13 @@ public:
 
   void run(size_t start, size_t end) const
   {
-    if(m_GoodVoxels != nullptr)
+    if(m_MaskArray != nullptr)
     {
-      if(m_GoodVoxels->getDataType() == DataType::boolean)
+      if(m_MaskArray->getDataType() == DataType::boolean)
       {
         convert<bool>(start, end);
       }
-      else if(m_GoodVoxels->getDataType() == DataType::uint8)
+      else if(m_MaskArray->getDataType() == DataType::uint8)
       {
         convert<uint8>(start, end);
       }
@@ -122,7 +122,7 @@ private:
   nx::core::Int32AbstractDataStore& m_CellPhases;
   nx::core::UInt32AbstractDataStore& m_CrystalStructures;
   int32_t m_NumPhases = 0;
-  const nx::core::IDataArray* m_GoodVoxels = nullptr;
+  const nx::core::IDataArray* m_MaskArray = nullptr;
   nx::core::UInt8AbstractDataStore& m_CellIPFColors;
   ebsdlib::ColorKeyKind m_ColorKey = ebsdlib::ColorKeyKind::TSL;
 };
@@ -143,9 +143,6 @@ ComputeIPFColors::~ComputeIPFColors() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<> ComputeIPFColors::operator()()
 {
-
-  std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-
   nx::core::Float32Array& eulers = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->cellEulerAnglesArrayPath);
   nx::core::Int32Array& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
 
@@ -168,11 +165,11 @@ Result<> ComputeIPFColors::operator()()
   algArrays.push_back(&crystalStructures);
   algArrays.push_back(&ipfColors);
 
-  nx::core::IDataArray* goodVoxelsArray = nullptr;
-  if(m_InputValues->useGoodVoxels)
+  nx::core::IDataArray* maskArray = nullptr;
+  if(m_InputValues->useMask)
   {
-    goodVoxelsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->goodVoxelsArrayPath);
-    algArrays.push_back(goodVoxelsArray);
+    maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
+    algArrays.push_back(maskArray);
   }
 
   // Allow data-based parallelization
@@ -180,13 +177,13 @@ Result<> ComputeIPFColors::operator()()
   dataAlg.setRange(0, totalPoints);
   dataAlg.requireArraysInMemory(algArrays);
 
-  dataAlg.execute(ComputeIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, goodVoxelsArray, ipfColors, m_InputValues->colorKey));
+  dataAlg.execute(ComputeIPFColorsImpl(this, normRefDir, eulers, phases, crystalStructures, numPhases, maskArray, ipfColors, m_InputValues->colorKey));
 
   if(m_PhaseWarningCount > 0)
   {
     std::string message = fmt::format("The Ensemble Phase information only references {} phase(s) but {} cell(s) had a phase value greater than {}. \
 This indicates a problem with the input cell phase data. DREAM3D-NX will give INCORRECT RESULTS.",
-                                      (numPhases - 1), m_PhaseWarningCount, (numPhases - 1));
+                                      (numPhases - 1), m_PhaseWarningCount.load(), (numPhases - 1));
 
     return nx::core::MakeErrorResult(-48000, message);
   }

@@ -8,6 +8,18 @@ Processing (Crystallography)
 
 This **Filter** will generate *inverse pole figure* (IPF) colors. The user can enter the *Reference Direction*, which defaults to [001]. The **Filter** also has the option to apply a black color to all "bad" **Elements**, as defined by a boolean *mask* array, which can be generated using the Threshold Objects **Filter** or any other filter that generates a "mask" of the data and outputs either a bool or uint8 array.
 
+The IPF color for each **Element** is computed by [EbsdLib](https://github.com/BlueQuartzSoftware/EbsdLib) from the **Element**'s Euler angles, the reference direction, and the crystal structure (Laue class) of its phase. **Elements** whose phase has an unknown/unsupported crystal structure, and **Elements** masked as "bad", are colored black (0, 0, 0).
+
+### Color Key
+
+The *Color Key* parameter selects which IPF coloring scheme is used:
+
++ **TSL** — legacy primary-corner standard-stereographic-triangle coloring (EDAX/OIM Analysis default). This is the scheme produced by DREAM3D 6.x and is the default.
++ **PUCM** — perceptually-uniform color map (Patala / MTEX-style).
++ **Nolze-Hielscher** — MTEX HSV-style coloring.
+
+The default (TSL) reproduces the coloring of earlier DREAM3D versions; PUCM and Nolze-Hielscher are new schemes with no DREAM3D 6.x equivalent.
+
 ### Originating Data Notes
 
 + TSL (.ang file)

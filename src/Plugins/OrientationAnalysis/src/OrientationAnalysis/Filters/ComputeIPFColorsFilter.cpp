@@ -105,10 +105,10 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
 {
 
   auto pReferenceDirValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceDir_Key);
-  auto pUseGoodVoxelsValue = filterArgs.value<bool>(k_UseMask_Key);
+  auto pUseMaskValue = filterArgs.value<bool>(k_UseMask_Key);
   auto pCellEulerAnglesArrayPathValue = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   auto pCellPhasesArrayPathValue = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  auto pGoodVoxelsArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  auto pMaskArrayPathValue = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   auto pCellIPFColorsArrayNameValue = pCellEulerAnglesArrayPathValue.replaceName(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
 
@@ -117,9 +117,9 @@ IFilter::PreflightResult ComputeIPFColorsFilter::preflightImpl(const DataStructu
   dataPaths.push_back(pCellEulerAnglesArrayPathValue);
   dataPaths.push_back(pCellPhasesArrayPathValue);
 
-  if(pUseGoodVoxelsValue)
+  if(pUseMaskValue)
   {
-    dataPaths.push_back(pGoodVoxelsArrayPathValue);
+    dataPaths.push_back(pMaskArrayPathValue);
   }
 
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataPaths);
@@ -147,10 +147,10 @@ Result<> ComputeIPFColorsFilter::executeImpl(DataStructure& dataStructure, const
   ComputeIPFColorsInputValues inputValues;
 
   inputValues.referenceDirection = filterArgs.value<VectorFloat32Parameter::ValueType>(k_ReferenceDir_Key);
-  inputValues.useGoodVoxels = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.cellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
   inputValues.cellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
-  inputValues.goodVoxelsArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.crystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
   inputValues.cellIpfColorsArrayPath = inputValues.cellEulerAnglesArrayPath.replaceName(filterArgs.value<std::string>(k_CellIPFColorsArrayName_Key));
 
