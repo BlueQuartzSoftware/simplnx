@@ -4,10 +4,21 @@
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/GeometryHelpers.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+
+namespace
+{
+// 2*pi, used to map cell-center positions onto the periodic unit circle.
+constexpr double k_TwoPi = 6.283185307179586;
+// A feature whose per-axis unit-vector resultant falls below this length has its mass spread ~uniformly
+// around the domain (a domain-filling feature); its circular mean is not meaningful, so the arithmetic
+// mean is kept instead.
+constexpr double k_DegenerateResultant = 1.0e-6;
+} // namespace
 
 using namespace nx::core;
 
@@ -21,7 +32,8 @@ class ComputeFeatureCentroidsImpl1
 {
 public:
   ComputeFeatureCentroidsImpl1(Float64AbstractDataStore& sum, Float64AbstractDataStore& compensation, UInt64AbstractDataStore& count, std::array<size_t, 3> dims, const nx::core::ImageGeom& imageGeom,
-                               const Int32AbstractDataStore& featureIds, UInt64AbstractDataStore& rangeXStoreRef, UInt64AbstractDataStore& rangeYStoreRef, UInt64AbstractDataStore& rangeZStoreRef)
+                               const Int32AbstractDataStore& featureIds, UInt64AbstractDataStore& rangeXStoreRef, UInt64AbstractDataStore& rangeYStoreRef, UInt64AbstractDataStore& rangeZStoreRef,
+                               bool isPeriodic, Float64AbstractDataStore& sumCos, Float64AbstractDataStore& sumSin, std::array<double, 3> origin, std::array<double, 3> domainLength)
   : m_Sum(sum)
   , m_Compensation(compensation)
   , m_Count(count)
@@ -31,6 +43,11 @@ public:
   , m_RangeXStoreRef(rangeXStoreRef)
   , m_RangeYStoreRef(rangeYStoreRef)
   , m_RangeZStoreRef(rangeZStoreRef)
+  , m_IsPeriodic(isPeriodic)
+  , m_SumCos(sumCos)
+  , m_SumSin(sumSin)
+  , m_Origin(origin)
+  , m_DomainLength(domainLength)
   {
   }
   ~ComputeFeatureCentroidsImpl1() = default;
@@ -85,6 +102,21 @@ public:
           m_Compensation[featureId_idx] = (temp - m_Sum[featureId_idx]) - componentValue;
           m_Sum[featureId_idx] = temp;
           m_Count[featureId_idx].inc();
+
+          // For periodic runs, also accumulate the unit vector of each cell center's angular position
+          // around the domain on each axis. The per-feature (cos, sin) sums produce a minimum-image
+          // centroid at finalize for features that wrap the boundary.
+          if(m_IsPeriodic)
+          {
+            const nx::core::Point3Dd center = {voxel_center[0], voxel_center[1], voxel_center[2]};
+            for(size_t axis = 0; axis < 3; axis++)
+            {
+              const double phase = k_TwoPi * (center[axis] - m_Origin[axis]) / m_DomainLength[axis];
+              const size_t axisIdx = featureId * 3ULL + axis;
+              m_SumCos[axisIdx] = m_SumCos.getValue(axisIdx) + std::cos(phase);
+              m_SumSin[axisIdx] = m_SumSin.getValue(axisIdx) + std::sin(phase);
+            }
+          }
         }
       }
     }
@@ -105,6 +137,11 @@ private:
   UInt64AbstractDataStore& m_RangeXStoreRef;
   UInt64AbstractDataStore& m_RangeYStoreRef;
   UInt64AbstractDataStore& m_RangeZStoreRef;
+  bool m_IsPeriodic = false;
+  Float64AbstractDataStore& m_SumCos;
+  Float64AbstractDataStore& m_SumSin;
+  std::array<double, 3> m_Origin = {0.0, 0.0, 0.0};
+  std::array<double, 3> m_DomainLength = {0.0, 0.0, 0.0};
 };
 
 } // namespace
@@ -169,6 +206,21 @@ Result<> ComputeFeatureCentroids::operator()()
   compensation.fill(0.0);
   count.fill(0.0);
 
+  // Per-feature/per-axis unit-vector sums for the periodic (circular-mean) centroid. Only populated when
+  // Is Periodic is enabled; harmless (all zero) otherwise.
+  auto sumCosPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  auto sumSinPtr = DataStoreUtilities::CreateDataStore<float64>(tupleShape, componentShape, IDataAction::Mode::Execute);
+  Float64AbstractDataStore& sumCos = *sumCosPtr.get();
+  Float64AbstractDataStore& sumSin = *sumSinPtr.get();
+  sumCos.fill(0.0);
+  sumSin.fill(0.0);
+
+  const auto geomOrigin = imageGeom.getOrigin();
+  const auto geomSpacing = imageGeom.getSpacing();
+  const std::array<double, 3> origin = {static_cast<double>(geomOrigin[0]), static_cast<double>(geomOrigin[1]), static_cast<double>(geomOrigin[2])};
+  // Periodic domain length on each axis = number of cells * spacing (the full physical extent).
+  const std::array<double, 3> domainLength = {static_cast<double>(xPoints) * geomSpacing[0], static_cast<double>(yPoints) * geomSpacing[1], static_cast<double>(zPoints) * geomSpacing[2]};
+
   // Create data stores to check if feature IDs are periodic
   componentShape[0] = 2;
   auto rangeXStorePtr = DataStoreUtilities::CreateDataStore<uint64>(tupleShape, componentShape, IDataAction::Mode::Execute);
@@ -187,7 +239,8 @@ Result<> ComputeFeatureCentroids::operator()()
   // by the total number of cores/threads and do a ParallelTask Algorithm instead
   // we might see some speedup.
   dataAlg.setParallelizationEnabled(false);
-  dataAlg.execute(ComputeFeatureCentroidsImpl1(sum, compensation, count, {xPoints, yPoints, zPoints}, imageGeom, featureIdsStoreRef, rangeXStoreRef, rangeYStoreRef, rangeZStoreRef));
+  dataAlg.execute(ComputeFeatureCentroidsImpl1(sum, compensation, count, {xPoints, yPoints, zPoints}, imageGeom, featureIdsStoreRef, rangeXStoreRef, rangeYStoreRef, rangeZStoreRef,
+                                               m_InputValues->IsPeriodic, sumCos, sumSin, origin, domainLength));
 
   // Here we are only looping over the number of features so let this just go in serial mode.
   // The count store carries the same voxel count in all three components of a feature; a feature with
@@ -216,9 +269,48 @@ Result<> ComputeFeatureCentroids::operator()()
   if(m_InputValues->IsPeriodic)
   {
     m_MessageHandler({IFilter::Message::Type::Info, "Checking for periodic data."});
-    if(GeometryHelpers::Topology::AdjustCentroidsForPeriodicFaces(imageGeom, rangeXStoreRef, rangeYStoreRef, rangeZStoreRef, centroids))
+
+    // For each axis on which a feature spans the full extent (a cell at index 0 and at the last index), the
+    // naive arithmetic centroid lands in the empty middle of the wrapped feature. Replace that component with
+    // the circular (minimum-image) mean derived from the per-feature unit-vector sums. A feature whose mass
+    // is spread ~uniformly around the domain (near-zero resultant) keeps its arithmetic mean.
+    const std::array<UInt64AbstractDataStore*, 3> rangeStores = {&rangeXStoreRef, &rangeYStoreRef, &rangeZStoreRef};
+    const std::array<size_t, 3> dims = {xPoints, yPoints, zPoints};
+    bool anyAdjusted = false;
+    for(size_t featureId = 0; featureId < totalFeatures; featureId++)
     {
-      m_MessageHandler({IFilter::Message::Type::Info, "ComputeFeatureCentroids found Non-Contiguous Features. Centroids may require additional checks."});
+      for(size_t axis = 0; axis < 3; axis++)
+      {
+        const size_t axisIdx = featureId * 3 + axis;
+        if(count[axisIdx] == 0)
+        {
+          continue;
+        }
+        const UInt64AbstractDataStore& rangeStore = *rangeStores[axis];
+        const bool spansExtent = (rangeStore.getValue(featureId * 2 + 0) == 0 && rangeStore.getValue(featureId * 2 + 1) == dims[axis] - 1);
+        if(!spansExtent)
+        {
+          continue;
+        }
+        const double sumCosValue = sumCos.getValue(axisIdx);
+        const double sumSinValue = sumSin.getValue(axisIdx);
+        const double resultant = std::sqrt(sumCosValue * sumCosValue + sumSinValue * sumSinValue) / static_cast<double>(count[axisIdx]);
+        if(resultant < k_DegenerateResultant)
+        {
+          continue;
+        }
+        double phase = std::atan2(sumSinValue, sumCosValue);
+        if(phase < 0.0)
+        {
+          phase += k_TwoPi;
+        }
+        centroids[axisIdx] = static_cast<float>(origin[axis] + (phase / k_TwoPi) * domainLength[axis]);
+        anyAdjusted = true;
+      }
+    }
+    if(anyAdjusted)
+    {
+      m_MessageHandler({IFilter::Message::Type::Info, "ComputeFeatureCentroids adjusted centroids of features that wrap the periodic boundary."});
     }
   }
 

@@ -160,10 +160,10 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boun
   using namespace CentroidToy;
   UnitTest::LoadPlugins();
 
-  SECTION("Fixture D - periodic wrap, unit spacing")
+  SECTION("Fixture D - periodic wrap, unit spacing (asymmetric)")
   {
     // 4x1x1; FeatureIds [1,2,1,1]; feature 1 spans x=0 and x=3 (full extent), feature 2 (x=1) does not.
-    // feature 1 cells x=0,2,3 -> centers 0.5,2.5,3.5 -> mean 6.5/3 = 2.16667
+    // feature 1 cells x=0,2,3 -> centers 0.5,2.5,3.5 -> non-periodic mean 6.5/3 = 2.16667
     auto sNP = Build(4, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 3, {1, 2, 1, 1});
     auto nonPeriodic = Run(sNP, false);
     RequireCentroid(nonPeriodic, 1, 6.5f / 3.0f, 0.5f, 0.5f);
@@ -171,26 +171,38 @@ TEST_CASE("SimplnxCore::ComputeFeatureCentroidsFilter: Class 1/4 - Periodic Boun
 
     auto sP = Build(4, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 3, {1, 2, 1, 1});
     auto periodic = Run(sP, true);
-    // Class 1 (given the DREAM3D periodic-shift model): spanning feature 1 gets +(dim-1)/2 = +1.5.
-    RequireCentroid(periodic, 1, 6.5f / 3.0f + 1.5f, 0.5f, 0.5f);
+    // Class 1 minimum-image oracle: domain L=4 (seam at x=0). The cell at center 0.5 wraps to 4.5, so the
+    // contiguous cluster is {2.5, 3.5, 4.5}; mean = 10.5/3 = 3.5, mapped back into [0,4) -> 3.5.
+    // (The old constant-offset model gave 6.5/3 + 1.5 = 3.6667, which is wrong.)
+    RequireCentroid(periodic, 1, 3.5f, 0.5f, 0.5f);
     // Class 4 invariant: the non-spanning feature 2 must be unchanged by the periodic pass.
     RequireCentroid(periodic, 2, 1.5f, 0.5f, 0.5f);
   }
 
-  SECTION("Fixture E - periodic wrap, NON-unit spacing (regression pin for the spacing fix)")
+  SECTION("Fixture E - periodic wrap, NON-unit spacing (asymmetric, interior result)")
   {
-    // 4x1x1, spacing (2,1,1), origin (10,0,0); FeatureIds [1,2,2,1]
-    // x-centers: idx0 -> 11.0, idx3 -> 17.0; non-periodic centroid.x = 14.0
-    auto sNP = Build(4, 1, 1, {2.0f, 1.0f, 1.0f}, {10.0f, 0.0f, 0.0f}, 3, {1, 2, 2, 1});
+    // 4x1x1, spacing (2,1,1), origin (10,0,0); FeatureIds [1,1,2,1]
+    // feature 1 cells idx 0,1,3 -> x-centers 11.0, 13.0, 17.0; non-periodic centroid.x = 41/3 = 13.6667
+    auto sNP = Build(4, 1, 1, {2.0f, 1.0f, 1.0f}, {10.0f, 0.0f, 0.0f}, 3, {1, 1, 2, 1});
     auto nonPeriodic = Run(sNP, false);
-    RequireCentroid(nonPeriodic, 1, 14.0f, 0.5f, 0.5f); // unambiguous analytical value
+    RequireCentroid(nonPeriodic, 1, 41.0f / 3.0f, 0.5f, 0.5f);
 
-    auto sP = Build(4, 1, 1, {2.0f, 1.0f, 1.0f}, {10.0f, 0.0f, 0.0f}, 3, {1, 2, 2, 1});
+    auto sP = Build(4, 1, 1, {2.0f, 1.0f, 1.0f}, {10.0f, 0.0f, 0.0f}, 3, {1, 1, 2, 1});
     auto periodic = Run(sP, true);
-    // The periodic offset must scale with spacing: (dim-1)*spacing_x/2 = 3*2/2 = 3.0 -> 14.0 + 3.0 = 17.0.
-    // Before the fix this returned 15.5 (offset 1.5 in cell units, ignoring spacing). Regression pin for
-    // the AdjustCentroidsForPeriodicFaces spacing fix. See vv/ComputeFeatureCentroidsFilter.md Phase 6.
-    RequireCentroid(periodic, 1, 17.0f, 0.5f, 0.5f);
+    // Class 1 minimum-image oracle: domain L=8 (seam at x=10 == x=18). Positions relative to origin are
+    // {1, 3, 7}; the largest empty gap is 3->7, so 1 and 3 wrap to 9 and 11. Cluster {7, 9, 11}; mean = 9,
+    // mapped back into [10,18) -> x = 11.0. (The old constant-offset model gave 13.6667 + 3.0 = 16.6667.)
+    RequireCentroid(periodic, 1, 11.0f, 0.5f, 0.5f);
+  }
+
+  SECTION("Fixture F - domain-filling feature (arithmetic-mean fallback)")
+  {
+    // 4x1x1, unit spacing; a single feature fills every cell (centers 0.5,1.5,2.5,3.5). It spans the full
+    // extent, so the periodic branch fires, but the unit vectors cancel (zero resultant): the circular mean
+    // is undefined, so the arithmetic mean 2.0 is kept. Class 4 fallback path.
+    auto sP = Build(4, 1, 1, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, 2, {1, 1, 1, 1});
+    auto periodic = Run(sP, true);
+    RequireCentroid(periodic, 1, 2.0f, 0.5f, 0.5f);
   }
 }
 
