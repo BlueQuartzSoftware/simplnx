@@ -6,16 +6,33 @@ Statistics (Morphological)
 
 ## Description
 
-For each feature, determine how many other features are within a user defined multiple of the average *Equivalent Sphere Diameter* of the centroid of the feature.
+For each feature, determine how many other features have their *centroid* within a search radius of that feature's centroid, counted using a true Euclidean (spherical) distance test.
 
-The algorithm for determining the number of **Features** is given below:
+The **Search Radius Type** parameter selects how the search radius is defined:
 
-1. Compute the average equivalent diameter for all features in a given phase
-2. Define a sphere centered at the **Feature**'s *centroid* and with radius equal to the average equivalent sphere diameter multiplied by the user defined multiple
-3. Check every other **Feature**'s *centroid* to see if it lies within the sphere and keep count and list of those that satisfy
-4. Repeat 2. & 3. for all **Features**
+- **Multiples of Equivalent Diameter** *(default)*: each feature searches within a radius equal to **its own** *Equivalent Sphere Diameter* multiplied by the *Multiples of Equivalent Diameter* value (`radius_i = equivalentDiameter[i] × multiples`). Because the radius scales with each feature's own size, larger features have larger neighborhoods and the neighbor relationship can be **asymmetric** (a large feature may reach a small one that does not reach back). This mode requires the *Equivalent Diameters* feature array. *(The average diameter of all features is used only to size the internal search grid. This per-feature radius preserves the behavior of the legacy DREAM3D `FindNeighborhoods` filter.)*
+- **Search Radius (microns)**: every feature uses the same absolute search radius (in microns) supplied by the user. The neighborhood is therefore symmetric, and the *Equivalent Diameters* array is **not** required.
 
-![](images/ComputeFeatureNeighborhoods_MultiplesOfAvgDiameter.png)
+In the "Multiples of Equivalent Diameter" mode the search radius for feature *i* is:
+
+```text
+radius_i = MultiplesOfEquivalentDiameter × EquivalentDiameter_i
+```
+
+(there is no division by two; the average diameter is used only to size the internal search grid). In the "Search Radius (microns)" mode the radius is the absolute value entered by the user.
+
+The algorithm for determining the number of neighboring **Features** is:
+
+1. Determine each feature's search radius from the selected **Search Radius Type**
+2. Define a sphere centered at the **Feature**'s *centroid* using that radius
+3. Check every other **Feature**'s *centroid* to see if it lies within the sphere (a centroid exactly on the sphere surface **is** counted); keep a count and a list of those that satisfy the test
+4. Repeat for all **Features**
+
+Feature 0 (the background/unassigned feature) is excluded from the computation entirely: it never searches for neighbors, it is never counted as a neighbor of any other feature, and its `Neighborhoods` entry is always 0 with an empty `NeighborhoodList`.
+
+The figure below shows a single target feature and how progressively larger multiples of its own diameter capture more neighboring centroids.
+
+![Search sphere around a feature at 1x, 2x, and 3x its own diameter](Images/ComputeFeatureNeighborhoods_SearchSphere.png)
 
 ## Output Notes
 

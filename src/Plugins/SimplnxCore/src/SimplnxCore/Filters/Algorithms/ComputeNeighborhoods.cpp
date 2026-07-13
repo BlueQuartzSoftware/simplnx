@@ -14,6 +14,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <atomic>
 #include <functional>
 #include <mutex>
@@ -67,13 +68,13 @@ struct BinKeyHasher
 class ComputeNeighborhoodsImpl
 {
 public:
-  ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, const nx::core::AbstractDataStore<float>& centroids, const std::vector<int64>& bins, float32 avgDiam, float32 multiplesOfAverage,
+  ComputeNeighborhoodsImpl(ComputeNeighborhoods* filter, const nx::core::AbstractDataStore<float>& centroids, const std::vector<int64>& bins, const std::vector<float32>& radii, float32 binSize,
                            const std::atomic_bool& shouldCancel, ProgressMessageHelper& progressMessageHelper)
   : m_Filter(filter)
   , m_Centroids(centroids)
   , m_Bins(bins)
-  , m_AvgDiam(avgDiam)
-  , m_MultiplesOfAverage(multiplesOfAverage)
+  , m_Radii(radii)
+  , m_BinSize(binSize)
   , m_ShouldCancel(shouldCancel)
   , m_ProgressMessageHelper(progressMessageHelper)
   {
@@ -96,11 +97,6 @@ public:
       binToFeatures[key].push_back(i);
     }
 
-    // 2. Precompute radius info
-    const float32 radius = m_AvgDiam * m_MultiplesOfAverage / 2.0f;
-    const float32 radiusSq = radius * radius;
-    const int64 k = static_cast<int64>(std::ceil(m_MultiplesOfAverage));
-
     ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
     for(usize i = start; i < end; i++)
     {
@@ -115,6 +111,12 @@ public:
       {
         return;
       }
+
+      // (a) This feature's own search radius (per-feature in Multiples mode; constant in Search-Radius mode).
+      //     The scan window k is derived from this feature's radius and the bin size.
+      const float32 radiusSq = m_Radii[i] * m_Radii[i];
+      const int64 k = static_cast<int64>(std::ceil(2.0f * m_Radii[i] / m_BinSize));
+
       // (a) Get feature's i position
       const float32 xi = m_Centroids[3 * i + 0];
       const float32 yi = m_Centroids[3 * i + 1];
@@ -180,8 +182,8 @@ private:
   ComputeNeighborhoods* m_Filter = nullptr;
   const nx::core::AbstractDataStore<float>& m_Centroids;
   const std::vector<int64>& m_Bins;
-  float32 m_AvgDiam;
-  float32 m_MultiplesOfAverage;
+  const std::vector<float32>& m_Radii;
+  float32 m_BinSize;
   const std::atomic_bool& m_ShouldCancel;
   ProgressMessageHelper& m_ProgressMessageHelper;
 };
@@ -213,12 +215,15 @@ Result<> ComputeNeighborhoods::operator()()
 {
   // m_ProgressCounter initialized to zero on filter creation
   auto multiplesOfAverage = m_InputValues->MultiplesOfAverage;
-  const auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath)->getDataStoreRef();
   const auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
 
   m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
 
-  const usize totalFeatures = equivalentDiameters.getNumberOfTuples();
+  const usize totalFeatures = centroids.getNumberOfTuples();
+  if(totalFeatures == 0)
+  {
+    return {};
+  }
 
   ProgressMessageHelper progressMessageHelper = m_MessageHelper.createProgressMessageHelper();
   progressMessageHelper.setMaxProgresss(totalFeatures);
@@ -226,18 +231,52 @@ Result<> ComputeNeighborhoods::operator()()
 
   m_LocalNeighborhoodList.resize(totalFeatures);
 
-  // (a) This section finds the average equivalent spherical (ESD) diameter of ALL features
-  float32 avgDiameter = 0.0f;
-  for(usize i = 1; i < totalFeatures; i++)
+  for(usize i = 0; i < totalFeatures; i++)
   {
     (*m_Neighborhoods)[i] = 0;
-    avgDiameter += equivalentDiameters[i];
   }
-  avgDiameter /= static_cast<float32>(totalFeatures);
-  m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Average Diameter: '{}'", avgDiameter));
 
-  // (c) We are going to place each feature's centroid into a bin in the normalized 3D space.
-  // The centroid is normalized by the Average Diameter
+  // Determine each feature's neighbor search radius and the spatial-bin grid size based on the user-selected
+  // Search Radius Type.
+  //   Type 0 (Multiples of Equivalent Diameter): each feature searches within its OWN Equivalent Sphere Diameter
+  //     times the multiplier (radius_i = equivalentDiameters[i] * multiples). The neighbor relation is therefore
+  //     per-feature (asymmetric): larger features have larger neighborhoods. The bin grid is sized by the
+  //     average diameter of all features.
+  //   Type 1 (Search Radius in microns): every feature uses the same absolute radius supplied by the user; the
+  //     Equivalent Diameters array is not needed, so the bin grid is sized by the search radius itself.
+  std::vector<float32> radii(totalFeatures, 0.0f);
+  float32 binSize = 0.0f;
+  if(m_InputValues->SearchRadiusType == 0)
+  {
+    // Find the average equivalent spherical (ESD) diameter of ALL features (excluding the background feature 0);
+    // used only to size the bin grid.
+    const auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath)->getDataStoreRef();
+    float32 avgDiameter = 0.0f;
+    for(usize i = 1; i < totalFeatures; i++)
+    {
+      avgDiameter += equivalentDiameters[i];
+    }
+    if(totalFeatures > 1)
+    {
+      avgDiameter /= static_cast<float32>(totalFeatures - 1);
+    }
+    m_MessageHandler(IFilter::Message::Type::Info, fmt::format("Feature Average Diameter: '{}'", avgDiameter));
+
+    for(usize i = 1; i < totalFeatures; i++)
+    {
+      radii[i] = equivalentDiameters[i] * multiplesOfAverage;
+    }
+    binSize = avgDiameter;
+  }
+  else
+  {
+    // Feature 0 is the background/unassigned feature: it gets no search radius so it is never a search source.
+    const float32 searchRadius = m_InputValues->SearchRadius;
+    std::fill(radii.begin() + 1, radii.end(), searchRadius);
+    binSize = searchRadius;
+  }
+
+  // Place each feature's centroid into a bin in the normalized 3D space (normalized by binSize)
   std::vector<int64> bins(3 * totalFeatures, 0);
   FloatVec3 origin = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry)->getOrigin();
   for(usize i = 1; i < totalFeatures; i++)
@@ -245,23 +284,30 @@ Result<> ComputeNeighborhoods::operator()()
     const float32 x = centroids[3 * i];
     const float32 y = centroids[3 * i + 1];
     const float32 z = centroids[3 * i + 2];
-    bins[3 * i] = static_cast<int64>((x - origin[0]) / avgDiameter);     // x-Bin
-    bins[3 * i + 1] = static_cast<int64>((y - origin[1]) / avgDiameter); // y-Bin
-    bins[3 * i + 2] = static_cast<int64>((z - origin[2]) / avgDiameter); // z-Bin
+    bins[3 * i] = static_cast<int64>((x - origin[0]) / binSize);     // x-Bin
+    bins[3 * i + 1] = static_cast<int64>((y - origin[1]) / binSize); // y-Bin
+    bins[3 * i + 2] = static_cast<int64>((z - origin[2]) / binSize); // z-Bin
   }
   if(m_ShouldCancel)
   {
     return {};
   }
+
+  // Feature 0 is the background/unassigned feature: it is excluded both as a search source (range starts at 1)
+  // and as a candidate (binToFeatures is built from feature 1 onward), so Neighborhoods[0] stays 0 and
+  // NeighborhoodList[0] stays empty.
   ParallelDataAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(Range(0, totalFeatures));
-  parallelAlgorithm.setParallelizationEnabled(true);
-  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, avgDiameter, multiplesOfAverage, m_ShouldCancel, progressMessageHelper));
+  parallelAlgorithm.setRange(Range(1, totalFeatures));
+  IParallelAlgorithm::AlgorithmStores algStores;
+  algStores.push_back(&centroids);
+  parallelAlgorithm.requireStoresInMemory(algStores);
+  parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, radii, binSize, m_ShouldCancel, progressMessageHelper));
 
   // Output Variables
   auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborhoodListArrayName);
-  // Set the vector for each list into the NeighborList Object
-  for(usize i = 1; i < totalFeatures; i++)
+  // Set the vector for each list into the NeighborList Object. Feature 0 gets an explicit empty list so the
+  // Neighborhoods[i] == NeighborhoodList[i].size() invariant holds at every index.
+  for(usize i = 0; i < totalFeatures; i++)
   {
     // Construct a shared vector<int32> through the std::vector<> copy constructor.
     const NeighborList<int32>::SharedVectorType sharedMisOrientationList(new std::vector<int32>(m_LocalNeighborhoodList[i]));
