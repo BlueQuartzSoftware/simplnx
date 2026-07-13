@@ -5,12 +5,17 @@
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
+#include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/CreateColorMapParameter.hpp"
 #include "simplnx/Parameters/GeneratedFileListParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/ColorTableUtilities.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -237,6 +242,49 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Write Stack", "[SimplnxCore][WriteImag
 
     validateOutputFiles(imageDims[0], offset, tempDir.name(), tempDir.path());
   }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Color table preflight validation", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({4, 4, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  // A 3-component array (invalid for color-table mode).
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "RGBInput", {1, 4, 4}, {3}, cellAmPtr->getId());
+  // A valid single-component mask array so the ArraySelectionParameter's own validation (which fires
+  // whenever 'mask_array_path' is active, i.e. whenever create_color_table is enabled) is satisfied and
+  // the preflight failure below is guaranteed to come from the '-27012' multi-component check, not from
+  // an unrelated empty-path parameter validation error.
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
+
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath arrayPath = geomPath.createChildPath("CellData").createChildPath("RGBInput");
+  const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
+
+  WriteImageFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(arrayPath));
+  args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ct_pf.tif"));
+  args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+  args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+  args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+  args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
+  args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

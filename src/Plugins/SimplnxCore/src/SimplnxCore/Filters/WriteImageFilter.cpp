@@ -8,13 +8,17 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Filter/Actions/EmptyAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
+#include "simplnx/Parameters/CreateColorMapParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Parameters/VectorParameter.hpp"
+#include "simplnx/Utilities/ColorTableUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -76,17 +80,41 @@ Parameters WriteImageFilter::parameters() const
   using ExtensionListType = std::unordered_set<std::string>;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "Selection for plane normal for writing the images (XY, XZ, or YZ)", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
+
+  params.insertSeparator(Parameters::Separator{"Output File Options"});
   params.insert(
       std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "Path to the output file to write.", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
   params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing multiple images", 0));
   params.insert(std::make_unique<Int32Parameter>(k_TotalIndexDigits_Key, "Total Number of Index Digits", "This is the total number of digits to use when generating the index", 3));
   params.insert(std::make_unique<StringParameter>(k_LeadingDigitCharacter_Key, "Fill Character", "The character to use for the leading digits if needed", "0"));
 
-  params.insertSeparator(Parameters::Separator{"Input Cell Data"});
+  params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(
       std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, ::k_ScalarPixelAllowedTypes));
+
+  params.insertSeparator(Parameters::Separator{"Color Table (Optional)"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateColorTable_Key, "Create Color Table",
+                                                                 "When enabled, the single-component input array is converted to RGB using the selected preset before writing.", false));
+  params.insert(
+      std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array", ColorTableUtilities::GetDefaultRGBPresetName()));
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign the masked color to 'bad' voxels", false));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the data array used to define voxels as good or bad.", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+  std::vector<uint8> defaultMask(3, 0);
+  params.insert(std::make_unique<VectorUInt8Parameter>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
+                                                       std::vector<std::string>{"Red", "Green", "Blue"}));
+
+  params.linkParameters(k_CreateColorTable_Key, k_SelectedPreset_Key, true);
+  // NOTE: k_UseMask_Key cannot itself be linked as a child of k_CreateColorTable_Key: it is a linkable
+  // group (it gates k_MaskArrayPath_Key/k_InvalidColorValue_Key below) and Parameters::linkParameters()
+  // forbids a group from being a child of another group. It therefore stays a top-level toggle, matching
+  // the same pattern used by CreateColorMapFilter's "Use Mask Array" parameter.
+  params.linkParameters(k_CreateColorTable_Key, k_MaskArrayPath_Key, true);
+  params.linkParameters(k_CreateColorTable_Key, k_InvalidColorValue_Key, true);
+  params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
+  params.linkParameters(k_UseMask_Key, k_InvalidColorValue_Key, true);
 
   return params;
 }
@@ -94,7 +122,8 @@ Parameters WriteImageFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType WriteImageFilter::parametersVersion() const
 {
-  return 1;
+  // Version 2: Added optional inline color-table parameters (create_color_table, selected_preset, use_mask, mask_array_path, invalid_color_value).
+  return 2;
 }
 
 //------------------------------------------------------------------------------
@@ -114,6 +143,9 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto totalDigits = filterArgs.value<int32>(k_TotalIndexDigits_Key);
   auto fillChar = filterArgs.value<StringParameter::ValueType>(k_LeadingDigitCharacter_Key);
+  auto createColorTable = filterArgs.value<bool>(k_CreateColorTable_Key);
+  auto useMask = filterArgs.value<bool>(k_UseMask_Key);
+  auto maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
 
   // Validate output file format is supported
   auto imageIOResult = CreateImageIO(filePath);
@@ -139,6 +171,25 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   {
     return {MakeErrorResult<OutputActions>(
         -27011, fmt::format("Unsupported data type '{}' for image writing. Supported types: int8, uint8, int16, uint16, int32, uint32, float32.", DataTypeToString(arrayDataType)))};
+  }
+
+  if(createColorTable)
+  {
+    // Color mapping requires a single-component scalar input; RGB is produced by the filter.
+    if(imageArray.getNumberOfComponents() != 1)
+    {
+      return {MakeErrorResult<OutputActions>(-27012, fmt::format("When 'Create Color Table' is enabled the input array must have a single component, but '{}' has {} components.",
+                                                                 imageArrayPath.toString(), imageArray.getNumberOfComponents()))};
+    }
+
+    if(useMask)
+    {
+      auto tupleValidityCheck = dataStructure.validateNumberOfTuples({imageArrayPath, maskArrayPath});
+      if(!tupleValidityCheck)
+      {
+        return {MakeErrorResult<OutputActions>(-27013, fmt::format("The input array and mask array must have equal tuple counts.\n{}", tupleValidityCheck.error()))};
+      }
+    }
   }
 
   const IDataStore& imageArrayStore = imageArray.getIDataStoreRef();
