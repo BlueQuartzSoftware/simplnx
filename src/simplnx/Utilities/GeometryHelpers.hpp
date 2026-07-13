@@ -1103,16 +1103,24 @@ using BoundingBoxFaces = std::unordered_set<BoundingBox3Df::faces_enum>;
 BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet);
 
 /**
- * @brief Adjusts one centroid for periodic bounding-box faces.
- * @param boundingBox Specifies spatial bounds.
- * @param faces Specifies touched periodic faces.
- * @param centroids Provides and receives XYZ feature centroids.
- * @param featureId Specifies the centroid tuple.
- * @return True when the feature crosses a periodic boundary.
- *
- * Centroid coordinates must use the bounding box's coordinate system.
+ * @brief Adjusts a feature's centroid for periodic (wrap-around) boundaries. For every axis on which the
+ * feature touches both opposing periodic faces, the centroid component is replaced with the minimum-image
+ * (largest-empty-gap) mean of the feature's vertex coordinates on that axis, rather than the naive
+ * arithmetic mean, which for a wrapped feature lands in the empty middle. Non-spanning axes are left
+ * untouched, and a domain-filling feature falls back to the arithmetic mean. The data is assumed to match
+ * the specified bounding box in shape as abstract shapes are not supported by this function.
+ * Returns true if the feature ID is periodic (any axis adjusted). Otherwise, returns false.
+ * @param boundingBox The bounding box of the whole geometry (the periodic domain).
+ * @param faces The set of bounding-box faces the feature's vertices touch.
+ * @param vertices The shared vertex coordinate store of the geometry.
+ * @param vertexSet The set of vertex indices belonging to this feature.
+ * @param centroids The per-feature centroid store to update (modified in place).
+ * @param featureId The feature whose centroid is adjusted.
+ * @return True when any centroid component was adjusted.
+ * @pre Vertex and centroid coordinates use the bounding box's coordinate system.
  */
-bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId);
+bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, const Float32AbstractDataStore& vertices,
+                                                    const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId);
 
 /**
  * @brief Adjusts feature centroids from periodic ImageGeom range arrays.
