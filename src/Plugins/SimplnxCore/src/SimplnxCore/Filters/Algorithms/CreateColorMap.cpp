@@ -6,31 +6,13 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
+#include <array>
+
 using namespace nx::core;
 
 namespace
 {
 constexpr usize k_ControlPointCompSize = 4;
-
-// -----------------------------------------------------------------------------
-usize findRightBinIndex(float32 nValue, const std::vector<float32>& binPoints)
-{
-  usize min = 0;
-  usize max = binPoints.size() - 1;
-  while(min < max)
-  {
-    const usize middle = (min + max) / 2;
-    if(nValue > binPoints[middle])
-    {
-      min = middle + 1;
-    }
-    else
-    {
-      max = middle;
-    }
-  }
-  return min;
-}
 
 /**
  * @brief The CreateColorMapImpl class implements a threaded algorithm that computes the RGB values
@@ -89,47 +71,13 @@ public:
         }
       }
 
-      // Normalize value
-      const float32 nValue = (static_cast<float32>(m_ArrayStore[i] - m_ArrayMin)) / static_cast<float32>((m_ArrayMax - m_ArrayMin));
+      // Normalize value (with min==max guard) and interpolate an RGB triple via the shared helper.
+      const float32 nValue = ColorTableUtilities::NormalizeValue(m_ArrayStore[i], m_ArrayMin, m_ArrayMax);
+      const std::array<uint8, 3> rgb = ColorTableUtilities::ComputeRgbFromControlPoints(nValue, m_BinPoints, m_ControlPoints, static_cast<usize>(m_NumControlColors));
 
-      int rightBinIndex = findRightBinIndex(nValue, m_BinPoints);
-
-      int leftBinIndex = rightBinIndex - 1;
-      if(leftBinIndex < 0)
-      {
-        leftBinIndex = 0;
-        rightBinIndex = 1;
-      }
-
-      // Find the fractional distance traveled between the beginning and end of the current color bin
-      float32 currFraction;
-      if(rightBinIndex < m_BinPoints.size())
-      {
-        currFraction = (nValue - m_BinPoints[leftBinIndex]) / (m_BinPoints[rightBinIndex] - m_BinPoints[leftBinIndex]);
-      }
-      else
-      {
-        currFraction = (nValue - m_BinPoints[leftBinIndex]) / (1 - m_BinPoints[leftBinIndex]);
-      }
-
-      // If the current color bin index is larger than the total number of control colors, automatically set the currentBinIndex
-      // to the last control color.
-      if(leftBinIndex > m_NumControlColors - 1)
-      {
-        leftBinIndex = m_NumControlColors - 1;
-      }
-
-      // Calculate the RGB values
-      const unsigned char redVal =
-          (m_ControlPoints[leftBinIndex * k_ControlPointCompSize + 1] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * k_ControlPointCompSize + 1] * currFraction) * 255;
-      const unsigned char greenVal =
-          (m_ControlPoints[leftBinIndex * k_ControlPointCompSize + 2] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * k_ControlPointCompSize + 2] * currFraction) * 255;
-      const unsigned char blueVal =
-          (m_ControlPoints[leftBinIndex * k_ControlPointCompSize + 3] * (1.0 - currFraction) + m_ControlPoints[rightBinIndex * k_ControlPointCompSize + 3] * currFraction) * 255;
-
-      m_ColorStore.setComponent(i, 0, redVal);
-      m_ColorStore.setComponent(i, 1, greenVal);
-      m_ColorStore.setComponent(i, 2, blueVal);
+      m_ColorStore.setComponent(i, 0, rgb[0]);
+      m_ColorStore.setComponent(i, 1, rgb[1]);
+      m_ColorStore.setComponent(i, 2, rgb[2]);
     }
   }
 
@@ -172,21 +120,8 @@ struct GenerateColorArrayFunctor
     // Control Points is a flattened 2D array with an unknown tuple count and a component size of 4
     const usize numControlColors = controlPoints.size() / k_ControlPointCompSize;
 
-    // Store A-values in binPoints vector.
-    std::vector<float32> binPoints;
-    binPoints.reserve(numControlColors);
-    for(usize i = 0; i < numControlColors; i++)
-    {
-      binPoints.push_back(controlPoints[i * k_ControlPointCompSize]);
-    }
-
-    // Normalize binPoints values
-    const float32 binMin = binPoints[0];
-    const float32 binMax = binPoints[binPoints.size() - 1];
-    for(auto& binPoint : binPoints)
-    {
-      binPoint = (binPoint - binMin) / (binMax - binMin);
-    }
+    // Store normalized A-values in binPoints via the shared helper.
+    std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
 
     auto& colorArray = dataStructure.getDataAs<UInt8Array>(inputValues->RgbArrayPath)->getDataStoreRef();
 

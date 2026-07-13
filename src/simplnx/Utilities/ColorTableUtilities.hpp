@@ -6,6 +6,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -109,5 +110,29 @@ SIMPLNX_EXPORT bool IsValidIndexedPreset(const nlohmann::json& preset);
  * @return
  */
 SIMPLNX_EXPORT bool IsValidIndexedPreset(const ColorPreset& preset);
+
+/**
+ * @brief Normalizes a scalar value into the [0, 1] range given the array min/max.
+ * Returns 0.0F when arrayMax == arrayMin to avoid a divide-by-zero on constant arrays.
+ */
+template <typename T>
+inline float32 NormalizeValue(T value, T arrayMin, T arrayMax)
+{
+  if(arrayMax == arrayMin)
+  {
+    return 0.0F;
+  }
+  return static_cast<float32>(value - arrayMin) / static_cast<float32>(arrayMax - arrayMin);
+}
+
+/**
+ * @brief Builds the normalized bin-point (A-value) vector from a flattened [A,R,G,B] control-point array.
+ */
+SIMPLNX_EXPORT std::vector<float32> NormalizeBinPoints(const std::vector<float32>& controlPoints);
+
+/**
+ * @brief Interpolates an RGB triple from the control points for a normalized value in [0, 1].
+ */
+SIMPLNX_EXPORT std::array<uint8, 3> ComputeRgbFromControlPoints(float32 normalizedValue, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, usize numControlColors);
 
 } // namespace nx::core::ColorTableUtilities

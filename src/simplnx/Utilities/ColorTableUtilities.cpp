@@ -5,7 +5,33 @@
 
 #include <fmt/format.h>
 
+#include <array>
+
 using namespace nx::core;
+
+namespace
+{
+constexpr nx::core::usize k_ControlPointCompSize = 4;
+
+nx::core::usize findRightBinIndex(nx::core::float32 nValue, const std::vector<nx::core::float32>& binPoints)
+{
+  nx::core::usize min = 0;
+  nx::core::usize max = binPoints.size() - 1;
+  while(min < max)
+  {
+    const nx::core::usize middle = (min + max) / 2;
+    if(nValue > binPoints[middle])
+    {
+      min = middle + 1;
+    }
+    else
+    {
+      max = middle;
+    }
+  }
+  return min;
+}
+} // namespace
 
 /* *****************************************************************************
  *
@@ -241,4 +267,56 @@ std::string ColorTableUtilities::GetDefaultRGBPresetName()
   }
 
   return {};
+}
+
+std::vector<float32> ColorTableUtilities::NormalizeBinPoints(const std::vector<float32>& controlPoints)
+{
+  const usize numControlColors = controlPoints.size() / k_ControlPointCompSize;
+  std::vector<float32> binPoints;
+  binPoints.reserve(numControlColors);
+  for(usize i = 0; i < numControlColors; i++)
+  {
+    binPoints.push_back(controlPoints[i * k_ControlPointCompSize]);
+  }
+  const float32 binMin = binPoints[0];
+  const float32 binMax = binPoints[binPoints.size() - 1];
+  for(auto& binPoint : binPoints)
+  {
+    binPoint = (binPoint - binMin) / (binMax - binMin);
+  }
+  return binPoints;
+}
+
+std::array<uint8, 3> ColorTableUtilities::ComputeRgbFromControlPoints(float32 nValue, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, usize numControlColors)
+{
+  int rightBinIndex = static_cast<int>(findRightBinIndex(nValue, binPoints));
+  int leftBinIndex = rightBinIndex - 1;
+  if(leftBinIndex < 0)
+  {
+    leftBinIndex = 0;
+    rightBinIndex = 1;
+  }
+
+  float32 currFraction = 0.0F;
+  if(static_cast<usize>(rightBinIndex) < binPoints.size())
+  {
+    currFraction = (nValue - binPoints[leftBinIndex]) / (binPoints[rightBinIndex] - binPoints[leftBinIndex]);
+  }
+  else
+  {
+    currFraction = (nValue - binPoints[leftBinIndex]) / (1 - binPoints[leftBinIndex]);
+  }
+
+  if(leftBinIndex > static_cast<int>(numControlColors) - 1)
+  {
+    leftBinIndex = static_cast<int>(numControlColors) - 1;
+  }
+
+  const uint8 redVal =
+      static_cast<uint8>((controlPoints[leftBinIndex * k_ControlPointCompSize + 1] * (1.0 - currFraction) + controlPoints[rightBinIndex * k_ControlPointCompSize + 1] * currFraction) * 255);
+  const uint8 greenVal =
+      static_cast<uint8>((controlPoints[leftBinIndex * k_ControlPointCompSize + 2] * (1.0 - currFraction) + controlPoints[rightBinIndex * k_ControlPointCompSize + 2] * currFraction) * 255);
+  const uint8 blueVal =
+      static_cast<uint8>((controlPoints[leftBinIndex * k_ControlPointCompSize + 3] * (1.0 - currFraction) + controlPoints[rightBinIndex * k_ControlPointCompSize + 3] * currFraction) * 255);
+  return {redVal, greenVal, blueVal};
 }
