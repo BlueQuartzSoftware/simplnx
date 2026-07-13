@@ -96,9 +96,9 @@ DataStructure BuildPeriodicToyMesh()
   auto& triangleGeom = *TriangleGeom::Create(dataStructure, k_TriangleGeometryName);
 
   // 16 vertices (x, y, z). Indices 0-2 -> F1, 3-6 -> F2, 7-10 -> F3, 11-15 -> F4.
-  const std::vector<float32> vertices = {1.0F, 1.0F, 0.0F, 2.0F, 1.0F, 0.0F, 3.0F, 1.0F, 0.0F,               // F1
-                                         0.0F, 2.0F, 0.0F, 0.0F, 2.0F, 0.0F, 4.0F, 2.0F, 0.0F, 4.0F, 2.0F, 0.0F, // F2
-                                         0.0F, 3.0F, 0.0F, 3.0F, 3.0F, 0.0F, 3.5F, 3.0F, 0.0F, 4.0F, 3.0F, 0.0F, // F3
+  const std::vector<float32> vertices = {1.0F, 1.0F, 0.0F, 2.0F, 1.0F, 0.0F, 3.0F, 1.0F, 0.0F,                                      // F1
+                                         0.0F, 2.0F, 0.0F, 0.0F, 2.0F, 0.0F, 4.0F, 2.0F, 0.0F, 4.0F, 2.0F, 0.0F,                    // F2
+                                         0.0F, 3.0F, 0.0F, 3.0F, 3.0F, 0.0F, 3.5F, 3.0F, 0.0F, 4.0F, 3.0F, 0.0F,                    // F3
                                          0.0F, 1.0F, 0.0F, 1.0F, 1.0F, 0.0F, 2.0F, 1.0F, 0.0F, 3.0F, 1.0F, 0.0F, 4.0F, 1.0F, 0.0F}; // F4
   const usize numVertices = vertices.size() / 3;
 
@@ -156,20 +156,18 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomCentroids: Periodic Minimum-Image Ora
 
   // Expected centroids per feature (feature 0 is empty -> default 0,0,0).
   // Non-periodic: plain arithmetic mean of each feature's unique vertices.
-  const std::vector<std::array<float32, 3>> nonPeriodicExpected = {
-      {0.0F, 0.0F, 0.0F},   // F0 empty
-      {2.0F, 1.0F, 0.0F},   // F1
-      {2.0F, 2.0F, 0.0F},   // F2 naive x = (0+0+4+4)/4
-      {2.625F, 3.0F, 0.0F}, // F3 naive x = (0+3+3.5+4)/4
-      {2.0F, 1.0F, 0.0F}};  // F4 naive x = (0+1+2+3+4)/5
+  const std::vector<std::array<float32, 3>> nonPeriodicExpected = {{0.0F, 0.0F, 0.0F},   // F0 empty
+                                                                   {2.0F, 1.0F, 0.0F},   // F1
+                                                                   {2.0F, 2.0F, 0.0F},   // F2 naive x = (0+0+4+4)/4
+                                                                   {2.625F, 3.0F, 0.0F}, // F3 naive x = (0+3+3.5+4)/4
+                                                                   {2.0F, 1.0F, 0.0F}};  // F4 naive x = (0+1+2+3+4)/5
 
   // Periodic: X component becomes the minimum-image mean on wrapping features; y/z unchanged.
-  const std::vector<std::array<float32, 3>> periodicExpected = {
-      {0.0F, 0.0F, 0.0F},   // F0 empty
-      {2.0F, 1.0F, 0.0F},   // F1 does not span -> unchanged
-      {0.0F, 2.0F, 0.0F},   // F2 symmetric wrap -> seam at x=0
-      {3.625F, 3.0F, 0.0F}, // F3 asymmetric wrap -> largest-gap mean (old code -> 4.625, out of bounds)
-      {2.0F, 1.0F, 0.0F}};  // F4 domain-filling -> arithmetic-mean fallback
+  const std::vector<std::array<float32, 3>> periodicExpected = {{0.0F, 0.0F, 0.0F},   // F0 empty
+                                                                {2.0F, 1.0F, 0.0F},   // F1 does not span -> unchanged
+                                                                {0.0F, 2.0F, 0.0F},   // F2 symmetric wrap -> seam at x=0
+                                                                {3.625F, 3.0F, 0.0F}, // F3 asymmetric wrap -> largest-gap mean (old code -> 4.625, out of bounds)
+                                                                {2.0F, 1.0F, 0.0F}};  // F4 domain-filling -> arithmetic-mean fallback
 
   const bool isPeriodic = GENERATE(false, true);
   const auto& expected = isPeriodic ? periodicExpected : nonPeriodicExpected;

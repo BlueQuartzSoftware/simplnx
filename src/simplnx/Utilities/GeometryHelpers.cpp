@@ -314,17 +314,17 @@ float32 PeriodicMean1D(const std::vector<float32>& coords, float32 domainMin, fl
 }
 } // namespace
 
-bool AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, const Float32AbstractDataStore& vertices,
-                                     const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId)
+bool AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet,
+                                     Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId)
 {
   bool isPeriodic = false;
   const auto minPoint = boundingBox.getMinPoint();
   const auto maxPoint = boundingBox.getMaxPoint();
 
   // left/right => X (axis 0), top/bottom => Y (axis 1), front/back => Z (axis 2)
-  const std::array<std::pair<BoundingBox3Df::faces_enum, BoundingBox3Df::faces_enum>, 3> axisFaces = {
-      std::make_pair(BoundingBox3Df::faces_enum::left, BoundingBox3Df::faces_enum::right), std::make_pair(BoundingBox3Df::faces_enum::top, BoundingBox3Df::faces_enum::bottom),
-      std::make_pair(BoundingBox3Df::faces_enum::front, BoundingBox3Df::faces_enum::back)};
+  const std::array<std::pair<BoundingBox3Df::faces_enum, BoundingBox3Df::faces_enum>, 3> axisFaces = {std::make_pair(BoundingBox3Df::faces_enum::left, BoundingBox3Df::faces_enum::right),
+                                                                                                      std::make_pair(BoundingBox3Df::faces_enum::top, BoundingBox3Df::faces_enum::bottom),
+                                                                                                      std::make_pair(BoundingBox3Df::faces_enum::front, BoundingBox3Df::faces_enum::back)};
 
   // For each axis on which the feature touches both opposing periodic faces, the naive arithmetic centroid
   // lands in the empty middle of the wrapped feature. Replace that component with the minimum-image mean
@@ -347,45 +347,5 @@ bool AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const Bo
   }
 
   return isPeriodic;
-}
-
-bool AdjustCentroidsForPeriodicFaces(const ImageGeom& imageGeom, const UInt64AbstractDataStore& xRanges, const UInt64AbstractDataStore& yRanges, const UInt64AbstractDataStore& zRanges,
-                                     Float32AbstractDataStore& centroids)
-{
-  const size_t xPoints = imageGeom.getNumXCells() - 1;
-  const size_t yPoints = imageGeom.getNumYCells() - 1;
-  const size_t zPoints = imageGeom.getNumZCells() - 1;
-
-  // Centroids are stored in physical coordinates (origin + (index + 0.5) * spacing), so the periodic
-  // wrap offset must also be a physical distance. Scale the (cell-count) span by the spacing on each
-  // axis; the offset is half the physical distance between the first and last cell centers. Using the
-  // raw cell count here would only be correct for unit spacing.
-  const auto spacing = imageGeom.getSpacing();
-
-  bool isAdjusted = false;
-
-  const usize numFeatures = xRanges.size() / 2;
-  for(usize featureId = 0; featureId < numFeatures; featureId++)
-  {
-    if(xRanges[featureId * 2 + 0] == 0 && xRanges[featureId * 2 + 1] == xPoints)
-    {
-      isAdjusted = true;
-      centroids[featureId * 3 + 0] += (static_cast<float32>(xPoints) * spacing[0]) / 2.0f;
-    }
-
-    if(yRanges[featureId * 2 + 0] == 0 && yRanges[featureId * 2 + 1] == yPoints)
-    {
-      isAdjusted = true;
-      centroids[featureId * 3 + 1] += (static_cast<float32>(yPoints) * spacing[1]) / 2.0f;
-    }
-
-    if(zRanges[featureId * 2 + 0] == 0 && zRanges[featureId * 2 + 1] == zPoints)
-    {
-      isAdjusted = true;
-      centroids[featureId * 3 + 2] += (static_cast<float32>(zPoints) * spacing[2]) / 2.0f;
-    }
-  }
-
-  return isAdjusted;
 }
 } // namespace nx::core::GeometryHelpers::Topology

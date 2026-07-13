@@ -978,9 +978,6 @@ BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& b
 bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, const Float32AbstractDataStore& vertices,
                                                     const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId);
 
-bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const ImageGeom& imageGeom, const UInt64AbstractDataStore& xRanges, const UInt64AbstractDataStore& yRanges, const UInt64AbstractDataStore& zRanges,
-                                                    Float32AbstractDataStore& centroids);
-
 /**
  * @brief
  * @tparam T
