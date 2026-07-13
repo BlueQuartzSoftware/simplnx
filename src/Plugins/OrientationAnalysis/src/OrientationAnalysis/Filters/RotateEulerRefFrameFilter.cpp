@@ -9,6 +9,9 @@
 
 #include "simplnx/Parameters/VectorParameter.hpp"
 
+#include <cmath>
+#include <limits>
+
 using namespace nx::core;
 
 namespace nx::core
@@ -82,6 +85,15 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
   nx::core::Result<OutputActions> resultOutputActions;
 
   std::vector<PreflightValue> preflightUpdatedValues;
+
+  // A zero-length axis cannot be normalized and would silently fill the Euler angles with NaN
+  const float32 axisMagnitude =
+      std::sqrt(pRotationAxisAngleValue[0] * pRotationAxisAngleValue[0] + pRotationAxisAngleValue[1] * pRotationAxisAngleValue[1] + pRotationAxisAngleValue[2] * pRotationAxisAngleValue[2]);
+  if(axisMagnitude < std::numeric_limits<float32>::epsilon())
+  {
+    return {MakeErrorResult<OutputActions>(-96200, fmt::format("Rotation axis <{}, {}, {}> has zero length. The ijk components must define a non-zero direction.", pRotationAxisAngleValue[0],
+                                                               pRotationAxisAngleValue[1], pRotationAxisAngleValue[2]))};
+  }
 
   resultOutputActions.value().modifiedActions.emplace_back(
       DataObjectModification{pCellEulerAnglesArrayPathValue, DataObjectModification::ModifiedType::Modified, dataStructure.getData(pCellEulerAnglesArrayPathValue)->getDataObjectType()});
