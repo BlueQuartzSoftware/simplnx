@@ -2,14 +2,14 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
-#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
-#include "simplnx/Utilities/GeometryHelpers.hpp"
 
 #include <nonstd/span.hpp>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <limits>
 #include <memory>
 
@@ -19,6 +19,8 @@ namespace
 {
 // Each bulk read contains 65,536 Feature IDs. This keeps the staging buffer cache-sized.
 constexpr usize k_ChunkTuples = 65536;
+constexpr double k_TwoPi = 6.283185307179586;
+constexpr double k_DegenerateResultant = 1.0e-6;
 } // namespace
 
 ComputeFeatureCentroids::ComputeFeatureCentroids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
@@ -62,6 +64,8 @@ Result<> ComputeFeatureCentroids::operator()()
   std::vector<float64> kahanSum(featureElems3, 0.0);
   std::vector<float64> kahanComp(featureElems3, 0.0);
   std::vector<uint64> voxelCount(featureElems3, 0);
+  std::vector<float64> sumCos(featureElems3, 0.0);
+  std::vector<float64> sumSin(featureElems3, 0.0);
   std::vector<uint64> rangeX(featureElems2, 0);
   std::vector<uint64> rangeY(featureElems2, 0);
   std::vector<uint64> rangeZ(featureElems2, 0);
@@ -75,6 +79,7 @@ Result<> ComputeFeatureCentroids::operator()()
 
   const FloatVec3 origin = imageGeom.getOrigin();
   const FloatVec3 spacing = imageGeom.getSpacing();
+  const std::array<double, 3> domainLength = {static_cast<double>(xPoints) * spacing[0], static_cast<double>(yPoints) * spacing[1], static_cast<double>(zPoints) * spacing[2]};
   const usize totalVoxels = xPoints * yPoints * zPoints;
   const usize xySize = xPoints * yPoints;
 
@@ -129,6 +134,12 @@ Result<> ComputeFeatureCentroids::operator()()
         kahanComp[fi] = (temp - kahanSum[fi]) - componentValue;
         kahanSum[fi] = temp;
         voxelCount[fi]++;
+        if(m_InputValues->IsPeriodic)
+        {
+          const double phase = k_TwoPi * (voxelCoords[c] - static_cast<double>(origin[c])) / domainLength[c];
+          sumCos[fi] += std::cos(phase);
+          sumSin[fi] += std::sin(phase);
+        }
       }
     }
   }
@@ -146,36 +157,51 @@ Result<> ComputeFeatureCentroids::operator()()
       }
     }
   }
+  if(m_InputValues->IsPeriodic)
+  {
+    m_MessageHandler({IFilter::Message::Type::Info, "Checking for periodic data."});
+    const std::array<const std::vector<uint64>*, 3> rangeStores = {&rangeX, &rangeY, &rangeZ};
+    const std::array<usize, 3> dims = {xPoints, yPoints, zPoints};
+    bool anyAdjusted = false;
+    for(usize featureId = 0; featureId < totalFeatures; featureId++)
+    {
+      for(usize axis = 0; axis < 3; axis++)
+      {
+        const usize axisIdx = featureId * 3 + axis;
+        if(voxelCount[axisIdx] == 0)
+        {
+          continue;
+        }
+        const auto& rangeStore = *rangeStores[axis];
+        const bool spansExtent = rangeStore[featureId * 2] == 0 && rangeStore[featureId * 2 + 1] == dims[axis] - 1;
+        if(!spansExtent)
+        {
+          continue;
+        }
+        const double resultant = std::sqrt(sumCos[axisIdx] * sumCos[axisIdx] + sumSin[axisIdx] * sumSin[axisIdx]) / static_cast<double>(voxelCount[axisIdx]);
+        if(resultant < k_DegenerateResultant)
+        {
+          continue;
+        }
+        double phase = std::atan2(sumSin[axisIdx], sumCos[axisIdx]);
+        if(phase < 0.0)
+        {
+          phase += k_TwoPi;
+        }
+        centroidsBuf[axisIdx] = static_cast<float32>(static_cast<double>(origin[axis]) + (phase / k_TwoPi) * domainLength[axis]);
+        anyAdjusted = true;
+      }
+    }
+    if(anyAdjusted)
+    {
+      m_MessageHandler({IFilter::Message::Type::Info, "ComputeFeatureCentroids adjusted centroids of features that wrap the periodic boundary."});
+    }
+  }
+
   Result<> writeResult = centroids.copyFromBuffer(0, nonstd::span<const float32>(centroidsBuf.data(), featureElems3));
   if(writeResult.invalid())
   {
     return writeResult;
-  }
-
-  if(m_InputValues->IsPeriodic)
-  {
-    m_MessageHandler({IFilter::Message::Type::Info, "Checking for periodic data."});
-
-    ShapeType tupleShape{totalFeatures};
-    ShapeType componentShape{2};
-    // Periodic adjustment receives plain stores because these feature ranges never enter the DataStructure.
-    auto rangeXStorePtr = std::make_shared<DataStore<uint64>>(tupleShape, componentShape, uint64{0});
-    auto rangeYStorePtr = std::make_shared<DataStore<uint64>>(tupleShape, componentShape, uint64{0});
-    auto rangeZStorePtr = std::make_shared<DataStore<uint64>>(tupleShape, componentShape, uint64{0});
-    auto& rangeXStoreRef = *rangeXStorePtr;
-    auto& rangeYStoreRef = *rangeYStorePtr;
-    auto& rangeZStoreRef = *rangeZStorePtr;
-    for(usize i = 0; i < featureElems2; i++)
-    {
-      rangeXStoreRef[i] = rangeX[i];
-      rangeYStoreRef[i] = rangeY[i];
-      rangeZStoreRef[i] = rangeZ[i];
-    }
-
-    if(GeometryHelpers::Topology::AdjustCentroidsForPeriodicFaces(imageGeom, rangeXStoreRef, rangeYStoreRef, rangeZStoreRef, centroids))
-    {
-      m_MessageHandler({IFilter::Message::Type::Info, "ComputeFeatureCentroids found Non-Contiguous Features. Centroids may require additional checks."});
-    }
   }
 
   return {};

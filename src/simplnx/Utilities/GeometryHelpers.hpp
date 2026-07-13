@@ -1123,18 +1123,6 @@ bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundi
                                                     const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId);
 
 /**
- * @brief Adjusts feature centroids from periodic ImageGeom range arrays.
- * @param imageGeom Specifies spatial bounds and dimensions.
- * @param xRanges Provides minimum and maximum X indexes per feature.
- * @param yRanges Provides minimum and maximum Y indexes per feature.
- * @param zRanges Provides minimum and maximum Z indexes per feature.
- * @param centroids Provides and receives XYZ feature centroids.
- * @return True when any feature crosses a periodic boundary.
- */
-bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const ImageGeom& imageGeom, const UInt64AbstractDataStore& xRanges, const UInt64AbstractDataStore& yRanges, const UInt64AbstractDataStore& zRanges,
-                                                    Float32AbstractDataStore& centroids);
-
-/**
  * @brief Computes arithmetic vertex centroids for mesh elements.
  * @tparam T Specifies mesh-index type.
  * @param elemList Provides element vertex indexes.
