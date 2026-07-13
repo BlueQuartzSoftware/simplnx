@@ -58,6 +58,10 @@ Result<> ComputeTriangleGeomCentroids::operator()()
 
   for(MeshIndexType i = 0; i < numTriangles; i++)
   {
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
     const int32 faceLabel0 = faceLabels[2 * i + 0];
     const int32 faceLabel1 = faceLabels[2 * i + 1];
     if(faceLabel0 > 0)
@@ -78,7 +82,11 @@ Result<> ComputeTriangleGeomCentroids::operator()()
 
   for(MeshIndexType i = 0; i < numFeatures; i++)
   {
-    std::set<MeshIndexType> vertexSet = vertexSets[i];
+    if(m_ShouldCancel)
+    {
+      return {};
+    }
+    const std::set<MeshIndexType>& vertexSet = vertexSets[i];
     auto periodicFaces = GeometryHelpers::Topology::FindElementPeriodicFaces(boundingBox, vertexCoords, vertexSet);
 
     for(const auto& vert : vertexSets[i])
@@ -95,10 +103,11 @@ Result<> ComputeTriangleGeomCentroids::operator()()
 
       if(m_InputValues->IsPeriodic)
       {
-        if(GeometryHelpers::Topology::AdjustCentroidsForPeriodicFaces(boundingBox, periodicFaces, centroids, i))
+        if(GeometryHelpers::Topology::AdjustCentroidsForPeriodicFaces(boundingBox, periodicFaces, vertexCoords, vertexSets[i], centroids, i))
         {
-          IFilter::Message warningMsg{IFilter::Message::Type::Info, fmt::format("Feature ID {} may be periodic. Manual review may be necessary.", i)};
-          m_MessageHandler.m_Callback(warningMsg);
+          // Use the MessageHandler's call operator (which guards against an empty callback) rather than
+          // invoking m_Callback directly, which throws std::bad_function_call when no handler is installed.
+          m_MessageHandler(IFilter::Message{IFilter::Message::Type::Info, fmt::format("Feature ID {} may be periodic. Manual review may be necessary.", i)});
         }
       }
     }
