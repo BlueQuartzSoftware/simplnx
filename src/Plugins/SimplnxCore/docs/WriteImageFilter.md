@@ -42,6 +42,18 @@ The *Plane* parameter controls which orthogonal plane is used when writing a 3D 
 
 The *Total Number of Index Digits* and *Fill Character* parameters control the numeric suffix applied to each slice filename. For example, 3 total digits with a fill character of `0` produces `slice_000.tif`, `slice_001.tif`, etc.
 
+### Flip Output Image (Optional)
+
+The *Flip Output Image* option optionally mirrors each image immediately before it is written to disk:
+
+- **None**: No flip is applied (default).
+- **Flip About X Axis**: Reverses the row order, mirroring the image top-to-bottom.
+- **Flip About Y Axis**: Reverses the pixel order within each row, mirroring the image left-to-right.
+
+The flip is applied uniformly to every image the filter writes: it works with both the raw-pixel-write path and the color-table path (see *Inline Color Table* below), and applies to slices generated from any of the three *Plane* selections (XY, XZ, YZ).
+
+This option only affects the written image files. The input Image Geometry and its data arrays in the DataStructure are left unmodified.
+
 ### Inline Color Table (Optional)
 
 Enabling *Create Color Table* converts a single-component **Data Array** to an RGB image using a selected color preset immediately before writing, so there is no need to run the Create Color Map **Filter** as a separate step beforehand. The results are identical to running Create Color Map followed by Write Image.
