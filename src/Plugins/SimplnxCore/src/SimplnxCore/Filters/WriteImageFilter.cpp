@@ -82,17 +82,19 @@ Parameters WriteImageFilter::parameters() const
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, GetAllNumericTypes()));
 
-  params.insertSeparator(Parameters::Separator{"Color Table (Optional)"});
-  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateColorTable_Key, "Create Color Table",
-                                                                 "When enabled, the single-component input array is converted to RGB using the selected preset before writing.", false));
-  params.insert(
-      std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array", ColorTableUtilities::GetDefaultRGBPresetName()));
+  params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign the masked color to 'bad' voxels", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the data array used to define voxels as good or bad.", DataPath(),
                                                           ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
   std::vector<uint8> defaultMask(3, 0);
   params.insert(std::make_unique<VectorUInt8Parameter>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
                                                        std::vector<std::string>{"Red", "Green", "Blue"}));
+
+  params.insertSeparator(Parameters::Separator{"Color Table (Optional)"});
+  params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateColorTable_Key, "Create Color Table",
+                                                                 "When enabled, the single-component input array is converted to RGB using the selected preset before writing.", false));
+  params.insert(
+      std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array", ColorTableUtilities::GetDefaultRGBPresetName()));
 
   params.insertSeparator(Parameters::Separator{"Output File Options"});
   params.insert(
