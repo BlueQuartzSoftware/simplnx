@@ -31,6 +31,21 @@ The *Plane* parameter controls which orthogonal plane is used when writing a 3D 
 
 The *Total Number of Index Digits* and *Fill Character* parameters control the numeric suffix applied to each slice filename. For example, 3 total digits with a fill character of `0` produces `slice_000.tif`, `slice_001.tif`, etc.
 
+### Inline Color Table (Optional)
+
+Enabling *Create Color Table* converts a single-component **Data Array** to an RGB image using a selected color preset immediately before writing, so there is no need to run the Create Color Map **Filter** as a separate step beforehand. The results are identical to running Create Color Map followed by Write Image.
+
+- *Select Preset...* chooses the color preset (for example grayscale, rainbow, or jet) that is applied to the array's values.
+- When *Create Color Table* is enabled, the **Input Image Data Array** must be a single-component numeric array. If the selected array has more than one component, the filter will fail during preflight.
+- Colorization is performed one slice at a time as each slice is streamed to disk; a full RGB copy of the volume is never held in memory. Only the minimum and maximum values across the entire input array (mask ignored) are computed up front and used to normalize each voxel's value against the preset's control points.
+- If every voxel in the input array has the same value (a constant array), every voxel normalizes to the same value and is colored using the preset's first control color.
+
+*Use Mask Array* is a separate, top-level toggle (it is not nested under *Create Color Table*) that assigns a fixed color to "bad" voxels instead of coloring them from the preset:
+
+- *Mask Array* selects a boolean or uint8, single-component array that marks each **Voxel** as good (*true* / non-zero) or bad (*false* / zero).
+- *Masked Color (RGB)* is the RGB triplet written for any voxel marked bad by the mask.
+- The mask is only applied when *Create Color Table* is also enabled. If *Create Color Table* is disabled, *Use Mask Array* and *Masked Color (RGB)* have no effect, since the filter writes the raw pixel data unchanged.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
