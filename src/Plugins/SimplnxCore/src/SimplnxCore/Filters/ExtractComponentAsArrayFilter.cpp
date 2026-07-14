@@ -38,7 +38,7 @@ Uuid ExtractComponentAsArrayFilter::uuid() const
 //------------------------------------------------------------------------------
 std::string ExtractComponentAsArrayFilter::humanName() const
 {
-  return "Extract/Remove Components";
+  return "Remove/Extract Components";
 }
 
 //------------------------------------------------------------------------------

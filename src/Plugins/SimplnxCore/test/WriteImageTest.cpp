@@ -261,15 +261,9 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Color table preflight validation", "[S
   imageGeomPtr->setCellData(*cellAmPtr);
   // A 3-component array (invalid for color-table mode).
   UnitTest::CreateTestDataArray<uint8>(dataStructure, "RGBInput", {1, 4, 4}, {3}, cellAmPtr->getId());
-  // A valid single-component mask array so the ArraySelectionParameter's own validation (which fires
-  // whenever 'mask_array_path' is active, i.e. whenever create_color_table is enabled) is satisfied and
-  // the preflight failure below is guaranteed to come from the '-27012' multi-component check, not from
-  // an unrelated empty-path parameter validation error.
-  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath arrayPath = geomPath.createChildPath("CellData").createChildPath("RGBInput");
-  const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
 
   WriteImageFilter filter;
   Arguments args;
@@ -283,7 +277,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Color table preflight validation", "[S
   args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
   args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
   args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
-  args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+  args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -311,18 +305,8 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table matches Create Colo
   {
     scalarStore[i] = static_cast<float32>(i); // 0..15 ramp
   }
-  // The Mask Array parameter is linked to 'Create Color Table' and is therefore validated (non-empty)
-  // whenever color-table mode is on, even with use_mask=false. Provide a valid single-component mask.
-  auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
-  auto& maskStore = maskPtr->getDataStoreRef();
-  for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
-  {
-    maskStore[i] = true;
-  }
-
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
-  const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
 
   // (A) Inline color-table write.
   ScopedTempDir inlineDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
@@ -339,7 +323,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table matches Create Colo
     args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
     args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
     args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
-    args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+    args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
     args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -537,15 +521,8 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table mask and constant-a
     {
       scalarStore[i] = 5.0F; // constant -> arrayMin == arrayMax
     }
-    auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
-    auto& maskStore = maskPtr->getDataStoreRef();
-    for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
-    {
-      maskStore[i] = true;
-    }
 
     const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
-    const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
 
     // Expected color: normalized value of a constant array is 0.0 -> the first control color of the preset.
     auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(presetName);
@@ -568,7 +545,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table mask and constant-a
       args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
       args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
       args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
-      args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+      args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
       args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
 
       auto preflightResult = filter.preflight(dataStructure, args);

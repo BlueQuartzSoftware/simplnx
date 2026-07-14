@@ -107,12 +107,12 @@ Parameters WriteImageFilter::parameters() const
                                                        std::vector<std::string>{"Red", "Green", "Blue"}));
 
   params.linkParameters(k_CreateColorTable_Key, k_SelectedPreset_Key, true);
-  // NOTE: k_UseMask_Key cannot itself be linked as a child of k_CreateColorTable_Key: it is a linkable
-  // group (it gates k_MaskArrayPath_Key/k_InvalidColorValue_Key below) and Parameters::linkParameters()
-  // forbids a group from being a child of another group. It therefore stays a top-level toggle, matching
-  // the same pattern used by CreateColorMapFilter's "Use Mask Array" parameter.
-  params.linkParameters(k_CreateColorTable_Key, k_MaskArrayPath_Key, true);
-  params.linkParameters(k_CreateColorTable_Key, k_InvalidColorValue_Key, true);
+  // NOTE: The mask array and masked color are gated by k_UseMask_Key ONLY, since the mask is optional
+  // and independent of whether a color table is being created. k_UseMask_Key cannot itself be linked
+  // as a child of k_CreateColorTable_Key: it is a linkable group (it gates k_MaskArrayPath_Key/
+  // k_InvalidColorValue_Key below) and Parameters::linkParameters() forbids a group from being a child
+  // of another group. It therefore stays a top-level toggle, matching the same pattern used by
+  // CreateColorMapFilter's "Use Mask Array" parameter.
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
   params.linkParameters(k_UseMask_Key, k_InvalidColorValue_Key, true);
 
