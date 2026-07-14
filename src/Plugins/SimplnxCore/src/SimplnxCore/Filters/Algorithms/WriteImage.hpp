@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
 
 #include <filesystem>
 #include <string>
@@ -27,6 +28,7 @@ struct SIMPLNXCORE_EXPORT WriteImageInputValues
   bool useMask = false;
   DataPath maskArrayPath;
   std::vector<uint8> invalidColor; ///< size 3, RGB
+  ImageFlipTransform flipMode = ImageFlipTransform::None;
 };
 
 /**

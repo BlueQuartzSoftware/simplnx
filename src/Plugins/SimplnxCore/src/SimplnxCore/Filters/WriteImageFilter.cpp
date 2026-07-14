@@ -20,6 +20,7 @@
 #include "simplnx/Parameters/StringParameter.hpp"
 #include "simplnx/Parameters/VectorParameter.hpp"
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
+#include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
@@ -76,6 +77,10 @@ Parameters WriteImageFilter::parameters() const
   using ExtensionListType = std::unordered_set<std::string>;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "Selection for plane normal for writing the images (XY, XZ, or YZ)", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_FlipMode_Key, "Flip Output Image",
+                                                   "Optionally flip each output image about the X or Y axis before writing. This affects only the written image files; the input Image Geometry and "
+                                                   "its data are not modified.",
+                                                   0, ChoicesParameter::Choices{"None", "Flip About X Axis", "Flip About Y Axis"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
@@ -121,7 +126,8 @@ IFilter::VersionType WriteImageFilter::parametersVersion() const
 {
   // Version 2: Added optional inline color-table parameters (create_color_table, selected_preset, use_mask, mask_array_path, invalid_color_value).
   // Version 3: Widened input array to all numeric types (color-table mode colorizes any numeric type).
-  return 3;
+  // Version 4: Added optional output-image flip (flip_mode).
+  return 4;
 }
 
 //------------------------------------------------------------------------------
@@ -258,6 +264,7 @@ Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
   inputValues.maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.invalidColor = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);
+  inputValues.flipMode = static_cast<ImageFlipTransform>(filterArgs.value<ChoicesParameter::ValueType>(k_FlipMode_Key));
 
   return WriteImage(dataStructure, messageHandler, shouldCancel, inputValues)();
 }

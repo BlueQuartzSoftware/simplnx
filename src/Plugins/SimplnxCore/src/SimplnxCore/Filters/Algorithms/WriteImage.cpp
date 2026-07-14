@@ -1,6 +1,7 @@
 #include "WriteImage.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
@@ -33,6 +34,40 @@ template <typename T>
 void WriteElementAs(uint8* data, usize byteOffset, T value)
 {
   std::memcpy(data + byteOffset, &value, sizeof(T));
+}
+
+// Flips a packed row-major 2D image buffer in place. pixelStrideBytes = numComponents * bytesPerComponent.
+void ApplyImageFlip(std::vector<uint8>& buffer, usize width, usize height, usize pixelStrideBytes, ImageFlipTransform flip)
+{
+  if(flip == ImageFlipTransform::None || width == 0 || height == 0)
+  {
+    return;
+  }
+  const usize rowBytes = width * pixelStrideBytes;
+  if(flip == ImageFlipTransform::FlipAboutXAxis)
+  {
+    // Reverse row order (mirror top-to-bottom).
+    for(usize y = 0; y < height / 2; ++y)
+    {
+      uint8* rowTop = buffer.data() + y * rowBytes;
+      uint8* rowBot = buffer.data() + (height - 1 - y) * rowBytes;
+      std::swap_ranges(rowTop, rowTop + rowBytes, rowBot);
+    }
+  }
+  else if(flip == ImageFlipTransform::FlipAboutYAxis)
+  {
+    // Reverse pixel order within each row (mirror left-to-right).
+    for(usize y = 0; y < height; ++y)
+    {
+      uint8* row = buffer.data() + y * rowBytes;
+      for(usize x = 0; x < width / 2; ++x)
+      {
+        uint8* pixL = row + x * pixelStrideBytes;
+        uint8* pixR = row + (width - 1 - x) * pixelStrideBytes;
+        std::swap_ranges(pixL, pixL + pixelStrideBytes, pixR);
+      }
+    }
+  }
 }
 
 /**
@@ -294,6 +329,9 @@ Result<> WriteImage::operator()()
       return ConvertResult(std::move(atomicFileResult));
     }
     AtomicFile atomicFile = std::move(atomicFileResult.value());
+
+    const usize pixelStrideBytes = metadata.numComponents * GetDataTypeSize(metadata.dataType);
+    ApplyImageFlip(sliceBuffer, metadata.width, metadata.height, pixelStrideBytes, m_InputValues.flipMode);
 
     auto writeResult = imageIO->writePixelData(atomicFile.tempFilePath(), sliceBuffer, metadata);
     if(writeResult.invalid())

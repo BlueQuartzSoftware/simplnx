@@ -693,3 +693,228 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table mask and constant-a
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 }
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Flip output image about X or Y axis", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  // WriteImageFilter flip_mode ChoicesParameter index values.
+  constexpr uint64 k_FlipNone = 0;
+  constexpr uint64 k_FlipAboutX = 1;
+  constexpr uint64 k_FlipAboutY = 2;
+
+  // Tiny asymmetric 3x2x1 (X,Y,Z) single-component uint8 image:
+  //   row y=0: 0  1  2
+  //   row y=1: 10 11 12
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  // Writes the tiny 3x2x1 image to a fresh temp dir as a PNG with the given flip mode, reads it back
+  // via ReadImageStackFilter, and returns the read-back single-component pixel values in row-major
+  // (y then x) order: {row0[0], row0[1], row0[2], row1[0], row1[1], row1[2]}.
+  auto writeAndReadBackFlip = [&](uint64 flipMode) -> std::array<uint8, 6> {
+    DataStructure dataStructure;
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions({3, 2, 1});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 2, 3}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, 2, 3}, {1}, cellAmPtr->getId());
+    auto& scalarStore = scalarPtr->getDataStoreRef();
+    const std::array<uint8, 6> pixelValues{0, 1, 2, 10, 11, 12};
+    for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+    {
+      scalarStore[i] = pixelValues[i];
+    }
+
+    ScopedTempDir tempDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+    {
+      WriteImageFilter filter;
+      Arguments args;
+      args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+      args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+      args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.png"));
+      args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+      args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+      args.insertOrAssign(WriteImageFilter::k_FlipMode_Key, std::make_any<ChoicesParameter::ValueType>(flipMode));
+
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+
+    DataStructure readDs;
+    ReadImageStackFilter reader;
+    GeneratedFileListParameter::ValueType fileList;
+    fileList.inputPath = tempDir.path().string();
+    fileList.startIndex = 0;
+    fileList.endIndex = 0;
+    fileList.incrementIndex = 1;
+    fileList.fileExtension = ".png";
+    fileList.filePrefix = "slice_";
+    fileList.fileSuffix = "";
+    fileList.paddingDigits = 3;
+    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+    Arguments rArgs;
+    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+    auto readerPreflight = reader.preflight(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+    auto readerExecute = reader.execute(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+
+    const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+    const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+    REQUIRE(readArrayPtr != nullptr);
+    const auto& readStore = readArrayPtr->getDataStoreRef();
+    const usize readComps = readArrayPtr->getNumberOfComponents();
+    // Confirmed by manual run: a single-channel (grayscale) PNG reads back as 1 component. Compare
+    // only the first channel regardless, so the assertion stays meaningful if a reader ever widens it.
+    REQUIRE(readStore.getNumberOfTuples() == 6);
+
+    std::array<uint8, 6> result{};
+    for(usize i = 0; i < 6; i++)
+    {
+      result[i] = readStore.getValue(i * readComps + 0);
+    }
+    return result;
+  };
+
+  SECTION("None: rows unchanged")
+  {
+    const auto pixels = writeAndReadBackFlip(k_FlipNone);
+    REQUIRE(pixels == std::array<uint8, 6>{0, 1, 2, 10, 11, 12});
+  }
+
+  SECTION("FlipAboutXAxis: row order reversed (top-to-bottom mirror)")
+  {
+    const auto pixels = writeAndReadBackFlip(k_FlipAboutX);
+    REQUIRE(pixels == std::array<uint8, 6>{10, 11, 12, 0, 1, 2});
+  }
+
+  SECTION("FlipAboutYAxis: pixel order within each row reversed (left-to-right mirror)")
+  {
+    const auto pixels = writeAndReadBackFlip(k_FlipAboutY);
+    REQUIRE(pixels == std::array<uint8, 6>{2, 1, 0, 12, 11, 10});
+  }
+
+  DataStructure dataStructure;
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-table path", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  constexpr uint64 k_FlipNone = 0;
+  constexpr uint64 k_FlipAboutX = 1;
+
+  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  // Writes a 4x4x1 scalar ramp through the color-table path with the given flip mode and returns the
+  // read-back RGB image as a flat vector of 4*4*3 uint8 values in row-major (y then x) order.
+  auto writeColorAndReadBack = [&](uint64 flipMode) -> std::vector<uint8> {
+    DataStructure dataStructure;
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions({4, 4, 1});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+    auto& scalarStore = scalarPtr->getDataStoreRef();
+    for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+    {
+      scalarStore[i] = static_cast<float32>(i); // 0..15 ramp
+    }
+
+    ScopedTempDir tempDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+    {
+      WriteImageFilter filter;
+      Arguments args;
+      args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+      args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+      args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.tif"));
+      args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+      args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+      args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+      args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+      args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
+      args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+      args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+      args.insertOrAssign(WriteImageFilter::k_FlipMode_Key, std::make_any<ChoicesParameter::ValueType>(flipMode));
+
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+
+    DataStructure readDs;
+    ReadImageStackFilter reader;
+    GeneratedFileListParameter::ValueType fileList;
+    fileList.inputPath = tempDir.path().string();
+    fileList.startIndex = 0;
+    fileList.endIndex = 0;
+    fileList.incrementIndex = 1;
+    fileList.fileExtension = ".tif";
+    fileList.filePrefix = "slice_";
+    fileList.fileSuffix = "";
+    fileList.paddingDigits = 3;
+    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+    Arguments rArgs;
+    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+    auto readerPreflight = reader.preflight(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+    auto readerExecute = reader.execute(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+
+    const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+    const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+    REQUIRE(readArrayPtr != nullptr);
+    const auto& readStore = readArrayPtr->getDataStoreRef();
+    const usize readComps = readArrayPtr->getNumberOfComponents();
+    const usize numPixels = readStore.getNumberOfTuples();
+    REQUIRE(numPixels == 16);
+
+    std::vector<uint8> result(numPixels * 3);
+    for(usize p = 0; p < numPixels; p++)
+    {
+      for(usize c = 0; c < 3; c++)
+      {
+        result[p * 3 + c] = readStore.getValue(p * readComps + c);
+      }
+    }
+    return result;
+  };
+
+  const std::vector<uint8> noneImage = writeColorAndReadBack(k_FlipNone);
+  const std::vector<uint8> flipXImage = writeColorAndReadBack(k_FlipAboutX);
+
+  // Build the expected row-reversed image from the None result (4 rows of 4 pixels * 3 components)
+  // and compare against the FlipAboutXAxis result: this proves the flip composes with the color
+  // path without re-asserting the color math (already covered by the roundtrip tests above).
+  constexpr usize width = 4;
+  constexpr usize height = 4;
+  std::vector<uint8> expectedFlipXImage(noneImage.size());
+  for(usize y = 0; y < height; y++)
+  {
+    const usize srcRow = y;
+    const usize dstRow = height - 1 - y;
+    std::copy(noneImage.begin() + static_cast<std::ptrdiff_t>(srcRow * width * 3), noneImage.begin() + static_cast<std::ptrdiff_t>((srcRow + 1) * width * 3),
+              expectedFlipXImage.begin() + static_cast<std::ptrdiff_t>(dstRow * width * 3));
+  }
+  REQUIRE(flipXImage == expectedFlipXImage);
+
+  DataStructure dataStructure;
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
