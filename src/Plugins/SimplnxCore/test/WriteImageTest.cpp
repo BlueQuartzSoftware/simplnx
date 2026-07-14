@@ -1,11 +1,13 @@
 #include <catch2/catch.hpp>
 
+#include "SimplnxCore/Filters/CreateColorMapFilter.hpp"
 #include "SimplnxCore/Filters/ReadImageStackFilter.hpp"
 #include "SimplnxCore/Filters/WriteImageFilter.hpp"
 #include "SimplnxCore/SimplnxCore_test_dirs.hpp"
 
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/ChoicesParameter.hpp"
@@ -17,6 +19,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/ColorTableUtilities.hpp"
 
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <random>
@@ -287,4 +290,307 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Color table preflight validation", "[S
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table matches Create Color Map chain", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+
+  // Build a small single-slice XY volume with a known scalar ramp.
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({4, 4, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+  auto& scalarStore = scalarPtr->getDataStoreRef();
+  for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+  {
+    scalarStore[i] = static_cast<float32>(i); // 0..15 ramp
+  }
+  // The Mask Array parameter is linked to 'Create Color Table' and is therefore validated (non-empty)
+  // whenever color-table mode is on, even with use_mask=false. Provide a valid single-component mask.
+  auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
+  auto& maskStore = maskPtr->getDataStoreRef();
+  for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
+  {
+    maskStore[i] = true;
+  }
+
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+  const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
+
+  // (A) Inline color-table write.
+  ScopedTempDir inlineDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+  {
+    WriteImageFilter filter;
+    Arguments args;
+    args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+    args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(inlineDir.path() / "slice.tif"));
+    args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+    args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+    args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+    args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // (B) Reference: Create Color Map then plain Write Image of the RGB array.
+  {
+    CreateColorMapFilter ccm;
+    Arguments ccmArgs;
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(scalarPath));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_UseMask_Key, std::make_any<bool>(false));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("RGB"));
+    auto ccmPreflight = ccm.preflight(dataStructure, ccmArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.outputActions);
+    // NOTE: store the execute result before asserting; SIMPLNX_RESULT_REQUIRE_VALID expands its
+    // argument multiple times, so inlining ccm.execute(...) would re-run execute and fail because
+    // the RGB output array already exists on the second call.
+    auto ccmExecute = ccm.execute(dataStructure, ccmArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(ccmExecute.result);
+  }
+
+  const DataPath rgbPath = geomPath.createChildPath("CellData").createChildPath("RGB");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(rgbPath));
+  const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8Array>(rgbPath).getDataStoreRef();
+
+  // Read the inline-written slice back and compare pixel RGB to the Create Color Map result.
+  ScopedTempDir readDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+  DataStructure readDs;
+  {
+    ReadImageStackFilter reader;
+    GeneratedFileListParameter::ValueType fileList;
+    fileList.inputPath = inlineDir.path().string();
+    fileList.startIndex = 0;
+    fileList.endIndex = 0;
+    fileList.incrementIndex = 1;
+    fileList.fileExtension = ".tif";
+    fileList.filePrefix = "slice_";
+    fileList.fileSuffix = "";
+    fileList.paddingDigits = 3;
+    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+    Arguments rArgs;
+    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+    auto readerPreflight = reader.preflight(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+    auto readerExecute = reader.execute(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+  }
+
+  // Locate the single RGB image-data array created by the reader and compare tuple-by-tuple.
+  const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+  const auto& readCellAm = readGeom.getCellData();
+  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readCellAm->begin()->second.get());
+  REQUIRE(readArrayPtr != nullptr);
+  const auto& readStore = readArrayPtr->getDataStoreRef();
+
+  // ReadImageStackFilter reads the color TIFF back as a 3-component (RGB) uint8 array; compare only
+  // the R,G,B components per pixel so the assertion is robust if a reader ever emits RGBA.
+  const usize readComps = readArrayPtr->getNumberOfComponents();
+  const usize numPixels = readStore.getNumberOfTuples();
+  REQUIRE(numPixels == expectedRgbStore.getNumberOfTuples());
+  for(usize p = 0; p < numPixels; p++)
+  {
+    for(usize c = 0; c < 3; c++)
+    {
+      REQUIRE(readStore.getValue(p * readComps + c) == expectedRgbStore.getValue(p * 3 + c));
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table mask and constant-array handling", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+  const DataPath geomPath({"ImageGeometry"});
+
+  // Reads a single-slice color image back from a directory and returns the pointer to the RGB array.
+  auto readBackSlice = [&](const fs::path& dir, DataStructure& readDs) -> const UInt8Array* {
+    ReadImageStackFilter reader;
+    GeneratedFileListParameter::ValueType fileList;
+    fileList.inputPath = dir.string();
+    fileList.startIndex = 0;
+    fileList.endIndex = 0;
+    fileList.incrementIndex = 1;
+    fileList.fileExtension = ".tif";
+    fileList.filePrefix = "slice_";
+    fileList.fileSuffix = "";
+    fileList.paddingDigits = 3;
+    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+    Arguments rArgs;
+    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+    auto rPreflight = reader.preflight(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(rPreflight.outputActions);
+    auto rExecute = reader.execute(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(rExecute.result);
+    const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+    return dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+  };
+
+  SECTION("Masked voxels read back as the masked color")
+  {
+    const std::vector<uint8> maskedColor{10, 20, 30};
+
+    DataStructure dataStructure;
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions({4, 4, 1});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+    auto& scalarStore = scalarPtr->getDataStoreRef();
+    for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+    {
+      scalarStore[i] = static_cast<float32>(i);
+    }
+    // Mark voxels 0 and 5 as bad.
+    auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
+    auto& maskStore = maskPtr->getDataStoreRef();
+    for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
+    {
+      maskStore[i] = true;
+    }
+    maskStore[0] = false;
+    maskStore[5] = false;
+
+    const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+    const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
+
+    ScopedTempDir maskDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+    {
+      WriteImageFilter filter;
+      Arguments args;
+      args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+      args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+      args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(maskDir.path() / "slice.tif"));
+      args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+      args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+      args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+      args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+      args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(true));
+      args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+      args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(maskedColor));
+
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+
+    DataStructure readDs;
+    const UInt8Array* readArrayPtr = readBackSlice(maskDir.path(), readDs);
+    REQUIRE(readArrayPtr != nullptr);
+    const auto& readStore = readArrayPtr->getDataStoreRef();
+    const usize readComps = readArrayPtr->getNumberOfComponents();
+
+    // For an XY single slice, read pixel index equals voxel index; voxels 0 and 5 must be the masked color.
+    for(usize badPixel : {static_cast<usize>(0), static_cast<usize>(5)})
+    {
+      REQUIRE(readStore.getValue(badPixel * readComps + 0) == maskedColor[0]);
+      REQUIRE(readStore.getValue(badPixel * readComps + 1) == maskedColor[1]);
+      REQUIRE(readStore.getValue(badPixel * readComps + 2) == maskedColor[2]);
+    }
+    // A known-good voxel must NOT be the masked color.
+    const bool goodDiffers =
+        readStore.getValue(1 * readComps + 0) != maskedColor[0] || readStore.getValue(1 * readComps + 1) != maskedColor[1] || readStore.getValue(1 * readComps + 2) != maskedColor[2];
+    REQUIRE(goodDiffers);
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
+
+  SECTION("Constant-valued input maps every pixel to the first control color")
+  {
+    DataStructure dataStructure;
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions({4, 4, 1});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+    auto& scalarStore = scalarPtr->getDataStoreRef();
+    for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+    {
+      scalarStore[i] = 5.0F; // constant -> arrayMin == arrayMax
+    }
+    auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
+    auto& maskStore = maskPtr->getDataStoreRef();
+    for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
+    {
+      maskStore[i] = true;
+    }
+
+    const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+    const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
+
+    // Expected color: normalized value of a constant array is 0.0 -> the first control color of the preset.
+    auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(presetName);
+    SIMPLNX_RESULT_REQUIRE_VALID(controlPointsResult);
+    const std::vector<float32> controlPoints = controlPointsResult.value();
+    const std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
+    const std::array<uint8, 3> expectedColor = ColorTableUtilities::ComputeRgbFromControlPoints(0.0F, binPoints, controlPoints, controlPoints.size() / 4);
+
+    ScopedTempDir constDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+    {
+      WriteImageFilter filter;
+      Arguments args;
+      args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+      args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+      args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(constDir.path() / "slice.tif"));
+      args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+      args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+      args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+      args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+      args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
+      args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+      args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+
+    DataStructure readDs;
+    const UInt8Array* readArrayPtr = readBackSlice(constDir.path(), readDs);
+    REQUIRE(readArrayPtr != nullptr);
+    const auto& readStore = readArrayPtr->getDataStoreRef();
+    const usize readComps = readArrayPtr->getNumberOfComponents();
+    const usize numPixels = readStore.getNumberOfTuples();
+    REQUIRE(numPixels == 16);
+    for(usize p = 0; p < numPixels; p++)
+    {
+      REQUIRE(readStore.getValue(p * readComps + 0) == expectedColor[0]);
+      REQUIRE(readStore.getValue(p * readComps + 1) == expectedColor[1]);
+      REQUIRE(readStore.getValue(p * readComps + 2) == expectedColor[2]);
+    }
+
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  }
 }

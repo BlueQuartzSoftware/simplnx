@@ -243,6 +243,11 @@ Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.leadingDigitCharacter = filterArgs.value<StringParameter::ValueType>(k_LeadingDigitCharacter_Key);
   inputValues.imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   inputValues.imageDataArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
+  inputValues.createColorTable = filterArgs.value<bool>(k_CreateColorTable_Key);
+  inputValues.presetName = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);
+  inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.invalidColor = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);
 
   return WriteImage(dataStructure, messageHandler, shouldCancel, inputValues)();
 }
