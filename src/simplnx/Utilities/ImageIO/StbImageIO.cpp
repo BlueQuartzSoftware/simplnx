@@ -173,3 +173,9 @@ Result<> StbImageIO::writePixelData(const std::filesystem::path& filePath, std::
 
   return {};
 }
+
+// -----------------------------------------------------------------------------
+std::set<DataType> StbImageIO::supportedWriteDataTypes() const
+{
+  return {DataType::uint8};
+}

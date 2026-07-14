@@ -21,6 +21,7 @@ public:
   Result<ImageMetadata> readMetadata(const std::filesystem::path& filePath) const override;
   Result<> readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer) const override;
   Result<> writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const override;
+  std::set<DataType> supportedWriteDataTypes() const override;
 };
 
 } // namespace nx::core

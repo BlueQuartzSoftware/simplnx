@@ -7,6 +7,7 @@
 #include "simplnx/Utilities/ImageIO/ImageMetadata.hpp"
 
 #include <filesystem>
+#include <set>
 #include <span>
 
 namespace nx::core
@@ -69,6 +70,12 @@ public:
    * @return Empty Result on success, or error Result with library-provided message
    */
   virtual Result<> writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const = 0;
+
+  /**
+   * @brief Returns the set of pixel DataTypes this backend can WRITE for the formats it handles.
+   * Used by callers to validate a (format, dataType) combination before writing.
+   */
+  virtual std::set<DataType> supportedWriteDataTypes() const = 0;
 };
 
 } // namespace nx::core

@@ -436,3 +436,9 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
 
   return {};
 }
+
+// -----------------------------------------------------------------------------
+std::set<DataType> TiffImageIO::supportedWriteDataTypes() const
+{
+  return {DataType::uint8, DataType::uint16, DataType::float32};
+}

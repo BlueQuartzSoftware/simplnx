@@ -122,6 +122,159 @@ void validateOutputFiles(size_t numImages, uint64 offset, const std::string& tem
   REQUIRE(count == 0);
 }
 
+// Writes a single-slice scalar ramp of type T through the inline color-table path, then compares the
+// read-back RGB image tuple-by-tuple against an independent CreateColorMap -> RGB reference. The oracle
+// is the real CreateColorMap chain, so this asserts parity across every numeric input type.
+template <typename T>
+void RunColorRoundtripForType()
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+
+  // Build a small single-slice XY volume with a known scalar ramp of type T.
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({4, 4, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* scalarPtr = UnitTest::CreateTestDataArray<T>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+  auto& scalarStore = scalarPtr->getDataStoreRef();
+  for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+  {
+    scalarStore[i] = static_cast<T>(i); // 0..15 ramp
+  }
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  // (A) Inline color-table write.
+  ScopedTempDir inlineDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+  {
+    WriteImageFilter filter;
+    Arguments args;
+    args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+    args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(inlineDir.path() / "slice.tif"));
+    args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+    args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+    args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+    args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+    args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
+    args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+
+  // (B) Reference: Create Color Map then plain Write Image of the RGB array.
+  {
+    CreateColorMapFilter ccm;
+    Arguments ccmArgs;
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(scalarPath));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_UseMask_Key, std::make_any<bool>(false));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("RGB"));
+    auto ccmPreflight = ccm.preflight(dataStructure, ccmArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.outputActions);
+    // NOTE: store the execute result before asserting; SIMPLNX_RESULT_REQUIRE_VALID expands its
+    // argument multiple times, so inlining ccm.execute(...) would re-run execute and fail because
+    // the RGB output array already exists on the second call.
+    auto ccmExecute = ccm.execute(dataStructure, ccmArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(ccmExecute.result);
+  }
+
+  const DataPath rgbPath = geomPath.createChildPath("CellData").createChildPath("RGB");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(rgbPath));
+  const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8Array>(rgbPath).getDataStoreRef();
+
+  // Read the inline-written slice back and compare pixel RGB to the Create Color Map result.
+  DataStructure readDs;
+  {
+    ReadImageStackFilter reader;
+    GeneratedFileListParameter::ValueType fileList;
+    fileList.inputPath = inlineDir.path().string();
+    fileList.startIndex = 0;
+    fileList.endIndex = 0;
+    fileList.incrementIndex = 1;
+    fileList.fileExtension = ".tif";
+    fileList.filePrefix = "slice_";
+    fileList.fileSuffix = "";
+    fileList.paddingDigits = 3;
+    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+    Arguments rArgs;
+    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+    auto readerPreflight = reader.preflight(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+    auto readerExecute = reader.execute(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+  }
+
+  // Locate the single RGB image-data array created by the reader and compare tuple-by-tuple.
+  const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+  const auto& readCellAm = readGeom.getCellData();
+  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readCellAm->begin()->second.get());
+  REQUIRE(readArrayPtr != nullptr);
+  const auto& readStore = readArrayPtr->getDataStoreRef();
+
+  // ReadImageStackFilter reads the color TIFF back as a 3-component (RGB) uint8 array; compare only
+  // the R,G,B components per pixel so the assertion is robust if a reader ever emits RGBA.
+  const usize readComps = readArrayPtr->getNumberOfComponents();
+  const usize numPixels = readStore.getNumberOfTuples();
+  REQUIRE(numPixels == expectedRgbStore.getNumberOfTuples());
+  for(usize p = 0; p < numPixels; p++)
+  {
+    for(usize c = 0; c < 3; c++)
+    {
+      REQUIRE(readStore.getValue(p * readComps + c) == expectedRgbStore.getValue(p * 3 + c));
+    }
+  }
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// Builds a 4x4x1 image geometry with a single-component array of type T and runs WriteImageFilter
+// preflight (color table OFF) against the given output file name, returning the preflight result.
+template <typename T>
+IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName)
+{
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({4, 4, 1});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  UnitTest::CreateTestDataArray<T>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  WriteImageFilter filter;
+  Arguments args;
+  args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+  args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / fileName));
+  args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+  args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+  args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+  args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+  args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(ColorTableUtilities::GetDefaultRGBPresetName()));
+  args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
+  args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+  args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+
+  return filter.preflight(dataStructure, args);
+}
+
 } // namespace
 
 TEST_CASE("SimplnxCore::WriteImageFilter: Write Stack", "[SimplnxCore][WriteImageFilter]")
@@ -286,120 +439,89 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Color table preflight validation", "[S
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table matches Create Color Map chain", "[SimplnxCore][WriteImageFilter]")
+TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table across numeric input types", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+  DYNAMIC_SECTION("int8")
+  {
+    RunColorRoundtripForType<int8>();
+  }
+  DYNAMIC_SECTION("uint8")
+  {
+    RunColorRoundtripForType<uint8>();
+  }
+  DYNAMIC_SECTION("int16")
+  {
+    RunColorRoundtripForType<int16>();
+  }
+  DYNAMIC_SECTION("uint16")
+  {
+    RunColorRoundtripForType<uint16>();
+  }
+  DYNAMIC_SECTION("int32")
+  {
+    RunColorRoundtripForType<int32>();
+  }
+  DYNAMIC_SECTION("uint32")
+  {
+    RunColorRoundtripForType<uint32>();
+  }
+  DYNAMIC_SECTION("int64")
+  {
+    RunColorRoundtripForType<int64>();
+  }
+  DYNAMIC_SECTION("uint64")
+  {
+    RunColorRoundtripForType<uint64>();
+  }
+  DYNAMIC_SECTION("float32")
+  {
+    RunColorRoundtripForType<float32>();
+  }
+  DYNAMIC_SECTION("float64")
+  {
+    RunColorRoundtripForType<float64>();
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Format-aware write-type preflight", "[SimplnxCore][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
   UnitTest::LoadPlugins();
 
-  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+  // STB backend (.png/.jpg/.bmp) only writes uint8; TIFF backend writes uint8/uint16/float32.
+  {
+    auto result = RunFormatPreflightForType<float32>("fmt_f32.png");
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+  {
+    auto result = RunFormatPreflightForType<uint16>("fmt_u16.png");
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+  {
+    auto result = RunFormatPreflightForType<uint8>("fmt_u8.png");
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  {
+    auto result = RunFormatPreflightForType<float32>("fmt_f32.tif");
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  {
+    auto result = RunFormatPreflightForType<uint16>("fmt_u16.tif");
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  {
+    auto result = RunFormatPreflightForType<int32>("fmt_i32.tif");
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
 
-  // Build a small single-slice XY volume with a known scalar ramp.
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeomPtr->setDimensions({4, 4, 1});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
-  auto& scalarStore = scalarPtr->getDataStoreRef();
-  for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
-  {
-    scalarStore[i] = static_cast<float32>(i); // 0..15 ramp
-  }
-  const DataPath geomPath({"ImageGeometry"});
-  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
-
-  // (A) Inline color-table write.
-  ScopedTempDir inlineDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
-  {
-    WriteImageFilter filter;
-    Arguments args;
-    args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
-    args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(inlineDir.path() / "slice.tif"));
-    args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-    args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
-    args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
-    args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
-    args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
-    args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
-    args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
-
-    auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  }
-
-  // (B) Reference: Create Color Map then plain Write Image of the RGB array.
-  {
-    CreateColorMapFilter ccm;
-    Arguments ccmArgs;
-    ccmArgs.insertOrAssign(CreateColorMapFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
-    ccmArgs.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(scalarPath));
-    ccmArgs.insertOrAssign(CreateColorMapFilter::k_UseMask_Key, std::make_any<bool>(false));
-    ccmArgs.insertOrAssign(CreateColorMapFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
-    ccmArgs.insertOrAssign(CreateColorMapFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
-    ccmArgs.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("RGB"));
-    auto ccmPreflight = ccm.preflight(dataStructure, ccmArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.outputActions);
-    // NOTE: store the execute result before asserting; SIMPLNX_RESULT_REQUIRE_VALID expands its
-    // argument multiple times, so inlining ccm.execute(...) would re-run execute and fail because
-    // the RGB output array already exists on the second call.
-    auto ccmExecute = ccm.execute(dataStructure, ccmArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(ccmExecute.result);
-  }
-
-  const DataPath rgbPath = geomPath.createChildPath("CellData").createChildPath("RGB");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(rgbPath));
-  const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8Array>(rgbPath).getDataStoreRef();
-
-  // Read the inline-written slice back and compare pixel RGB to the Create Color Map result.
-  ScopedTempDir readDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
-  DataStructure readDs;
-  {
-    ReadImageStackFilter reader;
-    GeneratedFileListParameter::ValueType fileList;
-    fileList.inputPath = inlineDir.path().string();
-    fileList.startIndex = 0;
-    fileList.endIndex = 0;
-    fileList.incrementIndex = 1;
-    fileList.fileExtension = ".tif";
-    fileList.filePrefix = "slice_";
-    fileList.fileSuffix = "";
-    fileList.paddingDigits = 3;
-    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
-
-    Arguments rArgs;
-    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
-    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
-    auto readerPreflight = reader.preflight(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
-    auto readerExecute = reader.execute(readDs, rArgs);
-    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
-  }
-
-  // Locate the single RGB image-data array created by the reader and compare tuple-by-tuple.
-  const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
-  const auto& readCellAm = readGeom.getCellData();
-  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readCellAm->begin()->second.get());
-  REQUIRE(readArrayPtr != nullptr);
-  const auto& readStore = readArrayPtr->getDataStoreRef();
-
-  // ReadImageStackFilter reads the color TIFF back as a 3-component (RGB) uint8 array; compare only
-  // the R,G,B components per pixel so the assertion is robust if a reader ever emits RGBA.
-  const usize readComps = readArrayPtr->getNumberOfComponents();
-  const usize numPixels = readStore.getNumberOfTuples();
-  REQUIRE(numPixels == expectedRgbStore.getNumberOfTuples());
-  for(usize p = 0; p < numPixels; p++)
-  {
-    for(usize c = 0; c < 3; c++)
-    {
-      REQUIRE(readStore.getValue(p * readComps + c) == expectedRgbStore.getValue(p * 3 + c));
-    }
-  }
-
+  UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 

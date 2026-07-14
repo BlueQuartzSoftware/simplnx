@@ -3,6 +3,7 @@
 #include "SimplnxCore/Filters/Algorithms/WriteImage.hpp"
 
 #include "simplnx/Common/AtomicFile.hpp"
+#include "simplnx/Common/DataTypeUtilities.hpp"
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
@@ -33,11 +34,6 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-
-namespace
-{
-const std::set<DataType> k_ScalarPixelAllowedTypes = {DataType::int8, DataType::uint8, DataType::int16, DataType::uint16, DataType::int32, DataType::uint32, DataType::float32};
-} // namespace
 
 namespace nx::core
 {
@@ -81,18 +77,10 @@ Parameters WriteImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "Selection for plane normal for writing the images (XY, XZ, or YZ)", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
 
-  params.insertSeparator(Parameters::Separator{"Output File Options"});
-  params.insert(
-      std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "Path to the output file to write.", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
-  params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing multiple images", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_TotalIndexDigits_Key, "Total Number of Index Digits", "This is the total number of digits to use when generating the index", 3));
-  params.insert(std::make_unique<StringParameter>(k_LeadingDigitCharacter_Key, "Fill Character", "The character to use for the leading digits if needed", "0"));
-
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(
-      std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, ::k_ScalarPixelAllowedTypes));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Color Table (Optional)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateColorTable_Key, "Create Color Table",
@@ -105,6 +93,13 @@ Parameters WriteImageFilter::parameters() const
   std::vector<uint8> defaultMask(3, 0);
   params.insert(std::make_unique<VectorUInt8Parameter>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
                                                        std::vector<std::string>{"Red", "Green", "Blue"}));
+
+  params.insertSeparator(Parameters::Separator{"Output File Options"});
+  params.insert(
+      std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "Path to the output file to write.", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
+  params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing multiple images", 0));
+  params.insert(std::make_unique<Int32Parameter>(k_TotalIndexDigits_Key, "Total Number of Index Digits", "This is the total number of digits to use when generating the index", 3));
+  params.insert(std::make_unique<StringParameter>(k_LeadingDigitCharacter_Key, "Fill Character", "The character to use for the leading digits if needed", "0"));
 
   params.linkParameters(k_CreateColorTable_Key, k_SelectedPreset_Key, true);
   // NOTE: The mask array and masked color are gated by k_UseMask_Key ONLY, since the mask is optional
@@ -123,7 +118,8 @@ Parameters WriteImageFilter::parameters() const
 IFilter::VersionType WriteImageFilter::parametersVersion() const
 {
   // Version 2: Added optional inline color-table parameters (create_color_table, selected_preset, use_mask, mask_array_path, invalid_color_value).
-  return 2;
+  // Version 3: Widened input array to all numeric types (color-table mode colorizes any numeric type).
+  return 3;
 }
 
 //------------------------------------------------------------------------------
@@ -153,6 +149,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   {
     return {ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
   }
+  const std::unique_ptr<IImageIO>& imageIO = imageIOResult.value();
 
   // Validate fill character is a single character
   if(fillChar.size() != 1)
@@ -164,13 +161,24 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& imageArray = dataStructure.getDataRefAs<IDataArray>(imageArrayPath);
 
-  // Validate data type is in the supported set
   DataType arrayDataType = imageArray.getDataType();
-  const auto& allowedTypes = ::k_ScalarPixelAllowedTypes;
-  if(allowedTypes.find(arrayDataType) == allowedTypes.end())
+
+  if(!createColorTable)
   {
-    return {MakeErrorResult<OutputActions>(
-        -27011, fmt::format("Unsupported data type '{}' for image writing. Supported types: int8, uint8, int16, uint16, int32, uint32, float32.", DataTypeToString(arrayDataType)))};
+    // Direct pixel write: the array's own data type must be writable by the chosen format's backend.
+    const std::set<DataType> supportedTypes = imageIO->supportedWriteDataTypes();
+    if(supportedTypes.find(arrayDataType) == supportedTypes.end())
+    {
+      std::vector<std::string> typeNames;
+      for(DataType t : supportedTypes)
+      {
+        typeNames.push_back(DataTypeToString(t).str());
+      }
+      return {MakeErrorResult<OutputActions>(
+          -27011, fmt::format("The output file format for '{}' cannot write '{}' pixel data. Supported data types for this format: {}. Enable 'Create Color Table' to write this array as an RGB image "
+                              "instead.",
+                              filePath.filename().string(), DataTypeToString(arrayDataType), fmt::join(typeNames, ", ")))};
+    }
   }
 
   if(createColorTable)
