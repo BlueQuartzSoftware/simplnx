@@ -11,7 +11,9 @@
 
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
 
+#include <chrono>
 #include <concepts>
+#include <mutex>
 
 namespace nx::core
 {
@@ -19,8 +21,6 @@ namespace nx::core
 namespace convert_orientations_constants
 {
 // Error Code constants
-constexpr int32 k_InputRepresentationTypeError = -67001;
-constexpr int32 k_OutputRepresentationTypeError = -67002;
 constexpr int32 k_InputComponentDimensionError = -67003;
 constexpr int32 k_InputComponentCountError = -67004;
 constexpr int32 k_MatchingTypesError = -67005;
@@ -52,11 +52,30 @@ public:
 
   Result<> operator()();
 
+  /**
+   * @brief Returns true if the user has requested the filter be cancelled. Safe to call from the
+   * parallel convertor workers.
+   */
+  bool shouldCancel() const;
+
+  /**
+   * @brief Mutex-protected, time-throttled progress reporter. The parallel convertor workers call
+   * this once per processed chunk; messages are emitted at most ~once per second.
+   * @param counter Number of tuples completed since the last call.
+   */
+  void sendThreadSafeProgressMessage(usize counter);
+
 private:
   DataStructure& m_DataStructure;
   const ConvertOrientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
+
+  // Thread safe Progress Message
+  std::chrono::steady_clock::time_point m_InitialPoint = std::chrono::steady_clock::now();
+  mutable std::mutex m_ProgressMessage_Mutex;
+  size_t m_TotalPoints = 0;
+  size_t m_ProgressCounter = 0;
 };
 
 } // namespace nx::core

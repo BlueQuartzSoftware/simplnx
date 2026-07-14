@@ -84,11 +84,21 @@ Orientation Matrix: Determinant must be +1.0
 
 ### Data Conversion Notes
 
-If the angles fall outside of this range the **original** Euler Input data **WILL BE CHANGED** to ensure they are within this range.
+This **Filter** does not modify the input array; it creates a new output array holding the converted representation. The input orientation values are used as supplied. (DREAM3D 6.5.171 *performed* an in-place Euler range-normalization step that both mutated the input array and — because it applied `fmod(Phi, pi)` and sign flips that are not rotation-preserving — could change the converted orientation for Euler input outside the standard Bunge ranges. That step is deliberately not performed here; see deviation D5.)
+
+## Algorithm Reference
+
+The transformation equations between all representations follow:
+
+> D. Rowenhorst, A. D. Rollett, G. S. Rohrer, M. Groeber, M. Jackson, P. J. Konijnenberg, and M. De Graef, "Consistent representations of and conversions between 3D rotations," *Modelling and Simulation in Materials Science and Engineering* **23**(8), 083501 (2015). DOI: [10.1088/0965-0393/23/8/083501](https://doi.org/10.1088/0965-0393/23/8/083501)
+
+The conversions themselves are implemented in EbsdLib and are verified against this reference by EbsdLib's own test suite.
 
 ## Precision Notes
 
 While every effort has been made to ensure the correctness of each transformation algorithm, certain situations may arise where the initial precision of the input data is not large enough for the algorithm to calculate an answer that is intuitive. The user should be acutely aware of their input data and if their data may cause these situations to occur. Combinations of Euler angles close to 0, 180 and 360 can cause these issues to be hit. For instance an Euler angle of [180, 56, 360] is symmetrically the same as [180, 56, 0] and due to calculation errors and round off errors converting that Euler angle between representations may not give the numerical answer the user was anticipating but will give a symmetrically equivalent angle.
+
+The input array must be of type **float32**. Conversions are performed in float32 precision. (DREAM3D 6.5.171 additionally accepted float64 input arrays; see the V&V deviations for this filter.)
 
 % Auto generated parameter table will be inserted here
 
