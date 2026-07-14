@@ -745,6 +745,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Flip output image about X or Y axis", 
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
     DataStructure readDs;
     ReadImageStackFilter reader;
@@ -801,9 +802,6 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Flip output image about X or Y axis", 
     const auto pixels = writeAndReadBackFlip(k_FlipAboutY);
     REQUIRE(pixels == std::array<uint8, 6>{2, 1, 0, 12, 11, 10});
   }
-
-  DataStructure dataStructure;
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-table path", "[SimplnxCore][WriteImageFilter]")
@@ -856,6 +854,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
       auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
 
     DataStructure readDs;
     ReadImageStackFilter reader;
@@ -914,7 +913,4 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
               expectedFlipXImage.begin() + static_cast<std::ptrdiff_t>(dstRow * width * 3));
   }
   REQUIRE(flipXImage == expectedFlipXImage);
-
-  DataStructure dataStructure;
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
