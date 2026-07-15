@@ -11,7 +11,12 @@ This **Filter** determines the Kernel Average Misorientation (KAM) for each **Ce
 1. Calculate the misorientation angle between each **Cell** in a kernel and the central **Cell** of the kernel
 2. Average all of the misorientations for the kernel and store at the central **Cell**
 
-The calculation will **not** consider cells that belong to different 'feature Ids', i.e., different grains.
+The **Use Feature Ids** option controls which **Cells** within the kernel are included in the average:
+
++ **Checked (default):** only **Cells** that belong to the same *Feature* (same *Feature Id*) as the central **Cell** are considered — the calculation will **not** cross grain boundaries. This is the traditional per-grain KAM.
++ **Unchecked:** the *Feature Id* grouping is ignored and the average may cross grain boundaries, producing a per-voxel KAM. A kernel **Cell** is still excluded if its *Feature Id* is 0 (invalid/background data) or if its *Phase* differs from the central **Cell**'s *Phase* (misorientation between different crystal structures is not defined).
+
+In both modes, **Cells** with a *Feature Id* of 0 or a *Phase* of 0 are considered invalid and receive a KAM value of 0.
 
 *Note:* All **Cells** in the kernel are weighted equally during the averaging, though they are not equidistant from the central **Cell**.
 
