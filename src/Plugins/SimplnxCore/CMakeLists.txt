@@ -123,6 +123,7 @@ set(FilterList
   ReadVtkStructuredPointsFilter
   ReadZeissTxmFileFilter
   RegularGridSampleSurfaceMeshFilter
+  RegularizeZSpacingFilter
   RemoveFlaggedEdgesFilter
   RemoveFlaggedFeaturesFilter
   RemoveFlaggedTrianglesFilter
@@ -289,6 +290,7 @@ set(AlgorithmList
   ReadVtkStructuredPoints
   ReadZeissTxmFile
   RegularGridSampleSurfaceMesh
+  RegularizeZSpacing
   RemoveFlaggedEdges
   RemoveFlaggedFeatures
   RemoveFlaggedTriangles

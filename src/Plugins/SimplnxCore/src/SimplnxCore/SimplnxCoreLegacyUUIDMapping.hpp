@@ -97,6 +97,7 @@
 #include "SimplnxCore/Filters/ReadVolumeGraphicsFileFilter.hpp"
 #include "SimplnxCore/Filters/ReadVtkStructuredPointsFilter.hpp"
 #include "SimplnxCore/Filters/RegularGridSampleSurfaceMeshFilter.hpp"
+#include "SimplnxCore/Filters/RegularizeZSpacingFilter.hpp"
 #include "SimplnxCore/Filters/RemoveFlaggedFeaturesFilter.hpp"
 #include "SimplnxCore/Filters/RemoveFlaggedTrianglesFilter.hpp"
 #include "SimplnxCore/Filters/RemoveFlaggedVerticesFilter.hpp"
@@ -250,6 +251,7 @@ namespace nx::core
     {nx::core::Uuid::FromString("2861f4b4-8d50-5e69-9575-68c9d35f1256").value(), {nx::core::FilterTraits<WriteAvizoRectilinearCoordinateFilter>::uuid, &WriteAvizoRectilinearCoordinateFilter::FromSIMPLJson}}, // AvizoRectilinearCoordinateWriter
     {nx::core::Uuid::FromString("a043bd66-2681-5126-82e1-5fdc46694bf4").value(), {nx::core::FilterTraits<WriteVtkRectilinearGridFilter>::uuid, &WriteVtkRectilinearGridFilter::FromSIMPLJson}}, // VtkRectilinearGridWriter
     {nx::core::Uuid::FromString("0df3da89-9106-538e-b1a9-6bbf1cf0aa92").value(), {nx::core::FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid, &RegularGridSampleSurfaceMeshFilter::FromSIMPLJson}}, // RegularGridSampleSurfaceMesh
+    {nx::core::Uuid::FromString("bc4952fa-34ca-50bf-a1e9-2b9f7e5d47ce").value(), {nx::core::FilterTraits<RegularizeZSpacingFilter>::uuid, &RegularizeZSpacingFilter::FromSIMPLJson}}, // RegularizeZSpacing
     {nx::core::Uuid::FromString("75cfeb9b-cd4b-5a20-a344-4170b39bbfaf").value(), {nx::core::FilterTraits<UncertainRegularGridSampleSurfaceMeshFilter>::uuid, &UncertainRegularGridSampleSurfaceMeshFilter::FromSIMPLJson}}, // UncertainRegularGridSampleSurfaceMesh
     {nx::core::Uuid::FromString("3524c2dc-df60-5f90-b54b-e04946628a38").value(), {nx::core::FilterTraits<VerifyTriangleWindingFilter>::uuid, &VerifyTriangleWindingFilter::FromSIMPLJson}}, // VerifyTriangleWinding
     {nx::core::Uuid::FromString("6357243e-41a6-52c4-be2d-2f6894c39fcc").value(), {nx::core::FilterTraits<ComputeBoundaryElementFractionsFilter>::uuid, &ComputeBoundaryElementFractionsFilter::FromSIMPLJson}}, // ComputeBoundaryElementFractions

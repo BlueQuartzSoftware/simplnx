@@ -124,6 +124,7 @@ set(${PLUGIN_NAME}UnitTest_SRCS
   ReadVtkStructuredPointsTest.cpp
   ReadZeissTxmFileTest.cpp
   RegularGridSampleSurfaceMeshTest.cpp
+  RegularizeZSpacingTest.cpp
   RemoveFlaggedEdgesTest.cpp
   RemoveFlaggedFeaturesTest.cpp
   RemoveFlaggedTrianglesTest.cpp
