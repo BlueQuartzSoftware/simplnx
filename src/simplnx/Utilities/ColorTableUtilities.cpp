@@ -5,6 +5,7 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <array>
 
 using namespace nx::core;
@@ -280,6 +281,12 @@ std::vector<float32> ColorTableUtilities::NormalizeBinPoints(const std::vector<f
   }
   const float32 binMin = binPoints[0];
   const float32 binMax = binPoints[binPoints.size() - 1];
+  if(binMax == binMin)
+  {
+    // Single control color or all-equal A-values: avoid a 0/0 divide and map every bin point to 0.0F.
+    std::fill(binPoints.begin(), binPoints.end(), 0.0F);
+    return binPoints;
+  }
   for(auto& binPoint : binPoints)
   {
     binPoint = (binPoint - binMin) / (binMax - binMin);

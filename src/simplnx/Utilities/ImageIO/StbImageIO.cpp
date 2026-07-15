@@ -179,3 +179,17 @@ std::set<DataType> StbImageIO::supportedWriteDataTypes() const
 {
   return {DataType::uint8};
 }
+
+// -----------------------------------------------------------------------------
+std::set<usize> StbImageIO::supportedWriteComponentCounts() const
+{
+  // The stb backend serves PNG, BMP and JPEG. Verified against the vendored stb_image_write.h:
+  //  - PNG:  stbi_write_png_to_mem() indexes ctype[comp] where ctype has 5 entries {-1,0,4,2,6};
+  //          comp>=5 is an out-of-bounds read. comp 1..4 are in range.
+  //  - JPEG: stbi_write_jpg_core() explicitly rejects (comp < 1 || comp > 4).
+  //  - BMP:  stbi_write_bmp_core() only produces conforming 24-bit RGB (comp 1,3) or 32-bit RGBA (comp 4).
+  // A 2-component array is not UB in any backend, but BMP and JPEG silently drop the second channel
+  // (treating it as grayscale + ignored alpha) so the write is not conforming across formats. The
+  // uniformly-supported, conforming intersection is therefore {1, 3, 4}.
+  return {1, 3, 4};
+}

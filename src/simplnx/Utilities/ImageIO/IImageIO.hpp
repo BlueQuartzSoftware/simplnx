@@ -76,6 +76,14 @@ public:
    * Used by callers to validate a (format, dataType) combination before writing.
    */
   virtual std::set<DataType> supportedWriteDataTypes() const = 0;
+
+  /**
+   * @brief Returns the set of per-pixel component counts this backend can WRITE for the formats it handles.
+   * Used by callers to validate a (format, numComponents) combination before writing. Component counts
+   * outside this set can produce non-conforming files or trigger out-of-bounds access inside the vendored
+   * write routines, so callers must reject unsupported counts before calling writePixelData().
+   */
+  virtual std::set<usize> supportedWriteComponentCounts() const = 0;
 };
 
 } // namespace nx::core

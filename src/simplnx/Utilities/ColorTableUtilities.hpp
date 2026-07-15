@@ -7,7 +7,9 @@
 #include <nlohmann/json.hpp>
 
 #include <array>
+#include <cmath>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace nx::core::ColorTableUtilities
@@ -113,7 +115,19 @@ SIMPLNX_EXPORT bool IsValidIndexedPreset(const ColorPreset& preset);
 
 /**
  * @brief Normalizes a scalar value into the [0, 1] range given the array min/max.
- * Returns 0.0F when arrayMax == arrayMin to avoid a divide-by-zero on constant arrays.
+ *
+ * Robustness guarantees:
+ * - Constant arrays (arrayMax == arrayMin) return 0.0F to avoid a divide-by-zero.
+ * - For wide signed integer types (int32/int64), the min/max differences are computed
+ *   in float64 before casting to float32, avoiding signed-integer-overflow UB when the
+ *   value range spans most of the type. Narrower signed types (int8/int16) promote to
+ *   int during subtraction and are safe, so they use the direct expression. The result
+ *   is numerically identical to the direct expression for all realistic inputs (any
+ *   difference exactly representable).
+ * - Non-finite inputs (NaN/Inf), or a computed result that overflows the float range,
+ *   deterministically map to 0.0F. This maps such values to the first control color
+ *   rather than propagating a NaN/Inf into a downstream static_cast<uint8>(...) (which
+ *   would be undefined behavior).
  */
 template <typename T>
 inline float32 NormalizeValue(T value, T arrayMin, T arrayMax)
@@ -122,7 +136,27 @@ inline float32 NormalizeValue(T value, T arrayMin, T arrayMax)
   {
     return 0.0F;
   }
-  return static_cast<float32>(value - arrayMin) / static_cast<float32>(arrayMax - arrayMin);
+
+  float32 result = 0.0F;
+  if constexpr(std::is_integral_v<T> && std::is_signed_v<T> && sizeof(T) >= 4)
+  {
+    // Compute both differences in float64 to avoid signed-integer overflow UB for
+    // wide integer types (e.g. int64 spanning [min, max]).
+    const float64 numerator = static_cast<float64>(value) - static_cast<float64>(arrayMin);
+    const float64 denominator = static_cast<float64>(arrayMax) - static_cast<float64>(arrayMin);
+    result = static_cast<float32>(numerator) / static_cast<float32>(denominator);
+  }
+  else
+  {
+    result = static_cast<float32>(value - arrayMin) / static_cast<float32>(arrayMax - arrayMin);
+  }
+
+  if(!std::isfinite(result))
+  {
+    // NaN/Inf inputs (or a float-range overflow) deterministically map to the first control color.
+    return 0.0F;
+  }
+  return result;
 }
 
 /**

@@ -187,6 +187,25 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
                               "instead.",
                               filePath.filename().string(), DataTypeToString(arrayDataType), fmt::join(typeNames, ", ")))};
     }
+
+    // Direct pixel write: the array's per-pixel component count must be writable by the chosen format's backend.
+    const usize numComponents = imageArray.getNumberOfComponents();
+    const std::set<usize> supportedComponentCounts = imageIO->supportedWriteComponentCounts();
+    if(supportedComponentCounts.find(numComponents) == supportedComponentCounts.end())
+    {
+      std::vector<std::string> countStrings;
+      for(usize count : supportedComponentCounts)
+      {
+        countStrings.push_back(std::to_string(count));
+      }
+      std::string message = fmt::format("The output file format for '{}' cannot write image data with {} components per pixel. Supported component counts for this format: {}.",
+                                        filePath.filename().string(), numComponents, fmt::join(countStrings, ", "));
+      if(numComponents == 1)
+      {
+        message += " Enable 'Create Color Table' to write this single-component array as an RGB image instead.";
+      }
+      return {MakeErrorResult<OutputActions>(-27014, message)};
+    }
   }
 
   if(createColorTable)
@@ -196,6 +215,15 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     {
       return {MakeErrorResult<OutputActions>(-27012, fmt::format("When 'Create Color Table' is enabled the input array must have a single component, but '{}' has {} components.",
                                                                  imageArrayPath.toString(), imageArray.getNumberOfComponents()))};
+    }
+
+    // Validate the selected preset now so an unknown/empty/degenerate preset fails during preflight
+    // rather than at execute. A valid preset defines at least 2 control colors (4 floats each => >= 8 floats).
+    auto presetName = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);
+    auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(presetName);
+    if(controlPointsResult.invalid() || controlPointsResult.value().empty() || controlPointsResult.value().size() < 8)
+    {
+      return {MakeErrorResult<OutputActions>(-27015, fmt::format("The selected color preset '{}' is invalid or does not define at least 2 control colors.", presetName))};
     }
 
     if(useMask)

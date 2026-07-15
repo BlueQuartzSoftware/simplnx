@@ -402,6 +402,14 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
     return MakeErrorResult(k_ErrorWriteFailed, fmt::format("Failed to set TIFF photometric tag for '{}': {}", pathStr, tiffFile.errorMessage()));
   }
 
+  // For 4-component RGBA output, declare the 4th sample as unassociated alpha so readers interpret it
+  // correctly rather than treating the extra channel as an undefined sample.
+  if(comp == 4)
+  {
+    const uint16_t extraSamples[1] = {EXTRASAMPLE_UNASSALPHA};
+    TIFFSetField(tiff, TIFFTAG_EXTRASAMPLES, 1, extraSamples);
+  }
+
   // Write optional origin
   if(metadata.origin.has_value())
   {
@@ -441,4 +449,11 @@ Result<> TiffImageIO::writePixelData(const std::filesystem::path& filePath, std:
 std::set<DataType> TiffImageIO::supportedWriteDataTypes() const
 {
   return {DataType::uint8, DataType::uint16, DataType::float32};
+}
+
+// -----------------------------------------------------------------------------
+std::set<usize> TiffImageIO::supportedWriteComponentCounts() const
+{
+  // 1 = grayscale (PHOTOMETRIC_MINISBLACK), 3 = RGB, 4 = RGBA (RGB + one declared extra sample).
+  return {1, 3, 4};
 }

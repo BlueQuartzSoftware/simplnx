@@ -353,6 +353,12 @@ Result<> WriteImage::operator()()
     {
       return MakeErrorResult(-27021, fmt::format("No valid control points found for preset '{}'", m_InputValues.presetName));
     }
+    // Each control color is 4 floats [A,R,G,B]; interpolation requires at least 2 colors (8 floats),
+    // otherwise ComputeRgbFromControlPoints would read past the end of the control-point array.
+    if(controlPoints.size() < 8)
+    {
+      return MakeErrorResult(-27022, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues.presetName));
+    }
     std::vector<float32> binPoints = ColorTableUtilities::NormalizeBinPoints(controlPoints);
     const usize numControlColors = controlPoints.size() / 4;
 

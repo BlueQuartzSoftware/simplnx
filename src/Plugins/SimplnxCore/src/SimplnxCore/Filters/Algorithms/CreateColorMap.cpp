@@ -179,6 +179,12 @@ Result<> CreateColorMap::operator()()
   {
     return MakeErrorResult(-34380, fmt::format("No valid points found from preset {}", m_InputValues->PresetName));
   }
+  // Each control color is 4 floats [A,R,G,B]; interpolation requires at least 2 colors (8 floats),
+  // otherwise ComputeRgbFromControlPoints would read past the end of the control-point array.
+  if(controlPoints.size() < 8)
+  {
+    return MakeErrorResult(-34382, fmt::format("Preset '{}' must define at least 2 control colors", m_InputValues->PresetName));
+  }
 
   ExecuteDataFunction(GenerateColorArrayFunctor{}, selectedIDataArray.getDataType(), m_DataStructure, m_InputValues, controlPoints);
   return {};
