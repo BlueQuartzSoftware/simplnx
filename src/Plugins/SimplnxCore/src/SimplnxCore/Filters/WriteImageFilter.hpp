@@ -36,7 +36,7 @@ public:
   static constexpr StringLiteral k_UseMask_Key = "use_mask";
   static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
   static constexpr StringLiteral k_InvalidColorValue_Key = "invalid_color_value";
-  static constexpr StringLiteral k_FlipMode_Key = "flip_mode";
+  static constexpr StringLiteral k_FlipMode_Key = "flip_mode_index";
 
   /**
    * @brief Returns the name of the filter.

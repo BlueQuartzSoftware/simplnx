@@ -126,7 +126,7 @@ IFilter::VersionType WriteImageFilter::parametersVersion() const
 {
   // Version 2: Added optional inline color-table parameters (create_color_table, selected_preset, use_mask, mask_array_path, invalid_color_value).
   // Version 3: Widened input array to all numeric types (color-table mode colorizes any numeric type).
-  // Version 4: Added optional output-image flip (flip_mode).
+  // Version 4: Added optional output-image flip (flip_mode_index).
   return 4;
 }
 
