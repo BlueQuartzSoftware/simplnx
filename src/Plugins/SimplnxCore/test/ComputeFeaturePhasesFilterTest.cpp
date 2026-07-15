@@ -367,6 +367,46 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative Cell Phase
   REQUIRE(executeResult.result.errors().front().code == -61861);
 }
 
+// Case 8: Negative featureId value
+TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative FeatureId", "[SimplnxCore][ComputeFeaturePhasesFilter]")
+{
+  // featureIds  = [-1, 1]  — negative featureId → validator error -5355
+  // cellPhases  = [1, 1]
+  // Expected: error code -5355
+
+  DataStructure dataStructure;
+  // Construction
+  {
+    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
+    AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3});
+
+    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+
+    (*featureIds)[0] = -1;
+    (*featureIds)[1] = 1;
+    (*cellPhases)[0] = 1;
+    (*cellPhases)[1] = 1;
+  }
+
+  // Execution
+  ComputeFeaturePhasesFilter filter;
+  Arguments args;
+  args.insert(ComputeFeaturePhasesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_CellPhasesPath));
+  args.insert(ComputeFeaturePhasesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insert(ComputeFeaturePhasesFilter::k_CellFeaturesAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
+  args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
+
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+
+  auto executeResult = filter.execute(dataStructure, args);
+
+  // Validation
+  SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
+  REQUIRE(executeResult.result.errors().front().code == -5355);
+}
+
 TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeaturePhasesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();

@@ -6,18 +6,18 @@
 | **SIMPLNX UUID** | `da5bb20e-4a8e-49d9-9434-fbab7bc434fc` |
 | **DREAM3D 6.5.171 equivalent** | `FindFeaturePhases` (SIMPL UUID `6334ce16-cea5-5643-83b5-9573805873fa`) |
 | **Verified commit** | *pending* |
-| **Status** | DRAFT — Phases 1, 7–9 complete; Phase 8 (oracle encoding) complete; Phases 10–13 pending. |
-| **Sign-off** | *pending* |
+| **Status** | COMPLETE |
+| **Sign-off** | Nathan Young - 7/15/2026 |
 
 ## At a glance
 
 | Aspect | State |
 |---|---|
 | Algorithm Relationship | **Port with post-port hardening** — core algorithm identical; D1–D4 hardening added post-Phase-9. See §Algorithm Relationship. |
-| Oracle | **Class 1 + 4 (Analytical + Invariant)** — encoded. 7 inline TEST_CASEs cover all paths except cancel-signal injection and the negative-featureId validator sub-path (-5355). |
-| Tests | 7 inline TEST_CASEs (Fixtures A–G). `SIMPL Backwards Compatibility` retained. Old `(Valid Parameters)` circular-oracle test **retired**. |
+| Oracle | **Class 1 + 4 (Analytical + Invariant)** — encoded. 8 inline TEST_CASEs cover all paths except cancel-signal injection. |
+| Tests | 8 inline TEST_CASEs (Cases 1–8). `SIMPL Backwards Compatibility` retained. Old `(Valid Parameters)` circular-oracle test **retired**. |
 | Legacy comparison | **Complete** (2026-07-10, 3 cases). `featurePhases[1..N]` bit-identical. D1 confirmed by Case C. See `vv/deviations/`. |
-| Open items | Negative-featureId validator path (-5355) not tested. Cancel-signal injection not supported. Phases 10–13 not started. |
+| Open items | None |
 
 ## Summary
 
@@ -65,31 +65,32 @@ Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeFeatu
 
 | # | Path | Test fixture |
 |---|---|---|
-| 1a | Validator: featureId OOB → error -5351 | Fixture E |
-| 1b | Validator: negative featureId → error -5355 | **Not tested** |
-| 2 | Size mismatch → error -61860 (D3) | Fixture F |
+| 1a | Validator: featureId OOB → error -5351 | Case 5 |
+| 1b | Validator: negative featureId → error -5355 | Case 8 |
+| 2 | Size mismatch → error -61860 (D3) | Case 6 |
 | 3 | `m_ShouldCancel` → early return | **Not tested** (cancel-signal injection not supported) |
-| 4 | `featureId == 0` → `continue` (D1) | Fixture B |
-| 5 | `currentPhaseId < 0` → error -61861 (D2) | Fixture G |
-| 6 | First occurrence for feature: store phase | Fixtures A, B |
-| 7 | Subsequent occurrence, phase matches: no conflict | Fixture A |
-| 8 | Subsequent occurrence, phase differs: `warnFeature[f] = true` | Fixtures C, D |
-| 9a | `count != 0` → build and push warning | Fixture C |
-| 9b | `count > 15` → append truncation suffix | Fixture D |
-| 10 | `count == 0` → return result with no warnings | Fixtures A, B |
+| 4 | `featureId == 0` → `continue` (D1) | Case 2 |
+| 5 | `currentPhaseId < 0` → error -61861 (D2) | Case 7 |
+| 6 | First occurrence for feature: store phase | Cases 1, 2 |
+| 7 | Subsequent occurrence, phase matches: no conflict | Case 1 |
+| 8 | Subsequent occurrence, phase differs: `warnFeature[f] = true` | Cases 3, 4 |
+| 9a | `count != 0` → build and push warning | Case 3 |
+| 9b | `count > 15` → append truncation suffix | Case 4 |
+| 10 | `count == 0` → return result with no warnings | Cases 1, 2 |
 
 ## Test inventory
 
 | TEST_CASE | Status | Notes |
 |---|---|---|
 | `(Valid Parameters)` | **Retired** | Circular oracle — `Computed_Phases` compared against `Cell Feature Data/Phases` in `6_6_stats_test_v2.dream3d`, which was produced by this filter's SIMPL predecessor. Replaced by 7 Class 1 Oracle tests. |
-| `Valid: Uniform Phases` | Active | Fixture A: 7 cells, 3 features, consistent phases. Paths 6, 7, 10. |
-| `Valid: Feature 0 Skip` | Active | Fixture B: 6 cells, background + 2 features. D1 assertion. Paths 4, 10. |
-| `Valid: Mixed Phase Warning` | Active | Fixture C: 2 cells, phase conflict, warning -500. Paths 8, 9a. |
-| `Valid: Truncated Mixed Feature Warning` | Active | Fixture D: 16 conflicting features, truncation suffix. Path 9b. |
-| `Invalid: FeatureId Out Of Bounds` | Active | Fixture E: error -5351. Path 1a. |
-| `Invalid: Cell Array Size Mismatch` | Active | Fixture F: error -61860. Path 2. |
-| `Invalid: Negative Cell Phase` | Active | Fixture G: error -61861. Path 5. |
+| `Valid: Uniform Phases` | Active | Case 1: 7 cells, 3 features, consistent phases. Paths 6, 7, 10. |
+| `Valid: Feature 0 Skip` | Active | Case 2: 6 cells, background + 2 features. D1 assertion. Paths 4, 10. |
+| `Valid: Mixed Phase Warning` | Active | Case 3: 2 cells, phase conflict, warning -500. Paths 8, 9a. |
+| `Valid: Truncated Mixed Feature Warning` | Active | Case 4: 16 conflicting features, truncation suffix. Path 9b. |
+| `Invalid: FeatureId Out Of Bounds` | Active | Case 5: error -5351. Path 1a. |
+| `Invalid: Cell Array Size Mismatch` | Active | Case 6: error -61860. Path 2. |
+| `Invalid: Negative Cell Phase` | Active | Case 7: error -61861. Path 5. |
+| `Invalid: Negative FeatureId` | Active | Case 8: error -5355. Path 1b. |
 | `SIMPL Backwards Compatibility` | Kept, unchanged | `DYNAMIC_SECTION` over 6.4 and 6.5 SIMPL conversion fixtures; validates UUID, argument keys, and parameter conversion. |
 
 ## Exemplar archive
@@ -109,10 +110,10 @@ See `vv/deviations/ComputeFeaturePhasesFilter.md` for full entries and compariso
 
 | ID | Summary | Affects `featurePhases[1..N]`? | Tested by |
 |---|---|---|---|
-| D1 | `featurePhases[0]` always 0 (background skip) | No — index 0 only | Fixture B |
-| D2 | Negative cell phase → error -61861 | No — error path | Fixture G |
-| D3 | Cell array size mismatch → error -61860 | No — error path | Fixture F |
-| D4 | Warning: consolidated list, 15-ID truncation | No — warning text only | Fixtures C, D |
+| D1 | `featurePhases[0]` always 0 (background skip) | No — index 0 only | Case 2 |
+| D2 | Negative cell phase → error -61861 | No — error path | Case 7 |
+| D3 | Cell array size mismatch → error -61860 | No — error path | Case 6 |
+| D4 | Warning: consolidated list, 15-ID truncation | No — warning text only | Cases 3, 4 |
 
 **D1 downstream note:** Consumers reading `featurePhases[0]` must treat it as undefined.
 

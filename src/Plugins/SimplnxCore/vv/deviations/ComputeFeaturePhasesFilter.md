@@ -10,7 +10,7 @@ Behavioral differences between `ComputeFeaturePhasesFilter` and `FindFeaturePhas
 |---|---|
 | **Affects output** | Yes — `featurePhases[0]` only |
 | **Severity** | Low |
-| **Tested by** | Fixture B (`Background Feature Skip`) |
+| **Tested by** | Case 2 (`Background Feature Skip`) |
 
 **SIMPLNX:** Cells with `featureId == 0` are skipped. `featurePhases[0]` retains zero-initialization from `CreateArrayAction`.
 
@@ -26,7 +26,7 @@ Behavioral differences between `ComputeFeaturePhasesFilter` and `FindFeaturePhas
 |---|---|
 | **Affects output** | No — error path only |
 | **Severity** | Behavioral change |
-| **Tested by** | Fixture G (`Negative Cell Phase`, error -61861) |
+| **Tested by** | Case 7 (`Negative Cell Phase`, error -61861) |
 
 **SIMPLNX:** Negative cell phase → immediate error -61861.
 
@@ -40,7 +40,7 @@ Behavioral differences between `ComputeFeaturePhasesFilter` and `FindFeaturePhas
 |---|---|
 | **Affects output** | No — error path only |
 | **Severity** | Behavioral change |
-| **Tested by** | Fixture F (`Cell Array Size Mismatch`, error -61860) |
+| **Tested by** | Case 6 (`Cell Array Size Mismatch`, error -61860) |
 
 **SIMPLNX:** `featureIds.getNumberOfTuples() != cellPhases.getNumberOfTuples()` → immediate error -61860.
 
@@ -56,7 +56,7 @@ Behavioral differences between `ComputeFeaturePhasesFilter` and `FindFeaturePhas
 |---|---|
 | **Affects output** | No — warning text only |
 | **Severity** | None |
-| **Tested by** | Fixtures C (`Inconsistent Phase Warning`) and D (`Warning Truncation`) |
+| **Tested by** | Cases 3 (`Inconsistent Phase Warning`) and 4 (`Warning Truncation`) |
 
 **SIMPLNX:** Single consolidated warning (code -500) listing up to 15 affected feature IDs by index, followed by `"and N more occurrence(s)"` for large conflict sets. Introduced at port time (PR #1455).
 
