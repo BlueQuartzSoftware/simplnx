@@ -39,6 +39,7 @@ public:
     const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
     const auto& crystalStructures = crystalStructuresArray.getDataStoreRef();
     const auto kernelSize = m_InputValues->KernelSize;
+    const bool useFeatureIds = m_InputValues->UseFeatureIds;
 
     // Output Arrays
     auto& kernelAvgMisorientationsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->KernelAverageMisorientationsArrayName);
@@ -112,9 +113,18 @@ public:
                     continue;
                   }
                   const int64_t neighbor = static_cast<int64_t>(point) + jStride + kStride + l;
-                  if(neighbor >= 0 && featureIds[point] == featureIds[static_cast<size_t>(neighbor)])
+                  if(neighbor < 0)
                   {
-                    quatIndex = neighbor * 4;
+                    continue;
+                  }
+                  const auto neighborIdx = static_cast<size_t>(neighbor);
+                  // Per-grain mode: neighbor must belong to the same feature as the central cell.
+                  // Per-voxel mode (use_feature_ids == false): neighbor must be a valid cell
+                  // (featureId > 0) of the same phase as the central cell.
+                  const bool neighborContributes = useFeatureIds ? (featureIds[point] == featureIds[neighborIdx]) : (featureIds[neighborIdx] > 0 && cellPhases[neighborIdx] == cellPhases[point]);
+                  if(neighborContributes)
+                  {
+                    quatIndex = neighborIdx * 4;
                     q2[0] = quats[quatIndex];
                     q2[1] = quats[quatIndex + 1];
                     q2[2] = quats[quatIndex + 2];

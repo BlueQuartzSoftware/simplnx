@@ -25,6 +25,7 @@ public:
 
   // Parameter Keys
   static constexpr StringLiteral k_KernelSize_Key = "kernel_size";
+  static constexpr StringLiteral k_UseFeatureIds_Key = "use_feature_ids";
   static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
   static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
   static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";

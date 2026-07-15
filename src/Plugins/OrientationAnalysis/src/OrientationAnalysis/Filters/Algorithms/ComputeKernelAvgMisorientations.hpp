@@ -15,6 +15,7 @@ namespace nx::core
 struct ORIENTATIONANALYSIS_EXPORT ComputeKernelAvgMisorientationsInputValues
 {
   VectorInt32Parameter::ValueType KernelSize;
+  bool UseFeatureIds = true;
   DataPath FeatureIdsArrayPath;
   DataPath CellPhasesArrayPath;
   DataPath QuatsArrayPath;

@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/DataPath.hpp"
 #include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
+#include "simplnx/Parameters/BoolParameter.hpp"
 #include "simplnx/Parameters/DataGroupSelectionParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
@@ -56,6 +57,11 @@ Parameters ComputeKernelAvgMisorientationsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorInt32Parameter>(k_KernelSize_Key, "Kernel Radius", "Size of the kernel in the X, Y and Z directions (in number of Cells)", std::vector<int32>{1, 1, 1},
                                                        std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<BoolParameter>(
+      k_UseFeatureIds_Key, "Use Feature Ids",
+      "When checked (default), only kernel Cells belonging to the same Feature as the central Cell are included in the average (per-grain KAM). When unchecked, every in-bounds kernel Cell with a "
+      "Feature Id greater than 0 and the same phase as the central Cell is included, allowing the average to cross Feature boundaries (per-voxel KAM).",
+      true));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "Path to the target geometry", DataPath({"Data Container"}),
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
@@ -81,7 +87,11 @@ Parameters ComputeKernelAvgMisorientationsFilter::parameters() const
 //------------------------------------------------------------------------------
 IFilter::VersionType ComputeKernelAvgMisorientationsFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
+  // Version 1 -> 2
+  // Change 1:
+  // Added k_UseFeatureIds_Key = "use_feature_ids" (default true preserves the
+  // original per-grain behavior; false enables per-voxel KAM per issue #1613)
 }
 
 //------------------------------------------------------------------------------
@@ -127,6 +137,7 @@ Result<> ComputeKernelAvgMisorientationsFilter::executeImpl(DataStructure& dataS
   ComputeKernelAvgMisorientationsInputValues inputValues;
 
   inputValues.KernelSize = filterArgs.value<VectorInt32Parameter::ValueType>(k_KernelSize_Key);
+  inputValues.UseFeatureIds = filterArgs.value<bool>(k_UseFeatureIds_Key);
   inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
   inputValues.QuatsArrayPath = filterArgs.value<DataPath>(k_QuatsArrayPath_Key);

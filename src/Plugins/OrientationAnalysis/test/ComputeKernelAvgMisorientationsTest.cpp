@@ -105,10 +105,11 @@ void SetCellQuat(FixtureData& td, usize cellIdx, const std::array<float32, 4>& q
   (*td.quats)[cellIdx * 4 + 3] = q[3];
 }
 
-Arguments BuildArgs(const std::vector<int32>& kernelRadius)
+Arguments BuildArgs(const std::vector<int32>& kernelRadius, bool useFeatureIds = true)
 {
   Arguments args;
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_KernelSize_Key, std::make_any<VectorInt32Parameter::ValueType>(kernelRadius));
+  args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_UseFeatureIds_Key, std::make_any<bool>(useFeatureIds));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_ImageGeomPath));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_FeatureIdsName)));
   args.insertOrAssign(ComputeKernelAvgMisorientationsFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_CellDataPath.createChildPath(k_CellPhasesName)));
@@ -356,6 +357,71 @@ TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 -
   }
   // Background cell must be exactly 0 (not just within tolerance) - it is set via the explicit
   // KAM=0 short-circuit at the bottom of the inner loop.
+  REQUIRE(kam[4] == 0.0f);
+
+  UnitTest::CheckArraysInheritTupleDims(td.ds);
+}
+
+TEST_CASE("OrientationAnalysis::ComputeKernelAvgMisorientationsFilter: Class 1 - Per-Voxel Mode (use_feature_ids = false)", "[OrientationAnalysis][ComputeKernelAvgMisorientationsFilter]")
+{
+  UnitTest::LoadPlugins();
+
+  // Same 6x1x1 layout as the Multi-Feature Multi-Voxel fixture, but run with use_feature_ids =
+  // false (per-voxel KAM, issue #1613). In this mode a kernel neighbor contributes iff it is
+  // in-bounds AND featureIds[neighbor] > 0 AND cellPhases[neighbor] == cellPhases[focal]. The
+  // focal-validity gate (featureIds[focal] > 0 && cellPhases[focal] > 0) is unchanged.
+  //   cell x=0: featureId=1, phase=1, phi1=0   degrees
+  //   cell x=1: featureId=1, phase=1, phi1=10  degrees
+  //   cell x=2: featureId=2, phase=1, phi1=0   degrees
+  //   cell x=3: featureId=2, phase=1, phi1=20  degrees
+  //   cell x=4: featureId=0, phase=0, phi1=N/A (background)
+  //   cell x=5: featureId=1, phase=1, phi1=30  degrees
+  //
+  // Kernel radius {1,0,0}. Expected per-voxel KAM:
+  //   cell 0: neighbors {self=0, x=1(F1,P1)=10}                       -> avg 10/2  = 5.0
+  //   cell 1: neighbors {x=0(F1,P1)=10, self=0, x=2(F2,P1)=10}        -> avg 20/3 ~= 6.6667
+  //           (default per-grain mode gives 5.0 here - x=2 was skipped; this cell proves the mode differs)
+  //   cell 2: neighbors {x=1(F1,P1)=10, self=0, x=3(F2,P1)=20}        -> avg 30/3  = 10.0
+  //   cell 3: neighbors {x=2(F2,P1)=20, self=0}; x=4 SKIPPED (featureId=0) -> avg 20/2 = 10.0
+  //   cell 4: focal-invalid (featureId=0, phase=0)                    -> KAM = 0 exactly
+  //   cell 5: x=4 SKIPPED (featureId=0), {self=0}                     -> avg 0/1   = 0.0
+  //
+  // Exercises: cross-feature accumulation (cells 1, 2), featureId=0 neighbor exclusion in
+  // per-voxel mode (cells 3, 5), unchanged focal-invalid path (cell 4).
+  AnalyticalFixtures::FixtureData td = AnalyticalFixtures::CreateScaffold(6, 1, 1);
+  // FeatureIds: [1, 1, 2, 2, 0, 1]
+  (*td.featureIds)[0] = 1;
+  (*td.featureIds)[1] = 1;
+  (*td.featureIds)[2] = 2;
+  (*td.featureIds)[3] = 2;
+  (*td.featureIds)[4] = 0;
+  (*td.featureIds)[5] = 1;
+  // CellPhases: [1, 1, 1, 1, 0, 1]
+  (*td.cellPhases)[0] = 1;
+  (*td.cellPhases)[1] = 1;
+  (*td.cellPhases)[2] = 1;
+  (*td.cellPhases)[3] = 1;
+  (*td.cellPhases)[4] = 0;
+  (*td.cellPhases)[5] = 1;
+  AnalyticalFixtures::SetCellQuat(td, 0, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
+  AnalyticalFixtures::SetCellQuat(td, 1, AnalyticalFixtures::QuatFromPhi1Deg(10.0f));
+  AnalyticalFixtures::SetCellQuat(td, 2, AnalyticalFixtures::QuatFromPhi1Deg(0.0f));
+  AnalyticalFixtures::SetCellQuat(td, 3, AnalyticalFixtures::QuatFromPhi1Deg(20.0f));
+  AnalyticalFixtures::SetCellQuat(td, 5, AnalyticalFixtures::QuatFromPhi1Deg(30.0f));
+
+  ComputeKernelAvgMisorientationsFilter filter;
+  Arguments args = AnalyticalFixtures::BuildArgs({1, 0, 0}, false);
+  auto preflightResult = filter.preflight(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto executeResult = filter.execute(td.ds, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+
+  const auto& kam = AnalyticalFixtures::GetOutputKAM(td.ds);
+  const std::array<float32, 6> expected = {5.0f, 20.0f / 3.0f, 10.0f, 10.0f, 0.0f, 0.0f};
+  for(usize i = 0; i < 6; ++i)
+  {
+    REQUIRE(kam[i] == Approx(expected[i]).margin(1e-3f));
+  }
   REQUIRE(kam[4] == 0.0f);
 
   UnitTest::CheckArraysInheritTupleDims(td.ds);
