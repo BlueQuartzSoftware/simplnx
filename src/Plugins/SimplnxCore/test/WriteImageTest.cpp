@@ -25,6 +25,7 @@
 #include <random>
 #include <string>
 #include <system_error>
+#include <type_traits>
 
 namespace fs = std::filesystem;
 
@@ -143,7 +144,17 @@ void RunColorRoundtripForType()
   auto& scalarStore = scalarPtr->getDataStoreRef();
   for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
   {
-    scalarStore[i] = static_cast<T>(i); // 0..15 ramp
+    // Signed types (and floats) span negatives (-8..7) so the roundtrip exercises negative-input
+    // normalization; unsigned types keep the plain 0..15 ramp. The oracle (Create Color Map) reads
+    // the very same array, so parity is preserved regardless of the offset.
+    if constexpr(std::is_signed_v<T>)
+    {
+      scalarStore[i] = static_cast<T>(i) - static_cast<T>(8);
+    }
+    else
+    {
+      scalarStore[i] = static_cast<T>(i);
+    }
   }
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
@@ -242,17 +253,17 @@ void RunColorRoundtripForType()
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Builds a 4x4x1 image geometry with a single-component array of type T and runs WriteImageFilter
+// Builds a 4x4x1 image geometry with a `numComponents`-component array of type T and runs WriteImageFilter
 // preflight (color table OFF) against the given output file name, returning the preflight result.
 template <typename T>
-IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName)
+IFilter::PreflightResult RunFormatPreflightForType(const std::string& fileName, usize numComponents = 1)
 {
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
   imageGeomPtr->setDimensions({4, 4, 1});
   auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAmPtr);
-  UnitTest::CreateTestDataArray<T>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+  UnitTest::CreateTestDataArray<T>(dataStructure, "Scalar", {1, 4, 4}, {numComponents}, cellAmPtr->getId());
 
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
@@ -435,6 +446,10 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Color table preflight validation", "[S
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  // A multi-component array in color-table mode must fail with the dedicated -27012 code.
+  const auto& ctErrors = preflightResult.outputActions.errors();
+  REQUIRE(ctErrors.size() == 1);
+  REQUIRE(ctErrors[0].code == -27012);
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -485,6 +500,151 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table across numeric inpu
   }
 }
 
+TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table 3D multi-slice across planes", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
+
+  // Build a 3D volume with DISTINCT dimensions so every plane's slice count and slice shape differ,
+  // exercising the ColorizeVolumeFunctor slice loop and its XY/XZ/YZ index branches.
+  const usize dimX = 3;
+  const usize dimY = 4;
+  const usize dimZ = 5;
+
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {dimZ, dimY, dimX}, {1}, cellAmPtr->getId());
+  auto& scalarStore = scalarPtr->getDataStoreRef();
+  for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+  {
+    scalarStore[i] = static_cast<float32>(i); // 0..59 ramp
+  }
+
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  // Oracle: run Create Color Map once. Its RGB output is parallel to the scalar array (tuple index
+  // = z*dimY*dimX + y*dimX + x), giving an independent reference for every voxel's expected color.
+  {
+    CreateColorMapFilter ccm;
+    Arguments ccmArgs;
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(scalarPath));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_UseMask_Key, std::make_any<bool>(false));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+    ccmArgs.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("RGB"));
+    auto ccmPreflight = ccm.preflight(dataStructure, ccmArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(ccmPreflight.outputActions);
+    auto ccmExecute = ccm.execute(dataStructure, ccmArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(ccmExecute.result);
+  }
+
+  const DataPath rgbPath = geomPath.createChildPath("CellData").createChildPath("RGB");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(rgbPath));
+  const auto& expectedRgbStore = dataStructure.getDataRefAs<UInt8Array>(rgbPath).getDataStoreRef();
+
+  // Writes the volume through the color-table path for the given plane, reads every written slice
+  // back, and compares each read pixel to the oracle RGB using an INDEPENDENT source-index derivation.
+  auto checkPlane = [&](uint64 planeIndex, usize sliceCount, usize sliceW, usize sliceH) {
+    ScopedTempDir planeDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+    {
+      WriteImageFilter filter;
+      Arguments args;
+      args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+      args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+      args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(planeDir.path() / "slice.tif"));
+      args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+      args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(planeIndex));
+      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+      args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+      args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+      args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+      args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(false));
+      args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(DataPath{}));
+      args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(std::vector<uint8>{0, 0, 0}));
+
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+
+    // Read the full stack back (one file per slice).
+    DataStructure readDs;
+    {
+      ReadImageStackFilter reader;
+      GeneratedFileListParameter::ValueType fileList;
+      fileList.inputPath = planeDir.path().string();
+      fileList.startIndex = 0;
+      fileList.endIndex = static_cast<int32>(sliceCount - 1);
+      fileList.incrementIndex = 1;
+      fileList.fileExtension = ".tif";
+      fileList.filePrefix = "slice_";
+      fileList.fileSuffix = "";
+      fileList.paddingDigits = 3;
+      fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+      Arguments rArgs;
+      rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+      rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+      auto readerPreflight = reader.preflight(readDs, rArgs);
+      SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+      auto readerExecute = reader.execute(readDs, rArgs);
+      SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+    }
+
+    const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+    const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+    REQUIRE(readArrayPtr != nullptr);
+    const auto& readStore = readArrayPtr->getDataStoreRef();
+    const usize readComps = readArrayPtr->getNumberOfComponents();
+    REQUIRE(readStore.getNumberOfTuples() == sliceCount * sliceH * sliceW);
+
+    for(usize s = 0; s < sliceCount; s++)
+    {
+      for(usize r = 0; r < sliceH; r++)
+      {
+        for(usize c = 0; c < sliceW; c++)
+        {
+          // Independent source-tuple derivation (NOT taken from production code).
+          usize srcTuple = 0;
+          if(planeIndex == k_XYPlane) // slice=z, row=y, col=x
+          {
+            srcTuple = s * dimY * dimX + r * dimX + c;
+          }
+          else if(planeIndex == k_XZPlane) // slice=y, row=z, col=x
+          {
+            srcTuple = r * dimY * dimX + s * dimX + c;
+          }
+          else // YZ: slice=x, row=z, col=y
+          {
+            srcTuple = r * dimY * dimX + c * dimX + s;
+          }
+
+          const usize readTuple = s * sliceH * sliceW + r * sliceW + c;
+          for(usize comp = 0; comp < 3; comp++)
+          {
+            INFO(fmt::format("plane={} slice={} row={} col={} comp={}", planeIndex, s, r, c, comp));
+            REQUIRE(readStore.getValue(readTuple * readComps + comp) == expectedRgbStore.getValue(srcTuple * 3 + comp));
+          }
+        }
+      }
+    }
+  };
+
+  checkPlane(k_XYPlane, dimZ, dimX, dimY); // 5 slices of 3x4
+  checkPlane(k_XZPlane, dimY, dimX, dimZ); // 4 slices of 3x5
+  checkPlane(k_YZPlane, dimX, dimY, dimZ); // 3 slices of 4x5
+
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
 TEST_CASE("SimplnxCore::WriteImageFilter: Format-aware write-type preflight", "[SimplnxCore][WriteImageFilter]")
 {
   auto app = Application::GetOrCreateInstance();
@@ -514,6 +674,39 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Format-aware write-type preflight", "[
   {
     auto result = RunFormatPreflightForType<int32>("fmt_i32.tif");
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+  // BMP/JPEG go through the stb backend (uint8 only).
+  {
+    auto result = RunFormatPreflightForType<uint8>("fmt_u8.bmp");
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  {
+    auto result = RunFormatPreflightForType<uint16>("fmt_u16.bmp");
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+  {
+    auto result = RunFormatPreflightForType<uint8>("fmt_u8.jpg");
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+  // TIFF writes uint8/uint16/float32 but not float64.
+  {
+    auto result = RunFormatPreflightForType<float64>("fmt_f64.tif");
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+
+  // Component-count validation (non-color mode): stb PNG supports {1,3,4} components.
+  {
+    // A 2-component array is not a conforming write for any format -> -27014.
+    auto result = RunFormatPreflightForType<uint8>("fmt_u8_2comp.png", 2);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+    const auto& compErrors = result.outputActions.errors();
+    REQUIRE(compErrors.size() == 1);
+    REQUIRE(compErrors[0].code == -27014);
+  }
+  {
+    // A 3-component (RGB) uint8 array writes directly with no color table.
+    auto result = RunFormatPreflightForType<uint8>("fmt_u8_3comp.png", 3);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
   }
 
   DataStructure dataStructure;
@@ -560,74 +753,94 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Inline color table mask and constant-a
 
   SECTION("Masked voxels read back as the masked color")
   {
-    const std::vector<uint8> maskedColor{10, 20, 30};
-
-    DataStructure dataStructure;
-    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
-    imageGeomPtr->setDimensions({4, 4, 1});
-    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
-    imageGeomPtr->setCellData(*cellAmPtr);
-    auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
-    auto& scalarStore = scalarPtr->getDataStoreRef();
-    for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+    // Exercise both mask data types the filter accepts (boolean and uint8 0/1) with identical
+    // expected output, covering both branches of MakeMaskPredicate.
+    const bool useUint8Mask = GENERATE(false, true);
+    DYNAMIC_SECTION("maskType=" << (useUint8Mask ? "uint8" : "bool"))
     {
-      scalarStore[i] = static_cast<float32>(i);
+      const std::vector<uint8> maskedColor{10, 20, 30};
+
+      DataStructure dataStructure;
+      auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+      imageGeomPtr->setDimensions({4, 4, 1});
+      auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 4, 4}, imageGeomPtr->getId());
+      imageGeomPtr->setCellData(*cellAmPtr);
+      auto* scalarPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Scalar", {1, 4, 4}, {1}, cellAmPtr->getId());
+      auto& scalarStore = scalarPtr->getDataStoreRef();
+      for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+      {
+        scalarStore[i] = static_cast<float32>(i);
+      }
+      // Mark voxels 0 and 5 as bad, using either a bool mask or a uint8 (0/1) mask.
+      if(useUint8Mask)
+      {
+        auto* maskPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
+        auto& maskStore = maskPtr->getDataStoreRef();
+        for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
+        {
+          maskStore[i] = 1;
+        }
+        maskStore[0] = 0;
+        maskStore[5] = 0;
+      }
+      else
+      {
+        auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
+        auto& maskStore = maskPtr->getDataStoreRef();
+        for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
+        {
+          maskStore[i] = true;
+        }
+        maskStore[0] = false;
+        maskStore[5] = false;
+      }
+
+      const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+      const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
+
+      ScopedTempDir maskDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+      {
+        WriteImageFilter filter;
+        Arguments args;
+        args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+        args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+        args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(maskDir.path() / "slice.tif"));
+        args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
+        args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+        args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
+        args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
+        args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
+        args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
+        args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(true));
+        args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
+        args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(maskedColor));
+
+        auto preflightResult = filter.preflight(dataStructure, args);
+        SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+        auto executeResult = filter.execute(dataStructure, args);
+        SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+      }
+
+      DataStructure readDs;
+      const UInt8Array* readArrayPtr = readBackSlice(maskDir.path(), readDs);
+      REQUIRE(readArrayPtr != nullptr);
+      const auto& readStore = readArrayPtr->getDataStoreRef();
+      const usize readComps = readArrayPtr->getNumberOfComponents();
+
+      // For an XY single slice, read pixel index equals voxel index; voxels 0 and 5 must be the masked color.
+      for(usize badPixel : {static_cast<usize>(0), static_cast<usize>(5)})
+      {
+        REQUIRE(readStore.getValue(badPixel * readComps + 0) == maskedColor[0]);
+        REQUIRE(readStore.getValue(badPixel * readComps + 1) == maskedColor[1]);
+        REQUIRE(readStore.getValue(badPixel * readComps + 2) == maskedColor[2]);
+      }
+      // A known-good voxel must NOT be the masked color.
+      const bool goodDiffers =
+          readStore.getValue(1 * readComps + 0) != maskedColor[0] || readStore.getValue(1 * readComps + 1) != maskedColor[1] || readStore.getValue(1 * readComps + 2) != maskedColor[2];
+      REQUIRE(goodDiffers);
+
+      UnitTest::CheckArraysInheritTupleDims(dataStructure);
     }
-    // Mark voxels 0 and 5 as bad.
-    auto* maskPtr = UnitTest::CreateTestDataArray<bool>(dataStructure, "Mask", {1, 4, 4}, {1}, cellAmPtr->getId());
-    auto& maskStore = maskPtr->getDataStoreRef();
-    for(usize i = 0; i < maskStore.getNumberOfTuples(); i++)
-    {
-      maskStore[i] = true;
-    }
-    maskStore[0] = false;
-    maskStore[5] = false;
-
-    const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
-    const DataPath maskPath = geomPath.createChildPath("CellData").createChildPath("Mask");
-
-    ScopedTempDir maskDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
-    {
-      WriteImageFilter filter;
-      Arguments args;
-      args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-      args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
-      args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(maskDir.path() / "slice.tif"));
-      args.insertOrAssign(WriteImageFilter::k_IndexOffset_Key, std::make_any<uint64>(0));
-      args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
-      args.insertOrAssign(WriteImageFilter::k_TotalIndexDigits_Key, std::make_any<Int32Parameter::ValueType>(3));
-      args.insertOrAssign(WriteImageFilter::k_LeadingDigitCharacter_Key, std::make_any<StringParameter::ValueType>("0"));
-      args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(true));
-      args.insertOrAssign(WriteImageFilter::k_SelectedPreset_Key, std::make_any<CreateColorMapParameter::ValueType>(presetName));
-      args.insertOrAssign(WriteImageFilter::k_UseMask_Key, std::make_any<bool>(true));
-      args.insertOrAssign(WriteImageFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));
-      args.insertOrAssign(WriteImageFilter::k_InvalidColorValue_Key, std::make_any<std::vector<uint8>>(maskedColor));
-
-      auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      auto executeResult = filter.execute(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    }
-
-    DataStructure readDs;
-    const UInt8Array* readArrayPtr = readBackSlice(maskDir.path(), readDs);
-    REQUIRE(readArrayPtr != nullptr);
-    const auto& readStore = readArrayPtr->getDataStoreRef();
-    const usize readComps = readArrayPtr->getNumberOfComponents();
-
-    // For an XY single slice, read pixel index equals voxel index; voxels 0 and 5 must be the masked color.
-    for(usize badPixel : {static_cast<usize>(0), static_cast<usize>(5)})
-    {
-      REQUIRE(readStore.getValue(badPixel * readComps + 0) == maskedColor[0]);
-      REQUIRE(readStore.getValue(badPixel * readComps + 1) == maskedColor[1]);
-      REQUIRE(readStore.getValue(badPixel * readComps + 2) == maskedColor[2]);
-    }
-    // A known-good voxel must NOT be the masked color.
-    const bool goodDiffers =
-        readStore.getValue(1 * readComps + 0) != maskedColor[0] || readStore.getValue(1 * readComps + 1) != maskedColor[1] || readStore.getValue(1 * readComps + 2) != maskedColor[2];
-    REQUIRE(goodDiffers);
-
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Constant-valued input maps every pixel to the first control color")
@@ -704,24 +917,21 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Flip output image about X or Y axis", 
   constexpr uint64 k_FlipAboutX = 1;
   constexpr uint64 k_FlipAboutY = 2;
 
-  // Tiny asymmetric 3x2x1 (X,Y,Z) single-component uint8 image:
-  //   row y=0: 0  1  2
-  //   row y=1: 10 11 12
   const DataPath geomPath({"ImageGeometry"});
   const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
 
-  // Writes the tiny 3x2x1 image to a fresh temp dir as a PNG with the given flip mode, reads it back
-  // via ReadImageStackFilter, and returns the read-back single-component pixel values in row-major
-  // (y then x) order: {row0[0], row0[1], row0[2], row1[0], row1[1], row1[2]}.
-  auto writeAndReadBackFlip = [&](uint64 flipMode) -> std::array<uint8, 6> {
+  // Writes a single-component uint8 image of the given (dimX, dimY) with the supplied row-major pixel
+  // values to a fresh temp dir as a PNG with the given flip mode, reads it back via ReadImageStackFilter,
+  // and returns the read-back single-component pixel values in row-major (y then x) order.
+  auto writeAndReadBackFlip = [&](uint64 flipMode, uint64 dimX, uint64 dimY, const std::vector<uint8>& pixelValues) -> std::vector<uint8> {
     DataStructure dataStructure;
     auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
-    imageGeomPtr->setDimensions({3, 2, 1});
-    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 2, 3}, imageGeomPtr->getId());
+    imageGeomPtr->setDimensions({dimX, dimY, 1});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, dimY, dimX}, imageGeomPtr->getId());
     imageGeomPtr->setCellData(*cellAmPtr);
-    auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, 2, 3}, {1}, cellAmPtr->getId());
+    auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, dimY, dimX}, {1}, cellAmPtr->getId());
     auto& scalarStore = scalarPtr->getDataStoreRef();
-    const std::array<uint8, 6> pixelValues{0, 1, 2, 10, 11, 12};
+    REQUIRE(pixelValues.size() == scalarStore.getNumberOfTuples());
     for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
     {
       scalarStore[i] = pixelValues[i];
@@ -775,32 +985,49 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Flip output image about X or Y axis", 
     const usize readComps = readArrayPtr->getNumberOfComponents();
     // Confirmed by manual run: a single-channel (grayscale) PNG reads back as 1 component. Compare
     // only the first channel regardless, so the assertion stays meaningful if a reader ever widens it.
-    REQUIRE(readStore.getNumberOfTuples() == 6);
+    const usize numPixels = dimX * dimY;
+    REQUIRE(readStore.getNumberOfTuples() == numPixels);
 
-    std::array<uint8, 6> result{};
-    for(usize i = 0; i < 6; i++)
+    std::vector<uint8> result(numPixels);
+    for(usize i = 0; i < numPixels; i++)
     {
       result[i] = readStore.getValue(i * readComps + 0);
     }
     return result;
   };
 
+  // Tiny asymmetric 3x2x1 (X,Y,Z) single-component uint8 image (even height):
+  //   row y=0: 0  1  2
+  //   row y=1: 10 11 12
+  const std::vector<uint8> pixels3x2{0, 1, 2, 10, 11, 12};
+
   SECTION("None: rows unchanged")
   {
-    const auto pixels = writeAndReadBackFlip(k_FlipNone);
-    REQUIRE(pixels == std::array<uint8, 6>{0, 1, 2, 10, 11, 12});
+    const auto pixels = writeAndReadBackFlip(k_FlipNone, 3, 2, pixels3x2);
+    REQUIRE(pixels == std::vector<uint8>{0, 1, 2, 10, 11, 12});
   }
 
   SECTION("FlipAboutXAxis: row order reversed (top-to-bottom mirror)")
   {
-    const auto pixels = writeAndReadBackFlip(k_FlipAboutX);
-    REQUIRE(pixels == std::array<uint8, 6>{10, 11, 12, 0, 1, 2});
+    const auto pixels = writeAndReadBackFlip(k_FlipAboutX, 3, 2, pixels3x2);
+    REQUIRE(pixels == std::vector<uint8>{10, 11, 12, 0, 1, 2});
   }
 
   SECTION("FlipAboutYAxis: pixel order within each row reversed (left-to-right mirror)")
   {
-    const auto pixels = writeAndReadBackFlip(k_FlipAboutY);
-    REQUIRE(pixels == std::array<uint8, 6>{2, 1, 0, 12, 11, 10});
+    const auto pixels = writeAndReadBackFlip(k_FlipAboutY, 3, 2, pixels3x2);
+    REQUIRE(pixels == std::vector<uint8>{2, 1, 0, 12, 11, 10});
+  }
+
+  SECTION("FlipAboutXAxis with odd height: end rows swap, middle row fixed")
+  {
+    // 3x3x1 (odd height). FlipAboutXAxis reverses row order: rows 0 and 2 swap, row 1 (middle) stays.
+    //   row y=0: 0  1  2          row y=0: 20 21 22
+    //   row y=1: 10 11 12   -->   row y=1: 10 11 12   (unchanged)
+    //   row y=2: 20 21 22         row y=2: 0  1  2
+    const std::vector<uint8> pixels3x3{0, 1, 2, 10, 11, 12, 20, 21, 22};
+    const auto pixels = writeAndReadBackFlip(k_FlipAboutX, 3, 3, pixels3x3);
+    REQUIRE(pixels == std::vector<uint8>{20, 21, 22, 10, 11, 12, 0, 1, 2});
   }
 }
 
@@ -811,6 +1038,7 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
 
   constexpr uint64 k_FlipNone = 0;
   constexpr uint64 k_FlipAboutX = 1;
+  constexpr uint64 k_FlipAboutY = 2;
 
   const std::string presetName = ColorTableUtilities::GetDefaultRGBPresetName();
   const DataPath geomPath({"ImageGeometry"});
@@ -898,12 +1126,14 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
 
   const std::vector<uint8> noneImage = writeColorAndReadBack(k_FlipNone);
   const std::vector<uint8> flipXImage = writeColorAndReadBack(k_FlipAboutX);
+  const std::vector<uint8> flipYImage = writeColorAndReadBack(k_FlipAboutY);
+
+  constexpr usize width = 4;
+  constexpr usize height = 4;
 
   // Build the expected row-reversed image from the None result (4 rows of 4 pixels * 3 components)
   // and compare against the FlipAboutXAxis result: this proves the flip composes with the color
   // path without re-asserting the color math (already covered by the roundtrip tests above).
-  constexpr usize width = 4;
-  constexpr usize height = 4;
   std::vector<uint8> expectedFlipXImage(noneImage.size());
   for(usize y = 0; y < height; y++)
   {
@@ -913,4 +1143,21 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
               expectedFlipXImage.begin() + static_cast<std::ptrdiff_t>(dstRow * width * 3));
   }
   REQUIRE(flipXImage == expectedFlipXImage);
+
+  // Build the expected column-reversed image from the None result by reversing the 3-byte RGB pixel
+  // groups within each row (multi-byte pixel stride) and compare against the FlipAboutYAxis result.
+  std::vector<uint8> expectedFlipYImage(noneImage.size());
+  for(usize y = 0; y < height; y++)
+  {
+    for(usize x = 0; x < width; x++)
+    {
+      const usize srcPixel = y * width + x;
+      const usize dstPixel = y * width + (width - 1 - x);
+      for(usize c = 0; c < 3; c++)
+      {
+        expectedFlipYImage[dstPixel * 3 + c] = noneImage[srcPixel * 3 + c];
+      }
+    }
+  }
+  REQUIRE(flipYImage == expectedFlipYImage);
 }
