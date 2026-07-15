@@ -869,9 +869,13 @@
           ],
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "quats_array_path": {
           "value": "fw-ar-IF1-avtr12-corr/Cell Data/Quats",
+          "version": 1
+        },
+        "use_feature_ids": {
+          "value": true,
           "version": 1
         }
       },
