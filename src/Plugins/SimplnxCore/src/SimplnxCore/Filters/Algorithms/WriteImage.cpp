@@ -11,6 +11,7 @@
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
 #include "simplnx/Utilities/ImageIO/ImageMetadata.hpp"
+#include "simplnx/Utilities/ScaleBarRenderer.hpp"
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -68,6 +69,29 @@ void ApplyImageFlip(std::vector<uint8>& buffer, usize width, usize height, usize
       }
     }
   }
+}
+
+// Converts a packed uint8 slice buffer with 1, 3 or 4 components per pixel into 3-component RGB.
+// Grayscale replicates into all three channels; RGBA drops the alpha channel.
+std::vector<uint8> ConvertUInt8ToRgb(const std::vector<uint8>& buffer, usize pixelCount, usize numComps)
+{
+  std::vector<uint8> rgb(pixelCount * 3);
+  for(usize i = 0; i < pixelCount; i++)
+  {
+    if(numComps == 1)
+    {
+      rgb[i * 3 + 0] = buffer[i];
+      rgb[i * 3 + 1] = buffer[i];
+      rgb[i * 3 + 2] = buffer[i];
+    }
+    else
+    {
+      rgb[i * 3 + 0] = buffer[i * numComps + 0];
+      rgb[i * 3 + 1] = buffer[i * numComps + 1];
+      rgb[i * 3 + 2] = buffer[i * numComps + 2];
+    }
+  }
+  return rgb;
 }
 
 /**
@@ -289,6 +313,17 @@ Result<> WriteImage::operator()()
     return MakeErrorResult(-27000, fmt::format("Invalid plane index: {}", m_InputValues.planeIndex));
   }
 
+  const bool addScaleBar = m_InputValues.addScaleBar;
+  usize bandHeight = 0;
+  std::vector<uint8> bandRgb;
+  if(addScaleBar)
+  {
+    FloatVec3 spacing = imageGeom.getSpacing();
+    const float64 unitsPerPixel = static_cast<float64>((m_InputValues.planeIndex == 2) ? spacing[1] : spacing[0]);
+    bandHeight = ScaleBarRenderer::ComputeBandHeight(sliceH);
+    bandRgb = ScaleBarRenderer::RenderScaleBarBandRgb(sliceW, sliceH, unitsPerPixel, imageGeom.getUnits());
+  }
+
   auto imageIOResult = CreateImageIO(m_InputValues.outputFilePath);
   if(imageIOResult.invalid())
   {
@@ -309,12 +344,12 @@ Result<> WriteImage::operator()()
   fs::path ext = m_InputValues.outputFilePath.extension();
   fs::path parent = fs::absolute(m_InputValues.outputFilePath).parent_path();
 
-  // ImageMetadata is invariant across slices; color mode always writes 3-component uint8.
+  // ImageMetadata is invariant across slices; color-table and scale-bar modes always write 3-component uint8.
   ImageMetadata metadata;
   metadata.width = sliceW;
-  metadata.height = sliceH;
-  metadata.numComponents = m_InputValues.createColorTable ? 3 : nComp;
-  metadata.dataType = m_InputValues.createColorTable ? DataType::uint8 : dataType;
+  metadata.height = sliceH + bandHeight;
+  metadata.numComponents = (m_InputValues.createColorTable || addScaleBar) ? 3 : nComp;
+  metadata.dataType = (m_InputValues.createColorTable || addScaleBar) ? DataType::uint8 : dataType;
   metadata.numPages = 1;
 
   // Shared per-slice writer: names the file, writes via the ImageIO layer, commits atomically.
@@ -330,10 +365,23 @@ Result<> WriteImage::operator()()
     }
     AtomicFile atomicFile = std::move(atomicFileResult.value());
 
-    const usize pixelStrideBytes = metadata.numComponents * GetDataTypeSize(metadata.dataType);
-    ApplyImageFlip(sliceBuffer, metadata.width, metadata.height, pixelStrideBytes, m_InputValues.flipMode);
+    // Flip operates on the un-padded slice; the scale-bar band is appended afterwards so the
+    // bar is always upright at the bottom of the written image.
+    const usize incomingComps = m_InputValues.createColorTable ? 3 : nComp;
+    const usize incomingTypeSize = m_InputValues.createColorTable ? GetDataTypeSize(DataType::uint8) : bytesPerComponent;
+    ApplyImageFlip(sliceBuffer, sliceW, sliceH, incomingComps * incomingTypeSize, m_InputValues.flipMode);
 
-    auto writeResult = imageIO->writePixelData(atomicFile.tempFilePath(), sliceBuffer, metadata);
+    std::vector<uint8>* writeBufferPtr = &sliceBuffer;
+    std::vector<uint8> paddedBuffer;
+    if(addScaleBar)
+    {
+      // Preflight guarantees uint8 input (or color-table RGB) when the scale bar is enabled.
+      paddedBuffer = ConvertUInt8ToRgb(sliceBuffer, sliceW * sliceH, incomingComps);
+      paddedBuffer.insert(paddedBuffer.end(), bandRgb.begin(), bandRgb.end());
+      writeBufferPtr = &paddedBuffer;
+    }
+
+    auto writeResult = imageIO->writePixelData(atomicFile.tempFilePath(), *writeBufferPtr, metadata);
     if(writeResult.invalid())
     {
       return writeResult;

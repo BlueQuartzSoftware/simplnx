@@ -1245,3 +1245,277 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar preflight validation", "[Sim
     SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
   }
 }
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar pads the written image with a band", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  // Writes a 200x100 single-component uint8 ramp at 0.5 µm/pixel as PNG (with or without the
+  // scale bar / inline color table), reads the file back via ReadImageStackFilter into readDs.
+  // Follows the writeAndReadBackFlip pattern. When createColorTable is true the filter's default
+  // preset is used (the preset argument is left unset so IFilter fills in the parameter default).
+  auto writeAndReadBack = [&](bool addScaleBar, bool createColorTable, DataStructure& readDs) {
+    constexpr usize dimX = 200;
+    constexpr usize dimY = 100;
+    DataStructure dataStructure;
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions({dimX, dimY, 1});
+    imageGeomPtr->setSpacing({0.5f, 0.5f, 1.0f});
+    imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, dimY, dimX}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {1, dimY, dimX}, {1}, cellAmPtr->getId());
+    auto& scalarStore = scalarPtr->getDataStoreRef();
+    for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+    {
+      scalarStore[i] = static_cast<uint8>(i % 251); // asymmetric ramp
+    }
+
+    ScopedTempDir tempDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+    {
+      WriteImageFilter filter;
+      Arguments args;
+      args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+      args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+      args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.png"));
+      args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+      args.insertOrAssign(WriteImageFilter::k_AddScaleBar_Key, std::make_any<bool>(addScaleBar));
+      args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(createColorTable));
+
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      auto executeResult = filter.execute(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+    }
+    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+    ReadImageStackFilter reader;
+    GeneratedFileListParameter::ValueType fileList;
+    fileList.inputPath = tempDir.path().string();
+    fileList.startIndex = 0;
+    fileList.endIndex = 0;
+    fileList.incrementIndex = 1;
+    fileList.fileExtension = ".png";
+    fileList.filePrefix = "slice_";
+    fileList.fileSuffix = "";
+    fileList.paddingDigits = 3;
+    fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+    Arguments rArgs;
+    rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+    rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+    auto readerPreflight = reader.preflight(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+    auto readerExecute = reader.execute(readDs, rArgs);
+    SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+  };
+
+  // Expected layout for 200x100 @ 0.5 µm/px:
+  //   band = max(24, llround(0.08*100)=8) = 24  -> written image is 200 x 124
+  //   nice = ComputeNiceBarLength(200, 0.5) : target 25 µm -> 20 µm -> 40 px bar
+  //   margin = 3, thickness = 2 -> bar rows (global) 100+24-3-2 = 119 and 120
+  //   barStartCol = (200-40)/2 = 80 -> bar cols 80..119
+  constexpr usize dimX = 200;
+  constexpr usize dimY = 100;
+  constexpr usize bandHeight = 24;
+
+  DataStructure withBarDs;
+  writeAndReadBack(true, false, withBarDs);
+  DataStructure withoutBarDs;
+  writeAndReadBack(false, false, withoutBarDs);
+
+  REQUIRE_NOTHROW(withBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
+  const auto& readGeom = withBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+  SizeVec3 readDims = readGeom.getDimensions();
+  REQUIRE(readDims[0] == dimX);
+  REQUIRE(readDims[1] == dimY + bandHeight);
+
+  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+  REQUIRE(readArrayPtr != nullptr);
+  const auto& readStore = readArrayPtr->getDataStoreRef();
+  const usize readComps = readArrayPtr->getNumberOfComponents();
+  REQUIRE(readComps == 3); // scale-bar output is always RGB
+
+  REQUIRE_NOTHROW(withoutBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
+  const auto& plainGeom = withoutBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+  const auto* plainArrayPtr = dynamic_cast<const UInt8Array*>(plainGeom.getCellData()->begin()->second.get());
+  REQUIRE(plainArrayPtr != nullptr);
+  const auto& plainStore = plainArrayPtr->getDataStoreRef();
+  const usize plainComps = plainArrayPtr->getNumberOfComponents();
+
+  auto barPixel = [&](usize row, usize col) -> std::array<uint8, 3> {
+    const usize i = (row * dimX + col) * readComps;
+    return {readStore.getValue(i), readStore.getValue(i + 1), readStore.getValue(i + 2)};
+  };
+
+  SECTION("image region is untouched and grayscale-replicated")
+  {
+    for(usize row = 0; row < dimY; row++)
+    {
+      for(usize col = 0; col < dimX; col++)
+      {
+        const uint8 expected = plainStore.getValue((row * dimX + col) * plainComps);
+        const std::array<uint8, 3> rgb = barPixel(row, col);
+        REQUIRE(rgb[0] == expected);
+        REQUIRE(rgb[1] == expected);
+        REQUIRE(rgb[2] == expected);
+      }
+    }
+  }
+
+  SECTION("band background is white and the bar is a crisp black run")
+  {
+    const std::array<uint8, 3> white = {255, 255, 255};
+    const std::array<uint8, 3> black = {0, 0, 0};
+    REQUIRE(barPixel(dimY, 0) == white);
+    REQUIRE(barPixel(dimY + bandHeight - 1, dimX - 1) == white);
+    for(usize row : {usize(119), usize(120)})
+    {
+      REQUIRE(barPixel(row, 79) == white);
+      for(usize col = 80; col < 120; col++)
+      {
+        REQUIRE(barPixel(row, col) == black);
+      }
+      REQUIRE(barPixel(row, 120) == white);
+    }
+  }
+
+  SECTION("label text renders in the band above the bar")
+  {
+    bool foundTextPixel = false;
+    for(usize row = dimY; row < usize(119) && !foundTextPixel; row++)
+    {
+      for(usize col = 0; col < dimX; col++)
+      {
+        if(barPixel(row, col)[0] < 128)
+        {
+          foundTextPixel = true;
+          break;
+        }
+      }
+    }
+    REQUIRE(foundTextPixel);
+  }
+
+  SECTION("scale bar composes with the inline color-table path")
+  {
+    // Color table on, bar on vs. color table on, bar off: the colorized image region must be
+    // identical, with the band appended below it.
+    DataStructure colorBarDs;
+    writeAndReadBack(true, true, colorBarDs);
+    DataStructure colorPlainDs;
+    writeAndReadBack(false, true, colorPlainDs);
+
+    REQUIRE_NOTHROW(colorBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
+    const auto& colorBarGeom = colorBarDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+    SizeVec3 colorBarDims = colorBarGeom.getDimensions();
+    REQUIRE(colorBarDims[0] == dimX);
+    REQUIRE(colorBarDims[1] == dimY + bandHeight);
+
+    const auto* colorBarArrayPtr = dynamic_cast<const UInt8Array*>(colorBarGeom.getCellData()->begin()->second.get());
+    REQUIRE(colorBarArrayPtr != nullptr);
+    const auto& colorBarStore = colorBarArrayPtr->getDataStoreRef();
+    REQUIRE(colorBarArrayPtr->getNumberOfComponents() == 3);
+
+    REQUIRE_NOTHROW(colorPlainDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
+    const auto& colorPlainGeom = colorPlainDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+    const auto* colorPlainArrayPtr = dynamic_cast<const UInt8Array*>(colorPlainGeom.getCellData()->begin()->second.get());
+    REQUIRE(colorPlainArrayPtr != nullptr);
+    const auto& colorPlainStore = colorPlainArrayPtr->getDataStoreRef();
+    REQUIRE(colorPlainArrayPtr->getNumberOfComponents() == 3);
+
+    for(usize i = 0; i < dimX * dimY * 3; i++)
+    {
+      REQUIRE(colorBarStore.getValue(i) == colorPlainStore.getValue(i));
+    }
+  }
+}
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar composes with flip and RGB input", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  constexpr uint64 k_FlipAboutX = 1;
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath rgbPath = geomPath.createChildPath("CellData").createChildPath("Rgb");
+
+  // Tiny 3x2 RGB image with distinct per-pixel colors, flipped about X, with the scale bar.
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({3, 2, 1});
+  imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f});
+  imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 2, 3}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* rgbPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Rgb", {1, 2, 3}, {3}, cellAmPtr->getId());
+  auto& rgbStore = rgbPtr->getDataStoreRef();
+  // row y=0: (10,11,12) (20,21,22) (30,31,32) ; row y=1: (110,111,112) (120,121,122) (130,131,132)
+  const std::vector<uint8> srcRgb = {10, 11, 12, 20, 21, 22, 30, 31, 32, 110, 111, 112, 120, 121, 122, 130, 131, 132};
+  for(usize i = 0; i < srcRgb.size(); i++)
+  {
+    rgbStore[i] = srcRgb[i];
+  }
+
+  ScopedTempDir tempDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+  {
+    WriteImageFilter filter;
+    Arguments args;
+    args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(rgbPath));
+    args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.png"));
+    args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+    args.insertOrAssign(WriteImageFilter::k_FlipMode_Key, std::make_any<ChoicesParameter::ValueType>(k_FlipAboutX));
+    args.insertOrAssign(WriteImageFilter::k_AddScaleBar_Key, std::make_any<bool>(true));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  DataStructure readDs;
+  ReadImageStackFilter reader;
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = tempDir.path().string();
+  fileList.startIndex = 0;
+  fileList.endIndex = 0;
+  fileList.incrementIndex = 1;
+  fileList.fileExtension = ".png";
+  fileList.filePrefix = "slice_";
+  fileList.fileSuffix = "";
+  fileList.paddingDigits = 3;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+  Arguments rArgs;
+  rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+  rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+  auto readerPreflight = reader.preflight(readDs, rArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+  auto readerExecute = reader.execute(readDs, rArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+
+  REQUIRE_NOTHROW(readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
+  const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+  SizeVec3 readDims = readGeom.getDimensions();
+  REQUIRE(readDims[0] == 3);
+  REQUIRE(readDims[1] == 2 + 24); // band = max(24, llround(0.08*2)=0) = 24
+
+  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+  REQUIRE(readArrayPtr != nullptr);
+  const auto& readStore = readArrayPtr->getDataStoreRef();
+  REQUIRE(readArrayPtr->getNumberOfComponents() == 3);
+
+  // Flip about X applies to the image region only: source row 1 is now on top, the band stays below.
+  const std::vector<uint8> expectedTopRows = {110, 111, 112, 120, 121, 122, 130, 131, 132, 10, 11, 12, 20, 21, 22, 30, 31, 32};
+  for(usize i = 0; i < expectedTopRows.size(); i++)
+  {
+    REQUIRE(readStore.getValue(i) == expectedTopRows[i]);
+  }
+  // First band row is white background
+  REQUIRE(readStore.getValue((2 * 3 + 0) * 3) == 255);
+}

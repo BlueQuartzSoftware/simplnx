@@ -29,6 +29,7 @@ struct SIMPLNXCORE_EXPORT WriteImageInputValues
   DataPath maskArrayPath;
   std::vector<uint8> invalidColor; ///< size 3, RGB
   ImageFlipTransform flipMode = ImageFlipTransform::None;
+  bool addScaleBar = false;
 };
 
 /**

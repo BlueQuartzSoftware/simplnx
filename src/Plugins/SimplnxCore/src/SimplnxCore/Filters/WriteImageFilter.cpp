@@ -337,6 +337,7 @@ Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Argum
   inputValues.maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
   inputValues.invalidColor = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);
   inputValues.flipMode = static_cast<ImageFlipTransform>(filterArgs.value<ChoicesParameter::ValueType>(k_FlipMode_Key));
+  inputValues.addScaleBar = filterArgs.value<bool>(k_AddScaleBar_Key);
 
   return WriteImage(dataStructure, messageHandler, shouldCancel, inputValues)();
 }
