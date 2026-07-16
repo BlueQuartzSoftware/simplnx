@@ -556,6 +556,8 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/DataStoreUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilePathGenerator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ColorTableUtilities.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Fonts/Fonts.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/Fonts/LatoRegular.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FileUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/AlgorithmDispatch.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FilterUtilities.hpp

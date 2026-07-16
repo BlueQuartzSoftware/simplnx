@@ -1,7 +1,6 @@
 #include "WritePoleFigureFilter.hpp"
 
 #include "OrientationAnalysis/Filters/Algorithms/WritePoleFigure.hpp"
-#include "OrientationAnalysis/utilities/Fonts.hpp"
 #include "OrientationAnalysis/utilities/LatoBold.hpp"
 #include "OrientationAnalysis/utilities/SIMPLConversion.hpp"
 
@@ -22,6 +21,7 @@
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/Parameters/NumberParameter.hpp"
 #include "simplnx/Parameters/StringParameter.hpp"
+#include "simplnx/Utilities/Fonts/Fonts.hpp"
 
 #define CANVAS_ITY_IMPLEMENTATION
 #include <canvas_ity.hpp>
