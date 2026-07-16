@@ -73,6 +73,7 @@ void ApplyImageFlip(std::vector<uint8>& buffer, usize width, usize height, usize
 
 // Converts a packed uint8 slice buffer with 1, 3 or 4 components per pixel into 3-component RGB.
 // Grayscale replicates into all three channels; RGBA drops the alpha channel.
+// Precondition: buffer holds uint8 components (1 byte each); preflight enforces this whenever the scale bar is enabled.
 std::vector<uint8> ConvertUInt8ToRgb(const std::vector<uint8>& buffer, usize pixelCount, usize numComps)
 {
   std::vector<uint8> rgb(pixelCount * 3);
@@ -324,6 +325,11 @@ Result<> WriteImage::operator()()
     bandRgb = ScaleBarRenderer::RenderScaleBarBandRgb(sliceW, sliceH, unitsPerPixel, imageGeom.getUnits());
   }
 
+  // Loop-invariant: the incoming per-slice buffer's component count and component byte size are the
+  // same for every slice, so compute them once here rather than inside writeSlice on every call.
+  const usize incomingComps = m_InputValues.createColorTable ? 3 : nComp;
+  const usize incomingTypeSize = m_InputValues.createColorTable ? GetDataTypeSize(DataType::uint8) : bytesPerComponent;
+
   auto imageIOResult = CreateImageIO(m_InputValues.outputFilePath);
   if(imageIOResult.invalid())
   {
@@ -367,8 +373,6 @@ Result<> WriteImage::operator()()
 
     // Flip operates on the un-padded slice; the scale-bar band is appended afterwards so the
     // bar is always upright at the bottom of the written image.
-    const usize incomingComps = m_InputValues.createColorTable ? 3 : nComp;
-    const usize incomingTypeSize = m_InputValues.createColorTable ? GetDataTypeSize(DataType::uint8) : bytesPerComponent;
     ApplyImageFlip(sliceBuffer, sliceW, sliceH, incomingComps * incomingTypeSize, m_InputValues.flipMode);
 
     std::vector<uint8>* writeBufferPtr = &sliceBuffer;

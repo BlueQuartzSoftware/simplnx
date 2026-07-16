@@ -1519,3 +1519,87 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar composes with flip and RGB i
   // First band row is white background
   REQUIRE(readStore.getValue((2 * 3 + 0) * 3) == 255);
 }
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar on XZ-plane slices locks per-plane dims and horizontal spacing", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath scalarPath = geomPath.createChildPath("CellData").createChildPath("Scalar");
+
+  // Distinct dims per axis so the XZ slice's W (=dimX) and H (=dimZ) can't be confused with dimY
+  // (the XZ slice count). Spacing is likewise distinct per axis so an XZ write using the wrong
+  // (Y-axis) spacing for the bar's horizontal axis would be caught.
+  constexpr usize dimX = 8;
+  constexpr usize dimY = 4;
+  constexpr usize dimZ = 6;
+
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  imageGeomPtr->setSpacing({0.5f, 1.0f, 1.0f});
+  imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {dimZ, dimY, dimX}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* scalarPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Scalar", {dimZ, dimY, dimX}, {1}, cellAmPtr->getId());
+  auto& scalarStore = scalarPtr->getDataStoreRef();
+  for(usize i = 0; i < scalarStore.getNumberOfTuples(); i++)
+  {
+    scalarStore[i] = static_cast<uint8>(i % 251);
+  }
+
+  // XZ plane: sliceCount = dimY, so 4 files are written; only slice 0 is read back below.
+  ScopedTempDir tempDir(fs::path(unit_test::k_BinaryTestOutputDir.view()));
+  {
+    WriteImageFilter filter;
+    Arguments args;
+    args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(scalarPath));
+    args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(tempDir.path() / "slice.png"));
+    args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XZPlane));
+    args.insertOrAssign(WriteImageFilter::k_AddScaleBar_Key, std::make_any<bool>(true));
+
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    auto executeResult = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
+  }
+  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+
+  DataStructure readDs;
+  ReadImageStackFilter reader;
+  GeneratedFileListParameter::ValueType fileList;
+  fileList.inputPath = tempDir.path().string();
+  fileList.startIndex = 0;
+  fileList.endIndex = 0;
+  fileList.incrementIndex = 1;
+  fileList.fileExtension = ".png";
+  fileList.filePrefix = "slice_";
+  fileList.fileSuffix = "";
+  fileList.paddingDigits = 3;
+  fileList.ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+
+  Arguments rArgs;
+  rArgs.insertOrAssign(ReadImageStackFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(fileList));
+  rArgs.insertOrAssign(ReadImageStackFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"ReadGeom"})));
+  auto readerPreflight = reader.preflight(readDs, rArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(readerPreflight.outputActions);
+  auto readerExecute = reader.execute(readDs, rArgs);
+  SIMPLNX_RESULT_REQUIRE_VALID(readerExecute.result);
+
+  // XZ slice: W = dimX = 8, H = dimZ = 6; band = max(24, llround(0.08*6)=0) = 24 -> 8 x 30.
+  REQUIRE_NOTHROW(readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"})));
+  const auto& readGeom = readDs.getDataRefAs<ImageGeom>(DataPath({"ReadGeom"}));
+  SizeVec3 readDims = readGeom.getDimensions();
+  REQUIRE(readDims[0] == dimX);
+  REQUIRE(readDims[1] == dimZ + 24);
+
+  const auto* readArrayPtr = dynamic_cast<const UInt8Array*>(readGeom.getCellData()->begin()->second.get());
+  REQUIRE(readArrayPtr != nullptr);
+  const auto& readStore = readArrayPtr->getDataStoreRef();
+  REQUIRE(readArrayPtr->getNumberOfComponents() == 3);
+
+  // First band row (row = dimZ, col = 0) is white background.
+  REQUIRE(readStore.getValue((dimZ * dimX + 0) * 3) == 255);
+}

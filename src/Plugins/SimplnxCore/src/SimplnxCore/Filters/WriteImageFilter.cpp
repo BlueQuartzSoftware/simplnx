@@ -299,11 +299,11 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
       {
         return {MakeErrorResult<OutputActions>(-27016, fmt::format("The scale bar can only be drawn on 8-bit images. '{}' is {} with {} component(s); supported inputs are uint8 with 1, 3 or 4 "
                                                                    "components. Enable 'Create Color Table' to convert this array to an 8-bit RGB image instead.",
-                                                                   imageArrayPath.toString(), DataTypeToString(arrayDataType), imageArray.getNumberOfComponents()))};
+                                                                   imageArrayPath.toString(), DataTypeToString(arrayDataType), numComponents))};
       }
     }
 
-    FloatVec3 spacing = imageGeom.getSpacing();
+    const FloatVec3 spacing = imageGeom.getSpacing();
     const float32 horizontalSpacing = (plane == 2) ? spacing[1] : spacing[0];
     if(!std::isfinite(horizontalSpacing) || horizontalSpacing <= 0.0f)
     {

@@ -69,7 +69,7 @@ Enabling *Create Color Table* converts a single-component **Data Array** to an R
 - *Masked Color (RGB)* is the RGB triplet written for any voxel marked bad by the mask.
 - The mask is only applied when *Create Color Table* is also enabled. If *Create Color Table* is disabled, *Use Mask Array* and *Masked Color (RGB)* have no effect, since the filter writes the raw pixel data unchanged.
 
-### Add Physical Scale Bar
+### Add Physical Scale Bar (Optional)
 
 When *Add Physical Scale Bar* is enabled, each written image is extended with a white band below the
 image data containing a black scale bar and a length label (for example `100 µm`). The image pixels are
