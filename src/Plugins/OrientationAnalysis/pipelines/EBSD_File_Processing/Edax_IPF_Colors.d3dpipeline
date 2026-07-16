@@ -186,6 +186,10 @@
           "value": "DataContainer/Cell Data/Phases",
           "version": 1
         },
+        "color_key_index": {
+          "value": 0,
+          "version": 1
+        },
         "crystal_structures_array_path": {
           "value": "DataContainer/Cell Ensemble Data/CrystalStructures",
           "version": 1
@@ -194,7 +198,7 @@
           "value": "DataContainer/Cell Data/Mask",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "reference_dir": {
           "value": [
             0.0,

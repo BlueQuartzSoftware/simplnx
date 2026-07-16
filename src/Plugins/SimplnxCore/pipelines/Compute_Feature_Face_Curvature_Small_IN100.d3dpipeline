@@ -170,6 +170,14 @@
           "value": "DataContainer/Cell Data/FeatureIds",
           "version": 1
         },
+        "input_data_array_paths": {
+          "value": [],
+          "version": 1
+        },
+        "input_feature_data_array_paths": {
+          "value": [],
+          "version": 1
+        },
         "input_grid_geometry_path": {
           "value": "DataContainer",
           "version": 1
@@ -377,11 +385,19 @@
     },
     {
       "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
         "export_file_path": {
           "value": "Small IN100 Face Curvature.dream3d",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
         "write_xdmf_file": {
           "value": true,
           "version": 1

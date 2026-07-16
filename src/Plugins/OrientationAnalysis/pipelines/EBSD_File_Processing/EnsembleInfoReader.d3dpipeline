@@ -48,6 +48,18 @@
     },
     {
       "args": {
+        "allow_partial_filling": {
+          "value": false,
+          "version": 1
+        },
+        "component_dimensions": {
+          "value": [
+            [
+              4.0
+            ]
+          ],
+          "version": 1
+        },
         "created_attribute_array_path": {
           "value": "[Image Geometry]/Cell Data/Quats",
           "version": 1
@@ -60,17 +72,13 @@
           "value": "Data/OrientationAnalysis/quats.raw",
           "version": 1
         },
-        "component_dimensions": {
-          "value": [
-            [
-              4.0
-            ]
-          ],
-          "version": 1
-        },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "scalar_type_index": {
           "value": 8,
+          "version": 1
+        },
+        "set_tuple_dimensions": {
+          "value": true,
           "version": 1
         },
         "skip_header_bytes": {
@@ -212,6 +220,10 @@
           "value": "[Image Geometry]/Cell Data/Phases",
           "version": 1
         },
+        "color_key_index": {
+          "value": 0,
+          "version": 1
+        },
         "crystal_structures_array_path": {
           "value": "[Image Geometry]/Cell Ensemble/CrystalStructures",
           "version": 1
@@ -220,7 +232,7 @@
           "value": "",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
         "reference_dir": {
           "value": [
             0.0,
@@ -243,11 +255,19 @@
     },
     {
       "args": {
+        "compression_level": {
+          "value": 5,
+          "version": 1
+        },
         "export_file_path": {
           "value": "Data/Output/Examples/EnsembleInfoReaderExample.dream3d",
           "version": 1
         },
-        "parameters_version": 1,
+        "parameters_version": 2,
+        "use_compression": {
+          "value": true,
+          "version": 1
+        },
         "write_xdmf_file": {
           "value": true,
           "version": 1
