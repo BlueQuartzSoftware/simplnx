@@ -2,6 +2,7 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
 #include <string>
 
 using namespace nx::core;
@@ -51,4 +52,56 @@ TEST_CASE("Simplnx::ScaleBarRenderer: ComputeBandHeight", "[Simplnx][ScaleBarRen
   REQUIRE(ScaleBarRenderer::ComputeBandHeight(500) == 40);  // 40
   REQUIRE(ScaleBarRenderer::ComputeBandHeight(1000) == 80); // 80
   REQUIRE(ScaleBarRenderer::ComputeBandHeight(0) == 24);    // degenerate -> minimum
+}
+
+TEST_CASE("Simplnx::ScaleBarRenderer: RenderScaleBarBandRgb", "[Simplnx][ScaleBarRenderer]")
+{
+  // 100 px wide, 50 px tall image, 1 µm/pixel:
+  //   band      = max(24, llround(0.08*50)=4)            = 24
+  //   margin    = max(2, llround(24*0.12)=3)             = 3
+  //   thickness = max(2, llround(24*0.08)=2)             = 2
+  //   nice      = ComputeNiceBarLength(100, 1.0)         = 20 µm -> 20 px bar
+  //   barTopRow = 24 - 3 - 2                             = 19  (bar covers rows 19-20)
+  //   barStart  = (100 - 20) / 2                         = 40  (bar covers cols 40-59)
+  const usize width = 100;
+  const std::vector<uint8> band = ScaleBarRenderer::RenderScaleBarBandRgb(width, 50, 1.0, IGeometry::LengthUnit::Micrometer);
+  REQUIRE(band.size() == width * 24 * 3);
+
+  auto pixel = [&](usize row, usize col) -> std::array<uint8, 3> {
+    const usize i = (row * width + col) * 3;
+    return {band[i], band[i + 1], band[i + 2]};
+  };
+  const std::array<uint8, 3> white = {255, 255, 255};
+  const std::array<uint8, 3> black = {0, 0, 0};
+
+  // Background corners are white
+  REQUIRE(pixel(0, 0) == white);
+  REQUIRE(pixel(23, 99) == white);
+
+  // The bar is a crisp black run on both bar rows, white immediately outside it
+  for(usize row : {usize(19), usize(20)})
+  {
+    REQUIRE(pixel(row, 39) == white);
+    for(usize col = 40; col < 60; col++)
+    {
+      REQUIRE(pixel(row, col) == black);
+    }
+    REQUIRE(pixel(row, 60) == white);
+  }
+
+  // The label ("20 µm") renders above the bar: at least one visibly dark pixel
+  // in the text region (rows 0..18). Anti-aliased glyphs are not pixel-compared.
+  bool foundTextPixel = false;
+  for(usize row = 0; row < 19 && !foundTextPixel; row++)
+  {
+    for(usize col = 0; col < width; col++)
+    {
+      if(pixel(row, col)[0] < 128)
+      {
+        foundTextPixel = true;
+        break;
+      }
+    }
+  }
+  REQUIRE(foundTextPixel);
 }

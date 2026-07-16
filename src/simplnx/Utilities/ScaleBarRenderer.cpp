@@ -1,6 +1,12 @@
 #include "ScaleBarRenderer.hpp"
 
+#include "simplnx/Utilities/Fonts/Fonts.hpp"
+#include "simplnx/Utilities/Fonts/LatoRegular.hpp"
+
 #include <fmt/format.h>
+
+#define CANVAS_ITY_IMPLEMENTATION
+#include <canvas_ity.hpp>
 
 #include <algorithm>
 #include <array>
@@ -11,9 +17,12 @@ using namespace nx::core;
 
 namespace
 {
-constexpr float64 k_TargetBarFraction = 0.25;  // bar targets 25% of the physical image width
-constexpr float64 k_BandHeightFraction = 0.08; // band is 8% of the image height...
-constexpr usize k_MinBandHeight = 24;          // ...but never less than 24 pixels
+constexpr float64 k_TargetBarFraction = 0.25;    // bar targets 25% of the physical image width
+constexpr float64 k_BandHeightFraction = 0.08;   // band is 8% of the image height...
+constexpr usize k_MinBandHeight = 24;            // ...but never less than 24 pixels
+constexpr float64 k_MarginFraction = 0.12;       // band-edge margin
+constexpr float64 k_BarThicknessFraction = 0.08; // bar thickness relative to band height
+constexpr float64 k_FontFraction = 0.45;         // font size relative to band height
 
 // Power-of-ten exponent that converts one geometry unit to meters, or nullopt
 // for non-metric units. Angstrom (1e-10 m) is treated as metric so labels
@@ -160,8 +169,47 @@ usize ComputeBandHeight(usize imageHeightPixels)
 //------------------------------------------------------------------------------
 std::vector<uint8> RenderScaleBarBandRgb(usize imageWidthPixels, usize imageHeightPixels, float64 unitsPerPixel, IGeometry::LengthUnit unit)
 {
-  // Implemented in the next task; a white band with no bar keeps callers functional.
   const usize bandHeight = ComputeBandHeight(imageHeightPixels);
-  return std::vector<uint8>(imageWidthPixels * bandHeight * 3, 255);
+  const usize margin = std::max<usize>(2, static_cast<usize>(std::llround(static_cast<float64>(bandHeight) * k_MarginFraction)));
+  const usize barThickness = std::max<usize>(2, static_cast<usize>(std::llround(static_cast<float64>(bandHeight) * k_BarThicknessFraction)));
+  const float32 fontSize = static_cast<float32>(k_FontFraction * static_cast<float64>(bandHeight));
+
+  canvas_ity::canvas context(static_cast<int>(imageWidthPixels), static_cast<int>(bandHeight));
+  context.set_color(canvas_ity::fill_style, 1.0f, 1.0f, 1.0f, 1.0f);
+  context.fill_rectangle(0.0f, 0.0f, static_cast<float>(imageWidthPixels), static_cast<float>(bandHeight));
+
+  const float64 niceLength = ComputeNiceBarLength(imageWidthPixels, unitsPerPixel);
+  if(niceLength > 0.0)
+  {
+    // Integer bar coordinates keep the rectangle edges crisp (full pixel coverage, no anti-aliasing)
+    const usize barPixels = std::min<usize>(imageWidthPixels, std::max<usize>(1, static_cast<usize>(std::llround(niceLength / unitsPerPixel))));
+    const usize barStartCol = (imageWidthPixels - barPixels) / 2;
+    const usize barTopRow = bandHeight - margin - barThickness;
+
+    context.set_color(canvas_ity::fill_style, 0.0f, 0.0f, 0.0f, 1.0f);
+    context.fill_rectangle(static_cast<float>(barStartCol), static_cast<float>(barTopRow), static_cast<float>(barPixels), static_cast<float>(barThickness));
+
+    const std::string label = FormatLengthLabel(niceLength, unit);
+    std::vector<unsigned char> fontData;
+    fonts::Base64Decode(fonts::k_LatoRegularBase64, fontData);
+    if(context.set_font(fontData.data(), static_cast<int>(fontData.size()), fontSize))
+    {
+      const float textWidth = context.measure_text(label.c_str());
+      const float baselineY = static_cast<float>(margin) + fontSize;
+      context.fill_text(label.c_str(), (static_cast<float>(imageWidthPixels) - textWidth) / 2.0f, baselineY);
+    }
+  }
+
+  std::vector<uint8> rgba(imageWidthPixels * bandHeight * 4);
+  context.get_image_data(rgba.data(), static_cast<int>(imageWidthPixels), static_cast<int>(bandHeight), static_cast<int>(imageWidthPixels * 4), 0, 0);
+
+  std::vector<uint8> rgb(imageWidthPixels * bandHeight * 3);
+  for(usize i = 0; i < imageWidthPixels * bandHeight; i++)
+  {
+    rgb[i * 3 + 0] = rgba[i * 4 + 0];
+    rgb[i * 3 + 1] = rgba[i * 4 + 1];
+    rgb[i * 3 + 2] = rgba[i * 4 + 2];
+  }
+  return rgb;
 }
 } // namespace nx::core::ScaleBarRenderer
