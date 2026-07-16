@@ -9,6 +9,7 @@
 
 #include <EbsdLib/LaueOps/LaueOps.h>
 
+#include <algorithm>
 #include <chrono>
 
 using namespace nx::core;
@@ -25,8 +26,12 @@ public:
   , m_InputValues(inputValues)
   , m_ShouldCancel(shouldCancel)
   {
+    m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   }
 
+  // For each valid focal cell in the chunk: walk the (2rx+1)x(2ry+1)x(2rz+1) kernel, admit
+  // neighbors per the Use Feature Ids mode, accumulate symmetry-reduced misorientation via
+  // LaueOps, and store the average (degrees) at the focal cell. Invalid focal cells get 0.
   void convert(size_t zStart, size_t zEnd, size_t yStart, size_t yEnd, size_t xStart, size_t xEnd) const
   {
     // Input Arrays / Parameter Data
@@ -45,17 +50,15 @@ public:
     auto& kernelAvgMisorientationsArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->KernelAverageMisorientationsArrayName);
     auto& kernelAvgMisorientations = kernelAvgMisorientationsArray.getDataStoreRef();
 
-    std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-
-    auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
-    SizeVec3 udims = gridGeom->getDimensions();
+    const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
+    SizeVec3 udims = imageGeom.getDimensions();
 
     ebsdlib::QuatD q1;
     ebsdlib::QuatD q2;
 
     // messenger values
     usize counter = 0;
-    usize increment = (zEnd - zStart) / 100;
+    usize increment = std::max(static_cast<usize>(1), (zEnd - zStart) / 100);
 
     ProgressMessenger progressMessenger = m_ProgressMessageHelper.createProgressMessenger();
 
@@ -64,11 +67,6 @@ public:
     auto zPoints = static_cast<int64_t>(udims[2]);
     for(size_t plane = zStart; plane < zEnd; plane++)
     {
-      if(m_ShouldCancel)
-      {
-        break;
-      }
-
       if(counter > increment)
       {
         progressMessenger.sendProgressMessage(counter);
@@ -77,6 +75,11 @@ public:
 
       for(size_t row = yStart; row < yEnd; row++)
       {
+        if(m_ShouldCancel)
+        {
+          return;
+        }
+
         for(size_t col = xStart; col < xEnd; col++)
         {
           size_t point = (plane * xPoints * yPoints) + (row * xPoints) + col;
@@ -93,31 +96,28 @@ public:
 
             for(int32_t j = -kernelSize[2]; j < kernelSize[2] + 1; j++)
             {
-
-              if(plane + j < 0 || plane + j > zPoints - 1)
+              const int64_t zIdx = static_cast<int64_t>(plane) + j;
+              if(zIdx < 0 || zIdx > zPoints - 1)
               {
                 continue;
               }
-              const int64_t jStride = j * xPoints * yPoints;
               for(int32_t k = -kernelSize[1]; k < kernelSize[1] + 1; k++)
               {
-                if(row + k < 0 || row + k > yPoints - 1)
+                const int64_t yIdx = static_cast<int64_t>(row) + k;
+                if(yIdx < 0 || yIdx > yPoints - 1)
                 {
                   continue;
                 }
-                const int64_t kStride = k * xPoints;
                 for(int32_t l = -kernelSize[0]; l < kernelSize[0] + 1; l++)
                 {
-                  if(col + l < 0 || col + l > xPoints - 1)
+                  const int64_t xIdx = static_cast<int64_t>(col) + l;
+                  if(xIdx < 0 || xIdx > xPoints - 1)
                   {
                     continue;
                   }
-                  const int64_t neighbor = static_cast<int64_t>(point) + jStride + kStride + l;
-                  if(neighbor < 0)
-                  {
-                    continue;
-                  }
-                  const auto neighborIdx = static_cast<size_t>(neighbor);
+                  // All three indices are clamped in-bounds, so the flattened neighbor index is
+                  // always valid; no separate negative-index guard is needed.
+                  const auto neighborIdx = static_cast<size_t>((zIdx * xPoints * yPoints) + (yIdx * xPoints) + xIdx);
                   // Per-grain mode: neighbor must belong to the same feature as the central cell.
                   // Per-voxel mode (use_feature_ids == false): neighbor must be a valid cell
                   // (featureId > 0) of the same phase as the central cell.
@@ -137,13 +137,11 @@ public:
                 }
               }
             }
+            // numVoxel is always >= 1 here: the focal cell passes both neighbor gates (j=k=l=0)
+            // and contributes a self-misorientation of 0 degrees.
             kernelAvgMisorientations[point] = totalMisorientation / static_cast<float>(numVoxel);
-            if(numVoxel == 0)
-            {
-              kernelAvgMisorientations[point] = 0.0f;
-            }
           }
-          if(featureIds[point] == 0 || cellPhases[point] == 0)
+          else
           {
             kernelAvgMisorientations[point] = 0.0f;
           }
@@ -165,6 +163,7 @@ private:
   DataStructure& m_DataStructure;
   const ComputeKernelAvgMisorientationsInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
+  std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
 };
 
 } // namespace
@@ -185,8 +184,8 @@ ComputeKernelAvgMisorientations::~ComputeKernelAvgMisorientations() noexcept = d
 // -----------------------------------------------------------------------------
 Result<> ComputeKernelAvgMisorientations::operator()()
 {
-  auto* gridGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry);
-  SizeVec3 udims = gridGeom->getDimensions();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
+  SizeVec3 udims = imageGeom.getDimensions();
 
   MessageHelper messageHelper(m_MessageHandler);
   ProgressMessageHelper progressMessageHelper = messageHelper.createProgressMessageHelper();
