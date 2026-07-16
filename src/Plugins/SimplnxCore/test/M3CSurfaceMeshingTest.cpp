@@ -356,7 +356,7 @@ namespace
 // Self-generated ("circular") regression oracle: the exemplar is produced BY this filter, so it only
 // guards against future *changes* to the output, not against correctness of the current output. It
 // should be replaced by an independent oracle (e.g. legacy DREAM3D M3C output) when available.
-const fs::path k_ExemplarFile = fs::path(nx::core::unit_test::k_TestFilesDir.view()) / "M3CSurfaceMeshingExemplar" / "M3CSurfaceMeshingExemplar.dream3d";
+const fs::path k_ExemplarFile = fs::path(nx::core::unit_test::k_TestFilesDir.view()) / "M3CSurfaceMeshingExemplar_v1" / "M3CSurfaceMeshingExemplar_v1.dream3d";
 const DataPath k_ExemplarMeshPath({"Computed M3C Mesh"});
 
 // Runs M3C (winding repair on) on an already-loaded Small IN100 input, creating k_ExemplarMeshPath.
@@ -487,8 +487,15 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Generate Exemplar", "[.][M3CGen
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
 
-  // Drop the input container so the exemplar holds only the generated mesh.
-  dataStructure.removeData(DataPath({k_DataContainer}));
+  // Drop everything except the generated mesh (the input file also carries QuickMesh exemplar
+  // geometries) so the exemplar archive holds only the M3C output.
+  for(DataObject* topLevelPtr : dataStructure.getTopLevelData())
+  {
+    if(topLevelPtr->getName() != k_ExemplarMeshPath.getTargetName())
+    {
+      dataStructure.removeData(topLevelPtr->getId());
+    }
+  }
   fs::create_directories(k_ExemplarFile.parent_path());
   WriteTestDataStructure(dataStructure, k_ExemplarFile);
 }
@@ -497,10 +504,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Exemplar Comparison", "[Simplnx
 {
   UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
-  // The exemplar has not been published to the Data_Archive yet, so reference the locally generated
-  // folder: the last two args (decompressFiles=false, removeTemp=false) tell the sentinel not to
-  // decompress an archive and not to delete the folder. Once published, restore the defaults.
-  const nx::core::UnitTest::TestFileSentinel exemplarSentinel(nx::core::unit_test::k_TestFilesDir, "M3CSurfaceMeshingExemplar.tar.gz", "M3CSurfaceMeshingExemplar", false, false);
+  const nx::core::UnitTest::TestFileSentinel exemplarSentinel(nx::core::unit_test::k_TestFilesDir, "M3CSurfaceMeshingExemplar_v1.tar.gz", "M3CSurfaceMeshingExemplar_v1");
 
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
