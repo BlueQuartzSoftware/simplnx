@@ -15,6 +15,11 @@ namespace fs = std::filesystem;
 
 namespace Test
 {
+// Relative tolerance for comparing float32 results against the hand-derived oracle values. A few
+// float32 ULPs (~1.2e-7 each) of slack so the pins survive platform and TBB reduction-order
+// differences without demanding bit-exact equality; anything beyond this is a real deviation.
+constexpr float64 k_RelativeTolerance = 1.0e-6;
+
 // Geometry Level
 const std::string k_ImageGeomName = "Image";
 const DataPath k_ImageGeomPath = DataPath({k_ImageGeomName});
@@ -87,14 +92,14 @@ void Validate2DImageDataStructure(const DataStructure& dataStructure)
   REQUIRE(numElements.getValue(3) == 13);
   // areas: 0.0 22.22 2.02 26.26
   const auto& areas = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
-  REQUIRE(std::abs(areas.getValue(1) - 22.220001f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(areas.getValue(2) - 2.0200002f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(areas.getValue(3) - 26.260002f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE(areas.getValue(1) == Approx(22.220001f).epsilon(k_RelativeTolerance));
+  REQUIRE(areas.getValue(2) == Approx(2.0200002f).epsilon(k_RelativeTolerance));
+  REQUIRE(areas.getValue(3) == Approx(26.260002f).epsilon(k_RelativeTolerance));
   // eqDiameters: 0.0 5.318964 1.603728 5.78232
   const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
-  REQUIRE(std::abs(equivalentDiameters.getValue(1) - 5.3189644f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(equivalentDiameters.getValue(2) - 1.60372818f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(equivalentDiameters.getValue(3) - 5.7823243f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE(equivalentDiameters.getValue(1) == Approx(5.3189644f).epsilon(k_RelativeTolerance));
+  REQUIRE(equivalentDiameters.getValue(2) == Approx(1.60372818f).epsilon(k_RelativeTolerance));
+  REQUIRE(equivalentDiameters.getValue(3) == Approx(5.7823243f).epsilon(k_RelativeTolerance));
 }
 
 DataStructure Create3DImageDataStructure()
@@ -171,14 +176,14 @@ void Validate3DImageDataStructure(const DataStructure& dataStructure)
   REQUIRE(numElements.getValue(3) == 23);
   // volumes: 0.0 165.564 65.772 52.164
   const auto& volumes = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
-  REQUIRE(std::abs(volumes.getValue(1) - 165.564f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(volumes.getValue(2) - 65.771995f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(volumes.getValue(3) - 52.163997f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE(volumes.getValue(1) == Approx(165.564f).epsilon(k_RelativeTolerance));
+  REQUIRE(volumes.getValue(2) == Approx(65.771995f).epsilon(k_RelativeTolerance));
+  REQUIRE(volumes.getValue(3) == Approx(52.163997f).epsilon(k_RelativeTolerance));
   // eqDiameters: 0.0 6.81275 5.00819 4.63579
   const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
-  REQUIRE(std::abs(equivalentDiameters.getValue(1) - 6.8127493f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(equivalentDiameters.getValue(2) - 5.0081901f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(equivalentDiameters.getValue(3) - 4.6357936f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE(equivalentDiameters.getValue(1) == Approx(6.8127493f).epsilon(k_RelativeTolerance));
+  REQUIRE(equivalentDiameters.getValue(2) == Approx(5.0081901f).epsilon(k_RelativeTolerance));
+  REQUIRE(equivalentDiameters.getValue(3) == Approx(4.6357936f).epsilon(k_RelativeTolerance));
 }
 
 DataStructure CreateRectGridDataStructure()
@@ -268,14 +273,14 @@ void ValidateRectGridDataStructure(const DataStructure& dataStructure)
   REQUIRE(numElements.getValue(3) == 10);
   // volumes: 0.0 2362.434 352.462 15.104
   const auto& volumes = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
-  REQUIRE(std::abs(volumes.getValue(1) - 2362.43384f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(volumes.getValue(2) - 352.461884f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(volumes.getValue(3) - 15.1039925f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE(volumes.getValue(1) == Approx(2362.43384f).epsilon(k_RelativeTolerance));
+  REQUIRE(volumes.getValue(2) == Approx(352.461884f).epsilon(k_RelativeTolerance));
+  REQUIRE(volumes.getValue(3) == Approx(15.1039925f).epsilon(k_RelativeTolerance));
   // eqDiameters: 0.0 16.5242 8.76404 3.06689
   const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
-  REQUIRE(std::abs(equivalentDiameters.getValue(1) - 16.5241966f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(equivalentDiameters.getValue(2) - 8.7640428f) < std::numeric_limits<float32>::epsilon());
-  REQUIRE(std::abs(equivalentDiameters.getValue(3) - 3.0668866f) < std::numeric_limits<float32>::epsilon());
+  REQUIRE(equivalentDiameters.getValue(1) == Approx(16.5241966f).epsilon(k_RelativeTolerance));
+  REQUIRE(equivalentDiameters.getValue(2) == Approx(8.7640428f).epsilon(k_RelativeTolerance));
+  REQUIRE(equivalentDiameters.getValue(3) == Approx(3.0668866f).epsilon(k_RelativeTolerance));
 }
 } // namespace Test
 
