@@ -900,6 +900,7 @@ target_include_directories(simplnx
   PUBLIC
     $<BUILD_INTERFACE:${SIMPLNX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${SIMPLNX_GENERATED_DIR}>
+    $<BUILD_INTERFACE:${SIMPLNX_SOURCE_DIR}/3rdParty/canvas_ity/src>
     $<INSTALL_INTERFACE:include>
 )
 

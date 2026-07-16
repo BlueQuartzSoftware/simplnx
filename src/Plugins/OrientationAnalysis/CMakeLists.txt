@@ -278,7 +278,6 @@ target_include_directories(${PLUGIN_NAME}
   PUBLIC
     "${EbsdLib_INCLUDE_DIRS}"
     "${${PLUGIN_NAME}_BINARY_DIR}"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/3rdParty/canvas_ity/src"
 )
 
 # ------------------------------------------------------------------------------
