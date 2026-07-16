@@ -69,6 +69,27 @@ Enabling *Create Color Table* converts a single-component **Data Array** to an R
 - *Masked Color (RGB)* is the RGB triplet written for any voxel marked bad by the mask.
 - The mask is only applied when *Create Color Table* is also enabled. If *Create Color Table* is disabled, *Use Mask Array* and *Masked Color (RGB)* have no effect, since the filter writes the raw pixel data unchanged.
 
+### Add Physical Scale Bar
+
+When *Add Physical Scale Bar* is enabled, each written image is extended with a white band below the
+image data containing a black scale bar and a length label (for example `100 µm`). The image pixels are
+never covered — the band is appended, so the written image is taller than the Image Geometry's slice
+dimensions by the band height (8% of the image height, minimum 24 pixels). The preflight output reports
+the padded size.
+
+- **Bar length**: chosen automatically as the largest "nice" value (1, 2 or 5 times a power of ten)
+  that spans no more than 25% of the physical image width, computed from the Image Geometry's spacing
+  along the written image's horizontal axis.
+- **Units**: taken from the Image Geometry's length unit and rescaled to the most readable SI prefix
+  (a spacing expressed in meters that yields a 0.0001 m bar is labeled `100 µm`). Non-metric units
+  (inch, foot, ...) are labeled as-is. If the geometry's unit is *Unspecified*, the label shows only
+  the number.
+- **Output format**: the written image is always 8-bit RGB when the scale bar is enabled. The input
+  must be an 8-bit array with 1 (grayscale), 3 (RGB) or 4 (RGBA, alpha is dropped) components, or
+  *Create Color Table* must be enabled (which already produces RGB). Other inputs fail preflight.
+- **Interaction with *Flip Output Image***: the flip applies to the image data only; the band and its
+  bar remain upright at the bottom of the written file.
+
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
