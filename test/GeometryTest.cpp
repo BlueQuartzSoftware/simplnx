@@ -152,6 +152,71 @@ void testGeomGrid(IGridGeometry* geom)
   }
 }
 
+// -----------------------------------------------------------------------------
+// getBoundingBox coverage. Regression guard for issue #1649 (commit a31beeb):
+// INodeGeometry0D::getBoundingBox() seeded the upper corner with
+// std::numeric_limits<float>::min() -- the smallest POSITIVE normal float
+// (~1.18e-38) rather than the most-negative value -- so the max corner was never
+// updated for any geometry whose maximum coordinate on an axis was <= ~0 (e.g. a
+// mesh centered at or below the origin), yielding a wrong/oversized box.
+// Geometries lying entirely in positive space happened to work, which masked the
+// bug. These helpers exercise negative, origin-straddling, and positive
+// coordinate ranges so the failure mode is caught for every node-based geometry.
+// -----------------------------------------------------------------------------
+template <typename T>
+void checkBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
+{
+  REQUIRE(bbox.isValid());
+  REQUIRE(bbox.getMinPoint()[0] == Approx(expectedMin[0]));
+  REQUIRE(bbox.getMinPoint()[1] == Approx(expectedMin[1]));
+  REQUIRE(bbox.getMinPoint()[2] == Approx(expectedMin[2]));
+  REQUIRE(bbox.getMaxPoint()[0] == Approx(expectedMax[0]));
+  REQUIRE(bbox.getMaxPoint()[1] == Approx(expectedMax[1]));
+  REQUIRE(bbox.getMaxPoint()[2] == Approx(expectedMax[2]));
+}
+
+template <class GeomType>
+void testNodeGeometryBoundingBox()
+{
+  DataStructure dataStructure;
+  auto* geom = createGeom<GeomType>(dataStructure);
+
+  const auto* vertices = createVertexList(geom);
+  geom->setVertices(*vertices);
+
+  // Regression for #1649: a geometry lying entirely in negative space. The upper
+  // corner must be the least-negative coordinate on each axis. The pre-fix code
+  // seeded the upper corner with numeric_limits<float>::min() (~1.18e-38), so the
+  // max never updated here and the box came back wrong/oversized.
+  {
+    geom->resizeVertexList(4);
+    geom->setVertexCoordinate(0, Point3Df{-3.0f, -4.0f, -5.0f});
+    geom->setVertexCoordinate(1, Point3Df{-1.0f, -8.0f, -2.0f});
+    geom->setVertexCoordinate(2, Point3Df{-6.0f, -2.0f, -9.0f});
+    geom->setVertexCoordinate(3, Point3Df{-4.0f, -5.0f, -7.0f});
+    checkBoundingBox<float32>(geom->getBoundingBox(), Point3Df{-6.0f, -8.0f, -9.0f}, Point3Df{-1.0f, -2.0f, -2.0f});
+  }
+
+  // Geometry straddling the origin (mixed-sign coordinates, including an exact
+  // zero on every axis).
+  {
+    geom->resizeVertexList(3);
+    geom->setVertexCoordinate(0, Point3Df{-2.0f, 3.0f, -4.0f});
+    geom->setVertexCoordinate(1, Point3Df{5.0f, -6.0f, 1.0f});
+    geom->setVertexCoordinate(2, Point3Df{0.0f, 0.0f, 0.0f});
+    checkBoundingBox<float32>(geom->getBoundingBox(), Point3Df{-2.0f, -6.0f, -4.0f}, Point3Df{5.0f, 3.0f, 1.0f});
+  }
+
+  // Geometry entirely in positive space (worked even before the fix; guards
+  // against an over-correction that would break the common case).
+  {
+    geom->resizeVertexList(2);
+    geom->setVertexCoordinate(0, Point3Df{2.0f, 4.0f, 6.0f});
+    geom->setVertexCoordinate(1, Point3Df{8.0f, 1.0f, 3.0f});
+    checkBoundingBox<float32>(geom->getBoundingBox(), Point3Df{2.0f, 1.0f, 3.0f}, Point3Df{8.0f, 4.0f, 6.0f});
+  }
+}
+
 /////////////////////////////////////
 // Begin geometry-specific testing //
 /////////////////////////////////////
@@ -358,4 +423,54 @@ TEST_CASE("VertexGeomTest")
   }
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
+}
+
+// -----------------------------------------------------------------------------
+// getBoundingBox coverage (regression guard for issue #1649 / commit a31beeb).
+// Every node-based geometry inherits INodeGeometry0D::getBoundingBox(), so each
+// concrete type is exercised to ensure the corner initialization is correct
+// regardless of where the geometry sits relative to the origin.
+// -----------------------------------------------------------------------------
+TEST_CASE("Node geometry getBoundingBox handles negative coordinates")
+{
+  SECTION("VertexGeom")
+  {
+    testNodeGeometryBoundingBox<VertexGeom>();
+  }
+  SECTION("EdgeGeom")
+  {
+    testNodeGeometryBoundingBox<EdgeGeom>();
+  }
+  SECTION("TriangleGeom")
+  {
+    testNodeGeometryBoundingBox<TriangleGeom>();
+  }
+  SECTION("QuadGeom")
+  {
+    testNodeGeometryBoundingBox<QuadGeom>();
+  }
+  SECTION("TetrahedralGeom")
+  {
+    testNodeGeometryBoundingBox<TetrahedralGeom>();
+  }
+  SECTION("HexahedralGeom")
+  {
+    testNodeGeometryBoundingBox<HexahedralGeom>();
+  }
+}
+
+TEST_CASE("ImageGeom getBoundingBox handles a negative origin")
+{
+  DataStructure dataStructure;
+  auto* geom = ImageGeom::Create(dataStructure, "Image");
+  geom->setDimensions(SizeVec3{4, 5, 6});
+  geom->setSpacing(FloatVec3{0.5f, 2.0f, 1.5f});
+  geom->setOrigin(FloatVec3{-3.0f, -10.0f, -1.0f});
+
+  // Lower corner is the origin; upper corner is origin + dims * spacing:
+  //   x: -3 + 4 * 0.5  = -1
+  //   y: -10 + 5 * 2.0 =  0
+  //   z: -1 + 6 * 1.5  =  8
+  checkBoundingBox<float64>(geom->getBoundingBox(), Point3Dd{-3.0, -10.0, -1.0}, Point3Dd{-1.0, 0.0, 8.0});
+  checkBoundingBox<float32>(geom->getBoundingBoxf(), Point3Df{-3.0f, -10.0f, -1.0f}, Point3Df{-1.0f, 0.0f, 8.0f});
 }
