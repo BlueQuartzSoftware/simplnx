@@ -87,8 +87,8 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode mode)
     // The pre-checks above should have caught the common failure modes; if we
     // get here it's an unexpected condition (e.g. cycle detection or a parent
     // group type that does not accept arrays).
-    return MakeErrorResult(-6004, fmt::format("{}Unable to create StringArray at '{}'. The parent '{}' rejected the new object for an unexpected reason.", prefix, path().toString(),
-                                              parentPath.toString()));
+    return MakeErrorResult(-6004,
+                           fmt::format("{}Unable to create StringArray at '{}'. The parent '{}' rejected the new object for an unexpected reason.", prefix, path().toString(), parentPath.toString()));
   }
   return {};
 }
