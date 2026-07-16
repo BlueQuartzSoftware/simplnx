@@ -13,7 +13,7 @@
 
 | Aspect | State |
 |---|---|
-| Algorithm relationship | **Port** of both `FindSizes::execute()` (ImageGeom) and `FindSizes::findSizesUnstructured()` (RectGridGeom) |
+| Algorithm relationship | **Port** of both `FindSizes::findSizesImage()` (ImageGeom) and `FindSizes::findSizesUnstructured()` (RectGridGeom) |
 | Oracle | **Class 1 (Analytical)** — all test data inlined, hand-derived |
 | Code paths | **14 of 19** exercised; 5 gaps (cancel ×2, INT32_MAX overflow ×2, other-geom no-op ×1) |
 | Tests | **10 TEST_CASEs** — all pass |
@@ -29,13 +29,15 @@
 
 **Port** of `FindSizes` (both ImageGeom and RectGridGeom paths).
 
-- **ImageGeom** (`ProcessImageGeom`): voxel count × voxel volume/area → ESD/ECD. Identical to `FindSizes::execute()`. Formulas: `ESD = 2·∛(V / (4π/3))`; `ECD = 2·√(A / π)`.
+- **ImageGeom** (`ProcessImageGeom`): voxel count × voxel volume/area → ESD/ECD. Port of `FindSizes::findSizesImage()` (legacy `execute()` dispatches to it via `findSizes()`). Formulas: `ESD = 2·∛(V / (4π/3))`; `ECD = 2·√(A / π)`.
 - **RectGridGeom** (`ProcessRectGridGeom`): per-cell `ΔxΔyΔz` sizes, summed per feature. Port of `FindSizes::findSizesUnstructured()`. SIMPLNX departs in precision: float32 element sizes are promoted to float64 and Kahan summation is applied at two levels (per-thread and post-reduction). See deviation `D1`.
 
 Port-time additions not in DREAM3D 6.5.171:
 - **Parallel execution** — `ParallelDataAlgorithm` + `tbb::combinable`; legacy was serial.
 - **Execute-time FeatureId bounds check** — `ValidateFeatureIdsToFeatureAttributeMatrixIndexing`; legacy accessed out-of-bounds silently.
 - **Preflight dimension guard** — rejects ImageGeom with two or more dimensions equal to 1. This is because a single empty dimension converts the calculation from Volume to Area and "1D" Images would not make sense to get an Area formula.
+- **Tighter overflow guard** — SIMPLNX errors when a feature exceeds `INT32_MAX` voxels on both geometry paths. Legacy `findSizesImage` errored only above 2⁵³ (so counts between 2³¹ and 2⁵³ silently overflowed the int32 `NumElements`), and legacy `findSizesUnstructured` had no guard at all.
+- **Narrower geometry scope** — the `GeometrySelectionParameter` allows only Image and RectGrid. Legacy `FindSizes` routed every non-image geometry (vertex/edge/triangle/quad/tet) through `findSizesUnstructured`; in SIMPLNX those are served by dedicated filters (e.g. `ComputeTriangleGeomVolumesFilter`).
 
 ## Oracle
 
@@ -43,13 +45,13 @@ Port-time additions not in DREAM3D 6.5.171:
 
 | Fixture | Geometry | Derived quantity |
 |---|---|---|
-| `Create2DImageDataStructure()` | 5×5×1 ImageGeom, spacing 20.2×0.1×1.0 | `voxelArea = 20.2 × 0.1 × 1.0 = 2.02`; areas = count × 2.02; ECDs from circle formula |
+| `Create2DImageDataStructure()` | 5×5×1 ImageGeom, spacing 20.2×0.1×1.0 | `voxelArea = 20.2 × 0.1 = 2.02` (flat-Z spacing excluded); areas = count × 2.02; ECDs from circle formula |
 | `Create3DImageDataStructure()` | 5×5×5 ImageGeom, spacing 1.2×0.9×2.1 | `voxelVol = 1.2 × 0.9 × 2.1 = 2.268`; volumes = count × 2.268; ESDs from sphere formula |
 | `CreateRectGridDataStructure()` | 4×4×4 non-uniform RectGrid | Per-cell `ΔxΔyΔz` summed per feature; step-by-step trace in provenance sidecar |
 
 Negative tests use degenerate inputs (out-of-bounds FeatureId; degenerate dims) and assert an error result is returned.
 
-Second-engineer review pending: verify hand-derivations for all three fixtures and the tolerance choice (`std::numeric_limits<float32>::epsilon()`).
+Second-engineer review pending: verify hand-derivations for all three fixtures and the tolerance choice (relative `1e-6` via Catch2 `Approx` — a few float32 ULPs of slack so the pins survive platform and TBB reduction-order differences).
 
 ## Code path coverage
 

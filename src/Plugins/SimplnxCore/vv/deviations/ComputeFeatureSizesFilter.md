@@ -8,15 +8,19 @@ Entries are referenced by stable ID (`ComputeFeatureSizes-D<N>`) from the V&V re
 
 ## ImageGeom path — no deviations
 
-Source-inspection comparison of `ProcessImageGeom` against DREAM3D 6.5.171 `FindSizes::execute()` confirmed identical algorithmic structure:
+Source-inspection comparison of `ProcessImageGeom` against DREAM3D 6.5.171 `FindSizes::findSizesImage()` confirmed identical algorithmic structure:
 
-- Per-feature voxel count: identical parallel accumulation logic (serial in legacy).
+- Per-feature voxel count: same accumulation logic (SIMPLNX parallelizes it via TBB; legacy is serial — the reduction is exact integer addition either way).
 - 3D volume formula: `volume = voxelCount × voxelVolume`; ESD: `2·∛(volume / (4π/3))` — both use the standard sphere formula.
 - 2D area formula (exactly one dim == 1): `area = voxelCount × (product of the two NON-flat spacings)`; ECD: `2·√(area / π)` — both use the standard circle formula, and both exclude the flat dimension's spacing.
 
 > **Corrected this V&V cycle (was a latent SIMPLNX bug, now no deviation):** `ProcessImageGeom` previously multiplied **all three** spacings for the 2D voxel area (`spacing[0]·spacing[1]·spacing[2]`), which is a volume, not an area. It diverged from DREAM3D 6.5.171 (which uses only the two non-flat resolutions) whenever the flat dimension's spacing was not 1.0. The prior 2D unit fixture used a flat-dimension spacing of exactly 1.0, so the defect was invisible. The formula now excludes the flat dimension's spacing, restoring parity with legacy — hence this remains a *no-deviation* entry. Pinned by the `2D area excludes the flat-dimension spacing` characterization test (flat X/Y/Z, non-unit flat spacing).
 
-**Precision non-deviation (not flagged):** SIMPLNX promotes `voxelVolume` to `float64` and evaluates `cbrt` / `sqrt` in `float64` before casting to `float32` for storage. The legacy filter likely used `float32` throughout. The difference is within ~1 ULP of `float32` for typical EBSD spacings and is non-material for downstream morphological statistics.
+**Precision notes (verified against 6.5.171 source, not flagged as deviations):**
+
+- *3D `Volumes`: bit-identical.* Both implementations compute the voxel volume as a float32 product of the three float32 spacings (SIMPLNX widens the float32 result to float64 afterward; legacy casts it to double) and multiply by the voxel count in double before storing as float32 — the same roundings in the same order.
+- *2D `Areas`: potential ≤1 float32 ULP difference.* SIMPLNX evaluates the two-non-flat-spacing product in float64 (exact for two float32 factors); legacy `findSizesImage` rounds the product to float32 first (`res_scalar = xRes * yRes`). When that product is inexact in float32, the stored per-feature area can differ by one ULP. Not observable in the current fixtures and non-material for downstream statistics; no A/B run has been performed for the ImageGeom path.
+- *ESD/ECD evaluation:* legacy uses float32 `powf`/`sqrtf` on the float32-rounded stored value, SIMPLNX uses float64 `std::cbrt`/`std::sqrt` on the unrounded float64 value — this is the same evaluation-precision pattern documented (and A/B-verified on RectGrid) as `ComputeFeatureSizes-D2`.
 
 ---
 
@@ -36,8 +40,8 @@ Source-inspection comparison of `ProcessImageGeom` against DREAM3D 6.5.171 `Find
 1. **float32 → float64 promotion.** Element sizes are stored as `float32` (the output of `findElementSizes`). The legacy `findSizesUnstructured` accumulated these directly in `float32`, so each per-cell addition carried a relative error of ~`ε_float32 ≈ 1.2×10⁻⁷`. SIMPLNX promotes each element size to `float64` before accumulation (`static_cast<float64>(m_ElemSizes.getValue(voxelIdx))`), reducing the per-operation rounding error to `ε_float64 ≈ 2.2×10⁻¹⁶`.
 
 2. **Kahan summation.** SIMPLNX applies Kahan compensated summation at two levels:
-   - *Per-thread, per-cell* in `RectGridSummationImpl::convert()` (lines 274–283): standard Kahan with `y = elemSize - c`, `t = sum + y`, `c′ = (t - sum) - y`. For a feature spanning N cells, naive float64 accumulation still has O(N · ε_float64) error; Kahan reduces this to O(ε_float64) by carrying a compensation term `c` that recovers the low-order bits lost in each `sum + y` operation.
-   - *Post-reduction, per thread-local vector* in `threadLocalVolumes.combine_each()` (lines 341–358): the same Kahan scheme is applied when combining the TBB thread-local partial sums into the final per-feature volume.
+   - *Per-thread, per-cell* in `RectGridSummationImpl::convert()` (lines 293–305): standard Kahan with `y = elemSize - c`, `t = sum + y`, `c′ = (t - sum) - y`. For a feature spanning N cells, naive float64 accumulation still has O(N · ε_float64) error; Kahan reduces this to O(ε_float64) by carrying a compensation term `c` that recovers the low-order bits lost in each `sum + y` operation. (Note the compensator is a local that resets on each TBB body invocation — see the V&V report's D1 summary.)
+   - *Post-reduction, per thread-local vector* in `threadLocalVolumes.combine_each()` (lines 368–385): the same Kahan scheme is applied when combining the TBB thread-local partial sums into the final per-feature volume.
 
    For a non-uniform rectilinear grid where cell volumes span several orders of magnitude (e.g., a grid with fine near-surface resolution and coarse interior), naive summation of N cells can lose ~`log₂(V_max / V_min)` bits of precision in the smaller cell contributions. Kahan summation recovers those bits regardless of N or the dynamic range of cell volumes.
 
