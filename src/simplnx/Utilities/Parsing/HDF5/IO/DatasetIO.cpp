@@ -97,7 +97,11 @@ nx::core::Result<hid_t> BuildChunkedDeflateDcpl(const std::vector<usize>& dims, 
     const usize castD = static_cast<usize>(d);
     if(castD == 0)
     {
-      return nx::core::MakeErrorResult<hid_t>(-1305, "BuildChunkedDeflateDcpl encountered a zero-valued dimension");
+      // A zero-valued dimension means an empty dataset (e.g. a NeighborList
+      // where no feature has neighbors). HDF5 cannot chunk a zero-sized
+      // dataset, but it can store one contiguously — fall back to the
+      // default DCPL instead of failing the whole file write.
+      return {H5P_DEFAULT};
     }
     if(totalBytes > std::numeric_limits<usize>::max() / castD)
     {
