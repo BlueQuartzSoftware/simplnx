@@ -111,6 +111,23 @@ N/A — no reference-library invocation (Class 2), no published-paper figure rep
 
 Recommended pending another engineer review. The multi-feature multi-voxel fixture in particular has 6 hand-derived per-cell expected values; a second pair of eyes on the symmetry-reduced cubic misorientation reasoning would catch arithmetic mistakes in the test comments before the V&V cycle is closed.
 
+## Code path coverage
+
+Re-enumerated this cycle for the per-mode neighbor gate (`ComputeKernelAvgMisorientations.cpp:124`). Paths 3–4 are the per-grain branch (`use_feature_ids = true`); paths 5–7 are the per-voxel branch (`use_feature_ids = false`). **Updated 2026-07-16 (commit `7f9cddc7d`):** the former path 9 (`numVoxel==0` fallback) was removed as unreachable dead code — see path 8's note. Path 2's boundary clamp is now a signed-index comparison (`zIdx`/`yIdx`/`xIdx` at `.cpp:100,107,114`) with the neighbor index computed directly from the clamped indices (`.cpp:120`); the separate `neighbor < 0` guard no longer exists because it is now provably unreachable by construction rather than checked at runtime.
+
+| Path | Description                                                                                                                                                  | Exercised by |
+|------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------|
+| 1    | Focal-valid gate (`featureIds[point] > 0 && cellPhases[point] > 0`) → enter kernel                                                                           | All 6 Class 1 fixtures; both Class 4 tests |
+| 2    | Kernel cell out-of-bounds (signed boundary clamp on `zIdx`/`yIdx`/`xIdx`) → `continue`                                                                       | `Class 1 - 1D x-axis Gradient` cells 0/4 (x-boundary); `Class 1 - 1D z-axis Gradient` planes 0/2 (z-boundary); `Class 1 - Uniform 2D` corners; both 3×3×3 fixtures (all faces) |
+| 3    | **Per-grain** (`use_feature_ids=true`): in-bounds neighbor + `featureId` match → accumulate miso + numVoxel++                                                | All default-mode Class 1 fixtures; Class 4 Invariants (i)/(iii); Class 4 Mode-Equivalence (per-grain run) |
+| 4    | **Per-grain**: in-bounds neighbor + `featureId` mismatch → skip (no accumulate)                                                                              | `Class 1 - Multi-Feature Multi-Voxel + Background` (cells 1, 2 see different-feature in-bounds neighbors) |
+| 5    | **Per-voxel** (`use_feature_ids=false`): in-bounds neighbor + `featureId>0` + phase match → accumulate                                                       | `Class 1 - Per-Voxel Mode` cells 1, 2 (cross-feature same-phase include); `Class 1 - Per-Voxel Two-Phase Gates` cells 0, 1; Class 4 Mode-Equivalence (per-voxel run) |
+| 6    | **Per-voxel**: neighbor `featureId == 0` → skip                                                                                                              | `Class 1 - Per-Voxel Mode` cells 3, 5 (x=4 background excluded); `Class 1 - Per-Voxel Two-Phase Gates` cell 3 (x=4 excluded) |
+| 7    | **Per-voxel**: neighbor phase mismatch (`cellPhases[neighbor] != cellPhases[point]`) → skip                                                                  | `Class 1 - Per-Voxel Two-Phase Gates` cell 2 (excludes phase-1 x=1/x=3), cells 1 & 3 (exclude phase-2 x=2) |
+| 8    | Focal-invalid (`featureIds == 0 \|\| cellPhases == 0`, reached via `else` since commit `7f9cddc7d`) → KAM = 0 directly. The former path 9 (`numVoxel == 0` fallback) was removed by this commit: in both modes the focal voxel always self-contributes when the focal is valid (per-grain: `featureId==featureId`; per-voxel: focal-valid ⇒ `featureId>0` and `phase==phase`), guaranteeing numVoxel ≥ 1 whenever path 1 is entered, so the fallback was unreachable by construction. | `Class 1 - Multi-Feature` cell 4; `Class 1 - Per-Voxel Mode` cell 4; `Class 1 - Per-Voxel Two-Phase Gates` cell 4 (`featureId=0` yet phase>0 — proves focal gate unchanged); Class 4 Invariants (ii) |
+
+8 of 8 paths exercised by the V&V suite. The former path 9 (`numVoxel==0` fallback, previously "unreachable by construction") was removed from SIMPLNX by the review-driven cleanup commit `7f9cddc7d` (2026-07-16); it was purely dead code and its removal is behavior-preserving, confirmed by the unchanged 9-test suite passing on both in-core and out-of-core builds.
+
 ## Test inventory
 
 | TEST_CASE                                                                              | Category | Status | ctest entry                                                                            |
