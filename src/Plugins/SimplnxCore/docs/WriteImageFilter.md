@@ -72,7 +72,8 @@ Enabling *Create Color Table* converts a single-component **Data Array** to an R
 ### Add Physical Scale Bar (Optional)
 
 When *Add Physical Scale Bar* is enabled, each written image is extended with a white band below the
-image data containing a black scale bar and a length label (for example `100 µm`). The image pixels are
+image data containing a black scale bar and a length label (for example `100 µm`). The bar is
+left-justified in the band with the label on the same line to its right. The image pixels are
 never covered — the band is appended, so the written image is taller than the Image Geometry's slice
 dimensions by the band height (8% of the image height, minimum 24 pixels). The preflight output reports
 the padded size.

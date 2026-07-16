@@ -1317,8 +1317,8 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar pads the written image with 
   // Expected layout for 200x100 @ 0.5 µm/px:
   //   band = max(24, llround(0.08*100)=8) = 24  -> written image is 200 x 124
   //   nice = ComputeNiceBarLength(200, 0.5) : target 25 µm -> 20 µm -> 40 px bar
-  //   margin = 3, thickness = 2 -> bar rows (global) 100+24-3-2 = 119 and 120
-  //   barStartCol = (200-40)/2 = 80 -> bar cols 80..119
+  //   margin = 3, thickness = 2 -> bar vertically centered: rows (global) 100+(24-2)/2 = 111 and 112
+  //   barStartCol = margin = 3 (left-justified) -> bar cols 3..42; label starts on the same line at col 3+40+3 = 46
   constexpr usize dimX = 200;
   constexpr usize dimY = 100;
   constexpr usize bandHeight = 24;
@@ -1373,23 +1373,23 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar pads the written image with 
     const std::array<uint8, 3> black = {0, 0, 0};
     REQUIRE(barPixel(dimY, 0) == white);
     REQUIRE(barPixel(dimY + bandHeight - 1, dimX - 1) == white);
-    for(usize row : {usize(119), usize(120)})
+    for(usize row : {usize(111), usize(112)})
     {
-      REQUIRE(barPixel(row, 79) == white);
-      for(usize col = 80; col < 120; col++)
+      REQUIRE(barPixel(row, 2) == white);
+      for(usize col = 3; col < 43; col++)
       {
         REQUIRE(barPixel(row, col) == black);
       }
-      REQUIRE(barPixel(row, 120) == white);
+      REQUIRE(barPixel(row, 43) == white);
     }
   }
 
-  SECTION("label text renders in the band above the bar")
+  SECTION("label text renders in the band on the same line as the bar")
   {
     bool foundTextPixel = false;
-    for(usize row = dimY; row < usize(119) && !foundTextPixel; row++)
+    for(usize row = dimY; row < dimY + bandHeight && !foundTextPixel; row++)
     {
-      for(usize col = 0; col < dimX; col++)
+      for(usize col = 46; col < dimX; col++)
       {
         if(barPixel(row, col)[0] < 128)
         {

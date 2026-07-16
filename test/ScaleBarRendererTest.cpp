@@ -61,8 +61,9 @@ TEST_CASE("Simplnx::ScaleBarRenderer: RenderScaleBarBandRgb", "[Simplnx][ScaleBa
   //   margin    = max(2, llround(24*0.12)=3)             = 3
   //   thickness = max(2, llround(24*0.08)=2)             = 2
   //   nice      = ComputeNiceBarLength(100, 1.0)         = 20 µm -> 20 px bar
-  //   barTopRow = 24 - 3 - 2                             = 19  (bar covers rows 19-20)
-  //   barStart  = (100 - 20) / 2                         = 40  (bar covers cols 40-59)
+  //   barTopRow = (24 - 2) / 2                           = 11  (bar covers rows 11-12, vertically centered)
+  //   barStart  = margin                                 = 3   (left-justified; bar covers cols 3-22)
+  //   label     = same line, starting at col 3+20+3      = 26
   const usize width = 100;
   const std::vector<uint8> band = ScaleBarRenderer::RenderScaleBarBandRgb(width, 50, 1.0, IGeometry::LengthUnit::Micrometer);
   REQUIRE(band.size() == width * 24 * 3);
@@ -78,23 +79,25 @@ TEST_CASE("Simplnx::ScaleBarRenderer: RenderScaleBarBandRgb", "[Simplnx][ScaleBa
   REQUIRE(pixel(0, 0) == white);
   REQUIRE(pixel(23, 99) == white);
 
-  // The bar is a crisp black run on both bar rows, white immediately outside it
-  for(usize row : {usize(19), usize(20)})
+  // The bar is a crisp black run on both bar rows, white immediately outside it.
+  // Column 2 is inside the left margin; column 23 sits in the gap between bar end (col 22)
+  // and the label start (col 26).
+  for(usize row : {usize(11), usize(12)})
   {
-    REQUIRE(pixel(row, 39) == white);
-    for(usize col = 40; col < 60; col++)
+    REQUIRE(pixel(row, 2) == white);
+    for(usize col = 3; col < 23; col++)
     {
       REQUIRE(pixel(row, col) == black);
     }
-    REQUIRE(pixel(row, 60) == white);
+    REQUIRE(pixel(row, 23) == white);
   }
 
-  // The label ("20 µm") renders above the bar: at least one visibly dark pixel
-  // in the text region (rows 0..18). Anti-aliased glyphs are not pixel-compared.
+  // The label ("20 µm") renders on the same line to the right of the bar: at least one
+  // visibly dark pixel in the text region (cols 26+). Anti-aliased glyphs are not pixel-compared.
   bool foundTextPixel = false;
-  for(usize row = 0; row < 19 && !foundTextPixel; row++)
+  for(usize row = 0; row < 24 && !foundTextPixel; row++)
   {
-    for(usize col = 0; col < width; col++)
+    for(usize col = 26; col < width; col++)
     {
       if(pixel(row, col)[0] < 128)
       {

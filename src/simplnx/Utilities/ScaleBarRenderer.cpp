@@ -181,10 +181,16 @@ std::vector<uint8> RenderScaleBarBandRgb(usize imageWidthPixels, usize imageHeig
   const float64 niceLength = ComputeNiceBarLength(imageWidthPixels, unitsPerPixel);
   if(niceLength > 0.0)
   {
-    // Integer bar coordinates keep the rectangle edges crisp (full pixel coverage, no anti-aliasing)
+    // Integer bar coordinates keep the rectangle edges crisp (full pixel coverage, no anti-aliasing).
+    // The bar is left-justified at one margin from the band edge and vertically centered; the label
+    // sits on the same line, one margin to the right of the bar.
     const usize barPixels = std::min<usize>(imageWidthPixels, std::max<usize>(1, static_cast<usize>(std::llround(niceLength / unitsPerPixel))));
-    const usize barStartCol = (imageWidthPixels - barPixels) / 2;
-    const usize barTopRow = bandHeight - margin - barThickness;
+    usize barStartCol = margin;
+    if(barStartCol + barPixels > imageWidthPixels)
+    {
+      barStartCol = imageWidthPixels - barPixels; // degenerate narrow image: keep the bar on-canvas
+    }
+    const usize barTopRow = (bandHeight - barThickness) / 2;
 
     context.set_color(canvas_ity::fill_style, 0.0f, 0.0f, 0.0f, 1.0f);
     context.fill_rectangle(static_cast<float>(barStartCol), static_cast<float>(barTopRow), static_cast<float>(barPixels), static_cast<float>(barThickness));
@@ -194,9 +200,9 @@ std::vector<uint8> RenderScaleBarBandRgb(usize imageWidthPixels, usize imageHeig
     fonts::Base64Decode(fonts::k_LatoRegularBase64, fontData);
     if(context.set_font(fontData.data(), static_cast<int>(fontData.size()), fontSize))
     {
-      const float textWidth = context.measure_text(label.c_str());
-      const float baselineY = static_cast<float>(margin) + fontSize;
-      context.fill_text(label.c_str(), (static_cast<float>(imageWidthPixels) - textWidth) / 2.0f, baselineY);
+      // Baseline places the glyph block (cap height ~0.7 * font size) vertically centered on the bar line.
+      const float baselineY = (static_cast<float>(bandHeight) + 0.7f * fontSize) / 2.0f;
+      context.fill_text(label.c_str(), static_cast<float>(barStartCol + barPixels + margin), baselineY);
     }
   }
 
