@@ -25,18 +25,18 @@ The test data is **inlined** in the test source — there is no separate tar.gz 
 
 ## How it was generated
 
-The dataset is a hand-rolled in-memory `DataStructure` designed as a **Class 1 (Analytical) oracle** with a paired **Class 4 (Invariant)** check. As of the 2026-07-15 reopen (issue #1613) it systematically covers the nine algorithmic paths in `ComputeKernelAvgMisorientations::FindKernelAvgMisorientationsImpl::convert()` — see the V&V report's Code path coverage table for the full enumeration and per-test mapping:
+The dataset is a hand-rolled in-memory `DataStructure` designed as a **Class 1 (Analytical) oracle** with a paired **Class 4 (Invariant)** check. As of the 2026-07-15 reopen (issue #1613) it systematically covers the eight algorithmic paths in `ComputeKernelAvgMisorientations::FindKernelAvgMisorientationsImpl::convert()` — see the V&V report's Code path coverage table for the full enumeration and per-test mapping:
 
 1. **Focal-valid gate** (`featureIds[point] > 0 && cellPhases[point] > 0`) → enter the kernel.
-2. **Kernel cell out-of-bounds** (boundary clamp `col+l > xPoints-1` etc., or `neighbor < 0`) → `continue`.
+2. **Kernel cell out-of-bounds** (signed boundary clamp on `zIdx`/`yIdx`/`xIdx`) → `continue`.
 3. **Per-grain** (`use_feature_ids=true`) in-bounds + feature-id match → accumulate.
 4. **Per-grain** in-bounds + feature-id mismatch → skip.
 5. **Per-voxel** (`use_feature_ids=false`) in-bounds + `featureId>0` + phase match → accumulate.
 6. **Per-voxel** neighbor `featureId==0` → skip.
 7. **Per-voxel** neighbor phase mismatch → skip.
-8. **Focal-invalid** (`featureIds[point] == 0 || cellPhases[point] == 0`) → KAM = 0 directly.
+8. **Focal-invalid** (`featureIds[point] == 0 || cellPhases[point] == 0`, reached via `else` since commit `7f9cddc7d`) → KAM = 0 directly.
 
-The 9th algorithmic path (`numVoxel == 0` fallback) is dead code in practice (the focal voxel always self-contributes in both modes) and is not exercised by design.
+A 9th algorithmic path (`numVoxel == 0` fallback) existed at the time these fixtures were designed (2026-06-03/2026-07-15) and was dead code in practice (the focal voxel always self-contributes in both modes) — not exercised by design. The review-driven cleanup pass (commit `7f9cddc7d`, 2026-07-16) removed that fallback from SIMPLNX as unreachable dead code, so the enumeration above is now the complete, current path list (8 of 8, all exercised); no fixture changes were needed since no fixture ever targeted the removed path.
 
 ### Scaffold structure
 
@@ -175,3 +175,9 @@ N/A — Class 1 and Class 4 oracles only. No reference-library invocation, no pa
 **Yes.** The inlined analytical dataset replaces the retired exemplar-comparison test. The pre-V&V test consumed the shared `6_6_stats_test_v2.tar.gz` archive's `KernelAverageMisorientations` exemplar, which was a circular oracle: the exemplar values were generated from a SIMPLNX build using EbsdLib < 2.4.1, where every cell's KAM was inflated by the spurious `~0.001–0.03°` self-misorientation precision noise documented as D1. Comparing the post-EbsdLib-2.4.1 SIMPLNX output against those exemplars would systematically fail by ~0.01–0.05° per cell (varies by focal-cell quaternion), which is what surfaced during the EbsdLib precision-cycle V&V work.
 
 The inlined Class 1 + Class 4 fixtures use derived-truth oracles independent of any pre-existing SIMPLNX output, eliminating the circular oracle pattern. The shared archive `6_6_stats_test_v2.tar.gz` remains downloaded for the 3 other filter tests that still consume it (`AlignSectionsMutualInformation`, `ComputeShapes`, `ComputeSchmids`); only F#5's consumption line in `ComputeKernelAvgMisorientationsTest.cpp` was removed during this V&V cycle.
+
+## Provenance log
+
+- **2026-06-03** — Class 1 / Class 4 base fixtures (1–4, 8) authored; legacy exemplar test retired (circular-oracle fix).
+- **2026-07-15** — Fixtures 5–7 (per-voxel mode, per-voxel two-phase gates, mode-equivalence invariant) added for issue #1613 on branch `topic/kam_ignore_feature_ids`; code paths re-enumerated 6→9 for the per-mode neighbor gate; runtime legacy A/B performed.
+- **2026-07-16** — Review-driven cleanup pass, commits `7f9cddc7d` (REV) and the paired DOC commit on branch `topic/kam_ignore_feature_ids`: `getDataRefAs` for the parameter-validated `ImageGeom` (2 sites); kernel boundary clamps made signed with the neighbor index computed directly from the clamped `zIdx`/`yIdx`/`xIdx` (removing the vacuous unsigned checks and the separate `neighbor<0` guard); `LaueOps` list hoisted to a worker member built once per run in the constructor (shared read-only across parallel ranges, matching the `ComputeFeatureFaceMisorientationPerTriangleImpl` precedent); cancellation check moved from per-plane to per-row; progress increment floored at 1; the dead `numVoxel==0` fallback (former path 9) removed, folding the invalid-cell reset into an `else` branch. No fixture changes were required — all 9 existing TEST_CASEs pass unchanged on both in-core and out-of-core builds, confirming the cleanup is behavior-preserving. Code path enumeration updated from 9 (8 exercised) to 8 (8 exercised).

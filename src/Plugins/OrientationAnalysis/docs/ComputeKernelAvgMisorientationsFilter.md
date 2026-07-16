@@ -6,7 +6,7 @@ Statistics (Crystallography)
 
 ## Description
 
-This **Filter** determines the Kernel Average Misorientation (KAM) for each **Cell**.  The user can select the size of the kernel to be used in the calculation.  The kernel size entered by the user is the *radius* of the kernel (i.e., entering values of *1*, *2*, *3* will result in a kernel that is *3*, *5*, and *7* **Cells** in size in the X, Y and Z directions, respectively).  The algorithm for determination of KAM is as follows:
+This **Filter** determines the Kernel Average Misorientation (KAM) for each **Cell**. This **Filter** requires an **Image Geometry**, and the output KAM values are stored in degrees.  The user can select the size of the kernel to be used in the calculation.  The kernel size entered by the user is the *radius* of the kernel (i.e., entering values of *1*, *2*, *3* will result in a kernel that is *3*, *5*, and *7* **Cells** in size in the X, Y and Z directions, respectively).  The algorithm for determination of KAM is as follows:
 
 1. Calculate the misorientation angle between each **Cell** in a kernel and the central **Cell** of the kernel
 2. Average all of the misorientations for the kernel and store at the central **Cell**
@@ -19,6 +19,8 @@ The **Use Feature Ids** option controls which **Cells** within the kernel are in
 In both modes, **Cells** with a *Feature Id* of 0 or a *Phase* of 0 are considered invalid and receive a KAM value of 0.
 
 *Note:* All **Cells** in the kernel are weighted equally during the averaging, though they are not equidistant from the central **Cell**.
+
+For related per-feature misorientation metrics, see the **Compute Feature Reference Misorientations** and **Compute Misorientation** filters.
 
 % Auto generated parameter table will be inserted here
 
