@@ -1161,3 +1161,87 @@ TEST_CASE("SimplnxCore::WriteImageFilter: Output flip composes with the color-ta
   }
   REQUIRE(flipYImage == expectedFlipYImage);
 }
+
+TEST_CASE("SimplnxCore::WriteImageFilter: Scale bar preflight validation", "[SimplnxCore][WriteImageFilter]")
+{
+  auto app = Application::GetOrCreateInstance();
+  UnitTest::LoadPlugins();
+
+  const DataPath geomPath({"ImageGeometry"});
+  const DataPath cellPath = geomPath.createChildPath("CellData");
+
+  // Builds a 200x100x1 ImageGeom with the requested cell array type/comps, spacing and units,
+  // then preflights WriteImageFilter with the scale bar enabled.
+  auto preflightScaleBar = [&](DataType dataType, usize numComps, const FloatVec3& spacing, bool createColorTable) -> IFilter::PreflightResult {
+    DataStructure dataStructure;
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions({200, 100, 1});
+    imageGeomPtr->setSpacing(spacing);
+    imageGeomPtr->setUnits(IGeometry::LengthUnit::Micrometer);
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 100, 200}, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    DataPath arrayPath = cellPath.createChildPath("Data");
+    switch(dataType)
+    {
+    case DataType::uint8:
+      UnitTest::CreateTestDataArray<uint8>(dataStructure, "Data", {1, 100, 200}, {numComps}, cellAmPtr->getId());
+      break;
+    case DataType::uint16:
+      UnitTest::CreateTestDataArray<uint16>(dataStructure, "Data", {1, 100, 200}, {numComps}, cellAmPtr->getId());
+      break;
+    default:
+      FAIL("unhandled test data type");
+    }
+
+    WriteImageFilter filter;
+    Arguments args;
+    args.insertOrAssign(WriteImageFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(WriteImageFilter::k_ImageArrayPath_Key, std::make_any<DataPath>(arrayPath));
+    args.insertOrAssign(WriteImageFilter::k_FileName_Key, std::make_any<fs::path>(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "scale_bar_preflight.png"));
+    args.insertOrAssign(WriteImageFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(k_XYPlane));
+    args.insertOrAssign(WriteImageFilter::k_CreateColorTable_Key, std::make_any<bool>(createColorTable));
+    args.insertOrAssign(WriteImageFilter::k_AddScaleBar_Key, std::make_any<bool>(true));
+    return filter.preflight(dataStructure, args);
+  };
+
+  SECTION("uint8 single component passes and reports the padded size")
+  {
+    auto result = preflightScaleBar(DataType::uint8, 1, {0.5f, 0.5f, 1.0f}, false);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    // band = max(24, llround(0.08*100)=8) = 24 -> 200 x 124
+    bool foundSizeValue = false;
+    for(const auto& value : result.outputValues)
+    {
+      if(value.name == "Output Image Size (with scale bar)")
+      {
+        REQUIRE(value.value == "200 x 124");
+        foundSizeValue = true;
+      }
+    }
+    REQUIRE(foundSizeValue);
+  }
+
+  SECTION("uint16 without color table fails with a color-table hint")
+  {
+    auto result = preflightScaleBar(DataType::uint16, 1, {0.5f, 0.5f, 1.0f}, false);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+
+  SECTION("uint8 with 2 components fails")
+  {
+    auto result = preflightScaleBar(DataType::uint8, 2, {0.5f, 0.5f, 1.0f}, false);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+
+  SECTION("uint16 with color table enabled passes")
+  {
+    auto result = preflightScaleBar(DataType::uint16, 1, {0.5f, 0.5f, 1.0f}, true);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+  }
+
+  SECTION("zero horizontal spacing fails")
+  {
+    auto result = preflightScaleBar(DataType::uint8, 1, {0.0f, 0.5f, 1.0f}, false);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
+  }
+}

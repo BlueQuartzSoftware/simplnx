@@ -23,12 +23,14 @@
 #include "simplnx/Utilities/ImageIO/ImageIOEnums.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOFactory.hpp"
 #include "simplnx/Utilities/ImageIO/ImageIOUtilities.hpp"
+#include "simplnx/Utilities/ScaleBarRenderer.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include <fmt/core.h>
 #include <fmt/format.h>
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <set>
 
@@ -101,6 +103,12 @@ Parameters WriteImageFilter::parameters() const
   params.insert(
       std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array", ColorTableUtilities::GetDefaultRGBPresetName()));
 
+  params.insertSeparator(Parameters::Separator{"Scale Bar (Optional)"});
+  params.insert(std::make_unique<BoolParameter>(k_AddScaleBar_Key, "Add Physical Scale Bar",
+                                                "Appends a band below each written image containing a physical scale bar sized from the Image Geometry's spacing and units. Requires an 8-bit input "
+                                                "image (1, 3 or 4 components) or 'Create Color Table' to be enabled. The written image becomes 8-bit RGB.",
+                                                false));
+
   params.insertSeparator(Parameters::Separator{"Output File Options"});
   params.insert(
       std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "Path to the output file to write.", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
@@ -127,7 +135,8 @@ IFilter::VersionType WriteImageFilter::parametersVersion() const
   // Version 2: Added optional inline color-table parameters (create_color_table, selected_preset, use_mask, mask_array_path, invalid_color_value).
   // Version 3: Widened input array to all numeric types (color-table mode colorizes any numeric type).
   // Version 4: Added optional output-image flip (flip_mode_index).
-  return 4;
+  // Version 5: Added optional physical scale bar (add_scale_bar).
+  return 5;
 }
 
 //------------------------------------------------------------------------------
@@ -150,6 +159,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   auto createColorTable = filterArgs.value<bool>(k_CreateColorTable_Key);
   auto useMask = filterArgs.value<bool>(k_UseMask_Key);
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  auto addScaleBar = filterArgs.value<bool>(k_AddScaleBar_Key);
 
   // Validate output file format is supported
   auto imageIOResult = CreateImageIO(filePath);
@@ -248,16 +258,24 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   // Compute slice count based on plane and geometry dims
   auto imageGeomDims = imageGeom.getDimensions();
   usize maxSlice = 1;
+  usize sliceW = 0;
+  usize sliceH = 0;
   switch(plane)
   {
   case 0: // XY
     maxSlice = imageGeomDims[2];
+    sliceW = imageGeomDims[0];
+    sliceH = imageGeomDims[1];
     break;
   case 1: // XZ
     maxSlice = imageGeomDims[1];
+    sliceW = imageGeomDims[0];
+    sliceH = imageGeomDims[2];
     break;
   case 2: // YZ
     maxSlice = imageGeomDims[0];
+    sliceW = imageGeomDims[1];
+    sliceH = imageGeomDims[2];
     break;
   default:
     break;
@@ -270,6 +288,32 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
   preflightUpdatedValues.push_back({"Example Output File", exampleFileName});
+
+  if(addScaleBar)
+  {
+    if(!createColorTable)
+    {
+      const usize numComponents = imageArray.getNumberOfComponents();
+      const bool supportedComponents = (numComponents == 1 || numComponents == 3 || numComponents == 4);
+      if(arrayDataType != DataType::uint8 || !supportedComponents)
+      {
+        return {MakeErrorResult<OutputActions>(-27016, fmt::format("The scale bar can only be drawn on 8-bit images. '{}' is {} with {} component(s); supported inputs are uint8 with 1, 3 or 4 "
+                                                                   "components. Enable 'Create Color Table' to convert this array to an 8-bit RGB image instead.",
+                                                                   imageArrayPath.toString(), DataTypeToString(arrayDataType), imageArray.getNumberOfComponents()))};
+      }
+    }
+
+    FloatVec3 spacing = imageGeom.getSpacing();
+    const float32 horizontalSpacing = (plane == 2) ? spacing[1] : spacing[0];
+    if(!std::isfinite(horizontalSpacing) || horizontalSpacing <= 0.0f)
+    {
+      return {MakeErrorResult<OutputActions>(
+          -27017, fmt::format("The scale bar requires a positive, finite spacing along the written image's horizontal axis, but the Image Geometry's spacing is {}.", horizontalSpacing))};
+    }
+
+    const usize bandHeight = ScaleBarRenderer::ComputeBandHeight(sliceH);
+    preflightUpdatedValues.push_back({"Output Image Size (with scale bar)", fmt::format("{} x {}", sliceW, sliceH + bandHeight)});
+  }
 
   return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
 }
