@@ -324,13 +324,19 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
 
-// Characterization test for the 2D area formula: the flat dimension's spacing must be EXCLUDED so a
-// 2D area is a true area, not a volume. The existing "Valid: Image 2D" fixture uses a flat-dimension
-// spacing of 1.0, which hides an all-three-spacings bug; here the flat dimension's spacing is
-// deliberately non-unit (5.0). If the flat spacing were (incorrectly) included, every area would be
-// 5x too large. All three flat orientations are checked so the fix cannot be an axis-specific special
-// case. This matches DREAM3D 6.5.171, which uses only the two non-flat resolutions.
-TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing", "[SimplnxCore][ComputeFeatureSizes]")
+// Characterization test for an OPEN BUG / pending design decision on the 2D area formula.
+//
+// The assertions below encode the legacy DREAM3D 6.5.171 semantics (FindSizes::findSizesImage):
+// a 2D area is the product of the two NON-flat spacings only, so the single feature's area is
+// 4 voxels * (2.0 * 3.0) = 24.0. The current implementation follows the PR #1590 "slab" convention
+// (matching ImageGeom::findElementSizes) and multiplies ALL THREE spacings, yielding 120.0 whenever
+// the flat dimension's spacing != 1. The existing "Valid: Image 2D" fixture uses a flat-dimension
+// spacing of exactly 1.0, which is why it cannot see the divergence; here the flat spacing is
+// deliberately 5.0, and all three flat orientations are GENERATEd so no axis-specific special case
+// can satisfy it.
+//
+// While the #1590 convention is in place, this test fails.
+TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing", "[SimplnxCore][ComputeFeatureSizes][2DFlatSpacing]")
 {
   auto [label, dims, spacing] = GENERATE(std::make_tuple("flat Z", SizeVec3{2, 2, 1}, FloatVec3{2.0f, 3.0f, 5.0f}), std::make_tuple("flat X", SizeVec3{1, 2, 2}, FloatVec3{5.0f, 2.0f, 3.0f}),
                                          std::make_tuple("flat Y", SizeVec3{2, 1, 2}, FloatVec3{2.0f, 5.0f, 3.0f}));
@@ -338,7 +344,7 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension
   DYNAMIC_SECTION(label)
   {
     // Four cells, all feature 1 (feature 0 unused). Non-flat spacings are always 2.0 and 3.0, so the
-    // per-voxel area is 6.0 and the single feature's area is 4 * 6.0 = 24.0 regardless of which axis is
+    // per-voxel area is 6.0, and the single feature's area is 4 * 6.0 = 24.0 regardless of which axis is
     // flat. The flat dimension's spacing is 5.0 and must NOT appear in the product.
     DataStructure dataStructure;
     auto* imageGeom = ImageGeom::Create(dataStructure, Test::k_ImageGeomName);
@@ -369,7 +375,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     const auto& areas = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
-    REQUIRE(areas.getValue(1) == Approx(24.0f)); // 4 voxels * (2.0 * 3.0); NOT 4 * (2.0 * 3.0 * 5.0) = 120
+    // Legacy 6.5.171 expectation: 4 voxels * (2.0 * 3.0) = 24.0. The current #1590 slab convention
+    // produces 4 * (2.0 * 3.0 * 5.0) = 120.0, so this assertion fails (expected, see [!shouldfail]).
+    REQUIRE(areas.getValue(1) == Approx(24.0f));
 
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }

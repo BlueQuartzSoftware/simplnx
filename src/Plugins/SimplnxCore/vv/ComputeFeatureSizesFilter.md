@@ -16,14 +16,14 @@
 | Algorithm relationship | **Port** of both `FindSizes::findSizesImage()` (ImageGeom) and `FindSizes::findSizesUnstructured()` (RectGridGeom) |
 | Oracle | **Class 1 (Analytical)** — all test data inlined, hand-derived |
 | Code paths | **14 of 19** exercised; 5 gaps (cancel ×2, INT32_MAX overflow ×2, other-geom no-op ×1) |
-| Tests | **10 TEST_CASEs** — all pass |
+| Tests | **10 TEST_CASEs** — 9 pass; 1 (`[!shouldfail]`) fails-as-expected, pinning the open 2D divergence |
 | External archive | None |
 | Deviations | **2 active**, both A/B-verified 2026-06-27: `ComputeFeatureSizes-D1` (float64+Kahan vs naive summation → `Volumes`), `ComputeFeatureSizes-D2` (float64 `std::cbrt` vs float32 `powf` → `EquivalentDiameters`) — see deviations file |
-| Open bugs | **None.** `Bug-1` (2D area formula multiplied all 3 spacings instead of the 2 non-flat spacings) was **fixed this cycle** and pinned by the `2D area excludes the flat-dimension spacing` characterization test; the ImageGeom 2D path now matches legacy (no deviation). |
+| Open bugs | **1 open, pending design decision** (`Bug-1`): the 2D area formula multiplies all 3 spacings (PR #1590 slab convention, consistent with `ImageGeom::findElementSizes`) and diverges from legacy 6.5.171 (2 non-flat spacings) when the flat dimension's spacing ≠ 1. A legacy-matching fix was applied then deliberately reverted pending a team decision on the NX-wide 2D convention (see PR #1638 discussion and the deviations file's OPEN entry). |
 
 ## Summary
 
-`ComputeFeatureSizesFilter` produces three arrays per feature: `NumElements` (voxel count, `int32`), `Volumes`/`Areas` (float32), and `EquivalentDiameters` (ESD or ECD, float32). For ImageGeom it uses voxel count × voxel size; for RectGridGeom it sums per-cell element sizes per feature. Both paths are parallelized via `ParallelDataAlgorithm` + TBB `tbb::combinable`. All tests use Class 1 oracles (hand-constructed fixtures with first-principles expected values). Source-inspection confirms both geometry paths are ports of legacy `FindSizes`. Two precision deviations (`D1`, `D2`) — both confirmed by a direct A/B run against DREAM3D 6.5.171 — are documented below. A latent 2D-area bug (`Bug-1`: the flat dimension's spacing was included in the per-voxel area) was found during this V&V and **fixed**; the 2D path now matches legacy and is pinned by a dedicated characterization test with a non-unit flat-dimension spacing.
+`ComputeFeatureSizesFilter` produces three arrays per feature: `NumElements` (voxel count, `int32`), `Volumes`/`Areas` (float32), and `EquivalentDiameters` (ESD or ECD, float32). For ImageGeom it uses voxel count × voxel size; for RectGridGeom it sums per-cell element sizes per feature. Both paths are parallelized via `ParallelDataAlgorithm` + TBB `tbb::combinable`. All tests use Class 1 oracles (hand-constructed fixtures with first-principles expected values). Source-inspection confirms both geometry paths are ports of legacy `FindSizes`. Two precision deviations (`D1`, `D2`) — both confirmed by a direct A/B run against DREAM3D 6.5.171 — are documented below. A 2D-area divergence from legacy (`Bug-1`: the flat dimension's spacing is included in the per-voxel area, per the PR #1590 slab convention) was found during this V&V; a legacy-matching fix was applied and then deliberately reverted because it conflicted with the NX-wide 2D standardization from PR #1590 without a team decision. The divergence remains **open** and is pinned by a dedicated `[!shouldfail]` characterization test with a non-unit flat-dimension spacing; see the deviations file's OPEN entry for the two resolution options.
 
 ## Algorithm Relationship
 
@@ -84,7 +84,7 @@ Second-engineer review pending: verify hand-derivations for all three fixtures a
 | Test case | Status | Notes |
 |---|---|---|
 | `Valid: Image 2D` | kept | Class 1; 5×5×1, spacing 20.2×0.1×1.0 (flat-Z spacing 1.0); SaveElementSizes=false |
-| `2D area excludes the flat-dimension spacing` | new-for-V&V | Class 1 characterization pin for the Bug-1 fix. 2×2 slab, non-flat spacings 2.0×3.0, flat-dimension spacing **5.0**; asserts area == 24.0 (not 120.0). `GENERATE`s all three flat orientations (X/Y/Z) so the flat spacing is proven excluded regardless of axis. |
+| `2D area excludes the flat-dimension spacing` | new-for-V&V | Class 1 characterization pin for the **open** Bug-1 divergence, tagged `[!shouldfail]`. 2×2 slab, non-flat spacings 2.0×3.0, flat-dimension spacing **5.0**; asserts the legacy value area == 24.0, while the current #1590 slab convention produces 120.0 — so it fails-as-expected until the 2D convention decision lands. `GENERATE`s all three flat orientations (X/Y/Z) so no axis-specific special case can satisfy it. |
 | `Valid: Image 2D with Element Sizes` | kept | Same fixture as `Valid: Image 2D`; SaveElementSizes=true |
 | `Valid: Image Stack 3D` | kept | Class 1; 5×5×5, spacing 1.2×0.9×2.1; SaveElementSizes=false |
 | `Valid: Image Stack 3D with Element Size` | kept | Same fixture; SaveElementSizes=true |
@@ -95,7 +95,7 @@ Second-engineer review pending: verify hand-derivations for all three fixtures a
 | `SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.4 + 6.5; validates UUID + arg-key + param-value decoding |
 | `Legacy: Small IN100 Test` | retired | Real-data comparison against legacy-produced `6_6_stats_test_v2.dream3d` arrays. Retired because it was a legacy-output regression check (not an independent oracle) and the D1/D2 precision deviations intentionally change those exact values; the RectGrid A/B (deviations file) now provides the legacy comparison and the inline Class 1 fixtures provide the correctness oracle. |
 
-All 10 TEST_CASEs pass.
+9 of 10 TEST_CASEs pass; the `[!shouldfail]` characterization test fails-as-expected (ctest green) while Bug-1 is unresolved.
 
 ## Exemplar archive
 

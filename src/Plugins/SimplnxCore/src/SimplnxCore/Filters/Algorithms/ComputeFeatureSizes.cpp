@@ -148,24 +148,13 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
      * For these two cases the following code would BREAK, so do not enable.
      **/
 
-    // Calculate the area of a single voxel from the two NON-flat dimensions only. Exactly one dimension
-    // is flat here (preflight rejects more than one empty dimension), so its spacing must be excluded --
-    // including it would compute a volume, not an area, and would diverge from DREAM3D 6.5.171 whenever
-    // the flat dimension's spacing != 1. This matches legacy FindSizes::findSizesImage, which uses only
-    // the two non-flat resolutions.
-    float64 voxelArea = 1.0;
-    if(xDimSize != 1)
-    {
-      voxelArea *= static_cast<float64>(spacing[0]);
-    }
-    if(yDimSize != 1)
-    {
-      voxelArea *= static_cast<float64>(spacing[1]);
-    }
-    if(zDimSize != 1)
-    {
-      voxelArea *= static_cast<float64>(spacing[2]);
-    }
+    // OPEN DESIGN QUESTION: this includes the flat dimension's spacing, matching the PR #1590
+    // "slab" convention used by ImageGeom::findElementSizes, but it diverges from legacy DREAM3D
+    // 6.5.171 (FindSizes::findSizesImage uses only the two non-flat resolutions) whenever the flat
+    // dimension's spacing != 1. See the "[2DFlatSpacing]" test case, which characterizes the
+    // divergence, and the ComputeFeatureSizesFilter V&V deviations entry.
+    // Calculate the area of a single voxel
+    const float64 voxelArea = static_cast<float64>(spacing[0]) * static_cast<float64>(spacing[1]) * static_cast<float64>(spacing[2]);
 
     msgHelper.sendMessage("Feature Level: Storing Voxel Counts and Calculating Area and ECD...");
     // Process each feature storing feature voxel counts, areas, and equivalent circular diameter

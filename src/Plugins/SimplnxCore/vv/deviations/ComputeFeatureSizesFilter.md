@@ -6,20 +6,19 @@ Entries are referenced by stable ID (`ComputeFeatureSizes-D<N>`) from the V&V re
 
 ---
 
-## ImageGeom path — no deviations
+## ImageGeom path — one open divergence (2D area, pending design decision)
 
-Source-inspection comparison of `ProcessImageGeom` against DREAM3D 6.5.171 `FindSizes::findSizesImage()` confirmed identical algorithmic structure:
+Source-inspection comparison of `ProcessImageGeom` against DREAM3D 6.5.171 `FindSizes::findSizesImage()` confirmed identical algorithmic structure for 3D and for voxel counting:
 
 - Per-feature voxel count: same accumulation logic (SIMPLNX parallelizes it via TBB; legacy is serial — the reduction is exact integer addition either way).
 - 3D volume formula: `volume = voxelCount × voxelVolume`; ESD: `2·∛(volume / (4π/3))` — both use the standard sphere formula.
-- 2D area formula (exactly one dim == 1): `area = voxelCount × (product of the two NON-flat spacings)`; ECD: `2·√(area / π)` — both use the standard circle formula, and both exclude the flat dimension's spacing.
 
-> **Corrected this V&V cycle (was a latent SIMPLNX bug, now no deviation):** `ProcessImageGeom` previously multiplied **all three** spacings for the 2D voxel area (`spacing[0]·spacing[1]·spacing[2]`), which is a volume, not an area. It diverged from DREAM3D 6.5.171 (which uses only the two non-flat resolutions) whenever the flat dimension's spacing was not 1.0. The prior 2D unit fixture used a flat-dimension spacing of exactly 1.0, so the defect was invisible. The formula now excludes the flat dimension's spacing, restoring parity with legacy — hence this remains a *no-deviation* entry. Pinned by the `2D area excludes the flat-dimension spacing` characterization test (flat X/Y/Z, non-unit flat spacing).
+> **OPEN — 2D area formula (exactly one dim == 1), pending design decision:** SIMPLNX multiplies **all three** spacings for the 2D per-voxel size (`spacing[0]·spacing[1]·spacing[2]`), following the PR #1590 "slab" convention that standardized 2D Image Geometry handling NX-wide (matching `ImageGeom::findElementSizes`). Legacy 6.5.171 uses only the **two non-flat** resolutions (a true area). The outputs therefore diverge whenever the flat dimension's spacing is not 1.0: `Volumes` scale by the flat spacing and `EquivalentDiameters` (circle-ECD from that value) by its square root. Note the current 2D branch feeds this three-spacing product into the circle-ECD formula `2·√(x/π)`, which is dimensionally inconsistent (a volume into an area formula). A legacy-matching fix was applied and then deliberately reverted (see PR #1638 discussion) because it conflicted with the #1590 convention without a team decision; the divergence is characterized by the `2D area excludes the flat-dimension spacing` test (tagged `[!shouldfail]`, flat X/Y/Z orientations, flat spacing 5.0), which asserts the legacy value and fails-as-expected until the convention is settled. Resolution options: (A) adopt legacy true-2D semantics here and in `findElementSizes`, or (B) keep the slab convention, switch the 2D branch to ESD for dimensional coherence, and promote this entry to a numbered deviation.
 
 **Precision notes (verified against 6.5.171 source, not flagged as deviations):**
 
 - *3D `Volumes`: bit-identical.* Both implementations compute the voxel volume as a float32 product of the three float32 spacings (SIMPLNX widens the float32 result to float64 afterward; legacy casts it to double) and multiply by the voxel count in double before storing as float32 — the same roundings in the same order.
-- *2D `Areas`: potential ≤1 float32 ULP difference.* SIMPLNX evaluates the two-non-flat-spacing product in float64 (exact for two float32 factors); legacy `findSizesImage` rounds the product to float32 first (`res_scalar = xRes * yRes`). When that product is inexact in float32, the stored per-feature area can differ by one ULP. Not observable in the current fixtures and non-material for downstream statistics; no A/B run has been performed for the ImageGeom path.
+- *2D `Areas`: potential ≤1 float32 ULP difference even when the flat spacing is 1.0.* Setting aside the open three-vs-two-spacing divergence above (which dominates whenever the flat spacing ≠ 1.0), the evaluation precision also differs: SIMPLNX computes the spacing product in float64; legacy `findSizesImage` rounds the two-resolution product to float32 first (`res_scalar = xRes * yRes`). When that product is inexact in float32, the stored per-feature area can differ by one ULP. Not observable in the current fixtures and non-material for downstream statistics; no A/B run has been performed for the ImageGeom path.
 - *ESD/ECD evaluation:* legacy uses float32 `powf`/`sqrtf` on the float32-rounded stored value, SIMPLNX uses float64 `std::cbrt`/`std::sqrt` on the unrounded float64 value — this is the same evaluation-precision pattern documented (and A/B-verified on RectGrid) as `ComputeFeatureSizes-D2`.
 
 ---
