@@ -7,8 +7,8 @@ Surface Meshing (Generation)
 ## Description
 
 This **Filter** creates a watertight, conformal triangle surface mesh from a segmented volume using
-the **Multi-Material Marching Cubes (M3C)** algorithm. The input is an **Image Geometry** (or
-**RectGrid Geometry**) together with a **Cell** **Feature Ids** **Data Array** that assigns every
+the **Multi-Material Marching Cubes (M3C)** algorithm. The input is an **Image Geometry**
+together with a **Cell** **Feature Ids** **Data Array** that assigns every
 **Voxel** to a **Feature** (for example a grain). The output is a **Triangle Geometry** whose faces
 tile every internal **Feature**–**Feature** interface as well as the outer boundary of the volume.
 
@@ -46,7 +46,7 @@ denote how many **Features** meet at the vertex; the exterior (volume-boundary) 
 |-----------|---------|
 | 2 | On a two-**Feature** interface |
 | 3 | On a triple line (three **Features**) |
-| 4 | At a quadruple point (four **Features**) |
+| 4 | At a quadruple point (four or more **Features**) |
 | 12 / 13 / 14 | The 2 / 3 / 4 variants lying on the outer volume boundary |
 
 ### Attribute Array Transfer
@@ -69,7 +69,8 @@ curvature-dependent analysis.
 - The volume is automatically wrapped in a temporary ghost layer so that **Features** touching the
   edge of the volume are meshed correctly; no manual padding is required.
 - **Feature Id** values of 0 are handled internally and restored on output.
-- For a **RectGrid Geometry** the node coordinates currently assume uniform **Cell** spacing.
+- Only an **Image Geometry** is accepted as input: the M3C node coordinates assume uniform **Cell**
+  spacing, so a **RectGrid Geometry** cannot be meshed correctly by this **Filter**.
 - The mesh is generated using multiple threads. For a given input the result is deterministic and
   reproducible — it does not depend on the number of threads.
 - **Memory:** the volume is swept one **Z** slice at a time, so the per-**Cell** working scratch is

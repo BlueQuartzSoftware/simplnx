@@ -356,7 +356,7 @@ namespace
 // Self-generated ("circular") regression oracle: the exemplar is produced BY this filter, so it only
 // guards against future *changes* to the output, not against correctness of the current output. It
 // should be replaced by an independent oracle (e.g. legacy DREAM3D M3C output) when available.
-const fs::path k_ExemplarFile = fs::path(nx::core::unit_test::k_TestFilesDir.view()) / "M3CSurfaceMeshingExemplar_v1" / "M3CSurfaceMeshingExemplar_v1.dream3d";
+const fs::path k_ExemplarFile = fs::path(nx::core::unit_test::k_TestFilesDir.view()) / "M3CSurfaceMeshingExemplar_v2" / "M3CSurfaceMeshingExemplar_v2.dream3d";
 const DataPath k_ExemplarMeshPath({"Computed M3C Mesh"});
 
 // Runs M3C (winding repair on) on an already-loaded Small IN100 input, creating k_ExemplarMeshPath.
@@ -386,7 +386,7 @@ DataStructure LoadSmallIn100Input()
 }
 } // namespace
 
-TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error and Warning Paths", "[SimplnxCore][M3CSurfaceMeshingFilter]")
+TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error Paths", "[SimplnxCore][M3CSurfaceMeshingFilter]")
 {
   UnitTest::LoadPlugins();
 
@@ -430,9 +430,9 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error and Warning Pat
     REQUIRE(has90200);
   }
 
-  // RectGrid warning (-90210): a non-Image grid geometry is accepted but preflight warns that
-  // non-uniform spacing is not honored.
-  SECTION("RectGrid geometry -> warning -90210")
+  // RectGrid geometries are rejected by the geometry parameter (M3C node coordinates assume uniform
+  // cell spacing, so only ImageGeom is an allowed input type).
+  SECTION("RectGrid geometry -> preflight fails")
   {
     DataStructure dataStructure;
     auto* rectGrid = RectGridGeom::Create(dataStructure, "RectGrid");
@@ -464,16 +464,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Preflight Error and Warning Pat
 
     M3CSurfaceMeshingFilter filter;
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-    bool has90210 = false;
-    for(const auto& warn : preflightResult.outputActions.warnings())
-    {
-      if(warn.code == -90210)
-      {
-        has90210 = true;
-      }
-    }
-    REQUIRE(has90210);
+    REQUIRE(preflightResult.outputActions.invalid());
   }
 }
 
@@ -504,7 +495,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Exemplar Comparison", "[Simplnx
 {
   UnitTest::LoadPlugins();
   const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "QuickSurfaceMeshTest_v2.tar.gz", "QuickSurfaceMeshTest_v2");
-  const nx::core::UnitTest::TestFileSentinel exemplarSentinel(nx::core::unit_test::k_TestFilesDir, "M3CSurfaceMeshingExemplar_v1.tar.gz", "M3CSurfaceMeshingExemplar_v1");
+  const nx::core::UnitTest::TestFileSentinel exemplarSentinel(nx::core::unit_test::k_TestFilesDir, "M3CSurfaceMeshingExemplar_v2.tar.gz", "M3CSurfaceMeshingExemplar_v2");
 
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);

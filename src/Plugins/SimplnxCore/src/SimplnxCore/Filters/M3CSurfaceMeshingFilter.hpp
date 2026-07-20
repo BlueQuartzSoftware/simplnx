@@ -10,7 +10,7 @@ namespace nx::core
 /**
  * @class M3CSurfaceMeshingFilter
  * @brief Generates a watertight, conformal multi-material triangle surface mesh from a segmented
- * (FeatureIds) Image/RectGrid geometry using the Multi-Material Marching Cubes (M3C) algorithm.
+ * (FeatureIds) Image geometry using the Multi-Material Marching Cubes (M3C) algorithm.
  *
  * This is a port of the legacy DREAM3D `M3CSliceBySlice`/`M3CEntireVolume` filters. The algorithm
  * was originally contributed by Dr. Sukbin Lee (CMU) and is based on Wu & Sullivan (2003),
