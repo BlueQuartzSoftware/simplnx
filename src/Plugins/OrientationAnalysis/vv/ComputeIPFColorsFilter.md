@@ -7,8 +7,8 @@
 | SIMPLNX Human Name | Compute IPF Colors |
 | DREAM3D 6.5.171 equivalent | `GenerateIPFColors` (SIMPL UUID `a50e6532-8075-5de5-ab63-945feb0de7f7`) — `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/GenerateIPFColors.{h,cpp}` |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | pending second-engineer review |
+| Status | COMPLETE — 2026-07-16 |
+| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive       | **None for this filter** — the oracle dataset is built inline in C++. The legacy-produced `so3_cubic_high_ipf_001.tar.gz` was **retired as a circular oracle** from this test (it is still downloaded for `CreateEnsembleInfoTest`, so the `download_test_data()` line remains). |
 | Legacy comparison      | **Run — SIMPLNX vs DREAM3D 6.5.171 (TSL).** SIMPLNX is byte-identical to the stored legacy `IPF Colors` (0/343,963); vs a fresh 6.5.171 run, 14/343,963 cells (0.004%) differ by exactly ±1/255 in one channel. One deviation: `ComputeIPFColorsFilter-D1` (precision + library, quantization jitter). |
 | Bug flags              | None. |
-| V&V phase              | Discovery, oracle design, oracle reconciliation (0 SIMPLNX bugs), algorithm review (2 warnings fixed: dead `orientationOps`, atomic phase-warning counter), dual-build, legacy comparison, and documentation complete. Outstanding: second-engineer sign-off. |
+| V&V phase              | Discovery, oracle design, oracle reconciliation (0 SIMPLNX bugs), algorithm review (2 warnings fixed: dead `orientationOps`, atomic phase-warning counter), dual-build, legacy comparison, and documentation complete. V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16. |
 
 ## Summary
 
@@ -59,7 +59,7 @@ Per the "test the value-add, not upstream" principle: EbsdLib is the trusted ref
 
 *Encoded:* `test/ComputeIPFColorsTest.cpp` — 8 `TEST_CASE`s, all pass in-core and OOC. The main `Class 1/2/3 Oracle (inline analytical dataset)` case carries the Class 2/3/1/4 assertions across four `SECTION`s.
 
-*Second-engineer review:* pending (this V&V PR's review constitutes the second-engineer sign-off).
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 

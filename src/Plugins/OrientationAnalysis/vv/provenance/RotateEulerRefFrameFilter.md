@@ -66,7 +66,9 @@ diff 7.2e-7 rad).
 
 ## Second-engineer oracle review
 
-**Pending.** Requested focus: (a) walk the F1–F7 hand derivations (~30 minutes); (b) confirm the
-sign convention — a +w reference-frame rotation about Z *subtracts* w from phi1
-(`phi1' = phi1 − w`), which the first-principles derivation establishes and both implementations
-exhibit; (c) confirm the Class 4 invariant set is complete for this algorithm.
+- **Reviewer:** Michael Jackson (technical authority)
+- **Date:** 2026-07-16
+- **Note:** Signed off. Review focus covered: (a) the F1–F7 hand derivations; (b) the
+  sign convention — a +w reference-frame rotation about Z *subtracts* w from phi1
+  (`phi1' = phi1 − w`), which the first-principles derivation establishes and both implementations
+  exhibit; (c) the Class 4 invariant set is complete for this algorithm.

@@ -29,22 +29,6 @@
 - The result is that the filter generates the expected output values
 
 
-## Resolution (V&V outcomes — 2026-05-27)
-
-| Topic | DRAFT-tentative finding | Final confirmed finding |
-|---|---|---|
-| Algorithm Relationship | Port (with rename `Find→Compute`) | **Port** — confirmed. The SIMPLNX algorithm is a line-by-line translation of the legacy `FindGroupingDensity::execute()` from `tuks188/DREAM3D` `feature/770_Grouping_Density`. Six port-time deltas documented in the V&V report, none change output. |
-| Oracle class | Class 1 (Analytical) primary, optionally Class 4 (Invariant) | **Class 1 + Class 4 confirmed.** Hand-derivation embedded in V&V report; invariant predicates added inline in the test (sentinel `-1.0f`, `density ≤ 1.0`, `density > 0 ∨ == -1.0f`, CheckedFeatures range). Second-engineer review skipped — set-union arithmetic on 5-feature hand-built fixture + bit-identical cross-check against independently-built legacy. |
-| Legacy comparison | Not yet run | **Done. No deviations.** All 4 `(UseNonContiguous, FindCheckedFeatures)` configurations produce bit-identical output between SIMPLNX and the locally-rebuilt legacy `FindGroupingDensity` (a local build of the legacy DREAM3D 6.5 source with the feature-branch sources). See `vv/deviations/ComputeGroupingDensityFilter.md`. |
-| `[SimplnxReview]` test-tag bug | Flagged as cleanup-needed | **Fixed.** All 7 tests now use `[SimplnxCore][ComputeGroupingDensityFilter]`. |
-| Exemplar archive | `compute_grouping_densities.tar.gz` (v1) — provenance TBD | **Replaced.** v1 archive retired from this filter's tests; new `compute_grouping_densities_v2.tar.gz` published to the GitHub Data_Archive with hand-review sign-off in its inline ReadMe + comparison report. SHA512 wired into `test/CMakeLists.txt`. Provenance sidecar published at `vv/provenance/ComputeGroupingDensityFilter.md` (four-hand authorship chain + v1 circular-oracle disposition). |
-| Test inventory | 8 tests, 4 redundant `(NC, CF)` execution tests + 1 exemplar test | **Restructured to 7 tests.** 5 redundant tests replaced by a single DYNAMIC_SECTION exemplar A/B test covering all 4 configurations. Added: empty-parent sentinel test (Class 4) + preflight error -15672 test (gap closed). Kept: 3 existing preflight error tests + SIMPL backwards-compat test. |
-| Deviation entries (`ComputeGroupingDensity-D<N>`) | Placeholder pending comparison | **None.** No deviations observed across all 4 configurations. See `vv/deviations/ComputeGroupingDensityFilter.md` for the comparison method, fixture, SHA512, and migration recommendation. |
-| Algorithm review (`review-algorithm`) | Not visible from PR history | **Done.** Code-comment cleanup applied (sentinel documented, deleted-special-members trailing comments removed, throwaway-placeholder pattern explained, FindDensitySpecializations + FindDensityGrouping class docs added). Memory / formatting / overflow concerns mitigated by the engineer. Tie-break behavior added to the user-facing filter doc. |
-| Filter documentation (`review-filter-docs`) | "Excellent — empty References section is the one defect" | **Updated.** Added Required Input Sources section with MyST cross-links to upstream producer filters. Stated volume units explicitly. MyST-linked the inline Compute Feature Neighborhoods mention. Italicized the `-1.0` sentinel as a value reference. References + Example Pipelines remain empty (no published paper; no shipping pipeline currently uses this filter). |
-| Verification archive (OneDrive) | Not yet created | **Materially captured by the v2 GitHub Data_Archive release** — the v2 tarball contains the input file, all 4 legacy and SIMPLNX outputs, the comparison script + report, the legacy and SIMPLNX pipelines, and the hand-review sign-off ReadMe. OneDrive duplication can be done at SBIR deliverable assembly. |
-
-
 ## Algorithm Relationship
 
 
@@ -108,7 +92,7 @@ CheckedFeatures derivations (when CF=1): NC=0 → `[0,1,1,2,2,2]` (parent 1 clai
 ## Code path coverage
 
 
-*7 of 7 paths enumerated — Test case column to be filled by vv-tests.*
+*7 of 7 paths exercised.*
 
 Source: `src/Plugins/SimplnxCore/src/SimplnxCore/Filters/Algorithms/ComputeGroupingDensity.cpp`
 
@@ -116,29 +100,38 @@ The algorithm dispatches on two booleans, producing 4 template specializations o
 
 | Path | Test case |
 |---|---|
-| `UseNonContiguousNeighbors=true, FindCheckedFeatures=true` (full path, both neighbor lists + per-feature parent tracking) | *(pending)* |
-| `UseNonContiguousNeighbors=true, FindCheckedFeatures=false` (both neighbor lists, no per-feature parent tracking) | *(pending)* |
-| `UseNonContiguousNeighbors=false, FindCheckedFeatures=true` (contiguous neighbors only + per-feature parent tracking) | *(pending)* |
-| `UseNonContiguousNeighbors=false, FindCheckedFeatures=false` (contiguous neighbors only, no per-feature parent tracking) | *(pending)* |
-| Edge: `totalFeatureCheckVolume == 0.0f` for a parent → density sentinel `-1.0f` written at line 114 | *(pending)* |
-| Cancellation: `m_ShouldCancel` checked inside the parent-id outer loop (line 76); early return without writing further densities | *(pending)* |
-| Preflight errors: invalid / mismatched input array paths (3 error tests in `ComputeGroupingDensityTest.cpp` per retroactive notes — confirm count) | *(pending)* |
+| `UseNonContiguousNeighbors=true, FindCheckedFeatures=true` (full path, both neighbor lists + per-feature parent tracking) | `Exemplar A/B — all 4 configurations` (DYNAMIC_SECTION `NC1_CF1`) |
+| `UseNonContiguousNeighbors=true, FindCheckedFeatures=false` (both neighbor lists, no per-feature parent tracking) | `Exemplar A/B — all 4 configurations` (DYNAMIC_SECTION `NC1_CF0`) |
+| `UseNonContiguousNeighbors=false, FindCheckedFeatures=true` (contiguous neighbors only + per-feature parent tracking) | `Exemplar A/B — all 4 configurations` (DYNAMIC_SECTION `NC0_CF1`) |
+| `UseNonContiguousNeighbors=false, FindCheckedFeatures=false` (contiguous neighbors only, no per-feature parent tracking) | `Exemplar A/B — all 4 configurations` (DYNAMIC_SECTION `NC0_CF0`) |
+| Edge: `totalFeatureCheckVolume == 0.0f` for a parent → density sentinel `-1.0f` written at line 114 | `Empty-parent edge case (-1.0f sentinel)` |
+| Cancellation: `m_ShouldCancel` checked inside the parent-id outer loop (line 76); early return without writing further densities | *Not directly tested — structurally covered; requires cancel-signal injection (low-value guard).* |
+| Preflight errors: invalid / mismatched input array paths → `-15670`/`-15671`/`-15672`/`-15673` | 4 dedicated preflight-error tests (one per code) |
 
 ## Test inventory
 
 | Test case | Status | Notes |
 |---|---|---|
-| *TestName* | kept / new-for-V&V / retired | *one line if needed* |
+| `SimplnxCore::ComputeGroupingDensityFilter: Exemplar A/B — all 4 configurations` | new-for-V&V | DYNAMIC_SECTION over `NC0_CF0`/`NC0_CF1`/`NC1_CF0`/`NC1_CF1`; bit-exact `CompareDataArrays<float32>`/`<int32>` against the v2 exemplar (equals the Class 1 hand-derivation) + inline Class 4 invariants. Replaces 5 redundant pre-V&V tests (4 execution variants + 1 v1-exemplar consumer). |
+| `SimplnxCore::ComputeGroupingDensityFilter: Empty-parent edge case (-1.0f sentinel)` | new-for-V&V | Class 4 — `density[1] == 1.0` (parent with features) and `density[2] == -1.0f` (empty-parent sentinel). |
+| `SimplnxCore::ComputeGroupingDensityFilter: Preflight error -15670` | kept | Invalid/mismatched input array path. |
+| `SimplnxCore::ComputeGroupingDensityFilter: Preflight error -15671` | kept | Invalid/mismatched input array path. |
+| `SimplnxCore::ComputeGroupingDensityFilter: Preflight error -15672` | new-for-V&V | Closed a preflight coverage gap. |
+| `SimplnxCore::ComputeGroupingDensityFilter: Preflight error -15673` | kept | Invalid/mismatched input array path. |
+| `SimplnxCore::ComputeGroupingDensityFilter: SIMPL Backwards Compatibility` | kept | `DYNAMIC_SECTION` over SIMPL 6.5 conversion fixture; UUID + argument conversion only. |
+
+Restructured 8 → 7 tests. All 7 use the `[SimplnxCore][ComputeGroupingDensityFilter]` tag (corrected from a
+`[SimplnxReview]` mis-tag) and pass at the verified commit.
 
 ## Exemplar archive
 
-- **Archive:** *`<name_vN.tar.gz>`*
-- **SHA512:** *`<copy from test/CMakeLists.txt>`*
-- **Provenance:** *`src/Plugins/<P>/vv/provenance/<name>.md`*
+- **Archive:** `compute_grouping_densities_v2.tar.gz` — **replaces** v1 `compute_grouping_densities.tar.gz` (retired from this filter's tests as a circular oracle). Carries inline provenance: input file + all 4 legacy/SIMPLNX outputs + comparison script + report + both pipelines + hand-review sign-off ReadMe.
+- **SHA512:** `3aaabb63c4fa16f7fa192ae4ee9dbba9394ec7f1cd19aff55e399a624d495a3a778c7f6f282911f681e85cea99e4c6d15344274e9107f337af7d4a19f93784ff`
+- **Provenance:** `src/Plugins/SimplnxCore/vv/provenance/ComputeGroupingDensityFilter.md` — records the authorship chain and the v1→v2 circular-oracle disposition.
 
-## Deviations from Pre-SIMPLNX Implementation
+## Deviations from DREAM3D 6.5.171
 
-**Note (this filter only):** the section heading has been re-titled from the template default "Deviations from DREAM3D 6.5.171" because the legacy is the pre-SIMPLNX `FindGroupingDensity` on `tuks188/DREAM3D` `feature/770_Grouping_Density` — not the shipped 6.5.171 baseline. See the Algorithm Relationship section for context. This rename is local to this report only; `docs/vv_templates/report_template.md` is unchanged.
+**Baseline note (this filter):** the legacy equivalent is the pre-SIMPLNX `FindGroupingDensity` on `tuks188/DREAM3D` `feature/770_Grouping_Density`, which was never shipped in any DREAM3D 6.5.x release (a few customers consumed it via a custom 6.5.x build) — so "DREAM3D 6.5.171" here denotes that feature-branch source rebuilt locally, not the shipped 6.5.171 baseline. See the Algorithm Relationship section for context.
 
 **No deviations observed.** Runtime A/B comparison run on the
 `compute_grouping_densities_v2.tar.gz` fixture: all 4

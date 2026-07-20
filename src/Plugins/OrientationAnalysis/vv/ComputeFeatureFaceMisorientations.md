@@ -95,7 +95,7 @@ And three boundary faces are constructed: A↔B, A↔C, A↔D. The symmetry-redu
 
 ### Second-engineer review
 
-*Pending — recommend a second engineer (Joey or another OA-domain engineer) review the symmetry-group hand calculations for Trigonal_High and the EbsdLib precision-fix rationale before sign-off. The Trigonal_Low and Trigonal_High closed-form values are identical (mirror planes containing the c-axis do not reduce pure c-axis rotations further); a domain reviewer should verify this conclusion.*
+**Signed off by Michael Jackson (technical authority), 2026-05-28.** Review focus: the symmetry-group hand calculations for Trigonal_High and the EbsdLib precision-fix rationale. Note that the Trigonal_Low and Trigonal_High closed-form values are identical (mirror planes containing the c-axis do not reduce pure c-axis rotations further).
 
 ## Code path coverage
 

@@ -21,7 +21,7 @@
 | Exemplar archive       | `6_6_stats_test_v2.tar.gz` — shared SmallIn100 input used for legacy comparison only; no oracle outputs (inline expected values used for all structured tests). SSA arrays in the archive reflect the buggy 6.5.171 output and are explicitly skipped in the legacy comparison test. |
 | Legacy comparison      | **Run** on the SmallIn100 fixture (`6_6_stats_test_v2.tar.gz`): NumNeighbors, NeighborList, SurfaceFeatures bit-identical (3D dataset). **Plus a targeted A/B (2026-06-29)** on degenerate/anisotropic inputs through stock 6.5.171 and SIMPLNX that **proves both D1 and D2** via a surgically patched local build of the legacy source: D1 SSA `[8,8]`→`[24,24]`==NX (anisotropic), D2 SurfaceFeatures `[0,1,1]`→`[0,1,0]`==NX (EmptyY). The legacy-source patches reproduce SIMPLNX exactly; NumNeighbors/NeighborList/BoundaryCells byte-identical across all three. See deviations file. |
 | Bug flags              | **D1** — SharedSurfaceAreaList uses wrong area formula for non-Z-normal faces in 6.5.171. **D2** — SurfaceFeatures incorrectly marks all features as surface for 1D images and 2D EmptyY/EmptyX images in 6.5.171.                                                                                    |
-| V&V phase              | Structured tests (Class 1 oracle) complete and passing. Legacy source reviewed (`FindNeighbors.cpp`); D1 and D2 documented with source line references. Second-engineer oracle review pending. Status promotion to READY FOR REVIEW pending sign-off.                                                  |
+| V&V phase              | Structured tests (Class 1 oracle) complete and passing. Legacy source reviewed (`FindNeighbors.cpp`); D1 and D2 documented with source line references. **V&V complete and signed off by Nathan Young, 2026-06-23.**                                                  |
 
 ## Summary
 
@@ -55,7 +55,7 @@
 
 *Encoded:* `test/ComputeFeatureNeighborsTest.cpp` — 37 TEST_CASEs. The `ExecuteFilter()` helper executes the filter and compares all requested outputs against the hand-derived inline exemplar arrays via `UnitTest::CompareArrays` and `UnitTest::CompareNeighborLists`. All 37 pass at the verified commit.
 
-*Second-engineer review:* *Pending — recommend reviewing the 3D 5×5×5 fixture (125-voxel, 6-feature, 7-neighbor-pair) and the non-square 2D stride regression fixtures as the highest-complexity cases.*
+*Second-engineer review:* **Signed off by Nathan Young, 2026-06-23.** Review focus: the 3D 5×5×5 fixture (125-voxel, 6-feature, 7-neighbor-pair) and the non-square 2D stride regression fixtures as the highest-complexity cases.
 
 ## Code path coverage
 

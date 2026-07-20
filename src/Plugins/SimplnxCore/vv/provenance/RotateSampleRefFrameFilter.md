@@ -36,8 +36,8 @@ These A/B artifacts are working files, not a test-consumed archive; they are kep
 
 ## Second-engineer oracle review
 
-- **Reviewer:** *Pending*
-- **Date:** —
+- **Reviewer:** Michael Jackson (technical authority)
+- **Date:** 2026-07-16
 
 ## Regenerated to fix a circular-oracle situation?
 

@@ -7,8 +7,8 @@
 | SIMPLNX Human Name          | Fill Bad Data                                                            |
 | DREAM3D 6.5.171 equivalent  | `FillBadData` — SIMPL UUID `30ae0a1e-3d94-5dab-b279-c5727ab5d7ff`       |
 | Verified commit             | *<filled at SBIR deliverable assembly>*                                  |
-| Status                      | **READY FOR REVIEW** (second-engineer review outstanding — see V&V phase) |
-| Sign-off                    | *pending second-engineer review*                                             |
+| Status                      | COMPLETE — 2026-07-16 |
+| Sign-off                    | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive       | `6_5_fill_bad_data.tar.gz` — `6_5_input/exemplar.dream3d` (Class 2) + `test_NN_input/expected.dream3d` pairs for Tests 01–07, 11, 13 (Class 1). *(Tests 08–10 and 12 have no fixtures — the numbering is non-contiguous.)* |
 | Legacy comparison      | SmallIN100 in-test (Class 2) — SIMPLNX matches the 6.5.x exemplar element-wise. A separate Test 08 three-way binary A/B was cited by an earlier revision but its working files are unrecoverable, so that claim is **withdrawn** (see deviations). Per-code-path correctness is pinned by the Class 1 analytical fixtures. |
 | Bug flags              | `FillBadDataFilter-B1` (preflight dead-return for `minAllowedDefectSize < 1`) resolved. Fixed this cycle: an all-bad-data / enclosed-bad-pocket input previously looped forever in Phase 4 (no fillable neighbor → `count` never reached 0); a no-progress guard now stops with a warning. |
-| V&V phase              | **READY FOR REVIEW.** Outstanding: (1) second-engineer spot-check of Tests 11/13; (2) cancel path (Path 14) untested. *(The unrecoverable Test 08 A/B claim has been withdrawn — no longer a gate.)* |
+| V&V phase              | **COMPLETE — V&V signed off by Michael Jackson (technical authority) 2026-07-16.** Outstanding: cancel path (Path 14) untested. *(The unrecoverable Test 08 A/B claim has been withdrawn — no longer a gate.)* |
 
 ## Summary
 
@@ -56,7 +56,7 @@ SIMPL UUID mapping is preserved via `SimplnxCoreLegacyUUIDMapping.hpp` and SIMPL
 - Class 1: `"SimplnxCore::FillBadData::Test01"` through `Test13` — `UnitTest::CompareExemplarToGeneratedData` against `test_NN_expected.dream3d`. Pass.
 - SIMPL compat: `"SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility"` — UUID + arg-key + value assertions only. Not an oracle test.
 
-*Second-engineer review:* Spot-check of Test 11 (tie-breaking scan order) and Test 13 (StoreAsNewPhase assignment) recommended before promoting to COMPLETE.
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 

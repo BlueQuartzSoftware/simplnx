@@ -151,6 +151,8 @@ Re-enumerated this cycle for the per-mode neighbor gate (`ComputeKernelAvgMisori
 
 The shared archive remains referenced in `src/Plugins/OrientationAnalysis/test/CMakeLists.txt` (line 130) for use by `AlignSectionsMutualInformation`, `ComputeShapes`, and `ComputeSchmids` tests. Only F#5's consumption line was removed.
 
+- **Provenance:** `vv/provenance/ComputeKernelAvgMisorientationsFilter.md` — the canonical record of how the inlined data fixtures were designed and how the expected values were derived.
+
 ## Deviations from DREAM3D 6.5.171
 
 See `vv/deviations/ComputeKernelAvgMisorientationsFilter.md` for the canonical, ID-stable list:
@@ -158,7 +160,3 @@ See `vv/deviations/ComputeKernelAvgMisorientationsFilter.md` for the canonical, 
 - **`ComputeKernelAvgMisorientationsFilter-D1`** — EbsdLib 2.4.1 CubicOps precision improvement (non-deviation in the algorithmic sense; precision class). The pre-2.4.1 `acos(w near 1)` form produces a spurious ~0.03° angle on float32-sourced identical quaternions, which inflates every per-cell self-misorientation contribution to the KAM. The 2.4.1 `2*atan2(|v|, w)` form returns 0° as expected. **Confirmed by runtime A/B this cycle:** on identical 12³ synthetic input (default per-grain path, kernel `{1,1,1}`), max \|Δ\|=0.0072°, mean \|Δ\|=0.00075°, 0/1728 cells > 0.01°, gating provably identical — the delta is purely `calculateMisorientation` precision (D1 + the `QuatF`→`QuatD` port delta).
 - **`ComputeKernelAvgMisorientationsFilter-D2`** — Legacy `FindKernelAvgMisorientations.cpp:264` uses `KernelSize.z + 1` as the upper bound of the x-direction inner loop (should be `KernelSize.x + 1`). SIMPLNX has the correct form. Dormant when `KernelSize.x == KernelSize.z`; fires for asymmetric kernels. Logged in `bug_triage.md`.
 - **`ComputeKernelAvgMisorientationsFilter-D3`** — `use_feature_ids = false` (per-voxel KAM) is an **NX-only capability** added for issue #1613. DREAM3D 6.5.171 `FindKernelAvgMisorientations` has no equivalent (it is per-grain only), so there is nothing to A/B against; the mode is validated by the Class 1 per-voxel fixtures and the Class 4 mode-equivalence invariant. The default (`use_feature_ids = true`) is unchanged and remains legacy-comparable.
-
-## Provenance
-
-See `vv/provenance/ComputeKernelAvgMisorientationsFilter.md` for the canonical record of how the inlined data fixtures were designed and how the expected values were derived.

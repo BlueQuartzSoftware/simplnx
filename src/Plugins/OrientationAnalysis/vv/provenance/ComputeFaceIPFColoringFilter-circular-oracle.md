@@ -15,9 +15,8 @@ No Class 2/3/5 provenance block applies (Class 1 oracle lives in the test code).
 
 ## Second-engineer oracle review
 
-- **Reviewer:** *pending*
-- **Date:** *pending*
-- **Note:** recommend an OA-domain engineer confirm the hex basal-corner color and the cubic corner-primary derivations.
+- **Reviewer:** Michael Jackson (technical authority)
+- **Date:** 2026-07-16
 
 ## Regenerated to fix a circular-oracle situation?
 

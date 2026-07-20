@@ -6,8 +6,8 @@
 | SIMPLNX UUID | 00cbb97e-a5c2-43e6-9a35-17a0f9ce26ed |
 | DREAM3D 6.5.171 equivalent | WritePoleFigure (legacy SIMPL UUID `a10bb78e-fcff-553d-97d6-830a43c85385`) |
 | Verified commit | *<filled at SBIR deliverable assembly>* |
-| Status | READY FOR REVIEW |
-| Sign-off | *<engineer(s), date>* |
+| Status | COMPLETE — 2026-07-16 |
+| Sign-off | Michael Jackson <mike.jackson@bluequartz.net> — 2026-07-16 |
 
 ## At a glance
 
@@ -20,7 +20,7 @@
 | Exemplar archive       | `Pole_Figure_Exemplars_v6.tar.gz` (inputs only — 502 hex-Ti orientations + 251/251 mask). No baked image exemplar (deliberate: avoids coupling CI to EbsdLib pixel byte-identity). |
 | Legacy comparison      | Three-way expert-visual (6.5.171 / 6.5.172 / SIMPLNX) on hex **and** cubic. 6.5.171 == 6.5.172 (byte-identical). Data (pole positions, intensity, color mapping) visually identical; 4 cosmetic/rendering deviations. |
 | Bug flags              | **None.** All 4 deviations are cosmetic (axis/family labels, font) or an intentional rendering improvement (discrete vector markers). No correctness defect. |
-| V&V phase              | All phases complete: oracle chosen + applied before legacy comparison, expert sign-off recorded, invariants pass on EbsdLib 3.1.0. Outstanding: second-engineer review of the Class 5 acceptance criteria. |
+| V&V phase              | All phases complete: oracle chosen + applied before legacy comparison, expert sign-off recorded, invariants pass on EbsdLib 3.1.0. V&V complete and signed off by Michael Jackson (technical authority) 2026-07-16. |
 
 ## Summary
 
@@ -52,7 +52,7 @@ The shared pole-figure projection math (modified Lambert for Color, stereographi
 - **Class 5 (Expert-visual):** the hex + cubic renders (legacy PDFs + SIMPLNX PNGs), signed off this cycle. Generator scripts + pipelines are committed under `Code_Review/vv/WritePoleFigure/`; the binary renders are archived to OneDrive — see the provenance sidecar and that folder's `README.md`.
 - **Class 2 (Reference), cited not duplicated:** EbsdLib `PoleFigureCompositorTest::All_Laue_Classes` pins per-Laue-class pixel reproduction.
 
-*Second-engineer review:* *Pending — recommend a second OA-domain engineer confirm the Class 5 acceptance criteria (that the four documented differences are the complete set and are all non-defect).*
+*Second-engineer review:* **Signed off by Michael Jackson (technical authority), 2026-07-16.**
 
 ## Code path coverage
 

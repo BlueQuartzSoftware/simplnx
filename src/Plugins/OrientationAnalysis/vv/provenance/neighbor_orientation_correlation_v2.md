@@ -54,5 +54,5 @@ that bar:
 
 ## Second-engineer oracle review
 
-- **Reviewer:** skipped in-session (single engineer)
-- **Skip reason:** review requested at PR review of the `vv/NeighborOrientationCorrelation` branch (PR #1655).
+- **Reviewer:** Michael Jackson (technical authority)
+- **Date:** 2026-07-16

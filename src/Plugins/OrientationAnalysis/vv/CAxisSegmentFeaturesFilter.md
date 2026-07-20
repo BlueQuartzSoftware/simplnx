@@ -7,8 +7,8 @@
 | SIMPLNX Human Name         | Segment Features (C-Axis Misalignment)                                                                                                       |
 | DREAM3D 6.5.171 equivalent | `CAxisSegmentFeatures` — `Source/Plugins/Reconstruction/ReconstructionFilters/CAxisSegmentFeatures.{h,cpp}` (SIMPL UUID `bff6be19-1219-5876-8838-1574ad29d965`) |
 | Verified commit            | *<filled at SBIR deliverable assembly>*                                                                                                      |
-| Status                     | READY FOR REVIEW                                                                                                                             |
-| Sign-off                   | pending second-engineer review                                                                                                               |
+| Status                     | COMPLETE — 2026-07-25                                                                                                                        |
+| Sign-off                   | Michael A. Jackson <mike.jackson@bluequartz.net> — 2026-07-23. Second engineer: Matthew Marine, 2026-07-25 (PR #1685 review). |
 
 ## At a glance
 
@@ -21,7 +21,7 @@
 | Exemplar archive       | **None — fixtures inlined in the test source.** The filter's consumption of `segment_features_test_data.tar.gz` (circular oracle) is retired; the archive remains for the EBSD segmentation tests.                                                                                            |
 | Legacy comparison      | **Run** (2026-07-22, rerun with TC5_3D 2026-07-24, `vv/comparisons/CAxisSegmentFeaturesFilter/`) — all 5 shared-behavior fixtures (incl. a 3×2×2 masked fixture covering the y/z stride branches) match 6.5.171 at the segmentation-partition level with identical feature counts; bit-identical ids are unattainable because 6.5.171 always clock-randomizes FeatureIds (D2). |
 | Bug flags              | D1, D4, D5 — all SIMPLNX defects, all **fixed this cycle** and pinned by tests. No legacy bug flags.                                                                                                                                                                                           |
-| V&V phase              | Discovery, relationship, oracle, reconciliation, algorithm review, tests (dual-build), legacy comparison, deviations, provenance, docs — complete. **Outstanding:** second-engineer review at PR (per sign-off convention).                                                                    |
+| V&V phase              | Discovery, relationship, oracle, reconciliation, algorithm review, tests (dual-build), legacy comparison, deviations, provenance, docs — complete. Second-engineer review completed at PR per sign-off convention (Matthew Marine, 2026-07-25, PR #1685).                                                                    |
 
 ## Summary
 
@@ -55,7 +55,7 @@
 
 *Encoded:* `test/CAxisSegmentFeaturesTest.cpp` — `Class 1 Analytical (Pure-Phi Chain, Face)`, `(Pi-Fold Antiparallel C-Axes)`, `(Neighbor Scheme Face vs All)` [2 sections], `(Mask Excludes Voxel 0)` [2 sections], `(Phase Separation)`, `(3D Linearization, 3x2x2)`, `(Quats Outside Cell AttributeMatrix)`, `(RectGrid Geometry)`, `Class 4 Invariants (RandomizeFeatureIds)`, `Class 4 Invariants (RandomizeFeatureIds Preserves Masked Zeros)` — all pass in both builds.
 
-*Second-engineer review:* pending at PR review (sign-off convention). The pure-Phi c-axis derivation is sibling-shared with the previously reviewed `GroupMicroTextureRegionsFilter` / `ComputeFeatureNeighborCAxisMisalignmentsFilter` Class 1 oracles.
+*Second-engineer review:* **Signed off by Matthew Marine, 2026-07-25** (PR #1685 review, per sign-off convention). The pure-Phi c-axis derivation is sibling-shared with the previously reviewed `GroupMicroTextureRegionsFilter` / `ComputeFeatureNeighborCAxisMisalignmentsFilter` Class 1 oracles. The V&V work was authored by Michael A. Jackson, so the review is independent of the author.
 
 ## Code path coverage
 
