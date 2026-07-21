@@ -255,7 +255,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 
 std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths)
 {
- return GetAllChildDataPathsOfType<IArray>(dataStructure, parentGroup, ignoredDataPaths);
+  return GetAllChildDataPathsOfType<IArray>(dataStructure, parentGroup, ignoredDataPaths);
 }
 
 std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths)
