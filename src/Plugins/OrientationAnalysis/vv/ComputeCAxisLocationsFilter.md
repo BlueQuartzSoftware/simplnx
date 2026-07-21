@@ -1,0 +1,102 @@
+# V&V Report: ComputeCAxisLocationsFilter
+
+|        |              |
+|--------|--------------|
+| Plugin | OrientationAnalysis |
+| SIMPLNX UUID | `a51c257a-ddc1-499a-9b21-f2d25a19d098` |
+| DREAM3D 6.5.171 equivalent | `FindCAxisLocations` (SIMPL UUID `68ae7b7e-b9f7-5799-9f82-ce21d0ccd55e`) - `Source/Plugins/OrientationAnalysis/OrientationAnalysisFilters/FindCAxisLocations.{h,cpp}` |
+| Verified commit | *<filled at SBIR deliverable assembly>* |
+| Status | READY FOR REVIEW |
+| Sign-off | *<engineer(s), date>* |
+
+## At a glance
+
+A scannable dashboard for reviewers. Each row is one sentence to one short paragraph — enough that a reader can decide whether they need to read the long-form sections below.
+
+| Aspect                 | Current state                                                                                                                |
+|------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| Algorithm Relationship | Port - The EbsdLib, matrix math, and SIMPL APIs have changed but the code is functionally identical. Addition of several error branchs when the crystal structure type is not hexagonal. |
+| Oracle (confirmed)     | Class 1 (Analytical) -  2 hand derived data fixtures |
+| Code paths enumerated  | 6 of 7 paths exercised - only the filter cancelation path is untested |
+| Tests today            | 5 test cases - 1 test with Class 1 Oracle, 2 error path tests, 1 warning path test, 1 SIMPL json backwards compatibility test |
+| Exemplar archive       | None - removed test using circular oracle data from `caxis_data.tar.gz` |
+| Legacy comparison      | Run against DREAM3D 6.5.171 with the inline test data for the Class 1 Oracle. Result is bit-identical between 6.5.171 and NX |
+| Bug flags              | None |
+| V&V phase              | Ready for review |
+
+For worked instances see `src/Plugins/OrientationAnalysis/vv/BadDataNeighborOrientationCheckFilter.md` and `src/Plugins/OrientationAnalysis/vv/ComputeAvgCAxesFilter.md` (on `topic/vv/compute_avg_caxis`).
+
+## Summary
+
+ComputeCAxisLocationsFilter determines the direction of the C-axis for each element, in the *sample reference frame*, by applying the quaternion of the element to the <001> direction, which is the C-axis for *Hexagonal* materials.
+
+The filter is verified with a Class 1 (Analytical) oracle. The filter uses the quaternion to rotate the C-axis into the sample reference frame. This is done by converting the quaternion to a rotation matrix. Then the transpose of the matrix is used due to DREAM3D conventions (see docs/ReferenceFrameNotes.rst). Due to the transpose the sign of the third element may need to be flipped. A new test was added with handed verified data.
+
+There were no deviations that affect the output found for hexagonal materials.
+
+## Algorithm Relationship
+
+*Classification*: Port
+
+*Evidence*: Same loop with the same rotation equation used
+
+- UUID changed from SIMPL and filter renamed to match "Compute" naming conventions.
+- EbsdLib is now up to version 3 which has equivalent but changed API for orientations like quaternions. The internal matrix math API has also changed here to use EbsdLib and Eigen but is functionally identical.
+- Added one error branch before main execution checking for at least one hexagonal phase
+- Added one warning branch before main execution for when not all phases are hexagonal
+- Added branch inside loop to set not hexagonal quaternions to NAN to identify them as invalid
+
+*PR(s):* 
+
+- **PR #576** ("FILTER: FindCAxisLocations & FindFeatureNeighborCAxisMisalignment filters") - Initial PR
+- **PR #801** ("ENH: Rename complex to simplnx") - Library rename
+- **PR #956** ("ENH: Rename Filters that start with Find/Generate/Calculate to Compute") - Filter rename
+- **PR #1438** ("ENH: Microtexture related filter cleanup") - Header include changed
+- **PR #1472** ("ENH: Update to EbsdLib 2.0.0 API") - EbsdLib 2.0.0 API update
+- **PR #1582** ("ENH: Add missing cancel checks to lots of filters") - Added cancel check in loop
+
+## Oracle
+
+*Class:* **Class 1 (Analytical)**
+
+*Applied:* Handed derived output of C-axis locations from quaternions. The expected outputs agree between DREAM3DNX, DREAM3D 6.5.171, and manual calculations (`v_passive ​= Rᵀv` with z component forced to postive). Includes 15 different orientations about x, y, and z at different angles. The using the previous formula the exact form results were produced and compared against DREAM3D output.
+
+*Encoded:* *`test/ComputeCAxisLocationsTest.cpp::"OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle"` - 15 fixtures, all pass.*
+
+*Second-engineer review:* *Pending*
+
+## Code path coverage
+
+*6 of 7 paths exercised. The non-covered path is the cancellation branch which is not currently able to be tested for all filters*
+
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/<ComputeCAxisLocationsFilter>.cpp` (N lines).
+
+| #  | Phase           | Path                                              | Test case                                  |
+|----|-----------------|---------------------------------------------------|--------------------------------------------|
+| 1  | *Preflight* | Tuple validity check (-3520 error code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: Preflight Error - Cell array tuple count mismatch (-3520)" |
+| 2  | *Execute* | No hexagonal phases check (-3522 error code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" |
+| 3  | *Execute* | Not all phases hexagonal check (-3523 warning code) | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" |
+| 4  | *Execute - per-cell* | Should cancel check | Not directly tested - no filter cancellation testing infrastructure |
+| 5  | *Execute - per-cell* | Hexagonal C-axis location calculation path | "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" |
+| 6  | *Execute - per-cell* | C-axis direction flip check | "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" |
+| 7  | *Execute - per-cell* | Non-hexagonal NAN branch | "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" |
+
+## Test inventory
+
+| Test case | Status | Notes |
+|-----------|--------|-------|
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: Valid Filter Execution" | retired | Circular oracle |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: InValid Filter Execution" | retired | Superceded by more specific test "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: Preflight Error - Cell array tuple count mismatch (-3520)" | kept | Covers preflight error for tuple mismatch of phases and quats |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: SIMPL Backwards Compatibility" | kept | Covers SIMPL json backwards compatibility |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: No hexagonal phases error" | new-for-V&V | Covers no hexagonal phases branch |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: Not all hexagonal phases warning" | new-for-V&V | Covers non-hexagonal branch |
+| "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" | new-for-V&V | Covers hand calculated quaternions which also agree with DREAM3D 6.5.171. Also covers the sign flip path. |
+
+## Exemplar archive
+
+No new exemplar archive was created for this V&V cycle: the Class 1 oracle is encoded entirely as inline expected values in the test source. Tests no longer use circular oracle `caxis_data.tar.gz`.
+
+## Deviations from DREAM3D 6.5.171
+
+- No deviations observed. Comparison run on "OrientationAnalysis::ComputeCAxisLocationsFilter: Class 1 Oracle" between NX and 6.5.171 with bit-identical output.
