@@ -2,6 +2,7 @@
 
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
@@ -9,7 +10,7 @@ using namespace nx::core;
 
 namespace
 {
-const int32 k_GreaterThanIndex = 1;
+constexpr int32 k_GreaterThanIndex = 1;
 
 template <typename T>
 class IComparisonFunctor
@@ -82,8 +83,8 @@ public:
 struct ExecuteTemplate
 {
   template <typename T>
-  void CompareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, const AbstractDataStore<T>& inputArray, int64 neighbor, float thresholdValue, float32& best,
-                     std::vector<int64_t>& bestNeighbor, size_t i) const
+  void CompareValues(std::shared_ptr<IComparisonFunctor<T>>& comparator, const AbstractDataStore<T>& inputArray, int64 neighbor, float32 thresholdValue, T& best, std::vector<int64>& bestNeighbor,
+                     usize i) const
   {
     if(comparator->compare1(inputArray[neighbor], thresholdValue) && comparator->compare2(inputArray[neighbor], best))
     {
@@ -93,12 +94,12 @@ struct ExecuteTemplate
   }
 
   template <typename T>
-  void operator()(const ImageGeom& imageGeom, IDataArray* inputIDataArray, int32 comparisonAlgorithm, float thresholdValue, bool loopUntilDone, const std::atomic_bool& shouldCancel,
-                  const IFilter::MessageHandler& messageHandler)
+  void operator()(const ImageGeom& imageGeom, const std::vector<IDataArray*>& neighborAMArrays, IDataArray* inputIDataArray, int32 comparisonAlgorithm, float32 thresholdValue, bool loopUntilDone,
+                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   {
     const auto& inputStore = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
 
-    const size_t totalPoints = inputStore.getNumberOfTuples();
+    const usize totalPoints = inputStore.getNumberOfTuples();
 
     Vec3 udims = imageGeom.getDimensions();
     std::array<int64, 3> dims = {
@@ -115,9 +116,9 @@ struct ExecuteTemplate
 
     constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
     const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-    std::vector<int64_t> bestNeighbor(totalPoints, -1);
+    std::vector<int64> bestNeighbor(totalPoints, -1);
 
-    size_t count = 0;
+    usize count = 0;
     bool keepGoing = true;
 
     std::shared_ptr<IComparisonFunctor<T>> comparator = std::make_shared<LessThanComparison<T>>();
@@ -125,8 +126,6 @@ struct ExecuteTemplate
     {
       comparator = std::make_shared<GreaterThanComparison<T>>();
     }
-
-    const AttributeMatrix* attrMatrix = imageGeom.getCellData();
 
     while(keepGoing)
     {
@@ -137,10 +136,10 @@ struct ExecuteTemplate
         break;
       }
 
-      auto progIncrement = static_cast<int64_t>(totalPoints / 50);
+      auto progIncrement = static_cast<int64>(totalPoints / 50);
       int64 prog = 1;
       int64 progressInt = 0;
-      for(size_t voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
+      for(usize voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
       {
         if(comparator->compare(inputStore[voxelIndex], thresholdValue))
         {
@@ -148,7 +147,7 @@ struct ExecuteTemplate
           row = (voxelIndex / dims[0]) % dims[1];
           plane = voxelIndex / (dims[0] * dims[1]);
           count++;
-          float32 best = inputStore[voxelIndex];
+          T best = inputStore[voxelIndex];
 
           neighbor = static_cast<int64>(voxelIndex) + neighborVoxelIndexOffsets[0];
           if(plane != 0)
@@ -183,9 +182,9 @@ struct ExecuteTemplate
         }
         if(voxelIndex > prog)
         {
-          progressInt = static_cast<int64_t>(((float)voxelIndex / totalPoints) * 100.0f);
+          progressInt = static_cast<int64>((static_cast<float32>(voxelIndex) / totalPoints) * 100.0f);
           const std::string progressMessage = fmt::format("Processing Loop({}) Progress: {}% Complete", count, progressInt);
-          messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
+          messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32>(progressInt)});
           prog += progIncrement;
         }
       }
@@ -195,32 +194,33 @@ struct ExecuteTemplate
         break;
       }
 
-      progIncrement = static_cast<int64_t>(totalPoints / 50);
+      progIncrement = static_cast<int64>(totalPoints / 50);
       prog = 1;
       progressInt = 0;
       for(int64 voxelIndex = 0; voxelIndex < totalPoints; voxelIndex++)
       {
         if(voxelIndex > prog)
         {
-          progressInt = static_cast<int64_t>(((float)voxelIndex / totalPoints) * 100.0f);
+          progressInt = static_cast<int64>((static_cast<float32>(voxelIndex) / totalPoints) * 100.0f);
           const std::string progressMessage = fmt::format("Transferring Loop({}) Progress: {}% Complete", count, progressInt);
-          messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32_t>(progressInt)});
+          messageHandler(IFilter::ProgressMessage{IFilter::Message::Type::Progress, progressMessage, static_cast<int32>(progressInt)});
           prog = prog + progIncrement;
         }
 
         neighbor = bestNeighbor[voxelIndex];
         if(neighbor != -1)
         {
-          for(const auto& [dataId, dataObject] : *attrMatrix)
+          for(auto* iDataArray : neighborAMArrays)
           {
-            auto& dataArray = dynamic_cast<IDataArray&>(*dataObject);
-            dataArray.copyTuple(neighbor, voxelIndex);
+            iDataArray->copyTuple(neighbor, voxelIndex);
           }
         }
       }
       if(loopUntilDone && count > 0)
       {
         keepGoing = true;
+        // Reset the vector to save unnecessary copies on next iteration
+        std::fill(bestNeighbor.begin(), bestNeighbor.end(), -1);
       }
     }
   }
@@ -250,12 +250,31 @@ const std::atomic_bool& ReplaceElementAttributesWithNeighborValues::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReplaceElementAttributesWithNeighborValues::operator()()
 {
-
   auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
   const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedImageGeometryPath);
 
-  ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray->getDataType(), imageGeom, srcIDataArray, m_InputValues->SelectedComparison, m_InputValues->MinConfidence, m_InputValues->Loop, m_ShouldCancel,
-                      m_MessageHandler);
+  std::vector<IDataArray*> neighborAMArrays = {};
+
+  {
+    const AttributeMatrix* attrMatrix = imageGeom.getCellData();
+
+    // Collect IDataArray objects from AM (NeighborList and StringArray excluded)
+    std::optional<std::vector<DataPath>> optDataPaths = GetAllChildDataPathsOfType<IDataArray>(m_DataStructure, attrMatrix->getDataPaths().front());
+
+    if(!optDataPaths.has_value())
+    {
+      // No IDataArrays == No work to do
+      return {};
+    }
+
+    for(const auto& dataPath : optDataPaths.value())
+    {
+      neighborAMArrays.push_back(m_DataStructure.getDataAs<IDataArray>(dataPath));
+    }
+  }
+
+  ExecuteDataFunction(ExecuteTemplate{}, srcIDataArray->getDataType(), imageGeom, neighborAMArrays, srcIDataArray, m_InputValues->SelectedComparison, m_InputValues->MinConfidence, m_InputValues->Loop,
+                      m_ShouldCancel, m_MessageHandler);
 
   return {};
 }

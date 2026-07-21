@@ -255,42 +255,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPaths(const DataStructure& d
 
 std::optional<std::vector<DataPath>> GetAllChildArrayDataPaths(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths)
 {
-  std::vector<DataPath> childDataObjects;
-  try
-  {
-    std::vector<std::string> childrenNames;
-    if(parentGroup.empty())
-    {
-      childrenNames = dataStructure.getDataMap().getNames();
-    }
-    else
-    {
-      childrenNames = dataStructure.getDataRefAs<BaseGroup>(parentGroup).getDataMap().getNames();
-    }
-
-    for(const auto& childName : childrenNames)
-    {
-      bool ignore = false;
-      DataPath childPath = parentGroup.createChildPath(childName);
-      const DataObject* dataObject = dataStructure.getData(childPath);
-      for(const auto& ignoredPath : ignoredDataPaths)
-      {
-        if(childPath == ignoredPath)
-        {
-          ignore = true;
-          break;
-        }
-      }
-      if(!ignore && dynamic_cast<const IArray*>(dataObject) != nullptr)
-      {
-        childDataObjects.push_back(childPath);
-      }
-    }
-  } catch(std::exception& e)
-  {
-    return {};
-  }
-  return {childDataObjects};
+ return GetAllChildDataPathsOfType<IArray>(dataStructure, parentGroup, ignoredDataPaths);
 }
 
 std::optional<std::vector<DataPath>> GetAllChildDataPathsRecursive(const DataStructure& dataStructure, const DataPath& parentGroup, const std::vector<DataPath>& ignoredDataPaths)

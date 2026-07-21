@@ -19,14 +19,14 @@
 | Code paths            | 16 of 17 directly tested; cancel path untestable (no cancel-signal injection in test framework). |
 | Tests                 | 2 TEST_CASEs: synthetic (4 SECTIONs, Class 1 + Class 4 oracle) + SIMPL backwards-compat (2 DYNAMIC_SECTIONs). |
 | Exemplar archive      | `6_6_replace_element_attributes_with_neighbor.tar.gz` — unreferenced; consuming circular-oracle test removed. See `vv/provenance/ReplaceElementAttributesWithNeighborValues.md`. |
-| Legacy comparison     | **Complete (2026-07-21).** Bit-identical on LessThan and GreaterThan vs 6.5.171; LessThan vs 6.5.172. No deviations. See `vv/deviations/ReplaceElementAttributesWithNeighborValuesFilter.md`. |
+| Legacy comparison     | **Complete (2026-07-21, re-run 2026-07-21 post-refactor).** Bit-identical on LessThan and GreaterThan vs 6.5.171; LessThan vs 6.5.172. No deviations. See `vv/deviations/ReplaceElementAttributesWithNeighborValuesFilter.md`. |
 | Bug flags             | None. |
 
 ## Summary
 
 `ReplaceElementAttributesWithNeighborValuesFilter` replaces each "bad" cell (one that fails a user-supplied threshold comparison) by copying all AttributeMatrix arrays from the best-passing face neighbor. Algorithm: (1) scan pass — for each bad voxel, check 6 face neighbors and record the one with the most-extreme passing value; (2) copy pass — apply recorded neighbor copies to all cell arrays. An optional loop repeats until no bad voxels remain.
 
-Verification used a Class 1 (Analytical) synthetic 3×3×3 fixture with closed-form expected values across four modes (LessThan, GreaterThan, loop=false, compare1=false), paired with Class 4 (Invariant) post-loop threshold saturation and multi-array copy assertions. A/B comparison against DREAM3D 6.5.171 and 6.5.172 confirmed bit-identical output on both operators. No deviations.
+Verification used a Class 1 (Analytical) synthetic 3×3×3 fixture with closed-form expected values across four modes (LessThan, GreaterThan, loop=false, compare1=false), paired with Class 4 (Invariant) post-loop threshold saturation and multi-array copy assertions. A/B comparison against DREAM3D 6.5.171 and 6.5.172 confirmed bit-identical output on both operators. The comparison was re-run after the algorithm was refactored and remained bit-identical. No deviations.
 
 ## Algorithm Relationship
 
