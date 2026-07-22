@@ -61,7 +61,7 @@
 
 *20 of 20 paths enumerated; 18 exercised.*
 
-Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/CAxisSegmentFeatures.cpp` (198 lines) + shared driver `src/simplnx/Utilities/SegmentFeatures.cpp` (execute loop).
+Source: `src/Plugins/OrientationAnalysis/src/OrientationAnalysis/Filters/Algorithms/CAxisSegmentFeatures.cpp` (207 lines) + shared driver `src/simplnx/Utilities/SegmentFeatures.cpp` (execute loop).
 
 Logical phases: **(a) init + validation** in `operator()`, **(b) flood-fill driver** in `SegmentFeatures::execute`, **(c) seeding** in `getSeed`, **(d) grouping decision** in `determineGrouping`, **(e) finalize** in `operator()`.
 

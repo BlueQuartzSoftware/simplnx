@@ -49,7 +49,7 @@ Result<> CAxisSegmentFeatures::operator()()
 
   // Loop through all the "Phase" cell values and validate that any phase found is
   // a hexagonal phase. This guards against there being multiple phases defined in
-  // and EBSD file but the non-hexagonal phases were actually never found
+  // an EBSD file where the non-hexagonal phases were never actually indexed to a cell.
   const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
   const usize numCells = m_CellPhases->getNumberOfTuples();
   const usize numEnsembles = crystalStructures.getNumberOfTuples();
@@ -98,7 +98,7 @@ Result<> CAxisSegmentFeatures::operator()()
   // Sanity check the result.
   if(this->m_FoundFeatures < 1)
   {
-    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly", this->m_FoundFeatures));
+    return MakeErrorResult(-87000, fmt::format("The number of Features is '{}' which means no Features were detected. A threshold value may be set incorrectly.", this->m_FoundFeatures));
   }
 
   // Resize the Feature Attribute Matrix
@@ -110,7 +110,7 @@ Result<> CAxisSegmentFeatures::operator()()
   activeArray->getDataStore()->fill(1);
   (*activeArray)[0] = 0;
 
-  // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
+  // Randomize the feature Ids purely for visual clarity. Having random Feature Ids
   // allows users visualizing the data to better discern each grain otherwise the coloring
   // would look like a smooth gradient. This is a user input parameter
   if(m_InputValues->RandomizeFeatureIds)
@@ -128,25 +128,25 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
   const usize totalPoints = featureIds.getNumberOfTuples();
   AbstractDataStore<int32>& cellPhases = m_CellPhases->getDataStoreRef();
 
-  // start with the next voxel after the last seed
-  auto randPoint = static_cast<usize>(nextSeed);
+  // Linearly scan for the next eligible voxel, starting just after the last seed
+  auto candidatePoint = static_cast<usize>(nextSeed);
   int64 seed = -1;
-  while(seed == -1 && randPoint < totalPoints)
+  while(seed == -1 && candidatePoint < totalPoints)
   {
-    if(featureIds[randPoint] == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
+    if(featureIds[candidatePoint] == 0) // If the GrainId of the voxel is ZERO then we can use this as a seed point
     {
-      if((!m_InputValues->UseMask || m_GoodVoxelsArray->isTrue(randPoint)) && cellPhases[randPoint] > 0)
+      if((!m_InputValues->UseMask || m_GoodVoxelsArray->isTrue(candidatePoint)) && cellPhases[candidatePoint] > 0)
       {
-        seed = static_cast<int64>(randPoint);
+        seed = static_cast<int64>(candidatePoint);
       }
       else
       {
-        randPoint += 1;
+        candidatePoint += 1;
       }
     }
     else
     {
-      randPoint += 1;
+      candidatePoint += 1;
     }
   }
   if(seed >= 0)
@@ -160,7 +160,7 @@ int64 CAxisSegmentFeatures::getSeed(int32 gnum, int64 nextSeed) const
 }
 
 // -----------------------------------------------------------------------------
-bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighborpoint, int32 gnum) const
+bool CAxisSegmentFeatures::determineGrouping(int64 referencePoint, int64 neighborPoint, int32 gnum) const
 {
   bool group = false;
 
@@ -172,15 +172,15 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
   bool neighborPointIsGood = false;
   if(m_GoodVoxelsArray != nullptr)
   {
-    neighborPointIsGood = m_GoodVoxelsArray->isTrue(neighborpoint);
+    neighborPointIsGood = m_GoodVoxelsArray->isTrue(neighborPoint);
   }
 
-  if(featureIds[neighborpoint] == 0 && (!m_InputValues->UseMask || neighborPointIsGood))
+  if(featureIds[neighborPoint] == 0 && (!m_InputValues->UseMask || neighborPointIsGood))
   {
-    if(cellPhases[referencepoint] == cellPhases[neighborpoint])
+    if(cellPhases[referencePoint] == cellPhases[neighborPoint])
     {
-      const ebsdlib::QuatF q1(quats[referencepoint * 4], quats[referencepoint * 4 + 1], quats[referencepoint * 4 + 2], quats[referencepoint * 4 + 3]);
-      const ebsdlib::QuatF q2(quats[neighborpoint * 4 + 0], quats[neighborpoint * 4 + 1], quats[neighborpoint * 4 + 2], quats[neighborpoint * 4 + 3]);
+      const ebsdlib::QuatF q1(quats[referencePoint * 4], quats[referencePoint * 4 + 1], quats[referencePoint * 4 + 2], quats[referencePoint * 4 + 3]);
+      const ebsdlib::QuatF q2(quats[neighborPoint * 4 + 0], quats[neighborPoint * 4 + 1], quats[neighborPoint * 4 + 2], quats[neighborPoint * 4 + 3]);
 
       const ebsdlib::OrientationMatrixFType oMatrix1 = q1.toOrientationMatrix();
       const ebsdlib::OrientationMatrixFType oMatrix2 = q2.toOrientationMatrix();
@@ -200,7 +200,7 @@ bool CAxisSegmentFeatures::determineGrouping(int64 referencepoint, int64 neighbo
       if(w <= m_InputValues->MisorientationTolerance || (Constants::k_PiD - w) <= m_InputValues->MisorientationTolerance)
       {
         group = true;
-        featureIds[neighborpoint] = gnum;
+        featureIds[neighborPoint] = gnum;
       }
     }
   }
